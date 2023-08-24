@@ -2,77 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, Check, X } from '@phosphor-icons/react';
-import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'react';
+import { Check, X } from '@phosphor-icons/react';
+import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useId, useTranslation } from '@dxos/aurora';
-import { chromeSurface, descriptionText, getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
+import { Actions, Action, AuthCode, Emoji, Centered, Label, Viewport, ViewportViewProps } from '../components';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
-type InvitationManagerProps = StepProps &
+export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
     invitationUrl?: string;
   };
-
-const Emoji = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <div role='none' className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-      <div role='none' className={mx(getSize(10), 'rounded border-2 border-current rotate-45 relative', chromeSurface)}>
-        <p className='text-2xl !leading-[2.2rem] absolute inset-0 -rotate-45 text-center'>{children}</p>
-      </div>
-    </div>
-  );
-};
 
 const InvitationManagerView = ({
   children,
   classNames: _classNames,
   emoji,
   ...props
-}: ViewportViewProps & { emoji: ReactNode }) => {
+}: ViewportViewProps & { emoji?: string }) => {
   return (
     <Viewport.View {...props} classNames='grow'>
-      <div role='none' className='is-full max-is-[12rem] mli-auto'>
-        <div role='none' className='aspect-square is-full bs-auto relative'>
+      <div role='none' className='is-full max-is-[14rem] mli-auto'>
+        <div role='none' className='aspect-square is-full bs-auto relative text-neutral-600 dark:text-neutral-500'>
           {children}
-          <Emoji>{emoji}</Emoji>
+          {emoji && (
+            <Centered>
+              <Emoji text={emoji} />
+            </Centered>
+          )}
         </div>
       </div>
     </Viewport.View>
   );
 };
 
-export const InvitationManager = ({
-  invitationUrl,
-  active,
-  send,
-  doneActionParent,
-  onDone,
-  status,
-  authCode,
-  id,
-}: InvitationManagerProps) => {
+export const InvitationManager = ({ invitationUrl, active, send, status, authCode, id }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
   const statusValue = invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = toEmoji(id ?? '');
-  const doneAction = (
-    <PanelAction
-      aria-label={t('done label')}
-      onClick={onDone}
-      disabled={!active}
-      classNames='order-2'
-      data-testid='identity-panel-done'
-    >
-      <Check weight='light' className={getSize(6)} />
-    </PanelAction>
-  );
   const activeView = useMemo(() => {
     switch (true) {
       case statusValue === 5:
@@ -93,9 +67,9 @@ export const InvitationManager = ({
               rounding={100}
               backgroundColor='transparent'
               color='currentColor'
-              className={mx('is-full bs-full', showAuthCode && 'invisible')}
+              className={mx('is-full bs-full p-2', showAuthCode && 'invisible')}
               aria-labelledby={qrLabel}
-              errorCorrectionLevel='M'
+              errorCorrectionLevel='Q'
             >
               {invitationUrl ?? 'never'}
             </QR>
@@ -103,46 +77,30 @@ export const InvitationManager = ({
               {t('qr label')}
             </span>
           </InvitationManagerView>
-          <InvitationManagerView id='showing auth code' emoji={emoji}>
-            <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
-              <p className={mx(descriptionText, 'text-center')}>{t('auth code message')}</p>
-              <div role='none' className='bs-14' />
-              <p className='text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+          <InvitationManagerView id='showing auth code'>
+            <div role='none' className='absolute inset-0 flex flex-col justify-between items-center'>
+              <Label>{t('auth code message')}</Label>
+              <AuthCode code={authCode} large className='text-black dark:text-white' />
+              <Label>Be sure the other device is showing this symbol:</Label>
+              {emoji && <Emoji text={emoji} />}
             </div>
           </InvitationManagerView>
-          <InvitationManagerView
-            id='showing final'
-            emoji={
-              statusValue > 0 ? (
+          <InvitationManagerView id='showing final'>
+            <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
+              {statusValue > 0 ? (
                 <Check className={mx('m-1.5', getSize(6))} />
               ) : (
                 <X className={mx('m-1.5', getSize(6))} />
-              )
-            }
-          />
+              )}
+            </div>
+          </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
-      <PanelActions classNames='mbs-4'>
-        <CopyButtonIconOnly
-          variant='ghost'
-          classNames='order-1 p-4'
-          disabled={!active || activeView === 'showing final'}
-          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-          iconProps={{
-            weight: 'light',
-            className: getSize(6),
-          }}
-        />
-        {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
-        <PanelAction
-          aria-label={t('back label')}
-          disabled={!active}
-          onClick={() => send({ type: 'deselectInvitation' })}
-        >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
-      </PanelActions>
+      <Actions classNames='mbs-4'>
+        <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
+          {t('back label')}
+        </Action>
+      </Actions>
     </>
   );
 };

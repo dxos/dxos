@@ -28,6 +28,7 @@ type ListItemScopedProps<P> = P & { __listItemScope?: Scope };
 
 interface ListItemData {
   id: string;
+  labelId?: string;
   selected?: CheckboxProps['checked'];
   open?: boolean;
 }
@@ -110,7 +111,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
       onChange: onOpenChange,
     });
 
-    const headingId = useId('listItem__heading');
+    const headingId = useId('listItem__heading', props.labelId);
 
     const listItem = (
       <Primitive.li

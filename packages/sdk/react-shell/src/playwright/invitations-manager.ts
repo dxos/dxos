@@ -150,7 +150,7 @@ export class InvitationsManager extends ShellManager {
       await peer.getByTestId('join-identity').click();
     }
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
-    await this.page.keyboard.press('Enter');
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {
