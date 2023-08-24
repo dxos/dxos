@@ -114,7 +114,7 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          await this.closeConnection();
+          await this.closeConnection(new Error('Connection displaced by remote initiator.'));
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -137,7 +137,7 @@ export class Peer {
           }
 
           // Calls `onStateChange` with CLOSED state.
-          await this.closeConnection();
+          await this.closeConnection(err);
         }
 
         return { accept: true };
@@ -183,7 +183,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
       // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection();
+      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -287,7 +287,7 @@ export class Peer {
       });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection();
+      void this.closeConnection(err);
     });
 
     this.connection = connection;
@@ -295,7 +295,7 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection() {
+  async closeConnection(err?: Error) {
     if (!this.connection) {
       return;
     }
@@ -304,7 +304,7 @@ export class Peer {
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await connection.close();
+    await connection.close(err);
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
   }

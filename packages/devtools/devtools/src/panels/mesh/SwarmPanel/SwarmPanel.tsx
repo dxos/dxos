@@ -32,6 +32,9 @@ const columns: GridColumnDef<SwarmConnection, any>[] = [
   helper.accessor((connection) => connection.connection?.state, {
     id: 'state',
   }),
+  helper.accessor((connection) => connection.connection?.closeReason, {
+    id: 'close reason',
+  }),
 ];
 
 export const SwarmPanel = () => {
