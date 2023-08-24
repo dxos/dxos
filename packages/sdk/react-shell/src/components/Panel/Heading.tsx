@@ -13,7 +13,7 @@ export type PanelHeadingProps = PropsWithChildren<{
   corner?: ReactNode;
 }>;
 
-export const PanelHeading = forwardRef<HTMLDivElement, PanelHeadingProps>(
+export const Heading = forwardRef<HTMLDivElement, PanelHeadingProps>(
   ({ titleId, title, titleSrOnly, children, corner }, forwardedRef) => {
     return (
       <div role='none' className='pbe-2 relative' ref={forwardedRef}>

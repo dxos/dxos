@@ -21,7 +21,7 @@
     "body": [
       "import React from 'react';",
       "",
-      "export type $1Props = {$2};",
+      "export type ${1:${TM_FILENAME_BASE/(.*)\\..+$/$1/}}Props = {$2};",
       "",
       "export const ${1:Component} = (props: $1Props) => {",
       "  return <>$0</>;",

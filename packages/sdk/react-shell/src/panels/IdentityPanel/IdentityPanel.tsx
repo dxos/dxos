@@ -10,7 +10,7 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
-import { Viewport, PanelHeading } from '../../components';
+import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
@@ -18,10 +18,10 @@ import { IdentityActionChooser } from './steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
-const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps) => {
+const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHeadingProps) => {
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <PanelHeading titleId={titleId} title={title}>
+    <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root size={12} variant='circle'>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
@@ -30,11 +30,19 @@ const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps
           {identity.profile?.displayName ?? humanize(identity.identityKey)}
         </Avatar.Label>
       </Avatar.Root>
-    </PanelHeading>
+    </Heading>
   );
 };
 
-export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
+export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
+  const {
+    identity,
+    titleId,
+    activeView,
+    IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
+    InvitationManager: InvitationManagerComponent = InvitationManager,
+    ...rest
+  } = props;
   const { t } = useTranslation('os');
   const title = useMemo(() => {
     switch (activeView) {
@@ -51,13 +59,13 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
+            <IdentityActionChooserComponent active={activeView === 'identity action chooser'} {...rest} />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
-            <InvitationManager
+            <InvitationManagerComponent
               active={activeView === 'device invitation manager'}
-              {...props}
-              invitationUrl={props.createInvitationUrl(props.invitationCode!)}
+              {...rest}
+              invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
@@ -110,7 +118,7 @@ export const IdentityPanel = ({
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:
-        return 'never';
+        return 'identity action chooser';
     }
   }, [identityState]);
 
@@ -121,7 +129,7 @@ export const IdentityPanel = ({
     send: identitySend,
     titleId,
     createInvitationUrl,
-  };
+  } satisfies IdentityPanelImplProps;
 
   return identityState.context.invitation ? (
     <IdentityPanelWithInvitationImpl {...implProps} invitation={identityState.context.invitation} />

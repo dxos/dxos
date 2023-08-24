@@ -45,7 +45,7 @@ export const CollapsibleHeading = ({ open, node, level, active }: SharedTreeItem
     <TreeItem.OpenTrigger
       {...(disabled && { disabled, 'aria-disabled': true })}
       {...(!navigationSidebarOpen && { tabIndex: -1 })}
-      classNames={['grow flex items-center gap-1 pie-1', ghostButtonColors, disabled && staticDisabled]}
+      classNames={['flex items-center gap-1 pie-1', navTreeHeading, ghostButtonColors, disabled && staticDisabled]}
     >
       <OpenTriggerIcon weight='fill' className={mx('shrink-0', getSize(2))} />
       {node.icon && <node.icon className={getSize(4)} />}

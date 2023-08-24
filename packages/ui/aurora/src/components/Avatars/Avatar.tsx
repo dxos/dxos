@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, Moon } from '@phosphor-icons/react';
 import {
   Root as AvatarRootPrimitive,
   AvatarProps as AvatarRootPrimitiveProps,
@@ -23,9 +22,10 @@ import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
 type AvatarVariant = 'square' | 'circle';
-type AvatarStatus = 'active' | 'inactive';
+type AvatarStatus = 'active' | 'inactive' | 'error' | 'warning';
+type AvatarAnimation = 'pulse' | 'none';
 
-type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
+export type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
 
 type AvatarContextValue = {
   labelId: string;
@@ -34,6 +34,7 @@ type AvatarContextValue = {
   size: Size;
   variant: AvatarVariant;
   status?: AvatarStatus;
+  animation?: AvatarAnimation;
   inGroup?: boolean;
 };
 const AVATAR_NAME = 'Avatar';
@@ -43,6 +44,7 @@ const AvatarRoot = ({
   size = 10,
   variant = 'circle',
   status,
+  animation,
   children,
   labelId: propsLabelId,
   descriptionId: propsDescriptionId,
@@ -53,7 +55,9 @@ const AvatarRoot = ({
   const descriptionId = useId('avatar__description', propsDescriptionId);
   const maskId = useId('avatar__mask', propsMaskId);
   return (
-    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, inGroup }}>{children}</AvatarProvider>
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup }}>
+      {children}
+    </AvatarProvider>
   );
 };
 
@@ -64,12 +68,14 @@ const rx = 8;
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { size, variant, labelId, descriptionId, maskId, inGroup, status } = useAvatarContext('AvatarFrame');
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation } =
+      useAvatarContext('AvatarFrame');
+
     const { tx } = useThemeContext();
     const imageSizeNumber = size === 'px' ? 1 : size * 4;
-    const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
-    const maskSize = statusIconSize * 4 + 2;
-    const maskCenter = imageSizeNumber - (statusIconSize * 4) / 2;
+    const ringGap = 3;
+    const ringWidth = 2;
+    const r = imageSizeNumber / 2 - ringGap - ringWidth;
     return (
       <AvatarRootPrimitive
         role='img'
@@ -90,34 +96,53 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           <defs>
             <mask id={maskId}>
               {variant === 'circle' ? (
-                <circle fill='white' cx={imageSizeNumber / 2} cy={imageSizeNumber / 2} r={imageSizeNumber / 2} />
+                <circle fill='white' cx='50%' cy='50%' r={r} />
               ) : (
-                <rect fill='white' width={imageSizeNumber} height={imageSizeNumber} rx={rx} />
-              )}
-              {status && (
-                <circle
-                  fill='black'
-                  cx={`${(100 * maskCenter) / imageSizeNumber}%`}
-                  cy={`${(100 * maskCenter) / imageSizeNumber}%`}
-                  r={`${(50 * maskSize) / imageSizeNumber}%`}
-                />
+                <rect fill='white' width={2 * r} height={2 * r} x={ringGap + ringWidth} y={ringGap + ringWidth} />
               )}
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <circle
-              className='avatarFrameFill fill-[var(--surface-bg)]'
-              cx={imageSizeNumber / 2}
-              cy={imageSizeNumber / 2}
-              r={imageSizeNumber / 2}
-            />
+            <g>
+              <circle fill='#999' stroke='none' opacity={0.1} cx='50%' cy='50%' r={r} />
+              <circle stroke='#888' fill='none' opacity={0.3} cx='50%' cy='50%' r={r} />
+            </g>
           ) : (
-            <rect
-              className='avatarFrameFill fill-[var(--surface-bg)]'
-              width={imageSizeNumber}
-              height={imageSizeNumber}
-              rx={rx}
-            />
+            <g>
+              <rect
+                fill='#999'
+                stroke='none'
+                opacity={0.1}
+                width={2 * r}
+                height={2 * r}
+                x={ringGap + ringWidth}
+                y={ringGap + ringWidth}
+                rx={2}
+              />
+              <rect
+                fill='none'
+                stroke='#333'
+                opacity={0.15}
+                width={2 * r}
+                height={2 * r}
+                x={ringGap + ringWidth}
+                y={ringGap + ringWidth}
+                rx={2}
+              />
+            </g>
+            //   <circle
+            //     className='avatarFrameFill fill-[var(--surface-bg)]'
+            //     cx={imageSizeNumber / 2}
+            //     cy={imageSizeNumber / 2}
+            //     r={imageSizeNumber / 2}
+            //   />
+            // ) : (
+            //   <rect
+            //     className='avatarFrameFill fill-[var(--surface-bg)]'
+            //     width={imageSizeNumber}
+            //     height={imageSizeNumber}
+            //     rx={rx}
+            //   />
           )}
           {children}
           {variant === 'circle' ? (
@@ -140,18 +165,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             />
           )}
         </svg>
-        {status === 'inactive' ? (
-          <Moon
-            mirrored
-            weight='fill'
-            className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
-          />
-        ) : status ? (
-          <Circle
-            weight='fill'
-            className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
-          />
-        ) : null}
+        <span className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })}></span>
       </AvatarRootPrimitive>
     );
   },
@@ -206,6 +220,28 @@ const AvatarMaskedImage = forwardRef<SVGImageElement, AvatarMaskedImageProps>((p
   return <image width='100%' height='100%' {...props} mask={`url(#${maskId})`} ref={forwardedRef} />;
 });
 
+type AvatarMaskedTextProps = PropsWithChildren<{ large?: boolean }>;
+
+const AvatarMaskedText = (props: AvatarMaskedTextProps) => {
+  const { maskId, size } = useAvatarContext('AvatarFallback');
+  const { large } = props;
+  const fontScale = (large ? 4 : 3) * (1 / 1.612);
+  const { tx } = useThemeContext();
+  return (
+    <text
+      x='50%'
+      y='50%'
+      className={tx('avatar.fallbackText', 'avatar__fallback-text')}
+      textAnchor='middle'
+      alignmentBaseline='central'
+      fontSize={size === 'px' ? '200%' : size * fontScale}
+      mask={`url(#${maskId})`}
+    >
+      {props.children}
+    </text>
+  );
+};
+
 type AvatarImageProps = ComponentPropsWithRef<'image'> & {
   onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
 };
@@ -222,12 +258,17 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
 
 type AvatarFallbackProps = ComponentPropsWithRef<'image'> & {
   delayMs?: number;
+  text?: string;
 };
 
-const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delayMs, ...props }, forwardedRef) => {
+const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delayMs, text, ...props }, forwardedRef) => {
+  const isTextOnly = Boolean(text && /[0-9a-zA-Z]+/.test(text));
   return (
     <AvatarFallbackPrimitive delayMs={delayMs} asChild>
-      <AvatarMaskedImage {...props} ref={forwardedRef} />
+      <>
+        <AvatarMaskedImage {...props} ref={forwardedRef} />
+        {text && <AvatarMaskedText large={!isTextOnly}>{text.toLocaleUpperCase()}</AvatarMaskedText>}
+      </>
     </AvatarFallbackPrimitive>
   );
 });
@@ -253,7 +294,7 @@ export { useJdenticonHref, useAvatarContext, getJdenticonHref };
 export type {
   AvatarStatus,
   AvatarVariant,
-  AvatarRootProps,
+  AvatarAnimation,
   AvatarFrameProps,
   AvatarImageProps,
   AvatarFallbackProps,
