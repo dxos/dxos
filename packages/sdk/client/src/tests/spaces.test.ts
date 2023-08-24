@@ -339,9 +339,6 @@ describe('Spaces', () => {
       });
       afterTest(() => subscription());
 
-      space.internal.db.itemUpdate.on(() => checkItem());
-      space.db._updateEvent.on(() => checkItem());
-
       await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
       await trigger.wait();
       checkItem();
