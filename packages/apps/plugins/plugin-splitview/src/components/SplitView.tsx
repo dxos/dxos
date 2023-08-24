@@ -26,20 +26,25 @@ export const SplitView = () => {
         onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
       })}
     >
+      {/* Left sidebar. */}
       <Main.NavigationSidebar classNames='overflow-hidden'>
         <Surface name='sidebar' />
       </Main.NavigationSidebar>
+
+      {/* Right sidebar. */}
       {complementarySidebarOpen !== null && (
         <Main.ComplementarySidebar classNames='overflow-hidden'>
           <Surface name='complementary-sidebar' />
         </Main.ComplementarySidebar>
       )}
       <Main.Overlay />
+
+      {/* Header bar. */}
       <Main.Content
         asChild
         classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
       >
-        <div role='none' aria-label={t('main header label')}>
+        <div role='none' aria-label={t('main header label')} className='border-b'>
           <DensityProvider density='fine'>
             <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
               <span className='sr-only'>{t('open navigation sidebar label')}</span>
@@ -60,7 +65,11 @@ export const SplitView = () => {
           </DensityProvider>
         </div>
       </Main.Content>
+
+      {/* Main content. */}
+      {/* TODO(burdon): Set baseSurface style */}
       <Surface name='main' role='main' />
+
       {/* TODO(burdon): Move dialog to settings-plugin. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
