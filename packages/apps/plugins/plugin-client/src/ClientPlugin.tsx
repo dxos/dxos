@@ -40,6 +40,9 @@ export const ClientPlugin = (
     },
     init: async () => {
       await client.initialize();
+      if (!client.halo.identity.get()) {
+        await client.halo.createIdentity();
+      }
 
       return {
         client,
