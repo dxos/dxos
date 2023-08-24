@@ -97,11 +97,13 @@ export class DatabaseProxy {
           objectCount: msg.batch.objects?.length ?? 0,
         });
 
+        const objectsUpdated: Item[] = [];
+
         if (msg.action === EchoEvent.DatabaseAction.RESET) {
+          objectsUpdated.push(...this._itemManager.entities.values());
           this._itemManager.clear();
         }
 
-        const objectsUpdated: Item[] = [];
         this._processMessage(msg.batch, objectsUpdated);
 
         if (msg.clientTag) {

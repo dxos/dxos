@@ -294,23 +294,27 @@ describe('Spaces', () => {
       await asyncTimeout(processedEpoch, 1000);
     };
 
-    const getUpdatePromise = () =>
-      asyncTimeout(
-        Promise.all([space.internal.db.itemUpdate.waitForCount(1), space.db._updateEvent.waitForCount(1)]),
-        1000,
-      );
-
     const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
 
     // Create empty Epoch and check if it clears items.
     {
-      const update = getUpdatePromise();
+      const trigger = new Trigger();
+
+      const query = space.db.query({ idx });
+      expect(query.objects.length).to.equal(1);
+
+      const subscription = query.subscribe(async (query) => {
+        log.info('query', { length: query.objects.length });
+        expect(query.objects.length).to.equal(0);
+        trigger.wake();
+      });
 
       await writeEpochWithSnapshot({});
-      await update;
+      await asyncTimeout(trigger.wait(), 500);
 
       expect(space.db.objects.length).to.equal(0);
       expect(item.__deleted).to.be.true;
+      subscription();
     }
 
     // Reset database to previous state.
@@ -322,19 +326,24 @@ describe('Spaces', () => {
       expect(space.db.query({ idx }).objects[0].text).to.equal(text);
       expect(space.db.query({ idx }).objects[0]).to.equal(item);
     }
-
     // Create Epoch and check if Item do not flickers.
     {
-      const update = getUpdatePromise();
-      const checkItem = () => {
-        expect(item.__deleted).to.be.false;
-        expect(item.text).to.equal(text);
+      const checkItem = (object = item) => {
+        expect(object.__deleted).to.be.false;
+        expect(object.text).to.equal(text);
       };
+      const trigger = new Trigger();
+      const subscription = space.db.query({ idx }).subscribe((query) => {
+        checkItem(query.objects[0]);
+        trigger.wake();
+      });
+      afterTest(() => subscription());
+
       space.internal.db.itemUpdate.on(() => checkItem());
       space.db._updateEvent.on(() => checkItem());
 
       await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
-      await update;
+      await trigger.wait();
       checkItem();
     }
   });
