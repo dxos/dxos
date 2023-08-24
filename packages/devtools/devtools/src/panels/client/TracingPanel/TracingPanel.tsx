@@ -4,14 +4,15 @@
 
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { FlameGraph } from 'react-flame-graph';
 import { useResizeDetector } from 'react-resize-detector';
+import { FlameChart } from '../../../components/FlameChart'; // Deliberately not using the common components export to aid in code-splitting.
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
 import { PanelContainer } from '../../../components';
+import type { FlameChartNodes } from 'flame-chart-js';
 
 type State = {
   resources: Map<number, Resource>;
@@ -63,7 +64,7 @@ export const TracingPanel = () => {
       <div className='h-1/2 overflow-auto'>
         <Grid<Resource> columns={columns} data={Array.from(state.current.resources.values())} />
       </div>
-      <div ref={containerRef} className='border-t'>
+      <div ref={containerRef} className='border-t h-1/2 flex flex-col'>
         <div className='flex flex-row items-baseline justify-items-center p-2'>
           <ArrowLeft className='cursor-pointer' onClick={handleBack} />
           <div className='flex-1 text-center'>
@@ -71,7 +72,10 @@ export const TracingPanel = () => {
           </div>
           <ArrowRight className='cursor-pointer' onClick={handleForward} />
         </div>
-        {flameGraph && <FlameGraph data={flameGraph} height={200} width={width} />}
+        {flameGraph && <FlameChart
+          className='flex-1'
+          data={flameGraph}
+        />}
       </div>
     </PanelContainer>
   );
@@ -99,10 +103,10 @@ const sanitizeClassName = (className: string) => {
   }
 };
 
-const buildFlameGraph = (state: State, rootId: number): any => {
+const buildFlameGraph = (state: State, rootId: number): FlameChartNodes => {
   const span = state.spans.get(rootId);
   if (!span) {
-    return undefined;
+    return [];
   }
 
   // TODO(burdon): Sort resources by names.
@@ -112,9 +116,16 @@ const buildFlameGraph = (state: State, rootId: number): any => {
     ? `${sanitizeClassName(resource.className)}#${resource.instanceId}.${span.methodName}`
     : span.methodName;
 
-  return {
+  const duration = span.endTs !== undefined ? +span.endTs - (+span.startTs) : undefined;
+  const children = childSpans.flatMap((s) => buildFlameGraph(state, s.id));
+
+  const visualDuration = duration ??
+    (children.at(-1)?.duration ? (children.at(-1)!.start + children.at(-1)!.duration) : 10);
+
+  return [{
     name,
-    value: +(span.endTs ?? '999') - +span.startTs,
-    children: childSpans.map((s) => buildFlameGraph(state, s.id)),
-  };
+    start: +span.startTs,
+    duration: visualDuration,
+    children: children,
+  }];
 };
