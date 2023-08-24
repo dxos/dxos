@@ -141,7 +141,8 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    test('recover from network failure during invitation', async () => {
+    // todo(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -298,7 +299,8 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
     });
 
-    test('recover from network failure during invitation', async () => {
+    // todo(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 0);
