@@ -206,7 +206,5 @@ const killProcessOnPort = (port: number) => {
       log.info('killing process occupying signal port', { port, pid });
       process.kill(-Number(pid), 'SIGINT');
     }
-  } catch (err) {
-    return;
-  }
+  } catch (err) {}
 };

@@ -383,9 +383,16 @@ export class Pipeline implements PipelineAccessor {
     const timeframe = this._state._startTimeframe;
     const seq = timeframe.get(feed.key) ?? -1;
 
-    log.info('setFeedDownloadState', { feed: feed.key, feedInstance: getPrototypeSpecificInstanceId(feed), seq, isBeingConsumed: this._isBeingConsumed, isStarted: this._isStarted, isPaused: this._isPaused });
+    log.info('setFeedDownloadState', {
+      feed: feed.key,
+      feedInstance: getPrototypeSpecificInstanceId(feed),
+      seq,
+      isBeingConsumed: this._isBeingConsumed,
+      isStarted: this._isStarted,
+      isPaused: this._isPaused,
+    });
     if (!this._isStarted || this._isPaused) {
-      console.log(new Error().stack)
+      console.log(new Error().stack);
     }
 
     feed.undownload({ callback: () => log('undownload') });

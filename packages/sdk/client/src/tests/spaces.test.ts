@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
-import { getPrototypeSpecificInstanceId, range } from '@dxos/util';
+import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState } from '../echo';
@@ -218,7 +218,7 @@ describe('Spaces', () => {
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 
     // Check that second peer does not have mutations before epoch.
-    expect(feed1 !== feed2).to.eq(true)
+    expect(feed1 !== feed2).to.eq(true);
     for (const i of range(feed1.length)) {
       expect(feed2.has(i)).to.be.false;
     }

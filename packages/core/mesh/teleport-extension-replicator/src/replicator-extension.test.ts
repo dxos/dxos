@@ -6,9 +6,9 @@ import expect from 'expect';
 
 import { Event, sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { createReplicatorPair, TestBuilder } from './testing';
-import { range } from '@dxos/util';
 
 describe('ReplicatorExtension', () => {
   test('replicates a feed', async () => {
@@ -120,16 +120,16 @@ describe('ReplicatorExtension', () => {
     replicator1.addFeed(feed1);
     replicator2.addFeed(feed2);
 
-    feed2.download({ start: 10, linear: true });
+    void feed2.download({ start: 10, linear: true });
 
     await sleep(50);
 
-    expect(range(10).every(idx => feed2.has(idx))).toEqual(false);
+    expect(range(10).every((idx) => feed2.has(idx))).toEqual(false);
 
-    feed2.download({ start: 0, linear: true });
+    void feed2.download({ start: 0, linear: true });
 
-    await Event.wrap(feed2, 'download').waitForCondition(() => range(10).every(idx => feed2.has(idx)));
-  })
+    await Event.wrap(feed2, 'download').waitForCondition(() => range(10).every((idx) => feed2.has(idx)));
+  });
 
   // TODO: not working yet.
   // eslint-disable-next-line mocha/no-skipped-tests
