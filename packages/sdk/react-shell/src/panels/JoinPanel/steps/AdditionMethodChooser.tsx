@@ -9,7 +9,7 @@ import { useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { CompoundButton } from '@dxos/react-appkit';
 
-import { PanelStepHeading } from '../../../components';
+import { StepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export type AdditionMethodChooserProps = JoinStepProps;
@@ -28,7 +28,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
 
   return (
     <>
-      <PanelStepHeading>{t('addition method chooser title')}</PanelStepHeading>
+      <StepHeading>{t('addition method chooser title')}</StepHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}

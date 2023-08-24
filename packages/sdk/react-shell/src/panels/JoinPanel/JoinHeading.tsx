@@ -7,7 +7,7 @@ import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 
-import { PanelHeading } from '../../components';
+import { Heading } from '../../components';
 import { JoinPanelMode } from './JoinPanelProps';
 
 export interface JoinSpaceHeadingProps {
@@ -35,7 +35,7 @@ export const JoinHeading = forwardRef(
     );
 
     return (
-      <PanelHeading
+      <Heading
         ref={forwardedRef}
         titleId={titleId}
         title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}

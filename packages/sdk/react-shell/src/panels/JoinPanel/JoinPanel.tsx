@@ -23,24 +23,26 @@ import {
   InvitationAccepted,
 } from './steps';
 
-export const JoinPanelImpl = ({
-  titleId,
-  send,
-  activeView,
-  failed,
-  mode,
-  unredeemedCodes,
-  invitationStates,
-  onExit,
-  onHaloDone,
-  onSpaceDone,
-  exitActionParent,
-  doneActionParent,
-  onHaloInvitationCancel,
-  onSpaceInvitationCancel,
-  onHaloInvitationAuthenticate,
-  onSpaceInvitationAuthenticate,
-}: JoinPanelImplProps) => {
+export const JoinPanelImpl = (props: JoinPanelImplProps) => {
+  const {
+    titleId,
+    send,
+    activeView,
+    failed,
+    mode,
+    unredeemedCodes,
+    invitationStates,
+    onExit,
+    onHaloDone,
+    onSpaceDone,
+    exitActionParent,
+    doneActionParent,
+    onHaloInvitationCancel,
+    onSpaceInvitationCancel,
+    onHaloInvitationAuthenticate,
+    onSpaceInvitationAuthenticate,
+    IdentityInput: IdentityInputComponent = IdentityInput,
+  } = props;
   return (
     <DensityProvider density='fine'>
       {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
@@ -50,10 +52,18 @@ export const JoinPanelImpl = ({
             <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='create identity input'>
-            <IdentityInput send={send} method='create identity' active={activeView === 'create identity input'} />
+            <IdentityInputComponent
+              send={send}
+              method='create identity'
+              active={activeView === 'create identity input'}
+            />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='recover identity input'>
-            <IdentityInput send={send} method='recover identity' active={activeView === 'recover identity input'} />
+            <IdentityInputComponent
+              send={send}
+              method='recover identity'
+              active={activeView === 'recover identity input'}
+            />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='halo invitation input'>
             <InvitationInput

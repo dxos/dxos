@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsClockwise, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { descriptionText, getSize } from '@dxos/aurora-theme';
+import { descriptionText } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/react-client/invitations';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
+import { Action, Actions, StepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationConnectorProps extends JoinStepProps {
@@ -24,21 +23,16 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
     case Invitation.State.CONNECTING:
       return (
         <>
-          <PanelStepHeading className={descriptionText}>{t('connecting status label')}</PanelStepHeading>
+          <StepHeading className={descriptionText}>{t('connecting status label')}</StepHeading>
           <div role='none' className='grow' />
-          <PanelActions>
-            <PanelAction aria-label={t('next label')} disabled classNames='order-2' data-testid='next'>
-              <CaretRight weight='light' className={getSize(6)} />
-            </PanelAction>
-            <PanelAction
-              aria-label={t('cancel label')}
-              disabled={!active}
-              onClick={onInvitationCancel}
-              data-testid='invitation-rescuer-cancel'
-            >
-              <CaretLeft weight='light' className={getSize(6)} />
-            </PanelAction>
-          </PanelActions>
+          <Actions>
+            <Action disabled classNames='order-2' data-testid='next'>
+              {t('next label')}
+            </Action>
+            <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
+              {t('cancel label')}
+            </Action>
+          </Actions>
         </>
       );
     case Invitation.State.TIMEOUT:
@@ -47,7 +41,7 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
     default:
       return (
         <>
-          <PanelStepHeading className={descriptionText}>
+          <StepHeading className={descriptionText}>
             {t(
               invitationState === Invitation.State.TIMEOUT
                 ? 'timeout status label'
@@ -55,18 +49,17 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
                 ? 'cancelled status label'
                 : 'error status label',
             )}
-          </PanelStepHeading>
+          </StepHeading>
           <div role='none' className='grow' />
-          <PanelActions>
-            <PanelAction
-              aria-label={t('reset label')}
+          <Actions>
+            <Action
               disabled={!active}
               onClick={() => send({ type: `reset${Kind}Invitation` })}
               data-testid='invitation-rescuer-reset'
             >
-              <ArrowsClockwise weight='light' className={getSize(6)} />
-            </PanelAction>
-          </PanelActions>
+              {t('reset label')}
+            </Action>
+          </Actions>
         </>
       );
   }
@@ -79,17 +72,18 @@ export const InvitationRescuer = (props: InvitationConnectorProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div role='none' className='grow' />
-          <PanelActions>
-            <PanelAction
-              aria-label={t('reset label')}
+          <div role='none' className='grow flex flex-col justify-center'>
+            <StepHeading className={descriptionText}>There was a problem joining the space</StepHeading>
+          </div>
+          <Actions>
+            <Action
               disabled={!active}
-              onClick={() => send({ type: `reset${Kind}Invitation` })}
               data-testid='invitation-rescuer-blank-reset'
+              onClick={() => send({ type: `reset${Kind}Invitation` })}
             >
-              <ArrowsClockwise weight='light' className={getSize(6)} />
-            </PanelAction>
-          </PanelActions>
+              {t('reset label')}
+            </Action>
+          </Actions>
         </>
       ) : (
         <InvitationActions {...props} />

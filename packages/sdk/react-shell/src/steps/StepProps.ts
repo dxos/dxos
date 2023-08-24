@@ -11,7 +11,7 @@ export type StepEvent = StepDeselectInvitationEvent;
 
 export type StepProps = {
   active?: boolean;
-  send: (event: SingleOrArray<Event<StepEvent>>) => void;
+  send?: (event: SingleOrArray<Event<StepEvent>>) => void;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
 };

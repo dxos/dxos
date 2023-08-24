@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation, List } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 import { PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
@@ -42,7 +42,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
   const { t } = useTranslation('os');
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (
-    <ul className='flex flex-col gap-2'>
+    <List classNames='flex flex-col gap-2'>
       {visibleMembers.map((member) => {
         return (
           <IdentityListItem
@@ -53,10 +53,10 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
           />
         );
       })}
-    </ul>
+    </List>
   ) : (
     <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center is-full')}>{t('empty space members message')}</p>
+      <p className={mx(descriptionText, 'text-center is-full mlb-2')}>{t('empty space members message')}</p>
     </div>
   );
 };
