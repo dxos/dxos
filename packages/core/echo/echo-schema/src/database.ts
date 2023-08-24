@@ -204,11 +204,6 @@ export class EchoDatabase {
         obj[base]._database = this;
         obj[base]._bind(object);
       }
-
-      const obj = this._objects.get(object.id)!;
-      if (obj[base]._item !== object) {
-        obj[base]._bind(object);
-      }
     }
 
     // Remove objects that are no longer in the database.
@@ -273,10 +268,8 @@ export class EchoDatabase {
 
   private _popRemovedObject(id: string): EchoObject | undefined {
     const obj = this._removed.get(id)?.deref();
-    if (obj) {
-      this._removed.delete(id);
-      this._finalization.unregister(obj);
-    }
+    this._removed.delete(id);
+    obj && this._finalization.unregister(obj);
     return obj;
   }
 }
