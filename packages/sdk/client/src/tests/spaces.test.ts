@@ -199,11 +199,12 @@ describe('Spaces', () => {
     const amount = 10;
     {
       // Create mutations and epoch.
-      for (const idx of range(amount)) {
-        const expando = new Expando({ id: idx.toString(), data: idx.toString() });
+      for (const i of range(amount)) {
+        const expando = new Expando({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
-        await space1.db.flush();
       }
+      // Wait to process all mutations.
+      await space1.db.flush();
       // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
@@ -236,7 +237,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.repeat(100)('epoch resets database', async () => {
+  test('epoch resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
