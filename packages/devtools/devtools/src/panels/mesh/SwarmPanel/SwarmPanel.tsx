@@ -20,6 +20,7 @@ const { helper, builder } = createColumnBuilder<SwarmConnection>();
 const columns: GridColumnDef<SwarmConnection, any>[] = [
   helper.accessor('id', builder.createKey({ header: 'swarm', tooltip: true })),
   helper.accessor('topic', builder.createKey({ tooltip: true })),
+  helper.accessor('label', { header: 'label' }),
   helper.accessor('isActive', builder.createIcon({ header: 'active' })),
   helper.accessor((connection) => connection.connection?.sessionId, {
     id: 'session',
