@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { FlameChart } from '../../../components/FlameChart'; // Deliberately not using the common components export to aid in code-splitting.
+import * as Tabs from '@radix-ui/react-tabs';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
@@ -15,6 +16,8 @@ import { PanelContainer } from '../../../components';
 import type { FlameChartNodes } from 'flame-chart-js';
 import { isNotNullOrUndefined } from '@dxos/util';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { mx } from '@dxos/aurora-theme';
+import { levels, LogLevel } from '@dxos/log';
 
 type ResourceState = {
   resource: Resource;
@@ -28,14 +31,12 @@ type State = {
 
 export const TracingPanel = () => {
   const client = useClient();
+
+  // Trace state.
   const state = useRef<State>({
     resources: new Map<number, ResourceState>(),
     spans: new Map<number, Span>(),
   });
-  const [selectedResource, setSelectedResource] = useState<number | undefined>(undefined);
-  const { ref: containerRef, width } = useResizeDetector();
-
-
   const [, forceUpdate] = useState({});
   useEffect(() => {
     const stream = client.services.services.TracingService!.streamTrace();
@@ -49,9 +50,9 @@ export const TracingPanel = () => {
       for (const event of data.spanAdded ?? []) {
         state.current.spans.set(event.span.id, event.span);
       }
-      for(const event of data.logAdded ?? []) {
+      for (const event of data.logAdded ?? []) {
         const resource = state.current.resources.get(event.log.meta!.resourceId!);
-        if(!resource) {
+        if (!resource) {
           continue;
         }
         resource.logs.push(event.log);
@@ -65,17 +66,34 @@ export const TracingPanel = () => {
     };
   }, []);
 
+  // Selections.
+  const [selectedResourceId, setSelectedResourceId] = useState<number | undefined>(undefined);
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
-  const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined).filter((s) => selectedResource === undefined || s.resourceId === selectedResource);
-  const flameGraph = roots.length > 0 ? buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0) : undefined;
+
+  const selectedResource = selectedResourceId !== undefined ? state.current.resources.get(selectedResourceId) : undefined;
+
+  // Spans
+  const spans = [...state.current.spans.values()].filter((s) => s.parentId === undefined).filter((s) => selectedResourceId === undefined || s.resourceId === selectedResourceId);
+  const flameGraph = spans.length > 0 ? buildFlameGraph(state.current, spans[Math.min(selectedFlameIndex, spans.length - 1)]?.id ?? 0) : undefined;
 
   const handleBack = () => {
     setSelectedFlameIndex((idx) => Math.max(0, idx - 1));
   };
 
   const handleForward = () => {
-    setSelectedFlameIndex((idx) => Math.min(roots.length - 1, idx + 1));
+    setSelectedFlameIndex((idx) => Math.min(spans.length - 1, idx + 1));
   };
+
+  const tabClass = mx(
+    "group",
+    "first:rounded-tl-lg last:rounded-tr-lg",
+    "border-b first:border-r last:border-l",
+    "border-gray-300 dark:border-gray-600",
+    "radix-state-active:border-b-gray-700 focus-visible:radix-state-active:border-b-transparent radix-state-inactive:bg-gray-50 dark:radix-state-active:border-b-gray-100 dark:radix-state-active:bg-gray-900 focus-visible:dark:radix-state-active:border-b-transparent dark:radix-state-inactive:bg-gray-800",
+    "flex-1 px-3 py-2.5",
+    "focus:radix-state-active:border-b-red",
+    "focus:z-10 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"
+  )
 
   return (
     <PanelContainer>
@@ -84,22 +102,38 @@ export const TracingPanel = () => {
           columns={columns}
           data={Array.from(state.current.resources.values())}
           select='single-toggle'
-          selected={selectedResource !== undefined ? [state.current.resources.get(selectedResource)].filter(isNotNullOrUndefined) : undefined}
-          onSelectedChange={resources => setSelectedResource(resources?.[0]?.id)} />
+          selected={selectedResourceId !== undefined ? [state.current.resources.get(selectedResourceId)].filter(isNotNullOrUndefined) : undefined}
+          onSelectedChange={resources => setSelectedResourceId(resources?.[0]?.resource.id)} />
       </div>
-      <div ref={containerRef} className='border-t h-1/2 flex flex-col'>
-        <div className='flex flex-row items-baseline justify-items-center p-2'>
-          <ArrowLeft className='cursor-pointer' onClick={handleBack} />
-          <div className='flex-1 text-center'>
-            {selectedFlameIndex + 1} / {roots.length}
+      <Tabs.Root className='border-t h-1/2 flex flex-col'>
+        <Tabs.List className='flex w-full rounded-t-lg bg-white dark:bg-gray-800'>
+          <Tabs.Trigger className={tabClass} value='details'>Details</Tabs.Trigger>
+          <Tabs.Trigger className={tabClass} value='logs'>Logs ({selectedResource?.logs.length ?? 0})</Tabs.Trigger>
+          <Tabs.Trigger className={tabClass} value='spans'>Spans ({spans.length})</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value='details'>
+          Details
+        </Tabs.Content>
+        <Tabs.Content value='logs'>
+          <Grid<LogEntry>
+            columns={logColumns}
+            data={selectedResource?.logs ?? []}
+          />
+        </Tabs.Content>
+        <Tabs.Content value='spans' className='flex flex-col flex-1'>
+          <div className='flex flex-row items-baseline justify-items-center p-2'>
+            <ArrowLeft className='cursor-pointer' onClick={handleBack} />
+            <div className='flex-1 text-center'>
+              {selectedFlameIndex + 1} / {spans.length}
+            </div>
+            <ArrowRight className='cursor-pointer' onClick={handleForward} />
           </div>
-          <ArrowRight className='cursor-pointer' onClick={handleForward} />
-        </div>
-        {flameGraph && <FlameChart
-          className='flex-1'
-          data={flameGraph}
-        />}
-      </div>
+          {flameGraph && <FlameChart
+            className='flex-1'
+            data={flameGraph}
+          />}
+        </Tabs.Content>
+      </Tabs.Root>
     </PanelContainer>
   );
 };
@@ -119,6 +153,42 @@ const columns: GridColumnDef<ResourceState, any>[] = [
     cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];
+
+
+// TODO(dmaretskyi): Unify with Logging panel.
+const colors: { [index: number]: string } = {
+  [LogLevel.TRACE]: 'text-gray-700',
+  [LogLevel.DEBUG]: 'text-green-700',
+  [LogLevel.INFO]: 'text-blue-700',
+  [LogLevel.WARN]: 'text-orange-700',
+  [LogLevel.ERROR]: 'text-red-700',
+};
+
+const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
+
+
+const logColumns = (() => {
+  const { helper, builder } = createColumnBuilder<LogEntry>();
+  const columns: GridColumnDef<LogEntry, any>[] = [
+    helper.accessor('timestamp', builder.createDate()),
+    helper.accessor(
+      (entry) =>
+        Object.entries(levels)
+          .find(([, level]) => level === entry.level)?.[0]
+          .toUpperCase(),
+      {
+        id: 'level',
+        size: 60,
+        cell: (cell) => <div className={colors[cell.row.original.level]}>{cell.getValue()}</div>,
+      },
+    ),
+    helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, { id: 'file', size: 160 }),
+    helper.accessor('message', {}),
+  ];
+  return columns;
+})();
+
+
 
 const SANITIZE_REGEX = /[^_](\d+)$/;
 
