@@ -10,9 +10,10 @@ import { getPrototypeSpecificInstanceId } from '@dxos/util';
 import type { AddLinkOptions } from './api';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
+import { inspect } from 'node:util';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new (...args: any[]): {} };
+  constructor: { new(...args: any[]): {} };
   instance: any;
 };
 
@@ -72,7 +73,30 @@ export class TraceProcessor {
 
     for (const [key, _opts] of Object.entries(tracingContext.infoProperties)) {
       try {
-        res[key] = typeof instance[key] === 'function' ? instance[key]() : instance[key];
+        const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
+
+        switch (typeof value) {
+          case 'string':
+          case 'number':
+          case 'boolean':
+          case 'undefined':
+            res[key] = value;
+            break;
+          case 'object':
+          case 'function':
+            if (value === null) {
+              res[key] = value;
+              break;
+            }
+
+            // TODO(dmaretskyi): Expose trait.
+            if (typeof value['truncate'] === 'function') {
+              res[key] = value.truncate();
+              break;
+            }
+
+            res[key] = value.toString()
+        }
       } catch (err: any) {
         res[key] = err.message;
       }
@@ -87,7 +111,7 @@ export class TraceProcessor {
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) {}
+  addLink(parent: any, child: any, opts: AddLinkOptions) { }
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
