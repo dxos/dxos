@@ -6,11 +6,12 @@ import React, { useEffect, useMemo } from 'react';
 
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { Heading, CloseButton, Viewport } from '../../components';
-import { InvitationManager } from '../../steps';
+import { IdentityInput, InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
@@ -49,9 +50,12 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
   } = props;
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...rest} {...{ titleId, space }} />
+      {activeView !== 'update profile input' && <SpacePanelHeading {...rest} {...{ titleId, space }} />}
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
+          <Viewport.View classNames={stepStyles} id='update profile input'>
+            <IdentityInput send={rest.send} method='create identity' active={activeView === 'update profile input'} />
+          </Viewport.View>
           <Viewport.View id='space manager' classNames={stepStyles}>
             <SpaceManagerComponent active={activeView === 'space manager'} space={space} {...rest} />
           </Viewport.View>
@@ -88,8 +92,9 @@ export const SpacePanel = ({
   ...props
 }: SpacePanelProps) => {
   const titleId = useId('spacePanel__heading', propsTitleId);
+  const client = useClient();
 
-  const [spaceState, spaceSend, spaceService] = useSpaceMachine({ context: { space: props.space } });
+  const [spaceState, spaceSend, spaceService] = useSpaceMachine(client, { context: { space: props.space } });
 
   useEffect(() => {
     const subscription = spaceService.subscribe((state) => {
@@ -101,6 +106,8 @@ export const SpacePanel = ({
 
   const activeView = useMemo(() => {
     switch (true) {
+      case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(spaceState.matches):
+        return 'update profile input';
       case spaceState.matches('managingSpace'):
         return 'space manager';
       case spaceState.matches('managingSpaceInvitation'):

@@ -3,16 +3,20 @@
 //
 
 import { useMachine } from '@xstate/react';
-import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
+import { assign, createMachine, InterpreterFrom, StateFrom, Subscribable } from 'xstate';
 
 import { log } from '@dxos/log';
+import { Client } from '@dxos/react-client';
 import { Space } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
 import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { StepEvent } from '../../steps';
+import { IdentityEvent, SetIdentityEvent, StepEvent } from '../../steps';
 import { ErsatzSpace } from './SpacePanelProps';
 
 type SpaceMachineContext = {
+  identity: Identity | null;
+  identitySubscribable: Subscribable<SetIdentityEvent> | null;
   invitation?: CancellableInvitationObservable;
   space: ErsatzSpace | Space | null;
 };
@@ -22,17 +26,39 @@ type SpaceSelectInvitationEvent = {
   invitation: CancellableInvitationObservable;
 };
 
-type SpaceEvent = SpaceSelectInvitationEvent | StepEvent;
+type SpaceEvent = IdentityEvent | SpaceSelectInvitationEvent | StepEvent;
 
 const spaceMachine = createMachine<SpaceMachineContext, SpaceEvent>(
   {
     id: 'space',
     predictableActionArguments: true,
     context: {
+      identity: null,
+      identitySubscribable: null,
       space: null,
     },
-    initial: 'managingSpace',
+    initial: 'unknown',
+    invoke: {
+      src: (context) => context.identitySubscribable!,
+    },
     states: {
+      unknown: {
+        always: [
+          { cond: 'noProfile', target: 'managingProfile', actions: 'log' },
+          { target: 'managingSpace', actions: 'log' },
+        ],
+      },
+      managingProfile: {
+        initial: 'idle',
+        states: {
+          idle: {},
+          pending: {},
+        },
+        on: {
+          setIdentity: { target: 'unknown', actions: ['setIdentity', 'log'] },
+          setDisplayName: { target: '.pending', actions: 'log' },
+        },
+      },
       managingSpace: {},
       managingSpaceInvitation: {},
     },
@@ -42,7 +68,13 @@ const spaceMachine = createMachine<SpaceMachineContext, SpaceEvent>(
     },
   },
   {
+    guards: {
+      noProfile: ({ identity }, _event) => !identity?.profile,
+    },
     actions: {
+      setIdentity: assign<SpaceMachineContext, SetIdentityEvent>({
+        identity: (context, event) => event.identity,
+      }),
       setInvitation: assign<SpaceMachineContext, SpaceEvent>({
         invitation: (context, event) => (event as SpaceSelectInvitationEvent)?.invitation ?? null,
       }),
@@ -64,8 +96,18 @@ type SpaceMachine = typeof spaceMachine;
 type SpaceState = StateFrom<SpaceMachine>;
 type SpaceSend = InterpreterFrom<SpaceMachine>['send'];
 
-const useSpaceMachine = (options?: Parameters<typeof useMachine<SpaceMachine>>[1]) => {
-  return useMachine(spaceMachine, { ...options, context: { ...options?.context } });
+const useSpaceMachine = (client: Client, options?: Parameters<typeof useMachine<SpaceMachine>>[1]) => {
+  return useMachine(spaceMachine, {
+    ...options,
+    context: {
+      ...options?.context,
+      identity: client.halo.identity.get(),
+      identitySubscribable: client.halo.identity.map((identity) => ({
+        type: 'setIdentity',
+        identity,
+      })) satisfies Subscribable<SetIdentityEvent>,
+    },
+  });
 };
 
 export type { SpaceMachine, SpaceEvent, SpaceMachineContext, SpaceState, SpaceSend };
