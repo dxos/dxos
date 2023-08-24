@@ -72,7 +72,7 @@ export const os = {
   'choose devices label': 'Add device',
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Sign out',
-  'empty space members message': 'No other members in this space',
+  'empty space members message': 'There is nobody in this space yet.',
   'back to all invitations label': 'Back to all invitations',
   'invitation heading': 'Invitation',
   'invitation list heading': 'Invitations',
@@ -80,6 +80,6 @@ export const os = {
   'space invitation list heading': 'Pending invitations',
   'device list heading': 'Devices',
   'space member list heading': 'Members in this space',
-  'space panel heading': 'Space settings',
+  'space panel heading': 'Space membership',
   'auth code message': 'Enter the following auth code on the joining device.',
 };

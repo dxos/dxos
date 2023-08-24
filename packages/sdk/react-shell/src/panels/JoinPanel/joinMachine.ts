@@ -407,14 +407,19 @@ const useJoinMachine = (
   const redeemHaloInvitationCode = useCallback(
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
-        const invitationObservable = client.halo.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
-        );
-        return {
-          ...halo,
-          invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
-        };
+        try {
+          const invitationObservable = client.halo.acceptInvitation(
+            InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
+          );
+          return {
+            ...halo,
+            invitationObservable,
+            invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
+          };
+        } catch (err) {
+          log.error('Could not redeem device invitation code', err);
+          return halo;
+        }
       } else {
         return halo;
       }
@@ -425,14 +430,19 @@ const useJoinMachine = (
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
-        const invitationObservable = client.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
-        );
-        return {
-          ...space,
-          invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
-        };
+        try {
+          const invitationObservable = client.acceptInvitation(
+            InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
+          );
+          return {
+            ...space,
+            invitationObservable,
+            invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
+          };
+        } catch (err) {
+          log.error('Could not redeem space invitation code', err);
+          return space;
+        }
       } else {
         return space;
       }

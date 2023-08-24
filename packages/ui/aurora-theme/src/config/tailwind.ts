@@ -354,6 +354,17 @@ export const tailwindConfig = ({
               transform: 'translateX(100%)',
             },
           },
+          'halo-pulse': {
+            '0%': {
+              opacity: 0.3,
+            },
+            '5%': {
+              opacity: 1,
+            },
+            '100%': {
+              opacity: 0.3,
+            },
+          },
         },
         animation: {
           // Dropdown menu
@@ -381,6 +392,8 @@ export const tailwindConfig = ({
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
           // Shimmer
           shimmer: 'shimmer-loop 2s infinite',
+          // halo-pulse
+          'halo-pulse': 'halo-pulse 2s ease-out infinite',
         },
       },
       ...extensions,
