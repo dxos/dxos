@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DialogRenameSpace';
+export * from './PopoverRenameSpace';
 export * from './DialogRestoreSpace';
 export * from './EmptySpace';
 export * from './EmptyTree';

@@ -22,6 +22,7 @@ import React, { forwardRef, FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
 
 type PopoverRootProps = PopoverRootPrimitiveProps;
 
@@ -58,16 +59,20 @@ const PopoverArrow = forwardRef<SVGSVGElement, PopoverArrowProps>(({ classNames,
 
 type PopoverContentProps = ThemedClassName<PopoverContentPrimitiveProps>;
 
-const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <PopoverContentPrimitive
-      {...props}
-      className={tx('popover.content', 'popover', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <PopoverContentPrimitive
+        {...props}
+        className={tx('popover.content', 'popover', {}, classNames)}
+        ref={forwardedRef}
+      >
+        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      </PopoverContentPrimitive>
+    );
+  },
+);
 
 export const Popover = {
   Root: PopoverRoot,

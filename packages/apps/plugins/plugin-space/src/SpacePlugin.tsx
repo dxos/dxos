@@ -20,7 +20,7 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import {
-  DialogRenameSpace,
+  PopoverRenameSpace,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
@@ -124,10 +124,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           case 'dialog':
             if (Array.isArray(data)) {
               switch (data[0]) {
-                case 'dxos.org/plugin/space/RenameSpaceDialog':
-                  return DialogRenameSpace;
                 case 'dxos.org/plugin/space/RestoreSpaceDialog':
                   return DialogRestoreSpace;
+                default:
+                  return null;
+              }
+            } else {
+              return null;
+            }
+          case 'popover':
+            if (Array.isArray(data)) {
+              switch (data[0]) {
+                case 'dxos.org/plugin/space/RenameSpacePopover':
+                  return PopoverRenameSpace;
                 default:
                   return null;
               }
@@ -269,8 +278,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             case SpaceAction.RENAME: {
               const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
-                splitViewPlugin.provides.splitView.dialogOpen = true;
-                splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RenameSpaceDialog', space];
+                splitViewPlugin.provides.splitView.popoverOpen = true;
+                splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${getSpaceId(
+                  spaceKey,
+                )}`;
                 return true;
               }
               break;
