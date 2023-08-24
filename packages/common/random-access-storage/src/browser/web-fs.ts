@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 import { STORAGE_MONITOR } from '../monitor';
+import { trace } from '@dxos/tracing';
 
 /**
  * Web file systems.
@@ -160,6 +161,7 @@ export class WebFS implements Storage {
 }
 
 // TODO(mykola): Remove EventEmitter.
+@trace.resource()
 export class WebFile extends EventEmitter implements File {
   readonly opened: boolean = true;
   readonly suspended: boolean = false;
@@ -171,6 +173,7 @@ export class WebFile extends EventEmitter implements File {
   readonly deletable: boolean = true;
   readonly truncatable: boolean = true;
   readonly statable: boolean = true;
+  @trace.info()
   private readonly _fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;

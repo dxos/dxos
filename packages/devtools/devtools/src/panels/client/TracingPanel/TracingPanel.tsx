@@ -53,7 +53,7 @@ export const TracingPanel = () => {
 
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
   const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined).filter((s) => selectedResource === undefined || s.resourceId === selectedResource);
-  const flameGraph = buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0);
+  const flameGraph = roots.length > 0 ? buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0) : undefined;
 
   const handleBack = () => {
     setSelectedFlameIndex((idx) => Math.max(0, idx - 1));
