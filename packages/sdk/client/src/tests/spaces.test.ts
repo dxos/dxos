@@ -296,15 +296,14 @@ describe('Spaces', () => {
 
     const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
 
+    const query = space.db.query({ idx });
+
     // Create empty Epoch and check if it clears items.
     {
       const trigger = new Trigger();
-
-      const query = space.db.query({ idx });
       expect(query.objects.length).to.equal(1);
 
       const subscription = query.subscribe(async (query) => {
-        log.info('query', { length: query.objects.length });
         expect(query.objects.length).to.equal(0);
         trigger.wake();
       });
@@ -313,19 +312,29 @@ describe('Spaces', () => {
       await asyncTimeout(trigger.wait(), 500);
 
       expect(space.db.objects.length).to.equal(0);
+      expect(query.objects.length).to.equal(0);
       expect(item.__deleted).to.be.true;
       subscription();
     }
 
     // Reset database to previous state.
     {
+      const trigger = new Trigger();
+      const subscription = query.subscribe(async (query) => {
+        expect(query.objects.length).to.equal(1);
+        trigger.wake();
+      });
+      afterTest(() => subscription());
+
       await writeEpochWithSnapshot(dataBaseState);
+      await asyncTimeout(trigger.wait(), 500);
 
       expect(item.__deleted).to.be.false;
       expect(space.db.objects.length).to.equal(2);
-      expect(space.db.query({ idx }).objects[0].text).to.equal(text);
-      expect(space.db.query({ idx }).objects[0]).to.equal(item);
+      expect(query.objects[0].text).to.equal(text);
+      expect(query.objects[0]).to.equal(item);
     }
+
     // Create Epoch and check if Item do not flickers.
     {
       const checkItem = (object = item) => {
@@ -340,7 +349,7 @@ describe('Spaces', () => {
       afterTest(() => subscription());
 
       await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
-      await trigger.wait();
+      await asyncTimeout(trigger.wait(), 500);
       checkItem();
     }
   });
