@@ -237,7 +237,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.only('epoch correctly resets database', async () => {
+  test('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
