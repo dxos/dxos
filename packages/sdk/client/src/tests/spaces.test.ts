@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Document } from '@braneframe/types';
-import { asyncTimeout, sleep, Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
@@ -236,7 +236,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('epoch resets database', async () => {
+  test.repeat(100)('epoch resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -248,17 +248,14 @@ describe('Spaces', () => {
     await space.waitUntilReady();
 
     const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
-    // Create Items.
-    const itemsNumber = 3;
-    const text = Array(itemsNumber)
-      .fill(0)
-      .map(() => PublicKey.random().toHex());
-    for (const idx of range(itemsNumber)) {
-      const expando = new Expando({ idx: idx.toString(), data: text[idx] });
-      space.db.add(expando);
-      await space.db.flush();
-    }
-    expect(space.db.objects.length).to.equal(itemsNumber + 1);
+
+    // Create Item.
+    const text = PublicKey.random().toHex();
+    const idx = '0';
+    const item = new Expando({ idx, text });
+    space.db.add(item);
+    await space.db.flush();
+    expect(space.db.objects.length).to.equal(2);
 
     const writeEpochWithSnapshot = async (databaseSnapshot: EchoSnapshot) => {
       const processedEpoch = dataSpace.dataPipeline.onNewEpoch.waitForCount(1);
@@ -303,16 +300,18 @@ describe('Spaces', () => {
 
     // Check if items are cleared.
     expect(space.db.objects.length).to.equal(0);
+    expect(item.__deleted).to.be.true;
 
     // Reset database to previous state.
     await writeEpochWithSnapshot(dataBaseState);
+    expect(item.__deleted).to.be.false;
 
     // Check if items are reset back.
-    expect(space.db.objects.length).to.equal(itemsNumber + 1);
-    await sleep(200);
-    for (const idx in range(itemsNumber)) {
-      expect(space.db.query({ idx: idx.toString() }).objects[0].data).to.equal(text[idx]);
-    }
+    expect(space.db.objects.length).to.equal(2);
+
+    expect(space.db.query({ idx }).objects[0].text).to.equal(text);
+
+    expect(space.db.query({ idx }).objects[0]).to.equal(item);
   });
 
   test.skip('spaces can be activated and deactivated', async () => {

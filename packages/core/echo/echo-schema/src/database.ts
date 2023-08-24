@@ -22,6 +22,8 @@ import { TypedObject } from './typed-object';
  */
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
+  // TODO(mykola) Reconcile with this._removed.
+  private readonly _removedByEpoch = new Map<string, EchoObject>();
 
   /**
    * Objects that have been removed from the database.
@@ -188,7 +190,14 @@ export class EchoDatabase {
   private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
-        const obj = this._createObjectInstance(object);
+        let obj: EchoObject | undefined;
+
+        if (this._removedByEpoch.has(object.id)) {
+          obj = this._removedByEpoch.get(object.id)!;
+          this._removedByEpoch.delete(object.id);
+        } else {
+          obj = this._createObjectInstance(object);
+        }
         if (!obj) {
           continue;
         }
@@ -203,8 +212,11 @@ export class EchoDatabase {
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
+        invariant(obj[base]._item);
+        obj[base]._item.deleted = true;
         obj[base]._itemUpdate();
         this._objects.delete(id);
+        this._removedByEpoch.set(obj[base]._id, obj);
       }
     }
 
