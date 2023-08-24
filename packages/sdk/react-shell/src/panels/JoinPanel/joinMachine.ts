@@ -18,7 +18,7 @@ import { JoinPanelMode } from './JoinPanelProps';
 type JoinMachineContext = {
   mode: JoinPanelMode;
   identity: Identity | null;
-  identitySubscribable: Subscribable<IdentityEvent> | null;
+  identitySubscribable: Subscribable<SetIdentityEvent> | null;
   halo: InvitationKindContext;
   space: InvitationKindContext;
 };

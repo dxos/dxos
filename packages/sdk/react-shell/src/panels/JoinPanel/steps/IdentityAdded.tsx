@@ -60,7 +60,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
           <Action
             variant='primary'
             disabled={disabled || !addedIdentity}
-            onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
+            onClick={() => addedIdentity && send({ type: 'setIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
             {t('continue label')}

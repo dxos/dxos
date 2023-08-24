@@ -8,9 +8,8 @@ import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation } from '@dxos/react-client/invitations';
 import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { StepProps } from '../../steps';
+import { StepProps, IdentityInputProps } from '../../steps';
 import { JoinSend } from './joinMachine';
-import { IdentityInputProps } from './steps';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
