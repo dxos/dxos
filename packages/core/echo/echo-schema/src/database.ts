@@ -22,13 +22,15 @@ import { TypedObject } from './typed-object';
  */
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
-  // TODO(mykola) Reconcile with this._removed.
-  private readonly _removedByEpoch = new Map<string, EchoObject>();
 
   /**
    * Objects that have been removed from the database.
    */
-  private readonly _removed = new WeakSet<EchoObject>();
+  private readonly _removed = new Map<string, WeakRef<EchoObject>>();
+  private readonly _finalization = new FinalizationRegistry((cleanUpCallback: () => void) => {
+    cleanUpCallback();
+  });
+
 
   /**
    * @internal
@@ -80,7 +82,7 @@ export class EchoDatabase {
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
 
-    if (this._removed.has(obj[base])) {
+    if (this._removed.has(obj[base]._id)) {
       this._backend.mutate({
         objects: [
           {
@@ -93,7 +95,7 @@ export class EchoDatabase {
           },
         ],
       });
-      this._removed.delete(obj[base]);
+      this._popRemovedObject(obj[base]._id);
       return obj;
     }
 
@@ -154,7 +156,7 @@ export class EchoDatabase {
         },
       ],
     });
-    this._removed.add(obj[base]);
+    this._saveRemovedObject(obj);
   }
 
   /**
@@ -190,12 +192,8 @@ export class EchoDatabase {
   private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
-        let obj: EchoObject | undefined;
-
-        if (this._removedByEpoch.has(object.id)) {
-          obj = this._removedByEpoch.get(object.id)!;
-          this._removedByEpoch.delete(object.id);
-        } else {
+        let obj = this._popRemovedObject(object.id);
+        if (!obj) {
           obj = this._createObjectInstance(object);
         }
         if (!obj) {
@@ -212,11 +210,12 @@ export class EchoDatabase {
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
-        invariant(obj[base]._item);
-        obj[base]._item.deleted = true;
+        if (obj[base]._item) {
+          obj[base]._item.deleted = true;
+        }
         obj[base]._itemUpdate();
         this._objects.delete(id);
-        this._removedByEpoch.set(obj[base]._id, obj);
+        this._saveRemovedObject(obj);
       }
     }
 
@@ -254,5 +253,25 @@ export class EchoDatabase {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
     }
+  }
+
+  private _saveRemovedObject(obj: EchoObject) {
+    this._removed.set(obj[base]._id, new WeakRef(obj));
+    this._finalization.register(
+      obj,
+      () => {
+        this._removed.delete(obj[base]._id);
+      },
+      obj,
+    );
+  }
+
+  private _popRemovedObject(id: string): EchoObject | undefined {
+    const obj = this._removed.get(id)?.deref();
+    if (obj) {
+      this._removed.delete(id);
+      this._finalization.unregister(obj);
+    }
+    return obj;
   }
 }
