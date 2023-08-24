@@ -14,6 +14,9 @@ export const inviteWithState = (state: Invitation.State) =>
       authMethod: Invitation.AuthMethod.NONE,
       swarmKey: PublicKey.random(),
       type: Invitation.Type.INTERACTIVE,
+      authCode: [Invitation.State.READY_FOR_AUTHENTICATION, Invitation.State.AUTHENTICATING].includes(state)
+        ? '123456'
+        : '',
     },
     subscriber: () => {},
     onCancel: async () => {},

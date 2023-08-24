@@ -31,7 +31,7 @@ export const Normal = () => {
         inviteWithState(Invitation.State.CANCELLED),
       ]}
       send={() => {}}
-      createInvitationUrl={() => ''}
+      createInvitationUrl={(invite) => invite}
     />
   );
 };
