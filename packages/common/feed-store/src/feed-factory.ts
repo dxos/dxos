@@ -70,8 +70,8 @@ export class FeedFactory<T extends {}> {
 
     const opts = defaultsDeep(
       {
-        sparse: false, // TODO(burdon): !!!
-        stats: false,
+        // sparse: false,
+        // stats: false,
       },
       this._hypercoreOptions,
       {
