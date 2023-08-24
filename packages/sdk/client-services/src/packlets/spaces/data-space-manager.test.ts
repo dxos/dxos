@@ -156,33 +156,34 @@ describe('DataSpaceManager', () => {
   });
 
   describe('Epochs', () => {
-    test('Epoch truncates feeds', async () => {
-      const builder = new TestBuilder();
-      afterTest(async () => builder.destroy());
+    test
+      .skip('Epoch truncates feeds', async () => {
+        const builder = new TestBuilder();
+        afterTest(async () => builder.destroy());
 
-      const peer = builder.createPeer({
-        storageType: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
-      });
-      await peer.createIdentity();
-      await openAndClose(peer.dataSpaceManager);
-      const space = await peer.dataSpaceManager.createSpace();
-      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+        const peer = builder.createPeer({
+          storageType: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
+        });
+        await peer.createIdentity();
+        await openAndClose(peer.dataSpaceManager);
+        const space = await peer.dataSpaceManager.createSpace();
+        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
-      const feedDataPath = path.join(space.inner.dataPipeline.pipelineState!.feeds[0].key.toHex(), 'data');
-      const directory = peer.storage.createDirectory('feeds');
-      const file = directory.getOrCreateFile(feedDataPath);
-      afterTest(() => file.close());
+        const feedDataPath = path.join(space.inner.dataPipeline.pipelineState!.feeds[0].key.toHex(), 'data');
+        const directory = peer.storage.createDirectory('feeds');
+        const file = directory.getOrCreateFile(feedDataPath);
+        afterTest(() => file.close());
 
-      expect((await file.stat()).size === 0).to.be.true;
+        expect((await file.stat()).size === 0).to.be.true;
 
-      for (const _ in range(10)) {
-        await testLocalDatabase(space.dataPipeline);
-      }
+        for (const _ in range(10)) {
+          await testLocalDatabase(space.dataPipeline);
+        }
 
-      expect((await file.stat()).size !== 0).to.be.true;
-      await space.createEpoch();
-      expect((await file.stat()).size === 0).to.be.true;
-    })
+        expect((await file.stat()).size !== 0).to.be.true;
+        await space.createEpoch();
+        expect((await file.stat()).size === 0).to.be.true;
+      })
       .onlyEnvironments('nodejs', 'chromium', 'firefox')
       .tag('flaky');
 

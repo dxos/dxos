@@ -132,8 +132,9 @@ export class DataPipeline implements CredentialProcessor {
 
     this._pipeline = new Pipeline();
     await this._params.onPipelineCreated(this._pipeline);
-    await this._pipeline.start();
+
     await this._pipeline.pause(); // Start paused until we have the first epoch.
+    await this._pipeline.start();
 
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
