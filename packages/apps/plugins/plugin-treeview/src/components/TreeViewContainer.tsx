@@ -29,7 +29,7 @@ import { NavTreeItem } from './NavTree';
 export const TreeViewContainer = () => {
   const { graph } = useGraph();
 
-  const identity = useIdentity({ login: true });
+  const identity = useIdentity();
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);

@@ -12,9 +12,16 @@ import type { Client } from '@dxos/react-client';
 import { Identity } from '@dxos/react-client/halo';
 import { AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
+import { IdentityEvent, SetIdentityEvent } from '../../steps';
 import { JoinPanelMode } from './JoinPanelProps';
 
-type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
+type JoinMachineContext = {
+  mode: JoinPanelMode;
+  identity: Identity | null;
+  identitySubscribable: Subscribable<IdentityEvent> | null;
+  halo: InvitationKindContext;
+  space: InvitationKindContext;
+};
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;
@@ -24,17 +31,7 @@ type InvitationKindContext = Partial<{
   invitationSubscribable: Subscribable<InvitationEvent>;
 }>;
 
-type JoinMachineContext = {
-  mode: JoinPanelMode;
-  identity: Identity | null;
-  halo: InvitationKindContext;
-  space: InvitationKindContext;
-};
-
-type SelectIdentityEvent = {
-  type: 'selectIdentity';
-  identity: Identity;
-};
+type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 
 type SetInvitationCodeEvent = {
   type: 'setHaloInvitationCode' | 'setSpaceInvitationCode';
@@ -258,7 +255,7 @@ type EmptyJoinEvent = {
     | 'deselectAuthMethod';
 };
 
-type JoinEvent = InvitationEvent | SelectIdentityEvent | EmptyJoinEvent;
+type JoinEvent = InvitationEvent | IdentityEvent | EmptyJoinEvent;
 
 const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
@@ -267,14 +264,19 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
     context: {
       mode: 'default',
       identity: null,
+      identitySubscribable: null,
       halo: {},
       space: {},
     },
     initial: 'unknown',
+    invoke: {
+      src: (context) => context.identitySubscribable!,
+    },
     states: {
       unknown: {
         always: [
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
+          { cond: 'noProfile', target: 'managingProfile', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
       },
@@ -294,6 +296,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           confirmingAddedIdentity: {},
         },
         on: {
+          setIdentity: { target: 'unknown', actions: ['setIdentity', 'log'] },
           recoverIdentity: { target: '.recoveringIdentity', actions: 'log' },
           createIdentity: { target: '.creatingIdentity', actions: 'log' },
           acceptHaloInvitation: { target: '.acceptingHaloInvitation', actions: 'log' },
@@ -303,6 +306,17 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
             actions: ['setIdentity', 'log'],
           },
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' },
+        },
+      },
+      managingProfile: {
+        initial: 'idle',
+        states: {
+          idle: {},
+          pending: {},
+        },
+        on: {
+          setIdentity: { target: 'unknown', actions: ['setIdentity', 'log'] },
+          setDisplayName: { target: '.pending', actions: 'log' },
         },
       },
       acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
@@ -317,15 +331,13 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
+      noProfile: ({ identity }, _event) => !identity?.profile,
       hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },
     actions: {
-      setIdentity: assign<JoinMachineContext, SelectIdentityEvent>({
+      setIdentity: assign<JoinMachineContext, SetIdentityEvent>({
         identity: (context, event) => event.identity,
-      }),
-      unsetIdentity: assign<JoinMachineContext>({
-        identity: () => null,
       }),
       resetInvitation: assign<JoinMachineContext, EmptyInvitationEvent>({
         halo: (context, event) => {
@@ -482,6 +494,14 @@ const useJoinMachine = (
 
   return useMachine(joinMachine, {
     ...options,
+    context: {
+      ...options?.context,
+      identity: client.halo.identity.get(),
+      identitySubscribable: client.halo.identity.map((identity) => ({
+        type: 'setIdentity',
+        identity,
+      })) satisfies Subscribable<IdentityEvent>,
+    },
     actions: {
       ...options?.actions,
       redeemHaloInvitationCode: assign<JoinMachineContext>({ halo: redeemHaloInvitationCode }),

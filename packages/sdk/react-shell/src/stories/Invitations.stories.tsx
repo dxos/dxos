@@ -9,6 +9,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Button, ButtonGroup, List } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
+import { log } from '@dxos/log';
 import { Group } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
@@ -19,6 +20,8 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
+
+log.config({ filter: 'debug' });
 
 export default {
   title: 'Invitations',
@@ -133,7 +136,7 @@ const Invitations = ({ id }: { id: number }) => {
     <ButtonGroup classNames='mbe-4'>
       {/* <Tooltip content='Create Identity'> */}
       <Button
-        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
+        onClick={() => client.halo.createIdentity()}
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       >

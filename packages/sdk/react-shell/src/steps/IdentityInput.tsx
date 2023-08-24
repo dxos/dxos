@@ -3,15 +3,29 @@
 //
 
 import React, { useState } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
 import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
+import { Identity, useIdentity } from '@dxos/react-client/halo';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { Action, Actions, StepHeading, Input } from '../components';
+import { StepProps } from './StepProps';
 
-export interface IdentityCreatorProps extends JoinStepProps {
+export type IdentityEvent = SetIdentityEvent | SetDisplayNameEvent;
+
+export type SetIdentityEvent = {
+  type: 'setIdentity';
+  identity: Identity | null;
+};
+
+export type SetDisplayNameEvent = {
+  type: 'setDisplayName';
+};
+
+export interface IdentityCreatorProps extends Omit<StepProps, 'send'> {
+  send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   method: 'recover identity' | 'create identity';
 }
 
@@ -26,25 +40,27 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const { send, method } = props;
   const isRecover = method === 'recover identity';
   const client = useClient();
+  const identity = useIdentity();
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
   const createIdentity = (displayName: string) => {
-    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: displayName }).then(
-      (identity) => {
-        send?.({ type: 'selectIdentity' as const, identity });
-      },
-      (error) => {
-        log.catch(error);
-        setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
-      },
-    );
+    send({ type: 'setDisplayName' });
+
+    const result = identity
+      ? client.halo.updateProfile({ displayName })
+      : client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: displayName });
+
+    void result.catch((error) => {
+      log.catch(error);
+      setValidationMessage(t(isRecover ? 'failed to recover identity message' : 'failed to create identity message'));
+    });
   };
   return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
 };
 
 // TODO(zhenyasav): impl shouldn't need send()
 export const IdentityInputImpl = (props: IdentityInputImplProps) => {
-  const { method, send, active, onDisplayNameConfirm, validationMessage } = props;
+  const { method, active, onDisplayNameConfirm, validationMessage } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
   const [inputValue, setInputValue] = useState('');
@@ -67,7 +83,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
         <Action
           variant='ghost'
           disabled={disabled}
-          onClick={() => send?.({ type: 'deselectAuthMethod' })}
+          // onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           {t('back label')}

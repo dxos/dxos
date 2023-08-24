@@ -1,21 +1,21 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
 
 import { Viewport } from '../../components';
+import { IdentityInput } from '../../steps';
 import { stepStyles } from '../../styles';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodChooser,
-  IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
   InvitationRescuer,
@@ -48,6 +48,9 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
       {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
+          <Viewport.View classNames={stepStyles} id='update profile input'>
+            <IdentityInput send={send} method='create identity' active={activeView === 'update profile input'} />
+          </Viewport.View>
           <Viewport.View classNames={stepStyles} id='addition method chooser'>
             <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
@@ -165,14 +168,12 @@ export const JoinPanel = ({
   onInvalidateInvitationCode,
 }: JoinPanelProps) => {
   const client = useClient();
-  const identity = useIdentity();
   const { hasIosKeyboard } = useThemeContext();
   const titleId = useId('joinPanel__heading', propsTitleId);
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
-      identity,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
       }),
@@ -200,6 +201,8 @@ export const JoinPanel = ({
 
   const activeView = useMemo(() => {
     switch (true) {
+      case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(joinState.matches):
+        return 'update profile input';
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
         return 'addition method chooser';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
@@ -356,7 +359,6 @@ export const JoinPanel = ({
         pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
         unredeemedCodes,
         invitationStates,
-        identity,
         onExit,
         exitActionParent,
         doneActionParent,
