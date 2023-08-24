@@ -118,10 +118,6 @@ export class ItemManager {
     this._entities.delete(itemId);
   }
 
-  clear() {
-    this._entities.clear();
-  }
-
   /**
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.

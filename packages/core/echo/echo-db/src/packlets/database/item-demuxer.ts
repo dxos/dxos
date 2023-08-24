@@ -83,8 +83,14 @@ export class ItemDemuxer {
   }
 
   restoreFromSnapshot(snapshot: EchoSnapshot) {
-    this._itemManager.clear();
     const { items = [] } = snapshot;
+
+    const keepIds = new Set<string>(items?.filter((object) => object.genesis).map((object) => object.objectId) ?? []);
+    for (const item of this._itemManager.entities.values()) {
+      if (!keepIds.has(item.id)) {
+        this._itemManager.deconstructItem(item.id);
+      }
+    }
 
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
