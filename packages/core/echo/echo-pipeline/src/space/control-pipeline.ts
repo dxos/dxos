@@ -13,6 +13,9 @@ import { AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
+import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
+import { Context } from '@dxos/context';
+import { FeedMessageBlock } from '@dxos/protocols';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;
@@ -26,6 +29,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 /**
  * Processes HALO credentials, which include genesis and invitations.
  */
+@trace.resource()
 export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
@@ -82,32 +86,42 @@ export class ControlPipeline {
   async start() {
     log('starting...');
     setTimeout(async () => {
-      for await (const msg of this._pipeline.consume()) {
-        try {
-          // log('processing', { msg });
-          log('processing', { key: msg.feedKey, seq: msg.seq });
-          if (msg.data.payload.credential) {
-            const timer = tracer.mark('dxos.echo.pipeline.control');
-            const result = await this._spaceStateMachine.process(
-              msg.data.payload.credential.credential,
-              PublicKey.from(msg.feedKey),
-            );
-
-            timer.end();
-            if (!result) {
-              log.warn('processing failed', { msg });
-            } else {
-              await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
-            }
-          }
-        } catch (err: any) {
-          log.catch(err);
-        }
-      }
+      void this._consumePipeline(new Context())
     });
 
     await this._pipeline.start();
     log('started');
+  }
+
+  @trace.span()
+  private async _consumePipeline(ctx: Context) {
+    for await (const msg of this._pipeline.consume()) {
+      try {
+        await this._processMessage(ctx, msg)
+      } catch (err: any) {
+        log.catch(err);
+      }
+    }
+  }
+
+  @trace.span()
+  private async _processMessage(ctx: Context, msg: FeedMessageBlock) {
+    // log('processing', { msg });
+    log('processing', { key: msg.feedKey, seq: msg.seq });
+    if (msg.data.payload.credential) {
+      const timer = tracer.mark('dxos.echo.pipeline.control');
+      const result = await this._spaceStateMachine.process(
+        msg.data.payload.credential.credential,
+        PublicKey.from(msg.feedKey),
+      );
+
+      timer.end();
+      if (!result) {
+        log.warn('processing failed', { msg });
+      } else {
+        await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
+      }
+    }
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
