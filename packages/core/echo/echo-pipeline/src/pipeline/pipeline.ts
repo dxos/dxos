@@ -376,7 +376,7 @@ export class Pipeline implements PipelineAccessor {
 
     feed.undownload({
       callback: () => {
-        log.info('download', { feed: feed.key.truncate(), seq, length: feed.length });
+        log('download', { feed: feed.key.truncate(), seq, length: feed.length });
         feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
           log.error('failed to download feed', err);
         });

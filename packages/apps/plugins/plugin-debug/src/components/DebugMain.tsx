@@ -23,7 +23,8 @@ import { arrayToBuffer } from '@dxos/util';
 import { DEBUG_PLUGIN, DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_PERIOD = 500;
+export const DEFAULT_COUNT = 100;
+export const DEFAULT_PERIOD = 10;
 
 export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
   const { t } = useTranslation(DEBUG_PLUGIN);
@@ -44,6 +45,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     void handleRefresh();
   }, []);
 
+  const [mutationCount, setMutationCount] = useState(String(DEFAULT_COUNT));
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
 
   const generator = useMemo(() => {
@@ -59,7 +61,14 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
       stop();
       void handleRefresh();
     } else {
-      start(() => generator.updateObject(), parseInt(mutationInterval));
+      let i = parseInt(mutationCount);
+      start(() => {
+        if (!isNaN(i) && i-- <= 0) {
+          stop();
+        } else {
+          generator.updateObject();
+        }
+      }, parseInt(mutationInterval));
     }
   };
 
@@ -112,7 +121,20 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
                 autoComplete='off'
                 size={6}
                 classNames='w-[100px] text-right'
-                placeholder='Mutation period'
+                placeholder='#'
+                value={mutationCount}
+                onChange={({ target: { value } }) => setMutationCount(value)}
+              />
+            </Input.Root>
+          </div>
+          <div>
+            <Input.Root>
+              <Input.TextInput
+                title={t('mutation period')}
+                autoComplete='off'
+                size={6}
+                classNames='w-[100px] text-right'
+                placeholder='Interval'
                 value={mutationInterval}
                 onChange={({ target: { value } }) => setMutationInterval(value)}
               />

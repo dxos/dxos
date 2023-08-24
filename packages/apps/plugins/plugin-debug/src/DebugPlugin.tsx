@@ -3,7 +3,7 @@
 //
 
 import { Hammer, IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -26,19 +26,27 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState<NodeJS.Timeout>();
+        const [timer, setTimer] = useState<NodeJS.Timer>();
+        const stop = useCallback(() => {
+          clearInterval(timer);
+          setTimer(undefined);
+        }, [timer]);
+
         return (
           <DebugContext.Provider
             value={{
-              running: !!running,
-              start: (cb: () => void, interval: number) => {
-                clearInterval(running);
-                setRunning(setInterval(cb, interval));
+              running: !!timer,
+              start: (cb: () => boolean | void, interval: number) => {
+                clearInterval(timer);
+                setTimer(
+                  setInterval(() => {
+                    if (cb() === false) {
+                      stop();
+                    }
+                  }, interval),
+                );
               },
-              stop: () => {
-                clearInterval(running);
-                setRunning(undefined);
-              },
+              stop,
             }}
           >
             {children}

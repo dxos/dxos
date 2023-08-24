@@ -12,7 +12,7 @@ export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
 export type DebugContextType = {
   running: boolean;
-  start: (cb: () => void, period: number) => void;
+  start: (cb: () => boolean | void, period: number) => void;
   stop: () => void;
 };
 
