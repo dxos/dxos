@@ -93,6 +93,7 @@ declare module 'hypercore' {
     keyPair?: { publicKey: Buffer; secretKey: Buffer };
     onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void;
     onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void;
+    maxRequests?: number;
   };
 
   /**
