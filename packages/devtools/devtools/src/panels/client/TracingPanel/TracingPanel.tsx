@@ -14,16 +14,22 @@ import { useClient } from '@dxos/react-client';
 import { PanelContainer } from '../../../components';
 import type { FlameChartNodes } from 'flame-chart-js';
 import { isNotNullOrUndefined } from '@dxos/util';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+
+type ResourceState = {
+  resource: Resource;
+  logs: LogEntry[];
+}
 
 type State = {
-  resources: Map<number, Resource>;
+  resources: Map<number, ResourceState>;
   spans: Map<number, Span>;
 };
 
 export const TracingPanel = () => {
   const client = useClient();
   const state = useRef<State>({
-    resources: new Map<number, Resource>(),
+    resources: new Map<number, ResourceState>(),
     spans: new Map<number, Span>(),
   });
   const [selectedResource, setSelectedResource] = useState<number | undefined>(undefined);
@@ -35,7 +41,7 @@ export const TracingPanel = () => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe((data) => {
       for (const event of data.resourceAdded ?? []) {
-        state.current.resources.set(event.resource.id, event.resource);
+        state.current.resources.set(event.resource.id, { resource: event.resource, logs: [] });
       }
       for (const event of data.resourceRemoved ?? []) {
         state.current.resources.delete(event.id);
@@ -43,6 +49,14 @@ export const TracingPanel = () => {
       for (const event of data.spanAdded ?? []) {
         state.current.spans.set(event.span.id, event.span);
       }
+      for(const event of data.logAdded ?? []) {
+        const resource = state.current.resources.get(event.log.meta!.resourceId!);
+        if(!resource) {
+          continue;
+        }
+        resource.logs.push(event.log);
+      }
+
       forceUpdate({});
     });
 
@@ -66,7 +80,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
-        <Grid<Resource>
+        <Grid<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
           select='single-toggle'
@@ -90,13 +104,18 @@ export const TracingPanel = () => {
   );
 };
 
-const { helper } = createColumnBuilder<Resource>();
-const columns: GridColumnDef<Resource, any>[] = [
-  helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, {
+const { helper } = createColumnBuilder<ResourceState>();
+const columns: GridColumnDef<ResourceState, any>[] = [
+  helper.accessor((state) => `${sanitizeClassName(state.resource.className)}#${state.resource.instanceId}`, {
     id: 'name',
     size: 200,
   }),
-  helper.accessor('info', {
+  helper.accessor((state) => state.logs.length, {
+    id: 'logs',
+    size: 100,
+  }),
+  helper.accessor(state => state.resource.info, {
+    id: 'info',
     cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];
@@ -120,7 +139,7 @@ const buildFlameGraph = (state: State, rootId: number): FlameChartNodes => {
 
   // TODO(burdon): Sort resources by names.
   const childSpans = [...state.spans.values()].filter((s) => s.parentId === span.id);
-  const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
+  const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId)?.resource : undefined;
   const name = resource
     ? `${sanitizeClassName(resource.className)}#${resource.instanceId}.${span.methodName}`
     : span.methodName;

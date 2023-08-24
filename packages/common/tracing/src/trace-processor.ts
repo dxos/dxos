@@ -5,12 +5,14 @@
 import { Context } from '@dxos/context';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { LogEntry } from '@dxos/protocols/proto/dxos/logging';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 import { inspect } from 'node:util';
+import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
 
 export type TraceResourceConstructorParams = {
   constructor: { new(...args: any[]): {} };
@@ -31,10 +33,12 @@ export type ResourceEntry = {
 export type TraceSubscription = {
   dirtyResources: Set<number>;
   dirtySpans: Set<number>;
+  newLogs: LogEntry[];
 };
 
 const MAX_RESOURCE_RECORDS = 500;
 const MAX_SPAN_RECORDS = 1_000;
+const MAX_LOG_RECORDS = 1_000;
 
 export class TraceProcessor {
   resources = new Map<number, ResourceEntry>();
@@ -44,7 +48,13 @@ export class TraceProcessor {
   spans = new Map<number, Span>();
   spanIdList: number[] = [];
 
+  logs: LogEntry[] = [];
+
   subscriptions: Set<TraceSubscription> = new Set();
+
+  constructor() {
+    log.addProcessor(this._logProcessor.bind(this));
+  }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
@@ -73,30 +83,7 @@ export class TraceProcessor {
 
     for (const [key, _opts] of Object.entries(tracingContext.infoProperties)) {
       try {
-        const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
-
-        switch (typeof value) {
-          case 'string':
-          case 'number':
-          case 'boolean':
-          case 'undefined':
-            res[key] = value;
-            break;
-          case 'object':
-          case 'function':
-            if (value === null) {
-              res[key] = value;
-              break;
-            }
-
-            // TODO(dmaretskyi): Expose trait.
-            if (typeof value['truncate'] === 'function') {
-              res[key] = value.truncate();
-              break;
-            }
-
-            res[key] = value.toString()
-        }
+        res[key] = sanitizeValue(typeof instance[key] === 'function' ? instance[key]() : instance[key]);
       } catch (err: any) {
         res[key] = err.message;
       }
@@ -159,6 +146,51 @@ export class TraceProcessor {
     while (this.spanIdList.length > MAX_SPAN_RECORDS) {
       const id = this.spanIdList.shift()!;
       this.spans.delete(id);
+    }
+  }
+
+  private _pushLog(log: LogEntry) {
+    this.logs.push(log);
+    if (this.logs.length > MAX_LOG_RECORDS) {
+      this.logs.shift();
+    }
+
+    for (const subscription of this.subscriptions) {
+      subscription.newLogs.push(log);
+    }
+  }
+
+  private _logProcessor: LogProcessor = (config, entry) => {
+    switch (entry.level) {
+      case LogLevel.ERROR:
+      case LogLevel.WARN:
+      case LogLevel.TRACE:
+        const scope = entry.meta?.S;
+        const resource = this.resourceInstanceIndex.get(scope);
+        if (!resource) {
+          return;
+        }
+
+        const context = getContextFromEntry(entry) ?? {};
+
+        for (const key of Object.keys(context)) {
+          context[key] = sanitizeValue(context[key]);
+        }
+
+        const entryToPush: LogEntry = {
+          level: entry.level,
+          message: entry.message,
+          context,
+          meta: {
+            file: entry.meta?.F ?? '',
+            line: entry.meta?.L ?? 0,
+            resourceId: resource.data.id,
+          }
+        }
+        this._pushLog(entryToPush);
+        break;
+      default:
+        return;
     }
   }
 }
@@ -237,3 +269,28 @@ const serializeError = (err: unknown): SerializedError => {
 };
 
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
+
+const sanitizeValue = (value: any) => {
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'undefined':
+      return value;
+      break;
+    case 'object':
+    case 'function':
+      if (value === null) {
+        return value;
+        break;
+      }
+
+      // TODO(dmaretskyi): Expose trait.
+      if (typeof value['truncate'] === 'function') {
+        return value.truncate();
+        break;
+      }
+
+      return value.toString()
+  }
+}

@@ -6,6 +6,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { StreamTraceEvent, TracingService } from '@dxos/protocols/proto/dxos/tracing';
 
 import { TraceProcessor, TraceSubscription } from './trace-processor';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
 const FLUSH_INTERVAL = 1_000;
 
@@ -17,17 +18,19 @@ export class TraceSender implements TracingService {
       const subscription: TraceSubscription = {
         dirtyResources: new Set(),
         dirtySpans: new Set(),
+        newLogs: []
       };
       this._traceProcessor.subscriptions.add(subscription);
       ctx.onDispose(() => {
         this._traceProcessor.subscriptions.delete(subscription);
       });
 
-      const flushEvents = (resources: Set<number> | null, spans: Set<number> | null) => {
+      const flushEvents = (resources: Set<number> | null, spans: Set<number> | null, logs: LogEntry[] | null) => {
         const event: StreamTraceEvent = {
           resourceAdded: [],
           resourceRemoved: [],
           spanAdded: [],
+          logAdded: [],
         };
 
         if (resources) {
@@ -58,17 +61,28 @@ export class TraceSender implements TracingService {
           }
         }
 
+        if(logs) {
+          for(const log of logs) {
+            event.logAdded!.push({ log });
+          }
+        } else {
+          for(const log of this._traceProcessor.logs) {
+            event.logAdded!.push({ log });
+          }
+        }
+
         if (event.resourceAdded!.length > 0 || event.resourceRemoved!.length > 0 || event.spanAdded!.length > 0) {
           next(event);
         }
       };
 
-      flushEvents(null, null);
+      flushEvents(null, null, null);
 
       const timer = setInterval(() => {
-        flushEvents(subscription.dirtyResources, subscription.dirtySpans);
+        flushEvents(subscription.dirtyResources, subscription.dirtySpans, subscription.newLogs);
         subscription.dirtyResources.clear();
         subscription.dirtySpans.clear();
+        subscription.newLogs.length = 0;
       }, FLUSH_INTERVAL);
       ctx.onDispose(() => {
         clearInterval(timer);

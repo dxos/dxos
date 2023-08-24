@@ -3,6 +3,7 @@ syntax = "proto3";
 import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";
 import "dxos/error.proto";
+import "dxos/client/logging.proto";
 
 package dxos.tracing;
 
@@ -54,9 +55,14 @@ message StreamTraceEvent {
     Span span = 1;
   }
 
+  message LogAdded {
+    dxos.client.services.LogEntry log = 1;
+  }
+
   repeated ResourceAdded resource_added = 1;
   repeated ResourceRemoved resource_removed = 2;
   repeated SpanAdded span_added = 3;
+  repeated LogAdded log_added = 4;
 }
 
 service TracingService {
