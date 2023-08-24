@@ -51,7 +51,7 @@ export const ClientPlugin = (
           await client.halo.createIdentity();
         }
 
-        // TODO(burdon): Handle initial connection (assumes no PIN).
+        // Handle initial connection (assumes no PIN).
         const searchParams = new URLSearchParams(window.location.search);
         const spaceInvitationCode = searchParams.get('spaceInvitationCode');
         if (spaceInvitationCode) {

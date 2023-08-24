@@ -45,12 +45,17 @@ import { PluginContextProvider } from '@dxos/react-surface';
 
 void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
 
+// TODO(burdon): Config.
+console.log(process.env);
+const mono = true;
+const debug = true;
+
 // TODO(burdon): Configure initial settings (e.g., show debug panel).
 const config = new Config(Envs(), Local(), Defaults());
 const clientOptions = {
   config,
   // TODO(burdon): Configure local services in debug mode (e.g., for mobile testing).
-  services: fromHost(config),
+  services: mono ? fromHost(config) : undefined,
   // services: fromIFrame(config, { vault: 'https://halo.dev.dxos.org/vault.html' }),
 };
 
@@ -60,7 +65,7 @@ createRoot(document.getElementById('root')!).render(
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Labs' }),
-        ClientPlugin({ ...clientOptions, debugIdentity: true }),
+        ClientPlugin({ ...clientOptions, debugIdentity: debug }),
         IntentPlugin(),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
