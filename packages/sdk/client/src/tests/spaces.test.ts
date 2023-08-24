@@ -237,7 +237,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('epoch correctly resets database', async () => {
+  test.only('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -351,6 +351,13 @@ describe('Spaces', () => {
       await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
       await asyncTimeout(trigger.wait(), 500);
       checkItem();
+    }
+
+    // Set new field and query it.
+    {
+      item.data = 'new text';
+      await space.db.flush();
+      expect(space.db.query({ idx }).objects[0].data).to.equal('new text');
     }
   });
 
