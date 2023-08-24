@@ -204,11 +204,17 @@ export class EchoDatabase {
         obj[base]._database = this;
         obj[base]._bind(object);
       }
+
+      const obj = this._objects.get(object.id)!;
+      if (obj[base]._item !== object) {
+        obj[base]._bind(object);
+      }
     }
 
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
+        obj[base]._database = undefined;
         if (obj[base]._item) {
           obj[base]._item.deleted = true;
         }
