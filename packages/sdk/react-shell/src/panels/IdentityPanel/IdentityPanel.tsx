@@ -5,13 +5,14 @@ import React, { useEffect, useMemo } from 'react';
 
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
 import { Viewport, Heading, CloseButton } from '../../components';
-import { InvitationManager } from '../../steps';
+import { IdentityInput, InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
@@ -68,7 +69,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
-          {/* <Viewport.View id='managing profile'></Viewport.View> */}
+          <Viewport.View classNames={viewStyles} id='update profile input'>
+            <IdentityInput send={rest.send} method='create identity' active={activeView === 'update profile input'} />
+          </Viewport.View>
           {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
@@ -90,12 +93,13 @@ export const IdentityPanel = ({
   ...props
 }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
+  const client = useClient();
   const identity = useIdentity();
   if (!identity) {
     console.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine({ context: { identity } });
+  const [identityState, identitySend, identityService] = useIdentityMachine(client);
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
@@ -109,12 +113,10 @@ export const IdentityPanel = ({
     switch (true) {
       case identityState.matches('choosingAction'):
         return 'identity action chooser';
-      case identityState.matches('managingDevices'):
-        return 'device manager';
-      case identityState.matches('managingDeviceInvitation'):
+      case identityState.matches({ managingDeviceInvitation: 'showingDeviceInvitation' }):
         return 'device invitation manager';
-      // case identityState.matches('managingProfile'):
-      //   return 'profile manager';
+      case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
+        return 'update profile input';
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:
