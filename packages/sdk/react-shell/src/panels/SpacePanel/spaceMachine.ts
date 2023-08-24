@@ -72,8 +72,8 @@ const spaceMachine = createMachine<SpaceMachineContext, SpaceEvent>(
       noProfile: ({ identity }, _event) => !identity?.profile,
     },
     actions: {
-      setIdentity: assign<SpaceMachineContext, SetIdentityEvent>({
-        identity: (context, event) => event.identity,
+      setIdentity: assign<SpaceMachineContext, SpaceEvent>({
+        identity: (context, event) => (event as SetIdentityEvent)?.identity ?? null,
       }),
       setInvitation: assign<SpaceMachineContext, SpaceEvent>({
         invitation: (context, event) => (event as SpaceSelectInvitationEvent)?.invitation ?? null,

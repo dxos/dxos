@@ -504,12 +504,12 @@ const useJoinMachine = (
     },
     actions: {
       ...options?.actions,
-      redeemHaloInvitationCode: assign<JoinMachineContext>({ halo: redeemHaloInvitationCode }),
-      redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode }),
-      invalidateHaloInvitationCode: assign<JoinMachineContext>({
+      redeemHaloInvitationCode: assign<JoinMachineContext, JoinEvent>({ halo: redeemHaloInvitationCode }),
+      redeemSpaceInvitationCode: assign<JoinMachineContext, JoinEvent>({ space: redeemSpaceInvitationCode }),
+      invalidateHaloInvitationCode: assign<JoinMachineContext, JoinEvent>({
         halo: invalidateHaloInvitationCode,
       }),
-      invalidateSpaceInvitationCode: assign<JoinMachineContext>({
+      invalidateSpaceInvitationCode: assign<JoinMachineContext, JoinEvent>({
         space: invalidateSpaceInvitationCode,
       }),
     },

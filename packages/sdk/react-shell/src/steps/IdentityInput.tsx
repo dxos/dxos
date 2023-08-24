@@ -25,7 +25,7 @@ export type SetDisplayNameEvent = {
 };
 
 export interface IdentityCreatorProps extends Omit<StepProps, 'send'> {
-  send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
+  send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   method: 'recover identity' | 'create identity';
 }
 
@@ -44,7 +44,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
   const createIdentity = (displayName: string) => {
-    send({ type: 'setDisplayName' });
+    send?.({ type: 'setDisplayName' });
 
     const result = identity
       ? client.halo.updateProfile({ displayName })

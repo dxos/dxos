@@ -82,8 +82,8 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
       noProfile: ({ identity }, _event) => !identity?.profile,
     },
     actions: {
-      setIdentity: assign<IdentityMachineContext, SetIdentityEvent>({
-        identity: (context, event) => event.identity,
+      setIdentity: assign<IdentityMachineContext, IdentityEvent>({
+        identity: (context, event) => (event as SetIdentityEvent)?.identity ?? null,
       }),
       setInvitation: assign<IdentityMachineContext, IdentityEvent>({
         invitation: (context, event) => (event as IdentitySelectDeviceInvitationEvent)?.invitation ?? null,
