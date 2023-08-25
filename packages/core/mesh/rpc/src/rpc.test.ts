@@ -436,7 +436,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const stream = bob.callStream('method', createPayload('request'));
-      stream.close();
+      await stream.close();
 
       await sleep(1);
 

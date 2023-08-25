@@ -118,7 +118,7 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
 
-    this._serviceStream.close();
+    await this._serviceStream.close();
 
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
@@ -135,7 +135,7 @@ export class WebRTCTransportProxy implements Transport {
    */
   // TODO(burdon): Option on close method.
   forceClose() {
-    this._serviceStream.close();
+    void this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
   }

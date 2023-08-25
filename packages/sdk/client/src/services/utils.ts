@@ -22,7 +22,7 @@ export const fromIFrame = async (
   config: Config = new Config(),
   options: Omit<Partial<IFrameClientServicesProxyOptions>, 'source'> = {},
 ): Promise<ClientServicesProvider> => {
-  log.info('creating client services', { config });
+  log('creating client services', { config });
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.
     throw new ApiError('Cannot configure IFrame bridge outside of browser environment.');
