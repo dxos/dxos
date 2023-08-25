@@ -57,7 +57,7 @@ export class ShellManager {
   async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope) {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).type(authCode);
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
 

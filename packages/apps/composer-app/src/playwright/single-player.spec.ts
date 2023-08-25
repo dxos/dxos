@@ -16,7 +16,7 @@ test.describe('Single-player tests', () => {
     await host.init();
   });
 
-  test.skip('create identity, space is created by default', async () => {
+  test('create identity, space is created by default', async () => {
     await host.shell.createIdentity('host');
     await waitForExpect(async () => {
       expect(await host.isAuthenticated()).to.be.true;
@@ -35,12 +35,12 @@ test.describe('Single-player tests', () => {
   test('create document', async () => {
     await host.shell.createIdentity('host');
     await host.createDocument();
+    await host.expandSpace();
+    await host.clickLastDocumentLink();
     const textBox = await host.getMarkdownTextbox();
-    const title = await host.getDocumentTitleInput();
     await waitForExpect(async () => {
       expect(await host.getDocumentItemsCount()).to.equal(1);
       expect(await textBox.isEditable()).to.be.true;
-      expect(await title.isEditable()).to.be.true;
     });
   });
 });

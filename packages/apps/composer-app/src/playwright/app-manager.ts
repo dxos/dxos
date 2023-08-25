@@ -36,6 +36,7 @@ export class AppManager {
   }
 
   async createSpace() {
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').first().click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
   }
@@ -54,12 +55,20 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 
-  getSpaceItemsCount() {
-    return this.page.getByTestId('spacePlugin.spaceTreeItemHeading').count();
+  async getSpaceItemsCount() {
+    const [openCount, closedCount] = await Promise.all([
+      this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').count(),
+      this.page.getByTestId('spacePlugin.spaceTreeItemCloseTrigger').count(),
+    ]);
+    return openCount + closedCount;
   }
 
   getDocumentItemsCount() {
     return this.page.getByTestId('spacePlugin.documentTreeItemLink').count();
+  }
+
+  clickLastDocumentLink() {
+    return this.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
   }
 
   getMarkdownTextbox() {
