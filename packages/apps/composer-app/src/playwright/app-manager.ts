@@ -35,24 +35,40 @@ export class AppManager {
     return this.page.getByTestId('splitViewPlugin.firstRunMessage').isVisible();
   }
 
-  createSpace() {
-    return this.page.getByTestId('spacePlugin.createSpace').click();
+  async createSpace() {
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').first().click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+    return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
   }
 
-  joinSpace() {
+  async joinSpace() {
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').first().click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  createDocument() {
+  expandSpace() {
+    return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
+  }
+
+  async createDocument() {
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel1').last().click();
     return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 
-  getSpaceItemsCount() {
-    return this.page.getByTestId('spacePlugin.spaceTreeItemHeading').count();
+  async getSpaceItemsCount() {
+    const [openCount, closedCount] = await Promise.all([
+      this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').count(),
+      this.page.getByTestId('spacePlugin.spaceTreeItemCloseTrigger').count(),
+    ]);
+    return openCount + closedCount;
   }
 
   getDocumentItemsCount() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemHeading').count();
+    return this.page.getByTestId('spacePlugin.documentTreeItemLink').count();
+  }
+
+  clickLastDocumentLink() {
+    return this.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
   }
 
   getMarkdownTextbox() {
@@ -75,7 +91,7 @@ export class AppManager {
   }
 
   getDocumentLinks() {
-    return this.page.getByTestId('spacePlugin.documentTreeItemHeading');
+    return this.page.getByTestId('spacePlugin.documentTreeItemLink');
   }
 
   getCollaboratorCursors() {

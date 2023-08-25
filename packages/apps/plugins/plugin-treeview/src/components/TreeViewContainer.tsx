@@ -88,7 +88,7 @@ export const TreeViewContainer = () => {
                   <NavTreeItem key={branch.id} node={branch} level={0} />
                 ))}
               </Tree.Root>
-              <ScrollArea.Scrollbar orientation='vertical'>
+              <ScrollArea.Scrollbar orientation='vertical' classNames='pointer-events-none'>
                 <ScrollArea.Thumb />
               </ScrollArea.Scrollbar>
             </ScrollArea.Viewport>
