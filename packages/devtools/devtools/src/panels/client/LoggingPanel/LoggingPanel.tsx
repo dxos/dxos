@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ArrowClockwise, Trash } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { getSize } from '@dxos/aurora-theme';
 import { levels, parseFilter } from '@dxos/log';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices } from '@dxos/react-client';
@@ -82,11 +84,16 @@ export const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
+          {/* <Searchbar onSearch={} /> */}
           <Input.Root>
             <Input.TextInput ref={inputRef} placeholder='Filter (e.g., "info", "client:debug")' />
           </Input.Root>
-          <Toolbar.Button onClick={handleQueryLogs}>Update</Toolbar.Button>
-          <Toolbar.Button onClick={() => setLogs([])}>Clear</Toolbar.Button>
+          <Toolbar.Button onClick={handleQueryLogs}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => setLogs([])}>
+            <Trash className={getSize(5)} />
+          </Toolbar.Button>
         </Toolbar.Root>
       }
     >
