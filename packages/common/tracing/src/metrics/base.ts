@@ -15,4 +15,6 @@ export abstract class BaseCounter {
   }
 
   abstract getData(): Record<string, any>;
+
+  abstract _tick?(time: number, delta: number): void;
 }

@@ -8,22 +8,12 @@ import { StreamTraceEvent, TracingService } from '@dxos/protocols/proto/dxos/tra
 import { TraceProcessor, TraceSubscription } from './trace-processor';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
-const FLUSH_INTERVAL = 1_000;
-
 export class TraceSender implements TracingService {
-  constructor(private _traceProcessor: TraceProcessor) {}
+  constructor(private _traceProcessor: TraceProcessor) { }
 
   streamTrace(request: void): Stream<StreamTraceEvent> {
     return new Stream(({ ctx, next }) => {
-      const subscription: TraceSubscription = {
-        dirtyResources: new Set(),
-        dirtySpans: new Set(),
-        newLogs: []
-      };
-      this._traceProcessor.subscriptions.add(subscription);
-      ctx.onDispose(() => {
-        this._traceProcessor.subscriptions.delete(subscription);
-      });
+
 
       const flushEvents = (resources: Set<number> | null, spans: Set<number> | null, logs: LogEntry[] | null) => {
         const event: StreamTraceEvent = {
@@ -61,12 +51,12 @@ export class TraceSender implements TracingService {
           }
         }
 
-        if(logs) {
-          for(const log of logs) {
+        if (logs) {
+          for (const log of logs) {
             event.logAdded!.push({ log });
           }
         } else {
-          for(const log of this._traceProcessor.logs) {
+          for (const log of this._traceProcessor.logs) {
             event.logAdded!.push({ log });
           }
         }
@@ -76,17 +66,25 @@ export class TraceSender implements TracingService {
         }
       };
 
-      flushEvents(null, null, null);
-
-      const timer = setInterval(() => {
+      const flush = () => {
         flushEvents(subscription.dirtyResources, subscription.dirtySpans, subscription.newLogs);
         subscription.dirtyResources.clear();
         subscription.dirtySpans.clear();
         subscription.newLogs.length = 0;
-      }, FLUSH_INTERVAL);
+      };
+
+      const subscription: TraceSubscription = {
+        flush,
+        dirtyResources: new Set(),
+        dirtySpans: new Set(),
+        newLogs: []
+      };
+      this._traceProcessor.subscriptions.add(subscription);
       ctx.onDispose(() => {
-        clearInterval(timer);
+        this._traceProcessor.subscriptions.delete(subscription);
       });
+
+      flushEvents(null, null, null);
     });
   }
 }

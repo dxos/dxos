@@ -32,6 +32,8 @@ export type ResourceEntry = {
 };
 
 export type TraceSubscription = {
+  flush: () => void;
+
   dirtyResources: Set<number>;
   dirtySpans: Set<number>;
   newLogs: LogEntry[];
@@ -40,6 +42,8 @@ export type TraceSubscription = {
 const MAX_RESOURCE_RECORDS = 500;
 const MAX_SPAN_RECORDS = 1_000;
 const MAX_LOG_RECORDS = 1_000;
+
+const REFRESH_INTERVAL = 1_000;
 
 export class TraceProcessor {
   resources = new Map<number, ResourceEntry>();
@@ -55,6 +59,8 @@ export class TraceProcessor {
 
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
+
+    setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
   }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
@@ -62,7 +68,7 @@ export class TraceProcessor {
 
     // init metrics counters.
     const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
-    for(const key of Object.keys(tracingContext.metricsProperties)) {
+    for (const key of Object.keys(tracingContext.metricsProperties)) {
       (params.instance[key] as BaseCounter)._assign(params.instance, key);
     }
 
@@ -127,6 +133,39 @@ export class TraceProcessor {
 
   createTraceSender() {
     return new TraceSender(this);
+  }
+
+  refresh() {
+    for (const resource of this.resources.values()) {
+      const instance = resource.instance.deref();
+      if (!instance) {
+        continue;
+      }
+
+      const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
+      for (const key of Object.keys(tracingContext.metricsProperties)) {
+        (instance[key] as BaseCounter)._tick?.(0, 0);
+      }
+
+      let changed = false;
+
+      const oldInfo = resource.data.info;
+      resource.data.info = this.getResourceInfo(instance);
+      changed ||= !areEqualShallow(oldInfo, resource.data.info);
+
+      const oldMetrics = resource.data.metrics;
+      resource.data.metrics = this.getResourceMetrics(instance);
+      changed ||= !areEqualShallow(oldMetrics, resource.data.metrics);
+
+
+      // if (changed) {
+        this._markResourceDirty(resource.data.id);
+      // }
+    }
+
+    for (const subscription of this.subscriptions) {
+      subscription.flush();
+    }
   }
 
   /**
@@ -314,4 +353,18 @@ const sanitizeValue = (value: any) => {
 
       return value.toString()
   }
+}
+
+const areEqualShallow = (a: any, b: any) => {
+  for (var key in a) {
+    if (!(key in b) || a[key] !== b[key]) {
+      return false;
+    }
+  }
+  for (var key in b) {
+    if (!(key in a) || a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
 }

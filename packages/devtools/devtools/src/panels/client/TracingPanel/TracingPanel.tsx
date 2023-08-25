@@ -112,7 +112,7 @@ export const TracingPanel = () => {
           selected={selectedResourceId !== undefined ? [state.current.resources.get(selectedResourceId)].filter(isNotNullOrUndefined) : undefined}
           onSelectedChange={resources => setSelectedResourceId(resources?.[0]?.resource.id)} />
       </div>
-      <Tabs.Root className='border-t h-1/2 flex flex-col'>
+      <Tabs.Root defaultValue='details' className='border-t h-1/2 flex flex-col'>
         <Tabs.List className='flex w-full rounded-t-lg bg-white dark:bg-gray-800'>
           <Tabs.Trigger className={tabClass} value='details'>Details</Tabs.Trigger>
           <Tabs.Trigger className={tabClass} value='logs'>Logs ({selectedResource?.logs.length ?? 0})</Tabs.Trigger>
