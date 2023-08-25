@@ -41,10 +41,12 @@ test.describe('Basic test', () => {
 
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
+      await host.expandSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
+      await guest.expandSpace();
 
-      await guest.page.getByRole('link').last().click();
+      await guest.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
       await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await host.page.url()).to.include(await guest.page.url());
@@ -60,8 +62,10 @@ test.describe('Basic test', () => {
 
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
+      await host.expandSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
+      await guest.expandSpace();
 
       await Promise.all([
         host.getDocumentLinks().nth(0).click(),
@@ -86,8 +90,10 @@ test.describe('Basic test', () => {
 
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
+      await host.expandSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
+      await guest.expandSpace();
 
       const parts = [
         'Lorem ipsum dolor sit amet,',
