@@ -3,7 +3,7 @@
 //
 
 // Main background.
-export const baseSurface = 'bg-white dark:bg-neutral-900';
+export const baseSurface = 'bg-neutral-50 dark:bg-neutral-900';
 
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur';
