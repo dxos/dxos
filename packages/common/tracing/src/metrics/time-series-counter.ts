@@ -21,7 +21,7 @@ export class TimeSeriesCounter extends BaseCounter {
 
   inc(by = 1) {
     this._currentValue += by;
-    this._changedlValue += by;
+    this._totalValue += by;
   }
 
   override _tick(time: number): void {
