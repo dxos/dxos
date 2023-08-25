@@ -7,6 +7,7 @@ import { type Space, SpaceState, defaultKey } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
+import { useIdentity } from '../halo';
 
 /**
  * Get a specific Space using its key. Returns undefined when no spaceKey is
@@ -16,10 +17,12 @@ import { useClient } from '../client';
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
   // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
-  const spaces = useSpaces({ includeDefault: true });
+  const spaces = useSpaces();
+  const identity = useIdentity();
+
   return spaceKey
     ? spaces.find((space) => space.key.equals(spaceKey))
-    : spaces.find((space) => space.properties[defaultKey]);
+    : spaces.find((space) => space.properties[defaultKey] === identity?.identityKey.toHex());
 };
 
 export type UseSpacesParams = {
@@ -27,11 +30,6 @@ export type UseSpacesParams = {
    * Return uninitialized spaces as well.
    */
   all?: boolean;
-
-  /**
-   * Return the default space in the list.
-   */
-  includeDefault?: boolean;
 };
 
 /**
@@ -40,12 +38,10 @@ export type UseSpacesParams = {
  * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = ({ all = false, includeDefault = false }: UseSpacesParams = {}): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
   const spaces = useMulticastObservable(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
-  return spaces
-    .filter((space) => all || space.state.get() === SpaceState.READY)
-    .filter((space) => includeDefault || !space.properties[defaultKey]);
+  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
 };

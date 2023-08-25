@@ -50,7 +50,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
 export type IntentPluginProvides = {
   intent: {
-    sendIntent: (intent: Intent) => any;
+    sendIntent: SendIntent;
   };
 };
 

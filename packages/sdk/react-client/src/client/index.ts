@@ -5,5 +5,5 @@
 export * from './ClientContext';
 export * from './useClientServices';
 export * from './useConfig';
-export * from './useShellProvider';
+export * from './useShell';
 export * from './useStatus';

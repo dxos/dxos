@@ -48,7 +48,8 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
         {...(disabled && { disabled, 'aria-disabled': true })}
         {...(!navigationSidebarOpen && { tabIndex: -1 })}
         classNames={['flex items-center gap-1 pie-1', navTreeHeading, ghostButtonColors, disabled && staticDisabled]}
-        data-testId={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
+        // TODO(wittjosiah): Why space plugin? This is treeview.
+        data-testid={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
       >
         <OpenTriggerIcon weight='fill' className={mx('shrink-0', getSize(2))} />
         {node.icon && <node.icon className={getSize(4)} />}

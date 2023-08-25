@@ -109,7 +109,7 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
-    // todo(thure): This is skipped because the UI no longer affords cancelling device invitations, consider removing.
+    // TODO(thure): This is skipped because the UI no longer affords cancelling device invitations, consider removing.
     test.skip('invitation cancelled by host', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
@@ -141,7 +141,7 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    // todo(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    // TODO(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
     test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
@@ -169,7 +169,7 @@ test.describe('Invitations', () => {
     test('happy path', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -181,13 +181,13 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
     test('no auth method', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space', { authMethod: Invitation.AuthMethod.NONE });
 
       await manager.createIdentity(1);
@@ -196,13 +196,13 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
     test('invalid & retry auth code', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -218,13 +218,13 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
     test('invalid & max auth code retries reached, retry invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -247,13 +247,13 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
     test('invitation timeout', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space', { timeout: 10 });
 
       await manager.createIdentity(1);
@@ -266,7 +266,7 @@ test.describe('Invitations', () => {
     test('invitation cancelled by host', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
 
       await manager.createIdentity(1);
@@ -281,7 +281,7 @@ test.describe('Invitations', () => {
     test('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -296,14 +296,14 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
-    // todo(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    // TODO(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
     test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -322,7 +322,7 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(1));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
     test('multiple concurrent invitations', async () => {
@@ -331,7 +331,7 @@ test.describe('Invitations', () => {
       await manager.createIdentity(2);
 
       await manager.createSpace(0);
-      await manager.openPanel(0, 0);
+      await manager.openPanel(0, 1);
       await manager.openPanel(1, 'join');
       await manager.openPanel(2, 'join');
 
@@ -354,9 +354,9 @@ test.describe('Invitations', () => {
       await manager.doneInvitation('space', manager.peer(2));
 
       await manager.openPanel(0, 'spaces');
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(1, 0));
-      expect(await manager.getSpaceName(0, 0)).to.equal(await manager.getSpaceName(2, 0));
-      expect(await manager.getSpaceName(1, 0)).to.equal(await manager.getSpaceName(2, 0));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
+      expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(2, 1));
+      expect(await manager.getSpaceName(1, 1)).to.equal(await manager.getSpaceName(2, 1));
     });
   });
 });
