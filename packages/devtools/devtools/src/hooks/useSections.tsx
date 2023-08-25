@@ -6,6 +6,7 @@ import {
   ChartLine,
   CreditCard,
   Database,
+  Devices,
   FireSimple,
   Gear,
   Graph,
@@ -76,6 +77,11 @@ export const useSections = (): SectionItem[] => {
           id: '/halo/identity',
           title: 'Identity',
           Icon: IdentificationBadge,
+        },
+        {
+          id: '/halo/devices',
+          title: 'Devices',
+          Icon: Devices,
         },
         {
           id: '/halo/keyring',

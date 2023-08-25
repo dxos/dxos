@@ -9,6 +9,7 @@ import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
+  DeviceListPanel,
   DiagnosticsPanel,
   FeedsPanel,
   IdentityPanel,
@@ -69,6 +70,10 @@ export const useRoutes = () => {
             {
               path: '/halo/identity',
               element: <IdentityPanel />,
+            },
+            {
+              path: '/halo/devices',
+              element: <DeviceListPanel />,
             },
             {
               path: '/halo/keyring',
