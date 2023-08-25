@@ -7,6 +7,9 @@ import { Context } from '@dxos/context';
 import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR } from './trace-processor';
 
+/**
+ * Annotates a class as a tracked resource.
+ */
 const resource =
   () =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
@@ -20,6 +23,9 @@ const resource =
     return klass;
   };
 
+/**
+ * Marks a property or a method to be included in the resource info section.
+ */
 const info = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
   getTracingContext(target).infoProperties[propertyKey] = {};
 };
@@ -43,6 +49,13 @@ const span = () => (target: any, propertyKey: string, descriptor: TypedPropertyD
   };
 };
 
+/**
+ * Attaches metrics counter to the resource.
+ */
+const metricsCounter = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
+  getTracingContext(target).metricsProperties[propertyKey] = {};
+};
+
 export type AddLinkOptions = {};
 
 const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
@@ -53,6 +66,7 @@ export const trace = {
   resource,
   info,
   span,
+  metricsCounter,
 
   addLink,
 };

@@ -87,6 +87,7 @@ message LogEntry {
     string file = 1;
     int32 line = 2;
     optional google.protobuf.Struct scope = 3;
+    optional int32 resource_id = 4;
   }
 
   LogLevel level = 1;
