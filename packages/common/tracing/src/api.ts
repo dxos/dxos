@@ -52,9 +52,9 @@ const span = () => (target: any, propertyKey: string, descriptor: TypedPropertyD
 /**
  * Attaches metrics counter to the resource.
  */
-const metricsCounter = () =>  (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
+const metricsCounter = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
   getTracingContext(target).metricsProperties[propertyKey] = {};
-}
+};
 
 export type AddLinkOptions = {};
 

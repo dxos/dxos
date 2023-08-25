@@ -1,5 +1,10 @@
-import { Metric } from "@dxos/protocols/proto/dxos/tracing";
-import { BaseCounter } from "./base";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Metric } from '@dxos/protocols/proto/dxos/tracing';
+
+import { BaseCounter } from './base';
 
 const MAX_BUCKETS = 60;
 
@@ -16,7 +21,7 @@ export class TimeSeriesCounter extends BaseCounter {
 
   inc(by = 1) {
     this._currentValue += by;
-    this._totalValue += by;
+    this._changedlValue += by;
   }
 
   override _tick(time: number): void {
@@ -31,15 +36,17 @@ export class TimeSeriesCounter extends BaseCounter {
     return {
       name: this.name!,
       timeSeries: {
-        tracks: [{
-          name: this.name!,
-          units: this.units,
-          points: this._buckets.map((value, index) => ({
-            value,
-          })),
-          total: this._totalValue,
-        }]
-      }
+        tracks: [
+          {
+            name: this.name!,
+            units: this.units,
+            points: this._buckets.map((value, index) => ({
+              value,
+            })),
+            total: this._totalValue,
+          },
+        ],
+      },
     };
   }
 }

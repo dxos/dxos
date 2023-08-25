@@ -2,22 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { unrefTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
-import { unrefTimeout } from '@dxos/async';
 
 import type { AddLinkOptions } from './api';
+import { BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
-import { inspect } from 'node:util';
-import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
-import { BaseCounter } from './metrics';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new(...args: any[]): {} };
+  constructor: { new (...args: any[]): {} };
   instance: any;
 };
 
@@ -126,7 +125,7 @@ export class TraceProcessor {
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) { }
+  addLink(parent: any, child: any, opts: AddLinkOptions) {}
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
@@ -150,19 +149,19 @@ export class TraceProcessor {
         (instance[key] as BaseCounter)._tick?.(time);
       }
 
-      let changed = false;
+      let _changed = false;
 
       const oldInfo = resource.data.info;
       resource.data.info = this.getResourceInfo(instance);
-      changed ||= !areEqualShallow(oldInfo, resource.data.info);
+      _changed ||= !areEqualShallow(oldInfo, resource.data.info);
 
       const oldMetrics = resource.data.metrics;
       resource.data.metrics = this.getResourceMetrics(instance);
-      changed ||= !areEqualShallow(oldMetrics, resource.data.metrics);
+      _changed ||= !areEqualShallow(oldMetrics, resource.data.metrics);
 
-
+      // TODO(dmaretskyi): Test if works and enable.
       // if (changed) {
-        this._markResourceDirty(resource.data.id);
+      this._markResourceDirty(resource.data.id);
       // }
     }
 
@@ -226,7 +225,7 @@ export class TraceProcessor {
     switch (entry.level) {
       case LogLevel.ERROR:
       case LogLevel.WARN:
-      case LogLevel.TRACE:
+      case LogLevel.TRACE: {
         const scope = entry.meta?.S;
         const resource = this.resourceInstanceIndex.get(scope);
         if (!resource) {
@@ -248,14 +247,14 @@ export class TraceProcessor {
             file: entry.meta?.F ?? '',
             line: entry.meta?.L ?? 0,
             resourceId: resource.data.id,
-          }
-        }
+          },
+        };
         this._pushLog(entryToPush);
         break;
+      }
       default:
-        return;
     }
-  }
+  };
 }
 
 export class TracingSpan {
@@ -349,25 +348,24 @@ const sanitizeValue = (value: any) => {
       }
 
       // TODO(dmaretskyi): Expose trait.
-      if (typeof value['truncate'] === 'function') {
+      if (typeof value.truncate === 'function') {
         return value.truncate();
-        break;
       }
 
-      return value.toString()
+      return value.toString();
   }
-}
+};
 
 const areEqualShallow = (a: any, b: any) => {
-  for (var key in a) {
+  for (const key in a) {
     if (!(key in b) || a[key] !== b[key]) {
       return false;
     }
   }
-  for (var key in b) {
+  for (const key in b) {
     if (!(key in a) || a[key] !== b[key]) {
       return false;
     }
   }
   return true;
-}
+};

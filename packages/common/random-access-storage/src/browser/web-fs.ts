@@ -9,10 +9,10 @@ import { RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 import { STORAGE_MONITOR } from '../monitor';
-import { TimeSeriesCounter, TimeUsageCounter, UnaryCounter, trace } from '@dxos/tracing';
 
 /**
  * Web file systems.
@@ -187,16 +187,15 @@ export class WebFile extends EventEmitter implements File {
 
   @trace.metricsCounter()
   private _reads = new TimeSeriesCounter();
-  
+
   @trace.metricsCounter()
   private _readBytes = new TimeSeriesCounter();
-  
+
   @trace.metricsCounter()
   private _writes = new TimeSeriesCounter();
-  
+
   @trace.metricsCounter()
   private _writeBytes = new TimeSeriesCounter();
-  
 
   constructor({
     fileName,

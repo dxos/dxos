@@ -1,5 +1,10 @@
-import { Metric } from "@dxos/protocols/proto/dxos/tracing";
-import { BaseCounter } from "./base";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Metric } from '@dxos/protocols/proto/dxos/tracing';
+
+import { BaseCounter } from './base';
 
 const MAX_BUCKETS = 60;
 
@@ -21,15 +26,15 @@ export class TimeUsageCounter extends BaseCounter {
       end: () => {
         const end = performance.now();
         this.record(end - start);
-      }
+      },
     };
   }
 
   override _tick(time: number): void {
     const delta = time - this._lastTickTime;
     this._lastTickTime = time;
-    
-    const percentage = this._currentValue / delta * 100;
+
+    const percentage = (this._currentValue / delta) * 100;
     this._buckets.push(percentage);
     if (this._buckets.length > MAX_BUCKETS) {
       this._buckets.shift();
@@ -41,15 +46,17 @@ export class TimeUsageCounter extends BaseCounter {
     return {
       name: this.name!,
       timeSeries: {
-        tracks: [{
-          name: this.name!,
-          units: '%',
-          points: this._buckets.map((value, index) => ({
-            value,
-          })),
-          total: this._totalValue,
-        }]
-      }
+        tracks: [
+          {
+            name: this.name!,
+            units: '%',
+            points: this._buckets.map((value, index) => ({
+              value,
+            })),
+            total: this._totalValue,
+          },
+        ],
+      },
     };
   }
 }

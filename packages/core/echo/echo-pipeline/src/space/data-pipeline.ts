@@ -19,12 +19,12 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
 import { DatabaseHost, SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
-import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 
 export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -86,7 +86,7 @@ export class DataPipeline implements CredentialProcessor {
   @trace.metricsCounter()
   private _mutations = new TimeSeriesCounter();
 
-  constructor(private readonly _params: DataPipelineParams) { }
+  constructor(private readonly _params: DataPipelineParams) {}
 
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;

@@ -1,8 +1,13 @@
-import { Metric } from "@dxos/protocols/proto/dxos/tracing";
-import { BaseCounter } from "./base";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Metric } from '@dxos/protocols/proto/dxos/tracing';
+
+import { BaseCounter } from './base';
 
 export class UnaryCounter extends BaseCounter {
-  value: number = 0;
+  value = 0;
   units?: string;
 
   constructor({ units }: { units?: string } = {}) {

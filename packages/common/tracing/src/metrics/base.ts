@@ -1,4 +1,8 @@
-import { Metric } from '@dxos/protocols/proto/dxos/tracing'
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Metric } from '@dxos/protocols/proto/dxos/tracing';
 
 export abstract class BaseCounter {
   /**

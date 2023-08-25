@@ -3,18 +3,16 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { StreamTraceEvent, TracingService } from '@dxos/protocols/proto/dxos/tracing';
 
 import { TraceProcessor, TraceSubscription } from './trace-processor';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
 export class TraceSender implements TracingService {
-  constructor(private _traceProcessor: TraceProcessor) { }
+  constructor(private _traceProcessor: TraceProcessor) {}
 
   streamTrace(request: void): Stream<StreamTraceEvent> {
     return new Stream(({ ctx, next }) => {
-
-
       const flushEvents = (resources: Set<number> | null, spans: Set<number> | null, logs: LogEntry[] | null) => {
         const event: StreamTraceEvent = {
           resourceAdded: [],
@@ -77,7 +75,7 @@ export class TraceSender implements TracingService {
         flush,
         dirtyResources: new Set(),
         dirtySpans: new Set(),
-        newLogs: []
+        newLogs: [],
       };
       this._traceProcessor.subscriptions.add(subscription);
       ctx.onDispose(() => {

@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
-import { TRACE_PROCESSOR, TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
-import { Context } from '@dxos/context';
-import { FeedMessageBlock } from '@dxos/protocols';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;
@@ -92,7 +92,7 @@ export class ControlPipeline {
   async start() {
     log('starting...');
     setTimeout(async () => {
-      void this._consumePipeline(new Context())
+      void this._consumePipeline(new Context());
     });
 
     await this._pipeline.start();
@@ -106,11 +106,11 @@ export class ControlPipeline {
       this._mutations.inc();
 
       try {
-        await this._processMessage(ctx, msg)
+        await this._processMessage(ctx, msg);
       } catch (err: any) {
         log.catch(err);
       }
-      
+
       span.end();
     }
   }
