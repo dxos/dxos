@@ -383,7 +383,7 @@ export class Pipeline implements PipelineAccessor {
     const timeframe = this._state._startTimeframe;
     const seq = timeframe.get(feed.key) ?? -1;
 
-    log.info('setFeedDownloadState', {
+    log('setFeedDownloadState', {
       feed: feed.key,
       feedInstance: getPrototypeSpecificInstanceId(feed),
       seq,
