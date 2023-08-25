@@ -71,7 +71,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
           }
         }),
       );
-      // TODO(thure): Looks like `object[property][subscribe]` on `Text` objects accepts a callback, but the callback isn’t getting called?
+      // TODO(thure): Related issue: https://github.com/dxos/dxos/issues/3675; Looks like `object[property][subscribe]` on `Text` objects accepts a callback, but the callback isn’t getting called?
       this._propertySubscriptions?.forEach((property) => {
         const id = `${parent.id}:${object.id}:${property}`;
         return this._subscriptions.set(
