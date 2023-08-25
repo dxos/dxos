@@ -34,19 +34,6 @@ test.describe('Basic test', () => {
   });
 
   test.describe('Default space', () => {
-    test('create identity', async () => {
-      expect(await host.isPlaceholderVisible()).to.be.true;
-      expect(await host.isNewTodoVisible()).to.be.false;
-
-      await host.shell.createIdentity('host');
-
-      // Wait for app to load identity.
-      await waitForExpect(async () => {
-        expect(await host.isPlaceholderVisible()).to.be.false;
-        expect(await host.isNewTodoVisible()).to.be.true;
-      }, 1000);
-    });
-
     test('create a task', async () => {
       await host.createTodo(Groceries.Eggs);
 
@@ -59,7 +46,6 @@ test.describe('Basic test', () => {
         return;
       }
 
-      await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
       const authCode = await host.shell.getAuthCode();
 
@@ -72,7 +58,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      }, 1000);
+      });
     });
 
     test('toggle a task', async () => {

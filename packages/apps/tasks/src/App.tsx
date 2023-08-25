@@ -16,7 +16,8 @@ export const App = () => {
     <ClientProvider
       config={config}
       onInitialized={async (client) => {
-        if (!client.halo.identity.get()) {
+        const searchParams = new URLSearchParams(location.search);
+        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
         }
       }}

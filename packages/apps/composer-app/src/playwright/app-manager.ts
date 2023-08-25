@@ -24,7 +24,7 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      waitFor: (page) => page.getByTestId('dxos-shell').isVisible(),
+      waitFor: (page) => page.getByTestId('treeView.haloButton').isVisible(),
     });
     this.page = page;
     this.shell = new ShellManager(this.page, this._inIframe);

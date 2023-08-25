@@ -270,7 +270,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MarkdownAction.CREATE: {
-              return { object: new DocumentType() };
+              return { object: new Document() };
             }
           }
         },

@@ -59,7 +59,11 @@ export const TreeViewContainer = () => {
                   role='none'
                   className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
                 >
-                  <Avatar.Frame classNames='cursor-pointer' onClick={openIdentityPanel}>
+                  <Avatar.Frame
+                    data-testid='treeView.haloButton'
+                    classNames='cursor-pointer'
+                    onClick={openIdentityPanel}
+                  >
                     <Avatar.Fallback href={jdenticon} />
                   </Avatar.Frame>
                   <div className='grow'></div>
