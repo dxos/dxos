@@ -147,6 +147,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                   <Button
                     variant='ghost'
                     classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+                    data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
@@ -170,6 +171,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                       }}
                       classNames='gap-2'
                       disabled={action.properties.disabled}
+                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
                       {action.icon && <action.icon className={getSize(4)} />}
                       <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>

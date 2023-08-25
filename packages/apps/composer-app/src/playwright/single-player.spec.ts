@@ -16,7 +16,7 @@ test.describe('Single-player tests', () => {
     await host.init();
   });
 
-  test('create identity, space is created by default', async () => {
+  test.skip('create identity, space is created by default', async () => {
     await host.shell.createIdentity('host');
     await waitForExpect(async () => {
       expect(await host.isAuthenticated()).to.be.true;

@@ -33,7 +33,7 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
       <TreeItem.Heading asChild>
         <button
           role='link'
-          data-testid='spacePlugin.documentTreeItemHeading'
+          {...(level > 1 && { 'data-testid': 'spacePlugin.documentTreeItemLink' })}
           data-itemid={node.id}
           {...(!navigationSidebarOpen && { tabIndex: -1 })}
           onKeyDown={(event) => {
