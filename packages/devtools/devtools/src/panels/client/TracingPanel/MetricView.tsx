@@ -5,9 +5,34 @@
 import React, { FC, useMemo } from 'react';
 import { AxisOptions, Chart } from 'react-charts';
 
-import { Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { Metric, Resource } from '@dxos/protocols/proto/dxos/tracing';
 
 import { JsonTreeView } from '../../../components';
+import { ResourceName } from './Resource';
+
+export const DetailView: FC<{ resource?: Resource }> = ({ resource }) => {
+  if (!resource) {
+    return null;
+  }
+
+  return (
+    <div className='px-2'>
+      <ResourceName className='text-lg' resource={resource} />
+
+      <div>
+        <h4 className='text-md border-b'>Info</h4>
+        <JsonTreeView data={resource.info} />
+      </div>
+
+      <div>
+        <h4 className='text-md border-b'>Metrics</h4>
+        {resource.metrics?.map((metric, idx) => (
+          <MetricView key={idx} metric={metric} />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const MetricView: FC<{ metric: Metric }> = ({ metric }) => {
   if (metric.counter) {

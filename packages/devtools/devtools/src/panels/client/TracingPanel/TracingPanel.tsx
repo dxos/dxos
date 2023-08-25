@@ -3,19 +3,41 @@
 //
 
 import * as Tabs from '@radix-ui/react-tabs';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import { JsonTreeView, PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
+import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 import { LogView } from './LogView';
-import { MetricView } from './MetricView';
+import { DetailView } from './MetricView';
+import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
 import { ResourceState, State } from './types';
+
+const { helper } = createColumnBuilder<ResourceState>();
+const columns: GridColumnDef<ResourceState, any>[] = [
+  helper.accessor('resource', {
+    id: 'name',
+    size: 200,
+    cell: (cell) => <ResourceName resource={cell.getValue()} />,
+  }),
+  helper.accessor((state) => state.logs.length, {
+    id: 'logs',
+    size: 50,
+  }),
+  helper.accessor((state) => state.spans.length, {
+    id: 'spans',
+    size: 50,
+  }),
+  helper.accessor((state) => state.resource.info, {
+    id: 'info',
+    cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
+  }),
+];
 
 export const TracingPanel = () => {
   const client = useClient();
@@ -113,23 +135,7 @@ export const TracingPanel = () => {
           </Tabs.List>
 
           <Tabs.Content value='details' className='grow overflow-scroll'>
-            {selectedResource && (
-              <div className='px-2'>
-                <ResourceName className='text-lg' resource={selectedResource.resource} />
-
-                <div>
-                  <h4 className='text-md border-b'>Info</h4>
-                  <JsonTreeView data={selectedResource.resource.info} />
-                </div>
-
-                <div>
-                  <h4 className='text-md border-b'>Metrics</h4>
-                  {selectedResource.resource.metrics?.map((metric, idx) => (
-                    <MetricView key={idx} metric={metric} />
-                  ))}
-                </div>
-              </div>
-            )}
+            <DetailView resource={selectedResource?.resource} />
           </Tabs.Content>
 
           <Tabs.Content value='logs' className='grow'>
@@ -143,42 +149,4 @@ export const TracingPanel = () => {
       </div>
     </PanelContainer>
   );
-};
-
-const { helper } = createColumnBuilder<ResourceState>();
-const columns: GridColumnDef<ResourceState, any>[] = [
-  helper.accessor('resource', {
-    id: 'name',
-    size: 200,
-    cell: (cell) => <ResourceName resource={cell.getValue()} />,
-  }),
-  helper.accessor((state) => state.logs.length, {
-    id: 'logs',
-    size: 50,
-  }),
-  helper.accessor((state) => state.spans.length, {
-    id: 'spans',
-    size: 50,
-  }),
-  helper.accessor((state) => state.resource.info, {
-    id: 'info',
-    cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
-  }),
-];
-
-const ResourceName: FC<{ className?: string; resource: Resource }> = ({ className, resource }) => (
-  <span className={className}>
-    {sanitizeClassName(resource.className)}
-    <span className='text-gray-400'>#{resource.instanceId}</span>
-  </span>
-);
-
-const sanitizeClassName = (className: string) => {
-  const SANITIZE_REGEX = /[^_](\d+)$/;
-  const m = className.match(SANITIZE_REGEX);
-  if (!m) {
-    return className;
-  } else {
-    return className.slice(0, -m[1].length);
-  }
 };
