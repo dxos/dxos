@@ -13,9 +13,11 @@ import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestBuilder, syncItemsLocal } from '../testing';
@@ -228,6 +230,61 @@ describe('DataSpaceManager', () => {
         await processedFirstEpoch;
         expect(epochs).to.deep.equal([epochsNumber]);
       }
+    });
+
+    test('Items are cleared before epoch applied', async () => {
+      const builder = new TestBuilder();
+      afterTest(async () => builder.destroy());
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.dataSpaceManager);
+
+      // Create space and fill it with Items.
+      const space = await peer.dataSpaceManager.createSpace();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const itemsNumber = 2;
+      for (const _ of range(itemsNumber)) {
+        await testLocalDatabase(space.dataPipeline);
+      }
+
+      // Create empty Epoch and check if it clears items.
+      {
+        const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(
+          (epoch) => epoch.subject.assertion.number === 1,
+        );
+
+        // Empty snapshot.
+        const snapshot: SpaceSnapshot = {
+          spaceKey: space.key.asUint8Array(),
+          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
+          database: {},
+        };
+
+        const snapshotCid = await peer.snapshotStore.saveSnapshot(snapshot);
+
+        const epoch: Epoch = {
+          previousId: space.dataPipeline.currentEpoch?.id,
+          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
+          number: (space.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
+          snapshotCid,
+        };
+
+        const receipt = await space.inner.controlPipeline.writer.write({
+          credential: {
+            credential: await peer.props.signingContext!.credentialSigner.createCredential({
+              subject: space.key,
+              assertion: {
+                '@type': 'dxos.halo.credentials.Epoch',
+                ...epoch,
+              },
+            }),
+          },
+        });
+        await space.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+        await processedFirstEpoch;
+      }
+
+      expect(Array.from(space.dataPipeline.itemManager.entities.keys()).length).to.equal(0);
     });
   });
 
