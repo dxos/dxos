@@ -50,11 +50,16 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
       [],
     );
 
-    // TODO(burdon): Change to line?
     const secondaryAxes: AxisOptions<any>[] = useMemo(
       () => [{ elementType: 'line', getValue: (point: any) => point.value as number }],
       [],
     );
+
+    const data =
+      metric.timeSeries.tracks?.map(({ name, points }) => ({
+        label: name,
+        data: points?.map((p, idx) => ({ idx: points.length - 1 - idx, value: p.value })) ?? [],
+      })) ?? [];
 
     return (
       <div className='m-2'>
@@ -76,11 +81,7 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
               primaryAxis,
               secondaryAxes,
               interactionMode: 'closest',
-              data:
-                metric.timeSeries.tracks?.map((track) => ({
-                  label: track.name,
-                  data: track.points?.map((p, idx) => ({ idx, value: p.value })) ?? [],
-                })) ?? [],
+              data,
             }}
           />
         </div>
