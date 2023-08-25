@@ -143,8 +143,9 @@ export class TraceProcessor {
       }
 
       const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
+      const time = performance.now();
       for (const key of Object.keys(tracingContext.metricsProperties)) {
-        (instance[key] as BaseCounter)._tick?.(0, 0);
+        (instance[key] as BaseCounter)._tick?.(time);
       }
 
       let changed = false;

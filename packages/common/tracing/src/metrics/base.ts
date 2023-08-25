@@ -18,5 +18,5 @@ export abstract class BaseCounter {
 
   abstract getData(): Metric;
 
-  _tick(time: number, delta: number): void {}
+  _tick(time: number): void {}
 }
