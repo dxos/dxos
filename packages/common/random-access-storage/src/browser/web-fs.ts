@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 import { STORAGE_MONITOR } from '../monitor';
-import { UnaryCounter, trace } from '@dxos/tracing';
+import { TimeSeriesCounter, UnaryCounter, trace } from '@dxos/tracing';
 
 /**
  * Web file systems.
@@ -180,7 +180,19 @@ export class WebFile extends EventEmitter implements File {
   private readonly _destroy: () => Promise<void>;
 
   @trace.metricsCounter()
-  private _operations = new UnaryCounter();
+  private _reads = new TimeSeriesCounter();
+  
+  @trace.metricsCounter()
+  private _readBytes = new TimeSeriesCounter();
+  
+  @trace.metricsCounter()
+  private _writes = new TimeSeriesCounter();
+  
+  @trace.metricsCounter()
+  private _writeBytes = new TimeSeriesCounter();
+  
+  @trace.metricsCounter()
+  private _operations = new TimeSeriesCounter();
 
   constructor({
     fileName,
@@ -213,6 +225,10 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async write(offset: number, data: Buffer) {
+    this._operations.inc();
+    this._writes.inc();
+    this._writeBytes.inc(data.length);
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
     try {
       // TODO(mykola): Fix types.
@@ -228,6 +244,9 @@ export class WebFile extends EventEmitter implements File {
   @synchronized
   async read(offset: number, size: number) {
     this._operations.inc();
+    this._reads.inc();
+    this._readBytes.inc(size);
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
     try {
       const fileHandle: any = await this._fileHandle;
@@ -245,6 +264,7 @@ export class WebFile extends EventEmitter implements File {
   @synchronized
   async del(offset: number, size: number) {
     this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'delete', size });
     try {
       if (offset < 0 || size < 0) {
@@ -271,6 +291,7 @@ export class WebFile extends EventEmitter implements File {
   @synchronized
   async stat() {
     this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
     try {
       const fileHandle: any = await this._fileHandle;
@@ -286,6 +307,7 @@ export class WebFile extends EventEmitter implements File {
   @synchronized
   async truncate(offset: number) {
     this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
       const fileHandle: any = await this._fileHandle;
