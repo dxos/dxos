@@ -55,11 +55,6 @@ export class FeedStore<T extends {}> {
     invariant(feedKey);
     invariant(!this._closed, 'Feed store is closed');
 
-    // TODO(burdon): Coordinate with FeedFactory!!!
-    if (sparse) {
-      sparse = false;
-    }
-
     let feed = this.getFeed(feedKey);
     if (feed) {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).

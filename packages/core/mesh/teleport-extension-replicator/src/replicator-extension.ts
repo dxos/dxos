@@ -225,20 +225,20 @@ export class ReplicatorExtension implements TeleportExtension {
     });
 
     // Left for testing.
-    const debug = true;
-    if (debug) {
-      feed.on('sync', () => {
-        log.info('sync', { key: feed.key, length: feed.length });
-      });
-      feed.on('download', (index: number, data: any) => {
-        log.info('download', {
-          key: feed.key,
-          index,
-          length: feed.length,
-          data: data.length,
-        });
-      });
-    }
+    // const debug = true;
+    // if (debug) {
+    //   feed.on('sync', () => {
+    //     log.info('sync', { key: feed.key, length: feed.length });
+    //   });
+    //   feed.on('download', (index: number, data: any) => {
+    //     log.info('download', {
+    //       key: feed.key,
+    //       index,
+    //       length: feed.length,
+    //       data: data.length,
+    //     });
+    //   });
+    // }
 
     replicationStream.on('error', (err) => {
       if (
