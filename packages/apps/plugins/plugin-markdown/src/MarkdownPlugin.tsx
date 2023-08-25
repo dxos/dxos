@@ -44,7 +44,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode, ['content']);
 
   const EditorMainStandalone = ({
     data: { composer, properties },
