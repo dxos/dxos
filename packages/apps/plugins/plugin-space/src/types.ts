@@ -21,6 +21,7 @@ export enum SpaceAction {
   RESTORE = `${SPACE_ACTION}/restore`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
+  RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
 }
 
 export type SpaceState = {

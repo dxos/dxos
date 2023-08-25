@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
+import { Article, ArticleMedium, PencilSimpleLine, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -81,6 +81,16 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+    },
+  });
+
+  child.addAction({
+    id: 'rename',
+    label: ['rename document label', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) => <PencilSimpleLine {...props} />,
+    intent: {
+      action: SpaceAction.RENAME_OBJECT,
       data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
     },
   });

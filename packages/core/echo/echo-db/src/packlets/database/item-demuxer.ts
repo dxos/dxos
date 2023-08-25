@@ -21,6 +21,7 @@ export type EchoProcessor = (message: IEchoStream) => void;
  */
 export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
+  readonly snapshot = new Event<EchoSnapshot>();
 
   constructor(private readonly _itemManager: ItemManager, private readonly _modelFactory: ModelFactory) {}
 
@@ -84,6 +85,13 @@ export class ItemDemuxer {
   restoreFromSnapshot(snapshot: EchoSnapshot) {
     const { items = [] } = snapshot;
 
+    const keepIds = new Set<string>(items?.filter((object) => object.genesis).map((object) => object.objectId) ?? []);
+    for (const item of this._itemManager.entities.values()) {
+      if (!keepIds.has(item.id)) {
+        this._itemManager.deconstructItem(item.id);
+      }
+    }
+
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
       invariant(item.objectId);
@@ -96,6 +104,7 @@ export class ItemDemuxer {
       });
       obj.resetToSnapshot(item);
     }
+    this.snapshot.emit(snapshot);
   }
 }
 

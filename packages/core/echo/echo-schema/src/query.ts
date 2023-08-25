@@ -54,9 +54,9 @@ export class Query<T extends TypedObject = TypedObject> {
   subscribe(callback: (query: Query<T>) => void): Subscription {
     return this._updateEvent.on((updated) => {
       const changed = updated.some((object) => {
-        if (this._objects.has(object.id)) {
+        const exists = this._cache?.find((obj) => obj.id === object.id);
+        if (this._objects.has(object.id) || exists) {
           const match = this._match(this._objects.get(object.id)! as T);
-          const exists = this._cache?.find((obj) => obj.id === object.id);
           return match || (exists && !match);
         } else {
           return false;
