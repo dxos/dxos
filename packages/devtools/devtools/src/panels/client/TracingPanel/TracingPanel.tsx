@@ -3,7 +3,7 @@
 //
 
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { FlameChart } from '../../../components/FlameChart'; // Deliberately not using the common components export to aid in code-splitting.
 import * as Tabs from '@radix-ui/react-tabs';
@@ -43,7 +43,12 @@ export const TracingPanel = () => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe((data) => {
       for (const event of data.resourceAdded ?? []) {
-        state.current.resources.set(event.resource.id, { resource: event.resource, spans: [], logs: [] });
+        const existing = state.current.resources.get(event.resource.id);
+        if (!existing) {
+          state.current.resources.set(event.resource.id, { resource: event.resource, spans: [], logs: [] });
+        } else {
+          existing.resource = event.resource;
+        }
       }
       for (const event of data.resourceRemoved ?? []) {
         state.current.resources.delete(event.id);
@@ -66,6 +71,9 @@ export const TracingPanel = () => {
       }
 
       forceUpdate({});
+      console.log(state.current)
+    }, err => {
+      console.error(err)
     });
 
     return () => {
@@ -80,15 +88,18 @@ export const TracingPanel = () => {
   const selectedResource = selectedResourceId !== undefined ? state.current.resources.get(selectedResourceId) : undefined;
 
   // Spans
-  const spans = selectedResourceId === undefined ? [...state.current.spans.values()].filter((s) => s.parentId === undefined) : selectedResource?.spans ?? [];
-  const flameGraph = spans.length > 0 ? buildFlameGraph(state.current, spans[Math.min(selectedFlameIndex, spans.length - 1)]?.id ?? 0) : undefined;
+  const graphs = useMemo(() => {
+    const spans = selectedResourceId === undefined ? [...state.current.spans.values()].filter((s) => s.parentId === undefined) : selectedResource?.spans ?? [];
+    return buildMultiFlameGraph(state.current, spans.map(s => s.id));
+  }, [selectedResource, state.current.spans.size]);
+  const flameGraph = graphs[Math.min(selectedFlameIndex, graphs.length - 1)];
 
   const handleBack = () => {
     setSelectedFlameIndex((idx) => Math.max(0, idx - 1));
   };
 
   const handleForward = () => {
-    setSelectedFlameIndex((idx) => Math.min(spans.length - 1, idx + 1));
+    setSelectedFlameIndex((idx) => Math.min(graphs.length - 1, idx + 1));
   };
 
   const tabClass = mx(
@@ -116,7 +127,7 @@ export const TracingPanel = () => {
         <Tabs.List className='flex w-full rounded-t-lg bg-white dark:bg-gray-800'>
           <Tabs.Trigger className={tabClass} value='details'>Details</Tabs.Trigger>
           <Tabs.Trigger className={tabClass} value='logs'>Logs ({selectedResource?.logs.length ?? 0})</Tabs.Trigger>
-          <Tabs.Trigger className={tabClass} value='spans'>Spans ({spans.length})</Tabs.Trigger>
+          <Tabs.Trigger className={tabClass} value='spans'>Spans ({selectedResource?.spans.length ?? 0})</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value='details'>
           {
@@ -139,7 +150,7 @@ export const TracingPanel = () => {
           <div className='flex flex-row items-baseline justify-items-center p-2'>
             <ArrowLeft className='cursor-pointer' onClick={handleBack} />
             <div className='flex-1 text-center'>
-              {selectedFlameIndex + 1} / {spans.length}
+              Thread {selectedFlameIndex + 1} / {graphs.length}
             </div>
             <ArrowRight className='cursor-pointer' onClick={handleForward} />
           </div>
@@ -251,3 +262,30 @@ const buildFlameGraph = (state: State, rootId: number): FlameChartNodes => {
     children: children,
   }];
 };
+
+const buildMultiFlameGraph = (state: State, roots: number[]): FlameChartNodes[] => {
+  const endTimes: number[] = []
+  const graphs: FlameChartNodes[] = []
+
+  for (const rootId of roots) {
+    const nodes = buildFlameGraph(state, rootId);
+    const startTime = nodes[0].start;
+
+    let found = false;
+    for(let idx in endTimes) {
+      if(endTimes[idx] <= startTime) {
+        endTimes[idx] = nodes[0].start + nodes[0].duration;
+        graphs[idx].push(nodes[0]);
+        found = true;
+        break;
+      }
+    }
+
+    if(!found) {
+      endTimes.push(nodes[0].start + nodes[0].duration);
+      graphs.push(nodes);
+    }
+  }
+
+  return graphs
+}
