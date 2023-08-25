@@ -9,8 +9,9 @@ import { FlameChart } from '../../../components/FlameChart'; // Deliberately not
 import * as Tabs from '@radix-ui/react-tabs';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
+import { AxisOptions, Chart } from "react-charts";
 
 import { JsonTreeView, PanelContainer } from '../../../components';
 import type { FlameChartNodes } from 'flame-chart-js';
@@ -136,7 +137,9 @@ export const TracingPanel = () => {
               <div className='text-md border-b'>Info</div>
               <JsonTreeView data={selectedResource.resource.info} />
               <div className='text-md border-b'>Metrics</div>
-              <JsonTreeView data={selectedResource.resource.metrics} />
+              {selectedResource.resource.metrics?.map((metric, idx) => (
+                <MetricView key={idx} metric={metric} />
+              ))}
             </>
           }
         </Tabs.Content>
@@ -188,6 +191,41 @@ const columns: GridColumnDef<ResourceState, any>[] = [
 const ResourceName = ({ resource }: { resource: Resource }) => (
   <span>{sanitizeClassName(resource.className)}<span className='text-gray-400'>#{resource.instanceId}</span></span>
 )
+
+
+const MetricView = ({ metric }: { metric: Metric }) => {
+  if (metric.counter) {
+    return <span>{metric.name}: {metric.counter.value} {metric.counter.units ?? ''}</span>
+  } else if (metric.timeSeries) {
+
+    const primaryAxis: AxisOptions<any> = useMemo(() => ({ scaleType: 'linear', getValue: (point: any) => point.idx as number }), [])
+    const secondaryAxes: AxisOptions<any>[] = useMemo(() => [{ elementType: 'bar', getValue: (point: any) => point.value as number }], [])
+
+    return (
+      <div className='m-2'>
+        <div className='text-lg'>{metric.name}</div>
+        <div>total: {JSON.stringify(metric.timeSeries.tracks?.reduce((acc, track) => ({ ...acc, [track.name]: track.total }), {}))}</div>
+        <div className='w-full h-[100px] m-2'>
+          <Chart
+            options={{
+              data: metric.timeSeries.tracks?.map(track => ({
+                label: track.name,
+                data: track.points?.map((p, idx) => ({ idx, value: p.value })) ?? [],
+              })) ?? [],
+              primaryAxis,
+              secondaryAxes,
+
+            }}
+          />
+        </div>
+      </div>
+    )
+  } else if (metric.custom) {
+    return <JsonTreeView data={{ [metric.name]: metric.custom.payload }} />
+  } else {
+    return <JsonTreeView data={metric} />
+  }
+}
 
 
 // TODO(dmaretskyi): Unify with Logging panel.
@@ -272,8 +310,8 @@ const buildMultiFlameGraph = (state: State, roots: number[]): FlameChartNodes[] 
     const startTime = nodes[0].start;
 
     let found = false;
-    for(let idx in endTimes) {
-      if(endTimes[idx] <= startTime) {
+    for (let idx in endTimes) {
+      if (endTimes[idx] <= startTime) {
         endTimes[idx] = nodes[0].start + nodes[0].duration;
         graphs[idx].push(nodes[0]);
         found = true;
@@ -281,7 +319,7 @@ const buildMultiFlameGraph = (state: State, roots: number[]): FlameChartNodes[] 
       }
     }
 
-    if(!found) {
+    if (!found) {
       endTimes.push(nodes[0].start + nodes[0].duration);
       graphs.push(nodes);
     }

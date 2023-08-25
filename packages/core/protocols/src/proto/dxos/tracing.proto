@@ -21,7 +21,7 @@ message Resource {
 
   google.protobuf.Struct info = 4;
   repeated ResourceLink links = 5;
-  map<string, google.protobuf.Struct> metrics = 6;
+  repeated Metric metrics = 6;
 }
 
 message ResourceLink {
@@ -65,6 +65,41 @@ message StreamTraceEvent {
   repeated SpanAdded span_added = 3;
   repeated LogAdded log_added = 4;
 }
+
+message Metric {
+  message Counter {
+    double value = 1;
+    optional string units = 2;
+  }
+
+  message TimeSeries {
+    message Point {
+      double value = 1;
+    }
+
+    message Track {
+      string name = 1;
+      optional string units = 2;
+      repeated Point points = 10;
+      double total = 11;
+    }
+
+    repeated Track tracks = 1;
+  }
+
+  message Custom {
+    google.protobuf.Struct payload = 1;
+  }
+
+  string name = 1;
+
+  oneof Value {
+    Counter counter = 100;
+    TimeSeries time_series = 101;
+    Custom custom = 199;
+  }
+}
+
 
 service TracingService {
   rpc StreamTrace(google.protobuf.Empty) returns (stream StreamTraceEvent);

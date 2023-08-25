@@ -1,3 +1,5 @@
+import { Metric } from '@dxos/protocols/proto/dxos/tracing'
+
 export abstract class BaseCounter {
   /**
    * @internal
@@ -14,7 +16,7 @@ export abstract class BaseCounter {
     this.name = name;
   }
 
-  abstract getData(): Record<string, any>;
+  abstract getData(): Metric;
 
   _tick(time: number, delta: number): void {}
 }

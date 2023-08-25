@@ -4,7 +4,7 @@
 
 import { Context } from '@dxos/context';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
@@ -107,12 +107,12 @@ export class TraceProcessor {
     return res;
   }
 
-  getResourceMetrics(instance: any): Record<string, any> {
-    const res: Record<string, any> = {};
+  getResourceMetrics(instance: any): Metric[] {
+    const res: Metric[] = [];
     const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
 
     for (const [key, _opts] of Object.entries(tracingContext.metricsProperties)) {
-      res[key] = instance[key].getData();
+      res.push(instance[key].getData());
     }
 
     return res;

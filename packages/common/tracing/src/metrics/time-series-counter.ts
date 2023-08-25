@@ -1,3 +1,4 @@
+import { Metric } from "@dxos/protocols/proto/dxos/tracing";
 import { BaseCounter } from "./base";
 
 const MAX_BUCKETS = 60;
@@ -6,6 +7,12 @@ export class TimeSeriesCounter extends BaseCounter {
   private _currentValue = 0;
   private _totalValue = 0;
   private _buckets: number[] = [];
+  units?: string;
+
+  constructor({ units }: { units?: string } = {}) {
+    super();
+    this.units = units;
+  }
 
   inc(by = 1) {
     this._currentValue += by;
@@ -20,10 +27,19 @@ export class TimeSeriesCounter extends BaseCounter {
     this._currentValue = 0;
   }
 
-  override getData(): Record<string, any> {
+  override getData(): Metric {
     return {
-      total: this._totalValue,
-      buckets: this._buckets,
+      name: this.name!,
+      timeSeries: {
+        tracks: [{
+          name: this.name!,
+          units: this.units,
+          points: this._buckets.map((value, index) => ({
+            value,
+          })),
+          total: this._totalValue,
+        }]
+      }
     };
   }
 }
