@@ -13,7 +13,7 @@ import { AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
-import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
+import { TRACE_PROCESSOR, TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { Context } from '@dxos/context';
 import { FeedMessageBlock } from '@dxos/protocols';
 
@@ -42,6 +42,12 @@ export class ControlPipeline {
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
+
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _mutations = new TimeSeriesCounter();
 
   constructor({ spaceKey, genesisFeed, feedProvider, metadataStore }: ControlPipelineParams) {
     this._spaceKey = spaceKey;
@@ -96,11 +102,16 @@ export class ControlPipeline {
   @trace.span()
   private async _consumePipeline(ctx: Context) {
     for await (const msg of this._pipeline.consume()) {
+      const span = this._usage.beginRecording();
+      this._mutations.inc();
+
       try {
         await this._processMessage(ctx, msg)
       } catch (err: any) {
         log.catch(err);
       }
+      
+      span.end();
     }
   }
 

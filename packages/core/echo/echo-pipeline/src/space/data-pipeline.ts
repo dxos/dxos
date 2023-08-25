@@ -24,6 +24,7 @@ import { tracer } from '@dxos/util';
 import { DatabaseHost, SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 
 export interface PipelineFactory {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -65,6 +66,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
   private _pipeline?: Pipeline = undefined;
@@ -78,7 +80,13 @@ export class DataPipeline implements CredentialProcessor {
   private _lastProcessedEpoch = -1;
   private _epochCtx?: Context;
 
-  constructor(private readonly _params: DataPipelineParams) {}
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _mutations = new TimeSeriesCounter();
+
+  constructor(private readonly _params: DataPipelineParams) { }
 
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
@@ -206,6 +214,9 @@ export class DataPipeline implements CredentialProcessor {
 
     invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
+      const span = this._usage.beginRecording();
+      this._mutations.inc();
+
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
 
@@ -242,6 +253,8 @@ export class DataPipeline implements CredentialProcessor {
       } catch (err: any) {
         log.catch(err);
       }
+
+      span.end();
     }
   }
 
