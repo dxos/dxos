@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Devices, Intersect, Planet } from '@phosphor-icons/react';
+import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
@@ -218,18 +218,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 action: SpaceAction.JOIN,
               },
             },
-            // TODO(wittjosiah): Factor out.
-            {
-              id: 'invite-device',
-              label: ['invite device label', { ns: 'os' }],
-              icon: (props) => <Devices {...props} />,
-              properties: {
-                testId: 'spacePlugin.inviteDevice',
-              },
-              intent: {
-                action: 'device-invitations',
-              },
-            },
           );
 
           return () => {
@@ -249,14 +237,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             case SpaceAction.JOIN: {
               if (clientPlugin) {
                 clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
-                return true;
-              }
-              return;
-            }
-
-            case 'device-invitations': {
-              if (clientPlugin) {
-                clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
                 return true;
               }
               return;

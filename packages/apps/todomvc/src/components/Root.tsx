@@ -13,7 +13,16 @@ const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const Root = () => (
-  <ClientProvider config={configProvider} services={servicesProvider}>
+  <ClientProvider
+    config={configProvider}
+    services={servicesProvider}
+    onInitialized={async (client) => {
+      const searchParams = new URLSearchParams(location.search);
+      if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        await client.halo.createIdentity();
+      }
+    }}
+  >
     <Main />
   </ClientProvider>
 );

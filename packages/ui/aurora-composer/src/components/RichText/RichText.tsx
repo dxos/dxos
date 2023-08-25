@@ -12,7 +12,7 @@ import StarterKit from '@tiptap/starter-kit';
 import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { humanize } from '@dxos/util';
+import { generateName } from '@dxos/display-name';
 
 import { ComposerModel, ComposerSlots } from '../../model';
 import {
@@ -132,7 +132,7 @@ const useEditor = ({ model, placeholder = 'Enter text…', slots = {} }: UseEdit
             CollaborationCursor.configure({
               provider: model.provider,
               user: model.peer && {
-                name: model.peer.name ?? humanize(model.peer.id),
+                name: model.peer.name ?? generateName(model.peer.id),
                 color: cursorColor.color,
               },
             }),

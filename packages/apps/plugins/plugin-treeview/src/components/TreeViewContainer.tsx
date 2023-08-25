@@ -5,6 +5,7 @@
 import { GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
+import type { ClientPluginProvides } from '@braneframe/plugin-client';
 import { useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
@@ -21,21 +22,31 @@ import {
   Separator,
 } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
+import { findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
 import { NavTreeItem } from './NavTree';
 
 export const TreeViewContainer = () => {
+  const { plugins } = usePluginContext();
   const { graph } = useGraph();
 
-  const identity = useIdentity({ login: true });
+  const identity = useIdentity();
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const splitViewContext = useSplitView();
 
   const branches = graph.root.children;
+  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+
+  const openIdentityPanel = () => {
+    if (clientPlugin) {
+      clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
+    }
+  };
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -43,17 +54,19 @@ export const TreeViewContainer = () => {
         <div role='none' className='flex flex-col bs-full'>
           {identity && (
             <>
-              <Avatar.Root size={6} variant='circle' status='active'>
+              <Avatar.Root size={10} variant='circle' status='active'>
                 <div
                   role='none'
                   className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
                 >
-                  <Avatar.Frame>
+                  <Avatar.Frame
+                    data-testid='treeView.haloButton'
+                    classNames='cursor-pointer'
+                    onClick={openIdentityPanel}
+                  >
                     <Avatar.Fallback href={jdenticon} />
                   </Avatar.Frame>
-                  <Avatar.Label classNames='grow text-sm'>
-                    {identity.profile?.displayName ?? identity.identityKey.truncate()}
-                  </Avatar.Label>
+                  <div className='grow'></div>
                   <Tooltip.Root>
                     <Tooltip.Trigger asChild>
                       <Button

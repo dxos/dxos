@@ -5,9 +5,9 @@ import React from 'react';
 
 import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
+import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Identity } from '@dxos/react-client/halo';
-import { humanize } from '@dxos/util';
 
 export const IdentityListItem = ({
   identity,
@@ -21,7 +21,7 @@ export const IdentityListItem = ({
   const fallbackValue = identity.identityKey.toHex();
   const labelId = useId('identityListItem__label');
   const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
-  const displayName = identity.profile?.displayName ?? humanize(identity.identityKey);
+  const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   return (
     <ListItem.Root
       classNames={mx('rounded p-2 flex gap-2 items-center', onClick && 'cursor-pointer')}

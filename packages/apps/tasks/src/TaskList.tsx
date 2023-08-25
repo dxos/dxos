@@ -4,15 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { ShellLayout } from '@dxos/react-client';
+import { ShellLayout, useShell } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { useShell } from '@dxos/react-shell';
 
 import { Task } from './proto';
 
 export const TaskList = () => {
-  useIdentity({ login: true });
   const space = useSpace(); // What should the pattern be for find-or-create a space?
   const shell = useShell();
   const tasks = useQuery<Task>(space, Task.filter());

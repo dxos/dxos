@@ -33,6 +33,7 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
