@@ -30,10 +30,12 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
+import { ClientOptions } from '@dxos/client';
 import { SpaceProxy } from '@dxos/client/echo';
 import { fromHost } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
 
@@ -43,20 +45,18 @@ import { PluginContextProvider } from '@dxos/react-surface';
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
-void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
-
-// TODO(burdon): Config.
-console.log(process.env);
-const mono = true;
-const debug = true;
+const config = new Config(Envs(), Local(), Defaults());
+void initializeAppTelemetry({ namespace: 'labs-app', config });
 
 // TODO(burdon): Configure initial settings (e.g., show debug panel).
-const config = new Config(Envs(), Local(), Defaults());
-const clientOptions = {
+const debug = config.values.runtime?.app?.env?.DX_DEBUG;
+
+const clientOptions: ClientOptions = {
   config,
-  // TODO(burdon): Configure local services in debug mode (e.g., for mobile testing).
-  services: mono ? fromHost(config) : undefined,
-  // services: fromIFrame(config, { vault: 'https://halo.dev.dxos.org/vault.html' }),
+  services:
+    config.values.runtime?.client?.clientServices === Runtime.Client.ClientServiceType.LOCAL
+      ? fromHost(config)
+      : undefined,
 };
 
 createRoot(document.getElementById('root')!).render(

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hammer, IconProps } from '@phosphor-icons/react';
+import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -59,7 +59,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Hammer {...props} />,
+              icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
                 action: 'debug-openDevtools',
@@ -80,7 +80,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           parent.add({
             id: nodeId,
             label: 'Debug',
-            icon: (props: IconProps) => <Hammer {...props} />,
+            icon: (props: IconProps) => <Bug {...props} />,
             data: { id: nodeId, space: parent.data },
           });
         },

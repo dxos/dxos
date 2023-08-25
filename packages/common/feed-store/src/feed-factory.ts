@@ -41,6 +41,7 @@ export class FeedFactory<T extends {}> {
   private readonly _hypercoreOptions?: HypercoreOptions;
 
   constructor({ root, signer, hypercore }: FeedFactoryOptions) {
+    log('FeedFactory', { options: hypercore });
     this._root = root ?? failUndefined();
     this._signer = signer;
     this._hypercoreOptions = hypercore;
@@ -53,8 +54,6 @@ export class FeedFactory<T extends {}> {
 
       return native;
     };
-
-    log.info('FeedFactory', { options: hypercore });
   }
 
   async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<Hypercore<T>> {

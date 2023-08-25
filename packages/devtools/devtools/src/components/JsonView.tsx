@@ -57,15 +57,9 @@ export const JsonTreeView: FC<{
   return (
     <div className={mx('m-2', className)}>
       <JSONTree
-        hideRoot={!showRoot}
-        theme={{
-          extend: theme,
-          valueLabel: {
-            textDecoration: 'underline',
-          },
-        }}
-        getItemString={showMeta ? undefined : () => null}
         data={replaced}
+        hideRoot={!showRoot}
+        getItemString={showMeta ? undefined : () => null}
         shouldExpandNodeInitially={(_, __, _level) => _level < level}
         labelRenderer={([key]) => key}
         // TODO(burdon): Fix.
@@ -74,6 +68,13 @@ export const JsonTreeView: FC<{
           return replacer('', value);
         }}
         */
+
+        theme={{
+          extend: theme,
+          valueLabel: {
+            textDecoration: 'underline',
+          },
+        }}
       />
     </div>
   );

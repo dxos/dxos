@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, HandPalm, Play, Plus } from '@phosphor-icons/react';
+import { ArrowClockwise, DownloadSimple, HandPalm, Play, Plus } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
+import { JSONTree } from 'react-json-tree';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
@@ -23,8 +24,54 @@ import { arrayToBuffer } from '@dxos/util';
 import { DEBUG_PLUGIN, DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_COUNT = 100;
+export const DEFAULT_COUNT = 1000;
 export const DEFAULT_PERIOD = 10;
+
+// TODO(burdon): Light/dark mode.
+// https://github.com/gaearon/base16-js/tree/master/src
+const theme = {
+  scheme: 'dxos',
+  author: 'DXOS',
+  base00: '#ffffff',
+  base01: '#302e00',
+  base02: '#5f5b17',
+  base03: '#6c6823',
+  base04: '#86813b',
+  base05: '#948e48',
+  base06: '#ccc37a',
+  base07: '#faf0a5',
+  base08: '#c35359',
+  base09: '#b36144',
+  base0A: '#a88339',
+  base0B: '#18974e',
+  base0C: '#75a738',
+  base0D: '#477ca1',
+  base0E: '#8868b3',
+  base0F: '#b3588e',
+};
+
+/**
+ * File download anchor.
+ *
+ * const download = useDownload();
+ * const handleDownload = (data: string) => {
+ *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
+ * };
+ */
+// TODO(burdon): Factor out.
+export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+  return useMemo(
+    () => (data: Blob | string, filename: string) => {
+      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+      const element = document.createElement('a');
+      element.setAttribute('href', url);
+      element.setAttribute('download', filename);
+      element.setAttribute('target', 'download');
+      element.click();
+    },
+    [],
+  );
+};
 
 export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
   const { t } = useTranslation(DEBUG_PLUGIN);
@@ -44,6 +91,14 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   useEffect(() => {
     void handleRefresh();
   }, []);
+
+  const download = useFileDownload();
+  const handleCopy = async () => {
+    download(
+      new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}.json`,
+    );
+  };
 
   const [mutationCount, setMutationCount] = useState(String(DEFAULT_COUNT));
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
@@ -146,6 +201,9 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <Button onClick={handleRefresh}>
             <ArrowClockwise className={getSize(5)} />
           </Button>
+          <Button onClick={handleCopy}>
+            <DownloadSimple className={getSize(5)} />
+          </Button>
 
           <div className='grow' />
           <Button onClick={handleCreateInvitation}>Invite</Button>
@@ -156,11 +214,27 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
       </div>
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
-        <div className='flex grow overflow-auto text-sm'>
+        <div className='flex flex-col grow overflow-auto'>
+          {false && (
+            <div className='text-sm font-mono [&>ul]:!m-0 [&>ul]:!p-2'>
+              <JSONTree
+                data={data}
+                hideRoot={true}
+                shouldExpandNodeInitially={(_, __, _level) => true}
+                labelRenderer={([key]) => key}
+                getItemString={() => null}
+                theme={{
+                  extend: theme,
+                }}
+              />
+            </div>
+          )}
+
           <SyntaxHighlighter language='json' style={style} className='w-full'>
             {JSON.stringify(data, replacer, 2)}
           </SyntaxHighlighter>
         </div>
+
         {config.values?.runtime?.app?.build?.timestamp && (
           <div className='p-2 text-sm font-mono'>
             {config.values?.runtime?.app?.build?.version} (

@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap, getPrototypeSpecificInstanceId } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
@@ -384,17 +384,17 @@ export class Pipeline implements PipelineAccessor {
     const seq = timeframe.get(feed.key) ?? -1;
 
     // TODO(burdon): Remove.
-    log.info('setFeedDownloadState', {
-      feed: feed.key,
-      feedInstance: getPrototypeSpecificInstanceId(feed),
-      seq,
-      isBeingConsumed: this._isBeingConsumed,
-      isStarted: this._isStarted,
-      isPaused: this._isPaused,
-    });
-    if (!this._isStarted || this._isPaused) {
-      console.log(new Error().stack);
-    }
+    // log.info('setFeedDownloadState', {
+    //   feed: feed.key,
+    //   feedInstance: getPrototypeSpecificInstanceId(feed),
+    //   isBeingConsumed: this._isBeingConsumed,
+    //   isStarted: this._isStarted,
+    //   isPaused: this._isPaused,
+    //   seq,
+    // });
+    // if (!this._isStarted || this._isPaused) {
+    //   console.log(new Error().stack);
+    // }
 
     feed.undownload({
       callback: () => {

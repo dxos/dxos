@@ -38,7 +38,7 @@ export const Local = <T = ConfigProto>(): T => ({} as T);
 export const Dynamics = <T = ConfigProto>(): T => ({} as T);
 
 /**
- * ENV variable (key/value) map
+ * ENV variable (key/value) map.
  */
 export const Envs = <T = ConfigProto>(basePath = DEFAULT_BASE_PATH): T => {
   const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
