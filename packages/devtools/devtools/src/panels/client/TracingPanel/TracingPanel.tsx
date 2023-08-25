@@ -12,7 +12,7 @@ import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
-import { PanelContainer } from '../../../components';
+import { JsonTreeView, PanelContainer } from '../../../components';
 import type { FlameChartNodes } from 'flame-chart-js';
 import { isNotNullOrUndefined } from '@dxos/util';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
@@ -50,9 +50,9 @@ export const TracingPanel = () => {
       }
       for (const event of data.spanAdded ?? []) {
         state.current.spans.set(event.span.id, event.span);
-        if(event.span.parentId === undefined) {
+        if (event.span.parentId === undefined) {
           const resource = state.current.resources.get(event.span.resourceId!);
-          if(resource) {
+          if (resource) {
             resource.spans.push(event.span);
           }
         }
@@ -119,7 +119,12 @@ export const TracingPanel = () => {
           <Tabs.Trigger className={tabClass} value='spans'>Spans ({spans.length})</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value='details'>
-          Details
+          {
+            selectedResource && <>
+              <h3 className='text-lg'><ResourceName resource={selectedResource.resource} /></h3>
+              <JsonTreeView data={selectedResource.resource.info} />
+            </>
+          }
         </Tabs.Content>
         <Tabs.Content value='logs'>
           <Grid<LogEntry>
@@ -147,9 +152,10 @@ export const TracingPanel = () => {
 
 const { helper } = createColumnBuilder<ResourceState>();
 const columns: GridColumnDef<ResourceState, any>[] = [
-  helper.accessor((state) => `${sanitizeClassName(state.resource.className)}#${state.resource.instanceId}`, {
+  helper.accessor('resource', {
     id: 'name',
     size: 200,
+    cell: (cell) => <ResourceName resource={cell.getValue()} />,
   }),
   helper.accessor((state) => state.logs.length, {
     id: 'logs',
@@ -164,6 +170,10 @@ const columns: GridColumnDef<ResourceState, any>[] = [
     cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];
+
+const ResourceName = ({ resource }: { resource: Resource }) => (
+  <span>{sanitizeClassName(resource.className)}<span className='text-gray-400'>#{resource.instanceId}</span></span>
+)
 
 
 // TODO(dmaretskyi): Unify with Logging panel.
