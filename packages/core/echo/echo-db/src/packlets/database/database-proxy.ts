@@ -98,6 +98,19 @@ export class DatabaseProxy {
         });
 
         const objectsUpdated: Item[] = [];
+
+        if (msg.action === EchoEvent.DatabaseAction.RESET) {
+          const keepIds = new Set<string>(
+            msg.batch.objects?.filter((object) => object.genesis).map((object) => object.objectId) ?? [],
+          );
+          for (const item of this._itemManager.entities.values()) {
+            if (!keepIds.has(item.id)) {
+              this._itemManager.deconstructItem(item.id);
+              objectsUpdated.push(item);
+            }
+          }
+        }
+
         this._processMessage(msg.batch, objectsUpdated);
 
         if (msg.clientTag) {

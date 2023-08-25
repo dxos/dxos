@@ -158,4 +158,43 @@ describe('database (unit)', () => {
       expect(model.get('tags').toArray()).toHaveLength(1);
     });
   });
+
+  it('epoch correctly resets items', async () => {
+    const builder = new DatabaseTestBuilder();
+    const peer = await builder.createPeer();
+
+    const id = PublicKey.random().toHex();
+    peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer.proxy.mutate(
+      createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
+    );
+
+    await peer.confirm();
+    expect(peer.confirmed).toEqual(1);
+    expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]));
+
+    const state = peer.items.getItem(id)!.state;
+    const snapshotWithItem = peer.makeSnapshot().database;
+
+    {
+      // Reset on empty epoch.
+      const updated = peer.proxy.itemUpdate.waitForCount(1);
+
+      expect(peer.proxy._itemManager.items.length).toEqual(1);
+
+      peer.createEpoch({});
+
+      await updated;
+      expect(peer.proxy._itemManager.items.length).toEqual(0);
+    }
+
+    {
+      // Reset to epoch with one item.
+      const updated = peer.proxy.itemUpdate.waitForCount(1);
+      peer.createEpoch(snapshotWithItem);
+      await updated;
+      expect(peer.proxy._itemManager.items.length).toEqual(1);
+      expect(peer.items.getItem(id)!.state).toEqual(state);
+    }
+  });
 });
