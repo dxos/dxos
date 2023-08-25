@@ -35,7 +35,7 @@ const columns: GridColumnDef<ResourceState, any>[] = [
   }),
   helper.accessor((state) => state.resource.info, {
     id: 'info',
-    cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
+    cell: (cell) => <div className='font-mono text-green-500'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];
 
@@ -136,15 +136,15 @@ export const TracingPanel = () => {
             </Tabs.Trigger>
           </Tabs.List>
 
-          <Tabs.Content value='details' className='grow overflow-scroll'>
+          <Tabs.Content value='details' className='grow overflow-auto'>
             <MetricsView resource={selectedResource?.resource} />
           </Tabs.Content>
 
-          <Tabs.Content value='logs' className='grow'>
+          <Tabs.Content value='logs' className='grow overflow-auto'>
             <LogView logs={selectedResource?.logs ?? []} />
           </Tabs.Content>
 
-          <Tabs.Content value='spans' className='grow'>
+          <Tabs.Content value='spans' className='grow overflow-hidden'>
             <TraceView state={state.current} resourceId={selectedResourceId} />
           </Tabs.Content>
         </Tabs.Root>

@@ -43,7 +43,13 @@ export const ClientPlugin = (
       id: 'dxos.org/plugin/client',
     },
     init: async () => {
+      let firstRun = false;
       await client.initialize();
+      const searchParams = new URLSearchParams(location.search);
+      if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        firstRun = true;
+        await client.halo.createIdentity();
+      }
 
       // Debugging (e.g., for monolithic mode).
       if (options.debugIdentity) {
@@ -67,6 +73,7 @@ export const ClientPlugin = (
 
       return {
         client,
+        firstRun,
         setLayout: async (layout, options) => {
           if (
             client.services instanceof IFrameClientServicesProxy ||

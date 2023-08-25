@@ -31,7 +31,7 @@ import {
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
 import type { EchoProxy } from '../echo';
-import type { HaloProxy } from '../halo';
+import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
 import { DXOS_VERSION } from '../version';
@@ -233,9 +233,9 @@ export class Client {
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    const handleIdentityCreated = async () => {
+    const handleIdentityCreated = async ({ identityKey }: Identity) => {
       const defaultSpace = await this.createSpace();
-      defaultSpace.properties[defaultKey] = true;
+      defaultSpace.properties[defaultKey] = identityKey.toHex();
     };
 
     this._config = this._options.config ?? new Config();

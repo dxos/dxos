@@ -49,11 +49,7 @@ export const SplitView = () => {
           </Main.ComplementarySidebar>
         )}
 
-        {/* TODO(burdon): Comment. */}
-        <Main.Overlay />
-
-        {/* Header bar. */}
-        {/* TODO(burdon): Border. */}
+        {/* Top (header) bar. */}
         <Main.Content
           asChild
           classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
@@ -66,7 +62,7 @@ export const SplitView = () => {
               </Button>
               <Surface name='heading' role='heading' limit={2} />
               <div role='none' className='grow' />
-              {/* TODO(burdon): Too specific? */}
+              {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface name='presence' role='presence' limit={1} />
               {complementarySidebarOpen !== null && (
                 <Button
@@ -81,10 +77,13 @@ export const SplitView = () => {
           </div>
         </Main.Content>
 
+        {/* Dialog overlay to dismiss dialogs. */}
+        <Main.Overlay />
+
         {/* Main content surface. */}
         <Surface name='main' role='main' />
 
-        {/* TODO(burdon): Comment. */}
+        {/* Global popovers. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
@@ -100,7 +99,7 @@ export const SplitView = () => {
           </Popover.Content>
         </Popover.Portal>
 
-        {/* TODO(burdon): Comment. */}
+        {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
             <Dialog.Overlay>

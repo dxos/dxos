@@ -1544,6 +1544,7 @@ importers:
 
   packages/apps/plugins/plugin-treeview:
     specifiers:
+      '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
@@ -1579,6 +1580,7 @@ importers:
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1616,7 +1618,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
       '@dxos/vault': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/node': ^18.11.9
@@ -1636,7 +1637,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/vault': link:../../sdk/vault
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
@@ -1855,6 +1855,12 @@ importers:
       '@dxos/node-std': workspace:*
     dependencies:
       '@dxos/node-std': link:../node-std
+
+  packages/common/display-name:
+    specifiers:
+      '@dxos/keys': workspace:*
+    devDependencies:
+      '@dxos/keys': link:../keys
 
   packages/common/esbuild-plugins:
     specifiers:
@@ -5416,6 +5422,7 @@ importers:
       '@dxos/aurora-types': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/display-name': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -5449,6 +5456,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/aurora-types': link:../../ui/aurora-types
       '@dxos/debug': link:../../common/debug
+      '@dxos/display-name': link:../../common/display-name
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -5661,6 +5669,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/display-name': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
@@ -5711,6 +5720,7 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/debug': link:../../common/debug
+      '@dxos/display-name': link:../../common/display-name
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async

@@ -12,11 +12,11 @@ import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(dmaretskyi): Unify with Logging panel.
 const colors: { [index: number]: string } = {
-  [LogLevel.TRACE]: 'text-gray-700',
-  [LogLevel.DEBUG]: 'text-green-700',
-  [LogLevel.INFO]: 'text-blue-700',
-  [LogLevel.WARN]: 'text-orange-700',
-  [LogLevel.ERROR]: 'text-red-700',
+  [LogLevel.TRACE]: 'text-sky-500',
+  [LogLevel.DEBUG]: 'text-green-500',
+  [LogLevel.INFO]: 'text-blue-500',
+  [LogLevel.WARN]: 'text-orange-500',
+  [LogLevel.ERROR]: 'text-red-500',
 };
 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
