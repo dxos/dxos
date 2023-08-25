@@ -9,13 +9,14 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { SPACE_PLUGIN } from '../types';
 
+// TODO(burdon): Wire up to presence.
 export const SpacePresence = () => {
   const identity = useIdentity();
   const fallbackHref = useJdenticonHref(identity?.identityKey.toHex() ?? '', 4);
   const { t } = useTranslation(SPACE_PLUGIN);
   return identity ? (
     <Tooltip.Root>
-      <Tooltip.Trigger>
+      <Tooltip.Trigger className='flex items-center'>
         <AvatarGroup.Root size={4} classNames='mie-5'>
           <AvatarGroup.Label classNames='text-xs font-system-semibold'>1</AvatarGroup.Label>
           <AvatarGroupItem.Root>
