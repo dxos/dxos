@@ -140,6 +140,7 @@ export class Space {
   }
 
   @logInfo
+  @trace.info()
   get key() {
     return this._key;
   }

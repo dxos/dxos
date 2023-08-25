@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { unrefTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
+import { BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
@@ -28,12 +32,18 @@ export type ResourceEntry = {
 };
 
 export type TraceSubscription = {
+  flush: () => void;
+
   dirtyResources: Set<number>;
   dirtySpans: Set<number>;
+  newLogs: LogEntry[];
 };
 
 const MAX_RESOURCE_RECORDS = 500;
 const MAX_SPAN_RECORDS = 1_000;
+const MAX_LOG_RECORDS = 1_000;
+
+const REFRESH_INTERVAL = 1_000;
 
 export class TraceProcessor {
   resources = new Map<number, ResourceEntry>();
@@ -43,10 +53,26 @@ export class TraceProcessor {
   spans = new Map<number, Span>();
   spanIdList: number[] = [];
 
+  logs: LogEntry[] = [];
+
   subscriptions: Set<TraceSubscription> = new Set();
+
+  constructor() {
+    log.addProcessor(this._logProcessor.bind(this));
+
+    const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
+    unrefTimeout(refreshInterval);
+  }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
+
+    // init metrics counters.
+    const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
+    for (const key of Object.keys(tracingContext.metricsProperties)) {
+      (params.instance[key] as BaseCounter)._assign(params.instance, key);
+    }
+
     const entry: ResourceEntry = {
       data: {
         id,
@@ -54,6 +80,7 @@ export class TraceProcessor {
         instanceId: getPrototypeSpecificInstanceId(params.instance),
         info: this.getResourceInfo(params.instance),
         links: [],
+        metrics: this.getResourceMetrics(params.instance),
       },
       instance: new WeakRef(params.instance),
     };
@@ -72,10 +99,21 @@ export class TraceProcessor {
 
     for (const [key, _opts] of Object.entries(tracingContext.infoProperties)) {
       try {
-        res[key] = typeof instance[key] === 'function' ? instance[key]() : instance[key];
+        res[key] = sanitizeValue(typeof instance[key] === 'function' ? instance[key]() : instance[key]);
       } catch (err: any) {
         res[key] = err.message;
       }
+    }
+
+    return res;
+  }
+
+  getResourceMetrics(instance: any): Metric[] {
+    const res: Metric[] = [];
+    const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
+
+    for (const [key, _opts] of Object.entries(tracingContext.metricsProperties)) {
+      res.push(instance[key].getData());
     }
 
     return res;
@@ -96,6 +134,40 @@ export class TraceProcessor {
 
   createTraceSender() {
     return new TraceSender(this);
+  }
+
+  refresh() {
+    for (const resource of this.resources.values()) {
+      const instance = resource.instance.deref();
+      if (!instance) {
+        continue;
+      }
+
+      const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
+      const time = performance.now();
+      for (const key of Object.keys(tracingContext.metricsProperties)) {
+        (instance[key] as BaseCounter)._tick?.(time);
+      }
+
+      let _changed = false;
+
+      const oldInfo = resource.data.info;
+      resource.data.info = this.getResourceInfo(instance);
+      _changed ||= !areEqualShallow(oldInfo, resource.data.info);
+
+      const oldMetrics = resource.data.metrics;
+      resource.data.metrics = this.getResourceMetrics(instance);
+      _changed ||= !areEqualShallow(oldMetrics, resource.data.metrics);
+
+      // TODO(dmaretskyi): Test if works and enable.
+      // if (changed) {
+      this._markResourceDirty(resource.data.id);
+      // }
+    }
+
+    for (const subscription of this.subscriptions) {
+      subscription.flush();
+    }
   }
 
   /**
@@ -137,6 +209,52 @@ export class TraceProcessor {
       this.spans.delete(id);
     }
   }
+
+  private _pushLog(log: LogEntry) {
+    this.logs.push(log);
+    if (this.logs.length > MAX_LOG_RECORDS) {
+      this.logs.shift();
+    }
+
+    for (const subscription of this.subscriptions) {
+      subscription.newLogs.push(log);
+    }
+  }
+
+  private _logProcessor: LogProcessor = (config, entry) => {
+    switch (entry.level) {
+      case LogLevel.ERROR:
+      case LogLevel.WARN:
+      case LogLevel.TRACE: {
+        const scope = entry.meta?.S;
+        const resource = this.resourceInstanceIndex.get(scope);
+        if (!resource) {
+          return;
+        }
+
+        const context = getContextFromEntry(entry) ?? {};
+
+        for (const key of Object.keys(context)) {
+          context[key] = sanitizeValue(context[key]);
+        }
+
+        const entryToPush: LogEntry = {
+          level: entry.level,
+          message: entry.message,
+          context,
+          timestamp: new Date(),
+          meta: {
+            file: entry.meta?.F ?? '',
+            line: entry.meta?.L ?? 0,
+            resourceId: resource.data.id,
+          },
+        };
+        this._pushLog(entryToPush);
+        break;
+      }
+      default:
+    }
+  };
 }
 
 export class TracingSpan {
@@ -213,3 +331,41 @@ const serializeError = (err: unknown): SerializedError => {
 };
 
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
+
+const sanitizeValue = (value: any) => {
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'undefined':
+      return value;
+      break;
+    case 'object':
+    case 'function':
+      if (value === null) {
+        return value;
+        break;
+      }
+
+      // TODO(dmaretskyi): Expose trait.
+      if (typeof value.truncate === 'function') {
+        return value.truncate();
+      }
+
+      return value.toString();
+  }
+};
+
+const areEqualShallow = (a: any, b: any) => {
+  for (const key in a) {
+    if (!(key in b) || a[key] !== b[key]) {
+      return false;
+    }
+  }
+  for (const key in b) {
+    if (!(key in a) || a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+};
