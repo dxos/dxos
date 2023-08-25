@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chats, List as MenuIcon } from '@phosphor-icons/react';
+import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
@@ -45,7 +45,7 @@ export const SplitView = () => {
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface name='complementary-sidebar' />
+            <Surface name='complementary' role='complementary' />
           </Main.ComplementarySidebar>
         )}
 
@@ -70,7 +70,11 @@ export const SplitView = () => {
                   variant='ghost'
                 >
                   <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <Chats weight='light' className={getSize(4)} />
+                  <CaretDoubleLeft
+                    mirrored={!!context.complementarySidebarOpen}
+                    weight='light'
+                    className={getSize(4)}
+                  />
                 </Button>
               )}
             </DensityProvider>

@@ -7,7 +7,7 @@ import format from 'date-fns/format';
 import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 
 import { useSubscription } from './util';
@@ -37,8 +37,8 @@ export const ThreadBlock: FC<{
     <div
       key={block.id}
       className={mx(
-        'flex flex-col overflow-hidden',
-        groupSurface,
+        'flex flex-col overflow-hidden shadow',
+        inputSurface,
         !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >

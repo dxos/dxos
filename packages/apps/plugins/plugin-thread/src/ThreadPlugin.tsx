@@ -65,13 +65,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isThread(data)) {
-          return null;
-        }
-
         switch (role) {
-          case 'main':
+          case 'main': {
+            if (!data || typeof data !== 'object' || !isThread(data)) {
+              return null;
+            }
             return ThreadMain;
+          }
+
+          case 'complementary':
+            return Test;
         }
       },
       components: {
@@ -88,4 +91,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
     },
   };
+};
+
+// TODO(burdon): Get current space.
+const Test = (props: any) => {
+  console.log(props);
+  return <div className='p-2'>Test</div>;
 };

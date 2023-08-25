@@ -75,7 +75,7 @@ createRoot(document.getElementById('root')!).render(
         GraphPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),
-        SplitViewPlugin(),
+        SplitViewPlugin({ enableComplementarySidebar: true }),
         SpacePlugin(),
 
         // Composer
