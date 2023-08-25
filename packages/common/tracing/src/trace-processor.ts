@@ -7,6 +7,7 @@ import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { Metric, Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
+import { unrefTimeout } from '@dxos/async';
 
 import type { AddLinkOptions } from './api';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
@@ -60,7 +61,8 @@ export class TraceProcessor {
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
-    setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
+    const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
+    unrefTimeout(refreshInterval);
   }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
