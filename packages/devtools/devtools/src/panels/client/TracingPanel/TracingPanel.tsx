@@ -13,7 +13,7 @@ import { isNotNullOrUndefined } from '@dxos/util';
 
 import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 import { LogView } from './LogView';
-import { DetailView } from './MetricView';
+import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
 import { ResourceState, State } from './types';
@@ -41,6 +41,8 @@ const columns: GridColumnDef<ResourceState, any>[] = [
 
 export const TracingPanel = () => {
   const client = useClient();
+
+  // Store state as ref to avoid re-building on state change.
   const [, forceUpdate] = useState({});
   const state = useRef<State>({
     resources: new Map<number, ResourceState>(),
@@ -135,7 +137,7 @@ export const TracingPanel = () => {
           </Tabs.List>
 
           <Tabs.Content value='details' className='grow overflow-scroll'>
-            <DetailView resource={selectedResource?.resource} />
+            <MetricsView resource={selectedResource?.resource} />
           </Tabs.Content>
 
           <Tabs.Content value='logs' className='grow'>

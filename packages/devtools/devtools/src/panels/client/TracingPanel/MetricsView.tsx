@@ -10,7 +10,7 @@ import { Metric, Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { JsonTreeView } from '../../../components';
 import { ResourceName } from './Resource';
 
-export const DetailView: FC<{ resource?: Resource }> = ({ resource }) => {
+export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   if (!resource) {
     return null;
   }
@@ -27,31 +27,34 @@ export const DetailView: FC<{ resource?: Resource }> = ({ resource }) => {
       <div>
         <h4 className='text-md border-b'>Metrics</h4>
         {resource.metrics?.map((metric, idx) => (
-          <MetricView key={idx} metric={metric} />
+          <MetricComponent key={idx} metric={metric} />
         ))}
       </div>
     </div>
   );
 };
 
-export const MetricView: FC<{ metric: Metric }> = ({ metric }) => {
+const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
   if (metric.counter) {
     return (
       <span>
         {metric.name}: {metric.counter.value} {metric.counter.units ?? ''}
       </span>
     );
-  } else if (metric.timeSeries) {
+  }
+
+  // https://react-charts.tanstack.com/docs/api
+  if (metric.timeSeries) {
     const primaryAxis: AxisOptions<any> = useMemo(
       () => ({ scaleType: 'linear', getValue: (point: any) => point.idx as number }),
       [],
     );
+
+    // TODO(burdon): Change to line?
     const secondaryAxes: AxisOptions<any>[] = useMemo(
-      () => [{ elementType: 'bar', getValue: (point: any) => point.value as number }],
+      () => [{ elementType: 'line', getValue: (point: any) => point.value as number }],
       [],
     );
-
-    // const format = value => typeof value === 'number' ? value.toFixed(2) : value;
 
     return (
       <div className='m-2'>
@@ -61,14 +64,18 @@ export const MetricView: FC<{ metric: Metric }> = ({ metric }) => {
           <span>
             {JSON.stringify(
               metric.timeSeries.tracks?.reduce((acc, track) => ({ ...acc, [track.name]: track.total }), {}),
+              (key: string, value: any) => {
+                return typeof value === 'number' ? value.toFixed(2) : value;
+              },
             )}
           </span>
         </div>
-        <div className='w-full h-[100px] m-2'>
+        <div className='w-full h-[160px] m-2'>
           <Chart
             options={{
               primaryAxis,
               secondaryAxes,
+              interactionMode: 'closest',
               data:
                 metric.timeSeries.tracks?.map((track) => ({
                   label: track.name,
@@ -79,9 +86,11 @@ export const MetricView: FC<{ metric: Metric }> = ({ metric }) => {
         </div>
       </div>
     );
-  } else if (metric.custom) {
-    return <JsonTreeView data={{ [metric.name]: metric.custom.payload }} />;
-  } else {
-    return <JsonTreeView data={metric} />;
   }
+
+  if (metric.custom) {
+    return <JsonTreeView data={{ [metric.name]: metric.custom.payload }} />;
+  }
+
+  return <JsonTreeView data={metric} />;
 };
