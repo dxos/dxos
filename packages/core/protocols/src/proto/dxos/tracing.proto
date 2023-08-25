@@ -21,6 +21,7 @@ message Resource {
 
   google.protobuf.Struct info = 4;
   repeated ResourceLink links = 5;
+  map<string, google.protobuf.Struct> metrics = 6;
 }
 
 message ResourceLink {

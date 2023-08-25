@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
-import { LogEntry } from '@dxos/protocols/proto/dxos/logging';
+import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
@@ -13,6 +13,7 @@ import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 import { inspect } from 'node:util';
 import { LogLevel, LogProcessor, getContextFromEntry, log } from '@dxos/log';
+import { BaseCounter } from './metrics';
 
 export type TraceResourceConstructorParams = {
   constructor: { new(...args: any[]): {} };
@@ -58,6 +59,13 @@ export class TraceProcessor {
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
+
+    // init metrics counters.
+    const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
+    for(const key of Object.keys(tracingContext.metricsProperties)) {
+      (params.instance[key] as BaseCounter)._assign(params.instance, key);
+    }
+
     const entry: ResourceEntry = {
       data: {
         id,
@@ -65,6 +73,7 @@ export class TraceProcessor {
         instanceId: getPrototypeSpecificInstanceId(params.instance),
         info: this.getResourceInfo(params.instance),
         links: [],
+        metrics: this.getResourceMetrics(params.instance),
       },
       instance: new WeakRef(params.instance),
     };
@@ -87,6 +96,17 @@ export class TraceProcessor {
       } catch (err: any) {
         res[key] = err.message;
       }
+    }
+
+    return res;
+  }
+
+  getResourceMetrics(instance: any): Record<string, any> {
+    const res: Record<string, any> = {};
+    const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
+
+    for (const [key, _opts] of Object.entries(tracingContext.metricsProperties)) {
+      res[key] = instance[key].getData();
     }
 
     return res;
@@ -181,6 +201,7 @@ export class TraceProcessor {
           level: entry.level,
           message: entry.message,
           context,
+          timestamp: new Date(),
           meta: {
             file: entry.meta?.F ?? '',
             line: entry.meta?.L ?? 0,

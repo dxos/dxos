@@ -121,8 +121,11 @@ export const TracingPanel = () => {
         <Tabs.Content value='details'>
           {
             selectedResource && <>
-              <h3 className='text-lg'><ResourceName resource={selectedResource.resource} /></h3>
+              <h3 className='text-lg m-2'><ResourceName resource={selectedResource.resource} /></h3>
+              <div className='text-md border-b'>Info</div>
               <JsonTreeView data={selectedResource.resource.info} />
+              <div className='text-md border-b'>Metrics</div>
+              <JsonTreeView data={selectedResource.resource.metrics} />
             </>
           }
         </Tabs.Content>
