@@ -104,7 +104,6 @@ export class EchoDatabase {
 
     invariant(!obj[db]);
     obj[base]._database = this;
-    this._objects.set(obj[base]._id, obj);
 
     const batchCreated = this._backend.beginBatch();
     try {
@@ -129,6 +128,8 @@ export class EchoDatabase {
 
       obj[base]._bind(result.objectsUpdated[0]);
     } finally {
+      this._objects.set(obj[base]._id, obj);
+
       if (batchCreated) {
         this._backend.commitBatch();
       }
@@ -209,12 +210,12 @@ export class EchoDatabase {
     // Remove objects that are no longer in the database.
     for (const [id, obj] of this._objects.entries()) {
       if (!this._itemManager.entities.has(id)) {
-        obj[base]._database = undefined;
         if (obj[base]._item) {
           obj[base]._item.deleted = true;
         }
         obj[base]._itemUpdate();
         this._objects.delete(id);
+        obj[base]._database = undefined;
         this._saveRemovedObject(obj);
       }
     }
