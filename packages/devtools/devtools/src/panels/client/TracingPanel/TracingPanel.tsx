@@ -21,6 +21,7 @@ import { levels, LogLevel } from '@dxos/log';
 
 type ResourceState = {
   resource: Resource;
+  spans: Span[];
   logs: LogEntry[];
 }
 
@@ -42,13 +43,19 @@ export const TracingPanel = () => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe((data) => {
       for (const event of data.resourceAdded ?? []) {
-        state.current.resources.set(event.resource.id, { resource: event.resource, logs: [] });
+        state.current.resources.set(event.resource.id, { resource: event.resource, spans: [], logs: [] });
       }
       for (const event of data.resourceRemoved ?? []) {
         state.current.resources.delete(event.id);
       }
       for (const event of data.spanAdded ?? []) {
         state.current.spans.set(event.span.id, event.span);
+        if(event.span.parentId === undefined) {
+          const resource = state.current.resources.get(event.span.resourceId!);
+          if(resource) {
+            resource.spans.push(event.span);
+          }
+        }
       }
       for (const event of data.logAdded ?? []) {
         const resource = state.current.resources.get(event.log.meta!.resourceId!);
@@ -73,7 +80,7 @@ export const TracingPanel = () => {
   const selectedResource = selectedResourceId !== undefined ? state.current.resources.get(selectedResourceId) : undefined;
 
   // Spans
-  const spans = [...state.current.spans.values()].filter((s) => s.parentId === undefined).filter((s) => selectedResourceId === undefined || s.resourceId === selectedResourceId);
+  const spans = selectedResourceId === undefined ? [...state.current.spans.values()].filter((s) => s.parentId === undefined) : selectedResource?.spans ?? [];
   const flameGraph = spans.length > 0 ? buildFlameGraph(state.current, spans[Math.min(selectedFlameIndex, spans.length - 1)]?.id ?? 0) : undefined;
 
   const handleBack = () => {
@@ -146,7 +153,11 @@ const columns: GridColumnDef<ResourceState, any>[] = [
   }),
   helper.accessor((state) => state.logs.length, {
     id: 'logs',
-    size: 100,
+    size: 50,
+  }),
+  helper.accessor((state) => state.spans.length, {
+    id: 'spans',
+    size: 50,
   }),
   helper.accessor(state => state.resource.info, {
     id: 'info',
