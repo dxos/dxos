@@ -54,7 +54,7 @@ export const SplitView = () => {
           asChild
           classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
         >
-          <div role='none' aria-label={t('main header label')} className='border-b'>
+          <div role='none' aria-label={t('main header label')} className='__border-b'>
             <DensityProvider density='fine'>
               <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
                 <span className='sr-only'>{t('open navigation sidebar label')}</span>
