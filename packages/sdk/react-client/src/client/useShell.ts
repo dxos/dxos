@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { IFrameClientServicesHost, IFrameClientServicesProxy } from '@dxos/client/services';
 
 import { useClient } from './ClientContext';
 
-export type UseShellProviderOptions = {
+export type UseShellOptions = {
   /**
    * The key of the current space.
    *
@@ -28,10 +28,18 @@ export type UseShellProviderOptions = {
   onInvalidatedInvitationCode?: (code?: string) => void;
 };
 
+type UseShellResult = {
+  setLayout: IFrameClientServicesProxy['setLayout'];
+};
+
 /**
  * Use this hook to fully integrate an app with the shell.
  */
-export const useShellProvider = ({ spaceKey, onJoinedSpace, onInvalidatedInvitationCode }: UseShellProviderOptions) => {
+export const useShell = ({
+  spaceKey,
+  onJoinedSpace,
+  onInvalidatedInvitationCode,
+}: UseShellOptions = {}): UseShellResult => {
   const client = useClient();
 
   useEffect(() => {
@@ -57,4 +65,17 @@ export const useShellProvider = ({ spaceKey, onJoinedSpace, onInvalidatedInvitat
       client.services.setSpaceProvider(() => spaceKey);
     }
   }, [spaceKey]);
+
+  const setLayout: IFrameClientServicesProxy['setLayout'] = useCallback(
+    async (layout, options = {}) => {
+      if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
+        await client.services.setLayout(layout, options);
+      }
+    },
+    [client],
+  );
+
+  return {
+    setLayout,
+  };
 };

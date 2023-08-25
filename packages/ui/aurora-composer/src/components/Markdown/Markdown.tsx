@@ -43,8 +43,8 @@ import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
 import { configColors } from '@dxos/aurora-theme';
+import { generateName } from '@dxos/display-name';
 import { YText } from '@dxos/text-model';
-import { humanize } from '@dxos/util';
 
 import { ComposerModel, ComposerSlots } from '../../model';
 import { markdownTagsExtension } from './markdownTags';
@@ -126,7 +126,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           peerColorDigit = parseInt(peer.id.slice(-1), 16);
         } catch (_) {}
         provider.awareness.setLocalStateField('user', {
-          name: peer.name ?? humanize(peer.id),
+          name: peer.name ?? generateName(peer.id),
           color: configColors[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
           colorLight:
             configColors[hexadecimalPaletteSeries[peerColorDigit]][

@@ -82,4 +82,6 @@ export const os = {
   'space member list heading': 'Members in this space',
   'space panel heading': 'Space membership',
   'auth code message': 'Enter the following auth code on the joining device.',
+  'display name input label': 'Display name',
+  'display name input placeholder': 'Enter a display name',
 };
