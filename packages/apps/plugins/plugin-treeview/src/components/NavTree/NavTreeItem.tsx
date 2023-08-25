@@ -9,7 +9,8 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useId, useSidebars, useTranslation } from '@dxos/aurora';
+import { useSplitView } from '@braneframe/plugin-splitview';
+import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import {
   focusRing,
   getSize,
@@ -61,12 +62,12 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   TreeViewItemProps
 >(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
-  const labelId = useId('navtree__item');
 
   const actions = sortActions(node.actions);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars();
   const { active: treeViewActive } = useTreeView();
+  const { popoverAnchorId } = useSplitView();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -81,32 +82,36 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     // todo(thure): Open if child within becomes active
   }, []);
 
+  const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
+  const isPopoverAnchor = popoverAnchorId === headingAnchorId;
+
+  const HeadingWithActionsRoot = isPopoverAnchor ? Popover.Anchor : 'div';
+
   return (
     <TreeItem.Root
-      id={labelId}
       collapsible={isBranch}
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={[
-        'rounded block',
-        hoverableFocusedKeyboardControls,
-        focusRing,
-        active && 'bg-neutral-75 dark:bg-neutral-850',
-        rearranging && 'invisible',
-      ]}
+      classNames={['rounded block', hoverableFocusedKeyboardControls, focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
       ref={forwardedRef}
     >
-      <div
+      <HeadingWithActionsRoot
         role='none'
-        className={mx(levelPadding(level), hoverableControls, hoverableFocusedWithinControls, 'flex items-start')}
+        className={mx(
+          levelPadding(level),
+          hoverableControls,
+          hoverableFocusedWithinControls,
+          (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
+          'flex items-start rounded',
+        )}
       >
         {isBranch ? (
-          <CollapsibleHeading {...{ open, node, level, active, id: labelId }} />
+          <CollapsibleHeading {...{ open, node, level, active }} />
         ) : (
-          <NavigableHeading {...{ node, level, active, id: labelId }} />
+          <NavigableHeading {...{ node, level, active }} />
         )}
         {actions.length > 0 && (
           <Tooltip.Root
@@ -142,6 +147,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                   <Button
                     variant='ghost'
                     classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+                    data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
@@ -165,6 +171,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                       }}
                       classNames='gap-2'
                       disabled={action.properties.disabled}
+                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
                       {action.icon && <action.icon className={getSize(4)} />}
                       <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
@@ -176,7 +183,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </DropdownMenu.Root>
           </Tooltip.Root>
         )}
-      </div>
+      </HeadingWithActionsRoot>
       {isBranch && (
         <TreeItem.Body>
           <NavTree items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />
