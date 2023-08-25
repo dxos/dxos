@@ -11,7 +11,7 @@ export const focusRing =
 /**
  * @deprecated
  */
-export const subduedFocus = 'focus:outline-none focus-visible:outline-none focus:ring-0 focus:border-0';
+export const subduedFocus = 'focus:outline-none focus-visible:outline-none focus:ring-0 ring-0 focus:border-0 border-0';
 
 /**
  * @deprecated
