@@ -35,6 +35,8 @@ describe('Replication', () => {
 
     const numBlocks = 10;
 
+    console.error('hello from rich and dima!!!');
+
     // Sync.
     {
       const stream1 = core1.replicate(true);
