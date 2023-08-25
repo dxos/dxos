@@ -5,7 +5,7 @@
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
-import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -269,7 +269,7 @@ export class DataPipeline implements CredentialProcessor {
         (item) =>
           item.modelMeta?.type === 'dxos:model/document' &&
           // TODO(burdon): Document?
-          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === TYPE_PROPERTIES,
       );
       if (propertiesItem) {
         cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;

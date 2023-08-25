@@ -4,7 +4,10 @@
 
 import { DocumentModel } from '@dxos/document-model';
 
+// TODO(burdon): Change: dxos.org/type/schema; search elsewhere.
 export const TYPE_SCHEMA = 'dxos:type/schema';
+export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
+export const MODEL_DOCUMENT = 'dxos:model/document';
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'ref';
 
