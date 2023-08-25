@@ -9,6 +9,7 @@ import { RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 import { STORAGE_MONITOR } from '../monitor';
@@ -160,6 +161,7 @@ export class WebFS implements Storage {
 }
 
 // TODO(mykola): Remove EventEmitter.
+@trace.resource()
 export class WebFile extends EventEmitter implements File {
   readonly opened: boolean = true;
   readonly suspended: boolean = false;
@@ -171,10 +173,29 @@ export class WebFile extends EventEmitter implements File {
   readonly deletable: boolean = true;
   readonly truncatable: boolean = true;
   readonly statable: boolean = true;
+  @trace.info()
   private readonly _fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
   private readonly _destroy: () => Promise<void>;
+
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _operations = new TimeSeriesCounter();
+
+  @trace.metricsCounter()
+  private _reads = new TimeSeriesCounter();
+
+  @trace.metricsCounter()
+  private _readBytes = new TimeSeriesCounter();
+
+  @trace.metricsCounter()
+  private _writes = new TimeSeriesCounter();
+
+  @trace.metricsCounter()
+  private _writeBytes = new TimeSeriesCounter();
 
   constructor({
     fileName,
@@ -207,6 +228,11 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async write(offset: number, data: Buffer) {
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+    this._writes.inc();
+    this._writeBytes.inc(data.length);
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
     try {
       // TODO(mykola): Fix types.
@@ -215,12 +241,18 @@ export class WebFile extends EventEmitter implements File {
       await writable.write({ type: 'write', data, position: offset });
       await writable.close();
     } finally {
+      span.end();
       metric.end();
     }
   }
 
   @synchronized
   async read(offset: number, size: number) {
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+    this._reads.inc();
+    this._readBytes.inc(size);
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
     try {
       const fileHandle: any = await this._fileHandle;
@@ -231,12 +263,16 @@ export class WebFile extends EventEmitter implements File {
       // does not copy the buffer
       return Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
     } finally {
+      span.end();
       metric.end();
     }
   }
 
   @synchronized
   async del(offset: number, size: number) {
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'delete', size });
     try {
       if (offset < 0 || size < 0) {
@@ -256,12 +292,16 @@ export class WebFile extends EventEmitter implements File {
       await writable.write({ type: 'truncate', size: offset + leftoverSize });
       await writable.close();
     } finally {
+      span.end();
       metric.end();
     }
   }
 
   @synchronized
   async stat() {
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
     try {
       const fileHandle: any = await this._fileHandle;
@@ -270,12 +310,16 @@ export class WebFile extends EventEmitter implements File {
         size: file.size,
       };
     } finally {
+      span.end();
       metric.end();
     }
   }
 
   @synchronized
   async truncate(offset: number) {
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
       const fileHandle: any = await this._fileHandle;
@@ -283,6 +327,7 @@ export class WebFile extends EventEmitter implements File {
       await writable.write({ type: 'truncate', size: offset });
       await writable.close();
     } finally {
+      span.end();
       metric.end();
     }
   }

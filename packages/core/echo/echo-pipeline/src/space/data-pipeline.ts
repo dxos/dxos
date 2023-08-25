@@ -19,6 +19,7 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
 import { DatabaseHost, SnapshotManager } from '../db-host';
@@ -65,6 +66,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
   private _pipeline?: Pipeline = undefined;
@@ -77,6 +79,12 @@ export class DataPipeline implements CredentialProcessor {
   private _lastSnapshotSaveTime = 0;
   private _lastProcessedEpoch = -1;
   private _epochCtx?: Context;
+
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _mutations = new TimeSeriesCounter();
 
   constructor(private readonly _params: DataPipelineParams) {}
 
@@ -206,6 +214,9 @@ export class DataPipeline implements CredentialProcessor {
 
     invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
+      const span = this._usage.beginRecording();
+      this._mutations.inc();
+
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
 
@@ -242,6 +253,8 @@ export class DataPipeline implements CredentialProcessor {
       } catch (err: any) {
         log.catch(err);
       }
+
+      span.end();
     }
   }
 

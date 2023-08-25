@@ -16,6 +16,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../async"
+    },
+    {
       "path": "../codec-protobuf"
     },
     {
