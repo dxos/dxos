@@ -7,12 +7,14 @@ import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { FC, MutableRefObject, RefCallback } from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph } from '@braneframe/plugin-graph';
+import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Document as DocumentType, Document } from '@braneframe/types';
+import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
-import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surface';
 
@@ -31,7 +33,7 @@ import {
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
+(globalThis as any)[Document.name] = Document;
 
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
@@ -44,7 +46,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
+  const adapter = new GraphNodeAdapter(Document.filter(), documentToGraphNode);
 
   const EditorMainStandalone = ({
     data: { composer, properties },
@@ -123,6 +125,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           state.onChange.push(plugin.provides.markdown.onChange);
         }
       });
+
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      if (clientPlugin && clientPlugin.provides.firstRun) {
+        const space = clientPlugin.provides.client.getSpace();
+        // TODO(wittjosiah): Expand message & translate.
+        const document = space?.db.add(
+          new Document({ title: 'Getting Started', content: new Text('Welcome to Composer!') }),
+        );
+        if (document && intentPlugin) {
+          void intentPlugin.provides.intent.sendIntent({
+            action: TreeViewAction.ACTIVATE,
+            data: { id: document.id },
+          });
+        }
+      }
     },
     unload: async () => {
       adapter.clear();

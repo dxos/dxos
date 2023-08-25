@@ -8,7 +8,7 @@ import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import {
@@ -68,6 +68,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const { navigationSidebarOpen } = useSidebars();
   const { active: treeViewActive } = useTreeView();
   const { popoverAnchorId } = useSplitView();
+  const { graph } = useGraph();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -79,8 +80,10 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const active = treeViewActive === node.id;
 
   useEffect(() => {
-    // todo(thure): Open if child within becomes active
-  }, []);
+    if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      setOpen(true);
+    }
+  }, [graph, treeViewActive]);
 
   const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
   const isPopoverAnchor = popoverAnchorId === headingAnchorId;

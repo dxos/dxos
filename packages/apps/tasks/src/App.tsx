@@ -13,7 +13,14 @@ const config = async () => new Config(await Dynamics(), Local(), Defaults());
 
 export const App = () => {
   return (
-    <ClientProvider config={config}>
+    <ClientProvider
+      config={config}
+      onInitialized={async (client) => {
+        if (!client.halo.identity.get()) {
+          await client.halo.createIdentity();
+        }
+      }}
+    >
       <TaskList />
     </ClientProvider>
   );
