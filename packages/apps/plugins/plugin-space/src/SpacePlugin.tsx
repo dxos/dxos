@@ -27,6 +27,7 @@ import {
   SpaceMain,
   SpaceMainEmpty,
   SpacePresence,
+  PopoverRenameObject,
 } from './components';
 import translations from './translations';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
@@ -137,6 +138,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               switch (data[0]) {
                 case 'dxos.org/plugin/space/RenameSpacePopover':
                   return PopoverRenameSpace;
+                case 'dxos.org/plugin/space/RenameObjectPopover':
+                  return PopoverRenameObject;
                 default:
                   return null;
               }
@@ -260,7 +263,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
           }
 
-          const spaceKey = intent.data?.spaceKey && PublicKey.safeFrom(intent.data.spaceKey);
+          // todo(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
+          const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
           if (!spaceKey) {
             return;
           }
@@ -332,6 +336,23 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               if (space && object) {
                 space.db.remove(object);
+                return true;
+              }
+              break;
+            }
+
+            case SpaceAction.RENAME_OBJECT: {
+              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
+              const object =
+                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
+              console.log('[space rename object]', object, splitViewPlugin?.provides.splitView);
+              if (object && splitViewPlugin?.provides.splitView) {
+                splitViewPlugin.provides.splitView.popoverOpen = true;
+                splitViewPlugin.provides.splitView.popoverContent = [
+                  'dxos.org/plugin/space/RenameObjectPopover',
+                  object,
+                ];
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${intent.data.objectId}`;
                 return true;
               }
               break;

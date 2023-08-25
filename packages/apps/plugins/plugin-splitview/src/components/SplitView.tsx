@@ -17,8 +17,6 @@ export const SplitView = () => {
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
-  console.log('[sv]', popoverOpen, popoverAnchorId);
-
   return (
     <Popover.Root
       open={!!(popoverAnchorId && popoverOpen)}
