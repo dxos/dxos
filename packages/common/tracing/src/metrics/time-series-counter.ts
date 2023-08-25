@@ -19,7 +19,7 @@ export class TimeSeriesCounter extends BaseCounter {
     this._totalValue += by;
   }
 
-  override _tick(time: number, delta: number): void {
+  override _tick(time: number): void {
     this._buckets.push(this._currentValue);
     if (this._buckets.length > MAX_BUCKETS) {
       this._buckets.shift();
