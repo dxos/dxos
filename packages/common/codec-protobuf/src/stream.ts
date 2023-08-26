@@ -123,13 +123,13 @@ export class Stream<T> {
   }
 
   private readonly _ctx: Context;
-  private _messageHandler?: (msg: T) => void;
-  private _closeHandler?: (error?: Error) => void;
-  private _readyHandler?: () => void;
+  private _messageHandler?: (msg: T) => void = undefined;
+  private _closeHandler?: (error?: Error) => void = undefined;
+  private _readyHandler?: () => void = undefined;
 
   private _isClosed = false;
-  private _closeError: Error | undefined;
-  private _producerCleanup: ((err?: Error) => void) | undefined;
+  private _closeError: Error | undefined = undefined;
+  private _producerCleanup: ((err?: Error) => void) | undefined = undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
