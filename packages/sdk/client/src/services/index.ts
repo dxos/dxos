@@ -3,9 +3,10 @@
 //
 
 export {
+  DEFAULT_VAULT_ORIGIN,
+  DEFAULT_VAULT_URL,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_ORIGIN,
   type ShellRuntime,
 } from '@dxos/client-protocol';
 export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';

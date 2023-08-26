@@ -34,6 +34,7 @@ export const FeedsPanel = () => {
   const [refreshCount, setRefreshCount] = useState(0);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
 
+  // TODO(burdon): Show timeframe/timestamp in table.
   const messages = useFeedMessages({ feedKey }).reverse();
   const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 

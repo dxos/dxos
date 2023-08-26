@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import {
-  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_VAULT_ORIGIN,
   Config,
   Defaults,
   Dynamics,
@@ -17,8 +17,6 @@ import {
   fromSocket,
 } from '@dxos/react-client';
 
-const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
-
 /**
  * Construct client from search params.
  */
@@ -27,7 +25,7 @@ export const useRemoteClient = () => {
   useAsyncEffect(async () => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
-      const target = searchParams.get('target') ?? DEFAULT_TARGET;
+      const target = searchParams.get('target') ?? DEFAULT_VAULT_ORIGIN;
       const client = await createClient(target);
       setClient(client);
     } catch (err: any) {
@@ -39,67 +37,46 @@ export const useRemoteClient = () => {
 };
 
 /**
- * Create client from target spec.
+ * Create client from target URL.
  */
-export const createClient = async (spec: string): Promise<Client> => {
-  const [protocol] = spec.split(':');
-  const resolver = targetResolvers[protocol];
-  if (!resolver) {
-    throw new Error(`Invalid type: ${spec} [${Object.keys(targetResolvers).join(', ')}]`);
-  }
-
-  return await resolver(spec);
-};
-
-const targetResolvers: Record<string, (target: string) => Promise<Client>> = {
-  //
-  // Local.
-  //
-  local: async () => {
-    const config = new Config();
-    const services = await fromHost(config);
-    const client = new Client({ config, services });
-    await client.initialize();
-    return client;
-  },
-
-  //
-  // Web socket.
-  //
-  ws: async (target) => {
-    if (!target) {
-      throw new Error('WebSocket URL is required; e.g., "target=ws://localhost:5001"');
+export const createClient = async (target: string): Promise<Client> => {
+  const url = new URL(target);
+  const protocol = url.protocol.slice(0, -1);
+  switch (protocol) {
+    case 'ws':
+    case 'wss': {
+      const config = new Config();
+      const services = fromSocket(target);
+      const client = new Client({ config, services });
+      await client.initialize();
+      return client;
     }
 
-    const config = new Config();
-    const services = fromSocket(target);
-    const client = new Client({ config, services });
-    await client.initialize();
-    return client;
-  },
-
-  //
-  // Browser shared worker.
-  //
-  vault: async (target) => {
-    if (!target) {
-      throw new Error('Vault URL is required; e.g., "target=vault:http://localhost:5173/vault.html"');
-    }
-
-    const config = new Config(
-      {
-        runtime: {
-          client: {
-            remoteSource: target.slice(target.indexOf(':') + 1),
+    case 'http':
+    case 'https': {
+      const config = new Config(
+        {
+          runtime: {
+            client: {
+              remoteSource: target + '/vault.html',
+            },
           },
         },
-      },
-      await Dynamics(),
-      Defaults(),
-    );
-    const services = await fromIFrame(config);
-    const client = new Client({ config, services });
-    await client.initialize();
-    return client;
-  },
+        await Dynamics(),
+        Defaults(),
+      );
+      const services = await fromIFrame(config);
+      const client = new Client({ config, services });
+      await client.initialize();
+      return client;
+    }
+
+    default: {
+      const config = new Config();
+      const services = await fromHost(config);
+      const client = new Client({ config, services });
+      await client.initialize();
+      return client;
+    }
+  }
 };
