@@ -18,6 +18,6 @@ describe('server', () => {
       body: JSON.stringify(query),
     });
 
-    console.log(response);
+    // console.log(response);
   });
 });

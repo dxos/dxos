@@ -377,7 +377,8 @@ describe('Messenger', () => {
         await messenger.listen({
           peerId,
           onMessage: async (msg) => {
-            console.log(++numReceived);
+            ++numReceived;
+            // console.log(numReceived);
           },
         });
 

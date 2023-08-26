@@ -16,7 +16,11 @@
   "include": [
     "src"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../../common/log"
+    }
+  ],
   "ts-node": {
     "compilerOptions": {
       "module": "CommonJS"
