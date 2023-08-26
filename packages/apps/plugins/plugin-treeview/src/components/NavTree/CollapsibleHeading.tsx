@@ -9,6 +9,7 @@ import { TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../../types';
+import { getTreeItemLabel } from '../../util';
 import {
   collapsibleSpacing,
   navTreeHeading,
@@ -41,7 +42,7 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
         {...(active && { 'aria-current': 'page' })}
         ref={forwardedRef}
       >
-        {Array.isArray(node.label) ? t(...node.label) : node.label}
+        {getTreeItemLabel(node, t)}
       </TreeItem.Heading>
     ) : (
       <TreeItem.OpenTrigger
@@ -58,7 +59,7 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
           classNames={[navTreeHeading, collapsibleSpacing, treeItemText, error && valenceColorText('error')]}
           {...(active && { 'aria-current': 'page' })}
         >
-          {Array.isArray(node.label) ? t(...node.label) : node.label}
+          {getTreeItemLabel(node, t)}
         </TreeItem.Heading>
       </TreeItem.OpenTrigger>
     );

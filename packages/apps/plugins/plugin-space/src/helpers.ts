@@ -20,6 +20,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
   constructor(
     private readonly _filter: Filter<T>,
     private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node,
+    private readonly _propertySubscriptions?: string[],
   ) {}
 
   clear() {
@@ -59,7 +60,8 @@ export class GraphNodeAdapter<T extends TypedObject> {
     // Subscribe to all objects.
     query.objects.forEach((object, index) => {
       const id = `${parent.id}:${object.id}`;
-      this._subscriptions.set(id, () =>
+      this._subscriptions.set(
+        id,
         object[subscribe](() => {
           if (object.__deleted) {
             this._subscriptions.get(id)?.();
@@ -69,7 +71,22 @@ export class GraphNodeAdapter<T extends TypedObject> {
           }
         }),
       );
-
+      // TODO(thure): Related issue: https://github.com/dxos/dxos/issues/3675; Looks like `object[property][subscribe]` on `Text` objects accepts a callback, but the callback isn’t getting called?
+      this._propertySubscriptions?.forEach((property) => {
+        const id = `${parent.id}:${object.id}:${property}`;
+        return this._subscriptions.set(
+          id,
+          object[property][subscribe](() => {
+            console.log('[Extra property subscripton callback]', property);
+            if (object.__deleted) {
+              this._subscriptions.get(id)?.();
+              this._subscriptions.delete(id);
+            } else {
+              parent.add(this._adapter(parent, object, indices[index]));
+            }
+          }),
+        );
+      });
       this._adapter(parent, object, indices[index]);
     });
 
