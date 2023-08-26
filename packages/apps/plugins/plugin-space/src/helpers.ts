@@ -77,7 +77,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
         return this._subscriptions.set(
           id,
           object[property][subscribe](() => {
-            console.log('[Extra property subscripton callback]', property);
+            console.log('[Extra property subscription callback]', property);
             if (object.__deleted) {
               this._subscriptions.get(id)?.();
               this._subscriptions.delete(id);
