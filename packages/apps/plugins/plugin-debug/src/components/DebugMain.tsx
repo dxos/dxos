@@ -5,14 +5,13 @@
 import { ArrowClockwise, DownloadSimple, HandPalm, Play, Plus } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
-import { JSONTree } from 'react-json-tree';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
@@ -21,34 +20,11 @@ import { useClient, useConfig } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DEBUG_PLUGIN, DebugContext } from '../props';
+import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_COUNT = 1000;
 export const DEFAULT_PERIOD = 100;
-
-// TODO(burdon): Light/dark mode.
-// https://github.com/gaearon/base16-js/tree/master/src
-const theme = {
-  scheme: 'dxos',
-  author: 'DXOS',
-  base00: '#ffffff',
-  base01: '#302e00',
-  base02: '#5f5b17',
-  base03: '#6c6823',
-  base04: '#86813b',
-  base05: '#948e48',
-  base06: '#ccc37a',
-  base07: '#faf0a5',
-  base08: '#c35359',
-  base09: '#b36144',
-  base0A: '#a88339',
-  base0B: '#18974e',
-  base0C: '#75a738',
-  base0D: '#477ca1',
-  base0E: '#8868b3',
-  base0F: '#b3588e',
-};
 
 /**
  * File download anchor.
@@ -74,7 +50,6 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
 };
 
 export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
-  const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
@@ -213,21 +188,6 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
         <div className='flex flex-col grow overflow-auto'>
-          {false && (
-            <div className='text-sm font-mono [&>ul]:!m-0 [&>ul]:!p-2'>
-              <JSONTree
-                data={data}
-                hideRoot={true}
-                shouldExpandNodeInitially={(_, __, _level) => true}
-                labelRenderer={([key]) => key}
-                getItemString={() => null}
-                theme={{
-                  extend: theme,
-                }}
-              />
-            </div>
-          )}
-
           <SyntaxHighlighter language='json' style={style} className='w-full'>
             {JSON.stringify(data, replacer, 2)}
           </SyntaxHighlighter>
