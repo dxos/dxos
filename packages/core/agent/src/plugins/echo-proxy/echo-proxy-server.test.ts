@@ -19,5 +19,6 @@ describe('server', () => {
     });
 
     // console.log(response);
+    expect(response.status).toEqual(200);
   });
 });

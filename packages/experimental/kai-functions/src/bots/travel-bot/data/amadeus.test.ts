@@ -30,6 +30,7 @@ describe.skip('amadeus', () => {
   test('cities', async () => {
     const cities = await amadeus.cities({ keyword: 'lon' });
     // console.log(cities);
+    expect(cities).to.exist;
   });
 
   // eslint-disable-next-line mocha/no-skipped-tests
