@@ -46,7 +46,9 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
   builder = new TestBuilder();
 
   async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
-    await Promise.all(range(spec.servers).map((num) => this.builder.createServer(num, outDir, spec.signalArguments)));
+    await Promise.all(
+      range(spec.servers).map((num) => this.builder.createSignalServer(num, outDir, spec.signalArguments)),
+    );
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
 
@@ -155,6 +157,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
     await this.builder.destroy();
+
     switch (params.spec.type) {
       case 'discovery': {
         return analyzeSwarmEvents(params, results);
