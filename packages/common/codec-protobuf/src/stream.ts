@@ -263,7 +263,6 @@ export class Stream<T> {
   onReady(onReady: () => void): void {
     invariant(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
-
     if (this._isReady) {
       onReady();
     }
