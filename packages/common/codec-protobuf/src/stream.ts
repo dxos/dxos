@@ -157,9 +157,7 @@ export class Stream<T> {
         void this._ctx.dispose();
       },
     });
-    this._ctx.onDispose(() => {
-      this.close();
-    });
+    this._ctx.onDispose(() => this.close());
 
     try {
       const producerCleanup = producer({

@@ -78,9 +78,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
-  const { connect, status } = useSpaceInvitation(space?.key);
-  // console.log('invitation', { status });
-
+  const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const config = useConfig();
   const [data, setData] = useState<any>({});
