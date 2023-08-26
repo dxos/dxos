@@ -48,7 +48,6 @@ export class WebRTCTransport implements Transport {
     // NOTE: Set localStorage.debug = 'simple-peer*' to enable debug logging. (Or show verbose in Chrome).
     // View throughput via: chrome://webrtc-internals (data-channel)
     this._peer = new SimplePeerConstructor({
-      channelName: this._instanceId,
       initiator: this.params.initiator,
       config: this.params.webrtcConfig,
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel
