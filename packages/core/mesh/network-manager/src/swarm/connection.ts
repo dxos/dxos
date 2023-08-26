@@ -158,7 +158,7 @@ export class Connection {
     });
 
     this._transport.errors.handle((err) => {
-      if(!this.closeReason) {
+      if (!this.closeReason) {
         this.closeReason = err?.message;
       }
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -178,7 +178,7 @@ export class Connection {
 
   @synchronized
   async close(err?: Error) {
-    if(!this.closeReason) {
+    if (!this.closeReason) {
       this.closeReason = err?.message;
     }
     if (this._state === ConnectionState.CLOSED) {

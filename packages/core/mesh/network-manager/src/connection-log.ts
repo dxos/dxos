@@ -63,8 +63,7 @@ export class ConnectionLog {
 
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
-        connectionInfo.closeReason = connection.closeReason,
-
+        connectionInfo.closeReason = connection.closeReason;
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
