@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Clipboard, Download } from '@phosphor-icons/react';
+import { ArrowClockwise, ClipboardText, Download } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/aurora';
@@ -66,17 +66,18 @@ export const DiagnosticsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
           <Input.Root>
             <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
             <Input.Label>Record metrics</Input.Label>
           </Input.Root>
           <div className='grow' />
-          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
+          <Toolbar.Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
           <Toolbar.Button onClick={handleDownload}>
             <Download className={getSize(5)} />
-            <span className='m-2'>Download</span>
           </Toolbar.Button>
+          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       }
       footer={
@@ -84,7 +85,7 @@ export const DiagnosticsPanel = () => {
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text, i) => (
               <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
-                <Clipboard />
+                <ClipboardText />
                 {text}
               </div>
             ))}

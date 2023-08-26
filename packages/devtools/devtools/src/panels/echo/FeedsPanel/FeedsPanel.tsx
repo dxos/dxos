@@ -2,10 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -83,7 +85,9 @@ export const FeedsPanel = () => {
             onChange={handleSelect}
           />
 
-          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
         </Toolbar.Root>
       }
     >
