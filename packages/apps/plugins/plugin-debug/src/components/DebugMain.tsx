@@ -170,7 +170,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <div>
             <Input.Root>
               <Input.TextInput
-                title={t('mutation period')}
+                title={'mutation count'}
                 autoComplete='off'
                 size={6}
                 classNames='w-[100px] text-right'
@@ -183,7 +183,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <div>
             <Input.Root>
               <Input.TextInput
-                title={t('mutation period')}
+                title={'mutation period'}
                 autoComplete='off'
                 size={6}
                 classNames='w-[100px] text-right'
