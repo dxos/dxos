@@ -31,7 +31,7 @@ export class FeedQueue<T extends {}> {
     autoReset: true,
   });
 
-  private _feedConsumer?: Writable;
+  private _feedConsumer?: Writable = undefined;
   private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
