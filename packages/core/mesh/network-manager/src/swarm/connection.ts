@@ -212,7 +212,7 @@ export class Connection {
     }
 
     try {
-      if(process.env.NODE_ENV !== 'test') {
+      if (process.env.NODE_ENV !== 'test') {
         await cancelWithContext(this._ctx, sleep(this._signallingDelay));
         this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
       }

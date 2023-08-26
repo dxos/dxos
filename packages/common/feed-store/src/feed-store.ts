@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import { Event, sleep } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
