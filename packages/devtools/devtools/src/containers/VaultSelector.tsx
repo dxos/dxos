@@ -12,8 +12,8 @@ const targets: Target[] = [
   undefined,
   'ws://localhost:5001',
   'http://localhost:3967',
-  'https://halo.dxos.org',
   'https://halo.dev.dxos.org',
+  'https://halo.dxos.org',
 ].map((value) => ({ value: value ?? '', label: value ?? 'default' }));
 
 const getTarget = (value: string): Target => targets.find((target) => target.value === value) ?? targets[0];

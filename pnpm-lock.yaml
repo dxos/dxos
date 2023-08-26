@@ -3313,6 +3313,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
@@ -3368,6 +3369,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': link:../../experimental/gem-core
