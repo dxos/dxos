@@ -3,6 +3,7 @@
 //
 
 import { Graph } from '@braneframe/plugin-graph';
+import type { TFunction } from '@dxos/aurora';
 
 export const uriToActive = (uri: string) => {
   const [_, ...nodeId] = uri.split('/');
@@ -35,3 +36,12 @@ export const sortByIndex = (a: Graph.Node, b: Graph.Node) => {
   }
   return 0;
 };
+
+export const getTreeItemLabel = (node: Graph.Node, t: TFunction) =>
+  node.properties?.preferFallbackTitle
+    ? Array.isArray(node.properties.fallbackTitle)
+      ? t(...(node.properties.fallbackTitle as [string, { ns: string }]))
+      : node.properties.fallbackTitle
+    : Array.isArray(node.label)
+    ? t(...node.label)
+    : node.label;

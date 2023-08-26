@@ -9,6 +9,7 @@ import { auroraTx, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
+import { getTreeItemLabel } from '../../util';
 import {
   topLevelHeadingHoverColor,
   navTreeHeading,
@@ -66,7 +67,7 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
         >
           {node.icon && <node.icon className={mx(getSize(4), 'shrink-0')} />}
           <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
-            {Array.isArray(node.label) ? t(...node.label) : node.label}
+            {getTreeItemLabel(node, t)}
           </span>
         </button>
       </TreeItem.Heading>
