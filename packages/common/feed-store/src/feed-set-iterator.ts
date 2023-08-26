@@ -163,7 +163,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           } catch (err) {
             // TODO(burdon): Same queue closed twice.
             log.warn('queue closed', { feedKey: queue.feed.key });
-            console.log(Array.from(this._feedQueues.values()));
+            // console.log(Array.from(this._feedQueues.values()));
           }
         }
       }

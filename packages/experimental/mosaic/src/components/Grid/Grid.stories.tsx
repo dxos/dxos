@@ -35,8 +35,8 @@ const Test = () => {
   const [items, setItems] = useState<Item<TestData>[]>(() => {
     return range(num).map(() => {
       return createItem({
-        x: faker.datatype.number({ min: -layout.range.x, max: layout.range.x }),
-        y: faker.datatype.number({ min: -layout.range.y, max: layout.range.y }),
+        x: faker.number.int({ min: -layout.range.x, max: layout.range.x }),
+        y: faker.number.int({ min: -layout.range.y, max: layout.range.y }),
       });
     });
   });
