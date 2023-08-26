@@ -40,6 +40,7 @@ import { ClientRuntime } from './client-runtime';
 /**
  * This options object configures the DXOS Client.
  */
+// TODO(burdon): Reconcile with ClientContextProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;

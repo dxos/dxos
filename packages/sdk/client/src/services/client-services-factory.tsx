@@ -2,54 +2,50 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { ClientServicesProvider } from '@dxos/client-protocol';
+import { Config, ConfigProto } from '@dxos/config';
 
-import { Client } from '../client';
 import { fromSocket } from './socket';
 import { fromHost, fromIFrame } from './utils';
 
-/**
- * Create client from target URL.
- */
-export const createClient = async (target: string): Promise<Client> => {
+export const Remote = (target: string | undefined): Partial<ConfigProto> => {
+  if (!target) {
+    return {};
+  }
+
   const url = new URL(target);
   const protocol = url.protocol.slice(0, -1);
-  console.log(target, protocol);
-  switch (protocol) {
-    case 'http':
-    case 'https': {
-      const config = new Config(
-        {
-          runtime: {
-            client: {
-              remoteSource: target + '/vault.html',
-            },
-          },
-        },
-        await Dynamics(),
-        Defaults(),
-      );
-      const services = await fromIFrame(config);
-      const client = new Client({ config, services });
-      await client.initialize();
-      return client;
-    }
 
-    case 'ws':
-    case 'wss': {
-      const config = new Config();
-      const services = fromSocket(target);
-      const client = new Client({ config, services });
-      await client.initialize();
-      return client;
-    }
+  return {
+    runtime: {
+      client: {
+        // TODO(burdon): Remove vault.html.
+        remoteSource: url.origin + (protocol.startsWith('http') ? '/vault.html' : ''),
+      },
+    },
+  };
+};
 
-    default: {
-      const config = new Config();
-      const services = await fromHost(config);
-      const client = new Client({ config, services });
-      await client.initialize();
-      return client;
+/**
+ * Create services from config.
+ */
+export const createClientServices = async (config: Config): Promise<ClientServicesProvider> => {
+  const remote = config.values.runtime?.client?.remoteSource;
+  if (remote) {
+    const url = new URL(remote);
+    const protocol = url.protocol.slice(0, -1);
+    switch (protocol) {
+      case 'ws':
+      case 'wss': {
+        return await fromSocket(remote);
+      }
+
+      case 'http':
+      case 'https': {
+        return await fromIFrame(config);
+      }
     }
   }
+
+  return await fromHost(config);
 };

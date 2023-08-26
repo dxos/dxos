@@ -101,7 +101,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
               }
               return true;
             }

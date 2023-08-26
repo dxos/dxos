@@ -30,13 +30,12 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
-import { ClientOptions } from '@dxos/client';
 import { SpaceProxy } from '@dxos/client/echo';
-import { fromHost } from '@dxos/client/services';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { createClientServices, Remote } from '@dxos/client/services';
+import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+import { Defaults } from '@dxos/react-client';
 import { PluginContextProvider } from '@dxos/react-surface';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
@@ -45,70 +44,54 @@ import { PluginContextProvider } from '@dxos/react-surface';
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
-const config = new Config(Envs(), Local(), Defaults());
-void initializeAppTelemetry({ namespace: 'labs-app', config });
+const main = async () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const services = await createClientServices(config);
+  const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 
-// TODO(burdon): Configure initial settings (e.g., show debug panel).
-const debug = config.values.runtime?.app?.env?.DX_DEBUG;
+  // TODO(burdon): Normalize telemetry namespace.
+  await initializeAppTelemetry({ namespace: 'labs.dxos.org', config: config! });
 
-const searchParams = new URLSearchParams(window.location.search);
-const target = searchParams.get('target');
-if (target) {
-  const remoteConfig = {
-    runtime: {
-      client: {
-        remoteSource: target.slice(target.indexOf(':') + 1),
-      },
-    },
-  };
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <PluginContextProvider
+        plugins={[
+          IntentPlugin(),
+          ThemePlugin({ appName: 'Labs' }),
+          ClientPlugin({ config, services, debugIdentity: debug }),
+          IntentPlugin(),
+          DndPlugin(),
+          // Outside of error boundary so that updates are not blocked by errors.
+          PwaPlugin(),
+          // Inside theme provider so that errors are styled.
+          ErrorPlugin(),
+          GraphPlugin(),
+          TreeViewPlugin(),
+          UrlSyncPlugin(),
+          SplitViewPlugin({ enableComplementarySidebar: true }),
+          SpacePlugin(),
 
-  console.log(JSON.stringify(remoteConfig, undefined, 2));
-}
+          // Composer
+          MarkdownPlugin(),
+          StackPlugin(),
+          GithubPlugin(),
+          FilesPlugin(),
 
-const clientOptions: ClientOptions = {
-  config,
-  services:
-    config.values.runtime?.client?.clientServices === Runtime.Client.ClientServiceType.LOCAL
-      ? fromHost(config)
-      : undefined,
+          // Labs
+          DebugPlugin(),
+          GridPlugin(),
+          IpfsPlugin(),
+          TemplatePlugin(),
+          DrawingPlugin(),
+          KanbanPlugin(),
+          ThreadPlugin(),
+          ChessPlugin(),
+          TemplatePlugin(),
+        ]}
+      />
+    </StrictMode>,
+  );
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <PluginContextProvider
-      plugins={[
-        IntentPlugin(),
-        ThemePlugin({ appName: 'Labs' }),
-        ClientPlugin({ ...clientOptions, debugIdentity: debug }),
-        IntentPlugin(),
-        DndPlugin(),
-        // Outside of error boundary so that updates are not blocked by errors.
-        PwaPlugin(),
-        // Inside theme provider so that errors are styled.
-        ErrorPlugin(),
-        GraphPlugin(),
-        TreeViewPlugin(),
-        UrlSyncPlugin(),
-        SplitViewPlugin({ enableComplementarySidebar: true }),
-        SpacePlugin(),
-
-        // Composer
-        MarkdownPlugin(),
-        StackPlugin(),
-        GithubPlugin(),
-        FilesPlugin(),
-
-        // Labs
-        DebugPlugin(),
-        GridPlugin(),
-        IpfsPlugin(),
-        TemplatePlugin(),
-        DrawingPlugin(),
-        KanbanPlugin(),
-        ThreadPlugin(),
-        ChessPlugin(),
-        TemplatePlugin(),
-      ]}
-    />
-  </StrictMode>,
-);
+void main();

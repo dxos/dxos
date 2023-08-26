@@ -131,7 +131,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   const handleOpenDevtools = () => {
     const vaultUrl = config.values?.runtime?.client?.remoteSource;
     if (vaultUrl) {
-      window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
     }
   };
 
