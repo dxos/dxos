@@ -56,7 +56,22 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   console.log(`$ ${mocha} ${args.join(' ')}`);
-  const exitCode = await execTool(mocha, args, {
+  const exitCode = await execTool('node', [
+
+    ...[
+      'prof',
+      'log-deopt',
+      'log-ic',
+      'log-maps',
+      'log-maps-details',
+      'log-internal-timer-events',
+      'log-code',
+      'log-source-code',
+      'detailed-line-info',
+    ].flatMap((flag) => `--${flag}`),
+    require.resolve("mocha/bin/mocha")
+
+    , ...args], {
     env: {
       ...process.env,
       ...options.envVariables,
@@ -83,6 +98,7 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
   return formatArgs([
+
     ...coverageArgs,
     ...options.testPatterns,
     ...ignoreArgs,
