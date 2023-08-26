@@ -25,7 +25,7 @@ import { DEBUG_PLUGIN, DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_COUNT = 1000;
-export const DEFAULT_PERIOD = 10;
+export const DEFAULT_PERIOD = 100;
 
 // TODO(burdon): Light/dark mode.
 // https://github.com/gaearon/base16-js/tree/master/src
@@ -206,8 +206,8 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <div className='grow' />
           <Button onClick={handleCreateInvitation}>Invite</Button>
           <Button onClick={handleOpenDevtools}>Devtools</Button>
-          <Button onClick={handleResetClient}>Reset client</Button>
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
+          <Button onClick={handleResetClient}>Reset client</Button>
         </DensityProvider>
       </div>
 
