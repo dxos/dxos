@@ -19,7 +19,8 @@ test('example', () => {
     };
   });
 
-  console.log(JSON.stringify(examples, undefined, 2));
+  // console.log(JSON.stringify(examples, undefined, 2));
+  expect(examples).to.exist;
 });
 
 test('deterministic', () => {

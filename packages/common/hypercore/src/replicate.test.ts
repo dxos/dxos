@@ -134,7 +134,7 @@ describe('Replication', () => {
 
       // Write batch of messages with delay.
       batch((next, i, remaining) => {
-        const size = faker.datatype.number({
+        const size = faker.number.int({
           min: 1,
           max: Math.min(10, remaining),
         });
@@ -145,7 +145,7 @@ describe('Replication', () => {
         // Random delay.
         setTimeout(() => {
           next(size);
-        }, faker.datatype.number({ min: 0, max: 100 }));
+        }, faker.number.int({ min: 0, max: 100 }));
       }, numBlocks);
 
       // Done.

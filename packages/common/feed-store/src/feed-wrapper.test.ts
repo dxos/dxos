@@ -125,7 +125,7 @@ describe('FeedWrapper', () => {
 
     // TODO(burdon): Use generator.
     for (const i of Array.from(Array(numBlocks)).keys()) {
-      await sleep(faker.datatype.number({ min: 0, max: 20 }));
+      await sleep(faker.number.int({ min: 0, max: 20 }));
       await feed.append({
         id: String(i + 1),
         value: faker.lorem.sentence(),

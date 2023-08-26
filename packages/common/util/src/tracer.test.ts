@@ -79,6 +79,6 @@ describe('Tracer', () => {
     expect(median).to.be.greaterThan(min!);
     expect(median).to.be.lessThan(max!);
 
-    console.log(numericalValues(events, (event) => event.duration!));
+    // console.log(numericalValues(events, (event) => event.duration!));
   });
 });
