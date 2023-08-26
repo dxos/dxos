@@ -43,11 +43,12 @@ export const useRemoteClient = () => {
  */
 export const createClient = async (spec: string): Promise<Client> => {
   const [protocol] = spec.split(':');
-  if (!(protocol in targetResolvers)) {
+  const resolver = targetResolvers[protocol];
+  if (!resolver) {
     throw new Error(`Invalid type: ${spec} [${Object.keys(targetResolvers).join(', ')}]`);
   }
 
-  return targetResolvers[protocol](spec);
+  return await resolver(spec);
 };
 
 const targetResolvers: Record<string, (target: string) => Promise<Client>> = {

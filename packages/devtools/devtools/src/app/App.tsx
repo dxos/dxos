@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
-import { Config, Defaults } from '@dxos/react-client';
+import { ClientServices, Config, Defaults } from '@dxos/react-client';
 
 import { namespace, useRemoteClient } from '../hooks';
 import { Devtools } from './Devtools';
@@ -19,5 +19,5 @@ export const App = () => {
     return null;
   }
 
-  return <Devtools client={client} namespace={namespace} />;
+  return <Devtools client={client} services={client.services.services as ClientServices} namespace={namespace} />;
 };

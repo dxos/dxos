@@ -9,7 +9,7 @@ import { HashRouter } from 'react-router-dom';
 import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
 import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
 import { useTelemetry } from '@dxos/react-appkit';
-import { Client, ClientContext } from '@dxos/react-client';
+import { Client, ClientContext, ClientServices } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -26,7 +26,11 @@ const Telemetry = ({ namespace }: { namespace: string }) => {
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Devtools: FC<{ client: Client; namespace?: string }> = ({ client, namespace = telemetryNamespace }) => {
+export const Devtools: FC<{ client: Client; services: ClientServices; namespace?: string }> = ({
+  client,
+  services,
+  namespace = telemetryNamespace,
+}) => {
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   const devtoolsTx = bindTheme({
     ...auroraTheme,
@@ -41,7 +45,7 @@ export const Devtools: FC<{ client: Client; namespace?: string }> = ({ client, n
     <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
-          <ClientContext.Provider value={{ client }}>
+          <ClientContext.Provider value={{ client, services }}>
             <DevtoolsContextProvider>
               <HashRouter>
                 <Telemetry namespace={namespace} />

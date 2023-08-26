@@ -91,8 +91,10 @@ export const FeedsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
-      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      <div className='flex flex-col'>
+        <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      </div>
     </PanelContainer>
   );
 };
