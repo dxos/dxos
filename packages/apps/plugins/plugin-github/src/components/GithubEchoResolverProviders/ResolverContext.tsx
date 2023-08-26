@@ -33,7 +33,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
 });
 
 export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
-  const identity = useIdentity({ login: true });
+  const identity = useIdentity();
   const identityHex = identity?.identityKey.toHex();
   const [source, id] = getLocationIdentifier();
   const spaces = useSpaces({ all: true });
