@@ -8,6 +8,7 @@ import { LogProcessor } from './context';
  * Standard levels.
  */
 // NOTE: Keep aligned with LogLevel in @dxos/protocols.
+// TODO(burdon): Update numbers?
 export enum LogLevel {
   TRACE = 5,
   DEBUG = 10,

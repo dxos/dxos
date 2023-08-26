@@ -1,8 +1,9 @@
 formatter:
-  column: 100
+  column: 80
 
-# depth: 0
+depth: 1
 
 filter:
   - warn
   - agent:debug
+  - pipeline:debug

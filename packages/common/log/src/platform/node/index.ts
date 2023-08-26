@@ -7,7 +7,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { LogOptions } from '../../config';
-import { log } from '../../log';
 
 /**
  * Node config loader.
@@ -15,7 +14,7 @@ import { log } from '../../log';
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
   if (filepath) {
     const fullpath = path.join(process.cwd(), filepath);
-    log(`Log file: ${fullpath}`);
+    // console.log(`Log file: ${fullpath}`);
     try {
       const text = fs.readFileSync(fullpath, 'utf-8');
       if (text) {

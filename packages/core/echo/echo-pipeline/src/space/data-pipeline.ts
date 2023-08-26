@@ -10,7 +10,7 @@ import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, omit } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataPipelineProcessed } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -332,7 +332,6 @@ export class DataPipeline implements CredentialProcessor {
         // Space closed before we got to process the epoch.
         return;
       }
-      log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
 
       this.appliedEpoch = epoch;
@@ -346,15 +345,13 @@ export class DataPipeline implements CredentialProcessor {
     invariant(this._pipeline);
     this._lastProcessedEpoch = epoch.number;
 
-    log('Processing epoch', { epoch });
+    log('processing', { epoch: omit(epoch, 'proof') });
     if (epoch.snapshotCid) {
       const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
-
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
 
-    log('restarting pipeline for epoch');
-
+    log('restarting pipeline from epoch');
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
     await this._pipeline.unpause();

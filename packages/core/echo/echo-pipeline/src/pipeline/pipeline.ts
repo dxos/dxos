@@ -398,9 +398,14 @@ export class Pipeline implements PipelineAccessor {
 
     feed.undownload({ callback: () => log('undownload') });
     log('download', { feed: feed.key.truncate(), seq, length: feed.length });
-    feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
-      log.error('failed to download feed', err);
-    });
+    feed
+      .download({ start: seq + 1, linear: true })
+      .then((x) => {
+        console.log('!!!!!!!!!!!', x);
+      })
+      .catch((err: Error) => {
+        log.error('download failed', { feed: feed.key, start: seq + 1, length: feed.length, error: err.message });
+      });
   }
 
   private async _initIterator() {
