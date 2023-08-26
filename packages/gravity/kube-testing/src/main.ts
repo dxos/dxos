@@ -4,14 +4,14 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { runPlan } from './plan';
+import { runPlan, RunPlanParams } from './plan';
 import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
 
 // TODO(burdon): Factor out plan to YML files.
-const plans: { [key: string]: () => any } = {
+const plans: { [key: string]: () => RunPlanParams<any, any> } = {
   signal: () => ({
     plan: new SignalTestPlan(),
     spec: {
@@ -21,7 +21,7 @@ const plans: { [key: string]: () => any } = {
       serversPerAgent: 1,
       signalArguments: [
         // 'p2pserver'
-        'globalsubserver',
+        'globalsubserver', // TODO(burdon): Import/define types (for KUBE?)
       ],
       topicCount: 1,
       topicsPerAgent: 1,
@@ -60,7 +60,6 @@ const plans: { [key: string]: () => any } = {
       staggerAgents: 1000,
       randomSeed: PublicKey.random().toHex(),
       // profile: true,
-      // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json`
     },
   }),
 
@@ -81,7 +80,6 @@ const plans: { [key: string]: () => any } = {
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
       profile: true,
-      // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
     },
   }),
 
@@ -90,21 +88,17 @@ const plans: { [key: string]: () => any } = {
     spec: {
       agents: 2,
       swarmsPerAgent: 1,
-      duration: 60_000,
-
-      transport: 'webrtc',
-
-      targetSwarmTimeout: 10_000,
-      fullSwarmTimeout: 60_000,
-
+      duration: 3_000,
+      transport: 'webrtc-proxy',
+      targetSwarmTimeout: 1_000,
+      fullSwarmTimeout: 10_000,
       signalArguments: ['globalsubserver'],
-      repeatInterval: 5_000,
-
+      repeatInterval: 100,
       feedsPerSwarm: 1,
       feedAppendInterval: 0,
       feedMessageSize: 500,
       // feedLoadDuration: 10_000,
-      feedMessageCount: 10_000,
+      feedMessageCount: 5_000,
     },
     options: {
       staggerAgents: 1000,
@@ -114,17 +108,29 @@ const plans: { [key: string]: () => any } = {
 };
 
 /**
- * Configure Redis (e.g., via Docker desktop) and export port.
- * KUBE_HOME=~/Code/dxos/kube p run-tests echo
+ * Requirements:
+ * - Configure Redis (e.g., via Docker desktop) and export port.
+ * - Install Go version 19.
+ * - Set the KUBE_HOME environment variable to the root of the kube repo.
+ *
+ * Example: KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
 const start = async () => {
   const [, , name] = process.argv;
-  const spec = name ?? process.env.GRAVITY_SPEC; // Env set when forked.
-  const plan = spec && plans[spec];
-  if (plan) {
-    await runPlan(name, plan());
+  const spec = name ?? process.env.GRAVITY_SPEC; // Env set when forked by test runner.
+  const planGenerator = plans[spec];
+  if (planGenerator) {
+    const plan: RunPlanParams<any, any> = planGenerator();
+
+    // TODO(burdon): Option.
+    const repeatAnalysis = undefined;
+    if (repeatAnalysis) {
+      plan.options.repeatAnalysis = repeatAnalysis;
+    }
+
+    await runPlan(name, plan);
   } else {
-    console.warn(`\nRun with test name: [${Object.keys(plans).join(', ')}]`);
+    console.warn(`\nRun with test: [${Object.keys(plans).join(', ')}]`);
   }
 };
 
