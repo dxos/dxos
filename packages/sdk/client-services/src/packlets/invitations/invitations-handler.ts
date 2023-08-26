@@ -186,7 +186,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
-        label: 'invitation host'
+        label: 'invitation host',
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -363,7 +363,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
-        label: 'invitation guest'
+        label: 'invitation guest',
       });
       ctx.onDispose(() => swarmConnection.close());
 

@@ -8,6 +8,7 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
+import { Toolbar } from '@dxos/aurora';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -96,5 +97,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 // TODO(burdon): Get current space.
 const Test = (props: any) => {
   console.log(props);
-  return <div className='p-2'>Test</div>;
+  return (
+    <div>
+      <Toolbar.Root>Threads</Toolbar.Root>
+    </div>
+  );
 };
