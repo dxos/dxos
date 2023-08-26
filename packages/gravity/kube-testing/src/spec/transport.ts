@@ -44,7 +44,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
   signalBuilder = new SignalTestBuilder();
 
   async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
-    const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
     return range(spec.agents).map((agentIdx) => ({
@@ -282,13 +282,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
   async finish(params: TestParams<TransportTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
-    log.info('finished shutdown');
-
-    const reader = getReader(results);
 
     const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();
     const testStats = new Map<string, SerializedLogEntry<TestStatsLog>[]>();
 
+    const reader = getReader(results);
     reader.forEach((entry: SerializedLogEntry<any>) => {
       switch (entry.message) {
         case 'dxos.mesh.teleport.stats': {
