@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 describe('server', () => {
@@ -18,6 +20,7 @@ describe('server', () => {
       body: JSON.stringify(query),
     });
 
-    console.log(response);
+    // console.log(response);
+    expect(response.status).to.eq(200);
   });
 });

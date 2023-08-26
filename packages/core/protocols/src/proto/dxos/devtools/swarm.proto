@@ -36,6 +36,7 @@ message ConnectionInfo {
   repeated string protocol_extensions = 5;
   repeated ConnectionEvent events = 6;
   repeated StreamStats streams = 7;
+  optional string close_reason = 8;
 }
 
 message ConnectionEvent {

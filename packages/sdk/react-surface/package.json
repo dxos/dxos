@@ -12,6 +12,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@types/react": "^18.0.21",
     "react": "^18.2.0"
   },

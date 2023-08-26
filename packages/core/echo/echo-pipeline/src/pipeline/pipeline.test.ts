@@ -215,10 +215,8 @@ describe('pipeline/Pipeline', () => {
         check = () => true;
 
         async run(model: Model, real: Real) {
-          console.log(`WriteCommand(${this.agent}, ${this.count})`);
-
+          // console.log(`WriteCommand(${this.agent}, ${this.count})`);
           const agent = real.agents.get(this.agent)!;
-
           const toWrite = Math.min(this.count, NUM_MESSAGES - agent.feed.length);
           if (toWrite > 0) {
             for (const _ of range(toWrite)) {
@@ -234,7 +232,7 @@ describe('pipeline/Pipeline', () => {
         check = () => true;
 
         async run(model: Model, real: Real) {
-          console.log('SyncCommand()');
+          // console.log('SyncCommand()');
           const targets: any = {};
 
           try {
@@ -245,7 +243,7 @@ describe('pipeline/Pipeline', () => {
             for (const agent of real.agents.values()) {
               targets[agent.id] = agent.pipeline.state.endTimeframe;
               if (agent.pipeline.state.endTimeframe.isEmpty()) {
-                console.log('empty endtimeframe', {
+                log('empty endtimeframe', {
                   id: agent.id,
                   endTimeframe: agent.pipeline.state.endTimeframe,
                   feeds: agent.pipeline.getFeeds().map((feed) => [feed.key.toString(), feed.length]),
@@ -264,7 +262,7 @@ describe('pipeline/Pipeline', () => {
               expect(agent.messages.length).toEqual(totalMessages);
             }
           } catch (err) {
-            console.log(
+            log(
               inspect(
                 {
                   agents: Array.from(real.agents.values()).map((agent) => ({
@@ -295,10 +293,9 @@ describe('pipeline/Pipeline', () => {
         check = () => true;
 
         async run(model: Model, real: Real) {
-          console.log(`RestartCommand(${this.agent})`);
+          log(`RestartCommand(${this.agent})`);
 
           const agent = real.agents.get(this.agent)!;
-
           await agent.writePromise;
           await agent.stop();
           await agent.start();
