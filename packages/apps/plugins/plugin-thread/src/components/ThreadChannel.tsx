@@ -88,7 +88,7 @@ export const ThreadChannel: FC<{
           <div ref={bottomRef} />
           {thread.blocks
             .map((block) => (
-              <div key={block.id} className='my-1 __divide-y __border-b'>
+              <div key={block.id} className='my-1'>
                 <ThreadBlock identityKey={identityKey} block={block} getBlockProperties={getBlockProperties} />
               </div>
             ))
