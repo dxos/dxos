@@ -51,6 +51,20 @@ void initializeAppTelemetry({ namespace: 'labs-app', config });
 // TODO(burdon): Configure initial settings (e.g., show debug panel).
 const debug = config.values.runtime?.app?.env?.DX_DEBUG;
 
+const searchParams = new URLSearchParams(window.location.search);
+const target = searchParams.get('target');
+if (target) {
+  const remoteConfig = {
+    runtime: {
+      client: {
+        remoteSource: target.slice(target.indexOf(':') + 1),
+      },
+    },
+  };
+
+  console.log(JSON.stringify(remoteConfig, undefined, 2));
+}
+
 const clientOptions: ClientOptions = {
   config,
   services:

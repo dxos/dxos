@@ -38,6 +38,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               running: !!timer,
               start: (cb: () => boolean | void, interval: number) => {
                 clearInterval(timer);
+                // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
+                // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
+                // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
                 setTimer(
                   setInterval(() => {
                     if (cb() === false) {

@@ -97,7 +97,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
 // TODO(burdon): Get current space.
 const Test = (props: any) => {
-  console.log(props);
+  // console.log(props);
   return (
     <div>
       <Toolbar.Root>

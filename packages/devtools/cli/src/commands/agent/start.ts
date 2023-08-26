@@ -41,6 +41,13 @@ export default class Start extends BaseCommand<typeof Start> {
     }),
   };
 
+  static override examples = [
+    {
+      description: 'Run with .',
+      command: 'dx agent start -f --ws=5001',
+    },
+  ];
+
   private readonly _ctx = new Context();
 
   async run(): Promise<any> {

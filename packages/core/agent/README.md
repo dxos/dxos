@@ -26,6 +26,12 @@ DX_PROFILE=test dx halo
 
 NOTE: The CLI will automatically start an agent if one is not already running.
 
+To run with logging enabled:
+
+```bash
+LOG_CONFIG=./log-config.yml dx agent start -f --ws=5001
+```
+
 ### Managing HALO Devices
 
 The CLI can support multiple profiles, each with its own HALO identity.
