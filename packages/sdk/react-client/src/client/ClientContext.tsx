@@ -27,6 +27,7 @@ export type ClientContextProps = {
   client: Client;
 
   // Optionally expose services (e.g., for devtools).
+  // TODO(burdon): Can't this just be accessed via `client.services`?
   services?: ClientServices;
 
   status?: SystemStatus | null;

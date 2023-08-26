@@ -4,82 +4,101 @@
 
 import { useState } from 'react';
 
+import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import {
+  DEFAULT_CLIENT_ORIGIN,
   Config,
   Defaults,
   Dynamics,
   Client,
-  ClientServices,
-  DEFAULT_CLIENT_ORIGIN,
   fromIFrame,
   fromHost,
   fromSocket,
-  ClientContextProps,
 } from '@dxos/react-client';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
+/**
+ * Construct client from search params.
+ */
 export const useRemoteClient = () => {
-  const [client, setClient] = useState<ClientContextProps>();
+  const [client, setClient] = useState<Client>();
   useAsyncEffect(async () => {
-    setClient(await createClientContext());
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const target = searchParams.get('target') ?? DEFAULT_TARGET;
+      const client = await createClient(target);
+      setClient(client);
+    } catch (err: any) {
+      log.catch(err);
+    }
   }, []);
 
   return client;
 };
 
-const createClientContext = async (): Promise<ClientContextProps> => {
-  /**
-   * Create client from remote source.
-   */
-  const fromRemoteSource = async (remoteSource?: string) => {
-    const remoteSourceConfig = remoteSource
-      ? {
-          runtime: {
-            client: {
-              remoteSource,
-            },
-          },
-        }
-      : {};
-
-    const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-    const servicesProvider = await (remoteSource ? fromIFrame(config) : fromHost(config));
-    const client = new Client({ config, services: servicesProvider });
-    await client.initialize();
-
-    return { client, services: servicesProvider.services as ClientServices };
-  };
-
-  const targetResolvers: Record<string, (remoteSource?: string) => Promise<ClientContextProps>> = {
-    local: () => fromRemoteSource(),
-    vault: (target) => {
-      if (!target) {
-        throw new Error('Vault URL is required target=vault:<vault URL>');
-      }
-
-      return fromRemoteSource(target.slice(target.indexOf(':') + 1));
-    },
-    ws: async (target) => {
-      if (!target) {
-        throw new Error('WebSocket URL is required target=ws:<ws URL>');
-      }
-
-      const client = new Client({ config: new Config(), services: fromSocket(target) });
-      await client.initialize();
-
-      return { client, services: client.services.services as ClientServices };
-    },
-  };
-
-  // Configure vault.
-  const searchParams = new URLSearchParams(window.location.search);
-  const target = searchParams.get('target') ?? DEFAULT_TARGET;
-  const [protocol] = target.split(':');
+/**
+ * Create client from target spec.
+ */
+export const createClient = async (spec: string): Promise<Client> => {
+  const [protocol] = spec.split(':');
   if (!(protocol in targetResolvers)) {
-    throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
+    throw new Error(`Invalid type: ${spec} [${Object.keys(targetResolvers).join(', ')}]`);
   }
 
-  return targetResolvers[protocol](target);
+  return targetResolvers[protocol](spec);
+};
+
+const targetResolvers: Record<string, (target: string) => Promise<Client>> = {
+  //
+  // Local.
+  //
+  local: async () => {
+    const config = new Config();
+    const services = await fromHost(config);
+    const client = new Client({ config, services });
+    await client.initialize();
+    return client;
+  },
+
+  //
+  // Web socket.
+  //
+  ws: async (target) => {
+    if (!target) {
+      throw new Error('WebSocket URL is required; e.g., "target=ws://localhost:5001"');
+    }
+
+    const config = new Config();
+    const services = fromSocket(target);
+    const client = new Client({ config, services });
+    await client.initialize();
+    return client;
+  },
+
+  //
+  // Browser shared worker.
+  //
+  vault: async (target) => {
+    if (!target) {
+      throw new Error('Vault URL is required; e.g., "target=vault:http://localhost:5173/vault.html"');
+    }
+
+    const config = new Config(
+      {
+        runtime: {
+          client: {
+            remoteSource: target.slice(target.indexOf(':') + 1),
+          },
+        },
+      },
+      await Dynamics(),
+      Defaults(),
+    );
+    const services = await fromIFrame(config);
+    const client = new Client({ config, services });
+    await client.initialize();
+    return client;
+  },
 };
