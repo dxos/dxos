@@ -379,29 +379,19 @@ export class Pipeline implements PipelineAccessor {
     this._isBeingConsumed = false;
   }
 
+  private _downloadId?: number;
   private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
+    if (this._downloadId) {
+      feed.undownload(this._downloadId);
+    }
+
     const timeframe = this._state._startTimeframe;
     const seq = timeframe.get(feed.key) ?? -1;
-
-    // TODO(burdon): Remove.
-    // log('setFeedDownloadState', {
-    //   feed: feed.key,
-    //   feedInstance: getPrototypeSpecificInstanceId(feed),
-    //   isBeingConsumed: this._isBeingConsumed,
-    //   isStarted: this._isStarted,
-    //   isPaused: this._isPaused,
-    //   seq,
-    // });
-    // if (!this._isStarted || this._isPaused) {
-    //   console.log(new Error().stack);
-    // }
-
-    feed.undownload({ callback: () => log('undownload') });
     log('download', { feed: feed.key.truncate(), seq, length: feed.length });
-    feed
+    this._downloadId = feed
       .download({ start: seq + 1, linear: true })
-      .then((x) => {
-        console.log('!!!!!!!!!!!', x);
+      .then(() => {
+        log.info('download complete'); // TODO(burdon): Never called?
       })
       .catch((err: Error) => {
         log.error('download failed', { feed: feed.key, start: seq + 1, length: feed.length, error: err.message });
