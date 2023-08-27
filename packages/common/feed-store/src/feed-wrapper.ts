@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Range } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
 
@@ -137,6 +136,10 @@ export class FeedWrapper<T extends {}> {
     return this._hypercore.closed;
   }
 
+  get readable() {
+    return this._hypercore.readable;
+  }
+
   get length() {
     return this._hypercore.length;
   }
@@ -169,7 +172,7 @@ export class FeedWrapper<T extends {}> {
   /**
    * Will not resolve if `end` parameter is not specified and the feed is not closed.
    */
-  download = this._binder.async(this._hypercore.download) as (range?: Partial<Range>) => Promise<number>;
+  download = this._binder.fn(this._hypercore.download);
   undownload = this._binder.fn(this._hypercore.undownload);
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
@@ -215,19 +218,16 @@ export class FeedWrapper<T extends {}> {
 
 class BatchedReadStream extends Readable {
   private readonly _feed: Hypercore<any>;
-  private readonly _batchSize: number;
+  private readonly _batch: number;
   private _cursor: number;
   private _reading = false;
 
   constructor(feed: Hypercore<any>, opts: ReadStreamOptions = {}) {
-    super({
-      objectMode: true,
-    });
-    this._feed = feed;
-
+    super({ objectMode: true });
     invariant(opts.live === true, 'Only live mode supported');
     invariant(opts.batch !== undefined && opts.batch > 1);
-    this._batchSize = opts.batch;
+    this._feed = feed;
+    this._batch = opts.batch;
     this._cursor = opts.start ?? 0;
   }
 
@@ -240,7 +240,7 @@ class BatchedReadStream extends Readable {
       return;
     }
 
-    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batchSize) === this._batchSize) {
+    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batch) === this._batch) {
       this._batchedRead(cb);
     } else {
       this._nonBatchedRead(cb);
@@ -261,7 +261,7 @@ class BatchedReadStream extends Readable {
   }
 
   private _batchedRead(cb: (err: Error | null) => void) {
-    this._feed.getBatch(this._cursor, this._cursor + this._batchSize, { wait: true }, (err, data) => {
+    this._feed.getBatch(this._cursor, this._cursor + this._batch, { wait: true }, (err, data) => {
       if (err) {
         cb(err);
       } else {

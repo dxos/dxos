@@ -130,7 +130,6 @@ export class Messenger {
     });
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
-
     return promise;
   }
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Play, HandPalm } from '@phosphor-icons/react';
+import { ArrowClockwise, DownloadSimple, HandPalm, Play, Plus } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -11,22 +11,49 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
+import { InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';
+import { useSpaceInvitation } from '@dxos/react-client/echo';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DEBUG_PLUGIN, DebugContext } from '../props';
+import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_PERIOD = 500;
+export const DEFAULT_COUNT = 1000;
+export const DEFAULT_PERIOD = 100;
+
+/**
+ * File download anchor.
+ *
+ * const download = useDownload();
+ * const handleDownload = (data: string) => {
+ *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
+ * };
+ */
+// TODO(burdon): Factor out.
+export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+  return useMemo(
+    () => (data: Blob | string, filename: string) => {
+      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+      const element = document.createElement('a');
+      element.setAttribute('href', url);
+      element.setAttribute('download', filename);
+      element.setAttribute('target', 'download');
+      element.click();
+    },
+    [],
+  );
+};
 
 export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
-  const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
+  const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const config = useConfig();
   const [data, setData] = useState<any>({});
@@ -38,6 +65,15 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     void handleRefresh();
   }, []);
 
+  const download = useFileDownload();
+  const handleCopy = async () => {
+    download(
+      new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}.json`,
+    );
+  };
+
+  const [mutationCount, setMutationCount] = useState(String(DEFAULT_COUNT));
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
 
   const generator = useMemo(() => {
@@ -46,23 +82,38 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     return generator;
   }, [space]);
 
-  // TODO(burdon): Note shared across spaces!
+  // TODO(burdon): Note: this is shared across spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
       stop();
       void handleRefresh();
     } else {
-      start(() => generator.updateObject(), parseInt(mutationInterval));
+      start(
+        () => {
+          generator.updateObject();
+        },
+        { count: parseInt(mutationCount), interval: parseInt(mutationInterval) },
+      );
     }
   };
 
-  const handleCreateObject = async () => {
-    generator.createObject();
+  const handleCreateObject = async (createContent: boolean) => {
+    generator.createObject({ createContent });
   };
 
-  const handleUpdateObject = async () => {
-    generator.updateObject();
+  const handleCreateInvitation = () => {
+    const invitation = space.createInvitation({
+      type: Invitation.Type.MULTIUSE,
+      authMethod: Invitation.AuthMethod.NONE,
+    });
+
+    // TODO(burdon): Refactor.
+    // TODO(burdon): Unsubscribe?
+    connect(invitation);
+    const code = InvitationEncoder.encode(invitation.get());
+    const url = `${window.origin}?spaceInvitationCode=${code}`;
+    void navigator.clipboard.writeText(url);
   };
 
   const handleResetClient = async () => {
@@ -78,7 +129,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   const handleOpenDevtools = () => {
     const vaultUrl = config.values?.runtime?.client?.remoteSource;
     if (vaultUrl) {
-      window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
     }
   };
 
@@ -86,16 +137,30 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
-          <Button onClick={handleCreateObject}>Create</Button>
-          <Button onClick={handleUpdateObject}>Update</Button>
+          <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
+            <Plus className={getSize(5)} />
+          </Button>
           <div>
             <Input.Root>
               <Input.TextInput
-                title={t('mutation period')}
+                title={'mutation count'}
                 autoComplete='off'
                 size={6}
                 classNames='w-[100px] text-right'
-                placeholder='Mutation period'
+                placeholder='#'
+                value={mutationCount}
+                onChange={({ target: { value } }) => setMutationCount(value)}
+              />
+            </Input.Root>
+          </div>
+          <div>
+            <Input.Root>
+              <Input.TextInput
+                title={'mutation period'}
+                autoComplete='off'
+                size={6}
+                classNames='w-[100px] text-right'
+                placeholder='Interval'
                 value={mutationInterval}
                 onChange={({ target: { value } }) => setMutationInterval(value)}
               />
@@ -104,21 +169,28 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
-          <Button onClick={handleRefresh}>Refresh</Button>
+          <Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Button>
+          <Button onClick={handleCopy}>
+            <DownloadSimple className={getSize(5)} />
+          </Button>
 
           <div className='grow' />
-          <Button onClick={handleOpenDevtools}>Open Devtools</Button>
-          <Button onClick={handleResetClient}>Reset client</Button>
+          <Button onClick={handleCreateInvitation}>Invite</Button>
+          <Button onClick={handleOpenDevtools}>Devtools</Button>
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
+          <Button onClick={handleResetClient}>Reset client</Button>
         </DensityProvider>
       </div>
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
-        <div className='flex grow overflow-auto text-sm'>
+        <div className='flex flex-col grow overflow-auto'>
           <SyntaxHighlighter language='json' style={style} className='w-full'>
             {JSON.stringify(data, replacer, 2)}
           </SyntaxHighlighter>
         </div>
+
         {config.values?.runtime?.app?.build?.timestamp && (
           <div className='p-2 text-sm font-mono'>
             {config.values?.runtime?.app?.build?.version} (

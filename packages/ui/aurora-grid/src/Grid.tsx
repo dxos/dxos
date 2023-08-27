@@ -50,9 +50,7 @@ export type GridSlots = {
     className?: string | string[];
   };
   margin?: {
-    style?: {
-      width?: number;
-    };
+    className?: string | string[];
   };
 };
 
@@ -229,7 +227,7 @@ export const Grid = <TData extends RowData>({
           {table.getHeaderGroups().map((headerGroup) => {
             return (
               <tr key={headerGroup.id}>
-                <th style={{ width: slots?.margin?.style?.width }} />
+                <th className={mx(slots?.margin?.className)} />
                 {headerGroup.headers
                   .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
                   .map((header) => {
@@ -246,7 +244,7 @@ export const Grid = <TData extends RowData>({
                     );
                   })}
                 {addFlex && <th />}
-                <th style={{ width: slots?.margin?.style?.width }} />
+                <th className={mx(slots?.margin?.className)} />
               </tr>
             );
           })}

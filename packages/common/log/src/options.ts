@@ -36,25 +36,27 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
   });
 };
 
-export const getConfig = (_options?: LogOptions): LogConfig => {
-  let options: LogOptions = defaultsDeep(
+export const getConfig = (options?: LogOptions): LogConfig => {
+  const nodeOptions: LogOptions | undefined =
+    'process' in globalThis
+      ? {
+          file: process!.env.LOG_CONFIG,
+          filter: process!.env.LOG_FILTER,
+          processor: process!.env.LOG_PROCESSOR,
+        }
+      : undefined;
+
+  const mergedOptions: LogOptions = defaultsDeep(
     {},
-    _options,
-    'process' in globalThis && {
-      // TODO(burdon): Node only.
-      file: process!.env?.LOG_CONFIG,
-      filter: process!.env?.LOG_FILTER,
-      processor: process!.env?.LOG_PROCESSOR,
-    },
+    options,
+    nodeOptions && loadOptions(nodeOptions.file),
+    nodeOptions,
   );
 
-  // TODO(burdon): Verbose option.
-  // console.log(JSON.stringify(options, undefined, 2));
-  options = defaultsDeep({}, loadOptions(options.file), options);
   return {
-    options,
-    filters: parseFilter(options.filter ?? LogLevel.INFO),
-    processors: options.processor ? [processors[options.processor]] : DEFAULT_PROCESSORS,
-    prefix: options.prefix,
+    options: mergedOptions,
+    filters: parseFilter(mergedOptions.filter ?? LogLevel.INFO),
+    processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
+    prefix: mergedOptions.prefix,
   };
 };

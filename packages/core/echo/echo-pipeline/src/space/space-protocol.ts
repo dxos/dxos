@@ -87,6 +87,7 @@ export class SpaceProtocol {
     this._onAuthFailure = onAuthFailure;
     this.blobSync = new BlobSync({ blobStore });
 
+    // TODO(burdon): Async race condition? Move to start?
     this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
   }
 
@@ -100,6 +101,7 @@ export class SpaceProtocol {
     }
   }
 
+  // TODO(burdon): Rename open? Common open/close interfaces for all services?
   async start() {
     if (this._connection) {
       return;
@@ -124,7 +126,7 @@ export class SpaceProtocol {
       peerId: this._swarmIdentity.peerKey,
       topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${topic}`,
+      label: `space swarm ${topic.truncate()}`,
     });
 
     log('started');
