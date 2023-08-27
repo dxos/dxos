@@ -10,9 +10,11 @@ import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
 export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
+export type DebugStartOptions = { count?: number; interval?: number };
+
 export type DebugContextType = {
   running: boolean;
-  start: (cb: () => boolean | void, period: number) => void;
+  start: (cb: (i: number) => boolean | void, options?: DebugStartOptions) => void;
   stop: () => void;
 };
 

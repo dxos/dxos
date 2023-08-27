@@ -89,14 +89,12 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
       stop();
       void handleRefresh();
     } else {
-      let i = parseInt(mutationCount);
-      start(() => {
-        if (!isNaN(i) && i-- <= 0) {
-          stop();
-        } else {
+      start(
+        () => {
           generator.updateObject();
-        }
-      }, parseInt(mutationInterval));
+        },
+        { count: parseInt(mutationCount), interval: parseInt(mutationInterval) },
+      );
     }
   };
 

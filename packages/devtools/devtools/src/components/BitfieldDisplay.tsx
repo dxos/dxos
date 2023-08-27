@@ -13,16 +13,15 @@ export const BitfieldDisplay = ({ value, length }: { value: Uint8Array; length: 
   const size = 8;
   const margin = 2;
   const buckets = Math.min(Math.floor((width ?? 0) / (size + margin)), length);
-
   const getColor = (index: number): string => {
-    const feedBegin = Math.floor((index * length) / buckets);
-    let feedEnd = Math.ceil(((index + 1) * length) / buckets);
-    if (feedEnd === feedBegin) {
-      feedEnd = feedBegin + 1;
+    const start = Math.floor((index * length) / buckets);
+    let end = Math.ceil(((index + 1) * length) / buckets);
+    if (end === start) {
+      end = start + 1;
     }
 
-    const count = BitField.count(value, feedBegin, feedEnd);
-    const percent = count / (feedEnd - feedBegin);
+    const count = BitField.count(value, start, end);
+    const percent = count / (end - start);
     if (percent === 1) {
       return 'green';
     } else if (percent > 0) {
@@ -36,10 +35,7 @@ export const BitfieldDisplay = ({ value, length }: { value: Uint8Array; length: 
     <div ref={ref} className='flex shrink-0 p-4'>
       <div className='flex' style={{ height: size * 2 }}>
         {range(buckets).map((index) => (
-          <div
-            key={index}
-            style={{ width: size, marginRight: margin, backgroundColor: getColor(index), minWidth: 1 }}
-          />
+          <div key={index} style={{ width: size, marginRight: margin, backgroundColor: getColor(index) }} />
         ))}
       </div>
     </div>

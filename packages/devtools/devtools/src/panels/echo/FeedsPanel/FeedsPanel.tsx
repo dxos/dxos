@@ -37,6 +37,7 @@ export const FeedsPanel = () => {
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
   const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
+  // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
   useEffect(() => {
