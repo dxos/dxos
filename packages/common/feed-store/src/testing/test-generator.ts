@@ -27,7 +27,7 @@ export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncod
 export type TestBlockGenerator<T> = (i: number) => T;
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   index: i,
   value: faker.lorem.sentence(),
 });

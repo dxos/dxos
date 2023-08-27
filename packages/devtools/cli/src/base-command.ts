@@ -49,7 +49,8 @@ import {
   waitForSpace,
 } from './util';
 
-log.config({ filter: process.env.LOG_FILTER ?? LogLevel.ERROR });
+// Set config if not overridden by env.
+log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 

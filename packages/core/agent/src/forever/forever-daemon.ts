@@ -143,7 +143,7 @@ export class ForeverDaemon implements Daemon {
           });
           await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
 
-          stream.close();
+          await stream.close();
           await services.close(new Context());
         }
         return await this._getProcess(profile);

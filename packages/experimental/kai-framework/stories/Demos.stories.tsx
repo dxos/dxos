@@ -23,7 +23,7 @@ type Item = { id: string; label: string; expanded: boolean; selected: boolean };
 // TODO(burdon): Use testing lib without db.
 const createItem = (n: MinMax): Item[] =>
   range(n).map(() => ({
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     label: faker.lorem.word(8),
     expanded: faker.datatype.boolean(),
     selected: faker.datatype.boolean(),

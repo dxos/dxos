@@ -23,20 +23,21 @@ const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
 ];
 
 export const FeedsPanel = () => {
+  const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
+  const messages = useFeedMessages({ feedKey }).reverse();
+
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
 
-  const devtoolsHost = useDevtools();
   const [refreshCount, setRefreshCount] = useState(0);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
-
-  const messages = useFeedMessages({ feedKey }).reverse();
   const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
+  // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
   useEffect(() => {
@@ -91,8 +92,10 @@ export const FeedsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
-      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      <div className='flex flex-col overflow-hidden'>
+        <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      </div>
     </PanelContainer>
   );
 };

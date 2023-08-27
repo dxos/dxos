@@ -335,7 +335,7 @@ export class RpcPeer {
       }
 
       this._localStreams.delete(decoded.streamClose.id);
-      stream.close();
+      await stream.close();
     } else if (decoded.bye) {
       this._byeTrigger.wake();
       // If we haven't already started closing, close now.

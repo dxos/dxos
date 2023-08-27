@@ -38,14 +38,15 @@ import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
 
 /**
- * This options object configures the DXOS Client
+ * This options object configures the DXOS Client.
  */
+// TODO(burdon): Reconcile with ClientContextProps.
 export type ClientOptions = {
-  /** client configuration object */
+  /** Client configuration object. */
   config?: Config;
-  /** custom services provider */
+  /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** custom model factory */
+  /** Custom model factory. */
   modelFactory?: ModelFactory;
 };
 
@@ -54,7 +55,7 @@ export type ClientOptions = {
  */
 export class Client {
   /**
-   * The version of this client API
+   * The version of this client API.
    */
   public readonly version = DXOS_VERSION;
 
@@ -109,7 +110,7 @@ export class Client {
   }
 
   /**
-   * Current configuration object
+   * Current configuration object.
    */
   get config(): Config {
     invariant(this._config, 'Client not initialized.');
@@ -126,7 +127,7 @@ export class Client {
 
   // TODO(burdon): Rename isOpen.
   /**
-   * Returns true if the client has been initialized. Initialize by calling `.initialize()`
+   * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
    */
   get initialized() {
     return this._initialized;

@@ -89,7 +89,7 @@ export const SpaceInfoPanel: FC = () => {
         </Toolbar.Root>
       }
     >
-      <div className='flex flex-col'>
+      <div className='flex flex-col gap-4'>
         {object && <DetailsTable object={object} />}
         <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
       </div>
