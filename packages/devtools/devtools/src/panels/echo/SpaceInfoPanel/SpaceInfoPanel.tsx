@@ -2,16 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
+import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
-import { DetailsTable, PanelContainer } from '../../../components';
+import { Bitbar, DetailsTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 import { PipelineTable } from './PipelineTable';
@@ -21,6 +24,7 @@ export const SpaceInfoPanel: FC = () => {
   const spacesInfo = useSpacesInfo();
   const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
+  const [, forceUpdate] = React.useState({});
 
   // TODO(burdon): Factor out.
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
@@ -78,11 +82,23 @@ export const SpaceInfoPanel: FC = () => {
     }
   };
 
+  // TODO(burdon): Seems like an additional pair of keys?
+  const feedKeys = [
+    ...(space?.internal.data.pipeline?.controlFeeds ?? []),
+    ...(space?.internal.data.pipeline?.dataFeeds ?? []),
+  ];
+  const devtoolsHost = useDevtools();
+  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, []);
+
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
           <SpaceSelector />
+          <Toolbar.Button onClick={() => forceUpdate({})}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
+          <div className='grow' />
           <Toolbar.Button onClick={toggleActive}>
             {space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}
           </Toolbar.Button>
@@ -91,7 +107,20 @@ export const SpaceInfoPanel: FC = () => {
     >
       <div className='flex flex-col gap-4'>
         {object && <DetailsTable object={object} />}
+
         <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
+
+        {/* TODO(burdon): Doesn't update */}
+        <div>
+          {feeds.map((feed) => (
+            <div key={feed.feedKey.toHex()} className='flex items-center mx-4 overflow-hidden'>
+              <div className='shrink-0 text-green-500 font-thin font-mono w-[100px]'>{feed.feedKey.truncate()}</div>
+              <div className='grow'>
+                <Bitbar value={feed.downloaded} length={feed.length} size={6} margin={1} height={8} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </PanelContainer>
   );

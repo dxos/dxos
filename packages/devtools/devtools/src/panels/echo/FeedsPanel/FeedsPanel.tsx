@@ -28,14 +28,13 @@ export const FeedsPanel = () => {
   const { space, feedKey } = useDevtoolsState();
   const messages = useFeedMessages({ feedKey }).reverse();
 
+  const [refreshCount, setRefreshCount] = useState(0);
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
-
-  const [refreshCount, setRefreshCount] = useState(0);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
-  const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+  const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
   // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
@@ -93,7 +92,7 @@ export const FeedsPanel = () => {
       }
     >
       <div className='flex flex-col overflow-hidden'>
-        <Bitbar value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
+        <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
         <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
       </div>
     </PanelContainer>

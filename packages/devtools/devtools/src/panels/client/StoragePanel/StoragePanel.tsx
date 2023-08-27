@@ -269,6 +269,7 @@ export const StoragePanel = () => {
               <Bitbar
                 value={selectedValue.blob.bitfield ?? new Uint8Array()}
                 length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+                className='m-2'
               />
               <JsonView data={selectedValue.blob} />
             </>
@@ -279,6 +280,7 @@ export const StoragePanel = () => {
               <Bitbar
                 value={selectedValue.feed.downloaded ?? new Uint8Array()}
                 length={Math.ceil(selectedValue.feed.length ?? 0)}
+                className='m-2'
               />
               <JsonView data={selectedValue.feed} />
             </>
