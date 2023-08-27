@@ -241,7 +241,7 @@ describe('FeedWrapper', () => {
     // Reader.
     {
       const start = 5;
-      feed2.download({ start, linear: true }).catch((err) => {
+      feed2.download({ start, linear: true }, (err: Error) => {
         log.catch(err);
       });
       await waitForExpect(async () => {

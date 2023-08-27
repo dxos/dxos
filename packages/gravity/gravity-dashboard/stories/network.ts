@@ -80,7 +80,7 @@ export class Generator {
 
   createKube(): Kube {
     return {
-      id: faker.datatype.uuid(),
+      id: faker.string.uuid(),
       bots: Array.from({
         length: faker.number.int({ min: 0, max: 5 }),
       }).map(() => this.createBot()),
@@ -89,7 +89,7 @@ export class Generator {
 
   createBot(): Bot {
     return {
-      id: faker.datatype.uuid(),
+      id: faker.string.uuid(),
     };
   }
 }
