@@ -37,6 +37,7 @@ export const Bitbar: FC<BitbarParams> = ({
     }
 
     const count = BitField.count(value, start, end);
+
     const percent = count / (end - start);
     if (percent === 1) {
       return 'bg-green-500';
