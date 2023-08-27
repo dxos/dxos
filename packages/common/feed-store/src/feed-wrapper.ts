@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Range } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
 
@@ -137,6 +136,10 @@ export class FeedWrapper<T extends {}> {
     return this._hypercore.closed;
   }
 
+  get readable() {
+    return this._hypercore.readable;
+  }
+
   get length() {
     return this._hypercore.length;
   }
@@ -169,7 +172,7 @@ export class FeedWrapper<T extends {}> {
   /**
    * Will not resolve if `end` parameter is not specified and the feed is not closed.
    */
-  download = this._binder.async(this._hypercore.download) as (range?: Partial<Range>) => Promise<number>;
+  download = this._binder.fn(this._hypercore.download);
   undownload = this._binder.fn(this._hypercore.undownload);
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);

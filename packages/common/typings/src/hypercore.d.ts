@@ -238,6 +238,7 @@ declare module 'hypercore' {
     /** @deprecated remove in v10 */
     getBatch(start: number, end: number, options?: GetOptions, cb?: Callback<T[]>): void;
 
+    // TODO(burdon): Documented signature is different from code.
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
     download(range?: Range, cb?: Callback<number>): number;
 
