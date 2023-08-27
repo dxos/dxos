@@ -81,6 +81,12 @@ export const SplitView = () => {
           </div>
         </Main.Content>
 
+        {/* Status info. */}
+        {/* TODO(burdon): name/role? */}
+        <div className='fixed right-0 bottom-0 p-2 z-[1]'>
+          <Surface name='status' role='status' />
+        </div>
+
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 

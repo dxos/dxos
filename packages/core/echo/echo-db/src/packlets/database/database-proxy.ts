@@ -18,12 +18,14 @@ import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 
+const FLUSH_TIMEOUT = 5_000;
+
 export type MutateResult = {
   objectsUpdated: Item<any>[];
   batch: Batch;
 };
 
-const FLUSH_TIMEOUT = 5_000;
+export type BatchUpdate = { size?: number; duration?: number; error?: Error };
 
 /**
  * Maintains a local cache of objects and provides a API for mutating the database.
@@ -35,6 +37,7 @@ export class DatabaseProxy {
   private readonly _ctx = new Context();
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
+  public readonly pendingBatch = new Event<BatchUpdate>();
 
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
@@ -44,7 +47,7 @@ export class DatabaseProxy {
    * ClientTag -> Batch
    */
   private _pendingBatches = new Map<string, Batch>();
-
+  private _pendingBatchStart?: number;
   private _currentBatch?: Batch;
 
   private _opening = false;
@@ -145,9 +148,14 @@ export class DatabaseProxy {
 
         this._subscriptionOpen = false;
         for (const batch of this._pendingBatches.values()) {
-          batch.processTrigger!.throw(new Error('Service connection closed'));
+          batch.processTrigger!.throw(new Error('Service connection closed.'));
         }
+        this.pendingBatch.emit({
+          size: this._pendingBatches.size,
+          error: new Error('Service connection closed.'),
+        });
         this._pendingBatches.clear();
+        this._pendingBatchStart = undefined;
       },
     );
 
@@ -271,6 +279,7 @@ export class DatabaseProxy {
     batch.processTrigger = new Trigger();
     batch.receiptTrigger = new Trigger();
     this._pendingBatches.set(batch.clientTag, batch);
+    this._pendingBatchStart = Date.now();
 
     this._service
       .write({
@@ -301,15 +310,12 @@ export class DatabaseProxy {
     const batchCreated = this.beginBatch();
     try {
       const startingMutationIndex = this._currentBatch!.data.objects!.length;
-
       this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
-
-      const objectsUpdated: Item<any>[] = [];
-
       tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!, startingMutationIndex);
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.
+      const objectsUpdated: Item<any>[] = [];
       for (const objectMutation of batchInput.objects ?? []) {
         const item = this._processOptimistic(objectMutation);
         if (item) {
@@ -330,13 +336,16 @@ export class DatabaseProxy {
     }
   }
 
-  // TODO(burdon): Add saving callback.
   async flush({ timeout }: { timeout?: number } = {}) {
+    invariant(this._pendingBatchStart);
+    const size = this._pendingBatches.size;
     const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {
       await asyncTimeout(promise, timeout);
     } else {
       await promise;
     }
+    this.pendingBatch.emit({ size, duration: Date.now() - this._pendingBatchStart });
+    this._pendingBatchStart = undefined;
   }
 }
