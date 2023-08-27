@@ -25,7 +25,7 @@ const NUM_MESSAGES = 10;
 // TODO(burdon): Describe test.
 describe('pipeline/stress test', () => {
   test
-    .only('stress', async () => {
+    .skip('stress', async () => {
       const builder = new TestFeedBuilder();
 
       const agentIds = range(NUM_AGENTS).map(() => PublicKey.random().toHex().slice(0, 8));

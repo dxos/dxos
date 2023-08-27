@@ -242,7 +242,9 @@ describe('FeedWrapper', () => {
     {
       const start = 5;
       feed2.download({ start, linear: true }, (err: Error) => {
-        log.catch(err);
+        if (err) {
+          throw err;
+        }
       });
       await waitForExpect(async () => {
         expect(feed2.has(start)).to.be.true;
