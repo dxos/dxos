@@ -4,11 +4,14 @@
 
 import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { getSize } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { Timeframe } from '@dxos/timeframe';
@@ -16,8 +19,16 @@ import { humanize } from '@dxos/util';
 
 import { Bitbar, DetailsTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../../hooks';
 import { PipelineTable } from './PipelineTable';
+
+const { helper, builder } = createColumnBuilder<SubscribeToFeedsResponse.Feed>();
+const columns: GridColumnDef<SubscribeToFeedsResponse.Feed, any>[] = [
+  helper.accessor('feedKey', builder.createKey({ tooltip: true })),
+  helper.accessor('downloaded', {
+    cell: (cell) => <Bitbar value={cell.getValue()} length={cell.row.original.length} size={6} margin={1} height={8} />,
+  }),
+];
 
 export const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -90,6 +101,13 @@ export const SpaceInfoPanel: FC = () => {
   const devtoolsHost = useDevtools();
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, []);
 
+  const navigate = useNavigate();
+  const setContext = useDevtoolsDispatch();
+  const handleSelect = (selected: SubscribeToFeedsResponse.Feed[] | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+    navigate('/echo/feeds');
+  };
+
   return (
     <PanelContainer
       toolbar={
@@ -107,20 +125,9 @@ export const SpaceInfoPanel: FC = () => {
     >
       <div className='flex flex-col gap-4'>
         {object && <DetailsTable object={object} />}
-
         <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-
-        {/* TODO(burdon): Doesn't update */}
-        <div>
-          {feeds.map((feed) => (
-            <div key={feed.feedKey.toHex()} className='flex items-center mx-4 overflow-hidden'>
-              <div className='shrink-0 text-green-500 font-thin font-mono w-[100px]'>{feed.feedKey.truncate()}</div>
-              <div className='grow'>
-                <Bitbar value={feed.downloaded} length={feed.length} size={6} margin={1} height={8} />
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* TODO(burdon): Doesn't update in real time. */}
+        <Grid<SubscribeToFeedsResponse.Feed> columns={columns} data={feeds} onSelectedChange={handleSelect} />
       </div>
     </PanelContainer>
   );

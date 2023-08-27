@@ -9,7 +9,7 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import React from 'react';
 
 import { Tooltip } from '@dxos/aurora';
-import { chromeSurface } from '@dxos/aurora-theme';
+import { chromeSurface, inputSurface } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -142,7 +142,7 @@ export class ColumnBuilder<TData extends RowData> {
 //  Reuse button fragments for hoverColors, selected, primary, etc.
 // TODO(burdon): Compact mode (smaller than density fine).
 export const defaultGridSlots: GridSlots = {
-  root: { className: chromeSurface },
+  root: { className: inputSurface },
   header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
   footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
   // cell: { className: 'p-1' },
