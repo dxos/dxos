@@ -32,6 +32,7 @@ export type TransportTestSpec = {
   repeatInterval: number;
 
   signalArguments: string[];
+  webrtcLibrary: string;
   showPNG: boolean;
 };
 
@@ -69,6 +70,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
+      webrtcLibrary: spec.webrtcLibrary,
       bridge: spec.transport === 'webrtc-proxy',
     });
 

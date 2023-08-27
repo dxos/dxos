@@ -61,6 +61,8 @@ export type ReplicationTestSpec = {
   swarmsPerAgent: number;
   duration: number;
   transport: 'webrtc' | 'webrtc-proxy';
+  webrtcLibrary?: string;
+
   targetSwarmTimeout: number;
   fullSwarmTimeout: number;
   feedsPerSwarm: number;
@@ -160,6 +162,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
       bridge: spec.transport === 'webrtc-proxy',
+      webrtcLibrary: spec.webrtcLibrary,
     });
 
     const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.agentId));

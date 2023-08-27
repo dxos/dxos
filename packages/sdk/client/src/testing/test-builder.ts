@@ -46,14 +46,18 @@ export class TestBuilder {
   public config: Config;
 
   public storage?: Storage;
+  _webrtcLibrary?: string;
 
+  // TODO(nf): move webrtcLibrary to config.
   // prettier-ignore
   constructor (
     config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
-    public signalManagerContext = new MemorySignalManagerContext()
+    public signalManagerContext = new MemorySignalManagerContext(),
+    webrtcLibrary?: string,
   ) {
     this.config = config ?? new Config();
+    this._webrtcLibrary = webrtcLibrary;
   }
 
   /**
@@ -64,9 +68,12 @@ export class TestBuilder {
     if (signals) {
       return {
         signalManager: new WebsocketSignalManager(signals),
-        transportFactory: createWebRTCTransportFactory({
-          iceServers: this.config.get('runtime.services.ice'),
-        }),
+        transportFactory: createWebRTCTransportFactory(
+          {
+            iceServers: this.config.get('runtime.services.ice'),
+          },
+          this._webrtcLibrary,
+        ),
       };
     }
 

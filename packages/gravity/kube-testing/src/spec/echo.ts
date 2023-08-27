@@ -34,6 +34,7 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
+  webrtcLibrary: string;
   showPNG: boolean;
 };
 
@@ -57,7 +58,7 @@ export type EchoAgentConfig = {
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
-  builder = new TestBuilder();
+  builder!: TestBuilder;
 
   services!: LocalClientServices;
   client!: Client;
@@ -79,6 +80,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
     const { agentIdx, signalUrl } = config;
+
+    if (!this.builder) {
+      this.builder = new TestBuilder(undefined, undefined, undefined, spec.webrtcLibrary);
+    }
 
     this.builder.config = new Config({
       runtime: {
