@@ -80,7 +80,7 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
   };
 
   return (
-    <div className='flex p-2 gap-[2px]'>
+    <div className='flex items-center p-2 gap-[2px] h-8'>
       {indicators.map(({ id, title, className }) => (
         <div key={id} title={title} onClick={() => handleReset(id)}>
           <Circle weight='fill' className={mx('cursor-pointer text-neutral-200', className, getSize(3))} />

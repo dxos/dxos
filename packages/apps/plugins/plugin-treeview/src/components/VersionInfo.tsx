@@ -15,7 +15,7 @@ export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
     window.open(`https://github.com/dxos/dxos/commit/${commitHash}`, 'commit');
   };
   return (
-    <div className='flex p-2 gap-2 font-mono text-xs text-neutral-500'>
+    <div className='flex items-center p-2 gap-2 font-mono text-xs text-neutral-500'>
       <div className='flex cursor-pointer gap-2' onClick={handleOpen}>
         <span>v{version}</span>
         {timestamp && <span>({format(new Date(timestamp), 'MMM dd')})</span>}
