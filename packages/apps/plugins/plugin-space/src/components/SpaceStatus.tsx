@@ -10,15 +10,61 @@ import { Space } from '@dxos/react-client/echo';
 
 type Indicator = {
   id: string;
-  label: string;
+  title?: string;
   className?: string;
 };
 
+// TODO(burdon): Swarm (global scope)?
+// TODO(burdon): Connected to vault (global scope)?
+// TODO(burdon): Error handling (global scope)?
+// TODO(burdon): Version out of date (global scope)?
+// TODO(burdon): Make pluggable.
+const defaultIndicators: Indicator[] = [
+  {
+    id: 'save',
+  },
+  {
+    id: 'vault',
+  },
+  {
+    id: 'network',
+  },
+  {
+    id: 'error',
+  },
+];
+
 export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
+  const [indicators, setIndicators] = React.useState<Indicator[]>(defaultIndicators);
+  const updateIndicator = (id: string, value: Partial<Indicator>) => {
+    setIndicators((indicators) =>
+      indicators.map((indicator) => {
+        if (indicator.id === id) {
+          return Object.assign({}, indicator, value);
+        }
+        return indicator;
+      }),
+    );
+  };
+
   // ({ data: [_, space] }}) => {
   // TODO(burdon): Get space object.
-  const space: Space = undefined;
+  const space: Space = undefined as any;
   useEffect(() => {
+    // TODO(burdon): Simulate.
+    setTimeout(() => {
+      updateIndicator('save', { className: 'text-green-500' });
+      setTimeout(() => {
+        updateIndicator('save', { className: undefined });
+      }, 500);
+    }, 2000);
+    setTimeout(() => {
+      updateIndicator('error', {
+        className: 'text-red-500 animate-pulse',
+        title: new Error('timeout').message,
+      });
+    }, 3000);
+
     if (!space) {
       return;
     }
@@ -29,39 +75,15 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
     });
   }, []);
 
-  // TODO(burdon): Swarm.
-  // TODO(burdon): Feed sync.
-  // TODO(burdon): Connected to vault.
-  // TODO(burdon): Error handling.
-  // TODO(burdon): Version out of date.
-  const indicators: Indicator[] = [
-    {
-      id: 'save',
-      label: 'Saving...',
-      // className: 'text-green-400 animate-pulse',
-    },
-    {
-      id: 'vault',
-      label: 'Vault',
-    },
-    {
-      id: 'network',
-      label: 'Network',
-    },
-    {
-      id: 'error',
-      label: 'Error',
-      // className: 'text-red-400 animate-pulse',
-    },
-  ];
-
-  const handleReset = (id: string) => {};
+  const handleReset = (id: string) => {
+    updateIndicator(id, { className: undefined, title: undefined });
+  };
 
   return (
     <div className='flex gap-[2px]'>
-      {indicators.map(({ id, label, className }) => (
-        <div key={id} title={label} onClick={() => handleReset(id)}>
-          <Circle weight='fill' className={mx('text-neutral-200', className, getSize(3))} />
+      {indicators.map(({ id, title, className }) => (
+        <div key={id} title={title} onClick={() => handleReset(id)}>
+          <Circle weight='fill' className={mx('cursor-pointer text-neutral-200', className, getSize(3))} />
         </div>
       ))}
     </div>

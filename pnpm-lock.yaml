@@ -1274,10 +1274,12 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
       jszip: ^3.10.1
+      lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
@@ -1298,6 +1300,7 @@ importers:
       '@tldraw/indices': 2.0.0-alpha.14
       deepsignal: 1.3.4_react@18.2.0
       jszip: 3.10.1
+      lodash.defaultsdeep: 4.6.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
     devDependencies:
@@ -1311,6 +1314,7 @@ importers:
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
