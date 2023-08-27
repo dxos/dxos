@@ -263,10 +263,10 @@ export class SignalClient implements SignalMethods {
 
     // Create new context for each connection.
     this._connectionCtx = this._ctx!.derive();
-    this._connectionCtx.onDispose(() => {
+    this._connectionCtx.onDispose(async () => {
       log('connection context disposed');
-      Array.from(this._swarmStreams.values()).forEach((stream) => stream.close());
-      Array.from(this._messageStreams.values()).forEach((stream) => stream.close());
+      await Promise.all(Array.from(this._swarmStreams.values()).map((stream) => stream.close()));
+      await Promise.all(Array.from(this._messageStreams.values()).map((stream) => stream.close()));
       this._swarmStreams.clear();
       this._messageStreams.clear();
     });

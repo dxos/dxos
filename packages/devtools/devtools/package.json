@@ -17,6 +17,7 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/gem-core": "workspace:*",

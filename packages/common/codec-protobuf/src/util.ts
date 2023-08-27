@@ -15,6 +15,6 @@ export const getFirstStreamValue = async <T extends {}>(
     stream.subscribe((value) => trigger.wake(value));
     return await trigger.wait({ timeout });
   } finally {
-    stream.close();
+    await stream.close();
   }
 };

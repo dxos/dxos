@@ -301,8 +301,8 @@ class MeshLayout {
 
 const createObjects = (n = 5): Kube[] =>
   Array.from({ length: n }).map(() => ({
-    id: `kube-${faker.datatype.uuid()}`,
-    bots: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }).map(() => ({ id: faker.datatype.uuid() })),
+    id: `kube-${faker.string.uuid()}`,
+    bots: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }).map(() => ({ id: faker.string.uuid() })),
   }));
 
 const Container = () => {
@@ -326,7 +326,7 @@ const Container = () => {
           : [
               ...bots.map((bot) => (faker.number.int(10) > 7 ? bot : undefined)).filter(Boolean),
               ...Array.from({ length: faker.number.int(4) }).map(() => ({
-                id: faker.datatype.uuid(),
+                id: faker.string.uuid(),
               })),
             ],
         ...rest,
