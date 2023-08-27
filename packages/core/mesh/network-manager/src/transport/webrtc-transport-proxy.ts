@@ -21,6 +21,7 @@ export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   bridgeService: BridgeService;
+  // TODO(burdon): Rename onSignal.
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
@@ -29,11 +30,10 @@ export class WebRTCTransportProxy implements Transport {
   private readonly _ctx = new Context();
 
   readonly closed = new Event();
-  private _closed = false;
   readonly connected = new Event();
-
   readonly errors = new ErrorStream();
 
+  private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
   // prettier-ignore
@@ -118,7 +118,7 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
 
-    this._serviceStream.close();
+    await this._serviceStream.close();
 
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
@@ -135,7 +135,7 @@ export class WebRTCTransportProxy implements Transport {
    */
   // TODO(burdon): Option on close method.
   forceClose() {
-    this._serviceStream.close();
+    void this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
   }

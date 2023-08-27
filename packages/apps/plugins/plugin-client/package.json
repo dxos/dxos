@@ -15,8 +15,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {

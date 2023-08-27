@@ -79,9 +79,10 @@ export class Agent {
       rmSync(path, { force: true });
       const httpServer = http.createServer();
       httpServer.listen(path);
-      const service = createServer(this._clientServices, { server: httpServer });
-      await service.open();
-      this._services.push(service);
+      const socketServer = createServer(this._clientServices, { server: httpServer });
+      await socketServer.open();
+      this._services.push(socketServer);
+      log.info('listening', { path });
     }
 
     //
@@ -89,9 +90,11 @@ export class Agent {
     // TODO(burdon): Insecure.
     //
     if (this._options.protocol?.webSocket) {
-      const service = createServer(this._clientServices, { port: this._options.protocol.webSocket });
-      await service.open();
-      this._services.push(service);
+      const port = this._options.protocol.webSocket;
+      const socketServer = createServer(this._clientServices, { port });
+      await socketServer.open();
+      this._services.push(socketServer);
+      log.info('listening', { port });
     }
 
     // Open plugins.
@@ -101,7 +104,7 @@ export class Agent {
       log('open', { plugin });
     }
 
-    log('started...');
+    log('started');
   }
 
   async stop() {
@@ -131,10 +134,11 @@ const createServer = (clientServices: ClientServicesProvider, options: WebSocket
     ...options,
     onConnection: async () => {
       let start = 0;
-      const connection = PublicKey.random().toHex();
+      const connection = PublicKey.random().toHex().slice(0, 8);
       return {
         exposed: clientServices.descriptors,
         handlers: clientServices.services as ClientServices,
+        // Called when client connects.
         onOpen: async () => {
           start = Date.now();
           log('open', { connection });

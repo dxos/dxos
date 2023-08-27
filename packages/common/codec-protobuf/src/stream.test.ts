@@ -73,7 +73,7 @@ describe('Stream', () => {
     expect(received).to.deep.equal(['first', 'second']);
   });
 
-  test('closing stream disposes the context', () => {
+  test('closing stream disposes the context', async () => {
     let disposed = false;
     const stream = new Stream<string>(({ ctx }) => {
       ctx.onDispose(() => {
@@ -81,7 +81,7 @@ describe('Stream', () => {
       });
     });
     expect(disposed).to.be.false;
-    stream.close();
+    await stream.close();
     expect(disposed).to.be.true;
   });
 
