@@ -90,6 +90,8 @@ export class LibDataChannelTransport implements Transport {
   }
 
   private _handleChannel(dataChannel: RTCDataChannel) {
+    // TODO(nf): emit this before invoking?
+    this.connected.emit();
     this._channel.onerror = async (err) => {
       log.error('channel error', { err });
       await this._disconnectStreams();
