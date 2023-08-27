@@ -9,8 +9,7 @@ import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeItemMainHeading, TreeViewContainer } from './components';
-import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
+import { Fallback, TreeItemMainHeading, TreeViewContainer, TreeItemDragOverlay } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 
