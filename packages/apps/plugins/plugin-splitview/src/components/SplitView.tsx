@@ -45,6 +45,7 @@ export const SplitView = () => {
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
+            {/* TODO(burdon): name vs. role? */}
             <Surface name='complementary' role='complementary' />
           </Main.ComplementarySidebar>
         )}

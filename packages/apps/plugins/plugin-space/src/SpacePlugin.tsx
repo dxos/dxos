@@ -101,6 +101,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state as SpaceState,
       translations,
       component: (data, role) => {
+        console.log(':::', role, data);
         switch (role) {
           case 'main':
             switch (true) {
@@ -109,7 +110,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
-          case 'tree--empty':
+          case 'tree--empty': // TODO(burdon): Why double-hyphen?
             switch (true) {
               case data === SPACE_PLUGIN:
                 return EmptyTree;

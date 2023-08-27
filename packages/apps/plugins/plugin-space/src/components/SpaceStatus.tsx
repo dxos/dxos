@@ -3,9 +3,10 @@
 //
 
 import { Circle } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
+import { Space } from '@dxos/react-client/echo';
 
 type Indicator = {
   id: string;
@@ -13,9 +14,21 @@ type Indicator = {
   className?: string;
 };
 
-// TODO(burdon): Get space object.
-export const SpaceStatus: FC<{}> = () => {
-  // TODO(burdon): Async save.
+export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
+  // ({ data: [_, space] }}) => {
+  // TODO(burdon): Get space object.
+  const space: Space = undefined;
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    // TODO(burdon): Async save.
+    return space.db.pendingBatch.on((update) => {
+      console.log('update', update);
+    });
+  }, []);
+
   // TODO(burdon): Swarm.
   // TODO(burdon): Feed sync.
   // TODO(burdon): Connected to vault.
@@ -25,16 +38,20 @@ export const SpaceStatus: FC<{}> = () => {
     {
       id: 'save',
       label: 'Saving...',
-      className: 'text-green-400 animate-pulse',
+      // className: 'text-green-400 animate-pulse',
+    },
+    {
+      id: 'vault',
+      label: 'Vault',
     },
     {
       id: 'network',
-      label: 'Error',
+      label: 'Network',
     },
     {
       id: 'error',
       label: 'Error',
-      className: 'text-red-400 animate-pulse',
+      // className: 'text-red-400 animate-pulse',
     },
   ];
 
