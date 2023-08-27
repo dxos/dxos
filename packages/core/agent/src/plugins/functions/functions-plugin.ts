@@ -4,8 +4,6 @@
 
 import express from 'express';
 
-import { log } from '@dxos/log';
-
 import { AbstractPlugin } from '../plugin';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { FunctionDispatcher } from './dispatcher';
