@@ -32,7 +32,7 @@ import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
-import { Config, Envs, Local } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { Defaults } from '@dxos/react-client';
@@ -46,7 +46,7 @@ import { PluginContextProvider } from '@dxos/react-surface';
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
-  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const config = new Config(Remote(searchParams.get('target') ?? undefined), Defaults());
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 

@@ -23,19 +23,18 @@ const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
 ];
 
 export const FeedsPanel = () => {
+  const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
+  const messages = useFeedMessages({ feedKey }).reverse();
+
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
 
-  const devtoolsHost = useDevtools();
   const [refreshCount, setRefreshCount] = useState(0);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
-
-  // TODO(burdon): Show timeframe/timestamp in table.
-  const messages = useFeedMessages({ feedKey }).reverse();
   const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
   // Hack to select and refresh first feed.
@@ -92,7 +91,7 @@ export const FeedsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className='flex flex-col'>
+      <div className='flex flex-col overflow-hidden'>
         <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
         <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
       </div>

@@ -7,9 +7,6 @@ import useResizeObserver from 'use-resize-observer';
 
 import { BitField, range } from '@dxos/util';
 
-const MIN_SUBDIVISION_PIXELS = 8;
-const MAX_SUBDIVISIONS = 400;
-
 export const BitfieldDisplay = ({ value, length }: { value: Uint8Array; length: number }) => {
   const { ref, width } = useResizeObserver();
 
