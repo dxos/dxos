@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
+import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
@@ -93,7 +93,7 @@ export const FeedsPanel = () => {
       }
     >
       <div className='flex flex-col overflow-hidden'>
-        <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
+        <Bitbar value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
         <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
       </div>
     </PanelContainer>

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './BitfieldDisplay';
+export * from './Bitbar';
 export * from './BooleanIcon';
 export * from './DetailsTable';
 export * from './ErrorBoundary';
