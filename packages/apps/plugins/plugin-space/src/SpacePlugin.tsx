@@ -101,7 +101,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state as SpaceState,
       translations,
       component: (data, role) => {
-        console.log(':::', role, data);
+        // console.log(':::', role, data);
         switch (role) {
           case 'main':
             switch (true) {
