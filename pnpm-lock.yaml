@@ -5504,8 +5504,9 @@ importers:
       '@dxos/log': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
-    devDependencies:
+    dependencies:
       '@dxos/log': link:../../common/log
+    devDependencies:
       '@types/react': 18.0.21
       react: 18.2.0
 

@@ -42,7 +42,7 @@ export const ClientPlugin = (
     meta: {
       id: 'dxos.org/plugin/client',
     },
-    init: async () => {
+    initialize: async () => {
       let firstRun = false;
       await client.initialize();
       const searchParams = new URLSearchParams(location.search);

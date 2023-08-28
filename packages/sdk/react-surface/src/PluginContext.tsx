@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+
+import { log } from '@dxos/log';
 
 import { composeContext } from './Context';
-import { Plugin, PluginDefinition, PluginProvides } from './Plugin';
+import { Plugin, PluginDefinition, PluginProvides, findPlugin } from './Plugin';
 
 export type PluginContextValue = {
   plugins: Plugin[];
@@ -15,23 +17,35 @@ const defaultContext: PluginContextValue = { plugins: [] };
 
 const PluginContext = createContext<PluginContextValue>(defaultContext);
 
-export const usePluginContext = () => useContext(PluginContext);
+export const usePlugins = () => useContext(PluginContext);
 
-export const PluginContextProvider = ({ plugins: definitions }: { plugins: PluginDefinition[] }) => {
+export const usePlugin = <T,>(id: string): Plugin<T> | undefined => {
+  const { plugins } = usePlugins();
+  return findPlugin<T>(plugins, id);
+};
+
+export const PluginProvider = ({
+  plugins: definitions,
+  fallback,
+}: {
+  plugins: PluginDefinition[];
+  fallback?: ReactNode;
+}) => {
   const [plugins, setPlugins] = useState<Plugin[]>();
   useEffect(() => {
     const timeout = setTimeout(async () => {
+      log('initializing plugins', { definitions });
       const plugins = await Promise.all(
         definitions.map(async (definition) => {
-          try {
-            return initializePlugin(definition);
-          } catch (err) {
+          return await initializePlugin(definition).catch((err) => {
             console.error('Failed to initialize plugin:', definition.meta.id, err);
             return undefined;
-          }
+          });
         }),
       ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
+      log('plugins initialized', { plugins });
       await Promise.all(definitions.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
+      log('plugins ready', { plugins });
       setPlugins(plugins);
     });
 
@@ -41,9 +55,8 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
     };
   }, []);
 
-  // TODO(wittjosiah): Fallback.
   if (!plugins) {
-    return null;
+    return <>{fallback ?? null}</>;
   }
 
   const ComposedContext = composeContext(plugins);
@@ -56,7 +69,7 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
 };
 
 export const initializePlugin = async <T, U>(pluginDefinition: PluginDefinition<T, U>): Promise<Plugin<T & U>> => {
-  const provides = await pluginDefinition.init?.();
+  const provides = await pluginDefinition.initialize?.();
   return {
     ...pluginDefinition,
 
