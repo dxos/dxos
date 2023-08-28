@@ -1,8 +1,8 @@
-import { defineTemplate, plate } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  async ({ input }) => {
+export default template.define.text({
+  content: async ({ input }) => {
     const { dxosUi, react, tailwind } = input;
     return plate`
     ${
@@ -169,6 +169,4 @@ export default defineTemplate(
     }
     `}
     `;
-  },
-  { config }
-);
+  }});

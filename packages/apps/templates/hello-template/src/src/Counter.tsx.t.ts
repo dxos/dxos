@@ -1,8 +1,8 @@
-import { defineTemplate, plate } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input: { react } }) => {
+export default template.define.script({
+  content: ({ input: { react } }) => {
     return !react
       ? null
       : plate/* javascript */ `
@@ -44,6 +44,5 @@ export default defineTemplate(
       );
     };
     `;
-  },
-  { config }
+  }}
 );
