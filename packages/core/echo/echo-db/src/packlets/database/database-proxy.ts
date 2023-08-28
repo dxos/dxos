@@ -25,7 +25,11 @@ export type MutateResult = {
   batch: Batch;
 };
 
-export type BatchUpdate = { size?: number; duration?: number; error?: Error };
+export type BatchUpdate = {
+  size?: number;
+  duration?: number; // Set if batch is complete (or failed).
+  error?: Error;
+};
 
 /**
  * Maintains a local cache of objects and provides a API for mutating the database.
@@ -47,7 +51,6 @@ export class DatabaseProxy {
    * ClientTag -> Batch
    */
   private _pendingBatches = new Map<string, Batch>();
-  private _pendingBatchStart?: number;
   private _currentBatch?: Batch;
 
   private _opening = false;
@@ -128,6 +131,9 @@ export class DatabaseProxy {
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
             this._pendingBatches.delete(msg.clientTag);
+
+            // TODO(burdon): Not batched (e.g., if create item, then two batches).
+            this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
           } else {
             // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
             // TODO(dmaretskyi): Just ignore the I guess.
@@ -155,7 +161,6 @@ export class DatabaseProxy {
           error: new Error('Service connection closed.'),
         });
         this._pendingBatches.clear();
-        this._pendingBatchStart = undefined;
       },
     );
 
@@ -265,6 +270,7 @@ export class DatabaseProxy {
     return true;
   }
 
+  // TODO(burdon): Make async?
   commitBatch() {
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
@@ -279,7 +285,7 @@ export class DatabaseProxy {
     batch.processTrigger = new Trigger();
     batch.receiptTrigger = new Trigger();
     this._pendingBatches.set(batch.clientTag, batch);
-    this._pendingBatchStart = Date.now();
+    this.pendingBatch.emit({ size: this._pendingBatches.size });
 
     this._service
       .write({
@@ -336,16 +342,15 @@ export class DatabaseProxy {
     }
   }
 
+  /**
+   * Waits for any pending batches to complete.
+   */
   async flush({ timeout }: { timeout?: number } = {}) {
-    invariant(this._pendingBatchStart);
-    const size = this._pendingBatches.size;
     const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {
       await asyncTimeout(promise, timeout);
     } else {
       await promise;
     }
-    this.pendingBatch.emit({ size, duration: Date.now() - this._pendingBatchStart });
-    this._pendingBatchStart = undefined;
   }
 }

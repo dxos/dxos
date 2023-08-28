@@ -14,7 +14,7 @@ import { SPACE_PLUGIN } from '../types';
 
 // TODO(burdon): Use FC signature throughout?
 export const SpacePresence: FC<{ data: any }> = ({ data, ...rest }) => {
-  console.log('SpacePresence', data, rest);
+  // console.log('########## SpacePresence', data, rest);
   const identity = useIdentity();
   if (!identity) {
     return null;

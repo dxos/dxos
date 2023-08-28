@@ -5,8 +5,11 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { FC, useEffect } from 'react';
 
+import { TimeoutError } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/react-client/echo';
+import { findPlugin, usePluginContext } from '@dxos/react-surface';
+
+import { SpacePluginProvides } from '../types';
 
 type Indicator = {
   id: string;
@@ -23,18 +26,56 @@ const defaultIndicators: Indicator[] = [
   {
     id: 'save',
   },
-  {
-    id: 'vault',
-  },
-  {
-    id: 'network',
-  },
-  {
-    id: 'error',
-  },
+  // {
+  //   id: 'vault',
+  // },
+  // {
+  //   id: 'network',
+  // },
+  // {
+  //   id: 'error',
+  // },
 ];
 
-export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
+// TODO(burdon): Timeout.
+const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
+  const min = options?.min ?? 500;
+  let start: number;
+  let pending: NodeJS.Timeout;
+  let timeout: NodeJS.Timeout;
+  return {
+    start: () => {
+      start = Date.now();
+      clearTimeout(pending);
+      if (options?.max) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          cb(new TimeoutError(options.max));
+        }, options.max);
+      }
+    },
+    stop: () => {
+      clearTimeout(timeout);
+      const delta = Date.now() - start;
+      if (delta < min) {
+        pending = setTimeout(() => {
+          cb();
+        }, min - delta);
+      }
+    },
+  };
+};
+
+const styles = {
+  success: 'text-green-400 dark:text-green-600',
+  warning: 'text-red-400 dark:text-red-600',
+};
+
+export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
+  const { plugins } = usePluginContext();
+  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+  const space = spacePlugin?.provides.space.current;
+
   const [indicators, setIndicators] = React.useState<Indicator[]>(defaultIndicators);
   const updateIndicator = (id: string, value: Partial<Indicator>) => {
     setIndicators((indicators) =>
@@ -47,31 +88,23 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
     );
   };
 
-  // TODO(burdon): Get space object.
-  const space: Space = undefined as any;
   useEffect(() => {
-    // TODO(burdon): Simulate.
-    setTimeout(() => {
-      updateIndicator('save', { className: 'text-green-500' });
-      setTimeout(() => {
-        updateIndicator('save', { className: undefined });
-      }, 500);
-    }, 2000);
-    setTimeout(() => {
-      updateIndicator('error', {
-        className: 'text-red-500 animate-pulse',
-        title: new Error('timeout').message,
-      });
-    }, 3000);
-
-    // TODO(burdon): Async save.
     if (!space) {
       return;
     }
-    return space.db.pendingBatch.on((update) => {
-      console.log('update', update);
+    const { start, stop } = timer((err) => updateIndicator('save', { className: err ? styles.warning : undefined }), {
+      min: 500,
+      max: 2000,
     });
-  }, []);
+    return space.db.pendingBatch.on(({ duration }) => {
+      if (duration === undefined) {
+        updateIndicator('save', { className: styles.success });
+        start();
+      } else {
+        stop();
+      }
+    });
+  }, [space]);
 
   const handleReset = (id: string) => {
     updateIndicator(id, { className: undefined, title: undefined });

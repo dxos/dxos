@@ -3,7 +3,7 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -26,35 +26,37 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = React.useState(false);
+        const [running, setRunning] = useState(false);
         const timer = useRef<NodeJS.Timer>();
         const stop = () => {
-          console.log('stop', timer.current);
           clearInterval(timer.current);
           timer.current = undefined;
           setRunning(false);
         };
+
+        useEffect(() => {
+          stop();
+        }, []);
 
         return (
           <DebugContext.Provider
             value={{
               running,
               start: (cb, options = {}) => {
-                clearInterval(timer.current);
                 // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
                 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
                 // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
                 let i = 0;
+                clearInterval(timer.current);
                 timer.current = setInterval(() => {
                   // TODO(burdon): Overflows and doesn't stop.
                   if ((options.count && i >= options.count) || cb(i) === false) {
-                    console.log(i);
                     stop();
                   } else {
                     i++;
                   }
                 }, Math.max(10, options.interval ?? 100));
-                console.log('start', options, timer.current);
+
                 setRunning(true);
               },
               stop,
