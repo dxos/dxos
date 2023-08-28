@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Context';
-export * from './ErrorBoundary';
-export * from './PluginContext';
-export * from './Plugin';
-export * from './Surface';
+export { ErrorBoundary } from './ErrorBoundary';
+export { usePlugins, usePlugin, PluginProvider, initializePlugin } from './PluginContext';
+export { ComponentProps, PluginDefinition, PluginProvides, Plugin, findPlugin } from './Plugin';
+export { Direction, SurfaceProps, Surface } from './Surface';
