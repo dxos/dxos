@@ -17,6 +17,8 @@ type Indicator = {
   className?: string;
 };
 
+// TODO(burdon): Move to DebugStatus.
+
 // TODO(burdon): Swarm (global scope)?
 // TODO(burdon): Connected to vault (global scope)?
 // TODO(burdon): Error handling (global scope)?
