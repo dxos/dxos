@@ -1233,21 +1233,29 @@ importers:
 
   packages/apps/plugins/plugin-pwa:
     specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/sentry': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
       react: ^18.2.0
+      react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/log': link:../../../common/log
-      '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/sentry': link:../../../common/sentry
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-space:
