@@ -7,7 +7,8 @@ import React, { FC, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { useNetworkStatus } from '@dxos/react-client/dist/types/src/mesh';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SpacePluginProvides } from '../types';
@@ -32,9 +33,9 @@ const defaultIndicators: Indicator[] = [
   // {
   //   id: 'vault',
   // },
-  // {
-  //   id: 'network',
-  // },
+  {
+    id: 'network',
+  },
   // {
   //   id: 'error',
   // },
@@ -78,8 +79,6 @@ export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.current;
-  const { swarm } = useNetworkStatus();
-  console.log({ swarm });
 
   const [indicators, setIndicators] = React.useState<Indicator[]>(defaultIndicators);
   const updateIndicator = (id: string, value: Partial<Indicator>) => {
@@ -92,6 +91,11 @@ export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
       }),
     );
   };
+
+  const { swarm } = useNetworkStatus();
+  useEffect(() => {
+    updateIndicator('network', { className: swarm === ConnectionState.ONLINE ? styles.success : styles.warning });
+  }, [swarm]);
 
   useEffect(() => {
     if (!space) {
