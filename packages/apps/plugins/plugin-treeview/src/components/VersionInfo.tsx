@@ -15,19 +15,24 @@ export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
     window.open(`https://github.com/dxos/dxos/commit/${commitHash}`, 'commit');
   };
   return (
-    <div className='flex items-center p-2 gap-2 font-mono text-xs text-neutral-500'>
+    <div className='flex items-center p-2 gap-2 font-thin text-xs text-neutral-500'>
       <div className='flex w-full gap-2'>
         <span
           title={timestamp && formatDistance(new Date(timestamp), new Date(), { addSuffix: true })}
-          className='cursor-pointer'
+          className='font-mono cursor-pointer'
           onClick={handleOpen}
         >
           v{version}
         </span>
         <div role='none' className='grow' />
         <span>
-          Powered by
-          <a href='https://dxos.org' target='_blank' rel='noreferrer' className='ml-1'>
+          Powered by{' '}
+          <a
+            href='https://dxos.org'
+            rel='noreferrer'
+            target='_blank'
+            className='font-normal hover:text-neutral-700 hover:dark:text-neutral-200'
+          >
             DXOS
           </a>
         </span>

@@ -47,7 +47,6 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
     );
   };
 
-  // ({ data: [_, space] }}) => {
   // TODO(burdon): Get space object.
   const space: Space = undefined as any;
   useEffect(() => {
@@ -65,11 +64,10 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
       });
     }, 3000);
 
+    // TODO(burdon): Async save.
     if (!space) {
       return;
     }
-
-    // TODO(burdon): Async save.
     return space.db.pendingBatch.on((update) => {
       console.log('update', update);
     });
@@ -83,7 +81,10 @@ export const SpaceStatus: FC<{ data: [string, Space] }> = () => {
     <div className='flex items-center p-2 gap-[2px] h-8'>
       {indicators.map(({ id, title, className }) => (
         <div key={id} title={title} onClick={() => handleReset(id)}>
-          <Circle weight='fill' className={mx('cursor-pointer text-neutral-200', className, getSize(3))} />
+          <Circle
+            weight='fill'
+            className={mx('cursor-pointer', className ?? 'text-neutral-200 dark:text-neutral-700', getSize(3))}
+          />
         </div>
       ))}
     </div>
