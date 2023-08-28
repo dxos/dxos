@@ -28,9 +28,9 @@ export type Plugin<TProvides = {}> = {
   provides: PluginProvides<TProvides>;
 };
 
-export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 'provides'> & {
+export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Plugin, 'provides'> & {
   provides?: Plugin<TProvides>['provides'];
-  init?: () => Promise<PluginProvides<TInitProvides>>; // TODO(burdon): Standardize: initialize.
+  initialize?: () => Promise<PluginProvides<TInitializeProvides>>;
   ready?: (plugins: Plugin[]) => Promise<void>;
   unload?: () => Promise<void>;
 };
