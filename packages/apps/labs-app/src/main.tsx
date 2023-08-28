@@ -36,7 +36,7 @@ import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { Defaults } from '@dxos/react-client';
-import { PluginContextProvider } from '@dxos/react-surface';
+import { PluginProvider } from '@dxos/react-surface';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -55,7 +55,7 @@ const main = async () => {
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <PluginContextProvider
+      <PluginProvider
         plugins={[
           IntentPlugin(),
           ThemePlugin({ appName: 'Labs' }),

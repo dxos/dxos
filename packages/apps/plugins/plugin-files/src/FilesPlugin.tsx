@@ -60,7 +60,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       id: FILES_PLUGIN,
       shortId: FILES_PLUGIN_SHORT_ID,
     },
-    init: async () => {
+    initialize: async () => {
       return {
         markdown: {
           onChange: (text) => {

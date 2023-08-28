@@ -10,7 +10,7 @@ import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
 import { isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { findPlugin, Surface, usePluginContext } from '@dxos/react-surface';
+import { findPlugin, Surface, usePlugins } from '@dxos/react-surface';
 
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
@@ -20,7 +20,7 @@ export const MarkdownMain: FC<{ data: unknown }> = ({ data }) => {
   const document = node && isDocument(node.data) ? node.data : undefined;
 
   const identity = useIdentity();
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
 
   const textModel = useTextModel({
