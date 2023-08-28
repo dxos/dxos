@@ -8,7 +8,7 @@ import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { blockSeparator, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
-import { findPlugin, usePluginContext } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 import { KanbanBoard } from './KanbanBoard';
@@ -16,7 +16,7 @@ import { KanbanBoard } from './KanbanBoard';
 export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
 
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.current;
 

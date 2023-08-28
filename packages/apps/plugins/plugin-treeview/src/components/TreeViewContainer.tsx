@@ -24,7 +24,7 @@ import {
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { findPlugin, usePluginContext } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
 import { NavTreeItem } from './NavTree';
@@ -32,7 +32,7 @@ import { VersionInfo } from './VersionInfo';
 
 export const TreeViewContainer = () => {
   const config = useConfig();
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const { graph } = useGraph();
 
   const identity = useIdentity();

@@ -6,7 +6,7 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
-import { Plugin, PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
+import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { Fallback, TreeItemMainHeading, TreeViewContainer, TreeItemDragOverlay } from './components';
@@ -40,7 +40,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       },
       components: {
         default: () => {
-          const { plugins } = usePluginContext();
+          const { plugins } = usePlugins();
           const treeView = useTreeView();
           const [shortId, component] = treeView.active?.split(':') ?? [];
           const plugin = findPlugin(plugins, shortId);
