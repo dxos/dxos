@@ -26,9 +26,7 @@ const DebugPluginStoryPlugin = () => ({
   },
 });
 
-const DebugSurfacesApp = () => (
-  <PluginProvider plugins={[ThemePlugin(), DebugPlugin(), DebugPluginStoryPlugin()]} />
-);
+const DebugSurfacesApp = () => <PluginProvider plugins={[ThemePlugin(), DebugPlugin(), DebugPluginStoryPlugin()]} />;
 
 export default {
   component: DebugSurfacesApp,

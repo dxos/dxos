@@ -36,9 +36,7 @@ const StackPluginStoryPlugin = () => ({
 });
 
 const StackSurfacesApp = () => (
-  <PluginProvider
-    plugins={[ThemePlugin(), DndPlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]}
-  />
+  <PluginProvider plugins={[ThemePlugin(), DndPlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]} />
 );
 
 export default {
