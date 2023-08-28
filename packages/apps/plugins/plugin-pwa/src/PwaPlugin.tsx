@@ -6,9 +6,10 @@ import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { log } from '@dxos/log';
-import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { PluginDefinition } from '@dxos/react-surface';
 import { captureException } from '@dxos/sentry';
+
+import { ServiceWorkerToast } from './components';
 
 export const PwaPlugin = (): PluginDefinition => ({
   meta: {
