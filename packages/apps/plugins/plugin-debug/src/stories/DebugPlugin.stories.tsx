@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { PluginContextProvider, Surface } from '@dxos/react-surface';
+import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import { DebugPlugin } from '../DebugPlugin';
 
@@ -27,7 +27,7 @@ const DebugPluginStoryPlugin = () => ({
 });
 
 const DebugSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), DebugPlugin(), DebugPluginStoryPlugin()]} />
+  <PluginProvider plugins={[ThemePlugin(), DebugPlugin(), DebugPluginStoryPlugin()]} />
 );
 
 export default {
