@@ -7,7 +7,7 @@ import React, { FC, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { findPlugin, usePluginContext } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SpacePluginProvides } from '../types';
 
@@ -72,7 +72,7 @@ const styles = {
 };
 
 export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.current;
 
