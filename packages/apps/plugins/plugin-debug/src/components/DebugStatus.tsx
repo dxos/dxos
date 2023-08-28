@@ -75,7 +75,7 @@ const styles = {
   warning: 'text-red-400 dark:text-red-600',
 };
 
-export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
+export const DebugStatus: FC<{ data: any }> = ({ data }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.current;
@@ -116,7 +116,11 @@ export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
   }, [space]);
 
   const handleReset = (id: string) => {
-    updateIndicator(id, { className: undefined, title: undefined });
+    switch (id) {
+      case 'error':
+        updateIndicator(id, { className: undefined, title: undefined });
+        break;
+    }
   };
 
   return (

@@ -28,7 +28,6 @@ import {
   SpaceMainEmpty,
   SpacePresence,
   PopoverRenameObject,
-  SpaceStatus,
 } from './components';
 import translations from './translations';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
@@ -145,8 +144,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
           case 'presence':
             return SpacePresence;
-          case 'status':
-            return SpaceStatus;
           default:
             return null;
         }

@@ -6,6 +6,7 @@ import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { SpaceStatus } from '@braneframe/plugin-space/dist/types/src/components';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
@@ -131,6 +132,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return DebugSettings;
             }
             break;
+          }
+          case 'status': {
+            return SpaceStatus;
           }
         }
 

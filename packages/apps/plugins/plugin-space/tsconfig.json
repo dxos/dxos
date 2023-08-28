@@ -39,9 +39,6 @@
       "path": "../../../core/echo/text-model"
     },
     {
-      "path": "../../../core/protocols"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
