@@ -22,14 +22,16 @@ import {
   Separator,
 } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { ShellLayout } from '@dxos/react-client';
+import { ShellLayout, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
 import { NavTreeItem } from './NavTree';
+import { VersionInfo } from './VersionInfo';
 
 export const TreeViewContainer = () => {
+  const config = useConfig();
   const { plugins } = usePlugins();
   const { graph } = useGraph();
 
@@ -106,6 +108,7 @@ export const TreeViewContainer = () => {
               </ScrollArea.Scrollbar>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
+          <VersionInfo config={config} />
         </div>
       </DensityProvider>
     </ElevationProvider>
