@@ -7,6 +7,7 @@ import React, { FC, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { useNetworkStatus } from '@dxos/react-client/dist/types/src/mesh';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SpacePluginProvides } from '../types';
@@ -77,6 +78,8 @@ export const SpaceStatus: FC<{ data: any }> = ({ data }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.current;
+  const { swarm } = useNetworkStatus();
+  console.log({ swarm });
 
   const [indicators, setIndicators] = React.useState<Indicator[]>(defaultIndicators);
   const updateIndicator = (id: string, value: Partial<Indicator>) => {

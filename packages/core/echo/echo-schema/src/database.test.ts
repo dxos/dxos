@@ -69,10 +69,10 @@ describe('Database', () => {
     }
   });
 
+  // TODO(burdon): 100 times (not batched).
   test.skip('flush callback', async () => {
     const { db } = await createDatabase();
 
-    // TODO(burdon): 100 times (not batched).
     const update = new Trigger<BatchUpdate>();
     db.pendingBatch.on((event) => {
       console.log('????', event);
