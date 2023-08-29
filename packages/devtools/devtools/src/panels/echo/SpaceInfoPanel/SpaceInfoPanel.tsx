@@ -10,8 +10,8 @@ import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { getSize } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
@@ -21,11 +21,19 @@ import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../../h
 import { PipelineTable } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 
-const { helper, builder } = createColumnBuilder<SubscribeToFeedsResponse.Feed>();
-const columns: GridColumnDef<SubscribeToFeedsResponse.Feed, any>[] = [
+type FeedInfo = {
+  feedKey: PublicKey;
+  downloaded: Uint8Array;
+  maxLength: number;
+};
+
+const { helper, builder } = createColumnBuilder<FeedInfo>();
+const columns: GridColumnDef<FeedInfo, any>[] = [
   helper.accessor('feedKey', builder.createKey({ tooltip: true })),
   helper.accessor('downloaded', {
-    cell: (cell) => <Bitbar value={cell.getValue()} length={cell.row.original.length} size={6} margin={1} height={8} />,
+    cell: (cell) => (
+      <Bitbar value={cell.getValue()} length={cell.row.original.maxLength} size={6} margin={1} height={8} />
+    ),
   }),
 ];
 
@@ -33,12 +41,7 @@ export const SpaceInfoPanel: FC = () => {
   const [, forceUpdate] = React.useState({});
   const { space } = useDevtoolsState();
 
-  // TODO(dmaretskyi): We don't need SpaceInfo anymore?
-  const spacesInfo = useSpacesInfo();
-  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
-  const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
-
-  // TODO(burdon): Doesn't update in realtime (set interval if not 100%).
+  // TODO(burdon): Constant updates.
   // TODO(burdon): Out of order with main table.
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
@@ -46,10 +49,17 @@ export const SpaceInfoPanel: FC = () => {
   ];
   const devtoolsHost = useDevtools();
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [feedKeys]);
+  const maxLength = feeds.reduce((max, feed) => (feed?.length > max ? feed.length : max), 0);
+  const updatedFeeds = feeds.map((feed) => ({ ...feed, maxLength }));
+
+  // TODO(dmaretskyi): We don't need SpaceInfo anymore?
+  const spacesInfo = useSpacesInfo();
+  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
+  const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: SubscribeToFeedsResponse.Feed[] | undefined) => {
+  const handleSelect = (selected: FeedInfo[] | undefined) => {
     setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
     navigate('/echo/feeds');
   };
@@ -62,10 +72,6 @@ export const SpaceInfoPanel: FC = () => {
       await space!.internal.close();
     }
   };
-
-  if (!space || !metadata) {
-    return null;
-  }
 
   return (
     <PanelContainer
@@ -82,11 +88,13 @@ export const SpaceInfoPanel: FC = () => {
         </Toolbar.Root>
       }
     >
-      <div className='flex flex-col gap-4'>
-        <SpaceProperties space={space} metadata={metadata} />
-        <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-        <Grid<SubscribeToFeedsResponse.Feed> columns={columns} data={feeds} onSelectedChange={handleSelect} />
-      </div>
+      {space && metadata && (
+        <div className='flex flex-col gap-4'>
+          <SpaceProperties space={space} metadata={metadata} />
+          <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
+          <Grid<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
+        </div>
+      )}
     </PanelContainer>
   );
 };

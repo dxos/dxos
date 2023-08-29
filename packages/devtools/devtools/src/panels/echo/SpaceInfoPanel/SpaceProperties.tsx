@@ -66,7 +66,7 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
       startupTime: PropertySchemaFormat.number('ms'),
       controlProgress: PropertySchemaFormat.percent(1),
       dataProgress: PropertySchemaFormat.percent(1),
-      epochCreated: PropertySchemaFormat.date({ format: 'MM:dd HH:mm:ss', relative: true }),
+      epochCreated: PropertySchemaFormat.date({ format: 'MM/dd HH:mm:ss', relative: true }),
       epochMutations: PropertySchemaFormat.number(),
       mutationsSinceEpoch: PropertySchemaFormat.number(),
     }),

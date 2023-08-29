@@ -8,13 +8,13 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
-export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
+import { TimerCallback, TimerOptions } from './timer';
 
-export type DebugStartOptions = { count?: number; interval?: number };
+export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
 export type DebugContextType = {
   running: boolean;
-  start: (cb: (i: number) => boolean | void, options?: DebugStartOptions) => void;
+  start: (cb: TimerCallback, options: TimerOptions) => void;
   stop: () => void;
 };
 

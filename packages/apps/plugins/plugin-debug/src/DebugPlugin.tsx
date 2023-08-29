@@ -3,7 +3,7 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -11,6 +11,7 @@ import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
+import { Timer } from './timer';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
@@ -26,40 +27,21 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState(false);
-        const timer = useRef<NodeJS.Timer>();
-        const stop = () => {
-          clearInterval(timer.current);
-          timer.current = undefined;
-          setRunning(false);
-        };
-
+        const [timer, setTimer] = useState<Timer>();
+        useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
         useEffect(() => {
-          stop();
+          timer?.stop();
         }, []);
 
         return (
           <DebugContext.Provider
             value={{
-              running,
-              start: (cb, options = {}) => {
-                // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
-                // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
-                // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
-                let i = 0;
-                clearInterval(timer.current);
-                timer.current = setInterval(() => {
-                  // TODO(burdon): Overflows and doesn't stop.
-                  if ((options.count && i >= options.count) || cb(i) === false) {
-                    stop();
-                  } else {
-                    i++;
-                  }
-                }, Math.max(10, options.interval ?? 100));
-
-                setRunning(true);
+              running: !!timer,
+              start: (cb, options) => {
+                timer?.stop();
+                setTimer(new Timer(cb).start(options));
               },
-              stop,
+              stop: () => timer?.stop(),
             }}
           >
             {children}
