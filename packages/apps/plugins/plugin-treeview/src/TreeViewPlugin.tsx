@@ -54,9 +54,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   complementary: { data: treeView.activeNode.data },
-                  main: { fallback: Fallback, data: treeView.activeNode.data },
+                  main: { data: treeView.activeNode.data, fallback: Fallback },
                   heading: { data: treeView.activeNode /* (thure): Intentionally the node. */ },
                   presence: { data: treeView.activeNode.data },
+                  status: { data: treeView.activeNode.data },
                 }}
               />
             );

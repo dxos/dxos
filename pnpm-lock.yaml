@@ -679,6 +679,7 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
@@ -708,6 +709,7 @@ importers:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-space': link:../plugin-space
+      '@dxos/async': link:../../../common/async
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/invariant': link:../../../common/invariant

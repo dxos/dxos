@@ -116,8 +116,8 @@ export const useSections = (): SectionItem[] => {
           Icon: Queue,
         },
         {
-          id: '/echo/items',
-          title: 'Items',
+          id: '/echo/objects',
+          title: 'Objects',
           Icon: Database,
         },
         {

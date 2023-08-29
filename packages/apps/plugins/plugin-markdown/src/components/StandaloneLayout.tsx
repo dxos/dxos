@@ -27,7 +27,7 @@ export const StandaloneLayout = ({
             inputSurface,
             surfaceElevation({ elevation: 'group' }),
             'mbs-2 mbe-6 pli-6 rounded',
-            'min-bs-[calc(100dvh-4.5rem)] flex flex-col',
+            'min-bs-[calc(100dvh-5rem)] flex flex-col',
           )}
         >
           {children}

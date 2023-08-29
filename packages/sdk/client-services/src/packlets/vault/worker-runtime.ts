@@ -63,7 +63,7 @@ export class WorkerRuntime {
       log('started');
     } catch (err: any) {
       this._ready.wake(err);
-      log.catch('starting', err);
+      log.error('starting', err);
     }
   }
 

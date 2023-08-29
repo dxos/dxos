@@ -4,6 +4,7 @@
 
 import { ClientServicesProvider } from '@dxos/client-protocol';
 import { Config, ConfigProto } from '@dxos/config';
+import { log } from '@dxos/log';
 
 import { fromSocket } from './socket';
 import { fromHost, fromIFrame } from './utils';
@@ -13,17 +14,22 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
     return {};
   }
 
-  const url = new URL(target);
-  const protocol = url.protocol.slice(0, -1);
+  try {
+    const url = new URL(target);
+    const protocol = url.protocol.slice(0, -1);
 
-  return {
-    runtime: {
-      client: {
-        // TODO(burdon): Remove vault.html.
-        remoteSource: url.origin + (protocol.startsWith('http') ? '/vault.html' : ''),
+    return {
+      runtime: {
+        client: {
+          // TODO(burdon): Remove vault.html.
+          remoteSource: url.origin + (protocol.startsWith('http') ? '/vault.html' : ''),
+        },
       },
-    },
-  };
+    };
+  } catch (err) {
+    log.catch(err);
+    return {};
+  }
 };
 
 /**
