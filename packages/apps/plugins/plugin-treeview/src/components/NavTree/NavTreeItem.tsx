@@ -69,7 +69,7 @@ type TreeViewItemProps = SharedTreeItemProps & SortableProps;
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   TreeViewItemProps
->(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
   const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
 
   const actions = sortActions(node.actions);
@@ -131,7 +131,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           levelPadding(level),
           hoverableControls,
           hoverableFocusedWithinControls,
-          (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
+          !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
           'flex items-start rounded',
         )}
       >
