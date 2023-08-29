@@ -22,7 +22,7 @@ export type BlobSyncExtensionParams = {
   onPush: (data: BlobChunk) => Promise<void>;
 };
 
-const MIN_WANT_LIST_UPDATE_INTERVAL = 500;
+const MIN_WANT_LIST_UPDATE_INTERVAL = process.env.NODE_ENV === 'test' ? 5 : 500;
 
 const MAX_CONCURRENT_UPLOADS = 20;
 

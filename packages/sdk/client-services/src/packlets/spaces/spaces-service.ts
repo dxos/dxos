@@ -78,7 +78,7 @@ export class SpacesServiceImpl implements SpacesService {
           log('update', { spaces });
           next({ spaces });
         },
-        { maxFrequency: 2 },
+        { maxFrequency: process.env.NODE_ENV === 'test' ? undefined : 2 },
       );
 
       scheduleTask(ctx, async () => {
