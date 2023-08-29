@@ -8,7 +8,9 @@ import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
+import { Doc, TextModel } from '@dxos/text-model';
 
+import { createModelMutation, encodeModelMutation } from './builder';
 import { ItemConstructionOptions, ItemManager } from './item-manager';
 
 describe('ItemManager', () => {
@@ -37,6 +39,25 @@ describe('ItemManager', () => {
 
       itemManager.deconstructItem(item.id);
       expect(itemManager.entities.size).toEqual(0);
+    });
+  });
+
+  describe('mutations merging', () => {
+    test('merge two EchoObjects with single mutation in them', async () => {
+      const modelFactory = new ModelFactory().registerModel(TextModel);
+      const itemManager = new ItemManager(modelFactory);
+
+      const itemId = PublicKey.random().toHex();
+
+      const item = itemManager.constructItem({
+        itemId,
+        modelType: TextModel.meta.type,
+      });
+
+      doc = new Doc();
+      doc.
+
+      const batch = createModelMutation(itemId, encodeModelMutation(item.modelMeta!, mutation));
     });
   });
 

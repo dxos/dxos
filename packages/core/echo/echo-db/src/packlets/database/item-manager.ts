@@ -140,9 +140,6 @@ export class ItemManager {
     if (!mutations.objects) {
       return mutations;
     }
-
-    log.info('Merging mutations:', { objects: mutations.objects });
-
     // Get batch of mutations per item.
     // [(objectId=1), (objectId=1), (objectId=2), (objectId=1)] -> [[(objectId=1), (objectId=1)], [(objectId=2)], [(objectId=1)]]
     const itemsMutations: EchoObject[][] = mutations.objects?.reduce(
@@ -190,7 +187,7 @@ export class ItemManager {
                       invariant(!m.meta!.memberKey);
                       invariant(!m.meta!.seq);
                       invariant(!m.meta!.timeframe);
-                      invariant(m.meta!.clientTag && m.meta?.clientTag?.length !== 0);
+                      invariant(m.meta!.clientTag && m.meta!.clientTag.length === 1);
                       return m.meta!.clientTag!;
                     }),
                   )
@@ -200,7 +197,7 @@ export class ItemManager {
             },
           ],
         };
-
+        log.info('merged mutation:', { newMutation });
         mutations[index] = newMutation;
       }
     }
