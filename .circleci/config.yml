@@ -84,7 +84,7 @@ jobs:
           steps:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
+            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
       - *codecov_upload
       - *store_test_results
 
@@ -138,7 +138,7 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=flaky --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=unit,flaky --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
 
