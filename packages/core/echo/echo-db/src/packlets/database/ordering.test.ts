@@ -123,7 +123,7 @@ const createMutation = (
       memberKey: feedKey,
       seq,
       timeframe,
-      clientTag,
+      clientTag: clientTag ? [clientTag] : undefined,
     },
     model: {
       type_url: 'test',
@@ -135,7 +135,7 @@ const createMutation = (
 const createOptimisticMutation = (clientTag: string): MutationInQueue => ({
   mutation: {
     meta: {
-      clientTag,
+      clientTag: [clientTag],
     },
     model: {
       type_url: 'test',
