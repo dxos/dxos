@@ -51,6 +51,7 @@ export class ConnectionLog {
     swarm.connectionAdded.on((connection) => {
       const connectionInfo: ConnectionInfo = {
         state: ConnectionState.INITIAL,
+        closeReason: connection.closeReason,
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
@@ -62,6 +63,7 @@ export class ConnectionLog {
 
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
+        connectionInfo.closeReason = connection.closeReason;
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,

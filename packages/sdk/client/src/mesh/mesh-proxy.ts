@@ -61,9 +61,7 @@ export class MeshProxy {
       this._networkStatusUpdated.emit(networkStatus);
     });
 
-    this._ctx.onDispose(() => {
-      networkStatusStream.close();
-    });
+    this._ctx.onDispose(() => networkStatusStream.close());
     log.trace('dxos.sdk.mesh-proxy.open', trace.end({ id: this._instanceId }));
   }
 

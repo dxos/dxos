@@ -13,10 +13,10 @@ export type TestData = {
 };
 
 export const createItem = (location?: Location): Item<TestData> => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   data: {
     title: faker.lorem.words(3),
-    description: faker.lorem.sentences(faker.datatype.number(8)),
+    description: faker.lorem.sentences(faker.number.int(8)),
   },
   location,
 });

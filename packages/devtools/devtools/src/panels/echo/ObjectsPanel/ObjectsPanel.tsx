@@ -37,7 +37,7 @@ const columns: GridColumnDef<TypedObject, any>[] = [
   helper.accessor((item) => item.__typename, { id: 'type' }),
 ];
 
-export const ItemsPanel = () => {
+export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
@@ -49,7 +49,7 @@ export const ItemsPanel = () => {
       toolbar={
         <Toolbar.Root>
           <SpaceSelector />
-          <Searchbar onSearch={setFilter} />
+          <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       }
     >

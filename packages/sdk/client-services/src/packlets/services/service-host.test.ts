@@ -142,7 +142,7 @@ describe('ClientServicesHost', () => {
         }
       });
       await expect(asyncTimeout(trigger.wait(), 200)).to.be.rejectedWith();
-      stream?.close();
+      await stream?.close();
       await host.close();
     }
   }).onlyEnvironments('nodejs', 'chromium', 'firefox');

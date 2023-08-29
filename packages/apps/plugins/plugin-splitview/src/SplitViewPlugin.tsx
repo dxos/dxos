@@ -17,6 +17,9 @@ export type SplitViewPluginConfig = Partial<{
   enableComplementarySidebar: boolean;
 }>;
 
+/**
+ * Root application layout that controls sidebars, popovers, and dialogs.
+ */
 export const SplitViewPlugin = ({
   enableComplementarySidebar,
 }: SplitViewPluginConfig = {}): PluginDefinition<SplitViewProvides> => {

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hammer, IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { Bug, IconProps } from '@phosphor-icons/react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings } from './components';
+import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -26,19 +26,40 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState<NodeJS.Timeout>();
+        const [running, setRunning] = useState(false);
+        const timer = useRef<NodeJS.Timer>();
+        const stop = () => {
+          clearInterval(timer.current);
+          timer.current = undefined;
+          setRunning(false);
+        };
+
+        useEffect(() => {
+          stop();
+        }, []);
+
         return (
           <DebugContext.Provider
             value={{
-              running: !!running,
-              start: (cb: () => void, interval: number) => {
-                clearInterval(running);
-                setRunning(setInterval(cb, interval));
+              running,
+              start: (cb, options = {}) => {
+                // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
+                // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
+                // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
+                let i = 0;
+                clearInterval(timer.current);
+                timer.current = setInterval(() => {
+                  // TODO(burdon): Overflows and doesn't stop.
+                  if ((options.count && i >= options.count) || cb(i) === false) {
+                    stop();
+                  } else {
+                    i++;
+                  }
+                }, Math.max(10, options.interval ?? 100));
+
+                setRunning(true);
               },
-              stop: () => {
-                clearInterval(running);
-                setRunning(undefined);
-              },
+              stop,
             }}
           >
             {children}
@@ -51,7 +72,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Hammer {...props} />,
+              icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
                 action: 'debug-openDevtools',
@@ -72,7 +93,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           parent.add({
             id: nodeId,
             label: 'Debug',
-            icon: (props: IconProps) => <Hammer {...props} />,
+            icon: (props: IconProps) => <Bug {...props} />,
             data: { id: nodeId, space: parent.data },
           });
         },
@@ -90,7 +111,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
               }
               return true;
             }
@@ -110,6 +131,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return DebugSettings;
             }
             break;
+          }
+          case 'status': {
+            return DebugStatus;
           }
         }
 

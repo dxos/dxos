@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Devices, Intersect, Planet } from '@phosphor-icons/react';
+import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
@@ -20,13 +20,14 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import {
-  DialogRenameSpace,
+  PopoverRenameSpace,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
   SpaceMain,
   SpaceMainEmpty,
   SpacePresence,
+  PopoverRenameObject,
 } from './components';
 import translations from './translations';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
@@ -50,16 +51,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      if (!clientPlugin) {
+      if (!clientPlugin || !treeViewPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-
-      if (!treeViewPlugin) {
-        return;
-      }
-
       const treeView = treeViewPlugin.provides.treeView;
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
@@ -104,6 +100,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state as SpaceState,
       translations,
       component: (data, role) => {
+        // console.log(':::', role, data);
         switch (role) {
           case 'main':
             switch (true) {
@@ -112,7 +109,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
-          case 'tree--empty':
+          case 'tree--empty': // TODO(burdon): Why double-hyphen?
             switch (true) {
               case data === SPACE_PLUGIN:
                 return EmptyTree;
@@ -124,10 +121,21 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           case 'dialog':
             if (Array.isArray(data)) {
               switch (data[0]) {
-                case 'dxos.org/plugin/space/RenameSpaceDialog':
-                  return DialogRenameSpace;
                 case 'dxos.org/plugin/space/RestoreSpaceDialog':
                   return DialogRestoreSpace;
+                default:
+                  return null;
+              }
+            } else {
+              return null;
+            }
+          case 'popover':
+            if (Array.isArray(data)) {
+              switch (data[0]) {
+                case 'dxos.org/plugin/space/RenameSpacePopover':
+                  return PopoverRenameSpace;
+                case 'dxos.org/plugin/space/RenameObjectPopover':
+                  return PopoverRenameObject;
                 default:
                   return null;
               }
@@ -206,18 +214,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 action: SpaceAction.JOIN,
               },
             },
-            // TODO(wittjosiah): Factor out.
-            {
-              id: 'invite-device',
-              label: ['invite device label', { ns: 'os' }],
-              icon: (props) => <Devices {...props} />,
-              properties: {
-                testId: 'spacePlugin.inviteDevice',
-              },
-              intent: {
-                action: 'device-invitations',
-              },
-            },
           );
 
           return () => {
@@ -241,17 +237,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               }
               return;
             }
-
-            case 'device-invitations': {
-              if (clientPlugin) {
-                clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
-                return true;
-              }
-              return;
-            }
           }
 
-          const spaceKey = intent.data?.spaceKey && PublicKey.safeFrom(intent.data.spaceKey);
+          // TODO(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
+          const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
           if (!spaceKey) {
             return;
           }
@@ -269,8 +258,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             case SpaceAction.RENAME: {
               const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
-                splitViewPlugin.provides.splitView.dialogOpen = true;
-                splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RenameSpaceDialog', space];
+                splitViewPlugin.provides.splitView.popoverOpen = true;
+                splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${getSpaceId(
+                  spaceKey,
+                )}`;
                 return true;
               }
               break;
@@ -320,6 +312,23 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               if (space && object) {
                 space.db.remove(object);
+                return true;
+              }
+              break;
+            }
+
+            case SpaceAction.RENAME_OBJECT: {
+              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
+              const object =
+                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
+              console.log('[space rename object]', object, splitViewPlugin?.provides.splitView);
+              if (object && splitViewPlugin?.provides.splitView) {
+                splitViewPlugin.provides.splitView.popoverOpen = true;
+                splitViewPlugin.provides.splitView.popoverContent = [
+                  'dxos.org/plugin/space/RenameObjectPopover',
+                  object,
+                ];
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${intent.data.objectId}`;
                 return true;
               }
               break;

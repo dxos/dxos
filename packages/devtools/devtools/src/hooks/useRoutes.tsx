@@ -9,15 +9,16 @@ import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
+  DeviceListPanel,
   DiagnosticsPanel,
   FeedsPanel,
   IdentityPanel,
-  ItemsPanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
   MetadataPanel,
   NetworkPanel,
+  ObjectsPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
@@ -71,6 +72,10 @@ export const useRoutes = () => {
               element: <IdentityPanel />,
             },
             {
+              path: '/halo/devices',
+              element: <DeviceListPanel />,
+            },
+            {
               path: '/halo/keyring',
               element: <KeyringPanel />,
             },
@@ -96,8 +101,8 @@ export const useRoutes = () => {
               element: <FeedsPanel />,
             },
             {
-              path: '/echo/items',
-              element: <ItemsPanel />,
+              path: '/echo/objects',
+              element: <ObjectsPanel />,
             },
             {
               path: '/echo/members',

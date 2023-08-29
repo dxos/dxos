@@ -59,9 +59,10 @@ export class PublicKey implements Equatable {
 
     try {
       const key = PublicKey.from(source);
-      if (key.length !== PUBLIC_KEY_LENGTH && key.length !== SECRET_KEY_LENGTH) {
-        return undefined;
-      }
+      // TODO(wittjosiah): Space keys don't pass this check.
+      // if (key.length !== PUBLIC_KEY_LENGTH && key.length !== SECRET_KEY_LENGTH) {
+      //   return undefined;
+      // }
       return key;
     } catch (err: any) {
       return undefined;

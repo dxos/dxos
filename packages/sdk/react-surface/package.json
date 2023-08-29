@@ -11,6 +11,9 @@
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "dependencies": {
+    "@dxos/log": "workspace:*"
+  },
   "devDependencies": {
     "@types/react": "^18.0.21",
     "react": "^18.2.0"

@@ -6,6 +6,7 @@ import {
   ChartLine,
   CreditCard,
   Database,
+  Devices,
   FireSimple,
   Gear,
   Graph,
@@ -78,6 +79,11 @@ export const useSections = (): SectionItem[] => {
           Icon: IdentificationBadge,
         },
         {
+          id: '/halo/devices',
+          title: 'Devices',
+          Icon: Devices,
+        },
+        {
           id: '/halo/keyring',
           title: 'Keyring',
           Icon: Key,
@@ -110,8 +116,8 @@ export const useSections = (): SectionItem[] => {
           Icon: Queue,
         },
         {
-          id: '/echo/items',
-          title: 'Items',
+          id: '/echo/objects',
+          title: 'Objects',
           Icon: Database,
         },
         {

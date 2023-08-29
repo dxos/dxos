@@ -209,8 +209,8 @@ describe('stress-tests', () => {
 
       await fc.assert(
         fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
-          console.log('\n=====');
-          console.log([...cmds].map((c) => c.toString()).join('\n'));
+          // console.log('\n=====');
+          // console.log([...cmds].map((c) => c.toString()).join('\n'));
 
           const system = await factory(keyring)();
           try {

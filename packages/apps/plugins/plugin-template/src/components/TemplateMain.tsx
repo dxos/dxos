@@ -9,10 +9,10 @@ import { Main } from '@dxos/aurora';
 import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { TypedObject } from '@dxos/client/echo';
-import { findPlugin, usePluginContext } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.current;
 

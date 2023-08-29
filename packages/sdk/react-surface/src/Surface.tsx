@@ -6,7 +6,7 @@ import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { Plugin } from './Plugin';
-import { usePluginContext } from './PluginContext';
+import { usePlugins } from './PluginContext';
 
 export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 
@@ -103,7 +103,7 @@ export const Surface = (props: SurfaceProps) => {
 };
 
 const SurfaceResolver = (props: SurfaceProps) => {
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const parent = useSurfaceContext();
   const components = resolveComponents(plugins, props, parent);
   const currentContext = {

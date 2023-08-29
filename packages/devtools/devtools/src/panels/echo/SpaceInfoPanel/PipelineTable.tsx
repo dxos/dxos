@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { PublicKey } from '@dxos/keys';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -46,13 +46,10 @@ const columns: GridColumnDef<PipelineTableRow, any>[] = [
   ),
 ];
 
-export const PipelineTable = ({
-  state,
-  metadata,
-}: {
+export const PipelineTable: FC<{
   state: SpaceProto.PipelineState;
   metadata: SubscribeToSpacesResponse.SpaceInfo | undefined;
-}) => {
+}> = ({ state, metadata }) => {
   const getType = (feedKey: PublicKey) => {
     if (metadata) {
       return {
@@ -118,7 +115,7 @@ export const PipelineTable = ({
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
   const handleSelect = (selected: PipelineTableRow[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, item: selected?.[0] }));
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
     navigate('/echo/feeds');
   };
 

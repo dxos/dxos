@@ -32,7 +32,7 @@ import { useTextModel } from '@dxos/aurora-composer';
 import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
+import { Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { useDocGhId } from '../../hooks';
 import { EditorViewState, GITHUB_PLUGIN } from '../../props';
@@ -53,7 +53,7 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
   const handleCloseEmbed = useCallback(() => {

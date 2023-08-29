@@ -90,7 +90,7 @@ export class EchoProxyServer extends AbstractPlugin {
 
     const { port } = this._options;
     this._server = app.listen(port, () => {
-      log('proxy listening', { port });
+      console.log('proxy listening', { port });
     });
   }
 

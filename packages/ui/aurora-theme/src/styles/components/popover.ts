@@ -5,16 +5,15 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { arrow, chromeSurface, chromeText, focusRing, surfaceElevation } from '../fragments';
+import { arrow, chromeSurface, focusRing, surfaceElevation } from '../fragments';
 
 export type PopoverStyleProps = {};
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    'rounded-md plb-1 pli-2 radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
+    'rounded-md p-1.5 radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down relative',
     chromeSurface,
     surfaceElevation({ elevation: 'group' }),
-    chromeText,
     focusRing,
     ...etc,
   );

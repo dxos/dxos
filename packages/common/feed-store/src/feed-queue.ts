@@ -16,7 +16,7 @@ import { FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
-  batch: 64, // Read in batches.
+  batch: 1024, // Read in batches.
 };
 
 export type FeedQueueOptions = {};
@@ -31,7 +31,7 @@ export class FeedQueue<T extends {}> {
     autoReset: true,
   });
 
-  private _feedConsumer?: Writable;
+  private _feedConsumer?: Writable = undefined;
   private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;

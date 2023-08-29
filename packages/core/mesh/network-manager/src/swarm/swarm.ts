@@ -34,16 +34,16 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  /**
-   * @internal
-   */
-  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
-
   private readonly _swarmMessenger: SwarmMessenger;
 
   private _ctx = new Context();
 
   private _listeningHandle?: ListeningHandle = undefined;
+
+  /**
+   * @internal
+   */
+  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
