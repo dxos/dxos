@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import { Event, sleep } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -96,7 +96,7 @@ export class FeedStore<T extends {}> {
         // TODO(burdon): SpaceProxy still being initialized.
         //  SpaceProxy.initialize => Database.createItem => ... => FeedWrapper.append
         //  Uncaught Error: Closed [random-access-storage/index.js:181:38]
-        await sleep(100);
+        // await sleep(100);
       }),
     );
 
