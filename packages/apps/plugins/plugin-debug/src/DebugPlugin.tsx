@@ -6,12 +6,12 @@ import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
-import { Timer } from './timer';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {

@@ -3,13 +3,15 @@
 //
 
 import { Event, ReadOnlyEvent } from '@dxos/async';
-import { log } from '@dxos/log';
 
 export type TimerOptions = { count: number; interval: number; jitter?: number };
 
 export type TimerCallback = (i: number) => Promise<boolean | void>;
 
-// TODO(burdon): Move to @dxos/async.
+/**
+ * Manages callback invocations at a interval with a possible jitter.
+ * Note: The interval excludes the running time of the callback.
+ */
 export class Timer {
   private readonly _state = new Event<boolean>();
   private _timer?: NodeJS.Timeout;
@@ -45,20 +47,12 @@ export class Timer {
       } else {
         const interval = (options.interval ?? 0) + Math.random() * (options.jitter ?? 0);
         this._timer = setTimeout(async () => {
-          const start = Date.now();
           await this._callback(this._count++);
-          const elapsed = Date.now() - start;
-          if (elapsed > interval) {
-            log.warn(`Stopping: interval is too short: [${elapsed} > ${options.interval}]`);
-            stop();
-          } else {
-            run();
-          }
+          run();
         }, interval);
       }
     };
 
-    log.info('starting...', options);
     this._state.emit(true);
     this._count = 0;
 
@@ -70,7 +64,6 @@ export class Timer {
   stop() {
     clearInterval(this._timer);
     this._timer = undefined;
-    log.info('stopped', { count: this._count });
     this._state.emit(false);
     return this;
   }
