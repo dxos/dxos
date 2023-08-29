@@ -69,7 +69,7 @@ describe('Ordering', () => {
 
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: false, apply: true });
       expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe()))).toEqual({ reorder: false, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), 'unk'))).toEqual({
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), ['unk']))).toEqual({
         reorder: false,
         apply: true,
       });
@@ -81,14 +81,14 @@ describe('Ordering', () => {
     test('confirming optimistic mutations', () => {
       const queue = new MutationQueue();
 
-      queue.pushOptimistic(createOptimisticMutation('1'));
-      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), '1'))).toEqual({
+      queue.pushOptimistic(createOptimisticMutation(['1']));
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['1']))).toEqual({
         reorder: false,
         apply: false,
       });
 
-      queue.pushOptimistic(createOptimisticMutation('2'));
-      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), '2'))).toEqual({
+      queue.pushOptimistic(createOptimisticMutation(['2']));
+      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), ['2']))).toEqual({
         reorder: false,
         apply: false,
       });
@@ -99,9 +99,9 @@ describe('Ordering', () => {
     test('push confirmed under optimistic', () => {
       const queue = new MutationQueue();
 
-      queue.pushOptimistic(createOptimisticMutation('1'));
+      queue.pushOptimistic(createOptimisticMutation(['1']));
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: true, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), '1'))).toEqual({
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), ['1']))).toEqual({
         reorder: false,
         apply: false,
       });
@@ -115,7 +115,7 @@ const createMutation = (
   feedKey: PublicKey,
   seq: number,
   timeframe: Timeframe,
-  clientTag?: string,
+  clientTag?: string[],
 ): MutationInQueue => ({
   mutation: {
     meta: {
@@ -123,7 +123,7 @@ const createMutation = (
       memberKey: feedKey,
       seq,
       timeframe,
-      clientTag: clientTag ? [clientTag] : undefined,
+      clientTag,
     },
     model: {
       type_url: 'test',
@@ -132,10 +132,10 @@ const createMutation = (
   },
 });
 
-const createOptimisticMutation = (clientTag: string): MutationInQueue => ({
+const createOptimisticMutation = (clientTag: string[]): MutationInQueue => ({
   mutation: {
     meta: {
-      clientTag: [clientTag],
+      clientTag,
     },
     model: {
       type_url: 'test',
