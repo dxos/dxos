@@ -23,7 +23,7 @@ export class WebFSBlocking implements Storage {
   protected readonly _files = new Map<string, BlockingWebFile>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) {}
+  constructor(public readonly path: string) { }
 
   public get size() {
     return this._files.size;
@@ -233,46 +233,45 @@ export class BlockingWebFile extends EventEmitter implements File {
 
   @synchronized
   async read(offset: number, size: number) {
-    // const span = this._usage.beginRecording();
-    // this._operations.inc();
-    // this._reads.inc();
-    // this._readBytes.inc(size);
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+    this._reads.inc();
+    this._readBytes.inc(size);
 
-    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
-    // try {
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
+    try {
 
-    const buffer = Buffer.alloc(size);
-    const handle = await this._syncAccessHandle;
-    const bytesRead = handle.read(buffer, { at: offset });
-    return Buffer.from(buffer.buffer, buffer.byteOffset, bytesRead);
+      const buffer = Buffer.alloc(size);
+      const handle = await this._syncAccessHandle;
+      const bytesRead = handle.read(buffer, { at: offset });
+      return Buffer.from(buffer.buffer, buffer.byteOffset, bytesRead);
 
-    // } finally {
-    //   span.end();
-    //   metric.end();
-    // }
+    } finally {
+      span.end();
+      metric.end();
+    }
   }
 
   @synchronized
   async write(offset: number, data: Buffer) {
-    // const span = this._usage.beginRecording();
-    // this._operations.inc();
-    // this._writes.inc();
-    // this._writeBytes.inc(data.length);
+    const span = this._usage.beginRecording();
+    this._operations.inc();
+    this._writes.inc();
+    this._writeBytes.inc(data.length);
 
-    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
-    // try {
-    // TODO(mykola): Fix types
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
+    try {
 
-    const handle = await this._syncAccessHandle;
-    handle.write(data, { at: offset });
+      const handle = await this._syncAccessHandle;
+      handle.write(data, { at: offset });
 
-    // TODO(dmaretskyi): Do we flush after every write?
-    // await handle.flush();
+      // TODO(dmaretskyi): Do we flush after every write?
+      // await handle.flush();
 
-    // } finally {
-    //   span.end();
-    //   metric.end();
-    // }
+    } finally {
+      span.end();
+      metric.end();
+    }
   }
 
   @synchronized
@@ -285,19 +284,15 @@ export class BlockingWebFile extends EventEmitter implements File {
       if (offset < 0 || size < 0) {
         return;
       }
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      const file = await fileHandle.getFile();
+      const handle = await this._syncAccessHandle;
       let leftoverSize = 0;
-      if (offset + size < file.size) {
-        // does not copy the buffer
-        const leftover = Buffer.from(await file.slice(offset + size, file.size).arrayBuffer());
-        leftoverSize = leftover.length;
-        await writable.write({ type: 'write', data: leftover, position: offset });
+      if (offset + size < handle.getSize()) {
+        const buffer = Buffer.alloc(handle.getSize() - offset - size);
+        leftoverSize = handle.read(buffer, { at: offset + size });
+        handle.write(buffer, { at: offset });
       }
 
-      await writable.write({ type: 'truncate', size: offset + leftoverSize });
-      await writable.close();
+      handle.truncate(offset + leftoverSize);
     } finally {
       span.end();
       metric.end();
@@ -311,10 +306,9 @@ export class BlockingWebFile extends EventEmitter implements File {
 
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
     try {
-      const fileHandle: any = await this._fileHandle;
-      const file = await fileHandle.getFile();
+      const handle = await this._syncAccessHandle;
       return {
-        size: file.size,
+        size: handle.getSize(),
       };
     } finally {
       span.end();
@@ -329,10 +323,9 @@ export class BlockingWebFile extends EventEmitter implements File {
 
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      await writable.write({ type: 'truncate', size: offset });
-      await writable.close();
+      const handle = await this._syncAccessHandle;
+
+      handle.truncate(offset);
     } finally {
       span.end();
       metric.end();

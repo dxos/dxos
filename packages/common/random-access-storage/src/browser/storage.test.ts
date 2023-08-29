@@ -16,7 +16,7 @@ import { createStorage } from './storage';
 const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
-  for (const storageType of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
+  for (const storageType of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS, StorageType.WEBFS_BLOCKING] as StorageType[]) {
     if (mochaExecutor.environment === 'webkit' && storageType === StorageType.WEBFS) {
       // Skip WEBFS in webkit.
       continue;
