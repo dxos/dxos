@@ -127,6 +127,11 @@
       "description": "Enable debug logging",
       "default": false
     },
+    "worker": {
+      "type": "boolean",
+      "description": "Run tests inside a browser dedicated worker",
+      "default": false
+    },
     "browserArgs": {
       "type": "array",
       "description": "Arguments to pass to browser runner"

@@ -32,9 +32,9 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     import { BrowserReporter } from '@dxos/test/reporter';
 
     async function run() {
-      const context = await window.browserMocha__getEnv();
+      const context = await globalThis.browserMocha__getEnv();
 
-      window.mochaExecutor = {
+      globalThis.mochaExecutor = {
         environment: context.browserType,
         tags: ${JSON.stringify(opts.tags)}
       };
@@ -46,9 +46,9 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
       ${files.map((file) => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
 
-      window.browserMocha__initFinished()
+      globalThis.browserMocha__initFinished()
       
-      mocha.run(window.browserMocha__testsDone);
+      mocha.run(globalThis.browserMocha__testsDone);
     }
 
     run();

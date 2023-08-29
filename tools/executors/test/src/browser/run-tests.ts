@@ -19,6 +19,7 @@ import { TestResult } from './reporter';
 
 export type RunTestsOptions = {
   debug: boolean;
+  worker: boolean
 };
 
 export type Suites = {
@@ -66,6 +67,12 @@ const parseTestResult = ([arg]: any[]) => {
     return undefined;
   }
 };
+
+type BrowserApi = {
+  browserMocha__testsDone?: (exitCode: number) => Promise<void>;
+  browserMocha__initFinished?: () => Promise<void>;
+  browserMocha__getEnv?: () => Promise<{ browserType: BrowserType }>;
+}
 
 export const runTests = async (page: Page, browserType: BrowserType, bundleFile: string, options: RunTestsOptions) => {
   let stats: Stats;
@@ -117,12 +124,8 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
   const port = (server.address() as AddressInfo).port;
   await page.goto(`http://localhost:${port}`);
 
+
   const [getPromise, resolve] = trigger<RunTestsResults>();
-  await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
-    await lock.executeSynchronized(async () => {
-      resolve({ suites, stats });
-    });
-  });
 
   const exitTimeout = setTimeout(() => {
     if (options.debug) {
@@ -133,13 +136,82 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
     process.exit(-1);
   }, INIT_TIMEOUT);
 
-  await page.exposeFunction('browserMocha__initFinished', () => {
-    clearTimeout(exitTimeout);
-  });
+  const api: BrowserApi = {
+    browserMocha__testsDone: async (exitCode: number) => {
+      await lock.executeSynchronized(async () => {
+        resolve({ suites, stats });
+      });
+    },
+    browserMocha__initFinished: async () => {
+      clearTimeout(exitTimeout);
+    },
+    browserMocha__getEnv: async () => ({ browserType })
+  }
+  for (const [key, value] of Object.entries(api)) {
+    await page.exposeFunction(key, value);
+  }
 
-  await page.exposeFunction('browserMocha__getEnv', () => ({ browserType }));
+  if (!options.worker) {
+    await page.addScriptTag({ path: bundleFile });
+  } else {
+    const worker = await page.addScriptTag({
+      type: 'text/js-worker',
+      content: `(${() => {
+        // WARN: This function is serialized and sent over to the browser. It must not reference any variables outside of its scope.
+        globalThis.onmessage = async (event) => {
+          const { bundleFile, apiMethods } = event.data;
 
-  await page.addScriptTag({ path: bundleFile });
+          for (const method of apiMethods) {
+            (globalThis as any)[method] = (...args: any[]) => new Promise((resolve, reject) => {
+              const channel = new MessageChannel();
+
+              channel.port1.onmessage = (event) => {
+                const { error, result } = event.data;
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              }
+
+              globalThis.postMessage({ method, args, callback: channel.port2 }, [channel.port2] as any);
+            });
+          }
+
+          importScripts(bundleFile);
+        }
+      }})();`
+    })
+    const workerBlob = await worker.evaluateHandle(element => new Blob([element.textContent!]))
+
+
+    const tests = await page.addScriptTag({
+      type: 'text/js-tests',
+      path: bundleFile,
+    })
+    const testsBlob = await tests.evaluateHandle(element => new Blob([element.textContent!]))
+
+    await page.evaluate(async ([workerBlob, testsBlob, apiMethods]) => {
+      // WARN: This function is serialized and sent over to the browser. It must not reference any variables outside of its scope.
+
+      const worker = new Worker(window.URL.createObjectURL(workerBlob));
+      worker.onmessage = (event) => {
+        const { method, args, callback } = event.data as { method: string, args: any, callback: MessagePort };
+
+        (globalThis as any)[method](...args).then(
+          (res: any) => {
+            callback.postMessage({ result: res });
+          },
+          (err: any) => {
+            callback.postMessage({ error: err });
+          }
+        )
+      }
+      worker.postMessage({ bundleFile: window.URL.createObjectURL(testsBlob), apiMethods })
+
+
+    }, [workerBlob, testsBlob, Object.keys(api)] as const);
+  }
 
   try {
     return await getPromise();

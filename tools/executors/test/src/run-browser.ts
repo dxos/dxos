@@ -24,6 +24,7 @@ export type BrowserOptions = {
   stayOpen: boolean;
   headless: boolean;
   debug: boolean;
+  worker: boolean;
   browserArgs?: string[];
   envVariables?: Record<string, string>;
 };
