@@ -2,26 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-<<<<<<< HEAD
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-=======
-import { ShellLayout, useClient, useShell } from '@dxos/react-client';
-import { Space, useQuery, useSpaces } from '@dxos/react-client/echo';
->>>>>>> 2a3e8297c (Temp non-working example of useEffect)
 
 import { Task } from './proto';
 
 export const TaskList = () => {
-<<<<<<< HEAD
-  // ECHO
-  const client = useClient();
-  const [spaceKey, setSpaceKey] = useState<PublicKey>();
-  const space = useSpace(spaceKey);
-=======
   const spaces = useSpaces({ all: true });
 
   // Possible API for finding or creating a space
@@ -46,7 +35,6 @@ export const TaskList = () => {
 
   // const shell = useShell();
   const shell = useShell();
->>>>>>> 2a3e8297c (Temp non-working example of useEffect)
   const tasks = useQuery<Task>(space, Task.filter());
 
   // UI State
