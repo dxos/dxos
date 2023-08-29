@@ -12,6 +12,7 @@ import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
@@ -73,6 +74,10 @@ export const SpaceInfoPanel: FC = () => {
     }
   };
 
+  if (!space || !metadata) {
+    return null;
+  }
+
   return (
     <PanelContainer
       toolbar={
@@ -91,7 +96,7 @@ export const SpaceInfoPanel: FC = () => {
       {space && metadata && (
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
-          <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
+          <PipelineTable state={pipelineState ?? {}} metadata={metadata} /><Grid<SubscribeToFeedsResponse.Feed> columns={columns} data={feeds} onSelectedChange={handleSelect} />
           <Grid<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
         </div>
       )}
