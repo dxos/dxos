@@ -25,7 +25,7 @@ import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { Config, Defaults } from '@dxos/config';
 import { TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
-import { PluginContextProvider } from '@dxos/react-surface';
+import { PluginProvider } from '@dxos/react-surface';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -35,7 +35,8 @@ void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defa
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PluginContextProvider
+    <PluginProvider
+      fallback={<div className='flex justify-center mbs-16'>Initializing Plugins...</div>}
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Composer' }),

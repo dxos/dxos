@@ -16,7 +16,7 @@ import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surface';
+import { PluginDefinition, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
 import { StandaloneMenu } from './components/StandaloneMenu';
@@ -67,7 +67,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ data: Document }> = ({ data }) => {
     const identity = useIdentity();
-    const { plugins } = usePluginContext();
+    const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.current;
 
@@ -98,7 +98,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
     const identity = useIdentity();
-    const { plugins } = usePluginContext();
+    const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.current;
 
