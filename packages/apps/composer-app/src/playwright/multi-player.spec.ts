@@ -7,6 +7,8 @@ import { expect } from 'chai';
 import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
+
 import { AppManager } from './app-manager';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -39,37 +41,33 @@ test.describe('Basic test', () => {
     test('guest joins host’s space', async () => {
       test.slow();
 
-      await host.shell.createIdentity('host');
-      await guest.shell.createIdentity('guest');
-      await host.expandSpace();
+      await host.createSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
-      await guest.expandSpace();
 
+      // TODO(wittjosiah): This should wait for document to be visible in DOM.
+      await sleep(1000); // Wait for document to replicate.
       await guest.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
       await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await host.page.url()).to.include(await guest.page.url());
       });
 
-      const hostLinks = await Promise.all([host.getDocumentLinks().nth(0).getAttribute('data-itemid')]);
-      const guestLinks = await Promise.all([guest.getDocumentLinks().nth(0).getAttribute('data-itemid')]);
+      const hostLinks = await Promise.all([host.getDocumentLinks().nth(1).getAttribute('data-itemid')]);
+      const guestLinks = await Promise.all([guest.getDocumentLinks().nth(1).getAttribute('data-itemid')]);
       expect(hostLinks[0]).to.equal(guestLinks[0]);
     });
 
     test('host and guest can see each others’ presence when same document is in focus', async () => {
       test.slow();
 
-      await host.shell.createIdentity('host');
-      await guest.shell.createIdentity('guest');
-      await host.expandSpace();
+      await host.createSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
-      await guest.expandSpace();
 
       await Promise.all([
-        host.getDocumentLinks().nth(0).click(),
-        guest.getDocumentLinks().nth(0).click(),
+        host.getDocumentLinks().nth(1).click(),
+        guest.getDocumentLinks().nth(1).click(),
         host.waitForMarkdownTextbox(),
         guest.waitForMarkdownTextbox(),
       ]);
@@ -80,20 +78,17 @@ test.describe('Basic test', () => {
       await host.getMarkdownTextbox().focus();
       await guest.getMarkdownTextbox().focus();
       await waitForExpect(async () => {
-        expect(await host.getCollaboratorCursors().first().textContent()).to.equal('guest');
-        expect(await guest.getCollaboratorCursors().first().textContent()).to.equal('host');
+        expect(await host.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
+        expect(await guest.getCollaboratorCursors().first().textContent()).to.have.lengthOf.above(0);
       });
     });
 
     test('host and guest can see each others’ changes in same document', async () => {
       test.slow();
 
-      await host.shell.createIdentity('host');
-      await guest.shell.createIdentity('guest');
-      await host.expandSpace();
+      await host.createSpace();
       await host.createDocument();
       await perfomInvitation(host, guest);
-      await guest.expandSpace();
 
       const parts = [
         'Lorem ipsum dolor sit amet,',
@@ -103,8 +98,8 @@ test.describe('Basic test', () => {
       const allParts = parts.join('');
 
       await Promise.all([
-        host.getDocumentLinks().nth(0).click(),
-        guest.getDocumentLinks().nth(0).click(),
+        host.getDocumentLinks().nth(1).click(),
+        guest.getDocumentLinks().nth(1).click(),
         host.waitForMarkdownTextbox(),
         guest.waitForMarkdownTextbox(),
       ]);

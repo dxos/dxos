@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hammer, IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { Bug, IconProps } from '@phosphor-icons/react';
+import React, { useRef } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -26,19 +26,38 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState<NodeJS.Timeout>();
+        const [running, setRunning] = React.useState(false);
+        const timer = useRef<NodeJS.Timer>();
+        const stop = () => {
+          console.log('stop', timer.current);
+          clearInterval(timer.current);
+          timer.current = undefined;
+          setRunning(false);
+        };
+
         return (
           <DebugContext.Provider
             value={{
-              running: !!running,
-              start: (cb: () => void, interval: number) => {
-                clearInterval(running);
-                setRunning(setInterval(cb, interval));
+              running,
+              start: (cb, options = {}) => {
+                clearInterval(timer.current);
+                // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
+                // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
+                // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
+                let i = 0;
+                timer.current = setInterval(() => {
+                  // TODO(burdon): Overflows and doesn't stop.
+                  if ((options.count && i >= options.count) || cb(i) === false) {
+                    console.log(i);
+                    stop();
+                  } else {
+                    i++;
+                  }
+                }, Math.max(10, options.interval ?? 100));
+                console.log('start', options, timer.current);
+                setRunning(true);
               },
-              stop: () => {
-                clearInterval(running);
-                setRunning(undefined);
-              },
+              stop,
             }}
           >
             {children}
@@ -51,7 +70,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Hammer {...props} />,
+              icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
                 action: 'debug-openDevtools',
@@ -72,7 +91,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           parent.add({
             id: nodeId,
             label: 'Debug',
-            icon: (props: IconProps) => <Hammer {...props} />,
+            icon: (props: IconProps) => <Bug {...props} />,
             data: { id: nodeId, space: parent.data },
           });
         },
@@ -90,7 +109,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
               }
               return true;
             }

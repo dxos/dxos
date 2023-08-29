@@ -10,7 +10,17 @@ import { useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { Actions, Action, AuthCode, Emoji, Centered, Label, Viewport, ViewportViewProps } from '../components';
+import {
+  Actions,
+  Action,
+  AuthCode,
+  Emoji,
+  Centered,
+  Label,
+  Viewport,
+  ViewportViewProps,
+  CopyButton,
+} from '../components';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -28,13 +38,16 @@ const InvitationManagerView = ({
   return (
     <Viewport.View {...props} classNames='grow'>
       <div role='none' className='is-full max-is-[14rem] mli-auto'>
-        <div role='none' className='aspect-square is-full bs-auto relative text-neutral-600 dark:text-neutral-500'>
-          {children}
+        <div
+          role='none'
+          className='flex flex-col items-center aspect-square is-full bs-auto relative text-neutral-600 dark:text-neutral-500'
+        >
           {emoji && (
             <Centered>
               <Emoji text={emoji} />
             </Centered>
           )}
+          {children}
         </div>
       </div>
     </Viewport.View>
@@ -76,6 +89,7 @@ export const InvitationManager = ({ invitationUrl, active, send, status, authCod
             <span id={qrLabel} className='sr-only'>
               {t('qr label')}
             </span>
+            <CopyButton variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code'>
             <div role='none' className='absolute inset-0 flex flex-col justify-between items-center'>

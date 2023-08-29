@@ -8,7 +8,7 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 /**
  * Access to remote client via a socket.
  */
-export const fromSocket = (url: string): ClientServicesProvider => {
+export const fromSocket = async (url: string): Promise<ClientServicesProvider> => {
   let dxRpcClient!: WebsocketRpcClient<ClientServices, {}>;
 
   return {

@@ -49,7 +49,7 @@ export const ItemsPanel = () => {
       toolbar={
         <Toolbar.Root>
           <SpaceSelector />
-          <Searchbar onSearch={setFilter} />
+          <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       }
     >

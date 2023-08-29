@@ -49,7 +49,7 @@ export class Generator {
 
   mutate() {
     // Remove.
-    this._kubes = this._kubes.map((kube) => (faker.datatype.number(10) > 7 ? kube : undefined)).filter(Boolean);
+    this._kubes = this._kubes.map((kube) => (faker.number.int(10) > 7 ? kube : undefined)).filter(Boolean);
 
     // Create.
     if (faker.datatype.float() > 0.3) {
@@ -58,10 +58,10 @@ export class Generator {
 
     // Add/remove bots.
     this._kubes.forEach((kube) => {
-      if (faker.datatype.number(10) > 3) {
+      if (faker.number.int(10) > 3) {
         kube.bots = [
-          ...kube.bots.map((bot) => (faker.datatype.number(10) > 3 ? bot : undefined)).filter(Boolean),
-          ...(faker.datatype.number(10) > 3 ? [this.createBot()] : []),
+          ...kube.bots.map((bot) => (faker.number.int(10) > 3 ? bot : undefined)).filter(Boolean),
+          ...(faker.number.int(10) > 3 ? [this.createBot()] : []),
         ];
       }
     });
@@ -72,7 +72,7 @@ export class Generator {
   addKubes({ min = 1, max = 5 }) {
     this._kubes = [
       ...this._kubes,
-      ...Array.from({ length: faker.datatype.number({ min: 0, max: 5 }) }).map(() => this.createKube()),
+      ...Array.from({ length: faker.number.int({ min: 0, max: 5 }) }).map(() => this.createKube()),
     ];
 
     return this;
@@ -80,16 +80,16 @@ export class Generator {
 
   createKube(): Kube {
     return {
-      id: faker.datatype.uuid(),
+      id: faker.string.uuid(),
       bots: Array.from({
-        length: faker.datatype.number({ min: 0, max: 5 }),
+        length: faker.number.int({ min: 0, max: 5 }),
       }).map(() => this.createBot()),
     };
   }
 
   createBot(): Bot {
     return {
-      id: faker.datatype.uuid(),
+      id: faker.string.uuid(),
     };
   }
 }

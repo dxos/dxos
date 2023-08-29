@@ -2,7 +2,11 @@ version: 1
 
 runtime:
   client:
+#    clientServices: 1
     remoteSource: http://localhost:3967/vault.html
+    storage:
+      persistent: true
+#      persistent: false
 
   services:
     signaling:

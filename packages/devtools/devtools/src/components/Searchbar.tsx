@@ -3,20 +3,25 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
-import { Button, Input } from '@dxos/aurora';
+import { Button, Input, TextInputProps } from '@dxos/aurora';
 
-export type SearchbarProps = {
-  onSearch?: (text: string) => void;
+export type SearchbarProps = Pick<TextInputProps, 'placeholder'> & {
+  value?: string;
+  onChange?: (text: string) => void;
+  delay?: number;
 };
 
-export const Searchbar: FC<SearchbarProps> = ({ onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ placeholder, value, onChange }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(value ?? '');
+  useEffect(() => {
+    setText(value ?? '');
+  }, [value]);
   const handleChange = (text: string) => {
     setText(text);
-    onSearch?.(text);
+    onChange?.(text);
   };
 
   const handleReset = () => {
@@ -29,15 +34,16 @@ export const Searchbar: FC<SearchbarProps> = ({ onSearch }) => {
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
-          placeholder={'Search...'}
+          placeholder={placeholder}
           value={text}
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
+        {/* TODO(burdon): Embedded icon. */}
+        <Button onClick={handleReset} variant='ghost'>
+          <X />
+        </Button>
       </Input.Root>
-      <Button onClick={handleReset}>
-        <X />
-      </Button>
     </div>
   );
 };

@@ -10,12 +10,12 @@ import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
+import { generateName } from '@dxos/display-name';
 import { Client, PublicKey } from '@dxos/react-client';
 import { Space, Text } from '@dxos/react-client/echo';
 import { Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
-import { humanize } from '@dxos/util';
 
 import { ComposerDocument, schema } from '../../src/testing';
 import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
@@ -37,7 +37,7 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
 
   const { awareness } = new SpaceAwarenessProvider({ space, doc, channel: `yjs.awareness.${text.id}` });
   awareness.setLocalStateField('user', {
-    name: identity.profile?.displayName ?? humanize(identity.identityKey),
+    name: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
     // TODO(wittjosiah): Pick colours from theme based on identity key.
     color: cursorColor.color,
     colorLight: cursorColor.light,

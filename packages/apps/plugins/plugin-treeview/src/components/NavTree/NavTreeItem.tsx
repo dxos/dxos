@@ -5,10 +5,19 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
+import React, {
+  FC,
+  forwardRef,
+  ForwardRefExoticComponent,
+  Fragment,
+  RefAttributes,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import {
@@ -68,6 +77,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const { navigationSidebarOpen } = useSidebars();
   const { active: treeViewActive } = useTreeView();
   const { popoverAnchorId } = useSplitView();
+  const { graph } = useGraph();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -79,13 +89,30 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const active = treeViewActive === node.id;
 
   useEffect(() => {
-    // todo(thure): Open if child within becomes active
-  }, []);
+    if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      setOpen(true);
+    }
+  }, [graph, treeViewActive]);
 
   const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
   const isPopoverAnchor = popoverAnchorId === headingAnchorId;
 
   const HeadingWithActionsRoot = isPopoverAnchor ? Popover.Anchor : 'div';
+
+  // TODO(burdon): Factor out heuristic to group actions.
+  const actionGroups =
+    level === 1
+      ? actions.reduce<{ id: string; actions: Graph.Action[] }[]>((groups, action) => {
+          const id = action.id.split(/[/-]/).at(-1)!;
+          let group = groups.find((group) => group.id === id);
+          if (!group) {
+            group = { id, actions: [] };
+            groups.push(group);
+          }
+          group.actions.push(action);
+          return groups;
+        }, [])
+      : [{ id: '', actions }];
 
   return (
     <TreeItem.Root
@@ -113,7 +140,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
         ) : (
           <NavigableHeading {...{ node, level, active }} />
         )}
-        {actions.length > 0 && (
+        {actionGroups.length > 0 && (
           <Tooltip.Root
             open={optionsTooltipOpen}
             onOpenChange={(nextOpen) => {
@@ -156,26 +183,31 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content classNames='z-[31]'>
-                  {actions.map((action) => (
-                    <DropdownMenu.Item
-                      key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        suppressNextTooltip.current = true;
-                        setOptionsMenuOpen(false);
-                        void action.invoke();
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                    >
-                      {action.icon && <action.icon className={getSize(4)} />}
-                      <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                    </DropdownMenu.Item>
+                  {actionGroups.map(({ id, actions }, i) => (
+                    <Fragment key={id}>
+                      {actions.map((action) => (
+                        <DropdownMenu.Item
+                          key={action.id}
+                          onClick={(event) => {
+                            if (action.properties.disabled) {
+                              return;
+                            }
+                            event.stopPropagation();
+                            // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                            suppressNextTooltip.current = true;
+                            setOptionsMenuOpen(false);
+                            void action.invoke();
+                          }}
+                          classNames='gap-2'
+                          disabled={action.properties.disabled}
+                          {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                        >
+                          {action.icon && <action.icon className={getSize(4)} />}
+                          <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                        </DropdownMenu.Item>
+                      ))}
+                      {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
+                    </Fragment>
                   ))}
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>

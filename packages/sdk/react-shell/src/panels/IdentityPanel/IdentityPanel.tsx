@@ -4,17 +4,18 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
+import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useClient } from '@dxos/react-client';
+import { Identity, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { humanize } from '@dxos/util';
 
 import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { IdentityActionChooser } from './steps';
+import { IdentityActionChooser, ProfileForm } from './steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
@@ -27,7 +28,7 @@ const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHead
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>
         <Avatar.Label classNames='block text-center font-light text-xl'>
-          {identity.profile?.displayName ?? humanize(identity.identityKey)}
+          {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
       </Avatar.Root>
     </Heading>
@@ -39,8 +40,10 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     identity,
     titleId,
     activeView,
+    onUpdateProfile,
     IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
     InvitationManager: InvitationManagerComponent = InvitationManager,
+    onDone,
     ...rest
   } = props;
   const { t } = useTranslation('os');
@@ -55,7 +58,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   }, [activeView, t]);
   return (
     <DensityProvider density='fine'>
-      <IdentityHeading {...{ identity, titleId, title }} />
+      <IdentityHeading {...{ identity, titleId, title, onDone }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
@@ -68,7 +71,14 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
-          {/* <Viewport.View id='managing profile'></Viewport.View> */}
+          <Viewport.View classNames={viewStyles} id='update profile form'>
+            <ProfileForm
+              send={rest.send}
+              active={activeView === 'update profile form'}
+              profile={identity.profile}
+              onUpdateProfile={onUpdateProfile}
+            />
+          </Viewport.View>
           {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
@@ -90,12 +100,13 @@ export const IdentityPanel = ({
   ...props
 }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
+  const client = useClient();
   const identity = useIdentity();
   if (!identity) {
     console.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine({ context: { identity } });
+  const [identityState, identitySend, identityService] = useIdentityMachine(client);
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
@@ -109,18 +120,21 @@ export const IdentityPanel = ({
     switch (true) {
       case identityState.matches('choosingAction'):
         return 'identity action chooser';
-      case identityState.matches('managingDevices'):
-        return 'device manager';
       case identityState.matches('managingDeviceInvitation'):
         return 'device invitation manager';
-      // case identityState.matches('managingProfile'):
-      //   return 'profile manager';
+      case [{ managingProfile: 'idle' }, { managingProfile: 'pending' }].some(identityState.matches):
+        return 'update profile form';
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:
         return 'identity action chooser';
     }
   }, [identityState]);
+
+  const onUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
+    identitySend({ type: 'updateProfile' });
+    await client.halo.updateProfile(profile);
+  };
 
   const implProps = {
     ...props,
@@ -129,6 +143,7 @@ export const IdentityPanel = ({
     send: identitySend,
     titleId,
     createInvitationUrl,
+    onUpdateProfile,
   } satisfies IdentityPanelImplProps;
 
   return identityState.context.invitation ? (

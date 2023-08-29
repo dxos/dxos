@@ -157,9 +157,7 @@ export class Stream<T> {
         void this._ctx.dispose();
       },
     });
-    this._ctx.onDispose(() => {
-      this.close();
-    });
+    this._ctx.onDispose(() => this.close());
 
     try {
       const producerCleanup = producer({
@@ -265,7 +263,6 @@ export class Stream<T> {
   onReady(onReady: () => void): void {
     invariant(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
-
     if (this._isReady) {
       onReady();
     }
@@ -274,8 +271,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  // TODO(burdon): Make async.
-  close() {
+  async close() {
     if (this._isClosed) {
       return;
     }
@@ -283,7 +279,7 @@ export class Stream<T> {
     this._isClosed = true;
     this._producerCleanup?.();
     this._closeHandler?.(undefined);
-    void this._ctx.dispose();
+    await this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;

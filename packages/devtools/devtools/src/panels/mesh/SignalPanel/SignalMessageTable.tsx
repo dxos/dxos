@@ -142,7 +142,7 @@ export const SignalMessageTable = () => {
     });
 
     return () => {
-      signalOutput.close();
+      void signalOutput.close();
     };
   }, []);
 
@@ -176,7 +176,7 @@ export const SignalMessageTable = () => {
           value={viewType}
           onValueChange={(type) => setViewType(type as ViewType)}
         />
-        <Searchbar onSearch={setSearch} />
+        <Searchbar onChange={setSearch} />
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar.Root>
 

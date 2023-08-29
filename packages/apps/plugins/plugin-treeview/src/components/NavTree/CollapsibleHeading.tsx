@@ -9,6 +9,7 @@ import { TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../../types';
+import { getTreeItemLabel } from '../../util';
 import {
   collapsibleSpacing,
   navTreeHeading,
@@ -41,14 +42,15 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
         {...(active && { 'aria-current': 'page' })}
         ref={forwardedRef}
       >
-        {Array.isArray(node.label) ? t(...node.label) : node.label}
+        {getTreeItemLabel(node, t)}
       </TreeItem.Heading>
     ) : (
       <TreeItem.OpenTrigger
         {...(disabled && { disabled, 'aria-disabled': true })}
         {...(!navigationSidebarOpen && { tabIndex: -1 })}
         classNames={['flex items-center gap-1 pie-1', navTreeHeading, ghostButtonColors, disabled && staticDisabled]}
-        data-testId={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
+        // TODO(wittjosiah): Why space plugin? This is treeview.
+        data-testid={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
       >
         <OpenTriggerIcon weight='fill' className={mx('shrink-0', getSize(2))} />
         {node.icon && <node.icon className={getSize(4)} />}
@@ -57,7 +59,7 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
           classNames={[navTreeHeading, collapsibleSpacing, treeItemText, error && valenceColorText('error')]}
           {...(active && { 'aria-current': 'page' })}
         >
-          {Array.isArray(node.label) ? t(...node.label) : node.label}
+          {getTreeItemLabel(node, t)}
         </TreeItem.Heading>
       </TreeItem.OpenTrigger>
     );

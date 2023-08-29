@@ -6,7 +6,7 @@ import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import {
   ClientServices,
   ClientServicesProvider,
-  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   DEFAULT_SHELL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
@@ -32,8 +32,8 @@ export type IFrameClientServicesProxyOptions = {
   client?: Client;
   shell?: boolean | string;
   vault?: string;
-  logFilter?: string;
   timeout?: number;
+  logFilter?: string;
 };
 
 /**
@@ -61,11 +61,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   private readonly _instanceId = PublicKey.random().toHex();
 
   constructor({
-    source = DEFAULT_CLIENT_ORIGIN,
+    source = DEFAULT_VAULT_URL,
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
-    logFilter = 'error,warn',
     timeout = PROXY_CONNECTION_TIMEOUT,
+    logFilter = 'error,warn',
   }: IFrameClientServicesProxyOptions = {}) {
     this._source = source;
     this._shell = shell;

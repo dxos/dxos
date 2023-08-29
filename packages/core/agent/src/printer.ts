@@ -44,7 +44,7 @@ export class Printer {
     if (this.state !== FileState.READING) {
       return;
     }
-    console.log(data.toString());
+
     this.offset += data.length;
   }
 

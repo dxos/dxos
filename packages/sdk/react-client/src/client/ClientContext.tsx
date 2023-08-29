@@ -23,10 +23,12 @@ import { getAsyncValue, MaybePromise, Provider } from '@dxos/util'; // TODO(burd
 
 import { printBanner } from '../banner';
 
+// TODO(burdon): Reconcile with ClientOptions.
 export type ClientContextProps = {
   client: Client;
 
   // Optionally expose services (e.g., for devtools).
+  // TODO(burdon): Can't this just be accessed via `client.services`?
   services?: ClientServices;
 
   status?: SystemStatus | null;

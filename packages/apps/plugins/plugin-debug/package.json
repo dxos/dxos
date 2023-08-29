@@ -23,12 +23,14 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2",
+    "react-json-tree": "^0.18.0",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {

@@ -91,8 +91,9 @@ export class ServiceContext {
         root: storage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
-          valueEncoding
-        }
+          valueEncoding,
+          stats: true,
+        },
       })
     });
 
@@ -161,7 +162,6 @@ export class ServiceContext {
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
-
     await this._initialize(new Context());
     return identity;
   }
@@ -174,7 +174,6 @@ export class ServiceContext {
 
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
-
     await this._initialize(new Context());
     return identity;
   }
@@ -248,6 +247,7 @@ export class ServiceContext {
         }
       },
     };
+
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 }

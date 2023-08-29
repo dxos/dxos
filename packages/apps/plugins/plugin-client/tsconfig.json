@@ -21,7 +21,13 @@
   ],
   "references": [
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/config"

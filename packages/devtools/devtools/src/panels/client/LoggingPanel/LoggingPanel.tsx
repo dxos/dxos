@@ -2,16 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import { Trash } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
-import { Input, Toolbar } from '@dxos/aurora';
+import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { getSize } from '@dxos/aurora-theme';
 import { levels, parseFilter } from '@dxos/log';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 
-import { MasterDetailTable, PanelContainer } from '../../../components';
+import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 
 const MAX_LOGS = 2_000;
 
@@ -54,16 +56,13 @@ export const LoggingPanel = () => {
 
   // Filtering.
   // TODO(burdon): Store in context.
-  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState<QueryLogsRequest>({});
-  const handleQueryLogs = () => {
-    const filtersString = inputRef.current?.value ?? '';
-    if (!filtersString) {
+  const onSearchChange = (text: string) => {
+    if (!text) {
       setQuery({});
-      return;
     }
 
-    setQuery({ filters: parseFilter(filtersString) });
+    setQuery({ filters: parseFilter(text) });
   };
 
   // Logs.
@@ -82,11 +81,10 @@ export const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput ref={inputRef} placeholder='Filter (e.g., "info", "client:debug")' />
-          </Input.Root>
-          <Toolbar.Button onClick={handleQueryLogs}>Update</Toolbar.Button>
-          <Toolbar.Button onClick={() => setLogs([])}>Clear</Toolbar.Button>
+          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' onChange={onSearchChange} />
+          <Toolbar.Button onClick={() => setLogs([])}>
+            <Trash className={getSize(5)} />
+          </Toolbar.Button>
         </Toolbar.Root>
       }
     >

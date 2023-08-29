@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chats, List as MenuIcon } from '@phosphor-icons/react';
+import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
@@ -37,18 +37,22 @@ export const SplitView = () => {
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
+        {/* Left navigation sidebar. */}
         <Main.NavigationSidebar classNames='overflow-hidden'>
           <Surface name='sidebar' />
         </Main.NavigationSidebar>
+
+        {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface name='complementary-sidebar' />
+            <Surface name='complementary' role='complementary' />
           </Main.ComplementarySidebar>
         )}
-        <Main.Overlay />
+
+        {/* Top (header) bar. */}
         <Main.Content
           asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
+          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, fixedSurface]}
         >
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>
@@ -58,6 +62,7 @@ export const SplitView = () => {
               </Button>
               <Surface name='heading' role='heading' limit={2} />
               <div role='none' className='grow' />
+              {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface name='presence' role='presence' limit={1} />
               {complementarySidebarOpen !== null && (
                 <Button
@@ -65,13 +70,24 @@ export const SplitView = () => {
                   variant='ghost'
                 >
                   <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <Chats weight='light' className={getSize(4)} />
+                  <CaretDoubleLeft
+                    mirrored={!!context.complementarySidebarOpen}
+                    weight='light'
+                    className={getSize(4)}
+                  />
                 </Button>
               )}
             </DensityProvider>
           </div>
         </Main.Content>
+
+        {/* Dialog overlay to dismiss dialogs. */}
+        <Main.Overlay />
+
+        {/* Main content surface. */}
         <Surface name='main' role='main' />
+
+        {/* Global popovers. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
@@ -86,6 +102,8 @@ export const SplitView = () => {
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
+
+        {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
           <DensityProvider density='fine'>
             <Dialog.Overlay>

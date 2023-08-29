@@ -25,7 +25,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
   }
 
   return (
-    <div>
+    <>
       <DetailsTable
         object={{
           state: connection.state,
@@ -37,6 +37,6 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
       />
 
       <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} />
-    </div>
+    </>
   );
 };

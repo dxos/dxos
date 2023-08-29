@@ -44,6 +44,7 @@ export type IdentityActionChooserImplProps = IdentityActionChooserProps & {
 export const IdentityActionChooserImpl = ({
   onCreateInvitationClick,
   active,
+  send,
   onDone,
   doneActionParent,
 }: IdentityActionChooserImplProps) => {
@@ -68,12 +69,7 @@ export const IdentityActionChooserImpl = ({
             <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
-          <Button
-            disabled
-            data-testid='manage-profile'
-            onClick={() => {} /* send({ type: 'chooseProfile' }) */}
-            classNames='plb-4'
-          >
+          <Button data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
             <UserGear className={getSize(6)} />
             <span className='grow mli-3'>{t('choose profile label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />

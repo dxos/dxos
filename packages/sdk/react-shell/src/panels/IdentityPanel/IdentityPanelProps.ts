@@ -13,8 +13,9 @@ import { IdentityEvent } from './identityMachine';
 
 export type IdentityPanelImplProps = {
   titleId: string;
-  activeView: 'device manager' | 'device invitation manager' | 'identity action chooser';
+  activeView: 'device manager' | 'update profile form' | 'device invitation manager' | 'identity action chooser';
   identity: Identity;
+  onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;
