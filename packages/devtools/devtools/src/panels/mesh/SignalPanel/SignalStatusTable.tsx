@@ -14,12 +14,30 @@ import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 const states = {
-  [SignalState.CONNECTING]: { label: 'connecting', color: 'orange' },
-  [SignalState.RECONNECTING]: { label: 'reconnecting', color: 'orange' },
-  [SignalState.CONNECTED]: { label: 'connected', color: 'green' },
-  [SignalState.DISCONNECTED]: { label: 'disconnected', color: 'red' },
-  [SignalState.ERROR]: { label: 'error', color: 'red' },
-  [SignalState.CLOSED]: { label: 'closed', color: 'darkgray' },
+  [SignalState.CONNECTING]: {
+    label: 'connecting',
+    className: 'text-orange-500',
+  },
+  [SignalState.RECONNECTING]: {
+    label: 'reconnecting',
+    className: 'text-orange-500',
+  },
+  [SignalState.CONNECTED]: {
+    label: 'connected',
+    className: 'text-green-500',
+  },
+  [SignalState.DISCONNECTED]: {
+    label: 'disconnected',
+    className: 'text-orange-500',
+  },
+  [SignalState.ERROR]: {
+    label: 'error',
+    className: 'text-red-500',
+  },
+  [SignalState.CLOSED]: {
+    label: 'closed',
+    className: 'text-neutral-500',
+  },
 };
 
 export interface SignalStatusProps {
@@ -64,15 +82,13 @@ export const SignalStatusTable = () => {
   const columns: GridColumnDef<SignalStatus, any>[] = [
     helper.accessor((status) => new URL(status.host).origin, {
       id: 'host',
-      cell: (props) => <span className='font-mono'>{props.getValue()}</span>,
+      cell: (props) => <div className='font-mono'>{props.getValue()}</div>,
       size: 240,
     }),
     helper.accessor((status) => states[status.state].label, {
       id: 'status',
       size: 120,
-      cell: (cell) => (
-        <span style={{ color: states[cell.row.original.state]?.color }}>{cell.getValue().toUpperCase()}</span>
-      ),
+      cell: (cell) => <div className={states[cell.row.original.state]?.className}>{cell.getValue().toUpperCase()}</div>,
     }),
     // TODO(burdon): Date format helper.
     helper.accessor(
