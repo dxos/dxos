@@ -2,38 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { ShellLayout, useClient, useShell } from '@dxos/react-client';
-import { Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { PublicKey, ShellLayout, useShell } from '@dxos/react-client';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 
 import { Task } from './proto';
 
 export const TaskList = () => {
-  const spaces = useSpaces({ all: true });
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
-  // Possible API for finding or creating a space
-  // const spaceName = new URLSearchParams(window.location.search).get('spaceKey');
-  // const space = useSpace({ name: spaceName, create: true });
+  // grab the callback from the shell to see if we have an space we joined
+  const shell = useShell({
+    onJoinedSpace: (spaceKey) => {
+      setSpaceKey(spaceKey);
+    },
+    onInvalidatedInvitationCode: () => {
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.delete('spaceInvitationCode');
+    },
+  });
+  const space = useSpace(spaceKey);
+  // space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
 
-  const specialSpace = spaces.find((s) => s.properties.name === 'specialSpace');
-  const [space, setSpace] = useState<Space | undefined>(specialSpace);
-
-  // const space = useSpace();
-  const client = useClient();
-  useEffect(() => {
-    if (!spaces || specialSpace) {
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      const specialSpace = await client.createSpace({ name: 'specialSpace' });
-      setSpace(specialSpace);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [spaces, specialSpace]);
-
-  // const shell = useShell();
-  const shell = useShell();
   const tasks = useQuery<Task>(space, Task.filter());
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<number | null>(null);
@@ -41,9 +32,6 @@ export const TaskList = () => {
 
   const handleNewTask = () => {
     if (!space || newTaskTitle === '') {
-      return;
-    }
-    if (!space) {
       return;
     }
 
