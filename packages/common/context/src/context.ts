@@ -25,7 +25,7 @@ export class Context {
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
-  private _disposePromise?: Promise<void>;
+  private _disposePromise?: Promise<void> = undefined;
   private _parent: Context | null = null;
 
   private _attributes: Record<string, any>;
