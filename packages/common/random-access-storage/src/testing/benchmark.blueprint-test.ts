@@ -15,7 +15,6 @@ export const randomText = () => Math.random().toString(36).substring(2);
 // https://gist.github.com/dmaretskyi/20604a10f85704406bbc1a3c672db1e5
 export const storageBenchmark = (testGroupName: StorageType, createStorage: () => Storage) => {
   describe(testGroupName, () => {
-
     for (const numThreads of [1, 5, 10, 20, 30]) {
       test('individual writers', async () => {
         const DATA_SIZE = 1024;

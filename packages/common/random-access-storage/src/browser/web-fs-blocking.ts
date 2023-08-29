@@ -23,7 +23,7 @@ export class WebFSBlocking implements Storage {
   protected readonly _files = new Map<string, BlockingWebFile>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) { }
+  constructor(public readonly path: string) {}
 
   public get size() {
     return this._files.size;
@@ -77,8 +77,8 @@ export class WebFSBlocking implements Storage {
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
       async () => {
-        await Promise.all(Array.from(this._getFiles(sub).values()).map(async (file) => file.flush()))
-      }
+        await Promise.all(Array.from(this._getFiles(sub).values()).map(async (file) => file.flush()));
+      },
     );
   }
 
@@ -231,7 +231,6 @@ export class BlockingWebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
-
   @synchronized
   async read(offset: number, size: number) {
     // const span = this._usage.beginRecording();
@@ -245,14 +244,13 @@ export class BlockingWebFile extends EventEmitter implements File {
     const buffer = Buffer.alloc(size);
     const handle = await this._syncAccessHandle;
     const bytesRead = handle.read(buffer, { at: offset });
-    return Buffer.from(buffer.buffer, buffer.byteOffset, bytesRead)
+    return Buffer.from(buffer.buffer, buffer.byteOffset, bytesRead);
 
     // } finally {
     //   span.end();
     //   metric.end();
     // }
   }
-
 
   @synchronized
   async write(offset: number, data: Buffer) {
