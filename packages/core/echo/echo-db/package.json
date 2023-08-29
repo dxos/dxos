@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@dxos/feed-store": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/typings": "workspace:*"
   },
   "publishConfig": {
