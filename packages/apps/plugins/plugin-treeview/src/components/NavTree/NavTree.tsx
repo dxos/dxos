@@ -31,7 +31,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   const [overIsDroppable, setOverIsDroppable] = useState<'rearrange' | 'migrate' | null>(null);
 
   useDragStart(({ active }) => {
-    setActiveNode(active?.data?.current?.treeitem ?? null);
+    setActiveNode(active.data?.current?.treeitem ?? null);
   }, []);
 
   useDragEnd(
@@ -76,11 +76,12 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
       setActiveNode(null);
       setOverIsDroppable(null);
     },
-    [parent, itemsInOrder],
+    [parent, activeNode, overIsDroppable, itemsInOrder],
   );
 
   useDragOver(
     ({ over }) => {
+      console.log('[drag over]', activeNode, over?.data);
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
         if (
@@ -102,7 +103,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
         }
       }
     },
-    [parent],
+    [activeNode, parent],
   );
 
   return (
