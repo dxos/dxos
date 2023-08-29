@@ -91,7 +91,15 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  const parts: FormatParts = { level, message, error, path: undefined, line: undefined, scope: undefined, context: undefined };
+  const parts: FormatParts = {
+    level,
+    message,
+    error,
+    path: undefined,
+    line: undefined,
+    scope: undefined,
+    context: undefined,
+  };
 
   if (meta) {
     parts.path = getRelativeFilename(meta.F);

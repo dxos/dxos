@@ -123,7 +123,7 @@ export class RpcPeer {
       streamHandler: undefined,
       noHandshake: false,
       ...params,
-    }
+    };
   }
 
   /**
