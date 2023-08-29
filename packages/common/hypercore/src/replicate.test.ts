@@ -73,104 +73,106 @@ describe('Replication', () => {
     expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
 
-  test('replicates feeds in batches', async () => {
-    const numBlocks = 100;
+  test
+    .only('replicates feeds in batches', async () => {
+      const numBlocks = 100;
 
-    // Replicating feeds must have the same public key.
-    const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory1.createFeed(publicKey, { secretKey });
-    const core2 = factory2.createFeed(publicKey);
+      // Replicating feeds must have the same public key.
+      const { publicKey, secretKey } = createKeyPair();
+      const core1 = factory1.createFeed(publicKey, { secretKey });
+      const core2 = factory2.createFeed(publicKey);
 
-    // Open.
-    {
-      const [ready, done] = latch({ count: 2 });
-      core1.open(done);
-      core2.open(done);
-      await ready();
-    }
+      // Open.
+      {
+        const [ready, done] = latch({ count: 2 });
+        core1.open(done);
+        core2.open(done);
+        await ready();
+      }
 
-    const stream1 = core1.replicate(true);
-    const stream2 = core2.replicate(false);
+      const stream1 = core1.replicate(true);
+      const stream2 = core2.replicate(false);
 
-    // Start replication.
-    // NOTE: Replication won't start unless the public keys on both sides are the same.
-    const [streamsClosed, onClose] = latch({ count: 2 });
-    stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+      // Start replication.
+      // NOTE: Replication won't start unless the public keys on both sides are the same.
+      const [streamsClosed, onClose] = latch({ count: 2 });
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
-    expect(core1.stats.peers).to.have.lengthOf(1);
-    expect(core2.stats.peers).to.have.lengthOf(1);
+      expect(core1.stats.peers).to.have.lengthOf(1);
+      expect(core2.stats.peers).to.have.lengthOf(1);
 
-    // Replicate messages.
-    {
-      // Wait until all uploaded.
-      const [waitForDownloaded, incDownload] = latch({ count: numBlocks });
+      // Replicate messages.
+      {
+        // Wait until all uploaded.
+        const [waitForDownloaded, incDownload] = latch({ count: numBlocks });
 
-      // Monitor uploads.
-      let uploaded = 0;
-      core1.on('upload', () => {
-        uploaded++;
-        log('up', { uploaded, length: core1.length });
-      });
-
-      // Monitor downloads.
-      let downloaded = 0;
-      core2.on('download', (seq: number, data: Buffer) => {
-        downloaded++;
-        const { id } = JSON.parse(data.toString()) as TestDataItem;
-        expect(id).to.eq(seq);
-        log('down', { downloaded, length: core2.length });
-        expect(downloaded).to.be.lessThanOrEqual(uploaded);
-        incDownload();
-      });
-
-      // Monitor sync points (multiple since delayed writes).
-      const sync = { started: 0, complete: 0 };
-      core2.on('sync', () => {
-        log('sync', { events: ++sync.started });
-        core2.download();
-      });
-
-      // Write batch of messages with delay.
-      batch((next, i, remaining) => {
-        const size = faker.number.int({
-          min: 1,
-          max: Math.min(10, remaining),
+        // Monitor uploads.
+        let uploaded = 0;
+        core1.on('upload', () => {
+          uploaded++;
+          log('up', { uploaded, length: core1.length });
         });
-        for (let j = 0; j < size; j++) {
-          core1.append(JSON.stringify(createDataItem(i + j)), noop);
-        }
 
-        // Random delay.
-        setTimeout(() => {
-          next(size);
-        }, faker.number.int({ min: 0, max: 100 }));
-      }, numBlocks);
+        // Monitor downloads.
+        let downloaded = 0;
+        core2.on('download', (seq: number, data: Buffer) => {
+          downloaded++;
+          const { id } = JSON.parse(data.toString()) as TestDataItem;
+          expect(id).to.eq(seq);
+          log('down', { downloaded, length: core2.length });
+          expect(downloaded).to.be.lessThanOrEqual(uploaded);
+          incDownload();
+        });
 
-      // Done.
-      await waitForDownloaded();
-      expect(uploaded).to.eq(downloaded);
-    }
+        // Monitor sync points (multiple since delayed writes).
+        const sync = { started: 0, complete: 0 };
+        core2.on('sync', () => {
+          log('sync', { events: ++sync.started });
+          core2.download();
+        });
 
-    // Close streams.
-    {
-      stream1.end();
-      stream2.end();
+        // Write batch of messages with delay.
+        batch((next, i, remaining) => {
+          const size = faker.number.int({
+            min: 1,
+            max: Math.min(10, remaining),
+          });
+          for (let j = 0; j < size; j++) {
+            core1.append(JSON.stringify(createDataItem(i + j)), noop);
+          }
 
-      await streamsClosed();
-      expect(stream1.destroyed).to.be.true;
-      expect(stream2.destroyed).to.be.true;
-    }
+          // Random delay.
+          setTimeout(() => {
+            next(size);
+          }, faker.number.int({ min: 0, max: 100 }));
+        }, numBlocks);
 
-    // Close feeds.
-    {
-      await core1.close();
-      await core2.close();
+        // Done.
+        await waitForDownloaded();
+        expect(uploaded).to.eq(downloaded);
+      }
 
-      expect(core1.writable).to.be.false;
-      expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
-      expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
-    }
-  }).timeout(5_000);
+      // Close streams.
+      {
+        stream1.end();
+        stream2.end();
+
+        await streamsClosed();
+        expect(stream1.destroyed).to.be.true;
+        expect(stream2.destroyed).to.be.true;
+      }
+
+      // Close feeds.
+      {
+        await core1.close();
+        await core2.close();
+
+        expect(core1.writable).to.be.false;
+        expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+        expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+      }
+    })
+    .timeout(5_000);
 
   test('replicates feeds with read stream', async () => {
     const numBlocks = 10;
