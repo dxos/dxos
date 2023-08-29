@@ -6,11 +6,10 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
-import { Plugin, PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
+import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeItemMainHeading, TreeViewContainer } from './components';
-import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
+import { Fallback, TreeItemMainHeading, TreeViewContainer, TreeItemDragOverlay } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 
@@ -41,7 +40,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       },
       components: {
         default: () => {
-          const { plugins } = usePluginContext();
+          const { plugins } = usePlugins();
           const treeView = useTreeView();
           const [shortId, component] = treeView.active?.split(':') ?? [];
           const plugin = findPlugin(plugins, shortId);
@@ -55,9 +54,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   complementary: { data: treeView.activeNode.data },
-                  main: { fallback: Fallback, data: treeView.activeNode.data },
+                  main: { data: treeView.activeNode.data, fallback: Fallback },
                   heading: { data: treeView.activeNode /* (thure): Intentionally the node. */ },
                   presence: { data: treeView.activeNode.data },
+                  status: { data: treeView.activeNode.data },
                 }}
               />
             );

@@ -5,6 +5,8 @@
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
 import { inspect } from 'node:util';
 
+import { Trigger } from '@dxos/async';
+import { BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { data } from './defs';
@@ -43,7 +45,7 @@ describe('Database', () => {
     expect(objects).toHaveLength(n);
   });
 
-  test('remove objects', async () => {
+  test('removing objects', async () => {
     const { db } = await createDatabase();
 
     const n = 10;
@@ -65,6 +67,27 @@ describe('Database', () => {
       const { objects } = db.query();
       expect(objects).toHaveLength(n - 1);
     }
+  });
+
+  // TODO(burdon): 100 times (not batched).
+  test.skip('flush callback', async () => {
+    const { db } = await createDatabase();
+
+    const update = new Trigger<BatchUpdate>();
+    db.pendingBatch.on((event) => {
+      console.log('????', event);
+      update.wake(event);
+    });
+
+    const n = 100;
+    for (const _ of Array.from({ length: n })) {
+      db.add(new TypedObject());
+    }
+    await db.flush();
+
+    const { size, duration } = await update.wait();
+    expect(size).toEqual(1);
+    expect(duration).toBeGreaterThan(0);
   });
 
   test.skip('move object between spaces', async () => {

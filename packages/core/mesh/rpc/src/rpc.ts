@@ -93,6 +93,8 @@ enum RpcState {
  * Inspired by JSON-RPC 2.0 https://www.jsonrpc.org/specification.
  */
 export class RpcPeer {
+  private readonly _params: RpcPeerOptions;
+
   private readonly _outgoingRequests = new Map<number, PendingRpcRequest>();
   private readonly _localStreams = new Map<number, Stream<any>>();
   private readonly _remoteOpenTrigger = new Trigger();
@@ -109,13 +111,20 @@ export class RpcPeer {
 
   private _nextId = 0;
   private _state = RpcState.INITIAL;
-  private _unsubscribeFromPort: (() => void) | undefined;
-  private _clearOpenInterval: (() => void) | undefined;
+  private _unsubscribeFromPort: (() => void) | undefined = undefined;
+  private _clearOpenInterval: (() => void) | undefined = undefined;
 
   // prettier-ignore
   constructor(
-    private readonly _options: RpcPeerOptions
-  ) {}
+    params: RpcPeerOptions
+  ) {
+    this._params = {
+      timeout: undefined,
+      streamHandler: undefined,
+      noHandshake: false,
+      ...params,
+    };
+  }
 
   /**
    * Open the peer. Required before making any calls.
@@ -128,7 +137,7 @@ export class RpcPeer {
       return;
     }
 
-    this._unsubscribeFromPort = this._options.port.subscribe(async (msg) => {
+    this._unsubscribeFromPort = this._params.port.subscribe(async (msg) => {
       try {
         await this._receive(msg);
       } catch (err: any) {
@@ -138,7 +147,7 @@ export class RpcPeer {
 
     this._state = RpcState.OPENING;
 
-    if (this._options.noHandshake) {
+    if (this._params.noHandshake) {
       this._state = RpcState.OPENED;
       this._remoteOpenTrigger.wake();
       return;
@@ -185,7 +194,7 @@ export class RpcPeer {
 
     this._abortRequests();
 
-    if (this._state === RpcState.OPENED && !this._options.noHandshake) {
+    if (this._state === RpcState.OPENED && !this._params.noHandshake) {
       try {
         this._state = RpcState.CLOSING;
         await this._sendMessage({ bye: {} });
@@ -299,14 +308,14 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message');
-      if (this._options.noHandshake) {
+      if (this._params.noHandshake) {
         return;
       }
 
       await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
       log('received openAck message');
-      if (this._options.noHandshake) {
+      if (this._params.noHandshake) {
         return;
       }
 
@@ -371,7 +380,7 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
+      const waiting = asyncTimeout<any>(responseReceived, this._params.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;
       invariant(response.id === id);
@@ -455,7 +464,7 @@ export class RpcPeer {
 
   private async _sendMessage(message: RpcMessage) {
     log('sending message', { type: Object.keys(message)[0] });
-    await this._options.port.send(RpcMessage.encode(message, { preserveAny: true }));
+    await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }));
   }
 
   private async _callHandler(req: Request): Promise<Response> {
@@ -464,7 +473,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._options.callHandler(req.method, req.payload);
+      const response = await this._params.callHandler(req.method, req.payload);
       return {
         id: req.id,
         payload: response,
@@ -479,12 +488,12 @@ export class RpcPeer {
 
   private _callStreamHandler(req: Request, callback: (response: Response) => void) {
     try {
-      invariant(this._options.streamHandler, 'Requests with streaming responses are not supported.');
+      invariant(this._params.streamHandler, 'Requests with streaming responses are not supported.');
       invariant(typeof req.id === 'number');
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._options.streamHandler(req.method, req.payload);
+      const responseStream = this._params.streamHandler(req.method, req.payload);
       responseStream.onReady(() => {
         callback({
           id: req.id,

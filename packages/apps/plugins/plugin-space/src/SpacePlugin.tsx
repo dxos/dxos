@@ -51,16 +51,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      if (!clientPlugin) {
+      if (!clientPlugin || !treeViewPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-
-      if (!treeViewPlugin) {
-        return;
-      }
-
       const treeView = treeViewPlugin.provides.treeView;
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
@@ -105,6 +100,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state as SpaceState,
       translations,
       component: (data, role) => {
+        // console.log(':::', role, data);
         switch (role) {
           case 'main':
             switch (true) {
@@ -113,7 +109,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
-          case 'tree--empty':
+          case 'tree--empty': // TODO(burdon): Why double-hyphen?
             switch (true) {
               case data === SPACE_PLUGIN:
                 return EmptyTree;
@@ -243,7 +239,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
           }
 
-          // todo(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
+          // TODO(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
           const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
           if (!spaceKey) {
             return;
