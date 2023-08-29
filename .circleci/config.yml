@@ -173,6 +173,13 @@ workflows:
           context:
             - Github
       - e2e:
+          # Only run e2e tests on pushes to main & release branches.
+          filters:
+            branches:
+              only:
+                - main
+                - /^rc-.*/
+                - /^hotfix-.*/
           context:
             - Github
 
