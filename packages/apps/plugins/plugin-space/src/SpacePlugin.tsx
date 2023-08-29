@@ -148,8 +148,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return null;
         }
       },
-      // TODO(burdon): Where is "Main" defined?
-      // TODO(burdon): 'components' vs 'component' in graph API?
       components: {
         Main: SpaceMain,
       },
