@@ -4,17 +4,49 @@
 
 import React, { useEffect, useState } from 'react';
 
+<<<<<<< HEAD
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+=======
+import { ShellLayout, useClient, useShell } from '@dxos/react-client';
+import { Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+>>>>>>> 2a3e8297c (Temp non-working example of useEffect)
 
 import { Task } from './proto';
 
 export const TaskList = () => {
+<<<<<<< HEAD
   // ECHO
   const client = useClient();
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
   const space = useSpace(spaceKey);
+=======
+  const spaces = useSpaces({ all: true });
+
+  // Possible API for finding or creating a space
+  // const spaceName = new URLSearchParams(window.location.search).get('spaceKey');
+  // const space = useSpace({ name: spaceName, create: true });
+
+  const specialSpace = spaces.find((s) => s.properties.name === 'specialSpace');
+  const [space, setSpace] = useState<Space | undefined>(specialSpace);
+
+  // const space = useSpace();
+  const client = useClient();
+  useEffect(() => {
+    if (!spaces || specialSpace) {
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      const specialSpace = await client.createSpace({ name: 'specialSpace' });
+      setSpace(specialSpace);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [spaces, specialSpace]);
+
+  // const shell = useShell();
+  const shell = useShell();
+>>>>>>> 2a3e8297c (Temp non-working example of useEffect)
   const tasks = useQuery<Task>(space, Task.filter());
 
   // UI State
