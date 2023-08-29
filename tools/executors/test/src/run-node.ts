@@ -57,23 +57,26 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   console.log(`$ ${mocha} ${args.join(' ')}`);
   const exitCode = await execTool(
-    'node',
-    [
-      ...[
-        'prof',
-        'log-deopt',
-        'log-ic',
-        'log-maps',
-        'log-maps-details',
-        'log-internal-timer-events',
-        'log-code',
-        'log-source-code',
-        'detailed-line-info',
-      ].flatMap((flag) => `--${flag}`),
-      require.resolve('mocha/bin/mocha'),
+    mocha,
+    args,
 
-      ...args,
-    ],
+    // TODO(dmaretskyi): Add a switch to run with deopt logs.
+    // 'node',
+    // [
+    //   ...[
+    //     'prof',
+    //     'log-deopt',
+    //     'log-ic',
+    //     'log-maps',
+    //     'log-maps-details',
+    //     'log-internal-timer-events',
+    //     'log-code',
+    //     'log-source-code',
+    //     'detailed-line-info',
+    //   ].flatMap((flag) => `--${flag}`),
+    //   require.resolve('mocha/bin/mocha'),
+    //   ...args,
+    // ],
     {
       env: {
         ...process.env,
