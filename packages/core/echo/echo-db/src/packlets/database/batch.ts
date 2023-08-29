@@ -8,6 +8,7 @@ import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 
 export class Batch {
+  public readonly timestamp = Date.now();
   public readonly data: EchoObjectBatch = { objects: [] };
   public clientTag: string | null = null;
 
