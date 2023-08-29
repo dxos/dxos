@@ -219,8 +219,10 @@ export class Connection {
     }
 
     try {
-      await cancelWithContext(this._ctx, sleep(this._signallingDelay));
-      this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      if (process.env.NODE_ENV !== 'test') {
+        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;
