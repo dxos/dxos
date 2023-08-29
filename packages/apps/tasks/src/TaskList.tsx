@@ -2,28 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { PublicKey, ShellLayout, useShell } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { Task } from './proto';
 
 export const TaskList = () => {
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
-  // grab the callback from the shell to see if we have an space we joined
-  const shell = useShell({
-    onJoinedSpace: (spaceKey) => {
-      setSpaceKey(spaceKey);
-    },
-    onInvalidatedInvitationCode: () => {
-      const searchParams = new URLSearchParams(location.search);
-      searchParams.delete('spaceInvitationCode');
-    },
-  });
+  const client = useClient();
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get('spaceInviteCode');
+    if (code) {
+      const receivedInvitation = InvitationEncoder.decode(code);
+      const invitationObservable = client.acceptInvitation(receivedInvitation);
+      invitationObservable.subscribe((invitation) => {
+        if (invitation.state === Invitation.State.SUCCESS) {
+          setSpaceKey(invitation.spaceKey);
+        }
+        searchParams.delete('spaceInviteCode');
+        window.location.search = searchParams.toString();
+      });
+    }
+  }, []);
+
   const space = useSpace(spaceKey);
-  // space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
 
   const tasks = useQuery<Task>(space, Task.filter());
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -44,7 +51,18 @@ export const TaskList = () => {
     <div className='p-2'>
       <button
         className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
-        onClick={() => shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key })}
+        onClick={async () => {
+          if (!space) {
+            return;
+          }
+          const invitationObservable = space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+          const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
+          // get the current URL from the window
+          const currentUrl = new URL(window.location.href);
+          const inviteUrl = `${currentUrl}?spaceInviteCode=${encodedInvitation}`;
+          // copy the invite URL to the clipboard
+          await navigator.clipboard.writeText(inviteUrl);
+        }}
       >
         Invite
       </button>
