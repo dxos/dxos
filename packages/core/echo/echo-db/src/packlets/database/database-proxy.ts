@@ -18,12 +18,18 @@ import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 
+const FLUSH_TIMEOUT = 5_000;
+
 export type MutateResult = {
   objectsUpdated: Item<any>[];
   batch: Batch;
 };
 
-const FLUSH_TIMEOUT = 5_000;
+export type BatchUpdate = {
+  size?: number;
+  duration?: number; // Set if batch is complete (or failed).
+  error?: Error;
+};
 
 /**
  * Maintains a local cache of objects and provides a API for mutating the database.
@@ -35,6 +41,7 @@ export class DatabaseProxy {
   private readonly _ctx = new Context();
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
+  public readonly pendingBatch = new Event<BatchUpdate>();
 
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
@@ -44,7 +51,6 @@ export class DatabaseProxy {
    * ClientTag -> Batch
    */
   private _pendingBatches = new Map<string, Batch>();
-
   private _currentBatch?: Batch;
 
   private _opening = false;
@@ -125,6 +131,9 @@ export class DatabaseProxy {
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
             this._pendingBatches.delete(msg.clientTag);
+
+            // TODO(burdon): Not batched (e.g., if create item, then two batches).
+            this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
           } else {
             // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
             // TODO(dmaretskyi): Just ignore the I guess.
@@ -145,8 +154,12 @@ export class DatabaseProxy {
 
         this._subscriptionOpen = false;
         for (const batch of this._pendingBatches.values()) {
-          batch.processTrigger!.throw(new Error('Service connection closed'));
+          batch.processTrigger!.throw(new Error('Service connection closed.'));
         }
+        this.pendingBatch.emit({
+          size: this._pendingBatches.size,
+          error: new Error('Service connection closed.'),
+        });
         this._pendingBatches.clear();
       },
     );
@@ -257,6 +270,7 @@ export class DatabaseProxy {
     return true;
   }
 
+  // TODO(burdon): Make async?
   commitBatch() {
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
@@ -271,6 +285,7 @@ export class DatabaseProxy {
     batch.processTrigger = new Trigger();
     batch.receiptTrigger = new Trigger();
     this._pendingBatches.set(batch.clientTag, batch);
+    this.pendingBatch.emit({ size: this._pendingBatches.size });
 
     this._service
       .write({
@@ -301,15 +316,12 @@ export class DatabaseProxy {
     const batchCreated = this.beginBatch();
     try {
       const startingMutationIndex = this._currentBatch!.data.objects!.length;
-
       this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
-
-      const objectsUpdated: Item<any>[] = [];
-
       tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!, startingMutationIndex);
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.
+      const objectsUpdated: Item<any>[] = [];
       for (const objectMutation of batchInput.objects ?? []) {
         const item = this._processOptimistic(objectMutation);
         if (item) {
@@ -330,7 +342,9 @@ export class DatabaseProxy {
     }
   }
 
-  // TODO(burdon): Add saving callback.
+  /**
+   * Waits for any pending batches to complete.
+   */
   async flush({ timeout }: { timeout?: number } = {}) {
     const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {

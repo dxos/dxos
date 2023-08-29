@@ -45,6 +45,7 @@ export const SplitView = () => {
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
+            {/* TODO(burdon): name vs. role? */}
             <Surface name='complementary' role='complementary' />
           </Main.ComplementarySidebar>
         )}
@@ -78,6 +79,17 @@ export const SplitView = () => {
                 </Button>
               )}
             </DensityProvider>
+          </div>
+        </Main.Content>
+
+        {/* Status info. */}
+        {/* TODO(burdon): name/role? */}
+        <Main.Content asChild classNames={['fixed bottom-0 z-[1] flex w-full gap-1', fixedSurface]}>
+          <div>
+            <div role='none' className='grow' />
+            <div role='none' aria-label={t('status label')}>
+              <Surface name='status' role='status' />
+            </div>
           </div>
         </Main.Content>
 

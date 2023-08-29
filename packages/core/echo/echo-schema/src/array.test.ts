@@ -133,7 +133,6 @@ describe('Arrays', () => {
     const root = db.add(new Expando());
     await db.flush();
     root.records = ['one'];
-
     expect(root.records).toHaveLength(1);
 
     root.records = [];

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, ReadOnlyEvent } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
@@ -35,6 +35,8 @@ export class EchoDatabase {
    * @internal
    */
   public readonly _updateEvent = new Event<Item[]>();
+
+  public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
   constructor(
     /**
@@ -156,6 +158,7 @@ export class EchoDatabase {
         },
       ],
     });
+
     this._saveRemovedObject(obj);
   }
 
@@ -165,8 +168,7 @@ export class EchoDatabase {
    */
   clone<T extends EchoObject>(obj: T) {
     log('clone', { id: obj.id, type: (obj as any).__typename });
-
-    console.warn('deprecated');
+    console.warn('deprecated'); // TODO(burdon): ???
 
     // TODO(burdon): Keep id.
     this.add(obj);
