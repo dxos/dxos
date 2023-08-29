@@ -114,7 +114,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
       void handleRefresh();
     } else {
       start(
-        async (i) => {
+        async () => {
           await generator.updateObject();
         },
         {
