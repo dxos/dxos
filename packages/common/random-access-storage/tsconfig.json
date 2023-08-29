@@ -3,7 +3,8 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "es2019"
+      "es2019",
+      "WebWorker"
     ],
     "outDir": "dist/types",
     "skipLibCheck": true,

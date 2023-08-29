@@ -17,6 +17,7 @@ export class Directory {
     private readonly _list: (path: string) => Promise<string[]>,
     private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
     private readonly _delete: () => Promise<void>,
+    private readonly _flush?: () => Promise<void>,
   ) {}
 
   toString() {
@@ -49,5 +50,9 @@ export class Directory {
    */
   async delete() {
     await this._delete();
+  }
+
+  async flush() {
+    await this._flush?.();
   }
 }

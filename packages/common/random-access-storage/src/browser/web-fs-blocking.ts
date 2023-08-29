@@ -17,19 +17,19 @@ import { STORAGE_MONITOR } from '../monitor';
 /**
  * Web file systems.
  */
-export class WebFS implements Storage {
-  readonly type = StorageType.WEBFS;
+export class WebFSBlocking implements Storage {
+  readonly type = StorageType.WEBFS_BLOCKING;
 
-  protected readonly _files = new Map<string, File>();
+  protected readonly _files = new Map<string, BlockingWebFile>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) {}
+  constructor(public readonly path: string) { }
 
   public get size() {
     return this._files.size;
   }
 
-  private _getFiles(path: string): Map<string, File> {
+  private _getFiles(path: string): Map<string, BlockingWebFile> {
     const fullName = this._getFullFilename(this.path, path);
     return new Map(
       [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true),
@@ -76,6 +76,9 @@ export class WebFS implements Storage {
       (path) => this._list(path),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
+      async () => {
+        await Promise.all(Array.from(this._getFiles(sub).values()).map(async (file) => file.flush()))
+      }
     );
   }
 
@@ -91,7 +94,7 @@ export class WebFS implements Storage {
   }
 
   private _createFile(fullName: string) {
-    return new WebFile({
+    return new BlockingWebFile({
       fileName: fullName,
       file: this._initialize().then((root) => root.getFileHandle(fullName, { create: true })),
       destroy: async () => {
@@ -162,7 +165,7 @@ export class WebFS implements Storage {
 
 // TODO(mykola): Remove EventEmitter.
 @trace.resource()
-export class WebFile extends EventEmitter implements File {
+export class BlockingWebFile extends EventEmitter implements File {
   readonly opened: boolean = true;
   readonly suspended: boolean = false;
   readonly closed: boolean = false;
@@ -177,6 +180,7 @@ export class WebFile extends EventEmitter implements File {
   private readonly _fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
+  private readonly _syncAccessHandle: Promise<FileSystemSyncAccessHandle>;
   private readonly _destroy: () => Promise<void>;
 
   @trace.metricsCounter()
@@ -209,6 +213,7 @@ export class WebFile extends EventEmitter implements File {
     super();
     this._fileName = fileName;
     this._fileHandle = file;
+    this._syncAccessHandle = file.then((f) => f.createSyncAccessHandle());
     this._destroy = destroy;
   }
 
@@ -226,46 +231,50 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
+
   @synchronized
   async read(offset: number, size: number) {
-    const span = this._usage.beginRecording();
-    this._operations.inc();
-    this._reads.inc();
-    this._readBytes.inc(size);
+    // const span = this._usage.beginRecording();
+    // this._operations.inc();
+    // this._reads.inc();
+    // this._readBytes.inc(size);
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
-    try {
-      const fileHandle: any = await this._fileHandle;
-      const file = await fileHandle.getFile();
-      if (offset + size > file.size) {
-        throw new Error('Read out of bounds');
-      }
-      // does not copy the buffer
-      return Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
-    } finally {
-      span.end();
-      metric.end();
-    }
+    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
+    // try {
+
+    const buffer = Buffer.alloc(size);
+    const handle = await this._syncAccessHandle;
+    const bytesRead = handle.read(buffer, { at: offset });
+    return Buffer.from(buffer.buffer, buffer.byteOffset, bytesRead)
+
+    // } finally {
+    //   span.end();
+    //   metric.end();
+    // }
   }
+
 
   @synchronized
   async write(offset: number, data: Buffer) {
-    const span = this._usage.beginRecording();
-    this._operations.inc();
-    this._writes.inc();
-    this._writeBytes.inc(data.length);
+    // const span = this._usage.beginRecording();
+    // this._operations.inc();
+    // this._writes.inc();
+    // this._writeBytes.inc(data.length);
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
-    try {
-      // TODO(mykola): Fix types.
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      await writable.write({ type: 'write', data, position: offset });
-      await writable.close();
-    } finally {
-      span.end();
-      metric.end();
-    }
+    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
+    // try {
+    // TODO(mykola): Fix types
+
+    const handle = await this._syncAccessHandle;
+    handle.write(data, { at: offset });
+
+    // TODO(dmaretskyi): Do we flush after every write?
+    // await handle.flush();
+
+    // } finally {
+    //   span.end();
+    //   metric.end();
+    // }
   }
 
   @synchronized
@@ -332,11 +341,33 @@ export class WebFile extends EventEmitter implements File {
     }
   }
 
-  async close(): Promise<void> {}
+  async flush() {
+    const handle = await this._syncAccessHandle;
+    await handle.flush();
+  }
+
+  async close(): Promise<void> {
+    try {
+      const handle = await this._syncAccessHandle;
+      await handle.flush();
+      await handle.close();
+    } catch {
+      // ignore
+    }
+  }
 
   @synchronized
   async destroy() {
     this.destroyed = true;
-    return await this._destroy();
+
+    try {
+      const handle = await this._syncAccessHandle;
+      await handle.flush();
+      await handle.close();
+    } catch {
+      // ignore
+    }
+
+    await this._destroy();
   }
 }

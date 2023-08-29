@@ -12,6 +12,7 @@ export enum StorageType {
   FIREFOX = 'firefox',
   NODE = 'node',
   WEBFS = 'webfs',
+  WEBFS_BLOCKING = 'webfs-blocking',
 }
 
 export type DiskInfo = {
