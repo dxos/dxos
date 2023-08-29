@@ -15,7 +15,7 @@ export const seed = (seed: number) => faker.seed(seed);
 //
 
 export const createNode = (type: string = undefined): TestNode => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   type,
   label: faker.lorem.words(3).replace(/ /g, '-'),
 });

@@ -46,7 +46,9 @@ export default defineConfig({
   plugins: [
     // mkcert(),
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
+      env: [
+        'DX_DEBUG', 'DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'
+      ],
     }),
     ThemePlugin({
       root: __dirname,
@@ -56,6 +58,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-chess/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-debug/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-drawing/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-grid/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-space/dist/lib/**/*.mjs'),

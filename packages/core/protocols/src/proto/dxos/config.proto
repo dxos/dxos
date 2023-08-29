@@ -120,16 +120,8 @@ message Runtime {
     optional int32 invitation_expiration = 5;
 
     /// Location of the remote client host.
-    // TODO(burdon): Rename.
+    // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop vault.html).
     optional string remote_source = 6;
-
-    enum ClientServiceType {
-      DEFAULT = 0;
-      LOCAL = 1;
-      IFRAME = 2;
-    }
-
-    optional ClientServiceType client_services = 7;
   }
 
   message App {

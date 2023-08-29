@@ -528,6 +528,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
@@ -572,6 +573,7 @@ importers:
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
@@ -642,8 +644,10 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
@@ -652,8 +656,10 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/echo-signals': link:../../../core/echo/echo-signals
+      '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -680,6 +686,7 @@ importers:
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -694,6 +701,7 @@ importers:
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-json-tree: ^0.18.0
       react-syntax-highlighter: ^15.5.0
       vite: ^4.3.9
     dependencies:
@@ -705,12 +713,14 @@ importers:
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       '@faker-js/faker': 8.0.2
       date-fns: 2.29.3
       lodash.get: 4.4.2
+      react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
       react-syntax-highlighter: 15.5.0_react@18.2.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -1223,21 +1233,29 @@ importers:
 
   packages/apps/plugins/plugin-pwa:
     specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/sentry': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
       react: ^18.2.0
+      react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/log': link:../../../common/log
-      '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/sentry': link:../../../common/sentry
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-space:
@@ -1554,6 +1572,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      date-fns: ^2.29.3
       deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
@@ -1567,6 +1586,7 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      date-fns: 2.29.3
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
@@ -1890,6 +1910,8 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
+      '@types/lodash.defaultsdeep': ^4.6.6
+      lodash.defaultsdeep: ^4.6.1
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
     dependencies:
@@ -1906,10 +1928,13 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
+      lodash.defaultsdeep: 4.6.1
       random-access-storage: 3.0.0
       streamx: 2.12.5
     optionalDependencies:
       '@faker-js/faker': 8.0.2
+    devDependencies:
+      '@types/lodash.defaultsdeep': 4.6.7
 
   packages/common/hypercore:
     specifiers:
@@ -2017,11 +2042,15 @@ importers:
       '@swc/core': 1.3.70
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.omit': ^4.5.7
+      '@types/lodash.pick': ^4.4.7
       '@types/lodash.pickby': ^4.6.7
       '@types/node': ^18.11.9
       chalk: ^4.1.0
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
+      lodash.omit: ^4.5.0
+      lodash.pick: ^4.4.0
       lodash.pickby: ^4.6.0
       pirates: ~4.0.5
       sorcery: ^0.10.0
@@ -2032,12 +2061,16 @@ importers:
       chalk: 4.1.2
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+      lodash.pick: 4.4.0
       lodash.pickby: 4.6.0
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.3.70
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.omit': 4.5.7
+      '@types/lodash.pick': 4.4.7
       '@types/lodash.pickby': 4.6.7
       '@types/node': 18.11.9
       pirates: 4.0.5
@@ -3290,6 +3323,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
@@ -3345,6 +3379,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': link:../../experimental/gem-core
@@ -5477,8 +5512,9 @@ importers:
       '@dxos/log': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
-    devDependencies:
+    dependencies:
       '@dxos/log': link:../../common/log
+    devDependencies:
       '@types/react': 18.0.21
       react: 18.2.0
 
@@ -22011,7 +22047,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -24126,8 +24162,8 @@ packages:
       '@types/sass': 1.43.1
       '@types/stylus': 0.48.38
       glob: 8.1.0
-      postcss: 8.4.24
-      postcss-modules: 4.3.1_postcss@8.4.24
+      postcss: 8.4.21
+      postcss-modules: 4.3.1_postcss@8.4.21
     dev: false
 
   /esbuild-sunos-64/0.14.54:
@@ -27197,13 +27233,13 @@ packages:
     resolution: {integrity: sha512-chIaY3Vh2mh2Q3RGXttaDIzeiPvaVXJ+C4DAh/w3c37SKZ/U6PGMmuicR2EQQp9bKG8zLMCl7I+PtIoOOPp8Gg==}
     dev: false
 
-  /icss-utils/5.1.0_postcss@8.4.24:
+  /icss-utils/5.1.0_postcss@8.4.21:
     resolution: {integrity: sha512-soFhflCVWLfRNOPU3iv5Z9VUdT44xFRbzjLsEzSr5AQmgqPMTHdU3PMT1Cf1ssx8fLNJDA1juftYl+PUcv3MqA==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.24
+      postcss: 8.4.21
     dev: false
 
   /idb/7.1.1:
@@ -33871,48 +33907,48 @@ packages:
       postcss: 8.4.24
       yaml: 2.2.2
 
-  /postcss-modules-extract-imports/3.0.0_postcss@8.4.24:
+  /postcss-modules-extract-imports/3.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-bdHleFnP3kZ4NYDhuGlVK+CMrQ/pqUm8bx/oGL93K6gVwiclvX5x0n76fYMKuIGKzlABOy13zsvqjb0f92TEXw==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.24
+      postcss: 8.4.21
     dev: false
 
-  /postcss-modules-local-by-default/4.0.0_postcss@8.4.24:
+  /postcss-modules-local-by-default/4.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-sT7ihtmGSF9yhm6ggikHdV0hlziDTX7oFoXtuVWeDd3hHObNkcHRo9V3yg7vCAY7cONyxJC/XXCmmiHHcvX7bQ==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      icss-utils: 5.1.0_postcss@8.4.24
-      postcss: 8.4.24
+      icss-utils: 5.1.0_postcss@8.4.21
+      postcss: 8.4.21
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
     dev: false
 
-  /postcss-modules-scope/3.0.0_postcss@8.4.24:
+  /postcss-modules-scope/3.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-hncihwFA2yPath8oZ15PZqvWGkWf+XUfQgUGamS4LqoP1anQLOsOJw0vr7J7IwLpoY9fatA2qiGUGmuZL0Iqlg==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.24
+      postcss: 8.4.21
       postcss-selector-parser: 6.0.11
     dev: false
 
-  /postcss-modules-values/4.0.0_postcss@8.4.24:
+  /postcss-modules-values/4.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-RDxHkAiEGI78gS2ofyvCsu7iycRv7oqw5xMWn9iMoR0N/7mf9D50ecQqUo5BZ9Zh2vH4bCUR/ktCqbB9m8vJjQ==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      icss-utils: 5.1.0_postcss@8.4.24
-      postcss: 8.4.24
+      icss-utils: 5.1.0_postcss@8.4.21
+      postcss: 8.4.21
     dev: false
 
-  /postcss-modules/4.3.1_postcss@8.4.24:
+  /postcss-modules/4.3.1_postcss@8.4.21:
     resolution: {integrity: sha512-ItUhSUxBBdNamkT3KzIZwYNNRFKmkJrofvC2nWab3CPKhYBQ1f27XXh1PAPE27Psx58jeelPsxWB/+og+KEH0Q==}
     peerDependencies:
       postcss: ^8.0.0
@@ -33920,11 +33956,11 @@ packages:
       generic-names: 4.0.0
       icss-replace-symbols: 1.1.0
       lodash.camelcase: 4.3.0
-      postcss: 8.4.24
-      postcss-modules-extract-imports: 3.0.0_postcss@8.4.24
-      postcss-modules-local-by-default: 4.0.0_postcss@8.4.24
-      postcss-modules-scope: 3.0.0_postcss@8.4.24
-      postcss-modules-values: 4.0.0_postcss@8.4.24
+      postcss: 8.4.21
+      postcss-modules-extract-imports: 3.0.0_postcss@8.4.21
+      postcss-modules-local-by-default: 4.0.0_postcss@8.4.21
+      postcss-modules-scope: 3.0.0_postcss@8.4.21
+      postcss-modules-values: 4.0.0_postcss@8.4.21
       string-hash: 1.1.3
     dev: false
 

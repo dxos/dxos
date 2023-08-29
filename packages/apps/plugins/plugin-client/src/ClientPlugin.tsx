@@ -4,8 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { log } from '@dxos/log';
 import {
   Client,
   ClientContext,
@@ -28,8 +30,10 @@ const handleInvalidatedInvitationCode = (code: string) => {
   }
 };
 
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
+
 export const ClientPlugin = (
-  options: ClientOptions = { config: new Config(Envs(), Local(), Defaults()) },
+  options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
   registerSignalFactory();
   const client = new Client(options);
@@ -38,13 +42,33 @@ export const ClientPlugin = (
     meta: {
       id: 'dxos.org/plugin/client',
     },
-    init: async () => {
+    initialize: async () => {
       let firstRun = false;
       await client.initialize();
       const searchParams = new URLSearchParams(location.search);
       if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
         firstRun = true;
         await client.halo.createIdentity();
+      }
+
+      // Debugging (e.g., for monolithic mode).
+      if (options.debugIdentity) {
+        if (!client.halo.identity.get()) {
+          await client.halo.createIdentity();
+        }
+
+        // Handle initial connection (assumes no PIN).
+        const searchParams = new URLSearchParams(window.location.search);
+        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+        if (spaceInvitationCode) {
+          setTimeout(() => {
+            // TODO(burdon): Unsubscribe.
+            const observer = client.acceptInvitation(InvitationEncoder.decode(spaceInvitationCode));
+            observer.subscribe(({ state }) => {
+              log.info('invitation', { state });
+            });
+          }, 2000);
+        }
       }
 
       return {

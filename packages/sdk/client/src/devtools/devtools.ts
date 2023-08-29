@@ -5,6 +5,7 @@
 import { type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
 import { DocumentModel, DocumentModelState } from '@dxos/document-model';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
@@ -117,7 +118,7 @@ const getSpaceName = (space: DataSpace): string => {
     const propertiesItem = space.dataPipeline.itemManager.items.find(
       (item) =>
         item.modelMeta?.type === DocumentModel.meta.type &&
-        (item.state as DocumentModelState)?.type === 'dxos.sdk.client.Properties',
+        (item.state as DocumentModelState)?.type === TYPE_PROPERTIES,
     );
 
     const state = propertiesItem?.state as DocumentModelState;

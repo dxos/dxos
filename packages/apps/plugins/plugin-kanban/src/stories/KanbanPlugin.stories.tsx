@@ -9,7 +9,7 @@ import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { mx } from '@dxos/aurora-theme';
-import { PluginContextProvider, Surface } from '@dxos/react-surface';
+import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import '@dxosTheme';
 
@@ -44,9 +44,7 @@ const KanbanPluginStoryPlugin = () => ({
   },
 });
 
-const KanbanSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()]} />
-);
+const KanbanSurfacesApp = () => <PluginProvider plugins={[ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()]} />;
 
 export default {
   component: KanbanSurfacesApp,

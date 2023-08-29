@@ -3,9 +3,10 @@
 //
 
 export {
+  DEFAULT_VAULT_ORIGIN,
+  DEFAULT_VAULT_URL,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_ORIGIN,
   type ShellRuntime,
 } from '@dxos/client-protocol';
 export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -17,6 +18,7 @@ export {
 } from '@dxos/protocols/proto/dxos/iframe';
 
 export { getUnixSocket, fromAgent, FromAgentOptions, AgentClientServiceProvider } from './agent';
+export { createClientServices, Remote } from './client-services-factory';
 export { IFrameClientServicesHost, IFrameClientServicesHostOptions } from './iframe-service-host';
 export { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 export { LocalClientServices } from './local-client-services';
