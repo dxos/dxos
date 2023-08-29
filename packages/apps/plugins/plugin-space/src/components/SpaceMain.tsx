@@ -15,6 +15,7 @@ export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
 
 export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
+  const identity = useIdentity();
   const [parentNode, childNode] =
     data &&
     typeof data === 'object' &&
@@ -24,7 +25,6 @@ export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
     isGraphNode(data.active[1])
       ? [data.active[0], data.active[1]]
       : [];
-  const identity = useIdentity();
 
   // TODO(wittjosiah): Factor out.
   const textModel = useTextModel({

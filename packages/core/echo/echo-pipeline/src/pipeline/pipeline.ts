@@ -386,19 +386,19 @@ export class Pipeline implements PipelineAccessor {
   }
 
   private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
-    let handle = this._downloads.get(feed); // TODO(burdon): Always undefined.
+    let handle = this._downloads.get(feed); // TODO(burdon): Always undefined?
     if (handle) {
       feed.undownload(handle);
     }
 
     const timeframe = this._state._startTimeframe;
     const seq = timeframe.get(feed.key) ?? -1;
-    log.info('download', { feed: feed.key.truncate(), seq, length: feed.length });
+    log('download', { feed: feed.key.truncate(), seq, length: feed.length });
     handle = feed.download({ start: seq + 1, linear: true }, (err: any, data: any) => {
       if (err) {
-        // log.error(err); // TODO(burdon): Feed is closed.
+        // log.warn(err); // TODO(burdon): Feed is closed/Download was cancelled.
       } else {
-        log.info('data', data); // TODO(burdon): Never called.
+        log.info('downloaded', { data }); // TODO(burdon): Never called.
       }
     });
 
