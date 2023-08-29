@@ -8,7 +8,6 @@ import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
@@ -57,24 +56,26 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
       disabled,
       error,
       index,
-      // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
-      onChildrenRearrange: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
-        log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
-        if (child.data) {
-          // TODO(burdon): Decouple from object's data structure.
+      onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
+        // TODO(burdon): Decouple from object's data structure.
+        child.data.meta = {
+          ...child.data?.meta,
+          index: nextIndex,
+        };
+      },
+      acceptMigrationClass: new Set(['spaceObject']),
+      onMigrateChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        if (child.parent?.id === id) {
+          // remove child from this space
+          space.db.remove(child.data);
+        } else if (nextParent.id === id) {
+          // add child to this space
           child.data.meta = {
             ...child.data?.meta,
             index: nextIndex,
           };
+          space.db.add(child.data);
         }
-      },
-      onMoveNode: (
-        source: Graph.Node<TypedObject>,
-        target: Graph.Node<TypedObject>,
-        child: Graph.Node<TypedObject>,
-        nextIndex: Index,
-      ) => {
-        log.info('onParentMove', { source: source.id, target: target.id, child: child.id, nextIndex });
       },
     },
   });
