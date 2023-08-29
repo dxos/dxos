@@ -289,7 +289,7 @@ export class DatabaseProxy {
 
     this._service
       .write({
-        batch: batch.data,
+        batch: this._itemManager.mergeMutations(batch.data),
         spaceKey: this._spaceKey,
         clientTag: batch.clientTag!,
       })
