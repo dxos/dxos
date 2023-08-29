@@ -10,4 +10,3 @@ export * from './EmptyTree';
 export * from './SpaceMain';
 export * from './SpaceMainEmpty';
 export * from './SpacePresence';
-export * from './SpaceStatus';
