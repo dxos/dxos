@@ -20,7 +20,7 @@ import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { BitField } from '@dxos/util';
 
-import { BitfieldDisplay, JsonView, PanelContainer } from '../../../components';
+import { Bitbar, JsonView, PanelContainer } from '../../../components';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -266,9 +266,10 @@ export const StoragePanel = () => {
           {selectedValue.kind === 'blob' && (
             <>
               <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-              <BitfieldDisplay
+              <Bitbar
                 value={selectedValue.blob.bitfield ?? new Uint8Array()}
                 length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+                className='m-2'
               />
               <JsonView data={selectedValue.blob} />
             </>
@@ -276,9 +277,10 @@ export const StoragePanel = () => {
 
           {selectedValue.kind === 'feed' && (
             <>
-              <BitfieldDisplay
+              <Bitbar
                 value={selectedValue.feed.downloaded ?? new Uint8Array()}
                 length={Math.ceil(selectedValue.feed.length ?? 0)}
+                className='m-2'
               />
               <JsonView data={selectedValue.feed} />
             </>
