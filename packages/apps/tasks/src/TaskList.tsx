@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -13,9 +13,30 @@ import { Task } from './proto';
 export const TaskList = () => {
   const spaces = useSpaces({ all: true });
 
+<<<<<<< HEAD
   // Possible API for finding or creating a space
   // const spaceName = new URLSearchParams(window.location.search).get('spaceKey');
   // const space = useSpace({ name: spaceName, create: true });
+=======
+  const client = useClient();
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get('spaceInviteCode');
+    if (code) {
+      const receivedInvitation = InvitationEncoder.decode(code);
+      const invitationObservable = client.acceptInvitation(receivedInvitation);
+      invitationObservable.subscribe((invitation) => {
+        if (invitation.state === Invitation.State.SUCCESS) {
+          setSpaceKey(invitation.spaceKey);
+        }
+        searchParams.delete('spaceInviteCode');
+        window.location.search = searchParams.toString();
+      });
+    }
+  }, []);
+
+  const space = useSpace(spaceKey);
+>>>>>>> d0b89ecfd (Skip the shell panel when creating invites)
 
   const specialSpace = spaces.find((s) => s.properties.name === 'specialSpace');
   const [space, setSpace] = useState<Space | undefined>(specialSpace);
@@ -89,11 +110,16 @@ export const TaskList = () => {
   return (
     <div className='p-2'>
       <button
+<<<<<<< HEAD
         className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+=======
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
+>>>>>>> d0b89ecfd (Skip the shell panel when creating invites)
         onClick={async () => {
           if (!space) {
             return;
           }
+<<<<<<< HEAD
 
           const invitationObservable = space.share({ authMethod: Invitation.AuthMethod.NONE });
           const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
@@ -101,6 +127,14 @@ export const TaskList = () => {
           const currentUrl = new URL(location.href);
           const inviteUrl = `${currentUrl}?spaceInviteCode=${encodedInvitation}`;
           // Copy the invite URL to the clipboard
+=======
+          const invitationObservable = space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+          const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
+          // get the current URL from the window
+          const currentUrl = new URL(window.location.href);
+          const inviteUrl = `${currentUrl}?spaceInviteCode=${encodedInvitation}`;
+          // copy the invite URL to the clipboard
+>>>>>>> d0b89ecfd (Skip the shell panel when creating invites)
           await navigator.clipboard.writeText(inviteUrl);
         }}
       >
