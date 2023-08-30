@@ -66,25 +66,20 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
       },
       acceptMigrationClass: new Set(['spaceObject']),
       onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
-        console.log('[migrate child start]', id, child.parent?.id, nextParent.id, nextIndex);
-        const object = clone(child.data);
-        if (nextParent.id === id) {
-          // add child to this space
-          object.meta = {
-            ...child.data?.meta,
-            index: nextIndex,
-          };
-          space.db.add(object);
-          console.log('[added child to space]', child.data.id, object.id);
-        }
+        // create clone of child and add to migration destination
+        const object = clone(child.data, {
+          retainId: true,
+          additional: child.data.content ? [child.data.content] : [],
+        });
+        object.meta = {
+          ...child.data?.meta,
+          index: nextIndex,
+        };
+        space.db.add(object);
       },
       onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
-        console.log('[migrate child end]', id, child.parent?.id);
-        if (child.parent?.id === id) {
-          // remove child from this space
-          space.db.remove(child.data);
-          console.log('[removed child from space]', child.data.id);
-        }
+        // remove child being replicated from migration origin
+        space.db.remove(child.data);
       },
     },
   });
