@@ -121,7 +121,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
       setOverIsDroppable(dropType);
       setItemsInOrder((itemsCurrent) => {
         const overNode: Graph.Node = over?.data?.current?.treeitem;
-        const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode.id);
+        const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode?.id);
         switch (dropType) {
           case 'migrate-origin':
             return itemsCurrent.filter(({ id }) => id !== activeNode?.id);

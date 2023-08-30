@@ -65,16 +65,19 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
       },
       acceptMigrationClass: new Set(['spaceObject']),
       onMigrateChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        console.log('[migrate child]', id, child.parent?.id, nextParent.id, nextIndex);
         if (child.parent?.id === id) {
           // remove child from this space
-          space.db.remove(child.data);
+          const result = space.db.remove(child.data);
+          console.log('[removed child from space]', result, child.data.id);
         } else if (nextParent.id === id) {
           // add child to this space
           child.data.meta = {
             ...child.data?.meta,
             index: nextIndex,
           };
-          space.db.add(child.data);
+          const result = space.db.add(child.data);
+          console.log('[added child to space]', result.id, child.data.id);
         }
       },
     },
