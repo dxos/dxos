@@ -7,6 +7,7 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
+import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
@@ -64,20 +65,25 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
         };
       },
       acceptMigrationClass: new Set(['spaceObject']),
-      onMigrateChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
-        console.log('[migrate child]', id, child.parent?.id, nextParent.id, nextIndex);
-        if (child.parent?.id === id) {
-          // remove child from this space
-          const result = space.db.remove(child.data);
-          console.log('[removed child from space]', result, child.data.id);
-        } else if (nextParent.id === id) {
+      onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        console.log('[migrate child start]', id, child.parent?.id, nextParent.id, nextIndex);
+        const object = clone(child.data);
+        if (nextParent.id === id) {
           // add child to this space
-          child.data.meta = {
+          object.meta = {
             ...child.data?.meta,
             index: nextIndex,
           };
-          const result = space.db.add(child.data);
-          console.log('[added child to space]', result.id, child.data.id);
+          space.db.add(object);
+          console.log('[added child to space]', child.data.id, object.id);
+        }
+      },
+      onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
+        console.log('[migrate child end]', id, child.parent?.id);
+        if (child.parent?.id === id) {
+          // remove child from this space
+          space.db.remove(child.data);
+          console.log('[removed child from space]', child.data.id);
         }
       },
     },

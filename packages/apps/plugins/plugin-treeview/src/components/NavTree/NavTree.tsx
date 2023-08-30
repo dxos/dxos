@@ -69,7 +69,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
         } else if (overIsDroppable === 'migrate-destination') {
           console.log('[drag end]', 'migrate');
           dnd.overlayDropAnimation = 'into';
-          if (overNode.parent?.properties.onMigrateChild && activeNode.parent?.properties.onMigrateChild) {
+          if (overNode.parent?.properties.onMigrateStartChild && activeNode.parent?.properties.onMigrateEndChild) {
             const overSiblings = overNode.parent?.children.sort(sortByIndex);
             const overIndex = overSiblings.findIndex(({ id }) => id === overNode.id);
             const migratedIndex =
@@ -79,8 +79,8 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
                     overSiblings[overIndex - 1].properties.index,
                     overSiblings[overIndex].properties.index,
                   );
-            overNode.parent?.properties.onMigrateChild(activeNode, overNode.parent, migratedIndex);
-            activeNode.parent?.properties.onMigrateChild(activeNode, overNode.parent, migratedIndex);
+            overNode.parent?.properties.onMigrateStartChild(activeNode, overNode.parent, migratedIndex);
+            activeNode.parent?.properties.onMigrateEndChild(activeNode);
           }
           setItemsInOrder(parent.children.sort(sortByIndex));
         } else if (overIsDroppable === 'migrate-origin') {
