@@ -158,6 +158,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
           node={item}
           level={level}
           rearranging={overIsDroppable === 'rearrange' && activeNode?.id === item.id}
+          isPreview={item.properties?.isPreview}
         />
       ))}
     </SortableContext>
