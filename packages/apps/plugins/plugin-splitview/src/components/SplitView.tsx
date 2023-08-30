@@ -29,6 +29,9 @@ export const SplitView = () => {
         }
       }}
     >
+      <div role='none' className='sr-only'>
+        <Surface name='documentTitle' limit={1} />
+      </div>
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
@@ -103,14 +106,14 @@ export const SplitView = () => {
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
-            sideOffset={4}
-            collisionPadding={8}
             onEscapeKeyDown={() => {
               context.popoverOpen = false;
               context.popoverAnchorId = undefined;
             }}
           >
-            <Surface role='popover' data={popoverContent} />
+            <Popover.Viewport>
+              <Surface role='popover' data={popoverContent} />
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>

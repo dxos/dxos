@@ -18,7 +18,7 @@ import {
   StackModel,
   StackProperties,
 } from '../types';
-import { StackSectionsPanel } from './StackSectionsPanel';
+import { StackSectionsSortable } from './StackSectionsSortable';
 
 export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
@@ -34,7 +34,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
 
   return (
     <Main.Content bounce classNames={coarseBlockPaddingStart}>
-      <StackSectionsPanel sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+      <StackSectionsSortable sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
@@ -46,23 +46,25 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
-              {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={async () => {
-                      const { object: nextSection } = await sendIntent(intent);
-                      handleAdd(nextSection, stack.sections.length);
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
+              <DropdownMenu.Viewport>
+                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={async () => {
+                        const { object: nextSection } = await sendIntent(intent);
+                        handleAdd(nextSection, stack.sections.length);
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </ButtonGroup>

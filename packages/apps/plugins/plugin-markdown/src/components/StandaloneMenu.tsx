@@ -31,7 +31,9 @@ export const StandaloneMenu = ({
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={8} classNames='z-10'>
-          <Surface data={[model, properties, editorRef]} role='menuitem' />
+          <DropdownMenu.Viewport>
+            <Surface data={[model, properties, editorRef]} role='menuitem' />
+          </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
