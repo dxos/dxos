@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
-import { latch } from '@dxos/async';
+import { latch, sleep, Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -13,12 +13,14 @@ import { describe, test } from '@dxos/test';
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-const noop = () => {};
+const noop = () => { };
 
 describe('Replication', () => {
-  const factory1 = new HypercoreFactory();
-  const factory2 = new HypercoreFactory();
+  const storage = createStorage({ type: StorageType.WEBFS, root: 'x' })
+  const factory1 = new HypercoreFactory(storage.createDirectory('one'));
+  const factory2 = new HypercoreFactory(storage.createDirectory('two'));
 
   test('replicates feeds', async () => {
     const { publicKey, secretKey } = createKeyPair();
@@ -239,4 +241,117 @@ describe('Replication', () => {
 
     await done();
   }).timeout(5_000);
+
+  test.only('replication bench', async () => {
+    const numBlocks = 10_000;
+    const maxRequests = 1024;
+    const sparse = true;
+    const eagerUpdate = false;
+    const linear = true;
+
+    const { publicKey, secretKey } = createKeyPair();
+
+    const core1 = factory1.createFeed(publicKey, { secretKey, writable: true, sparse, eagerUpdate });
+    core1.on('error', err => {
+      console.error(err);
+    })
+    // console.log('create')
+    // await new Promise((resolve, reject) => core1.open(err => err ? reject(err) : resolve));
+    // console.log('OPENED')
+
+
+    // Write.
+    console.log('begin append')
+    for (let i = 0; i < numBlocks; i++) {
+      await new Promise(resolve => core1.append(`test-${i}`, resolve));
+    }
+    console.log('end append')
+
+    console.log('begin wait')
+    await sleep(5_000);
+    console.log('end wait')
+
+
+    const core2 = factory2.createFeed(publicKey, { sparse, eagerUpdate });
+    core2.on('error', err => {
+      console.error(err);
+    })
+    // await new Promise(resolve => core2.open(resolve));
+
+
+    const begin = performance.now();
+
+    const done = new Trigger();
+    const range = core2.download({ start: 0, end: core1.length, linear }, () => done.wake());
+
+
+    // Replicate.
+    {
+      console.log("begin replication")
+      const reporter = setInterval(() => {
+        console.log(core2.stats)
+      }, 1000)
+
+      // console.log("BEGIN replication")
+      const stream1 = core1.replicate(true, {
+        live: true, noise: false,
+        encrypted: false,
+        maxRequests
+      });
+      const stream2 = core2.replicate(false, {
+        live: true, noise: false,
+        encrypted: false,
+        maxRequests
+      });
+
+
+      const onClose = err => {
+        console.log('onclose')
+        if (err && !err.message.includes('Writable stream closed prematurely')) {
+          console.error(err)
+        }
+      }
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+      // expect(core1.stats.peers).to.have.lengthOf(1);
+      // expect(core2.stats.peers).to.have.lengthOf(1);
+
+      // Wait for complete sync.
+      core2.on('sync', () => {
+        // console.log('SYNC')
+        // stream1.end();
+        // stream2.end();
+      });
+
+
+
+      await done.wait();
+      // await streamsClosed();
+
+      clearInterval(reporter)
+      console.log(await core2.stats)
+    }
+
+    const end = performance.now();
+    log.info('time', {
+      timeMs: end - begin,
+      numBlocks, maxRequests, storage: storage.type, sparse, eagerUpdate, linear
+    });
+
+    expect(await core2.has(0, numBlocks)).to.eq(true)
+
+    // Close.
+    {
+      const [closed, close] = latch({ count: 2 });
+      core1.on('close', close);
+      core2.on('close', close);
+      core1.close();
+      core2.close();
+      await closed();
+    }
+
+    // expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+    // expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+  }).timeout(500_000);
+
 });

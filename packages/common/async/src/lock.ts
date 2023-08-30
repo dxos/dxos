@@ -78,7 +78,7 @@ interface LockableClass {
   [classLockSymbol]?: Lock;
 }
 
-const IN_TEST = (globalThis as any).mochaExecutor;
+const IN_TEST = false; // (globalThis as any).mochaExecutor;
 
 /**
  * Same as `synchronized` in Java.
@@ -91,7 +91,7 @@ export const synchronized = (
   descriptor: TypedPropertyDescriptor<(...args: any) => any>,
 ) => {
   const method = descriptor.value!;
-  descriptor.value = async function (this: any & LockableClass, ...args: any) {
+  descriptor.value = async function synchronizedMethod(this: any & LockableClass, ...args: any) {
     const lock: Lock = (this[classLockSymbol] ??= new Lock());
 
     const tag = `${target.constructor.name}.${propertyName}`;

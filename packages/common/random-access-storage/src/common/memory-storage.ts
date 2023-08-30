@@ -9,6 +9,7 @@ import { arrayToBuffer } from '@dxos/util';
 
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
+import { log } from '@dxos/log';
 
 /**
  * Storage interface implementation for RAM.
@@ -18,6 +19,7 @@ export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
   protected override _createFile(path: string, filename: string): RandomAccessStorage {
+    log.info('create', { path, filename, type: this.type })
     return this._patchFile(ram());
   }
 

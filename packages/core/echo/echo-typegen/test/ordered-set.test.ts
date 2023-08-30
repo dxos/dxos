@@ -72,7 +72,6 @@ describe('ordered-set', () => {
 
     expect(root.records).to.have.length(1);
 
-    // debugger;
     root.records = [];
     expect(root.records).to.have.length(0);
     await db.flush();

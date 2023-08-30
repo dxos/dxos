@@ -6,10 +6,11 @@ import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
 
-import { synchronized } from '@dxos/async';
+import { DeferredTask, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
+import { Context } from '@dxos/context';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 import { STORAGE_MONITOR } from '../monitor';
@@ -226,47 +227,90 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
-  @synchronized
-  async write(offset: number, data: Buffer) {
-    const span = this._usage.beginRecording();
-    this._operations.inc();
-    this._writes.inc();
-    this._writeBytes.inc(data.length);
+  _cache: Uint8Array | null = null;
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
-    try {
-      // TODO(mykola): Fix types.
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      await writable.write({ type: 'write', data, position: offset });
-      await writable.close();
-    } finally {
-      span.end();
-      metric.end();
-    }
+  private async _loadCache() {
+    const fileHandle: any = await this._fileHandle;
+    const file = await fileHandle.getFile();
+    this._cache = new Uint8Array(await file.arrayBuffer());
+    // this._cache = new Uint8Array();
+  }
+
+  private async _flushCache() {
+    invariant(this._cache);
+
+    const fileHandle: any = await this._fileHandle;
+    const writable = await fileHandle.createWritable({ keepExistingData: true });
+    await writable.write({ type: 'write', data: this._cache, position: 0 });
+    await writable.close();
+  }
+
+  private _flushCtx = new Context()
+  private _flushTask = new DeferredTask(this._flushCtx, async () => {
+    await this._flushCache().catch((err) => log.warn('flush fail', { err }));
+  });
+
+  private _flushLater() {
+    this._flushTask.schedule();
   }
 
   @synchronized
   async read(offset: number, size: number) {
-    const span = this._usage.beginRecording();
-    this._operations.inc();
-    this._reads.inc();
-    this._readBytes.inc(size);
+    // const span = this._usage.beginRecording();
+    // this._operations.inc();
+    // this._reads.inc();
+    // this._readBytes.inc(size);
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
-    try {
-      const fileHandle: any = await this._fileHandle;
-      const file = await fileHandle.getFile();
-      if (offset + size > file.size) {
+    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
+    // try {
+      if(!this._cache) {
+        await this._loadCache();
+        invariant(this._cache);
+      }
+
+      if (offset + size > this._cache.length) {
         throw new Error('Read out of bounds');
       }
-      // does not copy the buffer
-      return Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
-    } finally {
-      span.end();
-      metric.end();
-    }
+
+      return Buffer.from(this._cache.slice(offset, offset + size));
+    // } finally {
+    //   span.end();
+    //   metric.end();
+    // }
   }
+
+  @synchronized
+  async write(offset: number, data: Buffer) {
+    // const span = this._usage.beginRecording();
+    // this._operations.inc();
+    // this._writes.inc();
+    // this._writeBytes.inc(data.length);
+
+    // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
+    // try {
+      if(!this._cache) {
+        await this._loadCache();
+        invariant(this._cache);
+      }
+
+      if(offset + data.length <= this._cache.length) {
+        this._cache.set(data, offset);
+      } else {
+        // TODO(dmaretskyi): Optimize re-allocations.
+        const newCache = new Uint8Array(offset + data.length);
+        newCache.set(this._cache);
+        newCache.set(data, offset);
+        this._cache = newCache;
+      }
+
+      this._flushLater();
+
+    // } finally {
+    //   span.end();
+    //   metric.end();
+    // }
+  }
+
 
   @synchronized
   async del(offset: number, size: number) {
@@ -278,19 +322,21 @@ export class WebFile extends EventEmitter implements File {
       if (offset < 0 || size < 0) {
         return;
       }
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      const file = await fileHandle.getFile();
-      let leftoverSize = 0;
-      if (offset + size < file.size) {
-        // does not copy the buffer
-        const leftover = Buffer.from(await file.slice(offset + size, file.size).arrayBuffer());
-        leftoverSize = leftover.length;
-        await writable.write({ type: 'write', data: leftover, position: offset });
+
+      if(!this._cache) {
+        await this._loadCache();
+        invariant(this._cache);
       }
 
-      await writable.write({ type: 'truncate', size: offset + leftoverSize });
-      await writable.close();
+      let leftoverSize = 0;
+      if (offset + size < this._cache.length) {
+        leftoverSize = this._cache.length - (offset + size);
+        this._cache.set(this._cache.slice(offset + size, offset + size + leftoverSize), offset);
+      } 
+
+      this._cache = this._cache.slice(0, offset + leftoverSize);
+
+      this._flushLater();
     } finally {
       span.end();
       metric.end();
@@ -304,6 +350,12 @@ export class WebFile extends EventEmitter implements File {
 
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
     try {
+      if(this._cache) {
+        return {
+          size: this._cache.length,
+        }
+      }
+
       const fileHandle: any = await this._fileHandle;
       const file = await fileHandle.getFile();
       return {
@@ -322,17 +374,24 @@ export class WebFile extends EventEmitter implements File {
 
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
-      const fileHandle: any = await this._fileHandle;
-      const writable = await fileHandle.createWritable({ keepExistingData: true });
-      await writable.write({ type: 'truncate', size: offset });
-      await writable.close();
+      if(!this._cache) {
+        await this._loadCache();
+        invariant(this._cache);
+      }
+
+      this._cache = this._cache.slice(0, offset);
+
+      this._flushLater();
     } finally {
       span.end();
       metric.end();
     }
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> {
+    await this._flushCtx.dispose()
+    await this._flushCache();
+  }
 
   @synchronized
   async destroy() {
