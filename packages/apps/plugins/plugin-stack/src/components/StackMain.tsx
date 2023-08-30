@@ -18,7 +18,7 @@ import {
   StackModel,
   StackProperties,
 } from '../types';
-import { StackSectionsPanel } from './StackSectionsPanel';
+import { StackSectionsSortable } from './StackSectionsSortable';
 
 export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
@@ -34,7 +34,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
 
   return (
     <Main.Content bounce classNames={coarseBlockPaddingStart}>
-      <StackSectionsPanel sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+      <StackSectionsSortable sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
