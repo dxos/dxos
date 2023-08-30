@@ -378,6 +378,6 @@ export class Swarm {
       return;
     }
 
-    await peer.closeConnection();
+    await peer.closeConnection(peer.connection);
   }
 }

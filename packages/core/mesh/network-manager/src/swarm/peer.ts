@@ -69,6 +69,7 @@ export class Peer {
   private _availableAfter = 0;
   public availableToConnect = true;
   private _lastConnectionTime?: number;
+  private _displacedConnection?: Connection;
 
   private readonly _ctx = new Context();
   private _connectionCtx?: Context;
@@ -114,7 +115,9 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          await this.closeConnection(new Error('Connection displaced by remote initiator.'));
+          this._displacedConnection = this.connection;
+          this.connection = undefined;
+          await this.closeConnection(this._displacedConnection, new Error('Connection displaced by remote initiator.'));
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -137,7 +140,7 @@ export class Peer {
           }
 
           // Calls `onStateChange` with CLOSED state.
-          await this.closeConnection(err);
+          await this.closeConnection(connection, err);
         }
 
         return { accept: true };
@@ -240,7 +243,6 @@ export class Peer {
 
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
-          invariant(this.connection === connection, 'Connection mismatch (race condition).');
 
           log.trace('dxos.mesh.connection.closed', {
             topic: this.topic,
@@ -250,26 +252,30 @@ export class Peer {
             initiator,
           });
 
-          if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
-            // If we're closing the connection, and it has been connected for a while, reset the backoff.
-            this._availableAfter = 0;
-          } else {
-            this.availableToConnect = false;
-            this._availableAfter = increaseInterval(this._availableAfter);
+          if (this.connection === connection) {
+            if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
+              // If we're closing the connection, and it has been connected for a while, reset the backoff.
+              this._availableAfter = 0;
+            } else {
+              this.availableToConnect = false;
+              this._availableAfter = increaseInterval(this._availableAfter);
+            }
+            this.connection = undefined;
+            this._callbacks.onDisconnected();
+
+            scheduleTask(
+              this._connectionCtx!,
+              () => {
+                this.availableToConnect = true;
+                this._callbacks.onPeerAvailable();
+              },
+              this._availableAfter,
+            );
+          } else if (this._displacedConnection === connection) {
+            this._displacedConnection = undefined;
           }
 
-          this.connection = undefined;
-          this._callbacks.onDisconnected();
           this._connectionLimiter.doneConnecting(sessionId);
-
-          scheduleTask(
-            this._connectionCtx!,
-            () => {
-              this.availableToConnect = true;
-              this._callbacks.onPeerAvailable();
-            },
-            this._availableAfter,
-          );
 
           break;
         }
@@ -287,7 +293,7 @@ export class Peer {
       });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection(err);
+      void this.closeConnection(connection, err);
     });
 
     this.connection = connection;
@@ -295,11 +301,11 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(err?: Error) {
-    if (!this.connection) {
+  async closeConnection(connection?: Connection, err?: Error) {
+    if (!connection) {
       return;
     }
-    const connection = this.connection;
+
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
