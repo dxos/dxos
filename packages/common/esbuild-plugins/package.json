@@ -20,5 +20,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "base64-js": "^1.5.1",
+    "ieee754": "^1.2.1"
   }
 }
