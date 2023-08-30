@@ -4,8 +4,9 @@
 
 import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessageBlock, schema } from '@dxos/protocols';
@@ -241,5 +242,34 @@ export class DatabaseTestPeer {
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }
     }
+  }
+
+  getModel(id: string): DocumentModel | TextModel | undefined {
+    const item = this.items.getItem(id);
+    if (!item) {
+      return;
+    }
+
+    invariant(item.modelMeta);
+    const ModelConstructor = this.modelFactory.getModel(item.modelMeta.type)?.constructor;
+    invariant(ModelConstructor);
+
+    const model = new ModelConstructor(
+      item.modelMeta,
+      item.id,
+      () => item.state,
+      async (mutation) => {
+        invariant(item.modelMeta);
+        this.proxy.mutate(createModelMutation(id, encodeModelMutation(item.modelMeta, mutation)));
+        return {
+          feedKey: PublicKey.from('00'),
+          seq: 0,
+          waitToBeProcessed: () => Promise.resolve(),
+        };
+      },
+    );
+    model.initialize();
+
+    return model;
   }
 }
