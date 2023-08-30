@@ -183,32 +183,34 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content classNames='z-[31]'>
-                  {actionGroups.map(({ id, actions }, i) => (
-                    <Fragment key={id}>
-                      {actions.map((action) => (
-                        <DropdownMenu.Item
-                          key={action.id}
-                          onClick={(event) => {
-                            if (action.properties.disabled) {
-                              return;
-                            }
-                            event.stopPropagation();
-                            // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                            suppressNextTooltip.current = true;
-                            setOptionsMenuOpen(false);
-                            void action.invoke();
-                          }}
-                          classNames='gap-2'
-                          disabled={action.properties.disabled}
-                          {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                        >
-                          {action.icon && <action.icon className={getSize(4)} />}
-                          <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                        </DropdownMenu.Item>
-                      ))}
-                      {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
-                    </Fragment>
-                  ))}
+                  <DropdownMenu.Viewport>
+                    {actionGroups.map(({ id, actions }, i) => (
+                      <Fragment key={id}>
+                        {actions.map((action) => (
+                          <DropdownMenu.Item
+                            key={action.id}
+                            onClick={(event) => {
+                              if (action.properties.disabled) {
+                                return;
+                              }
+                              event.stopPropagation();
+                              // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                              suppressNextTooltip.current = true;
+                              setOptionsMenuOpen(false);
+                              void action.invoke();
+                            }}
+                            classNames='gap-2'
+                            disabled={action.properties.disabled}
+                            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                          >
+                            {action.icon && <action.icon className={getSize(4)} />}
+                            <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                          </DropdownMenu.Item>
+                        ))}
+                        {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
+                      </Fragment>
+                    ))}
+                  </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
