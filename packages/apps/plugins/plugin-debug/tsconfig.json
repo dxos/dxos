@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../core/protocols"
     },
     {
       "path": "../../../sdk/client"

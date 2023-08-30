@@ -24,15 +24,17 @@ export class Generator {
     return this;
   }
 
-  createObject(type = Document.type.name) {
+  createObject({ type = Document.type.name, createContent = false } = {}) {
     log('update', { type });
     switch (type) {
       case Document.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
-        const content = range(this._faker!.number.int({ min: 2, max: 8 }))
-          .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
-          .join('\n\n');
+        const content = createContent
+          ? range(this._faker!.number.int({ min: 2, max: 8 }))
+              .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
+              .join('\n\n')
+          : '';
 
         this._space.db.add(new Document({ title, content: new Text(content) }));
         break;
@@ -40,7 +42,7 @@ export class Generator {
     }
   }
 
-  updateObject(type = Document.type.name) {
+  async updateObject(type = Document.type.name) {
     switch (type) {
       case Document.type.name: {
         const { objects } = this._space.db.query(Document.filter());
@@ -60,5 +62,8 @@ export class Generator {
         break;
       }
     }
+
+    // TODO(burdon): Make optional.
+    await this._space.db.flush();
   }
 }

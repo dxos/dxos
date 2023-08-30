@@ -67,6 +67,7 @@ export class Connection {
 
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
+  closeReason?: string;
 
   private _incomingSignalBuffer: Signal[] = [];
   private _outgoingSignalBuffer: Signal[] = [];
@@ -157,6 +158,9 @@ export class Connection {
     });
 
     this._transport.errors.handle((err) => {
+      if (!this.closeReason) {
+        this.closeReason = err?.message;
+      }
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         this.errors.raise(err);
       }
@@ -173,7 +177,10 @@ export class Connection {
   }
 
   @synchronized
-  async close() {
+  async close(err?: Error) {
+    if (!this.closeReason) {
+      this.closeReason = err?.message;
+    }
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
@@ -212,8 +219,10 @@ export class Connection {
     }
 
     try {
-      await cancelWithContext(this._ctx, sleep(this._signallingDelay));
-      this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      if (process.env.NODE_ENV !== 'test') {
+        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;

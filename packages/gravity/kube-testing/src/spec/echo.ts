@@ -21,7 +21,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPng } from '../analysys';
+import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
@@ -34,6 +34,7 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
+  showPNG: boolean;
 };
 
 export type EchoAgentConfig = {
@@ -63,7 +64,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   space!: Space;
 
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
-    const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({
@@ -269,8 +270,18 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       }
     }
 
+    if (params.spec.showPNG) {
+      await this.generatePNG(params, statsLogs, syncLogs);
+    }
+  }
+
+  private async generatePNG(
+    params: TestParams<EchoTestSpec>,
+    statsLogs: SerializedLogEntry<StatsLog>[],
+    syncLogs: SerializedLogEntry<SyncTimeLog>[],
+  ) {
     if (!params.spec.measureNewAgentSyncTime) {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {
@@ -290,7 +301,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         }),
       );
     } else {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {

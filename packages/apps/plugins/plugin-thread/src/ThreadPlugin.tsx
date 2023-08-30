@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { List, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
+import { Button, Toolbar } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -65,13 +67,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isThread(data)) {
-          return null;
-        }
-
         switch (role) {
-          case 'main':
+          case 'main': {
+            if (!data || typeof data !== 'object' || !isThread(data)) {
+              return null;
+            }
             return ThreadMain;
+          }
+
+          case 'complementary':
+            return Test;
         }
       },
       components: {
@@ -88,4 +93,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
     },
   };
+};
+
+// TODO(burdon): Get current space.
+const Test = (props: any) => {
+  // console.log(props);
+  return (
+    <div>
+      <Toolbar.Root>
+        <div role='none' className='grow' />
+        <Button variant='ghost'>
+          <List weight='light' className={getSize(4)} />
+        </Button>
+      </Toolbar.Root>
+    </div>
+  );
 };

@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hammer, IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { Bug, IconProps } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings } from './components';
+import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -26,19 +27,21 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState<NodeJS.Timeout>();
+        const [timer, setTimer] = useState<Timer>();
+        useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
+        useEffect(() => {
+          timer?.stop();
+        }, []);
+
         return (
           <DebugContext.Provider
             value={{
-              running: !!running,
-              start: (cb: () => void, interval: number) => {
-                clearInterval(running);
-                setRunning(setInterval(cb, interval));
+              running: !!timer,
+              start: (cb, options) => {
+                timer?.stop();
+                setTimer(new Timer(cb).start(options));
               },
-              stop: () => {
-                clearInterval(running);
-                setRunning(undefined);
-              },
+              stop: () => timer?.stop(),
             }}
           >
             {children}
@@ -51,7 +54,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Hammer {...props} />,
+              icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
                 action: 'debug-openDevtools',
@@ -72,7 +75,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           parent.add({
             id: nodeId,
             label: 'Debug',
-            icon: (props: IconProps) => <Hammer {...props} />,
+            icon: (props: IconProps) => <Bug {...props} />,
             data: { id: nodeId, space: parent.data },
           });
         },
@@ -90,7 +93,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
               }
               return true;
             }
@@ -110,6 +113,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return DebugSettings;
             }
             break;
+          }
+          case 'status': {
+            return DebugStatus;
           }
         }
 

@@ -111,6 +111,10 @@ export class Item<M extends Model = Model> {
     return this._deleted;
   }
 
+  set deleted(value: boolean) {
+    this._deleted = value;
+  }
+
   get parent(): ItemID | null {
     return this._parent;
   }

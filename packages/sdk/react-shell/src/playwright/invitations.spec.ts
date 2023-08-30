@@ -109,7 +109,7 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
-    // todo(thure): This is skipped because the UI no longer affords cancelling device invitations, consider removing.
+    // TODO(thure): This is skipped because the UI no longer affords cancelling device invitations, consider removing.
     test.skip('invitation cancelled by host', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
@@ -141,7 +141,8 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    test('recover from network failure during invitation', async () => {
+    // TODO(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -298,7 +299,8 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
-    test('recover from network failure during invitation', async () => {
+    // TODO(thure): The design no longer affords signalling an identity’s network status. Remove or adjust test, or adjust design.
+    test.skip('recover from network failure during invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);

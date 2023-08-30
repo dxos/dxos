@@ -20,6 +20,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
   constructor(
     private readonly _filter: Filter<T>,
     private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node,
+    private readonly _propertySubscriptions?: string[],
   ) {}
 
   clear() {
@@ -41,6 +42,9 @@ export class GraphNodeAdapter<T extends TypedObject> {
     );
     this._previousObjects.set(parent.id, query.objects);
 
+    // TODO(burdon): Provided by graph?
+    const indices = getIndices(query.objects.length);
+
     // Subscribe to query.
     this._subscriptions.set(
       parent.id,
@@ -49,33 +53,50 @@ export class GraphNodeAdapter<T extends TypedObject> {
         const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
         this._previousObjects.set(parent.id, query.objects);
         removedObjects.forEach((object) => parent.remove(object.id));
-        query.objects.forEach((object, index) => this._adapter(parent, object, stackIndices[index]));
+        query.objects.forEach((object, index) => this._adapter(parent, object, indices[index]));
       }),
     );
 
-    // TODO(burdon): Provided by graph?
-    const stackIndices = getIndices(query.objects.length);
-
     // Subscribe to all objects.
     query.objects.forEach((object, index) => {
-      defaultMap(this._subscriptions, object.id, () =>
+      const id = `${parent.id}:${object.id}`;
+      this._subscriptions.set(
+        id,
         object[subscribe](() => {
           if (object.__deleted) {
-            this._subscriptions.get(object.id)?.();
-            this._subscriptions.delete(object.id);
+            this._subscriptions.get(id)?.();
+            this._subscriptions.delete(id);
           } else {
-            parent.add(this._adapter(parent, object, stackIndices[index]));
+            parent.add(this._adapter(parent, object, indices[index]));
           }
         }),
       );
-
-      this._adapter(parent, object, stackIndices[index]);
+      // TODO(thure): Related issue: https://github.com/dxos/dxos/issues/3675; Looks like `object[property][subscribe]` on `Text` objects accepts a callback, but the callback isn’t getting called?
+      this._propertySubscriptions?.forEach((property) => {
+        const id = `${parent.id}:${object.id}:${property}`;
+        return this._subscriptions.set(
+          id,
+          object[property][subscribe](() => {
+            console.log('[Extra property subscription callback]', property);
+            if (object.__deleted) {
+              this._subscriptions.get(id)?.();
+              this._subscriptions.delete(id);
+            } else {
+              parent.add(this._adapter(parent, object, indices[index]));
+            }
+          }),
+        );
+      });
+      this._adapter(parent, object, indices[index]);
     });
 
     return () => {
-      // Don't clear the query here otherwise removals will not be detected.
-      this._subscriptions.forEach((unsubscribe) => unsubscribe());
-      this._subscriptions.clear();
+      Array.from(this._subscriptions.keys())
+        .filter((key) => key.startsWith(parent.id))
+        .forEach((key) => {
+          this._subscriptions.get(key)?.();
+          this._subscriptions.delete(key);
+        });
     };
   }
 }

@@ -5,12 +5,12 @@
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
-import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, omit } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataPipelineProcessed } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -19,6 +19,7 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
 import { DatabaseHost, SnapshotManager } from '../db-host';
@@ -65,6 +66,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
   private _pipeline?: Pipeline = undefined;
@@ -77,6 +79,12 @@ export class DataPipeline implements CredentialProcessor {
   private _lastSnapshotSaveTime = 0;
   private _lastProcessedEpoch = -1;
   private _epochCtx?: Context;
+
+  @trace.metricsCounter()
+  private _usage = new TimeUsageCounter();
+
+  @trace.metricsCounter()
+  private _mutations = new TimeSeriesCounter();
 
   constructor(private readonly _params: DataPipelineParams) {}
 
@@ -132,8 +140,9 @@ export class DataPipeline implements CredentialProcessor {
 
     this._pipeline = new Pipeline();
     await this._params.onPipelineCreated(this._pipeline);
-    await this._pipeline.start();
+
     await this._pipeline.pause(); // Start paused until we have the first epoch.
+    await this._pipeline.start();
 
     if (this._targetTimeframe) {
       this._pipeline.state.setTargetTimeframe(this._targetTimeframe);
@@ -205,6 +214,9 @@ export class DataPipeline implements CredentialProcessor {
 
     invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
+      const span = this._usage.beginRecording();
+      this._mutations.inc();
+
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
 
@@ -241,6 +253,8 @@ export class DataPipeline implements CredentialProcessor {
       } catch (err: any) {
         log.catch(err);
       }
+
+      span.end();
     }
   }
 
@@ -268,7 +282,7 @@ export class DataPipeline implements CredentialProcessor {
         (item) =>
           item.modelMeta?.type === 'dxos:model/document' &&
           // TODO(burdon): Document?
-          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
+          (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === TYPE_PROPERTIES,
       );
       if (propertiesItem) {
         cache.properties = getStateMachineFromItem(propertiesItem)?.snapshot() as ObjectSnapshot;
@@ -318,7 +332,6 @@ export class DataPipeline implements CredentialProcessor {
         // Space closed before we got to process the epoch.
         return;
       }
-      log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
 
       this.appliedEpoch = epoch;
@@ -332,16 +345,13 @@ export class DataPipeline implements CredentialProcessor {
     invariant(this._pipeline);
     this._lastProcessedEpoch = epoch.number;
 
-    log('Processing epoch', { epoch });
+    log('processing', { epoch: omit(epoch, 'proof') });
     if (epoch.snapshotCid) {
       const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
-
-      // TODO(dmaretskyi): Clearing old items + events.
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
 
-    log('restarting pipeline for epoch');
-
+    log('restarting pipeline from epoch');
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
     await this._pipeline.unpause();

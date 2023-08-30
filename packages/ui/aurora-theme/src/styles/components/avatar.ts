@@ -10,7 +10,9 @@ import { descriptionText, getSize, getSizeHeight } from '../fragments';
 export type AvatarStyleProps = Partial<{
   size: Size;
   srOnly: boolean;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'error' | 'warning';
+  animation: 'pulse' | 'none';
+  variant: 'circle' | 'square';
   inGroup: boolean;
 }>;
 
@@ -18,6 +20,7 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inG
   mx('relative inline-flex', getSize(size), inGroup && '-mie-2', ...etc);
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
+
 export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
   mx(descriptionText, srOnly && 'sr-only', ...etc);
 
@@ -34,6 +37,23 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
       : 'text-neutral-350 dark:text-neutral-250',
     ...etc,
   );
+
+export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
+  mx(
+    'absolute inset-0 border-2 border-neutral-400 dark:border-neutral-600',
+    variant === 'circle' ? 'rounded-full' : 'rounded',
+    status === 'active'
+      ? 'border-success-400 dark:border-success-400'
+      : status === 'error'
+      ? 'border-error-400 dark:border-error-500'
+      : status === 'warning'
+      ? 'border-warning-400 dark:border-warning-500'
+      : '',
+    animation === 'pulse' ? 'animate-halo-pulse' : '',
+  );
+
+export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
+  mx('fill-neutral-600 dark:fill-neutral-300');
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);
@@ -56,6 +76,8 @@ export const avatarTheme: Theme<AvatarStyleProps> = {
   description: avatarDescription,
   statusIcon: avatarStatusIcon,
   frame: avatarFrame,
+  ring: avatarRing,
+  fallbackText: avatarFallbackText,
   group: avatarGroup,
   groupLabel: avatarGroupLabel,
   groupDescription: avatarGroupDescription,

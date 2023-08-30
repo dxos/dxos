@@ -2,15 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
+import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
@@ -21,20 +23,20 @@ const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
 ];
 
 export const FeedsPanel = () => {
+  const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
+  const messages = useFeedMessages({ feedKey }).reverse();
+
+  const [refreshCount, setRefreshCount] = useState(0);
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
-
-  const devtoolsHost = useDevtools();
-  const [refreshCount, setRefreshCount] = useState(0);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
+  const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
-  const messages = useFeedMessages({ feedKey }).reverse();
-  const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
-
+  // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
   useEffect(() => {
@@ -83,12 +85,16 @@ export const FeedsPanel = () => {
             onChange={handleSelect}
           />
 
-          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
         </Toolbar.Root>
       }
     >
-      <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
-      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      <div className='flex flex-col overflow-hidden'>
+        <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+      </div>
     </PanelContainer>
   );
 };

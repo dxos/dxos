@@ -3,3 +3,4 @@
 //
 
 export * from './IdentityActionChooser';
+export * from './ProfileForm';

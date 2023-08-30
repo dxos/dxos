@@ -12,7 +12,7 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { mx } from '@dxos/aurora-theme';
 import { Config } from '@dxos/client';
-import { PluginContextProvider, Surface } from '@dxos/react-surface';
+import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 import { createThread } from './testing';
@@ -47,7 +47,7 @@ const ThreadPluginStoryPlugin = () => ({
 });
 
 const ThreadSurfacesApp = () => (
-  <PluginContextProvider
+  <PluginProvider
     plugins={[ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]}
   />
 );

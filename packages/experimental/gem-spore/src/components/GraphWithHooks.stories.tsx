@@ -104,7 +104,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   // });
   // useButton('Reset', () => {
   //   model.clear();
-  //   model.createNodes(undefined, faker.datatype.number({ min: 6, max: 36 }));
+  //   model.createNodes(undefined, faker.number.int({ min: 6, max: 36 }));
   // });
   // useButton('Create', () => {
   //   model.createNodes(undefined, 1);

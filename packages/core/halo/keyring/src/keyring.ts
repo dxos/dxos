@@ -135,6 +135,11 @@ export class Keyring implements Signer {
     }
     return keys;
   }
+
+  async importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey> {
+    await this._setKey(keyPair);
+    return keyPairToPublicKey(keyPair);
+  }
 }
 
 const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => {

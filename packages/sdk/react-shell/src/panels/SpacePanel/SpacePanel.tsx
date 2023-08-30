@@ -9,43 +9,54 @@ import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { PanelHeading, Viewport } from '../../components';
+import { Heading, CloseButton, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
 
-const SpacePanelHeading = ({ titleId, space }: SpacePanelHeadingProps) => {
+const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');
   const name = space.properties.name;
   const fallbackHref = useJdenticonHref(space.key.toHex(), 8);
   return (
-    <PanelHeading titleId={titleId} title={t('space panel heading')}>
+    <Heading
+      titleId={titleId}
+      title={t('space panel heading')}
+      corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
+    >
       <Avatar.Root variant='square' size={8}>
-        <div role='none' className='flex gap-4 items-center justify-center'>
+        <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
           <Avatar.Frame>
             <Avatar.Fallback href={fallbackHref} />
           </Avatar.Frame>
           <Avatar.Label classNames='block text-start font-light text-xl'>{name ?? space.key.truncate()}</Avatar.Label>
         </div>
       </Avatar.Root>
-    </PanelHeading>
+    </Heading>
   );
 };
 
 export const SpacePanelImpl = (props: SpacePanelImplProps) => {
-  const { titleId, activeView, space, SpaceManager: SpaceMgr = SpaceManager, ...rest } = props;
+  const {
+    titleId,
+    activeView,
+    space,
+    SpaceManager: SpaceManagerComponent = SpaceManager,
+    InvitationManager: InvitationManagerComponent = InvitationManager,
+    ...rest
+  } = props;
   return (
     <DensityProvider density='fine'>
       <SpacePanelHeading {...rest} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceMgr active={activeView === 'space manager'} space={space} {...rest} />
+            <SpaceManagerComponent active={activeView === 'space manager'} space={space} {...rest} />
           </Viewport.View>
           <Viewport.View id='space invitation manager' classNames={stepStyles}>
-            <InvitationManager
+            <InvitationManagerComponent
               active={activeView === 'space invitation manager'}
               {...rest}
               invitationUrl={props.invitationUrl}

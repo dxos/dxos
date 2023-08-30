@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
+import { Article, ArticleMedium, PencilSimpleLine, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -63,7 +63,25 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
+const nonTitleChars = /[^\w ]/g;
+
+const getFallbackTitle = (document: Document) => {
+  return document.content?.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+};
+
 export const documentToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
+  const fallbackProps = document.title
+    ? {}
+    : (() => {
+        const fallbackTitle = getFallbackTitle(document);
+        return fallbackTitle?.length && fallbackTitle?.length > 0
+          ? {
+              fallbackTitle,
+              preferFallbackTitle: true,
+            }
+          : {};
+      })();
+
   const [child] = parent.add({
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
@@ -72,6 +90,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     data: document,
     properties: {
       index: get(document, 'meta.index', index),
+      ...fallbackProps,
     },
   });
 
@@ -81,6 +100,16 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+    },
+  });
+
+  child.addAction({
+    id: 'rename',
+    label: ['rename document label', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) => <PencilSimpleLine {...props} />,
+    intent: {
+      action: SpaceAction.RENAME_OBJECT,
       data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
     },
   });

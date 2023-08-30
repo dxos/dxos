@@ -6,7 +6,7 @@ import { Event, Trigger, asyncTimeout } from '@dxos/async';
 import {
   ClientServices,
   ClientServicesProvider,
-  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
@@ -29,6 +29,9 @@ export type IFrameClientServicesHostOptions = {
   timeout?: number;
 };
 
+/**
+ * Proxy to host client service via iframe.
+ */
 export class IFrameClientServicesHost implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
   public readonly invalidatedInvitationCode = new Event<string>();
@@ -41,7 +44,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
 
   constructor({
     host,
-    source = DEFAULT_CLIENT_ORIGIN,
+    source = DEFAULT_VAULT_URL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     timeout = PROXY_CONNECTION_TIMEOUT,
   }: IFrameClientServicesHostOptions) {

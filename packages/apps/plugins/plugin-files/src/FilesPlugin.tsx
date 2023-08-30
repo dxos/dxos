@@ -60,7 +60,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       id: FILES_PLUGIN,
       shortId: FILES_PLUGIN_SHORT_ID,
     },
-    init: async () => {
+    initialize: async () => {
       return {
         markdown: {
           onChange: (text) => {
@@ -169,6 +169,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           const [groupNode] = parent.add({
             id: 'all-files',
             label: ['plugin name', { ns: FILES_PLUGIN }],
+            properties: { palette: 'teal' },
           });
 
           const fileIndices = getIndices(state.files.length);

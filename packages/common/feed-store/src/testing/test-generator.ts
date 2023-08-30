@@ -27,7 +27,7 @@ export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncod
 export type TestBlockGenerator<T> = (i: number) => T;
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
-  id: faker.datatype.uuid(),
+  id: faker.string.uuid(),
   index: i,
   value: faker.lorem.sentence(),
 });
@@ -61,7 +61,7 @@ export class TestGenerator<T extends {}> {
         const data = this._generate(this._count++);
         const receipt = await writer.write(data);
         if (delay) {
-          await sleep(faker.datatype.number(delay));
+          await sleep(faker.number.int(delay));
         }
 
         return receipt;

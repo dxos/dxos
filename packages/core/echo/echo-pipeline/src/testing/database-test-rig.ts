@@ -8,9 +8,10 @@ import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { FeedMessageBlock } from '@dxos/protocols';
+import { FeedMessageBlock, schema } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -52,6 +53,9 @@ export class DatabaseTestPeer {
   public readonly key = PublicKey.random();
 
   public feedMessages: FeedMessage[] = [];
+
+  public readonly snapshots = new Map<string, SpaceSnapshot>();
+  private currentEpoch?: Epoch;
 
   /**
    * Sequence number of the last mutation confirmed to be written to the feed store.
@@ -160,6 +164,27 @@ export class DatabaseTestPeer {
       timeframe: this.timeframe,
     };
     return this.snapshot;
+  }
+
+  createEpoch(mockSnapshot?: EchoSnapshot) {
+    const snapshot = this.makeSnapshot();
+    // Substitute snapshot with the mock one for test purposes (e.g. to test with empty snapshot).
+    mockSnapshot && (snapshot.database = mockSnapshot);
+    const snapshotCid = PublicKey.from(
+      schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot),
+    ).toHex();
+    this.snapshots.set(snapshotCid, snapshot);
+
+    const epoch: Epoch = {
+      previousId: PublicKey.random(),
+      timeframe: this.timeframe,
+      number: this.currentEpoch ? this.currentEpoch.number + 1 : 0,
+      snapshotCid,
+    };
+
+    this.currentEpoch = epoch;
+
+    this.host._itemDemuxer.restoreFromSnapshot(snapshot.database);
   }
 
   /**

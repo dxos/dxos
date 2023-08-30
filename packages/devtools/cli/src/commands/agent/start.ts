@@ -41,6 +41,13 @@ export default class Start extends BaseCommand<typeof Start> {
     }),
   };
 
+  static override examples = [
+    {
+      description: 'Run with .',
+      command: 'dx agent start -f --ws=5001',
+    },
+  ];
+
   private readonly _ctx = new Context();
 
   async run(): Promise<any> {
@@ -60,7 +67,7 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    // TODO(burdon): Option to start metrics recording (or config).
+    // TODO(burdon): Option to start metrics recording (via config).
 
     const agent = new Agent({
       config: this.clientConfig,
@@ -97,7 +104,7 @@ export default class Start extends BaseCommand<typeof Start> {
 
     this._sendTelemetry();
 
-    if (this.flags['web-socket']) {
+    if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
     }
   }

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
@@ -41,6 +43,7 @@ describe.skip('IMAP processor', () => {
       }))
       .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0));
 
-    console.log('messages', JSON.stringify(mapped, undefined, 2));
+    // console.log('messages', JSON.stringify(mapped, undefined, 2));
+    expect(mapped).to.have.length.greaterThan(0);
   });
 });

@@ -2,119 +2,153 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
+import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
-import { FlameGraph } from 'react-flame-graph';
-import { useResizeDetector } from 'react-resize-detector';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { mx } from '@dxos/aurora-theme';
+import { Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
+import { isNotNullOrUndefined } from '@dxos/util';
 
-import { PanelContainer } from '../../../components';
+import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
+import { LogView } from './LogView';
+import { MetricsView } from './MetricsView';
+import { ResourceName } from './Resource';
+import { TraceView } from './TraceView';
+import { ResourceState, State } from './types';
 
-type State = {
-  resources: Map<number, Resource>;
-  spans: Map<number, Span>;
-};
-
-export const TracingPanel = () => {
-  const client = useClient();
-  const state = useRef<State>({
-    resources: new Map<number, Resource>(),
-    spans: new Map<number, Span>(),
-  });
-  const { ref: containerRef, width } = useResizeDetector();
-  const [, forceUpdate] = useState({});
-  useEffect(() => {
-    const stream = client.services.services.TracingService!.streamTrace();
-    stream.subscribe((data) => {
-      for (const event of data.resourceAdded ?? []) {
-        state.current.resources.set(event.resource.id, event.resource);
-      }
-      for (const event of data.resourceRemoved ?? []) {
-        state.current.resources.delete(event.id);
-      }
-      for (const event of data.spanAdded ?? []) {
-        state.current.spans.set(event.span.id, event.span);
-      }
-      forceUpdate({});
-    });
-
-    return () => {
-      stream.close();
-    };
-  }, []);
-
-  const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
-  const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined);
-  const flameGraph = buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0);
-
-  const handleBack = () => {
-    setSelectedFlameIndex((idx) => Math.max(0, idx - 1));
-  };
-
-  const handleForward = () => {
-    setSelectedFlameIndex((idx) => Math.min(roots.length - 1, idx + 1));
-  };
-
-  return (
-    <PanelContainer>
-      <div className='h-1/2 overflow-auto'>
-        <Grid<Resource> columns={columns} data={Array.from(state.current.resources.values())} />
-      </div>
-      <div ref={containerRef} className='border-t'>
-        <div className='flex flex-row items-baseline justify-items-center p-2'>
-          <ArrowLeft className='cursor-pointer' onClick={handleBack} />
-          <div className='flex-1 text-center'>
-            {selectedFlameIndex + 1} / {roots.length}
-          </div>
-          <ArrowRight className='cursor-pointer' onClick={handleForward} />
-        </div>
-        {flameGraph && <FlameGraph data={flameGraph} height={200} width={width} />}
-      </div>
-    </PanelContainer>
-  );
-};
-
-const { helper } = createColumnBuilder<Resource>();
-const columns: GridColumnDef<Resource, any>[] = [
-  helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, {
+const { helper } = createColumnBuilder<ResourceState>();
+const columns: GridColumnDef<ResourceState, any>[] = [
+  helper.accessor('resource', {
     id: 'name',
     size: 200,
+    cell: (cell) => <ResourceName resource={cell.getValue()} />,
   }),
-  helper.accessor('info', {
-    cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
+  helper.accessor((state) => state.logs.length, {
+    id: 'logs',
+    size: 50,
+  }),
+  helper.accessor((state) => state.spans.length, {
+    id: 'spans',
+    size: 50,
+  }),
+  helper.accessor((state) => state.resource.info, {
+    id: 'info',
+    cell: (cell) => <div className='font-mono text-green-500'>{JSON.stringify(cell.getValue())}</div>,
   }),
 ];
 
-const SANITIZE_REGEX = /[^_](\d+)$/;
+export const TracingPanel = () => {
+  const client = useClient();
 
-const sanitizeClassName = (className: string) => {
-  const m = className.match(SANITIZE_REGEX);
-  if (!m) {
-    return className;
-  } else {
-    return className.slice(0, -m[1].length);
-  }
-};
+  // Store state as ref to avoid re-building on state change.
+  const [, forceUpdate] = useState({});
+  const state = useRef<State>({
+    resources: new Map<number, ResourceState>(),
+    spans: new Map<number, Span>(),
+  });
 
-const buildFlameGraph = (state: State, rootId: number): any => {
-  const span = state.spans.get(rootId);
-  if (!span) {
-    return undefined;
-  }
+  const [selectedResourceId, setSelectedResourceId] = useState<number>();
+  const selectedResource: ResourceState | undefined =
+    selectedResourceId !== undefined ? state.current.resources.get(selectedResourceId) : undefined;
 
-  // TODO(burdon): Sort resources by names.
-  const childSpans = [...state.spans.values()].filter((s) => s.parentId === span.id);
-  const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
-  const name = resource
-    ? `${sanitizeClassName(resource.className)}#${resource.instanceId}.${span.methodName}`
-    : span.methodName;
+  useEffect(() => {
+    const stream = client.services.services.TracingService!.streamTrace();
+    stream.subscribe(
+      (data) => {
+        for (const event of data.resourceAdded ?? []) {
+          const existing = state.current.resources.get(event.resource.id);
+          if (!existing) {
+            state.current.resources.set(event.resource.id, { resource: event.resource, spans: [], logs: [] });
+          } else {
+            existing.resource = event.resource;
+          }
+        }
 
-  return {
-    name,
-    value: +(span.endTs ?? '999') - +span.startTs,
-    children: childSpans.map((s) => buildFlameGraph(state, s.id)),
-  };
+        for (const event of data.resourceRemoved ?? []) {
+          state.current.resources.delete(event.id);
+        }
+
+        for (const event of data.spanAdded ?? []) {
+          state.current.spans.set(event.span.id, event.span);
+          if (event.span.parentId === undefined) {
+            const resource = state.current.resources.get(event.span.resourceId!);
+            if (resource) {
+              resource.spans.push(event.span);
+            }
+          }
+        }
+
+        for (const event of data.logAdded ?? []) {
+          const resource = state.current.resources.get(event.log.meta!.resourceId!);
+          if (!resource) {
+            continue;
+          }
+          resource.logs.push(event.log);
+        }
+
+        forceUpdate({});
+      },
+      (err) => {
+        console.error(err);
+      },
+    );
+
+    return () => {
+      void stream.close();
+    };
+  }, []);
+
+  const tabClass = mx(
+    'radix-state-active:border-b-gray-700 focus-visible:radix-state-active:border-b-transparent radix-state-inactive:bg-gray-50 dark:radix-state-active:border-b-gray-100 dark:radix-state-active:bg-gray-500 focus-visible:dark:radix-state-active:border-b-transparent dark:radix-state-inactive:bg-gray-800',
+    'flex-1 px-3 py-2.5',
+    'first:rounded-tl-lg last:rounded-tr-lg',
+    'border-b first:border-r last:border-l',
+  );
+
+  return (
+    <PanelContainer>
+      <div className='flex flex-col h-1/3 overflow-hidden'>
+        <Grid<ResourceState>
+          columns={columns}
+          data={Array.from(state.current.resources.values())}
+          select='single-toggle'
+          selected={
+            selectedResourceId !== undefined
+              ? [state.current.resources.get(selectedResourceId)].filter(isNotNullOrUndefined)
+              : undefined
+          }
+          onSelectedChange={(resources) => setSelectedResourceId(resources?.[0]?.resource.id)}
+        />
+      </div>
+      <div className='flex flex-col h-2/3 overflow-hidden border-t'>
+        <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
+          <Tabs.List className='flex'>
+            <Tabs.Trigger className={tabClass} value='details'>
+              Details
+            </Tabs.Trigger>
+            <Tabs.Trigger className={tabClass} value='logs'>
+              Logs ({selectedResource?.logs.length ?? 0})
+            </Tabs.Trigger>
+            <Tabs.Trigger className={tabClass} value='spans'>
+              Spans ({selectedResource?.spans.length ?? 0})
+            </Tabs.Trigger>
+          </Tabs.List>
+
+          <Tabs.Content value='details' className='grow overflow-auto'>
+            <MetricsView resource={selectedResource?.resource} />
+          </Tabs.Content>
+
+          <Tabs.Content value='logs' className='grow overflow-auto'>
+            <LogView logs={selectedResource?.logs ?? []} />
+          </Tabs.Content>
+
+          <Tabs.Content value='spans' className='grow overflow-hidden'>
+            <TraceView state={state.current} resourceId={selectedResourceId} />
+          </Tabs.Content>
+        </Tabs.Root>
+      </div>
+    </PanelContainer>
+  );
 };

@@ -12,7 +12,7 @@ module.exports = async (event: any, context: any) => {
     return context.status(400);
   }
 
-  const client = new Client({ config: new Config({}), services: fromSocket(clientUrl) });
+  const client = new Client({ config: new Config({}), services: await fromSocket(clientUrl) });
   await client.initialize();
 
   const { Chess } = await import('chess.js');

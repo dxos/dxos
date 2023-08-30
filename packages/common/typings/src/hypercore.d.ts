@@ -95,6 +95,7 @@ declare module 'hypercore' {
     keyPair?: { publicKey: Buffer; secretKey: Buffer };
     onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void;
     onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void;
+    maxRequests?: number;
   };
 
   /**
@@ -141,6 +142,7 @@ declare module 'hypercore' {
     valueEncoding?: ValueEncoding;
     crypto?: Crypto;
     writable?: boolean;
+    stats?: boolean;
   };
 
   export interface HypercoreBitfield {
@@ -251,6 +253,7 @@ declare module 'hypercore' {
     /** @deprecated remove in v10 */
     getBatch(start: number, end: number, options?: GetOptions, cb?: Callback<T[]>): void;
 
+    // TODO(burdon): Documented signature is different from code.
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
     download(range?: Range, cb?: Callback<number>): number;
 

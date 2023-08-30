@@ -5,19 +5,40 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
+import React, {
+  FC,
+  forwardRef,
+  ForwardRefExoticComponent,
+  Fragment,
+  RefAttributes,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
-import { focusRing, getSize } from '@dxos/aurora-theme';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
+import { useSplitView } from '@braneframe/plugin-splitview';
+import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import {
+  focusRing,
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedKeyboardControls,
+  hoverableFocusedWithinControls,
+  hoverableOpenControlItem,
+  mx,
+} from '@dxos/aurora-theme';
 
-import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../../types';
+import { useTreeView } from '../../TreeViewContext';
+import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
 import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
 import { NavigableHeading } from './NavigableHeading';
-import { levelPadding } from './style-fragments';
+import { levelPadding } from './navtree-fragments';
+import { SharedTreeItemProps } from './props';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
@@ -54,6 +75,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const actions = sortActions(node.actions);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars();
+  const { active: treeViewActive } = useTreeView();
+  const { popoverAnchorId } = useSplitView();
+  const { graph } = useGraph();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -62,29 +86,61 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const [open, setOpen] = useState(level < 1);
 
   const disabled = !!node.properties?.disabled;
+  const active = treeViewActive === node.id;
 
   useEffect(() => {
-    // todo(thure): Open if child within becomes active
-  }, []);
+    if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      setOpen(true);
+    }
+  }, [graph, treeViewActive]);
+
+  const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
+  const isPopoverAnchor = popoverAnchorId === headingAnchorId;
+
+  const HeadingWithActionsRoot = isPopoverAnchor ? Popover.Anchor : 'div';
+
+  // TODO(burdon): Factor out heuristic to group actions.
+  const actionGroups =
+    level === 1
+      ? actions.reduce<{ id: string; actions: Graph.Action[] }[]>((groups, action) => {
+          const id = action.id.split(/[/-]/).at(-1)!;
+          let group = groups.find((group) => group.id === id);
+          if (!group) {
+            group = { id, actions: [] };
+            groups.push(group);
+          }
+          group.actions.push(action);
+          return groups;
+        }, [])
+      : [{ id: '', actions }];
 
   return (
     <TreeItem.Root
       collapsible={isBranch}
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['rounded block', focusRing, levelPadding(level), rearranging && 'invisible']}
+      classNames={['rounded block', hoverableFocusedKeyboardControls, focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
       ref={forwardedRef}
     >
-      <div role='none' className='flex items-start pie-1'>
-        {isBranch ? (
-          <CollapsibleHeading open={open} node={node} level={level} />
-        ) : (
-          <NavigableHeading node={node} level={level} />
+      <HeadingWithActionsRoot
+        role='none'
+        className={mx(
+          levelPadding(level),
+          hoverableControls,
+          hoverableFocusedWithinControls,
+          (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
+          'flex items-start rounded',
         )}
-        {actions.length > 0 && (
+      >
+        {isBranch ? (
+          <CollapsibleHeading {...{ open, node, level, active }} />
+        ) : (
+          <NavigableHeading {...{ node, level, active }} />
+        )}
+        {actionGroups.length > 0 && (
           <Tooltip.Root
             open={optionsTooltipOpen}
             onOpenChange={(nextOpen) => {
@@ -117,7 +173,8 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                 <Tooltip.Trigger asChild>
                   <Button
                     variant='ghost'
-                    classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                    classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+                    data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
@@ -126,33 +183,41 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content classNames='z-[31]'>
-                  {actions.map((action) => (
-                    <DropdownMenu.Item
-                      key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        suppressNextTooltip.current = true;
-                        setOptionsMenuOpen(false);
-                        void action.invoke();
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                    >
-                      {action.icon && <action.icon className={getSize(4)} />}
-                      <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                    </DropdownMenu.Item>
-                  ))}
+                  <DropdownMenu.Viewport>
+                    {actionGroups.map(({ id, actions }, i) => (
+                      <Fragment key={id}>
+                        {actions.map((action) => (
+                          <DropdownMenu.Item
+                            key={action.id}
+                            onClick={(event) => {
+                              if (action.properties.disabled) {
+                                return;
+                              }
+                              event.stopPropagation();
+                              // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                              suppressNextTooltip.current = true;
+                              setOptionsMenuOpen(false);
+                              void action.invoke();
+                            }}
+                            classNames='gap-2'
+                            disabled={action.properties.disabled}
+                            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                          >
+                            {action.icon && <action.icon className={getSize(4)} />}
+                            <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                          </DropdownMenu.Item>
+                        ))}
+                        {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
+                      </Fragment>
+                    ))}
+                  </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </Tooltip.Root>
         )}
-      </div>
+      </HeadingWithActionsRoot>
       {isBranch && (
         <TreeItem.Body>
           <NavTree items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />

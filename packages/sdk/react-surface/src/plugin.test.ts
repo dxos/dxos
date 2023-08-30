@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import { FC } from 'react';
 
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
@@ -72,7 +73,7 @@ export const Section: Interface<Section> = { key: 'list' };
 const plugin1 = new Plugin({
   provides: [
     provide(Printable, {
-      print: (data: any | undefined) => console.log(data),
+      print: (data: any | undefined) => log(data),
     }),
 
     provide(Selectable, {
@@ -87,7 +88,7 @@ const plugin1 = new Plugin({
 const plugin2 = new Plugin({
   provides: [
     provide(Printable, {
-      print: (data: any) => console.log(data),
+      print: (data: any) => log(data),
     }),
   ],
 });

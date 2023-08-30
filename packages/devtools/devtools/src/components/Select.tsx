@@ -21,7 +21,7 @@ export const Select = ({ items = [], ...props }: SelectProps) => {
           <AuroraSelect.Viewport>
             {items?.map(({ value, label }) => (
               <AuroraSelect.Option key={value} value={value}>
-                {label}
+                <span className='font-mono'>{label}</span>
               </AuroraSelect.Option>
             ))}
           </AuroraSelect.Viewport>
