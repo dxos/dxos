@@ -14,8 +14,8 @@ import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';
 import { py } from './util';
 
-describe.only('HypercoreFactory', () => {
-  test.only('migration sanity', async () => {
+describe('HypercoreFactory', () => {
+  test('migration sanity', async () => {
     const core = new Hypercore('test');
     expect(core.opened).to.be.false;
 

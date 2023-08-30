@@ -218,12 +218,14 @@ export class WebFile extends EventEmitter implements File {
   filename = '';
   type: StorageType = StorageType.WEBFS;
   native: RandomAccessStorage = {
+    open: callbackify(async () => {}),
     write: callbackify(this.write.bind(this)),
     read: callbackify(this.read.bind(this)),
     del: callbackify(this.del.bind(this)),
     stat: callbackify(this.stat.bind(this)),
     destroy: callbackify(this.destroy.bind(this)),
     truncate: callbackify(this.truncate?.bind(this)),
+    close: callbackify(this.close.bind(this)),
   } as RandomAccessStorage;
 
   @synchronized

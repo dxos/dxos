@@ -145,4 +145,8 @@ export abstract class AbstractStorage implements Storage {
       }),
     );
   }
+
+  async close() {
+    
+  }
 }

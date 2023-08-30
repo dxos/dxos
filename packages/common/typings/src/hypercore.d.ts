@@ -22,15 +22,6 @@ declare module 'hypercore' {
   export type Callback<T> = (err: Error | null, result: T) => void;
 
   /**
-   * Download range.
-   */
-  export type Range = {
-    start: number;
-    end: number;
-    linear: boolean;
-  };
-
-  /**
    * https://github.com/mafintosh/abstract-encoding
    */
   export type AbstractValueEncoding<T = any> = {
@@ -138,7 +129,7 @@ declare module 'hypercore' {
   export type HypercoreOptions = {
     sparse?: boolean; // do not mark the entire feed to be downloaded
     createIfMissing?: boolean;
-    secretKey?: Buffer;
+    keyPair?: { publicKey: Buffer; secretKey: Buffer };
     valueEncoding?: ValueEncoding;
     crypto?: Crypto;
     writable?: boolean;
@@ -153,6 +144,17 @@ declare module 'hypercore' {
     // TODO(dmaretskyi): More props.
   }
 
+  export interface RangeInit {
+    start: number
+    end: number
+    blocks?: number[]
+    linear?: boolean
+  }
+
+  export interface Range extends RangeInit {
+    done(): Promise<void>;
+  }
+
   /**
    * Raw hypercore feed.
    * https://docs.holepunch.to/building-blocks/hypercore (v10)
@@ -160,7 +162,7 @@ declare module 'hypercore' {
   export class Hypercore<T> extends EventEmitter {
     // https://docs.holepunch.to/building-blocks/hypercore#const-core-new-hypercore-storage-key-options
     constructor(
-      type: string | ((filename: string) => RandomAccessStorage),
+      storage: string | ((filename: string) => RandomAccessStorage),
       key?: Buffer | string,
       options?: HypercoreOptions,
     );
@@ -216,7 +218,7 @@ declare module 'hypercore' {
     async ready(): Promise<void>;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedappenddata-callback
-    append(data: T | T[], cb: Callback<number>): void;
+    append(data: T | T[]): Promise<{ length: number, byteLength: number }>;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
     createReadStream(options?: ReadStreamOptions): Readable;
@@ -255,7 +257,7 @@ declare module 'hypercore' {
 
     // TODO(burdon): Documented signature is different from code.
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-    download(range?: Range, cb?: Callback<number>): number;
+    download(range?: RangeInit): Range;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
     downloaded(start?: number, end?: number): boolean;

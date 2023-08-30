@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import ram from 'random-access-memory';
+import RandomAccessMemory from 'random-access-memory';
 import { Callback, RandomAccessStorage } from 'random-access-storage';
 
 import { arrayToBuffer } from '@dxos/util';
@@ -18,7 +18,7 @@ export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
   protected override _createFile(path: string, filename: string): RandomAccessStorage {
-    return this._patchFile(ram());
+    return this._patchFile(new RandomAccessMemory());
   }
 
   protected override _openFile(file: RandomAccessStorage): RandomAccessStorage {

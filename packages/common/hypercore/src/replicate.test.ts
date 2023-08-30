@@ -5,20 +5,42 @@
 import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
+import { Duplex } from 'streamx'
+import Protomux from 'protomux'
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-const noop = () => {};
+const noop = () => { };
+
+const createStreams = () => {
+  const make = (getTarget: () => Duplex) => new Duplex({
+    open() {
+    },
+    write(chunk: any, cb: any) {
+      console.log('write', chunk)
+      getTarget().push(chunk)
+      cb();
+    }
+  })
+
+  let stream1 = make(() => stream2), stream2 = make(() => stream1);
+  return [
+    stream1,
+    stream2
+  ]
+}
 
 describe('Replication', () => {
-  const factory1 = new HypercoreFactory();
-  const factory2 = new HypercoreFactory();
+  const storage = createStorage({ type: StorageType.RAM })
+  const factory1 = new HypercoreFactory(storage.createDirectory('test1'));
+  const factory2 = new HypercoreFactory(storage.createDirectory('test2'));
 
   test('replicates feeds', async () => {
     const { publicKey, secretKey } = createKeyPair();
@@ -37,6 +59,7 @@ describe('Replication', () => {
 
     // Sync.
     {
+
       const stream1 = core1.replicate(true);
       const stream2 = core2.replicate(false);
 
@@ -240,4 +263,82 @@ describe('Replication', () => {
 
     await done();
   }).timeout(5_000);
+
+  test.only('replication bench', async () => {
+    const { publicKey, secretKey } = createKeyPair();
+
+    const core1 = factory1.createFeed(publicKey, { keyPair: { publicKey, secretKey }, writable: true });
+    await core1.ready();
+
+    // Write.
+    const numBlocks = 10;
+    for (let i = 0; i < numBlocks; i++) {
+      await core1.append(`test-${i}`);
+    }
+
+
+
+    debugger;
+    const core2 = factory2.createFeed(publicKey);
+    await core2.ready();
+
+    const begin = performance.now();
+
+    const range = core2.download({ start: 0, end: core1.length, linear: true });
+
+    // Replicate.
+    {
+      const [stream1, stream2] = createStreams()
+
+      stream1.opened = Promise.resolve(true)
+      stream1.isInitiator = true
+      stream1.handshakeHash = Buffer.from([0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0])
+
+      stream2.opened = Promise.resolve(true)
+      stream2.isInitiator = false
+      stream2.handshakeHash = Buffer.from([0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0])
+
+      core1.replicate(Protomux.from(stream1));
+      core2.replicate(Protomux.from(stream2));
+
+      const onClose = err => {
+        if (err) {
+          console.error(err)
+        }
+      }
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+      // expect(core1.stats.peers).to.have.lengthOf(1);
+      // expect(core2.stats.peers).to.have.lengthOf(1);
+
+      // Wait for complete sync.
+      core2.on('sync', () => {
+        stream1.end();
+        stream2.end();
+      });
+
+      await range.done()
+
+      // await streamsClosed();
+    }
+
+    const end = performance.now();
+    log.info('time', { timeMs: end - begin, numBlocks });
+
+    expect(await core2.has(0, numBlocks)).to.eq(true)
+
+    // Close.
+    {
+      const [closed, close] = latch({ count: 2 });
+      core1.on('close', close);
+      core2.on('close', close);
+      core1.close();
+      core2.close();
+      await closed();
+    }
+
+    // expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+    // expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+  }).timeout(60_000);
+
 });

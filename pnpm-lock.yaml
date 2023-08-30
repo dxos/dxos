@@ -1964,15 +1964,15 @@ importers:
       hypercore-protocol: ^8.0.7
       is-options: ^1.0.2
       noise-protocol: 3.0.1
-      protomux: ^1.0.0
+      protomux: 3.5.1
       quickbit-universal: ^2.2.0
       random-access-file: ^2.2.1
       random-access-memory: ^4.1.0
       random-array-iterator: ^1.0.0
       readable-stream: ^3.6.0
       safety-catch: ^1.0.0
-      sodium-native: ^3.2.0
-      sodium-universal: ^3.0.2
+      sodium-native: ^4.0.4
+      sodium-universal: ^4.0.0
       streamx: ^2.12.5
       xache: ^1.1.0
       z32: ^1.0.0
@@ -1994,14 +1994,14 @@ importers:
       fast-fifo: 1.3.2
       hypercore-errors: 1.0.0
       is-options: 1.0.2
-      protomux: 1.1.0
+      protomux: 3.5.1
       quickbit-universal: 2.2.0
       random-access-file: 2.2.1
       random-array-iterator: 1.0.0
       readable-stream: 3.6.0
       safety-catch: 1.0.2
-      sodium-native: 3.4.1
-      sodium-universal: 3.1.0
+      sodium-native: 4.0.4
+      sodium-universal: 4.0.0
       streamx: 2.12.5
       xache: 1.1.0
       z32: 1.0.1
@@ -2244,7 +2244,7 @@ importers:
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
-      random-access-memory: ^4.1.0
+      random-access-memory: ^6.2.0
       random-access-storage: ^3.0.0
       random-access-web: ^2.0.3
       randombytes: ^2.1.0
@@ -2261,7 +2261,7 @@ importers:
       pify: 5.0.0
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
-      random-access-memory: 4.1.0
+      random-access-memory: 6.2.0
       random-access-storage: 3.0.0
       random-access-web: 2.0.3
     devDependencies:
@@ -12942,7 +12942,7 @@ packages:
     requiresBuild: true
     dependencies:
       node-addon-api: 3.2.1
-      node-gyp-build: 4.5.0
+      node-gyp-build: 4.6.0
     dev: true
 
   /@phenomnomnominal/tsquery/5.0.1_typescript@5.0.4:
@@ -32271,10 +32271,6 @@ packages:
     hasBin: true
     dev: false
 
-  /node-gyp-build/4.5.0:
-    resolution: {integrity: sha512-2iGbaQBV+ITgCz76ZEjmhUKAKVf7xfY1sRl4UiKQspfZMH2h06SyhNsnSVy50cwkFQDGLyif6m/6uFXHkOZ6rg==}
-    hasBin: true
-
   /node-gyp-build/4.6.0:
     resolution: {integrity: sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==}
     hasBin: true
@@ -34504,14 +34500,6 @@ packages:
   /protocol-buffers-schema/3.6.0:
     resolution: {integrity: sha512-TdDRD+/QNdrCGCE7v8340QyuXd4kIWIgapsE2+n/SaGiSSbomYl4TjHlvIoCWRpE7wFt02EpB35VVA2ImcBVqw==}
 
-  /protomux/1.1.0:
-    resolution: {integrity: sha512-YV8ndXcD+fJfXcGiEhsEQuH9CuPImz5Mxp35yDbZ4nAyTTRWSPnSaQ4qqlCBfyVhXD2xuBGWdTvpXwLRo581vg==}
-    dependencies:
-      b4a: 1.6.0
-      compact-encoding: 2.12.0
-      safety-catch: 1.0.2
-    dev: false
-
   /protomux/3.5.1:
     resolution: {integrity: sha512-+ioDo9Cu5rTNQH9Or2UkXJRFPAZMzqr4gZFuyib8tTmy8YyZDCL2poP8dhc5JgJydTrj94jn1Dsp/C0ESpEtjQ==}
     dependencies:
@@ -34519,7 +34507,6 @@ packages:
       compact-encoding: 2.12.0
       queue-tick: 1.0.1
       safety-catch: 1.0.2
-    dev: true
 
   /proxy-addr/2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -34768,6 +34755,15 @@ packages:
       inherits: 2.0.4
       is-options: 1.0.2
       random-access-storage: 1.4.3
+    dev: true
+
+  /random-access-memory/6.2.0:
+    resolution: {integrity: sha512-5gRsd32lQd87tHM1ODkrBsvTnQ00GMw5KjeiSFWjEeTkv6E4zSTewUaHRxDbfk+lroRaunAEECGo/gNnq1T/HQ==}
+    dependencies:
+      b4a: 1.6.0
+      is-options: 1.0.2
+      random-access-storage: 3.0.0
+    dev: false
 
   /random-access-storage/1.3.0:
     resolution: {integrity: sha512-pdS9Mcb9TB7oICypPRALlheaSuszuAKmLVEPKJMuYor7R/zDuHh5ALuQoS+ox31XRwQUL+tDwWH2GPdyspwelA==}
@@ -37158,7 +37154,8 @@ packages:
     resolution: {integrity: sha512-PaNN/roiFWzVVTL6OqjzYct38NSXewdl2wz8SRB51Br/MLIJPrbM3XexhVWkq7D3UWMysfrhKVf1v1phZq6MeQ==}
     requiresBuild: true
     dependencies:
-      node-gyp-build: 4.5.0
+      node-gyp-build: 4.6.0
+    dev: true
 
   /sodium-native/4.0.4:
     resolution: {integrity: sha512-faqOKw4WQKK7r/ybn6Lqo1F9+L5T6NlBJJYvpxbZPetpWylUVqz449mvlwIBKBqxEHbWakWuOlUt8J3Qpc4sWw==}
@@ -37185,6 +37182,7 @@ packages:
       sodium-javascript: 0.8.0
       sodium-native: 3.4.1
       xsalsa20: 1.2.0
+    dev: true
 
   /sodium-universal/4.0.0:
     resolution: {integrity: sha512-iKHl8XnBV96k1c75gwwzANFdephw/MDWSjQAjPmBE+du0y3P23Q8uf7AcdcfFsYAMwLg7WVBfSAIBtV/JvRsjA==}
