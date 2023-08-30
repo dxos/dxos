@@ -19,7 +19,7 @@ export type DropdownMenuStyleProps = Partial<{
   constrainBlockSize: boolean;
 }>;
 
-export const dropdownMenuContentViewport: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
+export const dropdownMenuViewport: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
   mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
 export const dropdownMenuContent: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
@@ -44,7 +44,7 @@ export const dropdownMenuArrow: ComponentFunction<DropdownMenuStyleProps> = (_pr
 
 export const dropdownMenuTheme: Theme<DropdownMenuStyleProps> = {
   content: dropdownMenuContent,
-  contentViewport: dropdownMenuContentViewport,
+  viewport: dropdownMenuViewport,
   item: dropdownMenuItem,
   separator: dropdownMenuSeparator,
   groupLabel: dropdownMenuGroupLabel,

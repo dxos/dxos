@@ -17,7 +17,7 @@ const StorybookDropdownMenu = () => {
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
-        <DropdownMenu.ContentViewport>
+        <DropdownMenu.Viewport>
           <DropdownMenu.Item>
             <span className='grow'>New Tab </span>
             <span className='opacity-50'>⌘+T</span>
@@ -82,7 +82,7 @@ const StorybookDropdownMenu = () => {
           {/*    Colm Tuite */}
           {/*  </DropdownMenu.RadioItem> */}
           {/* </DropdownMenu.RadioGroup> */}
-        </DropdownMenu.ContentViewport>
+        </DropdownMenu.Viewport>
 
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>

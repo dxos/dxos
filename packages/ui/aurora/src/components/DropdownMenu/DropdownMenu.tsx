@@ -60,18 +60,18 @@ const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>
   },
 );
 
-type DropdownMenuContentViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type DropdownMenuViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   asChild?: boolean;
 };
 
-const DropdownMenuContentViewport = forwardRef<HTMLDivElement, DropdownMenuContentViewportProps>(
+const DropdownMenuViewport = forwardRef<HTMLDivElement, DropdownMenuViewportProps>(
   ({ classNames, asChild, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
       <Root
         {...props}
-        className={tx('dropdownMenu.contentViewport', 'dropdown-menu__viewport', {}, classNames)}
+        className={tx('dropdownMenu.viewport', 'dropdown-menu__viewport', {}, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -149,7 +149,7 @@ export const DropdownMenu = {
   Trigger: DropdownMenuTrigger,
   Portal: DropdownMenuPortal,
   Content: DropdownMenuContent,
-  ContentViewport: DropdownMenuContentViewport,
+  Viewport: DropdownMenuViewport,
   Arrow: DropdownMenuArrow,
   Group: DropdownMenuGroup,
   Item: DropdownMenuItem,
@@ -162,7 +162,7 @@ export type {
   DropdownMenuTriggerProps,
   DropdownMenuPortalProps,
   DropdownMenuContentProps,
-  DropdownMenuContentViewportProps,
+  DropdownMenuViewportProps,
   DropdownMenuArrowProps,
   DropdownMenuGroupProps,
   DropdownMenuItemProps,
