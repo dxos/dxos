@@ -24,8 +24,8 @@ declare module 'hypercore' {
    */
   export type Range = {
     start: number;
-    end: number;
-    linear: boolean;
+    end?: number;
+    linear?: boolean;
   };
 
   /**
@@ -93,7 +93,7 @@ declare module 'hypercore' {
     keyPair?: { publicKey: Buffer; secretKey: Buffer };
     onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void;
     onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void;
-    maxRequests?: number;
+    maxRequests?: number; // Default 16.
   };
 
   /**
@@ -134,13 +134,15 @@ declare module 'hypercore' {
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
    */
   export type HypercoreOptions = {
-    sparse?: boolean; // do not mark the entire feed to be downloaded
+    sparse?: boolean; // Do not mark the entire feed to be downloaded.
+    eagerUpdate?: boolean;
     createIfMissing?: boolean;
     secretKey?: Buffer;
     valueEncoding?: ValueEncoding;
     crypto?: Crypto;
     writable?: boolean;
     stats?: boolean;
+    maxRequests?: number;
   };
 
   /**
@@ -209,6 +211,14 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
     createWriteStream(options?: WriteStreamOptions): Writable;
 
+    /**
+     * Sets up a replication stream.
+     * Blocks are downloaded:
+     * - explicitly when download or get called;
+     * - implicitly if options.sparse and options.eagerUpdate are true.
+     * @param initiator
+     * @param options
+     */
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     replicate(initiator: boolean, options?: ReplicationOptions): ProtocolStream;
 

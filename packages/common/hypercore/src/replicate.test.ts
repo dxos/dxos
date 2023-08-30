@@ -22,8 +22,8 @@ describe('Replication', () => {
 
   test('replicates feeds', async () => {
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory1.createFeed(publicKey, { secretKey });
-    const core2 = factory2.createFeed(publicKey);
+    const core1 = factory1.createFeed(publicKey, { stats: true, sparse: true, eagerUpdate: false, secretKey });
+    const core2 = factory2.createFeed(publicKey, { stats: true, sparse: true, eagerUpdate: false });
 
     // Open.
     {
@@ -33,13 +33,42 @@ describe('Replication', () => {
       await ready();
     }
 
-    const numBlocks = 10;
+    const numBlocks = 100;
+
+    // TODO(burdon): Test # wire requests
+    //  Defined by replication or feed options (defaults to 16).
+    const maxRequests = undefined;
 
     // Sync.
     {
-      const stream1 = core1.replicate(true);
-      const stream2 = core2.replicate(false);
+      // TODO(burdon): Replicate options.
+      //  https://github.com/holepunchto/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
+      const stream1 = core1.replicate(true, { maxRequests });
+      const stream2 = core2.replicate(false, { maxRequests });
 
+      {
+        const uploaded: number[] = [];
+        const downloaded: number[] = [];
+        core1.on('upload', (i) => {
+          uploaded.push(i);
+        });
+        core2.on('download', (i) => {
+          downloaded.push(i);
+        });
+
+        // Fired when all data is replicated.
+        core2.on('sync', () => {
+          const blocks = downloaded.reduce((set, i) => set.add(i), new Set<number>());
+          expect(uploaded.length).to.eq(downloaded.length);
+          expect(blocks.size).to.eq(numBlocks);
+
+          // TODO(burdon): Not linear or matching.
+          // console.log('##', JSON.stringify({ uploaded, stats: core1.stats }));
+          // console.log('##', JSON.stringify({ downloaded, stats: core2.stats }));
+        });
+      }
+
+      // TODO(burdon): Buffer requests: 1) network stream; 2) file IO.
       const [streamsClosed, onClose] = latch({ count: 2 });
       stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
@@ -57,6 +86,9 @@ describe('Replication', () => {
         core1.append(`test-${i}`, noop);
       }
 
+      // Explicitly download (since sparse and not eager).
+      // Not completely linear but much more ordered than eager replication.
+      core2.download({ start: 0, linear: true });
       await streamsClosed();
     }
 
@@ -65,7 +97,6 @@ describe('Replication', () => {
       const [closed, close] = latch({ count: 2 });
       core1.close(close);
       core1.close(close);
-
       await closed();
     }
 
@@ -163,8 +194,8 @@ describe('Replication', () => {
 
     // Close feeds.
     {
-      await core1.close();
-      await core2.close();
+      core1.close();
+      core2.close();
 
       expect(core1.writable).to.be.false;
       expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
@@ -225,6 +256,8 @@ describe('Replication', () => {
     {
       const [done, inc] = latch({ count: numBlocks });
 
+      // TODO(burdon): Batch size.
+      //  https://github.com/holepunchto/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
       setTimeout(async () => {
         for await (const _ of createReadable(core2.createReadStream({ live: true }))) {
           inc();
