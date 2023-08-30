@@ -5,18 +5,25 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { arrow, chromeSurface, dataDisabled, descriptionText, subduedFocus, surfaceElevation } from '../fragments';
+import {
+  arrow,
+  chromeSurface,
+  dataDisabled,
+  descriptionText,
+  popperMotion,
+  subduedFocus,
+  surfaceElevation,
+} from '../fragments';
 
-export type DropdownMenuStyleProps = {};
+export type DropdownMenuStyleProps = Partial<{
+  constrainBlockSize: boolean;
+}>;
+
+export const dropdownMenuContentViewport: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
+  mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
 export const dropdownMenuContent: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
-  mx(
-    'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
-    'is-48 rounded-md p-1 md:is-56',
-    chromeSurface,
-    surfaceElevation({ elevation: 'group' }),
-    ...etc,
-  );
+  mx('is-48 rounded-md md:is-56', popperMotion, chromeSurface, surfaceElevation({ elevation: 'group' }), ...etc);
 
 export const dropdownMenuItem: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
   mx(
@@ -37,6 +44,7 @@ export const dropdownMenuArrow: ComponentFunction<DropdownMenuStyleProps> = (_pr
 
 export const dropdownMenuTheme: Theme<DropdownMenuStyleProps> = {
   content: dropdownMenuContent,
+  contentViewport: dropdownMenuContentViewport,
   item: dropdownMenuItem,
   separator: dropdownMenuSeparator,
   groupLabel: dropdownMenuGroupLabel,

@@ -21,7 +21,9 @@ import {
   DropdownMenuLabel as DropdownMenuLabelPrimitive,
   DropdownMenuLabelProps as DropdownMenuLabelPrimitiveProps,
 } from '@radix-ui/react-dropdown-menu';
-import React, { forwardRef } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
@@ -39,7 +41,7 @@ type DropdownMenuPortalProps = DropdownMenuPortalPrimitiveProps;
 
 const DropdownMenuPortal = DropdownMenuPortalPrimitive;
 
-type DropdownMenuContentProps = ThemedClassName<DropdownMenuContentPrimitiveProps>;
+type DropdownMenuContentProps = ThemedClassName<DropdownMenuContentPrimitiveProps> & { constrainBlockSize?: boolean };
 
 const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -54,6 +56,26 @@ const DropdownMenuContent = forwardRef<HTMLDivElement, DropdownMenuContentProps>
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
       </DropdownMenuContentPrimitive>
+    );
+  },
+);
+
+type DropdownMenuContentViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+};
+
+const DropdownMenuContentViewport = forwardRef<HTMLDivElement, DropdownMenuContentViewportProps>(
+  ({ classNames, asChild, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root
+        {...props}
+        className={tx('dropdownMenu.contentViewport', 'dropdown-menu__viewport', {}, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
     );
   },
 );
@@ -127,6 +149,7 @@ export const DropdownMenu = {
   Trigger: DropdownMenuTrigger,
   Portal: DropdownMenuPortal,
   Content: DropdownMenuContent,
+  ContentViewport: DropdownMenuContentViewport,
   Arrow: DropdownMenuArrow,
   Group: DropdownMenuGroup,
   Item: DropdownMenuItem,
@@ -139,6 +162,7 @@ export type {
   DropdownMenuTriggerProps,
   DropdownMenuPortalProps,
   DropdownMenuContentProps,
+  DropdownMenuContentViewportProps,
   DropdownMenuArrowProps,
   DropdownMenuGroupProps,
   DropdownMenuItemProps,
