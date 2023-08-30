@@ -69,11 +69,11 @@ export class Peer {
   private _availableAfter = 0;
   public availableToConnect = true;
   private _lastConnectionTime?: number;
-  private _displacedConnection?: Connection;
 
   private readonly _ctx = new Context();
   private _connectionCtx?: Context;
 
+  public displacedConnection?: Connection;
   public connection?: Connection;
 
   /**
@@ -115,9 +115,9 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          this._displacedConnection = this.connection;
+          this.displacedConnection = this.connection;
           this.connection = undefined;
-          await this.closeConnection(this._displacedConnection, new Error('Connection displaced by remote initiator.'));
+          await this.closeConnection(this.displacedConnection, new Error('Connection displaced by remote initiator.'));
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -186,7 +186,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
       // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection(err);
+      await this.closeConnection(connection, err);
       throw err;
     } finally {
       this.initiating = false;
@@ -271,10 +271,9 @@ export class Peer {
               },
               this._availableAfter,
             );
-          } else if (this._displacedConnection === connection) {
-            this._displacedConnection = undefined;
           }
 
+          // Make sure none of the connections are stuck in the limiter.
           this._connectionLimiter.doneConnecting(sessionId);
 
           break;

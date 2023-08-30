@@ -33,11 +33,13 @@ describe('Swarm', () => {
     peerId = PublicKey.random(),
     connectionLimiter = new ConnectionLimiter(),
     signalManager = new MemorySignalManager(context),
+    initiationDelay = 100,
   }: {
     topic?: PublicKey;
     peerId?: PublicKey;
     connectionLimiter?: ConnectionLimiter;
     signalManager?: SignalManager;
+    initiationDelay?: number;
   }): Promise<TestPeer> => {
     const protocol = new TestWireProtocol(peerId);
     const swarm = new Swarm(
@@ -49,6 +51,7 @@ describe('Swarm', () => {
       createWebRTCTransportFactory(),
       undefined,
       connectionLimiter,
+      initiationDelay,
     );
 
     afterTest(async () => {
@@ -83,6 +86,23 @@ describe('Swarm', () => {
     expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2);
+  }).timeout(5_000);
+
+  test('with simultaneous connections one of the peers drops initiated connection', async () => {
+    const topic = PublicKey.random();
+
+    const peerId1 = PublicKey.fromHex('39ba0e42');
+    const peerId2 = PublicKey.fromHex('7d2bc6ab');
+
+    const peer1 = await setupSwarm({ peerId: peerId1, topic, initiationDelay: 0 });
+    const peer2 = await setupSwarm({ peerId: peerId2, topic, initiationDelay: 0 });
+
+    expect(peer1.swarm.connections.length).to.equal(0);
+    expect(peer2.swarm.connections.length).to.equal(0);
+
+    await connectSwarms(peer1, peer2);
+
+    expect(peer2.swarm._peers.get(peerId1)?.displacedConnection?.state).to.equal(ConnectionState.CLOSED);
   }).timeout(5_000);
 
   test('second peer discovered after delay', async () => {
