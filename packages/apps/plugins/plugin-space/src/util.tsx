@@ -69,13 +69,16 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
         // create clone of child and add to migration destination
         const object = clone(child.data, {
           retainId: true,
-          additional: child.data.content ? [child.data.content] : [],
+          additional: [
+            ...(child.data.content ? [child.data.content] : []),
+            ...(child.data.meta ? [child.data.meta] : []),
+          ],
         });
+        space.db.add(object);
         object.meta = {
-          ...child.data?.meta,
+          ...object.meta,
           index: nextIndex,
         };
-        space.db.add(object);
       },
       onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
         // remove child being replicated from migration origin
