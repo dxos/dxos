@@ -21,11 +21,16 @@ export type LibDataChannelTransportParams = {
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
+// https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size/
+const MAX_MESSAGE_SIZE = 64 * 1024;
+
 /**
  * Transport
  */
 export class LibDataChannelTransport implements Transport {
+  private _closed = false;
   readonly closed = new Event();
+  private _connected = false;
   readonly connected = new Event();
   readonly errors = new ErrorStream();
   private readonly _peer: Promise<PeerConnection>;
@@ -37,18 +42,27 @@ export class LibDataChannelTransport implements Transport {
 
   constructor(private readonly params: LibDataChannelTransportParams) {
     this._peer = (async () => {
-      const { PeerConnection } = await import('./datachannel/rtc-peer-connection');
+      const { RTCPeerConnection: PeerConnection } = await import('./datachannel');
+      if (this._closed) {
+        this.errors.raise(Error('connection already closed'));
+      }
       const peer = new PeerConnection(params.webrtcConfig);
 
       peer.onicecandidateerror = (event) => {
-        log.error('onicecandidateerror', { event });
+        log.error('peer.onicecandidateerror', { event });
       };
 
       peer.onconnectionstatechange = (event) => {
-        log.info('onconnectionstatechange', { event, state: peer.connectionState });
+        log.debug('peer.onconnectionstatechange', {
+          event,
+          peerConnectionState: peer.connectionState,
+          transportConnectionState: this._connected,
+        });
+        // TODO(nf): throw error if datachannel does not connect after some time?
       };
 
       peer.onicecandidate = async (event) => {
+        log.debug('peer.onicecandidate', { event });
         if (event.candidate) {
           await params.sendSignal({
             payload: {
@@ -56,8 +70,9 @@ export class LibDataChannelTransport implements Transport {
                 type: 'candidate',
                 candidate: {
                   candidate: event.candidate.candidate,
-                  sdpMLineIndex: event.candidate.sdpMLineIndex,
-                  sdpMid: event.candidate.sdpMid,
+                  // these fields never seem to be not null, but connecting to Chrome doesn't work if they are
+                  sdpMLineIndex: event.candidate.sdpMLineIndex ?? 0,
+                  sdpMid: event.candidate.sdpMid ?? 0,
                 },
               },
             },
@@ -68,20 +83,33 @@ export class LibDataChannelTransport implements Transport {
         peer
           .createOffer()
           .then(async (offer) => {
+            if (peer.connectionState !== 'connecting') {
+              log.error('i am initiator but peer not in state connecting', { peer });
+              this.errors.raise(Error('invalid state: peer is initiator, but other peer not in state connecting'));
+            }
+            log.debug(`im the initiator, creating offer, peer is in state ${peer.connectionState}`, { offer });
             await peer.setLocalDescription(offer);
             await params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
+            return offer;
           })
           .catch((err) => {
-            log.catch(err);
+            this.errors.raise(err);
           });
 
-        this._channel = peer.createDataChannel('dxos.mesh.transport');
-
-        this._channel.onopen = () => this._handleChannel(this._channel);
+        // TODO(nf): better pattern for adding event handlers to existing object?
+        this._channel = this._channelHandler(peer.createDataChannel('dxos.mesh.transport'));
+        log.info('created data channel', { label: this._channel.label });
+        peer.ondatachannel = (event) => {
+          this.errors.raise(Error('got ondatachannel when i am the initiator?'));
+        };
       } else {
         peer.ondatachannel = (event) => {
-          this._channel = event.channel;
-          this._channel.onopen = () => this._handleChannel(this._channel);
+          log.info('peer.ondatachannel (non-initiator)', { event });
+          // TODO(nf): should the label contain some identifier?
+          if (event.channel.label !== 'dxos.mesh.transport') {
+            this.errors.raise(Error(`unexpected channel label ${event.channel.label}`));
+          }
+          this._channel = this._channelHandler(event.channel);
         };
       }
 
@@ -89,41 +117,55 @@ export class LibDataChannelTransport implements Transport {
     })();
   }
 
-  private _handleChannel(dataChannel: RTCDataChannel) {
-    // TODO(nf): emit this before invoking?
-    this.connected.emit();
-    this._channel.onerror = async (err) => {
+  private _channelHandler(dataChannel: RTCDataChannel) {
+    dataChannel.onopen = () => {
+      log.info('dataChannel.onopen');
+      const duplex = new Duplex({
+        read: () => {},
+        write: (chunk, encoding, callback) => {
+          // todo wait to open
+
+          if (chunk.length > MAX_MESSAGE_SIZE) {
+            this.errors.raise(Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
+          }
+          dataChannel.send(chunk);
+
+          if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+            log.debug('bufferedAmount > MAX_BUFFERED_AMOUNT: PAUSING');
+            if (this._writeCallback !== null) {
+              log.error("consumer trying to write before we're ready for more data");
+            }
+            this._writeCallback = callback;
+          } else {
+            callback();
+          }
+        },
+      });
+
+      duplex.pipe(this.params.stream).pipe(duplex);
+      this._stream = duplex;
+      this._connected = true;
+      this.connected.emit();
+    };
+
+    dataChannel.onerror = async (err) => {
       log.error('channel error', { err });
       await this._disconnectStreams();
+      this._closed = true;
       this.closed.emit();
     };
-    this._channel.onclose = async (err) => {
+    dataChannel.onclose = async (err) => {
       log.error('channel error', { err });
       await this._disconnectStreams();
+      this._closed = true;
       this.closed.emit();
     };
-
-    const duplex = new Duplex({
-      read: () => {},
-      write: (chunk, encoding, callback) => {
-        // todo wait to open
-
-        dataChannel.send(chunk);
-
-        if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-          this._writeCallback = callback;
-        } else {
-          callback();
-        }
-      },
-    });
-
     dataChannel.onmessage = (event) => {
       let data = event.data;
       if (data instanceof ArrayBuffer) {
         data = Buffer.from(data);
       }
-      duplex.push(data);
+      this._stream.push(data);
     };
 
     // TODO(mykola): Check if this is working correctly.
@@ -134,11 +176,11 @@ export class LibDataChannelTransport implements Transport {
     };
 
     dataChannel.onclose = () => {
-      duplex.destroy();
+      this._stream.destroy();
+      this._closed = true;
       this.closed.emit();
     };
-    duplex.pipe(this.params.stream).pipe(duplex);
-    this._stream = duplex;
+    return dataChannel;
   }
 
   signal(signal: Signal): void {
@@ -147,6 +189,11 @@ export class LibDataChannelTransport implements Transport {
         const data = signal.payload.data;
         switch (data.type) {
           case 'offer': {
+            if ((await this._peer).connectionState !== 'new') {
+              log.error('received offer but peer not in state new', { peer });
+              this.errors.raise(Error('invalid signalling state: received offer when peer is not in state new'));
+              break;
+            }
             await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
             const answer = await peer.createAnswer();
             await peer.setLocalDescription(answer);
@@ -166,7 +213,8 @@ export class LibDataChannelTransport implements Transport {
             break;
 
           default:
-            log.warn('unknown signal type', { type: data.type, signal });
+            log.error('unhandled signal type', { type: data.type, signal });
+            this.errors.raise(Error(`unhandled signal type ${data.type}`));
         }
       })
       .catch((err) => {
@@ -175,12 +223,19 @@ export class LibDataChannelTransport implements Transport {
   }
 
   async destroy(): Promise<void> {
-    (await this._peer).close();
+    if (this._closed) {
+      log.warn('tried to destroy already closed connection');
+      return;
+    }
+    await this._disconnectStreams();
+    if (this._peer) {
+      (await this._peer).close();
+    }
+    this._closed = true;
     this.closed.emit();
   }
 
   private async _disconnectStreams() {
-    // TODO(rzadp): Find a way of unpiping this?
     this.params.stream.unpipe?.(this._stream)?.unpipe?.(this.params.stream);
   }
 }
