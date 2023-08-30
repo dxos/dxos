@@ -197,6 +197,45 @@ describe('database (unit)', () => {
     });
   });
 
+  describe('Mutations merging', () => {
+    test('merge EchoObject-s for one item', async () => {
+      const rig = new DatabaseTestBuilder();
+      const peer1 = await rig.createPeer();
+      const peer2 = await rig.createPeer();
+
+      const mutations = [];
+      const doc = new Doc();
+      doc.on('update', (update) => {
+        mutations.push(update);
+      });
+
+      const id = PublicKey.random().toHex();
+      const begin = peer1.proxy.beginBatch();
+      expect(begin).toBeTruthy();
+      peer1.proxy.mutate(genesisMutation(id, TextModel.meta.type));
+      const model = peer1.getModel(id);
+      invariant(model instanceof TextModel);
+      model.insert('Hello', 0);
+      model.insert(' World!', 5);
+      peer1.proxy.commitBatch();
+      await peer1.confirm();
+      await peer1.proxy.flush();
+
+      peer2.replicate(peer1.timeframe);
+      const replicatedItem = peer2.items.entities.get(id);
+      expect(replicatedItem).toBeDefined();
+      const replicatedModel = peer2.getModel(id)! as TextModel;
+      expect(replicatedModel.textContent).toBe('Hello World!');
+
+      replicatedModel.insert(' DXOS', 5);
+      await peer2.confirm();
+      await peer2.proxy.flush();
+
+      peer1.replicate(peer2.timeframe);
+      expect(model.textContent).toBe('Hello DXOS World!');
+    });
+  });
+
   it('epoch correctly resets items', async () => {
     const builder = new DatabaseTestBuilder();
     const peer = await builder.createPeer();

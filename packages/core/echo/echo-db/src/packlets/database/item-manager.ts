@@ -140,66 +140,69 @@ export class ItemManager {
     if (!mutations.objects) {
       return mutations;
     }
+
     // Get batch of mutations per item.
     // [(objectId=1), (objectId=1), (objectId=2), (objectId=1)] -> [[(objectId=1), (objectId=1)], [(objectId=2)], [(objectId=1)]]
-    const itemsMutations: EchoObject[][] = mutations.objects?.reduce(
-      (acc, mutation) => {
-        const itemMutations = acc.at(-1);
-        if (mutation.genesis || mutation.snapshot) {
-          acc.push([mutation]);
-        } else if (itemMutations?.[0]?.objectId === mutation.objectId) {
-          itemMutations.push(mutation);
-        } else {
-          acc.push([mutation]);
-        }
-        return acc;
-      },
-      [[]] as EchoObject[][],
-    );
+    const itemsMutations: EchoObject[][] = mutations.objects?.reduce((acc, mutation) => {
+      const itemMutations = acc.at(-1);
+      if (mutation.genesis || mutation.snapshot) {
+        acc.push([mutation]);
+      } else if (itemMutations?.[0]?.objectId === mutation.objectId) {
+        itemMutations.push(mutation);
+      } else {
+        acc.push([mutation]);
+      }
+      return acc;
+    }, [] as EchoObject[][]);
 
     // Merge mutations for each item.
     for (const index in itemsMutations) {
       const mutations = itemsMutations[index];
       const item = this._entities.get(mutations[0]?.objectId);
 
-      if (typeof item?.modelMeta?.mergeMutations === 'function') {
-        const mergedMutation = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(
-          item.modelMeta.mergeMutations(
-            mutations
-              .filter((mutation) => mutation.mutations)
-              .map((mutation) => mutation.mutations!.map((m) => item.modelMeta!.mutationCodec.decode(m.model.value)))
-              .flat(),
-          ),
-        );
-
-        const newMutation: EchoObject = {
-          genesis: mutations[0].genesis,
-          snapshot: mutations[0].snapshot,
-          objectId: mutations[0].objectId,
-          meta: mutations[0].meta,
-          mutations: [
-            {
-              meta: {
-                clientTag: mutations
-                  .map((mutation) =>
-                    mutation.mutations!.map((m) => {
-                      invariant(!m.meta!.feedKey);
-                      invariant(!m.meta!.memberKey);
-                      invariant(!m.meta!.seq);
-                      invariant(!m.meta!.timeframe);
-                      invariant(m.meta!.clientTag && m.meta!.clientTag.length === 1);
-                      return m.meta!.clientTag!;
-                    }),
-                  )
-                  .flat(2),
-              },
-              model: mergedMutation,
-            },
-          ],
-        };
-        log.info('merged mutation:', { newMutation });
-        mutations[index] = newMutation;
+      if (typeof item?.modelMeta?.mergeMutations !== 'function') {
+        continue;
       }
+
+      const notEmptyMutations = mutations.filter((mutation) => mutation.mutations);
+      if (notEmptyMutations.length === 0) {
+        continue;
+      }
+
+      const mergedMutation = (item.modelMeta.mutationCodec as ProtoCodec).encodeAsAny(
+        item.modelMeta.mergeMutations(
+          notEmptyMutations
+            .map((mutation) => mutation.mutations!.map((m) => item.modelMeta!.mutationCodec.decode(m.model.value)))
+            .flat(),
+        ),
+      );
+
+      const newMutation: EchoObject = {
+        genesis: mutations[0].genesis,
+        snapshot: mutations[0].snapshot,
+        objectId: mutations[0].objectId,
+        meta: mutations[0].meta,
+        mutations: [
+          {
+            meta: {
+              clientTag: notEmptyMutations
+                .map((mutation) =>
+                  mutation.mutations!.map((m) => {
+                    invariant(!m.meta!.feedKey);
+                    invariant(!m.meta!.memberKey);
+                    invariant(!m.meta!.seq);
+                    invariant(!m.meta!.timeframe);
+                    invariant(m.meta!.clientTag && m.meta!.clientTag.length === 1);
+                    return m.meta!.clientTag!;
+                  }),
+                )
+                .flat(2),
+            },
+            model: mergedMutation,
+          },
+        ],
+      };
+      itemsMutations[index] = [newMutation];
     }
 
     // Return flattened mutations.
