@@ -55,6 +55,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       repeatInterval: 5_000,
       streamLoadInterval: 1,
       streamLoadChunkSize: 5_000_000,
+      showPNG: true,
     },
     options: {
       staggerAgents: 1000,
@@ -75,6 +76,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       insertionSize: 512,
       operationCount: 1000,
       signalArguments: ['globalsubserver'],
+      showPNG: true,
     },
     options: {
       staggerAgents: 5,

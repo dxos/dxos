@@ -18,7 +18,7 @@ const columns: GridColumnDef<Credential, any>[] = [
   // @ts-ignore
   helper.accessor('id', builder.createKey({ tooltip: true })),
   helper.accessor('issuer', builder.createKey({ tooltip: true })),
-  helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type' }),
+  helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type', size: 240 }),
   helper.accessor('issuanceDate', builder.createDate({ header: 'issued' })),
 ];
 

@@ -46,23 +46,25 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
-              {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={async () => {
-                      const { object: nextSection } = await sendIntent(intent);
-                      handleAdd(nextSection, stack.sections.length);
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
+              <DropdownMenu.Viewport>
+                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={async () => {
+                        const { object: nextSection } = await sendIntent(intent);
+                        handleAdd(nextSection, stack.sections.length);
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </ButtonGroup>
