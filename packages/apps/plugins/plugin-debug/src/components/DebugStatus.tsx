@@ -74,7 +74,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
     if (!space) {
       return;
     }
-    const { start, stop } = timer((err) => setState(err ? 2 : 0), { min: 500, max: 2000 });
+    const { start, stop } = timer((err) => setState(err ? 2 : 0), { min: 250, max: 2000 });
     return space.db.pendingBatch.on(({ duration }) => {
       if (duration === undefined) {
         setState(1);
