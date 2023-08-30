@@ -29,6 +29,9 @@ export const SplitView = () => {
         }
       }}
     >
+      <div role='none' className='sr-only'>
+        <Surface name='documentTitle' limit={1} />
+      </div>
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
