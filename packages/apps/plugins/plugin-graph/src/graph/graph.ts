@@ -156,9 +156,9 @@ export class GraphStore implements Graph {
       },
       invoke: async () => {
         if (Array.isArray(action.intent)) {
-          return await this._sendIntent?.(...action.intent);
+          return this._sendIntent?.(...action.intent);
         } else if (action.intent) {
-          return await this._sendIntent?.(action.intent);
+          return this._sendIntent?.(action.intent);
         }
       },
       add: (...partials) => {
