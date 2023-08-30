@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
-import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPng } from '../analysys';
+import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
@@ -32,6 +32,7 @@ export type TransportTestSpec = {
   repeatInterval: number;
 
   signalArguments: string[];
+  showPNG: boolean;
 };
 
 export type TransportAgentConfig = {
@@ -304,8 +305,22 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       }
     });
 
+    if (params.spec.showPNG) {
+      await this.generatePNG(muxerStats, testStats);
+    }
+
+    //
+    // Connections.
+    //
+    return analyzeConnections(reader);
+  }
+
+  private async generatePNG(
+    muxerStats: Map<string, SerializedLogEntry<TeleportStatsLog>[]>,
+    testStats: Map<string, SerializedLogEntry<TestStatsLog>[]>,
+  ) {
     let colorIdx = 0;
-    showPng(
+    showPNG(
       await renderPNG({
         type: 'scatter',
         data: {
@@ -351,11 +366,6 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         options: {},
       }),
     );
-
-    //
-    // Connections.
-    //
-    return analyzeConnections(reader);
   }
 }
 
