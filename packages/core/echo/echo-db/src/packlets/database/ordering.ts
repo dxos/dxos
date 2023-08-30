@@ -101,7 +101,10 @@ export class MutationQueue<T> {
     // Remove optimistic mutation from the queue.
     let optimisticIndex = -1;
     if (entry.mutation.meta!.clientTag) {
-      invariant(entry.mutation.meta!.clientTag.length === 1);
+      invariant(
+        entry.mutation.meta!.clientTag.length === 1,
+        `Multiple tags are not supported: ${entry.mutation.meta!.clientTag}`,
+      );
       optimisticIndex = this._optimistic.findIndex(
         (message) =>
           message.mutation.meta!.clientTag &&
