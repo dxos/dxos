@@ -32,7 +32,9 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   const [itemsInOrder, setItemsInOrder] = useState(items.sort(sortByIndex));
   const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
 
-  useEffect(() => setItemsInOrder(items.sort(sortByIndex)), [items, parent.id]);
+  useEffect(() => {
+    return setItemsInOrder(items.sort(sortByIndex));
+  }, [items, parent.id]);
 
   useDragStart(({ active }) => {
     setActiveNode(active.data?.current?.treeitem ?? null);
@@ -43,7 +45,6 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
       const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
       if (activeNode && overNode) {
         if (overIsDroppable === 'rearrange') {
-          console.log('[drag end]', 'rearrange');
           dnd.overlayDropAnimation = 'around';
           if (overNode.id !== activeNode.id) {
             const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
@@ -52,7 +53,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
             const beforeNode = itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1];
             const afterNode = itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex];
             if (beforeNode?.properties.index === afterNode?.properties.index) {
-              const nextActiveIndex = getIndexAbove(beforeNode.properties.index);
+              const nextActiveIndex = getIndexAbove(beforeNode?.properties.index);
               const nextAfterIndex = getIndexAbove(nextActiveIndex);
               parent.properties.onRearrangeChild(activeNode, nextActiveIndex);
               parent.properties.onRearrangeChild(afterNode, nextAfterIndex);
@@ -60,31 +61,27 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
               parent.properties.onRearrangeChild(
                 activeNode,
                 overIndex < 1
-                  ? getIndexBelow(itemsInOrder[0].properties.index)
-                  : getIndexBetween(beforeNode.properties.index, afterNode?.properties.index),
+                  ? getIndexBelow(itemsInOrder[0]?.properties.index)
+                  : getIndexBetween(beforeNode?.properties.index, afterNode?.properties.index),
               );
             }
             setItemsInOrder(parent.children.sort(sortByIndex));
           }
         } else if (overIsDroppable === 'migrate-destination') {
-          console.log('[drag end]', 'migrate');
-          dnd.overlayDropAnimation = 'into';
-          if (overNode.parent?.properties.onMigrateStartChild && activeNode.parent?.properties.onMigrateEndChild) {
-            const overSiblings = overNode.parent?.children.sort(sortByIndex);
-            const overIndex = overSiblings.findIndex(({ id }) => id === overNode.id);
+          dnd.overlayDropAnimation = 'around';
+          if (overNode.parent?.properties.onMigrateStartChild) {
+            const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
             const migratedIndex =
               overIndex < 1
-                ? getIndexBelow(overSiblings[0].properties.index)
+                ? getIndexBelow(itemsInOrder[0]?.properties.index)
                 : getIndexBetween(
-                    overSiblings[overIndex - 1].properties.index,
-                    overSiblings[overIndex].properties.index,
+                    itemsInOrder[overIndex - 1]?.properties.index,
+                    itemsInOrder[overIndex + 1]?.properties.index,
                   );
             overNode.parent?.properties.onMigrateStartChild(activeNode, overNode.parent, migratedIndex);
-            activeNode.parent?.properties.onMigrateEndChild(activeNode);
           }
-          setItemsInOrder(parent.children.sort(sortByIndex));
         } else if (overIsDroppable === 'migrate-origin') {
-          setItemsInOrder(parent.children.sort(sortByIndex));
+          activeNode.parent?.properties.onMigrateEndChild?.(activeNode);
         }
       }
       setActiveNode(null);
@@ -96,6 +93,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   useDragOver(
     ({ over }) => {
       let dropType: NavTreeDropType = null;
+
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
         if (
@@ -103,13 +101,14 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
           activeNode.parent?.id === parent.id &&
           overNode.parent?.id === parent.id
         ) {
+          // rearrange relevant & supported
           dropType = 'rearrange';
         } else if (
           activeNode.parent?.id !== overNode.parent?.id &&
           activeNode.properties?.migrationClass &&
           overNode.parent?.properties?.acceptMigrationClass?.has(activeNode.properties.migrationClass)
         ) {
-          // migration supported
+          // migration relevant
           if (overNode.parent?.id === parent.id) {
             dropType = 'migrate-destination';
           } else if (activeNode.parent?.id === parent.id) {
@@ -119,31 +118,35 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
       }
 
       setOverIsDroppable(dropType);
+
       setItemsInOrder((itemsCurrent) => {
-        const overNode: Graph.Node = over?.data?.current?.treeitem;
-        const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode?.id);
-        switch (dropType) {
-          case 'migrate-origin':
-            return itemsCurrent.filter(({ id }) => id !== activeNode?.id);
-          case 'migrate-destination':
-            if (overIndex >= 0) {
-              const persistedObjects = [...items];
-              return [
-                ...persistedObjects.slice(0, overIndex),
-                {
-                  ...activeNode!,
-                  id: 'migration-subject',
-                  parent,
-                  properties: { isPreview: true },
-                },
-                ...persistedObjects.slice(overIndex, persistedObjects.length),
-              ];
-            } else {
-              return itemsCurrent;
-            }
-          case 'rearrange':
-          default:
-            return itemsCurrent.length !== items.length ? items.sort(sortByIndex) : itemsCurrent;
+        const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
+        if (overNode && activeNode) {
+          const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode?.id);
+          switch (dropType) {
+            case 'migrate-origin':
+              return itemsCurrent.filter(({ id }) => id !== activeNode?.id);
+            case 'migrate-destination':
+              if (overIndex >= 0) {
+                return [
+                  ...items.slice(0, overIndex),
+                  {
+                    ...activeNode!,
+                    id: 'migration-subject',
+                    parent,
+                    properties: { isPreview: true },
+                  },
+                  ...items.slice(overIndex, items.length),
+                ];
+              } else {
+                return itemsCurrent;
+              }
+            case 'rearrange':
+            default:
+              return itemsCurrent.length !== items.length ? items.sort(sortByIndex) : itemsCurrent;
+          }
+        } else {
+          return itemsCurrent;
         }
       });
     },
