@@ -39,6 +39,7 @@ describe('ItemManager', () => {
       expect(itemManager.entities.size).toEqual(0);
     });
   });
+
   describe.skip('parent-child relationship', () => {
     test('can be constructed and will have correct references', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
