@@ -65,7 +65,9 @@ export const AppMenu = () => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content classNames='z-50'>
-                <Actions />
+                <DropdownMenu.Viewport>
+                  <Actions />
+                </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
