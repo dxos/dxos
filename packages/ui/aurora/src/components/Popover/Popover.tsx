@@ -18,7 +18,9 @@ import {
   PopoverCloseProps as PopoverClosePrimitiveProps,
   PopoverClose as PopoverClosePrimitive,
 } from '@radix-ui/react-popover';
-import React, { forwardRef, FunctionComponent } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { ComponentPropsWithRef, forwardRef, FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
@@ -64,12 +66,36 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     const { tx } = useThemeContext();
     return (
       <PopoverContentPrimitive
+        sideOffset={4}
+        collisionPadding={8}
         {...props}
         className={tx('popover.content', 'popover', {}, classNames)}
         ref={forwardedRef}
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
       </PopoverContentPrimitive>
+    );
+  },
+);
+
+type PopoverViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+  constrainInline?: boolean;
+  constrainBlock?: boolean;
+};
+
+const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
+  ({ classNames, asChild, constrainInline = true, constrainBlock = true, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root
+        {...props}
+        className={tx('popover.viewport', 'popover__viewport', { constrainInline, constrainBlock }, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
     );
   },
 );
@@ -82,6 +108,7 @@ export const Popover = {
   Arrow: PopoverArrow,
   Close: PopoverClose,
   Content: PopoverContent,
+  Viewport: PopoverViewport,
 };
 
 export type {
@@ -92,4 +119,5 @@ export type {
   PopoverArrowProps,
   PopoverCloseProps,
   PopoverContentProps,
+  PopoverViewportProps,
 };

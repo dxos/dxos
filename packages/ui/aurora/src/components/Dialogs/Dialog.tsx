@@ -46,7 +46,6 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
     const { tx } = useThemeContext();
     return (
       <DialogTitlePrimitive
-        {...(!srOnly && { tabIndex: 0 })}
         {...props}
         className={tx('dialog.title', 'dialog__title', { srOnly }, classNames)}
         ref={forwardedRef}
