@@ -19,7 +19,7 @@ import { GenericStackObject, getSectionModels, STACK_PLUGIN, StackSectionModel, 
 import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 
-export const StackSectionsPanel: FC<{
+export const StackSectionsSortable: FC<{
   sections: StackSections;
   id: string;
   onAdd: (sectionObject: GenericStackObject, start: number) => StackSectionModel[];
