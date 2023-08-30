@@ -49,23 +49,7 @@ describe('TextModel', () => {
     }
   });
 
-  test.skip('insert', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
-
-    peer1.model.insert('Hello World!', 0);
-
-    // await peer2.model.update.waitForCount(1);
-    expect(peer2.model.textContent).toBe('Hello World!');
-
-    // TODO(burdon): Test delete.
-    const words = peer1.model.textContent.split(' ');
-    peer2.model.insert(' DXOS', words[0].length);
-    // await peer1.model.update.waitForCount(1);
-    expect(peer1.model.textContent).toBe('Hello DXOS World!');
-  });
-
+  // TODO(mykola): transfer to @dxos/echo-pipeline database unit test
   test.skip('insert a new text node', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
