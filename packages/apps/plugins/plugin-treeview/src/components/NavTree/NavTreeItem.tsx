@@ -85,7 +85,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
 
   const [open, setOpen] = useState(level < 1);
 
-  const disabled = !!node.properties?.disabled;
+  const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
   const active = treeViewActive === node.id;
 
   useEffect(() => {

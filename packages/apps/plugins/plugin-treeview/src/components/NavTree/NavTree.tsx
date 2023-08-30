@@ -5,7 +5,7 @@
 import { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
@@ -21,14 +21,18 @@ export type TreeViewProps = {
   parent?: string | Graph.Node | null;
 };
 
+type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
+
 const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; items: Graph.Node[]; level: number }) => {
-  // todo(thure): `observer` does not trigger updates when node indices are updated.
-  const itemsInOrder = items.sort(sortByIndex);
-  const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
   const dnd = useDnd();
 
   const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);
-  const [overIsDroppable, setOverIsDroppable] = useState<'rearrange' | 'migrate' | null>(null);
+  const [overIsDroppable, setOverIsDroppable] = useState<NavTreeDropType>(null);
+
+  const [itemsInOrder, setItemsInOrder] = useState(items.sort(sortByIndex));
+  const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
+
+  useEffect(() => setItemsInOrder(items.sort(sortByIndex)), [items, parent.id]);
 
   useDragStart(({ active }) => {
     setActiveNode(active.data?.current?.treeitem ?? null);
@@ -60,17 +64,27 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
                   : getIndexBetween(beforeNode.properties.index, afterNode?.properties.index),
               );
             }
+            setItemsInOrder(parent.children.sort(sortByIndex));
           }
-        } else if (overIsDroppable === 'migrate' && overNode.parent?.properties.onMigrateChild) {
+        } else if (overIsDroppable === 'migrate-destination') {
           console.log('[drag end]', 'migrate');
-          dnd.overlayDropAnimation = 'around';
-          const overSiblings = overNode.parent?.children.sort(sortByIndex);
-          const overIndex = overSiblings.findIndex(({ id }) => id === overNode.id);
-          const migratedIndex =
-            overIndex < 1
-              ? getIndexBelow(overSiblings[0].properties.index)
-              : getIndexBetween(overSiblings[overIndex - 1].properties.index, overSiblings[overIndex].properties.index);
-          overNode.parent?.properties.onMigrateChild(activeNode, overNode.parent, migratedIndex);
+          dnd.overlayDropAnimation = 'into';
+          if (overNode.parent?.properties.onMigrateChild && activeNode.parent?.properties.onMigrateChild) {
+            const overSiblings = overNode.parent?.children.sort(sortByIndex);
+            const overIndex = overSiblings.findIndex(({ id }) => id === overNode.id);
+            const migratedIndex =
+              overIndex < 1
+                ? getIndexBelow(overSiblings[0].properties.index)
+                : getIndexBetween(
+                    overSiblings[overIndex - 1].properties.index,
+                    overSiblings[overIndex].properties.index,
+                  );
+            overNode.parent?.properties.onMigrateChild(activeNode, overNode.parent, migratedIndex);
+            activeNode.parent?.properties.onMigrateChild(activeNode, overNode.parent, migratedIndex);
+          }
+          setItemsInOrder(parent.children.sort(sortByIndex));
+        } else if (overIsDroppable === 'migrate-origin') {
+          setItemsInOrder(parent.children.sort(sortByIndex));
         }
       }
       setActiveNode(null);
@@ -81,7 +95,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
 
   useDragOver(
     ({ over }) => {
-      console.log('[drag over]', activeNode, over?.data);
+      let dropType: NavTreeDropType = null;
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
         if (
@@ -89,25 +103,55 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
           activeNode.parent?.id === parent.id &&
           overNode.parent?.id === parent.id
         ) {
-          console.log('[drag over]', 'rearrange');
-          setOverIsDroppable('rearrange');
+          dropType = 'rearrange';
         } else if (
+          activeNode.parent?.id !== overNode.parent?.id &&
           activeNode.properties?.migrationClass &&
           overNode.parent?.properties?.acceptMigrationClass?.has(activeNode.properties.migrationClass)
         ) {
-          console.log('[drag over]', 'migrate');
-          setOverIsDroppable('migrate');
-        } else {
-          console.log('[drag over]', null);
-          setOverIsDroppable(null);
+          // migration supported
+          if (overNode.parent?.id === parent.id) {
+            dropType = 'migrate-destination';
+          } else if (activeNode.parent?.id === parent.id) {
+            dropType = 'migrate-origin';
+          }
         }
       }
+
+      setOverIsDroppable(dropType);
+      setItemsInOrder((itemsCurrent) => {
+        const overNode: Graph.Node = over?.data?.current?.treeitem;
+        const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode.id);
+        switch (dropType) {
+          case 'migrate-origin':
+            return itemsCurrent.filter(({ id }) => id !== activeNode?.id);
+          case 'migrate-destination':
+            if (overIndex >= 0) {
+              const persistedObjects = [...items];
+              return [
+                ...persistedObjects.slice(0, overIndex),
+                {
+                  ...activeNode!,
+                  id: 'migration-subject',
+                  parent,
+                  properties: { isPreview: true },
+                },
+                ...persistedObjects.slice(overIndex, persistedObjects.length),
+              ];
+            } else {
+              return itemsCurrent;
+            }
+          case 'rearrange':
+          default:
+            return itemsCurrent.length !== items.length ? items.sort(sortByIndex) : itemsCurrent;
+        }
+      });
     },
-    [activeNode, parent],
+    [activeNode, parent, items],
   );
 
   return (
-    <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
+    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) => (
         <SortableTreeViewItem
           key={item.id}
