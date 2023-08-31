@@ -100,7 +100,7 @@ export class MutationQueue<T> {
 
     // Remove optimistic mutation from the queue.
     let optimisticIndex = -1;
-    if (entry.mutation.meta!.clientTag) {
+    if (entry.mutation.meta!.clientTag && entry.mutation.meta!.clientTag.length > 0) {
       invariant(
         entry.mutation.meta!.clientTag.length === 1,
         `Multiple tags are not supported: ${entry.mutation.meta!.clientTag}`,
