@@ -64,6 +64,7 @@ export class LibDataChannelTransport implements Transport {
       peer.onicecandidate = async (event) => {
         log.debug('peer.onicecandidate', { event });
         if (event.candidate) {
+try {
           await params.sendSignal({
             payload: {
               data: {
@@ -77,6 +78,9 @@ export class LibDataChannelTransport implements Transport {
               },
             },
           });
+          } catch(err) {
+             log.warn('signaling errror, { err })
+          }
         }
       };
       if (params.initiator) {
