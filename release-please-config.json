@@ -114,6 +114,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-settings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-space/package.json",
           "jsonpath": "$.version"
         },

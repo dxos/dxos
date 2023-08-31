@@ -17,6 +17,7 @@
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

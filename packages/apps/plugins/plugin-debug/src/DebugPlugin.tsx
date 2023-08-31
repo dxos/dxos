@@ -6,11 +6,12 @@ import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { SETTINGS_PLUGIN, SettingsPluginProvides } from '@braneframe/plugin-settings';
 import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
+import { DebugMain, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -23,6 +24,11 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   return {
     meta: {
       id: DEBUG_PLUGIN,
+    },
+    ready: async (plugins) => {
+      // TODO(burdon): Copy pattern (with PLUGIN const).
+      const settingsPlugin = findPlugin<SettingsPluginProvides>(plugins, SETTINGS_PLUGIN);
+      console.log(settingsPlugin?.provides.store);
     },
     provides: {
       translations,
@@ -64,8 +70,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               },
             });
             return;
-            // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
-          } else if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
+          } else if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 

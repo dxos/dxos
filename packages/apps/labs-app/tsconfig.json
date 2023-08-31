@@ -97,6 +97,9 @@
       "path": "../plugins/plugin-pwa"
     },
     {
+      "path": "../plugins/plugin-settings"
+    },
+    {
       "path": "../plugins/plugin-space"
     },
     {

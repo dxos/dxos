@@ -515,6 +515,7 @@ importers:
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
+      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
@@ -561,6 +562,7 @@ importers:
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
+      '@braneframe/plugin-settings': link:../plugins/plugin-settings
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
@@ -675,6 +677,7 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -708,6 +711,7 @@ importers:
     dependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-settings': link:../plugin-settings
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/async': link:../../../common/async
       '@dxos/client': link:../../../sdk/client
@@ -1258,6 +1262,20 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-settings:
+    specifiers:
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      react: ^18.2.0
+      vite: ^4.3.9
+    devDependencies:
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-space:
@@ -28788,7 +28806,7 @@ packages:
       sane: 4.1.0
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -39740,7 +39758,7 @@ packages:
       postcss: 8.4.24
       rollup: 3.23.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /vite/4.3.9_@types+node@18.11.9:
