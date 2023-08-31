@@ -90,7 +90,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     data: document,
     properties: {
       index: get(document, 'meta.index', index),
-      migrationClass: 'spaceObject',
+      persistenceClass: 'spaceObject',
       ...fallbackProps,
     },
   });

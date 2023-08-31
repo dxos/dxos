@@ -13,7 +13,7 @@ export const TreeItemDragOverlay = ({ data }: { data: Graph.Node }) => {
   return (
     <DensityProvider density='fine'>
       <List variant='unordered'>
-        <NavTreeItem node={data} level={2} isOverlay />
+        <NavTreeItem node={data} level={3} isOverlay />
       </List>
     </DensityProvider>
   );
