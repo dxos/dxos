@@ -185,7 +185,7 @@ export namespace Graph {
     intent?: Intent | Intent[];
 
     /**
-     * Properties of the node relevant to displaying the node.
+     * Properties of the node relevant to displaying the action.
      *
      * @example { index: 'a1' }
      */
