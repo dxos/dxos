@@ -31,6 +31,7 @@ export const stackToGraphNode = (parent: Graph.Node<Space>, object: Stack, index
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
+      persistenceClass: 'spaceObject',
     },
   });
 

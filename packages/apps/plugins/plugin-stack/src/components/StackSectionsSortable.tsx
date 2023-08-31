@@ -23,7 +23,9 @@ export const StackSectionsSortable: FC<{
   sections: StackSections;
   id: string;
   onAdd: (sectionObject: GenericStackObject, start: number) => StackSectionModel[];
-}> = ({ sections, id: stackId, onAdd }) => {
+  persistenceId?: string;
+  StackSectionComponent?: typeof StackSection;
+}> = ({ sections, id: stackId, onAdd, persistenceId, StackSectionComponent = StackSection }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const dnd = useDnd();
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
@@ -126,11 +128,12 @@ export const StackSectionsSortable: FC<{
       <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
         {sectionModels.map((sectionModel, start) => {
           return (
-            <StackSection
+            <StackSectionComponent
               key={sectionModel.id}
               onRemove={() => handleRemove(start)}
               section={sectionModel}
               rearranging={overIsMember && activeId === sectionModel.id}
+              persistenceId={persistenceId}
             />
           );
         })}
