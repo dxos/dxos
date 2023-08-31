@@ -4,7 +4,7 @@
 
 import { Duplex } from 'stream';
 
-import { Event, Trigger } from '@dxos/async';
+import { Event, Trigger, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -19,6 +19,7 @@ export type LibDataChannelTransportParams = {
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
+const DATACHANNEL_LABEL = 'dxos.mesh.transport';
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size/
@@ -44,7 +45,7 @@ export class LibDataChannelTransport implements Transport {
     this._peer = (async () => {
       const { RTCPeerConnection: PeerConnection } = await import('./datachannel');
       if (this._closed) {
-        this.errors.raise(Error('connection already closed'));
+        this.errors.raise(new Error('connection already closed'));
       }
       const peer = new PeerConnection(params.webrtcConfig);
 
@@ -64,22 +65,22 @@ export class LibDataChannelTransport implements Transport {
       peer.onicecandidate = async (event) => {
         log.debug('peer.onicecandidate', { event });
         if (event.candidate) {
-try {
-          await params.sendSignal({
-            payload: {
-              data: {
-                type: 'candidate',
-                candidate: {
-                  candidate: event.candidate.candidate,
-                  // these fields never seem to be not null, but connecting to Chrome doesn't work if they are
-                  sdpMLineIndex: event.candidate.sdpMLineIndex ?? 0,
-                  sdpMid: event.candidate.sdpMid ?? 0,
+          try {
+            await params.sendSignal({
+              payload: {
+                data: {
+                  type: 'candidate',
+                  candidate: {
+                    candidate: event.candidate.candidate,
+                    // these fields never seem to be not null, but connecting to Chrome doesn't work if they are
+                    sdpMLineIndex: event.candidate.sdpMLineIndex ?? 0,
+                    sdpMid: event.candidate.sdpMid ?? 0,
+                  },
                 },
               },
-            },
-          });
-          } catch(err) {
-             log.warn('signaling errror, { err })
+            });
+          } catch (err) {
+            log.warn('signaling errror', { err });
           }
         }
       };
@@ -89,7 +90,7 @@ try {
           .then(async (offer) => {
             if (peer.connectionState !== 'connecting') {
               log.error('i am initiator but peer not in state connecting', { peer });
-              this.errors.raise(Error('invalid state: peer is initiator, but other peer not in state connecting'));
+              this.errors.raise(new Error('invalid state: peer is initiator, but other peer not in state connecting'));
             }
             log.debug(`im the initiator, creating offer, peer is in state ${peer.connectionState}`, { offer });
             await peer.setLocalDescription(offer);
@@ -101,19 +102,19 @@ try {
           });
 
         // TODO(nf): better pattern for adding event handlers to existing object?
-        this._channel = this._channelHandler(peer.createDataChannel('dxos.mesh.transport'));
-        log.info('created data channel', { label: this._channel.label });
+        this.handleChannel(peer.createDataChannel(DATACHANNEL_LABEL));
+        log.debug('created data channel');
         peer.ondatachannel = (event) => {
-          this.errors.raise(Error('got ondatachannel when i am the initiator?'));
+          this.errors.raise(new Error('got ondatachannel when i am the initiator?'));
         };
       } else {
         peer.ondatachannel = (event) => {
-          log.info('peer.ondatachannel (non-initiator)', { event });
+          log.debug('peer.ondatachannel (non-initiator)', { event });
           // TODO(nf): should the label contain some identifier?
-          if (event.channel.label !== 'dxos.mesh.transport') {
-            this.errors.raise(Error(`unexpected channel label ${event.channel.label}`));
+          if (event.channel.label !== DATACHANNEL_LABEL) {
+            this.errors.raise(new Error(`unexpected channel label ${event.channel.label}`));
           }
-          this._channel = this._channelHandler(event.channel);
+          this.handleChannel(event.channel);
         };
       }
 
@@ -121,16 +122,17 @@ try {
     })();
   }
 
-  private _channelHandler(dataChannel: RTCDataChannel) {
-    dataChannel.onopen = () => {
-      log.info('dataChannel.onopen');
+  private handleChannel(dataChannel: RTCDataChannel) {
+    this._channel = dataChannel;
+    this._channel.onopen = () => {
+      log.debug('dataChannel.onopen');
       const duplex = new Duplex({
         read: () => {},
         write: (chunk, encoding, callback) => {
           // todo wait to open
 
           if (chunk.length > MAX_MESSAGE_SIZE) {
-            this.errors.raise(Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
+            this.errors.raise(new Error(`message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}`));
           }
           dataChannel.send(chunk);
 
@@ -152,19 +154,15 @@ try {
       this.connected.emit();
     };
 
-    dataChannel.onerror = async (err) => {
-      log.error('channel error', { err });
-      await this._disconnectStreams();
-      this._closed = true;
-      this.closed.emit();
+    this._channel.onerror = async (err) => {
+      this.errors.raise(new Error('channel error: ' + err.toString()));
+      await this._close();
     };
-    dataChannel.onclose = async (err) => {
-      log.error('channel error', { err });
-      await this._disconnectStreams();
-      this._closed = true;
-      this.closed.emit();
+    this._channel.onclose = async (err) => {
+      log.info('channel onclose', { err });
+      await this._close();
     };
-    dataChannel.onmessage = (event) => {
+    this._channel.onmessage = (event) => {
       let data = event.data;
       if (data instanceof ArrayBuffer) {
         data = Buffer.from(data);
@@ -172,19 +170,21 @@ try {
       this._stream.push(data);
     };
 
-    // TODO(mykola): Check if this is working correctly.
-    dataChannel.onbufferedamountlow = () => {
+    this._channel.onbufferedamountlow = () => {
       const cb = this._writeCallback;
       this._writeCallback = null;
       cb?.();
     };
+  }
 
-    dataChannel.onclose = () => {
-      this._stream.destroy();
-      this._closed = true;
-      this.closed.emit();
-    };
-    return dataChannel;
+  @synchronized
+  private async _close() {
+    if (this._closed) {
+      return;
+    }
+    await this._disconnectStreams();
+    this._closed = true;
+    this.closed.emit();
   }
 
   signal(signal: Signal): void {
@@ -195,20 +195,30 @@ try {
           case 'offer': {
             if ((await this._peer).connectionState !== 'new') {
               log.error('received offer but peer not in state new', { peer });
-              this.errors.raise(Error('invalid signalling state: received offer when peer is not in state new'));
+              this.errors.raise(new Error('invalid signalling state: received offer when peer is not in state new'));
               break;
             }
-            await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
-            const answer = await peer.createAnswer();
-            await peer.setLocalDescription(answer);
-            await this.params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
-            this._readyForCandidates.wake();
+            try {
+              await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
+              const answer = await peer.createAnswer();
+              await peer.setLocalDescription(answer);
+              await this.params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
+              this._readyForCandidates.wake();
+            } catch (err) {
+              log.error("can't handle offer from signalling server", { err });
+              this.errors.raise(new Error('error handling offer'));
+            }
             break;
           }
 
           case 'answer':
-            await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
-            this._readyForCandidates.wake();
+            try {
+              await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
+              this._readyForCandidates.wake();
+            } catch (err) {
+              log.error("can't handle answer from signalling server", { err });
+              this.errors.raise(new Error('error handling answer'));
+            }
             break;
 
           case 'candidate':
@@ -218,7 +228,7 @@ try {
 
           default:
             log.error('unhandled signal type', { type: data.type, signal });
-            this.errors.raise(Error(`unhandled signal type ${data.type}`));
+            this.errors.raise(new Error(`unhandled signal type ${data.type}`));
         }
       })
       .catch((err) => {
@@ -226,17 +236,9 @@ try {
       });
   }
 
+  // TODO(nf): add classmethod to call node-datachannel.cleanup() when all instances have been destroyed?
   async destroy(): Promise<void> {
-    if (this._closed) {
-      log.warn('tried to destroy already closed connection');
-      return;
-    }
-    await this._disconnectStreams();
-    if (this._peer) {
-      (await this._peer).close();
-    }
-    this._closed = true;
-    this.closed.emit();
+    await this._close();
   }
 
   private async _disconnectStreams() {
