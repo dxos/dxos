@@ -6,6 +6,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
@@ -40,6 +41,8 @@ export const testConfigWithLocalSignal = new Config({
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
 export class TestBuilder {
+  private readonly _ctx = new Context();
+
   public config: Config;
 
   public storage?: Storage;
@@ -78,24 +81,28 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost() {
-    return new ClientServicesHost({
+    const services = new ClientServicesHost({
       config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,
     });
+    this._ctx.onDispose(() => services.close());
+    return services;
   }
 
   /**
    * Create local services host.
    */
   createLocal() {
-    return new LocalClientServices({
+    const services = new LocalClientServices({
       config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,
     });
+    this._ctx.onDispose(() => services.close());
+    return services;
   }
 
   /**
@@ -108,10 +115,17 @@ export class TestBuilder {
       handlers: host.services as ClientServices,
       port: hostPort,
     });
+    this._ctx.onDispose(() => server.close());
+
     // TODO(dmaretskyi): Refactor.
 
     const client = new Client({ services: new ClientServicesProxy(proxyPort) });
+    this._ctx.onDispose(() => client.destroy());
     return [client, server];
+  }
+
+  destroy() {
+    void this._ctx.dispose();
   }
 }
 
@@ -119,6 +133,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
   const objectId = PublicKey.random().toHex();
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+  create.commitBatch();
 
   await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
