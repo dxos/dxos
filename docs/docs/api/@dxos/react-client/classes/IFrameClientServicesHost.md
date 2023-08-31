@@ -1,8 +1,8 @@
 # Class `IFrameClientServicesHost`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:14]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:17]()</sub>
 
 
-Provide access to client services definitions and service handler.
+Proxy to host client service via iframe.
 
 
 ## Constructors
@@ -18,6 +18,9 @@ Arguments:
 
 
 ## Properties
+### [invalidatedInvitationCode]()
+Type: <code>Event&lt;string&gt;</code>
+
 ### [joinedSpace]()
 Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
 
