@@ -278,7 +278,7 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     }
 
     if (description.type !== 'offer') {
-      console.log(`setLocalDescription: only offer is supported, not ${description.type}`);
+      console.log(`node-datachannel: setLocalDescription: only offer is supported, not ${description.type}`);
       // any other type causes libdatachannel to throw
       return;
     }
