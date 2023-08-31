@@ -22,15 +22,13 @@ import { ComplexMap } from '@dxos/util';
 import { SimplePeerTransport } from './simplepeer-transport';
 
 type TransportState = {
-  transport: WebRTCTransport;
+  transport: SimplePeerTransport;
   stream: Duplex;
   writeCallbacks: (() => void)[];
 };
 
 export class WebRTCTransportService implements BridgeService {
-  private readonly transports = new ComplexMap<PublicKey, { transport: SimplePeerTransport; stream: Duplex }>(
-    PublicKey.hash,
-  );
+  private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
   // prettier-ignore
   constructor(
