@@ -1,24 +1,24 @@
 # Type `ClientOptions`
-<sub>Declared in [packages/sdk/client/src/client/client.ts:40](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L40)</sub>
+<sub>Declared in [packages/sdk/client/src/client/client.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L44)</sub>
 
 
-This options object configures the DXOS Client
+This options object configures the DXOS Client.
 
 
 ## Properties
-### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L42)
+### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L46)
 Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-client configuration object
+Client configuration object.
 
 
-### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L46)
+### [modelFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L50)
 Type: <code>ModelFactory</code>
 
-custom model factory
+Custom model factory.
 
 
-### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L44)
+### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L48)
 Type: <code>MaybePromise&lt;ClientServicesProvider&gt;</code>
 
-custom services provider
+Custom services provider.
