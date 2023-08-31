@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
+import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 
 import { invariant } from '@dxos/invariant';
 import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
@@ -62,6 +62,22 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     stateMachine: () => new TextModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.text.TextMutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.TextSnapshot'),
+    mergeMutations: (mutations: TextMutation[]) => {
+      const first = mutations[0];
+      invariant(
+        mutations.every(
+          (mutation) =>
+            mutation.kind === first.kind && mutation.field === first.field && mutation.clientId === first.clientId,
+        ),
+      );
+
+      return {
+        kind: first.kind,
+        field: first.field,
+        clientId: first.clientId,
+        update: mergeUpdates(mutations.map((mutation) => mutation.update!)),
+      };
+    },
   };
 
   private _unsubscribe: (() => void) | undefined;

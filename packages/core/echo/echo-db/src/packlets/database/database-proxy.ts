@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTask, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
@@ -19,6 +19,8 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
+
+const BATCH_INTERVAL = 200;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -39,6 +41,7 @@ export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
+  private _currentBatchCtx?: Context;
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
   public readonly pendingBatch = new Event<BatchUpdate>();
@@ -82,11 +85,10 @@ export class DatabaseProxy {
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item.modelType === model.meta.type) {
-          await this._itemManager.initializeModel(item.id);
+          this._itemManager.initializeModel(item.id);
         }
       }
     });
-
     const loaded = new Trigger();
 
     invariant(!this._entities);
@@ -272,6 +274,9 @@ export class DatabaseProxy {
 
   // TODO(burdon): Make async?
   commitBatch() {
+    // Discard scheduled commit.
+    void this._currentBatchCtx?.dispose();
+
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
@@ -289,7 +294,7 @@ export class DatabaseProxy {
 
     this._service
       .write({
-        batch: batch.data,
+        batch: this._itemManager.mergeMutations(batch.data),
         spaceKey: this._spaceKey,
         clientTag: batch.clientTag!,
       })
@@ -337,7 +342,9 @@ export class DatabaseProxy {
       };
     } finally {
       if (batchCreated) {
-        this.commitBatch();
+        this._currentBatchCtx = this._ctx.derive();
+        // Commit batch after a delay to allow for batching.
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_INTERVAL);
       }
     }
   }

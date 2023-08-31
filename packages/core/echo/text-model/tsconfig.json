@@ -35,9 +35,6 @@
       "path": "../document-model"
     },
     {
-      "path": "../echo-db"
-    },
-    {
       "path": "../model-factory"
     }
   ]

@@ -69,7 +69,7 @@ describe('Ordering', () => {
 
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: false, apply: true });
       expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe()))).toEqual({ reorder: false, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), 'unk'))).toEqual({
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), ['unk']))).toEqual({
         reorder: false,
         apply: true,
       });
@@ -81,14 +81,14 @@ describe('Ordering', () => {
     test('confirming optimistic mutations', () => {
       const queue = new MutationQueue();
 
-      queue.pushOptimistic(createOptimisticMutation('1'));
-      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), '1'))).toEqual({
+      queue.pushOptimistic(createOptimisticMutation(['1']));
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['1']))).toEqual({
         reorder: false,
         apply: false,
       });
 
-      queue.pushOptimistic(createOptimisticMutation('2'));
-      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), '2'))).toEqual({
+      queue.pushOptimistic(createOptimisticMutation(['2']));
+      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), ['2']))).toEqual({
         reorder: false,
         apply: false,
       });
@@ -99,14 +99,38 @@ describe('Ordering', () => {
     test('push confirmed under optimistic', () => {
       const queue = new MutationQueue();
 
-      queue.pushOptimistic(createOptimisticMutation('1'));
+      queue.pushOptimistic(createOptimisticMutation(['1']));
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: true, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), '1'))).toEqual({
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), ['1']))).toEqual({
         reorder: false,
         apply: false,
       });
 
       expect(queue.getMutations().length).toEqual(2);
+    });
+
+    test('pushing mutation with same tag throws', async () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation(['1', '2', '3', '4']));
+      expect(() => queue.pushOptimistic(createOptimisticMutation(['5', '6', '2', '7']))).toThrowError('2');
+    });
+
+    test('confirming mutation with more than one tag throws', async () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation(['1', '2', '3', '4']));
+      expect(() => queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['1', '2']))).toThrow();
+    });
+
+    test('mutation is confirmed if at one tag matches', async () => {
+      const queue = new MutationQueue();
+
+      const mutation = createOptimisticMutation(['1', '2', '3', '4']);
+      queue.pushOptimistic(mutation);
+      expect(queue.getConfirmedMutations().length).toEqual(0);
+      queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['2']));
+      expect(queue.getConfirmedMutations().length).toEqual(1);
     });
   });
 });
@@ -115,7 +139,7 @@ const createMutation = (
   feedKey: PublicKey,
   seq: number,
   timeframe: Timeframe,
-  clientTag?: string,
+  clientTag?: string[],
 ): MutationInQueue => ({
   mutation: {
     meta: {
@@ -132,7 +156,7 @@ const createMutation = (
   },
 });
 
-const createOptimisticMutation = (clientTag: string): MutationInQueue => ({
+const createOptimisticMutation = (clientTag: string[]): MutationInQueue => ({
   mutation: {
     meta: {
       clientTag,
