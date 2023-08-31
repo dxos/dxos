@@ -22,6 +22,10 @@ const main = async () => {
   let devtools: WebSocket | undefined;
 
   const handleHost = (socket: WebSocket, request: IncomingMessage) => {
+    if (host) {
+      host?.removeAllListeners('message');
+    }
+
     host = socket;
     socket.on('message', (data) => {
       log('from host', { data });

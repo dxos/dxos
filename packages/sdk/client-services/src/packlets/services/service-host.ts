@@ -108,7 +108,7 @@ export class ClientServicesHost {
     this._callbacks = callbacks;
 
     if (config) {
-      void this.initialize({ config, transportFactory, signalManager });
+      this.initialize({ config, transportFactory, signalManager });
     }
 
     if (lockKey) {
@@ -180,7 +180,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  async initialize({ config, ...options }: InitializeOptions) {
+  initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
@@ -282,7 +282,6 @@ export class ClientServicesHost {
     await this._serviceContext.open(ctx);
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
-    console.log('devtoolsProxy', devtoolsProxy);
     if (devtoolsProxy) {
       this._devtoolsProxy = new WebsocketRpcClient({
         url: devtoolsProxy,
@@ -291,7 +290,6 @@ export class ClientServicesHost {
         handlers: this.services as ClientServices,
       });
       void this._devtoolsProxy.open();
-      console.log('opening devtools proxy');
     }
 
     this._opening = false;
