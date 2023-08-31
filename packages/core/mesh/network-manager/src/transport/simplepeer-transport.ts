@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Transport } from './transport';
+import { Transport, TransportFactory } from './transport';
 import { wrtc } from './webrtc';
 
 export type SimplePeerTransportParams = {
@@ -105,3 +105,11 @@ export class SimplePeerTransport implements Transport {
     this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
   }
 }
+
+export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  createTransport: (params) =>
+    new SimplePeerTransport({
+      ...params,
+      webrtcConfig,
+    }),
+});

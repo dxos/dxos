@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type PeerConnection } from './datachannel/rtc-peer-connection';
-import { Transport } from './transport';
+import { Transport, TransportFactory } from './transport';
 
 export type LibDataChannelTransportParams = {
   initiator: boolean;
@@ -245,3 +245,11 @@ export class LibDataChannelTransport implements Transport {
     this.params.stream.unpipe?.(this._stream)?.unpipe?.(this.params.stream);
   }
 }
+
+export const createLibDataChannelTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  createTransport: (params) =>
+    new LibDataChannelTransport({
+      ...params,
+      webrtcConfig,
+    }),
+});

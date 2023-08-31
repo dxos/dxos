@@ -14,7 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, MemoryTransportFactory } from '@dxos/network-manager';
+import {
+  createSimplePeerTransportFactory,
+  createLibDataChannelTransportFactory,
+  MemoryTransportFactory,
+} from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
@@ -46,18 +50,18 @@ export class TestBuilder {
   public config: Config;
 
   public storage?: Storage;
-  _webrtcLibrary?: string;
+  _transport: string;
 
-  // TODO(nf): move webrtcLibrary to config.
   // prettier-ignore
   constructor (
     config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
     public signalManagerContext = new MemorySignalManagerContext(),
-    webrtcLibrary?: string,
+    transport = 'simple-peer',
   ) {
     this.config = config ?? new Config();
-    this._webrtcLibrary = webrtcLibrary;
+    this._transport = transport;
+
   }
 
   /**
@@ -66,14 +70,17 @@ export class TestBuilder {
   private get networking() {
     const signals = this.config.get('runtime.services.signaling');
     if (signals) {
+      log.info(`using transport ${this._transport}`);
       return {
         signalManager: new WebsocketSignalManager(signals),
-        transportFactory: createWebRTCTransportFactory(
-          {
-            iceServers: this.config.get('runtime.services.ice'),
-          },
-          this._webrtcLibrary,
-        ),
+        transportFactory:
+          this._transport === 'libdatachannel'
+            ? createLibDataChannelTransportFactory({
+                iceServers: this.config.get('runtime.services.ice'),
+              })
+            : createSimplePeerTransportFactory({
+                iceServers: this.config.get('runtime.services.ice'),
+              }),
       };
     }
 

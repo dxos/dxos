@@ -34,7 +34,7 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
-  webrtcLibrary: string;
+  transport: 'simple-peer' | 'simple-peer-proxy' | 'libdatachannel';
   showPNG: boolean;
 };
 
@@ -82,7 +82,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     const { agentIdx, signalUrl } = config;
 
     if (!this.builder) {
-      this.builder = new TestBuilder(undefined, undefined, undefined, spec.webrtcLibrary);
+      this.builder = new TestBuilder(undefined, undefined, undefined, spec.transport);
     }
 
     this.builder.config = new Config({

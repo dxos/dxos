@@ -3,20 +3,29 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
   SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
+import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { ProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
-import { MemoryTransportFactory, TransportFactory, createWebRTCTransportFactory } from '../transport';
+import {
+  MemoryTransportFactory,
+  TransportFactory,
+  SimplePeerTransportProxyFactory,
+  SimplePeerTransportService,
+  createSimplePeerTransportFactory,
+  createLibDataChannelTransportFactory,
+} from '../transport';
 import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
@@ -28,7 +37,7 @@ export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
-  webrtcLibrary?: string;
+  transport?: string;
 };
 
 /**
@@ -48,7 +57,10 @@ export class TestBuilder {
   }
 
   createPeer(peerId: PublicKey = PublicKey.random()) {
-    return new TestPeer(this, peerId, this.options.webrtcLibrary);
+    if (!this.options.transport) {
+      return new TestPeer(this, peerId, 'simple-peer');
+    }
+    return new TestPeer(this, peerId, this.options.transport);
   }
 }
 
@@ -74,21 +86,53 @@ export class TestPeer {
   constructor(
     private readonly testBuilder: TestBuilder,
     public readonly peerId: PublicKey,
-    public readonly webrtcLibrary?: string,
+    public readonly transport: string,
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
-    this._networkManager = this.createNetworkManager(webrtcLibrary);
+    this._networkManager = this.createNetworkManager(transport);
   }
 
   // TODO(burdon): Move to TestBuilder.
-  createNetworkManager(webrtcLibrary?: string) {
+  createNetworkManager(transport: string) {
     let transportFactory: TransportFactory = MemoryTransportFactory;
 
     if (this.testBuilder.options.signalHosts) {
       if (this.testBuilder.options.bridge) {
-        throw new Error('no longer implemented.');
+        // Simulates bridge to shared worker.
+        const [proxyPort, servicePort] = createLinkedPorts();
+
+        this._proxy = createProtoRpcPeer({
+          port: proxyPort,
+          requested: {
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+          },
+          noHandshake: true,
+          encodingOptions: {
+            preserveAny: true,
+          },
+        });
+
+        this._service = createProtoRpcPeer({
+          port: servicePort,
+          exposed: {
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+          },
+          handlers: { BridgeService: new SimplePeerTransportService() },
+          noHandshake: true,
+          encodingOptions: {
+            preserveAny: true,
+          },
+        });
+        log.info('using SimplePeerTransportProxy');
+        transportFactory = new SimplePeerTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
       } else {
-        transportFactory = createWebRTCTransportFactory(undefined, webrtcLibrary);
+        if (transport === 'libdatachannel') {
+          log.info('using LibDataChannelTransport');
+          transportFactory = createLibDataChannelTransportFactory();
+        } else {
+          log.info('using SimplePeerTransport');
+          transportFactory = createSimplePeerTransportFactory();
+        }
       }
     }
 
