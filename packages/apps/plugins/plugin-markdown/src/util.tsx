@@ -8,6 +8,7 @@ import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
+import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
 import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
@@ -101,7 +102,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
-      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
     },
   });
 
@@ -111,7 +112,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
     icon: (props) => <PencilSimpleLine {...props} />,
     intent: {
       action: SpaceAction.RENAME_OBJECT,
-      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
     },
   });
 
