@@ -21,11 +21,13 @@ describe('database (unit)', () => {
 
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer.proxy.commitBatch();
     peer.proxy.mutate(
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
-
+    peer.proxy.commitBatch();
     await peer.confirm();
+
     expect(peer.confirmed).toEqual(1);
     expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]));
 
@@ -45,10 +47,13 @@ describe('database (unit)', () => {
 
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer.proxy.commitBatch();
+
     peer.proxy.mutate(
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
+    peer.proxy.commitBatch();
     await peer.confirm();
     expect(peer.confirmed).toEqual(1);
     expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]));
@@ -74,6 +79,7 @@ describe('database (unit)', () => {
     peer1.proxy.mutate(
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
+    peer1.proxy.commitBatch();
     await peer1.confirm();
 
     peer2.replicate(peer1.timeframe);
@@ -179,6 +185,7 @@ describe('database (unit)', () => {
       invariant(model instanceof TextModel);
       model.insert('Hello World!', 0);
 
+      peer1.proxy.commitBatch();
       await peer1.confirm();
       await peer1.proxy.flush();
 
@@ -189,6 +196,8 @@ describe('database (unit)', () => {
       expect(replicatedModel.textContent).toBe('Hello World!');
 
       replicatedModel.insert(' DXOS', 5);
+
+      peer2.proxy.commitBatch();
       await peer2.confirm();
       await peer2.proxy.flush();
 
@@ -217,19 +226,23 @@ describe('database (unit)', () => {
       invariant(model instanceof TextModel);
       model.insert('Hello', 0);
       model.insert(' World!', 5);
+
       peer1.proxy.commitBatch();
       await peer1.confirm();
-      await peer1.proxy.flush();
+
+      // Mutations got merged.
+      expect(peer1.feedMessages.length).toEqual(1);
 
       peer2.replicate(peer1.timeframe);
+
       const replicatedItem = peer2.items.entities.get(id);
       expect(replicatedItem).toBeDefined();
       const replicatedModel = peer2.getModel(id)! as TextModel;
       expect(replicatedModel.textContent).toBe('Hello World!');
 
       replicatedModel.insert(' DXOS', 5);
+      peer2.proxy.commitBatch();
       await peer2.confirm();
-      await peer2.proxy.flush();
 
       peer1.replicate(peer2.timeframe);
       expect(model.textContent).toBe('Hello DXOS World!');
@@ -242,9 +255,11 @@ describe('database (unit)', () => {
 
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    peer.proxy.commitBatch();
     peer.proxy.mutate(
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
+    peer.proxy.commitBatch();
 
     await peer.confirm();
     expect(peer.confirmed).toEqual(1);
