@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, scheduleTaskInterval, sleep, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTask, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -20,7 +20,7 @@ import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
 
-const BATCH_INTERVAL = 500;
+const BATCH_INTERVAL = 200;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -41,6 +41,7 @@ export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
+  private _currentBatchCtx?: Context;
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
   public readonly pendingBatch = new Event<BatchUpdate>();
@@ -169,7 +170,6 @@ export class DatabaseProxy {
     await loaded.wait();
 
     this._open = true;
-    scheduleTaskInterval(this._ctx, () => this.batchCycle(), 0);
   }
 
   async close(): Promise<void> {
@@ -274,6 +274,9 @@ export class DatabaseProxy {
 
   // TODO(burdon): Make async?
   commitBatch() {
+    // Discard scheduled commit.
+    void this._currentBatchCtx?.dispose();
+
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
@@ -305,20 +308,6 @@ export class DatabaseProxy {
           batch.receiptTrigger!.throw(err);
         },
       );
-  }
-
-  async batchCycle() {
-    let created = false;
-    if (!this._currentBatch) {
-      created = this.beginBatch();
-    }
-
-    await cancelWithContext(this._ctx, sleep(BATCH_INTERVAL));
-
-    if (this._currentBatch?.data.objects?.length !== 0 && created) {
-      this.commitBatch();
-      created = false;
-    }
   }
 
   // TODO(dmaretskyi): Revert batch.
@@ -353,7 +342,9 @@ export class DatabaseProxy {
       };
     } finally {
       if (batchCreated) {
-        this.commitBatch();
+        this._currentBatchCtx = this._ctx.derive();
+        // Commit batch after a delay to allow for batching.
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_INTERVAL);
       }
     }
   }
