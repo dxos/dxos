@@ -910,6 +910,7 @@ importers:
     specifiers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -936,6 +937,7 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-settings': link:../plugin-settings
       '@braneframe/types': link:../../types
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/log': link:../../../common/log

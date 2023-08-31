@@ -119,13 +119,13 @@ const SwarmIndicator: FC<IconProps> = (props) => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Lightning className={getSize(5)} {...props} />
+        <Lightning className={getSize(4)} {...props} />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <LightningSlash className={mx(styles.warning, getSize(5))} {...props} />
+        <LightningSlash className={mx(styles.warning, getSize(4))} {...props} />
       </span>
     );
   }
@@ -180,7 +180,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
 export const DebugStatus = () => {
   const indicators = useMemo(() => [SavingIndicator, ErrorIndicator, SwarmIndicator], []);
   return (
-    <div className='flex items-center p-2 gap-1 h-8 text-neutral-300 dark:text-neutral-700'>
+    <div className='flex items-center px-1 gap-1 h-6 text-neutral-300 dark:text-neutral-700 border-l border-t'>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}

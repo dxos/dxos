@@ -8,18 +8,21 @@ import { Context, createContext } from 'react';
 export type SettingsValues = { [index: string]: string };
 
 export class SettingsStore {
-  readonly _values: SettingsValues = deepSignal<SettingsValues>({ foo: '100' });
+  public readonly _values: SettingsValues = deepSignal<SettingsValues>({});
 
   get values() {
     return this._values;
   }
 
   getKey(key: string): any {
-    localStorage.getItem(key);
+    const value = localStorage.getItem(key);
+    if (value) {
+      this._values[key] = value;
+    }
+    return this._values[key];
   }
 
   setKey(key: string, value: string | undefined) {
-    console.log('SET', key, value, this._values);
     if (value) {
       localStorage.setItem(key, value);
       this._values[key] = value;
@@ -27,7 +30,6 @@ export class SettingsStore {
       localStorage.removeItem(key);
       delete this._values[key];
     }
-    console.log('SET', key, value, this._values);
   }
 }
 

@@ -58,6 +58,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
+        // TODO(burdon): Invalidate graph when toggling visibility.
         nodes: (parent) => {
           if (parent.id === 'root') {
             parent.addAction({
@@ -66,7 +67,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
-                action: 'debug-openDevtools',
+                action: 'open-devtools',
               },
               properties: {
                 testId: 'spacePlugin.openDevtools',
@@ -91,7 +92,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       intent: {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
-            case 'debug-openDevtools': {
+            case 'open-devtools': {
               // TODO(burdon): Access config.
               const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               if (!clientPlugin) {
@@ -111,7 +112,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       component: (data, role) => {
         switch (role) {
           case 'main': {
-            return settingsStore?.getKey(SETTINGS_KEY) ? DebugMain : null;
+            return isDebug(data) && settingsStore?.getKey(SETTINGS_KEY) ? DebugMain : null;
           }
           case 'status': {
             return settingsStore?.getKey(SETTINGS_KEY) ? DebugStatus : null;

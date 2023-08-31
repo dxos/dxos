@@ -5,8 +5,8 @@
 import { Octokit } from 'octokit';
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
+import { useSettings } from '@braneframe/plugin-settings';
 import { log } from '@dxos/log';
-import { useKeyStore } from '@dxos/react-client/halo';
 
 export type OctokitContextValue = {
   pat: string;
@@ -16,26 +16,24 @@ export type OctokitContextValue = {
 };
 
 export const OctokitContext: Context<OctokitContextValue> = createContext<OctokitContextValue>({
-  pat: '',
+  pat: '', // TODO(burdon): Access settings directly.
   setPat: async () => {},
   patError: null,
   octokit: null,
 });
 
 // TODO(burdon): github.com/settings/pat
-const GhPatKey = 'com.github.pat';
+const GITHUB_PAT = 'com.github.pat';
 
 export const useOctokitContext = () => useContext(OctokitContext);
 
 export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
-  const [keyMap, setKey] = useKeyStore([GhPatKey]);
-  const pat = keyMap.get(GhPatKey) ?? '';
-
+  const settings = useSettings();
   const [octokit, setOctokit] = useState<Octokit | null>(null);
   const [patError, setPatError] = useState<OctokitContextValue['patError']>(null);
 
   const setPat = async (nextPat: string) => {
-    setKey(GhPatKey, nextPat);
+    settings.setKey(GITHUB_PAT, nextPat);
     if (nextPat) {
       const nextOctokit = new Octokit({ auth: nextPat });
       return nextOctokit.rest.users.getAuthenticated().then(
@@ -54,6 +52,7 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
     }
   };
 
+  const pat = settings.getKey(GITHUB_PAT);
   useEffect(() => {
     if (pat && !octokit) {
       void setPat(pat);

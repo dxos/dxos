@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/log": "workspace:*",
