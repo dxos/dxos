@@ -19,7 +19,6 @@
   ],
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
