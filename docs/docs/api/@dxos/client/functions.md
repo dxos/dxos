@@ -9,7 +9,7 @@ title: Functions
 JSON config.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: 
 
@@ -22,7 +22,7 @@ Arguments:
 Provided dynamically by server.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: none
 
@@ -30,10 +30,10 @@ Arguments: none
 
 
 
-ENV variable (key/value) map
+ENV variable (key/value) map.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: 
 
@@ -46,6 +46,6 @@ Arguments:
 Development config.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: none

@@ -23,6 +23,9 @@ Arguments:
 ### [[devtoolsFormatter]]()
 Type: <code>DevtoolsFormatter</code>
 
+### [length]()
+Type: <code>number</code>
+
 
 ## Methods
 ### [\[custom\](depth, options)]()
