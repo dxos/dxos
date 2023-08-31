@@ -117,8 +117,7 @@ export class Peer {
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
           this.connectionDisplaced.emit(this.connection);
-          await this.closeConnection(new Error('Connection displaced by remote initiator.'));
-          this.connection = undefined;
+          await this.closeConnection(new Error('Connection displaced by remote initiator.'), true);
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -301,18 +300,24 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(err?: Error) {
+  async closeConnection(err?: Error, reset = false) {
     if (!this.connection) {
       return;
     }
 
-    log('closing...', { peerId: this.id, sessionId: this.connection.sessionId });
+    const connection = this.connection;
+
+    if (reset) {
+      this.connection = undefined;
+    }
+
+    log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await this.connection.close(err);
+    await connection.close(err);
 
-    log('closed', { peerId: this.id, sessionId: this.connection.sessionId });
+    log('closed', { peerId: this.id, sessionId: connection.sessionId });
   }
 
   async onSignal(message: SignalMessage) {
