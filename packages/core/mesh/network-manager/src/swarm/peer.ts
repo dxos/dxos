@@ -16,6 +16,12 @@ import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 
+export class ConnectionDisplacedError extends Error {
+  constructor() {
+    super('Connection displaced by remote initiator.');
+  }
+}
+
 interface PeerCallbacks {
   /**
    * Connection attempt initiated.
@@ -116,8 +122,7 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          this.connectionDisplaced.emit(this.connection);
-          await this.closeConnection(new Error('Connection displaced by remote initiator.'), true);
+          await this.closeConnection(new ConnectionDisplacedError());
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -217,15 +222,8 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory,
-    );
-    this._callbacks.onInitiated(connection);
-
-    void this._connectionCtx?.dispose();
-    this._connectionCtx = this._ctx.derive();
-
-    connection.stateChanged.on((state) => {
-      switch (state) {
-        case ConnectionState.CONNECTED: {
+      {
+        onConnected: () => {
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
@@ -238,11 +236,14 @@ export class Peer {
             sessionId,
             initiator,
           });
-          break;
-        }
-
-        case ConnectionState.CLOSED: {
+        },
+        onClosed: (err) => {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
+
+          // Make sure none of the connections are stuck in the limiter.
+          this._connectionLimiter.doneConnecting(sessionId);
+
+          invariant(this.connection === connection, 'Connection mismatch (race condition).');
 
           log.trace('dxos.mesh.connection.closed', {
             topic: this.topic,
@@ -252,7 +253,9 @@ export class Peer {
             initiator,
           });
 
-          if (this.connection === connection) {
+          if (err instanceof ConnectionDisplacedError) {
+            this.connectionDisplaced.emit(this.connection);
+          } else {
             if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
               // If we're closing the connection, and it has been connected for a while, reset the backoff.
               this._availableAfter = 0;
@@ -260,7 +263,6 @@ export class Peer {
               this.availableToConnect = false;
               this._availableAfter = increaseInterval(this._availableAfter);
             }
-            this.connection = undefined;
             this._callbacks.onDisconnected();
 
             scheduleTask(
@@ -273,13 +275,15 @@ export class Peer {
             );
           }
 
-          // Make sure none of the connections are stuck in the limiter.
-          this._connectionLimiter.doneConnecting(sessionId);
+          this.connection = undefined;
+        },
+      },
+    );
+    this._callbacks.onInitiated(connection);
 
-          break;
-        }
-      }
-    });
+    void this._connectionCtx?.dispose();
+    this._connectionCtx = this._ctx.derive();
+
     connection.errors.handle((err) => {
       log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
       log.trace('dxos.mesh.connection.error', {
@@ -300,16 +304,12 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(err?: Error, reset = false) {
+  async closeConnection(err?: Error) {
     if (!this.connection) {
       return;
     }
 
     const connection = this.connection;
-
-    if (reset) {
-      this.connection = undefined;
-    }
 
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
