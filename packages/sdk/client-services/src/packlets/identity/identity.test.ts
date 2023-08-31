@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MetadataStore,
@@ -106,8 +107,8 @@ describe('identity/identity', () => {
       space,
     });
 
-    await identity.open();
-    afterTest(() => identity.close());
+    await identity.open(new Context());
+    afterTest(() => identity.close(new Context()));
 
     //
     // Identity genesis
@@ -219,8 +220,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
 
       //
       // Identity genesis
@@ -310,8 +311,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
     }
 
     //

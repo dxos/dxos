@@ -4,8 +4,6 @@
 
 import express from 'express';
 
-import { log } from '@dxos/log';
-
 import { AbstractPlugin } from '../plugin';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { FunctionDispatcher } from './dispatcher';
@@ -64,7 +62,7 @@ export class FunctionsPlugin extends AbstractPlugin {
 
     const port = this._options.port ?? DEFAULT_PORT;
     this._server.listen(port, () => {
-      log('functions server listening', { port });
+      console.log('functions server listening', { port });
     });
   }
 

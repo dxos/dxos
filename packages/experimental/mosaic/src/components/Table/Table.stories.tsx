@@ -18,7 +18,7 @@ const columns: TableColumn<Item<TestData>>[] = [
   {
     Header: 'id',
     accessor: (record) => record.id.slice(0, 8),
-    Cell: ({ value }: any) => <div className='font-mono font-xs'>{value}</div>,
+    Cell: ({ value }: any) => <div className='font-mono text-xs'>{value}</div>,
     width: 80,
   },
   {

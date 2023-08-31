@@ -24,6 +24,9 @@
       "path": "../debug"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../keys"
     },
     {

@@ -24,7 +24,7 @@ import {
   WebRTCTransportProxyFactory,
   WebRTCTransportService,
 } from '../transport';
-import { TestWireProtocol } from './test-wire-protocol';
+import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;
@@ -152,13 +152,13 @@ export class TestPeer {
     return swarm;
   }
 
-  createSwarm(topic: PublicKey): TestSwarmConnection {
+  createSwarm(topic: PublicKey, extensionFactory: TestTeleportExtensionFactory = () => []): TestSwarmConnection {
     // TODO(burdon): Multiple.
     // if (this._swarms.get(topic)) {
     //   throw new Error(`Swarm already exists for topic: ${topic.truncate()}`);
     // }
 
-    const swarm = new TestSwarmConnection(this, topic);
+    const swarm = new TestSwarmConnection(this, topic, extensionFactory);
     this._swarms.set(topic, swarm);
     return swarm;
   }
@@ -176,10 +176,14 @@ export class TestPeer {
 export class TestSwarmConnection {
   protocol: TestWireProtocol;
 
-  constructor(readonly peer: TestPeer, readonly topic: PublicKey) {
+  constructor(
+    readonly peer: TestPeer,
+    readonly topic: PublicKey,
+    readonly extensionFactory: TestTeleportExtensionFactory,
+  ) {
     // TODO(burdon): Configure plugins.
     // TODO(burdon): Prevent reuse?
-    this.protocol = new TestWireProtocol(this.peer.peerId);
+    this.protocol = new TestWireProtocol(this.peer.peerId, this.extensionFactory);
   }
 
   // TODO(burdon): Need to create new plugin instance per swarm?

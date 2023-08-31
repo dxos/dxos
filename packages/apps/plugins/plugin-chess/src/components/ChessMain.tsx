@@ -4,14 +4,13 @@
 
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
-import invariant from 'tiny-invariant';
 
 import { Main } from '@dxos/aurora';
-import { baseSurface, mx } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
 import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
-import { SpaceProxy } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 
-export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; object: Game } }) => {
+export const ChessMain = ({ data: object }: { data: Game }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
     if (!model || object.pgn !== model?.chess.pgn()) {
@@ -38,7 +37,7 @@ export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; obj
   }
 
   return (
-    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
+    <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>
       <div className='flex grow justify-center items-center md:m-8'>
         <div className='flex md:min-w-[600px] md:min-h-[600px]'>
           <Chessboard model={model} onUpdate={handleUpdate} />

@@ -2,21 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphNode } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
+import type { TFunction } from '@dxos/aurora';
 
 export const uriToActive = (uri: string) => {
-  const [_, pluginShortId, nodeId, ...rest] = uri.split('/');
-  return pluginShortId && nodeId ? [`${pluginShortId}/${nodeId}`, ...rest] : pluginShortId ? [pluginShortId] : [];
+  const [_, ...nodeId] = uri.split('/');
+  return nodeId ? nodeId.join(':') : undefined;
 };
 
-export const activeToUri = (active: string[]) => '/' + active.join('/').split('/').map(encodeURIComponent).join('/');
+export const activeToUri = (active?: string) =>
+  '/' + (active ? active.split(':').map(encodeURIComponent).join('/') : '');
 
-export const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
-  const node = graph.find((node) => node.id === id);
-  if (!node) {
-    return nodes;
+// TODO(wittjosiah): Move into node implementation?
+export const sortActions = (actions: Graph.Action[]): Graph.Action[] =>
+  actions.sort((a, b) => {
+    if (a.properties.disposition === b.properties.disposition) {
+      return 0;
+    }
+
+    if (a.properties.disposition === 'toolbar') {
+      return -1;
+    }
+
+    return 1;
+  });
+
+// NOTE: This is the same as @tldraw/indices implementation but working on Graph.Node properties.
+export const sortByIndex = (a: Graph.Node, b: Graph.Node) => {
+  if (a.properties.index < b.properties.index) {
+    return -1;
+  } else if (a.properties.index > b.properties.index) {
+    return 1;
   }
-
-  const children = Object.values(node.pluginChildren ?? {}).flat() as GraphNode[];
-  return resolveNodes(children, path, [...nodes, node]);
+  return 0;
 };
+
+export const getTreeItemLabel = (node: Graph.Node, t: TFunction) =>
+  node.properties?.preferFallbackTitle
+    ? Array.isArray(node.properties.fallbackTitle)
+      ? t(...(node.properties.fallbackTitle as [string, { ns: string }]))
+      : node.properties.fallbackTitle
+    : Array.isArray(node.label)
+    ? t(...node.label)
+    : node.label;

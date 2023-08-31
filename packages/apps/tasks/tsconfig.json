@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "outDir": "out/tasks",
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["vite.config.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

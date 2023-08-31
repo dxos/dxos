@@ -17,8 +17,12 @@ export enum SplitViewAction {
 
 export type SplitViewContextValue = DeepSignal<{
   sidebarOpen: boolean;
+  complementarySidebarOpen: boolean | null;
   dialogContent: any;
   dialogOpen: boolean;
+  popoverContent?: any;
+  popoverOpen?: boolean;
+  popoverAnchorId?: string;
 }>;
 
 export type SplitViewProvides = GraphProvides &

@@ -3,10 +3,10 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -163,7 +163,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           } catch (err) {
             // TODO(burdon): Same queue closed twice.
             log.warn('queue closed', { feedKey: queue.feed.key });
-            console.log(Array.from(this._feedQueues.values()));
+            // console.log(Array.from(this._feedQueues.values()));
           }
         }
       }

@@ -45,7 +45,7 @@ describe('Memory transport', () => {
       const message = randomBytes(PACKET_SIZE / 2).toString('hex');
 
       for (let i = 0; i < NUM_ROUNDS; i++) {
-        console.log(`Round ${i}/${NUM_ROUNDS}`);
+        // console.log(`Round ${i}/${NUM_ROUNDS}`);
         await Promise.all(
           pairs.map(async ({ swarm1, swarm2 }) => {
             await exchangeMessages(swarm1, swarm2, message);

@@ -45,8 +45,14 @@ message ControlMetricsResponse {
   optional bool recording = 1;
 }
 
+// TODO(burdon): Rename Trace?
 message QueryMetricsRequest {
   optional int32 interval = 1;
+}
+
+message QueryMetricsResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  Metrics metrics = 2;
 }
 
 // NOTE: Keep aligned with LogLevel in @dxos/log.
@@ -81,6 +87,7 @@ message LogEntry {
     string file = 1;
     int32 line = 2;
     optional google.protobuf.Struct scope = 3;
+    optional int32 resource_id = 4;
   }
 
   LogLevel level = 1;
@@ -92,7 +99,8 @@ message LogEntry {
 }
 
 service LoggingService {
+  // TODO(burdon): Deprecated: move to system service/diagnostics.
   rpc ControlMetrics(ControlMetricsRequest) returns (ControlMetricsResponse);
-  rpc QueryMetrics(QueryMetricsRequest) returns (stream Metrics);
+  rpc QueryMetrics(QueryMetricsRequest) returns (stream QueryMetricsResponse);
   rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }

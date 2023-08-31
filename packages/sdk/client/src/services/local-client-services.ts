@@ -5,6 +5,7 @@
 import { synchronized } from '@dxos/async';
 import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { ClientServicesHost, ClientServicesHostParams } from '@dxos/client-services';
+import { Context } from '@dxos/context';
 import { ServiceBundle } from '@dxos/rpc';
 
 /**
@@ -38,7 +39,7 @@ export class LocalClientServices implements ClientServicesProvider {
 
     const { ClientServicesHost } = await import('@dxos/client-services');
     this._host = new ClientServicesHost(this._params);
-    await this._host.open();
+    await this._host.open(new Context());
   }
 
   @synchronized

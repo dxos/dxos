@@ -1,6 +1,10 @@
-import React, {createElement, useEffect} from 'react';
-import {ThemeProvider} from '../src';
-import {auroraTx} from '@dxos/aurora-theme';
+//
+// Copyright 2022 DXOS.org
+//
+
+import React, { createElement, useEffect } from 'react';
+import { ThemeProvider } from '../src';
+import { auroraTx } from '@dxos/aurora-theme';
 
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},
@@ -18,9 +22,9 @@ export const globalTypes = {
     description: 'Global theme for components',
     defaultValue: 'light',
     toolbar: {
-      // The icon for the toolbar item
+      // The icon for the toolbar item.
       icon: 'circlehollow',
-      // Array of options
+      // Array of options.
       items: [
         { value: 'light', icon: 'circlehollow', title: 'light' },
         { value: 'dark', icon: 'circle', title: 'dark' },
@@ -35,8 +39,12 @@ const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
   useEffect(()=>{
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn), tx: auroraTx})
+  }, [theme]);
+
+  return createElement(ThemeProvider, {
+    children: createElement(StoryFn),
+    tx: auroraTx
+  });
 }
 
 export const decorators = [withTheme];

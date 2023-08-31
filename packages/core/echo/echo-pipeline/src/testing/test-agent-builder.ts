@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
@@ -198,7 +199,7 @@ export class TestAgent {
     space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
 
-    await space.open();
+    await space.open(new Context());
 
     this._spaces.set(spaceKey, space);
     return space;

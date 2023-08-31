@@ -3,10 +3,11 @@
 //
 
 import { PublicKeyLike } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState, defaultKey } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
+import { useIdentity } from '../halo';
 
 /**
  * Get a specific Space using its key. Returns undefined when no spaceKey is
@@ -15,8 +16,13 @@ import { useClient } from '../client';
  * @param [spaceKey] the key of the space to look for
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
+  // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
   const spaces = useSpaces();
-  return spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
+  const identity = useIdentity();
+
+  return spaceKey
+    ? spaces.find((space) => space.key.equals(spaceKey))
+    : spaces.find((space) => space.properties[defaultKey] === identity?.identityKey.toHex());
 };
 
 export type UseSpacesParams = {

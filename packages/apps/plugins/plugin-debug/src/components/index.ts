@@ -3,3 +3,5 @@
 //
 
 export * from './DebugMain';
+export * from './DebugSettings';
+export * from './DebugStatus';

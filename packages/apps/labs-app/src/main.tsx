@@ -16,7 +16,9 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
+import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
@@ -29,11 +31,12 @@ import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { SpaceProxy } from '@dxos/client/echo';
-import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { createClientServices, Remote } from '@dxos/client/services';
+import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
-import { PluginContextProvider } from '@dxos/react-surface';
-// import { fromHost } from '@dxos/react-client';
+import { Defaults } from '@dxos/react-client';
+import { PluginProvider } from '@dxos/react-surface';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -41,47 +44,54 @@ import { PluginContextProvider } from '@dxos/react-surface';
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
-void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
+const main = async () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
+  const services = await createClientServices(config);
+  const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 
-const clientOptions = {
-  config: new Config(Envs(), Local(), Defaults()),
-  // TODO(burdon): Configure local services in debug mode (e.g., for mobile testing).
-  // services: fromHost(), // TODO(burdon): Rename?
+  // TODO(burdon): Normalize telemetry namespace.
+  await initializeAppTelemetry({ namespace: 'labs.dxos.org', config: config! });
+
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <PluginProvider
+        plugins={[
+          IntentPlugin(),
+          ThemePlugin({ appName: 'Labs' }),
+          ClientPlugin({ config, services, debugIdentity: debug }),
+          IntentPlugin(),
+          DndPlugin(),
+          // Outside of error boundary so that updates are not blocked by errors.
+          PwaPlugin(),
+          // Inside theme provider so that errors are styled.
+          ErrorPlugin(),
+          GraphPlugin(),
+          TreeViewPlugin(),
+          UrlSyncPlugin(),
+          SplitViewPlugin({ enableComplementarySidebar: true }),
+          SpacePlugin(),
+
+          // Composer
+          MarkdownPlugin(),
+          StackPlugin(),
+          GithubPlugin(),
+          FilesPlugin(),
+
+          // Labs
+          DebugPlugin(),
+          GridPlugin(),
+          IpfsPlugin(),
+          TemplatePlugin(),
+          DrawingPlugin(),
+          KanbanPlugin(),
+          ThreadPlugin(),
+          ChessPlugin(),
+          TemplatePlugin(),
+        ]}
+      />
+    </StrictMode>,
+  );
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <PluginContextProvider
-      plugins={[
-        IntentPlugin(),
-        ThemePlugin({ appName: 'Labs' }),
-        ClientPlugin(clientOptions),
-        IntentPlugin(),
-        DndPlugin(),
-        // Outside of error boundary so that updates are not blocked by errors.
-        PwaPlugin(),
-        // Inside theme provider so that errors are styled.
-        ErrorPlugin(),
-        GraphPlugin(),
-        TreeViewPlugin(),
-        UrlSyncPlugin(),
-        SplitViewPlugin(),
-        SpacePlugin(),
-
-        MarkdownPlugin(),
-        StackPlugin(),
-        GithubPlugin(),
-        FilesPlugin(),
-
-        // Labs
-        DebugPlugin(),
-        TemplatePlugin(),
-        DrawingPlugin(),
-        KanbanPlugin(),
-        ThreadPlugin(),
-        ChessPlugin(),
-        TemplatePlugin(),
-      ]}
-    />
-  </StrictMode>,
-);
+void main();

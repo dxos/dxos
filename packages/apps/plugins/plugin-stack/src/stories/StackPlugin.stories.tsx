@@ -8,7 +8,7 @@ import React from 'react';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { PluginContextProvider, Surface } from '@dxos/react-surface';
+import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import '@dxosTheme';
 
@@ -21,7 +21,7 @@ const DefaultStackPluginStory = () => {
     title: 'Stack storybook title',
   });
 
-  return <Surface role='main' data={[stack, stack]} />;
+  return <Surface role='main' data={{ data: { object: stack } }} />;
 };
 
 const StackPluginStoryPlugin = () => ({
@@ -36,9 +36,7 @@ const StackPluginStoryPlugin = () => ({
 });
 
 const StackSurfacesApp = () => (
-  <PluginContextProvider
-    plugins={[ThemePlugin(), DndPlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]}
-  />
+  <PluginProvider plugins={[ThemePlugin(), DndPlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]} />
 );
 
 export default {

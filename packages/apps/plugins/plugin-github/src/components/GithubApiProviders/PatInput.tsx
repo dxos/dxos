@@ -42,7 +42,7 @@ export const PatInput = () => {
 
   return (
     <Input.Root>
-      <div role='none' className='mlb-4 max-is-md text-start'>
+      <div role='none' className='max-is-md text-start'>
         <Input.Label>{t('github pat label')}</Input.Label>
         <Input.TextInput
           autoFocus

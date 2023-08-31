@@ -56,6 +56,8 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ classN
   const { tx } = useThemeContext();
   return (
     <TooltipContentPrimitive
+      sideOffset={4}
+      collisionPadding={8}
       {...props}
       className={tx('tooltip.content', 'tooltip', {}, classNames)}
       ref={forwardedRef}

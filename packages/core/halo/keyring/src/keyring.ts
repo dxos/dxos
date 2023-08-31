@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
@@ -135,6 +134,11 @@ export class Keyring implements Signer {
       keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
     }
     return keys;
+  }
+
+  async importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey> {
+    await this._setKey(keyPair);
+    return keyPairToPublicKey(keyPair);
   }
 }
 

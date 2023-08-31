@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -19,6 +19,7 @@
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "^2.0.1",

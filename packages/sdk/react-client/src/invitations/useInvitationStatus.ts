@@ -20,7 +20,7 @@ export type InvitationResult = {
 };
 
 interface InvitationReducerState {
-  status: Invitation.State;
+  status: Invitation.State; // TODO(burdon): Rename state.
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
@@ -77,6 +77,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       log('useInvitationStatus', { action });
       return {
         ...prev,
+        // TODO(burdon): State.
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
@@ -102,7 +103,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     },
   );
 
-  // Handle unmount
+  // Handle unmount.
 
   useEffect(() => {
     const update = (invitation: Invitation) => {
@@ -148,7 +149,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
     return () => subscription?.unsubscribe();
   }, [state.observable, state.status]);
 
-  // Return memoized callbacks & values
+  // Return memoized callbacks & values.
 
   const connect = useCallback((observable: CancellableInvitationObservable) => {
     dispatch({ status: Invitation.State.CONNECTING, observable });

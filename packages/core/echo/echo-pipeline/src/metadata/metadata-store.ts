@@ -3,10 +3,10 @@
 //
 
 import CRC32 from 'crc-32';
-import invariant from 'tiny-invariant';
 
 import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';
@@ -72,7 +72,7 @@ export class MetadataStore {
       log('loaded', { size: dataSize, checksum });
 
       if (fileLength < dataSize + 8) {
-        throw new DataCorruptionError('Metadata size is smaller than expected.');
+        throw new DataCorruptionError('Metadata size is smaller than expected.', { fileLength, dataSize });
       }
 
       const data = await file.read(8, dataSize);

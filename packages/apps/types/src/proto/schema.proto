@@ -18,6 +18,17 @@ message Meta {
   repeated ForeignKey keys = 1;
 }
 
+message File {
+  option (object) = true;
+
+  string type = 1;
+  string timestamp = 2;
+  string title = 3;
+  string filename = 4;
+
+  string cid = 10;
+}
+
 message Document {
   option (object) = true;
 

@@ -29,7 +29,7 @@ export const useCredentials = ({ spaceKey }: { spaceKey?: PublicKey }) => {
     });
 
     return () => {
-      stream.close();
+      void stream.close();
     };
   }, [spaceKey?.toHex()]);
 

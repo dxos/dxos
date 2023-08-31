@@ -18,6 +18,8 @@ export default [
         'chooser done label': 'Add selected',
         'create document label': 'Create document',
         'delete document label': 'Delete',
+        'rename document label': 'Rename',
+        'editor placeholder': 'Start typing here…',
       },
     },
   },

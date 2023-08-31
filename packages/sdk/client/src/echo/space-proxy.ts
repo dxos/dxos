@@ -2,17 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
 import isEqualWith from 'lodash.isequalwith';
-import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
+import { DatabaseRouter, EchoDatabase, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
@@ -252,7 +250,7 @@ export class SpaceProxy implements Space {
         try {
           await waitForSpaceMeta.wait({ timeout: LOAD_PROPERTIES_TIMEOUT });
         } catch {
-          throw new ApiError('Properties not found.');
+          log.warn('Space properties not found in time.', { space: this.key, timeout: LOAD_PROPERTIES_TIMEOUT });
         } finally {
           subscription();
         }
@@ -378,5 +376,5 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
     return false;
   }
 
-  return !isEqual(prev, next);
+  return !isEqualWith(prev, next, loadashEqualityFn);
 };

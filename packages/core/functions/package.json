@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Functions SDK and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",

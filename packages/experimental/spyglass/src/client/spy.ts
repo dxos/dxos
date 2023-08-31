@@ -3,7 +3,7 @@
 //
 
 import fetch from 'isomorphic-fetch';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 import urljoin from 'url-join';
 
 import { PublicKey } from '@dxos/keys';

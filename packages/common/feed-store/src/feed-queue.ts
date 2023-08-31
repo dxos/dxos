@@ -8,14 +8,15 @@ import { Writable } from 'streamx';
 import { Event, latch, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import type { ReadStreamOptions } from '@dxos/hypercore';
-import { invariant, log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
-  batch: 64, // Read in batches.
+  batch: 1024, // Read in batches.
 };
 
 export type FeedQueueOptions = {};
@@ -30,7 +31,7 @@ export class FeedQueue<T extends {}> {
     autoReset: true,
   });
 
-  private _feedConsumer?: Writable;
+  private _feedConsumer?: Writable = undefined;
   private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
@@ -130,15 +131,32 @@ export class FeedQueue<T extends {}> {
       onClose();
     });
 
+    this._feedConsumer.on('error', (err: Error) => {
+      if (err) {
+        onError(err);
+      }
+    });
+
     // Called when queue is closed. Throws exception if waiting for `pop`.
     this._feedConsumer.once('close', () => {
       onClose();
     });
 
     // Pipe readable stream into writable consumer.
-    feedStream.pipe(this._feedConsumer, () => {
+    feedStream.pipe(this._feedConsumer, (err) => {
+      if (err) {
+        onError(err);
+      }
       onClose();
     });
+
+    const onError = (err: Error) => {
+      if (err.message === 'Writable stream closed prematurely') {
+        return;
+      }
+
+      log.catch(err, { feedKey: this._feed.key });
+    };
 
     log('opened');
   }

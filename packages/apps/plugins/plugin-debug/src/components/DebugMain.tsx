@@ -2,7 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Play, HandPalm } from '@phosphor-icons/react';
+import {
+  ArrowClockwise,
+  DownloadSimple,
+  Flag,
+  FlagPennant,
+  HandPalm,
+  PaperPlaneRight,
+  Play,
+  Plus,
+  PlusMinus,
+  Skull,
+  Timer,
+  Toolbox,
+} from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -11,34 +24,72 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
-import { baseSurface, fullSurface, getSize } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
+import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
+import { Space } from '@dxos/client/echo';
+import { InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';
+import { useSpaceInvitation } from '@dxos/react-client/echo';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DEBUG_PLUGIN, DebugContext } from '../props';
+import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
+export const DEFAULT_COUNT = 100;
 export const DEFAULT_PERIOD = 500;
+export const DEFAULT_JITTER = 50;
 
-export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
-  const { t } = useTranslation(DEBUG_PLUGIN);
+/**
+ * File download anchor.
+ *
+ * const download = useDownload();
+ * const handleDownload = (data: string) => {
+ *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
+ * };
+ */
+// TODO(burdon): Factor out.
+export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+  return useMemo(
+    () => (data: Blob | string, filename: string) => {
+      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+      const element = document.createElement('a');
+      element.setAttribute('href', url);
+      element.setAttribute('download', filename);
+      element.setAttribute('target', 'download');
+      element.click();
+    },
+    [],
+  );
+};
+
+export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
+  const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
+    const data = await client.diagnostics({ truncate: true });
     setData(data);
   };
   useEffect(() => {
     void handleRefresh();
   }, []);
 
+  const download = useFileDownload();
+  const handleCopy = async () => {
+    download(
+      new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}.json`,
+    );
+  };
+
+  const [mutationCount, setMutationCount] = useState(String(DEFAULT_COUNT));
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
+  const [mutationJitter, setMutationJitter] = useState(String(DEFAULT_JITTER));
 
   const generator = useMemo(() => {
     const generator = new Generator(space);
@@ -46,23 +97,51 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
     return generator;
   }, [space]);
 
-  // TODO(burdon): Note shared across spaces!
+  // TODO(burdon): Factor out.
+  const safeParseInt = (value: string | undefined, defaultValue = 0): number => {
+    if (!value) {
+      return defaultValue;
+    }
+    const num = parseInt(value);
+    return num === null || isNaN(num) ? defaultValue : num;
+  };
+
+  // TODO(burdon): Note: this is shared across all spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
       stop();
       void handleRefresh();
     } else {
-      start(() => generator.updateObject(), parseInt(mutationInterval));
+      start(
+        async () => {
+          await generator.updateObject();
+        },
+        {
+          count: safeParseInt(mutationCount),
+          interval: safeParseInt(mutationInterval),
+          jitter: safeParseInt(mutationJitter),
+        },
+      );
     }
   };
 
-  const handleCreateObject = async () => {
-    generator.createObject();
+  const handleCreateObject = async (createContent: boolean) => {
+    generator.createObject({ createContent });
   };
 
-  const handleUpdateObject = async () => {
-    generator.updateObject();
+  const handleCreateInvitation = () => {
+    const invitation = space.createInvitation({
+      type: Invitation.Type.MULTIUSE,
+      authMethod: Invitation.AuthMethod.NONE,
+    });
+
+    // TODO(burdon): Refactor.
+    // TODO(burdon): Unsubscribe?
+    connect(invitation);
+    const code = InvitationEncoder.encode(invitation.get());
+    const url = `${window.origin}?spaceInvitationCode=${code}`;
+    void navigator.clipboard.writeText(url);
   };
 
   const handleResetClient = async () => {
@@ -78,59 +157,99 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   const handleOpenDevtools = () => {
     const vaultUrl = config.values?.runtime?.client?.remoteSource;
     if (vaultUrl) {
-      window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
     }
   };
 
   return (
-    <Main.Content classNames={[fullSurface, baseSurface]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
-          <Button onClick={handleCreateObject}>Create</Button>
-          <Button onClick={handleUpdateObject}>Update</Button>
-          <div className='w-[80px]'>
+          <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
+            <Plus className={getSize(5)} />
+          </Button>
+          <div className='relative' title='mutation count'>
             <Input.Root>
               <Input.TextInput
-                title={t('mutation period')}
                 autoComplete='off'
-                classNames='flex-1 is-auto pis-2 text-right'
-                placeholder='Mutation period'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
+                placeholder='Count'
+                value={mutationCount}
+                onChange={({ target: { value } }) => setMutationCount(value)}
+              />
+            </Input.Root>
+            <Flag className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          </div>
+          <div className='relative' title='mutation period'>
+            <Input.Root>
+              <Input.TextInput
+                autoComplete='off'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
+                placeholder='Interval'
                 value={mutationInterval}
                 onChange={({ target: { value } }) => setMutationInterval(value)}
               />
             </Input.Root>
+            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          </div>
+          <div className='relative' title='mutation jitter'>
+            <Input.Root>
+              <Input.TextInput
+                autoComplete='off'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
+                placeholder='Jitter'
+                value={mutationJitter}
+                onChange={({ target: { value } }) => setMutationJitter(value)}
+              />
+            </Input.Root>
+            <PlusMinus className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
           </div>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
+          <Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Button>
+          <Button onClick={handleCopy}>
+            <DownloadSimple className={getSize(5)} />
+          </Button>
 
           <div className='grow' />
-          <Button onClick={handleRefresh}>Refresh</Button>
-          <Button onClick={handleOpenDevtools}>Open Devtools</Button>
-          <Button onClick={handleResetClient}>Reset client</Button>
-          <Button onClick={handleCreateEpoch}>Create epoch</Button>
+          <Button onClick={handleCreateInvitation} title='Space invitation'>
+            <PaperPlaneRight className={getSize(5)} />
+          </Button>
+          <Button onClick={handleOpenDevtools} title='DXOS Dectools'>
+            <Toolbox className={getSize(5)} />
+          </Button>
+          <Button onClick={handleCreateEpoch}>
+            <FlagPennant className={getSize(5)} />
+          </Button>
+          <Button onClick={handleResetClient} title='Reset client'>
+            <Skull className={getSize(5)} />
+          </Button>
         </DensityProvider>
       </div>
 
-      <div className='flex grow overflow-hidden px-2'>
-        <div className='flex flex-col w-full overflow-auto space-y-2'>
-          {config.values?.runtime?.app?.build?.timestamp && (
-            <div>
-              <pre className='p-2 text-sm'>Build</pre>
-              <div className='px-2'>
-                {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
-                  addSuffix: true,
-                  includeSeconds: true,
-                })}
-              </div>
-            </div>
-          )}
-          <div>
-            <SyntaxHighlighter language='json' style={style}>
-              {JSON.stringify(data, replacer, 2)}
-            </SyntaxHighlighter>
-          </div>
+      <div className='flex flex-col grow px-2 overflow-hidden'>
+        <div className='flex flex-col grow overflow-auto'>
+          <SyntaxHighlighter language='json' style={style} className='w-full'>
+            {JSON.stringify(data, replacer, 2)}
+          </SyntaxHighlighter>
         </div>
+
+        {config.values?.runtime?.app?.build?.timestamp && (
+          <div className='p-2 text-sm font-mono'>
+            {config.values?.runtime?.app?.build?.version} (
+            {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
+              addSuffix: true,
+              includeSeconds: true,
+            })}
+            )
+          </div>
+        )}
       </div>
     </Main.Content>
   );

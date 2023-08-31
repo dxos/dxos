@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
 import { DataServiceSubscriptions, MetadataStore, Space, SpaceManager } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -185,7 +184,7 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: 500,
+      announceInterval: 1_000,
       offlineTimeout: 5_000, // TODO(burdon): Config.
       identityKey: this._signingContext.identityKey,
       gossip,
@@ -194,7 +193,11 @@ export class DataSpaceManager {
     const controlFeed =
       metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
     const dataFeed =
-      metadata.dataFeedKey && (await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true, sparse: true }));
+      metadata.dataFeedKey &&
+      (await this._feedStore.openFeed(metadata.dataFeedKey, {
+        writable: true,
+        sparse: true,
+      }));
 
     const space: Space = await this._spaceManager.constructSpace({
       metadata,

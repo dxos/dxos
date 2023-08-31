@@ -4,16 +4,25 @@
 
 import React, { FC } from 'react';
 
+import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
-import { baseSurface, blockSeparator, fullSurface, mx } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
+import { blockSeparator, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 import { KanbanBoard } from './KanbanBoard';
 
-export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
+export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
+
+  const { plugins } = usePlugins();
+  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+  const space = spacePlugin?.provides?.space.current;
+
+  if (!space) {
+    return null;
+  }
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
@@ -30,7 +39,7 @@ export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }>
   };
 
   return (
-    <Main.Content classNames={[fullSurface, baseSurface]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>
