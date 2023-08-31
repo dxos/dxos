@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L94)
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L96)
 
 
 
@@ -23,7 +23,7 @@ Arguments:
 JSON config.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: 
 
@@ -36,7 +36,7 @@ Arguments:
 Provided dynamically by server.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: none
 
@@ -44,10 +44,10 @@ Arguments: none
 
 
 
-ENV variable (key/value) map
+ENV variable (key/value) map.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: 
 
@@ -60,9 +60,32 @@ Arguments:
 Development config.
 
 
-Returns: <code>T</code>
+Returns: <code>Partial&lt;Config&gt;</code>
 
 Arguments: none
+
+### [Remote(target)]()
+
+
+
+Returns: <code>Partial&lt;Config&gt;</code>
+
+Arguments: 
+
+`target`: <code>undefined | string</code>
+
+### [createClientServices(config)]()
+
+
+
+Create services from config.
+
+
+Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)&gt;</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 ### [fromAgent(\[options\])]()
 
@@ -114,7 +137,7 @@ Arguments:
 Access to remote client via a socket.
 
 
-Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)&gt;</code>
 
 Arguments: 
 
@@ -132,7 +155,7 @@ Arguments:
 
 `protocol`: <code>string</code>
 
-### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L43)
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L45)
 
 
 
@@ -177,18 +200,18 @@ Arguments:
 
 `observable`: <code>MulticastObservable&lt;T&gt;</code>
 
-### [useShellProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useShellProvider.ts#L29)
+### [useShell(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useShell.ts#L38)
 
 
 
 Use this hook to fully integrate an app with the shell.
 
 
-Returns: <code>void</code>
+Returns: <code>UseShellResult</code>
 
 Arguments: 
 
-`options`: <code>[UseShellProviderOptions](/api/@dxos/react-client/types/UseShellProviderOptions)</code>
+`options`: <code>[UseShellOptions](/api/@dxos/react-client/types/UseShellOptions)</code>
 
 ### [useStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useStatus.ts#L12)
 
