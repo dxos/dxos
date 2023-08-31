@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
-import { Event } from '@dxos/async';
+import { Event, ReadOnlyEvent } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
@@ -27,12 +26,17 @@ export class EchoDatabase {
   /**
    * Objects that have been removed from the database.
    */
-  private readonly _removed = new WeakSet<EchoObject>();
+  private readonly _removed = new Map<string, WeakRef<EchoObject>>();
+  private readonly _finalization = new FinalizationRegistry((cleanUpCallback: () => void) => {
+    cleanUpCallback();
+  });
 
   /**
    * @internal
    */
   public readonly _updateEvent = new Event<Item[]>();
+
+  public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
   constructor(
     /**
@@ -79,7 +83,7 @@ export class EchoDatabase {
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
 
-    if (this._removed.has(obj[base])) {
+    if (this._removed.has(obj[base]._id)) {
       this._backend.mutate({
         objects: [
           {
@@ -92,7 +96,7 @@ export class EchoDatabase {
           },
         ],
       });
-      this._removed.delete(obj[base]);
+      this._popRemovedObject(obj[base]._id);
       return obj;
     }
 
@@ -102,7 +106,6 @@ export class EchoDatabase {
 
     invariant(!obj[db]);
     obj[base]._database = this;
-    this._objects.set(obj[base]._id, obj);
 
     const batchCreated = this._backend.beginBatch();
     try {
@@ -127,6 +130,8 @@ export class EchoDatabase {
 
       obj[base]._bind(result.objectsUpdated[0]);
     } finally {
+      this._objects.set(obj[base]._id, obj);
+
       if (batchCreated) {
         this._backend.commitBatch();
       }
@@ -153,7 +158,8 @@ export class EchoDatabase {
         },
       ],
     });
-    this._removed.add(obj[base]);
+
+    this._saveRemovedObject(obj);
   }
 
   /**
@@ -162,8 +168,7 @@ export class EchoDatabase {
    */
   clone<T extends EchoObject>(obj: T) {
     log('clone', { id: obj.id, type: (obj as any).__typename });
-
-    console.warn('deprecated');
+    console.warn('deprecated'); // TODO(burdon): ???
 
     // TODO(burdon): Keep id.
     this.add(obj);
@@ -189,7 +194,10 @@ export class EchoDatabase {
   private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
-        const obj = this._createObjectInstance(object);
+        let obj = this._popRemovedObject(object.id);
+        if (!obj) {
+          obj = this._createObjectInstance(object);
+        }
         if (!obj) {
           continue;
         }
@@ -198,6 +206,19 @@ export class EchoDatabase {
         this._objects.set(object.id, obj);
         obj[base]._database = this;
         obj[base]._bind(object);
+      }
+    }
+
+    // Remove objects that are no longer in the database.
+    for (const [id, obj] of this._objects.entries()) {
+      if (!this._itemManager.entities.has(id)) {
+        if (obj[base]._item) {
+          obj[base]._item.deleted = true;
+        }
+        obj[base]._itemUpdate();
+        this._objects.delete(id);
+        obj[base]._database = undefined;
+        this._saveRemovedObject(obj);
       }
     }
 
@@ -235,5 +256,23 @@ export class EchoDatabase {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
     }
+  }
+
+  private _saveRemovedObject(obj: EchoObject) {
+    this._removed.set(obj[base]._id, new WeakRef(obj));
+    this._finalization.register(
+      obj,
+      () => {
+        this._removed.delete(obj[base]._id);
+      },
+      obj,
+    );
+  }
+
+  private _popRemovedObject(id: string): EchoObject | undefined {
+    const obj = this._removed.get(id)?.deref();
+    this._removed.delete(id);
+    obj && this._finalization.unregister(obj);
+    return obj;
   }
 }

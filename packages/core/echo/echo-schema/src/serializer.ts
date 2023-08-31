@@ -3,8 +3,9 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { TextModel } from '@dxos/text-model';
-import { stripKeys } from '@dxos/util';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { EchoDatabase } from './database';
 import { base } from './defs';
@@ -33,7 +34,7 @@ export class Serializer {
     const { objects } = database.query();
     const data = {
       objects: objects.map((object) => {
-        return stripKeys({
+        return stripUndefinedValues({
           ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
         });
       }),
@@ -45,14 +46,14 @@ export class Serializer {
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
       objects: [properties],
-    } = database.query({ '@type': 'dxos.sdk.client.Properties' });
+    } = database.query({ '@type': TYPE_PROPERTIES });
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;
 
       // Handle Space Properties
       // TODO(mykola): move to @dxos/client
-      if (properties && type === 'dxos.sdk.client.Properties') {
+      if (properties && type === TYPE_PROPERTIES) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;

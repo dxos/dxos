@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-client",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,8 +15,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {

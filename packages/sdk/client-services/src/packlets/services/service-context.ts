@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -15,6 +14,7 @@ import {
   SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,6 +27,8 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { trace as Trace } from '@dxos/tracing';
+import { safeInstanceof } from '@dxos/util';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
@@ -41,6 +43,9 @@ import { DataSpaceManager, SigningContext } from '../spaces';
  * Shared backend for all client services.
  */
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
+// TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
+@safeInstanceof('dxos.client-services.ServiceContext')
+@Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
@@ -86,8 +91,9 @@ export class ServiceContext {
         root: storage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
-          valueEncoding
-        }
+          valueEncoding,
+          stats: true,
+        },
       })
     });
 
@@ -122,21 +128,21 @@ export class ServiceContext {
     );
   }
 
-  async open() {
-    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
-
+  @Trace.span()
+  async open(ctx: Context) {
     await this._checkStorageVersion();
 
     log('opening...');
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
-    await this.identityManager.open();
+    await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
-      await this._initialize();
+      await this._initialize(ctx);
     }
-    log('opened');
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
+    log('opened');
   }
 
   async close() {
@@ -156,8 +162,7 @@ export class ServiceContext {
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
-
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
@@ -169,8 +174,7 @@ export class ServiceContext {
 
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
-
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
@@ -183,7 +187,8 @@ export class ServiceContext {
   }
 
   // Called when identity is created.
-  private async _initialize() {
+  @Trace.span()
+  private async _initialize(ctx: Context) {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
@@ -242,6 +247,7 @@ export class ServiceContext {
         }
       },
     };
+
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 }

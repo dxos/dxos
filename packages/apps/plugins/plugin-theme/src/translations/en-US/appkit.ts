@@ -12,7 +12,7 @@ export const appkit = (appName?: string) => ({
   'create identity description': 'Create a new identity.',
   'recover identity label': 'Use a seed phrase',
   'recover identity description': 'Enter your seed phrase to log in manually.',
-  'join identity label': 'Use an authed device',
+  'join identity label': 'Use another device',
   'join identity description': 'Add this device to an identity you’re already logged into on another device.',
   'join space label': 'Join a space',
   'create space label': 'Create a space',
@@ -102,5 +102,5 @@ export const appkit = (appName?: string) => ({
   'new list item input label': 'New list item title',
   'new list item input placeholder': 'Enter text…',
   'reset client label': 'Reset',
-  'reset client confirm label': 'Yes, confirm reset',
+  'reset client confirm label': 'Confirm to wipe ALL DATA from local database',
 });

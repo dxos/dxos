@@ -7,7 +7,7 @@ APPS=(
   ./packages/apps/composer-app
   ./packages/apps/halo-app
   ./packages/apps/labs-app
-  ./packages/apps/tasks-app
+  ./packages/apps/tasks
   ./packages/apps/todomvc
   ./packages/devtools/devtools
   ./packages/experimental/kai
@@ -25,7 +25,7 @@ for APP in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  if [ $BRANCH = "production" ]; then
+  if [[ $BRANCH = "production" || ($BRANCH = "main" && $APP = "./docs") ]]; then
     export DX_ENVIRONMENT=production
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")

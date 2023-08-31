@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -32,9 +31,9 @@ const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
  */
 export class SwarmMessenger implements SignalMessenger {
   private readonly _ctx = new Context();
-  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
+  private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
+  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
   private readonly _topic: PublicKey;
 

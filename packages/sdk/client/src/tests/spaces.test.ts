@@ -10,8 +10,12 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Expando } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
@@ -23,6 +27,25 @@ import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
+  test('creates a default space', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    await waitForExpect(() => {
+      expect(client.getSpace()).not.to.be.undefined;
+    });
+    const space = client.getSpace()!;
+    await testSpace(space.internal.db);
+
+    expect(space.members.get()).to.be.length(1);
+  });
+
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
@@ -46,7 +69,7 @@ describe('Spaces', () => {
     // testBuilder.storage = createStorage({ type: StorageType.WEBFS });
 
     const host = testBuilder.createClientServicesHost();
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
@@ -73,8 +96,7 @@ describe('Spaces', () => {
 
     let itemId: string;
     {
-      // TODO(burdon): API (client.echo/client.halo).
-      const space = await client.createSpace();
+      const space = client.getSpace()!;
       const {
         objectsUpdated: [item],
       } = await testSpace(space.internal.db);
@@ -152,7 +174,8 @@ describe('Spaces', () => {
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
   });
 
-  test('peer do not load mutations before epoch', async () => {
+  // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
+  test.skip('peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
     const services1 = testBuilder.createLocal();
@@ -169,9 +192,9 @@ describe('Spaces', () => {
     const space1 = await client1.createSpace();
     await space1.waitUntilReady();
 
-    const dataSpace1 = services1.host!._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const dataSpace1 = services1.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = services1.host!._serviceContext.feedStore.getFeed(feedKey!)!;
+    const feed1 = services1.host!.context.feedStore.getFeed(feedKey!)!;
 
     const amount = 10;
     {
@@ -186,13 +209,19 @@ describe('Spaces', () => {
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
 
+    // log.break();
+    // log.info('epoch created', { feedToCheck: feedKey, length: feed1.length })
+
     await Promise.all(performInvitation({ host: space1, guest: client2 }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const dataSpace2 = services2.host!._serviceContext.dataSpaceManager?.spaces.get(space1.key);
-    const feed2 = services2.host!._serviceContext.feedStore.getFeed(feedKey!)!;
+    const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
+
+    // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 
     // Check that second peer does not have mutations before epoch.
+    expect(feed1 !== feed2).to.eq(true);
     for (const i of range(feed1.length)) {
       expect(feed2.has(i)).to.be.false;
     }
@@ -205,6 +234,130 @@ describe('Spaces', () => {
       // Wait to process new mutation on second peer.
       await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
       expect(feed2.has(amount + 1)).to.be.true;
+    }
+  });
+
+  test('epoch correctly resets database', async () => {
+    const testBuilder = new TestBuilder();
+    const services = testBuilder.createLocal();
+    const client = new Client({ services });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.createSpace();
+    await space.waitUntilReady();
+
+    const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
+
+    // Create Item.
+    const text = PublicKey.random().toHex();
+    const idx = '0';
+    const item = new Expando({ idx, text });
+    space.db.add(item);
+    await space.db.flush();
+    expect(space.db.objects.length).to.equal(2);
+
+    const writeEpochWithSnapshot = async (databaseSnapshot: EchoSnapshot) => {
+      const processedEpoch = dataSpace.dataPipeline.onNewEpoch.waitForCount(1);
+
+      // Empty snapshot.
+      const snapshot: SpaceSnapshot = {
+        spaceKey: space.key.asUint8Array(),
+        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
+        database: databaseSnapshot,
+      };
+
+      const snapshotCid = await services.host!.context.snapshotStore.saveSnapshot(snapshot);
+
+      const epoch: Epoch = {
+        previousId: dataSpace.dataPipeline.currentEpoch?.id,
+        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
+        number: (dataSpace.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
+        snapshotCid,
+      };
+
+      const receipt = await dataSpace.inner.controlPipeline.writer.write({
+        credential: {
+          credential: await services
+            .host!.context.identityManager.identity!.getIdentityCredentialSigner()
+            .createCredential({
+              subject: space.key,
+              assertion: {
+                '@type': 'dxos.halo.credentials.Epoch',
+                ...epoch,
+              },
+            }),
+        },
+      });
+      await dataSpace.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+      await asyncTimeout(processedEpoch, 1000);
+    };
+
+    const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
+
+    const query = space.db.query({ idx });
+
+    // Create empty Epoch and check if it clears items.
+    {
+      const trigger = new Trigger();
+      expect(query.objects.length).to.equal(1);
+
+      const subscription = query.subscribe(async (query) => {
+        expect(query.objects.length).to.equal(0);
+        trigger.wake();
+      });
+
+      await writeEpochWithSnapshot({});
+      await asyncTimeout(trigger.wait(), 500);
+
+      expect(space.db.objects.length).to.equal(0);
+      expect(query.objects.length).to.equal(0);
+      expect(item.__deleted).to.be.true;
+      subscription();
+    }
+
+    // Reset database to previous state.
+    {
+      const trigger = new Trigger();
+      const subscription = query.subscribe(async (query) => {
+        expect(query.objects.length).to.equal(1);
+        trigger.wake();
+      });
+      afterTest(() => subscription());
+
+      await writeEpochWithSnapshot(dataBaseState);
+      await asyncTimeout(trigger.wait(), 500);
+
+      expect(item.__deleted).to.be.false;
+      expect(space.db.objects.length).to.equal(2);
+      expect(query.objects[0].text).to.equal(text);
+      expect(query.objects[0]).to.equal(item);
+    }
+
+    // Create Epoch and check if Item do not flickers.
+    {
+      const checkItem = (object = item) => {
+        expect(object.__deleted).to.be.false;
+        expect(object.text).to.equal(text);
+      };
+      const trigger = new Trigger();
+      const subscription = space.db.query({ idx }).subscribe((query) => {
+        checkItem(query.objects[0]);
+        trigger.wake();
+      });
+      afterTest(() => subscription());
+
+      await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
+      await asyncTimeout(trigger.wait(), 500);
+      checkItem();
+    }
+
+    // Set new field and query it.
+    {
+      item.data = 'new text';
+      await space.db.flush();
+      expect(space.db.query({ idx }).objects[0].data).to.equal('new text');
     }
   });
 

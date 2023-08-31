@@ -36,6 +36,9 @@
       "path": "../../../ui/aurora-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-dnd"
     },
     {

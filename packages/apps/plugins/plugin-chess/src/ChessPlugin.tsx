@@ -28,52 +28,47 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
     },
     provides: {
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${CHESS_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${CHESS_PLUGIN}/create`,
+            label: ['create game label', { ns: CHESS_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            intent: [
+              {
+                plugin: CHESS_PLUGIN,
+                action: ChessAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'chessPlugin.createKanban',
-              label: ['create object label', { ns: CHESS_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: CHESS_PLUGIN,
-                  action: ChessAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       translations,
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main': {
-            if ('object' in datum && isObject(datum.object)) {
+            if (isObject(data)) {
               return ChessMain;
             }
           }

@@ -4,15 +4,17 @@
 
 import React from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
-import { List } from '@dxos/aurora';
+import { Graph } from '@braneframe/plugin-graph';
+import { List, DensityProvider } from '@dxos/aurora';
 
-import { LeafTreeItem } from './LeafTreeItem';
+import { NavTreeItem } from './NavTree';
 
-export const TreeItemDragOverlay = ({ data }: { data: GraphNode }) => {
+export const TreeItemDragOverlay = ({ data }: { data: Graph.Node }) => {
   return (
-    <List variant='unordered'>
-      <LeafTreeItem node={data} isOverlay />
-    </List>
+    <DensityProvider density='fine'>
+      <List variant='unordered'>
+        <NavTreeItem node={data} level={2} isOverlay />
+      </List>
+    </DensityProvider>
   );
 };

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
-import React, { cloneElement, useCallback } from 'react';
+import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
+import React, { useCallback } from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
@@ -11,26 +11,50 @@ import { useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { PanelAction, PanelActions } from '../../../components';
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }: IdentityPanelStepProps) => {
-  const { t } = useTranslation('os');
+export type IdentityActionChooserProps = IdentityPanelStepProps;
+
+export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
+  const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
-
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
       console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
+  const createInvitation = () => {
+    invitations.forEach((invitation) => invitation.cancel());
+    const invitation = client.halo.createInvitation();
+    // TODO(wittjosiah): Don't depend on NODE_ENV.
+    if (process.env.NODE_ENV !== 'production') {
+      invitation.subscribe(onInvitationEvent);
+    }
+    send?.({ type: 'selectInvitation', invitation });
+  };
+  return <IdentityActionChooserImpl {...props} onCreateInvitationClick={createInvitation} />;
+};
 
-  const doneAction = (
-    <PanelAction aria-label={t('done label')} onClick={onDone} disabled={!active} data-testid='identity-panel-done'>
-      <Check weight='light' className={getSize(6)} />
-    </PanelAction>
-  );
+export type IdentityActionChooserImplProps = IdentityActionChooserProps & {
+  onCreateInvitationClick?: () => void;
+};
+
+export const IdentityActionChooserImpl = ({
+  onCreateInvitationClick,
+  active,
+  send,
+  onDone,
+  doneActionParent,
+}: IdentityActionChooserImplProps) => {
+  const { t } = useTranslation('os');
+
+  // const doneAction = (
+  //   <PanelAction aria-label={t('done label')} onClick={onDone} disabled={!active} data-testid='identity-panel-done'>
+  //     <Check weight='light' className={getSize(6)} />
+  //   </PanelAction>
+  // );
   return (
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
@@ -38,27 +62,14 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
           <Button
             disabled={!active}
             data-testid='devices-panel.create-invitation'
-            onClick={() => {
-              invitations.forEach((invitation) => invitation.cancel());
-              const invitation = client.halo.createInvitation();
-              // TODO(wittjosiah): Don't depend on NODE_ENV.
-              if (process.env.NODE_ENV !== 'production') {
-                invitation.subscribe(onInvitationEvent);
-              }
-              send({ type: 'selectInvitation', invitation });
-            }}
+            onClick={onCreateInvitationClick}
             classNames='plb-4'
           >
             <Plus className={getSize(6)} />
             <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
-          <Button
-            disabled
-            data-testid='manage-profile'
-            onClick={() => {} /* send({ type: 'chooseProfile' }) */}
-            classNames='plb-4'
-          >
+          <Button data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
             <UserGear className={getSize(6)} />
             <span className='grow mli-3'>{t('choose profile label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
@@ -75,7 +86,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
           </Button>
         </div>
       </DensityProvider>
-      <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions>
+      {/* <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions> */}
     </div>
   );
 };

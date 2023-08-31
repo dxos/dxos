@@ -3,12 +3,13 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
-import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
@@ -95,6 +96,10 @@ export class ForeverDaemon implements Daemon {
           options?.metrics ? '--metrics' : undefined,
           options?.config ? `--config=${options.config}` : undefined,
         ].filter(Boolean) as string[],
+        // TODO(burdon): Make optional.
+        env: {
+          LOG_FILTER: process.env.LOG_FILTER,
+        },
         uid: profile,
         max: 0,
         logFile, // Forever daemon process.
@@ -128,18 +133,18 @@ export class ForeverDaemon implements Daemon {
         // Check if agent is initialized.
         {
           const services = fromAgent({ profile });
-          await services.open();
+          await services.open(new Context());
 
           const trigger = new Trigger();
           const stream = services.services.SystemService!.queryStatus({});
           stream.subscribe(({ status }) => {
-            assert(status === SystemStatus.ACTIVE);
+            invariant(status === SystemStatus.ACTIVE);
             trigger.wake();
           });
           await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
 
-          stream.close();
-          await services.close();
+          await stream.close();
+          await services.close(new Context());
         }
         return await this._getProcess(profile);
       } catch (err) {

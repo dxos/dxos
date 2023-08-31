@@ -9,8 +9,8 @@ import { mx } from '@dxos/aurora-theme';
 // TODO(burdon): Factor out as hook.
 export const styles = {
   bg: 'bg-white dark:bg-neutral-800',
-  frame: 'md:shadow md:rounded __border __border-neutral-300',
-  divide: 'divide-y divide-y-reverse __divide-neutral-300',
+  frame: 'md:shadow md:rounded',
+  divide: 'divide-y divide-y-reverse',
   heading: 'text-black dark:text-white',
   body: 'text-neutral-600',
 };

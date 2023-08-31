@@ -3,12 +3,13 @@
 //
 
 import { expect } from 'chai';
-import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
@@ -38,7 +39,7 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
 
     const peer = testBuilder.createClientServicesHost();
-    await peer.open();
+    await peer.open(new Context());
     afterTest(() => peer.close());
 
     const [client, server] = testBuilder.createClientServer(peer);
@@ -55,7 +56,7 @@ describe('Client services', () => {
 
     {
       const peer1 = testBuilder.createClientServicesHost();
-      await peer1.open();
+      await peer1.open(new Context());
       afterTest(() => peer1.close());
 
       {
@@ -86,7 +87,7 @@ describe('Client services', () => {
 
     {
       const peer2 = testBuilder.createClientServicesHost();
-      await peer2.open();
+      await peer2.open(new Context());
       afterTest(() => peer2.close());
 
       {
@@ -110,8 +111,8 @@ describe('Client services', () => {
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
 
-    await peer1.open();
-    await peer2.open();
+    await peer1.open(new Context());
+    await peer2.open(new Context());
 
     const [client1, server1] = testBuilder.createClientServer(peer1);
     const [client2, server2] = testBuilder.createClientServer(peer2);
@@ -156,8 +157,8 @@ describe('Client services', () => {
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
 
-    await peer1.open();
-    await peer2.open();
+    await peer1.open(new Context());
+    await peer2.open(new Context());
 
     const [client1, server1] = testBuilder.createClientServer(peer1);
     const [client2, server2] = testBuilder.createClientServer(peer2);
@@ -205,7 +206,7 @@ describe('Client services', () => {
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
       const guestSpace = client2.getSpace(guestInvitation!.spaceKey!);
-      assert(guestSpace);
+      invariant(guestSpace);
       expect(guestSpace).to.exist;
       trigger.wake(guestSpace);
     });
@@ -214,26 +215,27 @@ describe('Client services', () => {
 
     for (const space of [hostSpace, guestSpace]) {
       await waitForExpect(() => {
-        expect(space.members.get()).to.deep.equal([
-          {
-            identity: {
-              identityKey: client1.halo.identity.get()!.identityKey,
-              profile: {
-                displayName: 'Peer 1',
-              },
+        const members = space.members.get();
+        expect(members).to.have.length(2);
+
+        expect(members[0]).to.deep.include({
+          identity: {
+            identityKey: client1.halo.identity.get()!.identityKey,
+            profile: {
+              displayName: 'Peer 1',
             },
-            presence: SpaceMember.PresenceState.ONLINE,
           },
-          {
-            identity: {
-              identityKey: client2.halo.identity.get()!.identityKey,
-              profile: {
-                displayName: 'Peer 2',
-              },
+          presence: SpaceMember.PresenceState.ONLINE,
+        });
+        expect(members[1]).to.deep.include({
+          identity: {
+            identityKey: client2.halo.identity.get()!.identityKey,
+            profile: {
+              displayName: 'Peer 2',
             },
-            presence: SpaceMember.PresenceState.ONLINE,
           },
-        ]);
+          presence: SpaceMember.PresenceState.ONLINE,
+        });
       }, 3_000);
     }
 

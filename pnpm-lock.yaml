@@ -84,7 +84,7 @@ importers:
       chai-as-promised: ^7.1.1
       chai-dom: ^1.11.0
       chalk: ^4.1.0
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       esbuild-plugin-raw: ^0.1.7
       esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.41.0
@@ -191,8 +191,8 @@ importers:
       chai-as-promised: 7.1.1_chai@4.3.6
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
-      esbuild: 0.16.14
-      esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
+      esbuild: 0.19.2
+      esbuild-plugin-raw: 0.1.7_esbuild@0.19.2
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
       expect: 27.5.1
@@ -221,7 +221,7 @@ importers:
       semver: 7.3.8
       serve: 14.1.2
       syncpack: 8.2.4
-      ts-jest: 28.0.8_7arsnux5ydamigscd2bfhbseqi
+      ts-jest: 28.0.8_hhea6e55xty6rkiwieslux7lzi
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_gfdau6lq6t4oyqgmczgglapuxi
       types-package-json: 2.0.39
       typescript: 5.0.4
@@ -509,7 +509,9 @@ importers:
       '@braneframe/plugin-files': workspace:*
       '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-grid': workspace:*
       '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-ipfs': workspace:*
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
@@ -526,6 +528,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
@@ -552,7 +555,9 @@ importers:
       '@braneframe/plugin-files': link:../plugins/plugin-files
       '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-grid': link:../plugins/plugin-grid
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
+      '@braneframe/plugin-ipfs': link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
@@ -568,6 +573,7 @@ importers:
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
@@ -599,6 +605,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/lodash.get': ^4.4.7
@@ -609,17 +616,16 @@ importers:
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
-      tiny-invariant: ^1.3.1
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/chess-app': link:../../../experimental/chess-app
       '@dxos/client': link:../../../sdk/client
+      '@dxos/invariant': link:../../../common/invariant
       chess.js: 1.0.0-alpha.0
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
-      tiny-invariant: 1.3.1
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -638,8 +644,10 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
@@ -648,8 +656,10 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/echo-signals': link:../../../core/echo/echo-signals
+      '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -669,12 +679,15 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -689,22 +702,27 @@ importers:
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-json-tree: ^0.18.0
       react-syntax-highlighter: ^15.5.0
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-space': link:../plugin-space
+      '@dxos/async': link:../../../common/async
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       '@faker-js/faker': 8.0.2
       date-fns: 2.29.3
       lodash.get: 4.4.2
+      react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
       react-syntax-highlighter: 15.5.0_react@18.2.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -853,6 +871,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -863,6 +882,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/async': link:../../../common/async
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
       deepsignal: 1.3.4_react@18.2.0
       localforage: 1.10.0
@@ -952,10 +972,12 @@ importers:
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -965,6 +987,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
       lodash.set: 4.3.2
     devDependencies:
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -973,7 +996,55 @@ importers:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-grid:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
+      '@dxos/client': link:../../../sdk/client
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@dxos/util': link:../../../common/util
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -993,6 +1064,55 @@ importers:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       react: 18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-ipfs:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      url-join: ^5.0.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/types': link:../../types
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
+      url-join: 5.0.0
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-kanban:
@@ -1073,10 +1193,11 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -1091,8 +1212,9 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
-      '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@preact/signals-react': 1.3.4_react@18.2.0
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
@@ -1113,21 +1235,29 @@ importers:
 
   packages/apps/plugins/plugin-pwa:
     specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/sentry': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
       react: ^18.2.0
+      react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/log': link:../../../common/log
-      '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/sentry': link:../../../common/sentry
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-space:
@@ -1152,10 +1282,11 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       jszip: ^3.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1173,8 +1304,9 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
-      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
@@ -1245,6 +1377,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -1252,9 +1385,13 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
+      ipfs-http-client: ~56.0.1
       lodash.get: ^4.4.2
+      node-fetch: ^2.6.0
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -1263,9 +1400,14 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
       lodash.get: 4.4.2
+      node-fetch: 2.6.7
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
+      react-is: 18.2.0
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1412,6 +1554,7 @@ importers:
 
   packages/apps/plugins/plugin-treeview:
     specifiers:
+      '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
@@ -1431,6 +1574,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      date-fns: ^2.29.3
       deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
@@ -1444,9 +1588,11 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      date-fns: 2.29.3
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1477,24 +1623,15 @@ importers:
       react: 18.2.0
       vite: 4.3.9
 
-  packages/apps/quickstart:
+  packages/apps/tasks:
     specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
       '@dxos/cli': workspace:*
-      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/react-appkit': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/vault': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@storybook/addon-essentials': ^7.0.6
-      '@storybook/addon-interactions': ^7.0.6
-      '@storybook/addon-links': ^7.0.6
-      '@storybook/builder-vite': ^7.0.6
-      '@storybook/core-server': ^7.0.6
-      '@storybook/mdx2-csf': ^1.0.0
-      '@storybook/react': ^7.0.6
-      '@storybook/react-vite': ^7.0.6
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -1507,152 +1644,29 @@ importers:
       tailwindcss: ~3.3.2
       typescript: ^5.0.4
       vite: ^4.3.9
-      vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
-      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/vault': link:../../sdk/vault
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/cli': link:../../devtools/cli
-      '@storybook/addon-essentials': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-interactions': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-links': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 7.0.7_2gs4ymahx52s2pmgq265ylhxyq
-      '@storybook/core-server': 7.0.7
-      '@storybook/mdx2-csf': 1.0.0
-      '@storybook/react': 7.0.7_tvrvbu6r5w7oyqiu4bvze3slou
-      '@storybook/react-vite': 7.0.7_ywllpln6eimhzafvge634225tu
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
-      autoprefixer: 10.4.13_postcss@8.4.21
-      postcss: 8.4.21
+      autoprefixer: 10.4.13_postcss@8.4.24
+      postcss: 8.4.24
       tailwindcss: 3.3.2
       typescript: 5.0.4
       vite: 4.3.9_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
-
-  packages/apps/tasks-app:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/sentry': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.7.2
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      vite: ^4.3.9
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@dxos/sentry': link:../../common/sentry
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@sentry/react': 7.42.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@sentry/vite-plugin': 0.7.2
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      vite: 4.3.9
-      vite-plugin-pwa: 0.14.1_vite@4.3.9
-      workbox-window: 6.5.4
-
-  packages/apps/tasks-app-2:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/cli': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addon-essentials': ^7.0.6
-      '@storybook/addon-interactions': ^7.0.6
-      '@storybook/addon-links': ^7.0.6
-      '@storybook/builder-vite': ^7.0.6
-      '@storybook/core-server': ^7.0.6
-      '@storybook/mdx2-csf': ^1.0.0
-      '@storybook/react': ^7.0.6
-      '@storybook/react-vite': ^7.0.6
-      '@types/node': ^18.11.9
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      autoprefixer: ^10.4.12
-      postcss: ^8.4.21
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      tailwindcss: ~3.3.2
-      typescript: ^5.0.4
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@dxos/cli': link:../../devtools/cli
-      '@storybook/addon-essentials': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-interactions': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-links': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 7.0.7_2gs4ymahx52s2pmgq265ylhxyq
-      '@storybook/core-server': 7.0.7
-      '@storybook/mdx2-csf': 1.0.0
-      '@storybook/react': 7.0.7_tvrvbu6r5w7oyqiu4bvze3slou
-      '@storybook/react-vite': 7.0.7_ywllpln6eimhzafvge634225tu
-      '@types/node': 18.11.9
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      autoprefixer: 10.4.13_postcss@8.4.21
-      postcss: 8.4.21
-      tailwindcss: 3.3.2
-      typescript: 5.0.4
-      vite: 4.3.9_@types+node@18.11.9
 
   packages/apps/templates/bare-template:
     specifiers:
@@ -1688,35 +1702,6 @@ importers:
       postcss: 8.4.21
       tailwindcss: 3.3.2
     devDependencies:
-      typescript: 5.0.4
-
-  packages/apps/templates/tasks-template:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/bare-template': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/plate': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      typescript: ^5.0.4
-    dependencies:
-      '@dxos/bare-template': link:../bare-template
-      '@dxos/plate': link:../../../common/plate
-    devDependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/react-appkit': link:../../../ui/react-appkit
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       typescript: 5.0.4
 
   packages/apps/todomvc:
@@ -1785,18 +1770,18 @@ importers:
     specifiers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
       '@types/zen-observable': ^0.8.3
-      tiny-invariant: ^1.3.1
       zen-observable: ^0.10.0
       zen-push: ^0.3.1
     dependencies:
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
-      tiny-invariant: 1.3.1
       zen-observable: 0.10.0
       zen-push: 0.3.1
     devDependencies:
@@ -1806,6 +1791,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
@@ -1813,17 +1799,16 @@ importers:
       compress-json: ^2.1.2
       lodash.merge: ^4.6.2
       protobufjs: ^7.2.2
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../async
       '@dxos/context': link:../context
+      '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       compress-json: 2.1.2
       lodash.merge: 4.6.2
       protobufjs: 7.2.2
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/lodash.merge': 4.6.7
 
@@ -1839,17 +1824,17 @@ importers:
 
   packages/common/crypto:
     specifiers:
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
       '@types/crypto-js': ~4.0.2
       '@types/node': ^18.11.9
       hypercore-crypto: ^2.3.0
-      tiny-invariant: ^1.3.1
     dependencies:
+      '@dxos/invariant': link:../invariant
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
       hypercore-crypto: 2.3.2
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/crypto-js': 4.0.2
       '@types/node': 18.11.9
@@ -1883,12 +1868,18 @@ importers:
     dependencies:
       '@dxos/node-std': link:../node-std
 
+  packages/common/display-name:
+    specifiers:
+      '@dxos/keys': workspace:*
+    devDependencies:
+      '@dxos/keys': link:../keys
+
   packages/common/esbuild-plugins:
     specifiers:
       assert: ^2.0.0
       crypto-browserify: ^3.12.0
       domain-browser: ^4.22.0
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       events: ^3.3.0
       path-browserify: ^1.0.1
       readable-stream: ^3.6.0
@@ -1898,7 +1889,7 @@ importers:
       assert: 2.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.22.0
-      esbuild: 0.16.14
+      esbuild: 0.19.2
       events: 3.3.0
       path-browserify: 1.0.1
       readable-stream: 3.6.0
@@ -1913,6 +1904,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hypercore': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1920,9 +1912,10 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
+      '@types/lodash.defaultsdeep': ^4.6.6
+      lodash.defaultsdeep: ^4.6.1
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -1930,17 +1923,20 @@ importers:
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
       '@dxos/hypercore': link:../hypercore
+      '@dxos/invariant': link:../invariant
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
+      lodash.defaultsdeep: 4.6.1
       random-access-storage: 3.0.0
       streamx: 2.12.5
-      tiny-invariant: 1.3.1
     optionalDependencies:
       '@faker-js/faker': 8.0.2
+    devDependencies:
+      '@types/lodash.defaultsdeep': 4.6.7
 
   packages/common/hypercore:
     specifiers:
@@ -1948,6 +1944,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -1965,12 +1962,12 @@ importers:
       sodium-native: ^3.2.0
       sodium-universal: ^3.0.2
       streamx: ^2.12.5
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
@@ -1980,7 +1977,6 @@ importers:
       sodium-native: 3.4.1
       sodium-universal: 3.1.0
       streamx: 2.12.5
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/log': link:../log
       '@faker-js/faker': 8.0.2
@@ -1991,18 +1987,31 @@ importers:
       noise-protocol: 3.0.1
       random-access-memory: 4.1.0
 
+  packages/common/invariant:
+    specifiers:
+      '@dxos/node-std': workspace:*
+      '@swc/core': 1.3.70
+      '@types/node': ^18.11.9
+      typescript: ^5.0.4
+    dependencies:
+      '@dxos/node-std': link:../node-std
+    devDependencies:
+      '@swc/core': 1.3.70
+      '@types/node': 18.11.9
+      typescript: 5.0.4
+
   packages/common/keys:
     specifiers:
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/node-std': workspace:*
       '@types/randombytes': ^2.0.0
       randombytes: ^2.1.0
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/node-std': link:../node-std
       randombytes: 2.1.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/randombytes': 2.0.0
 
@@ -2035,11 +2044,15 @@ importers:
       '@swc/core': 1.3.70
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.omit': ^4.5.7
+      '@types/lodash.pick': ^4.4.7
       '@types/lodash.pickby': ^4.6.7
       '@types/node': ^18.11.9
       chalk: ^4.1.0
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
+      lodash.omit: ^4.5.0
+      lodash.pick: ^4.4.0
       lodash.pickby: ^4.6.0
       pirates: ~4.0.5
       sorcery: ^0.10.0
@@ -2050,12 +2063,16 @@ importers:
       chalk: 4.1.2
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+      lodash.pick: 4.4.0
       lodash.pickby: 4.6.0
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.3.70
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.omit': 4.5.7
+      '@types/lodash.pick': 4.4.7
       '@types/lodash.pickby': 4.6.7
       '@types/node': 18.11.9
       pirates: 4.0.5
@@ -2096,7 +2113,7 @@ importers:
       '@types/yargs': ~16.0.1
       callsite: ^1.0.0
       chalk: ^4.1.0
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       inquirer: ^8.2.0
       lodash.flatten: ^4.4.0
       lodash.merge: ^4.6.2
@@ -2114,7 +2131,7 @@ importers:
       '@swc/core': 1.3.70
       callsite: 1.0.0
       chalk: 4.1.2
-      esbuild: 0.16.14
+      esbuild: 0.19.2
       inquirer: 8.2.4
       lodash.flatten: 4.4.0
       lodash.merge: 4.6.2
@@ -2144,6 +2161,7 @@ importers:
   packages/common/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protobuf-test': workspace:*
@@ -2162,6 +2180,7 @@ importers:
       ts-node: 10.9.1
       typescript: ^5.0.4
     dependencies:
+      '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
       argparse: 2.0.1
@@ -2186,8 +2205,10 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
       '@types/pify': ^3.0.2
       '@types/randombytes': ^2.0.0
@@ -2200,12 +2221,13 @@ importers:
       random-access-web: ^2.0.3
       randombytes: ^2.1.0
       source-map-support: ^0.5.12
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../async
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
+      '@dxos/tracing': link:../tracing
       '@dxos/util': link:../util
       del: 5.1.0
       pify: 5.0.0
@@ -2214,7 +2236,6 @@ importers:
       random-access-memory: 4.1.0
       random-access-storage: 3.0.0
       random-access-web: 2.0.3
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/pify': 3.0.2
       '@types/randombytes': 2.0.0
@@ -2247,6 +2268,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
@@ -2256,11 +2278,11 @@ importers:
       '@sentry/tracing': ^7.45.0
       '@sentry/types': ^7.45.0
       sentry-testkit: ^5.0.5
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../async
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
@@ -2268,7 +2290,6 @@ importers:
       '@sentry/integrations': 7.45.0
       '@sentry/node': 7.46.0
       '@sentry/tracing': 7.46.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@sentry/types': 7.46.0
       sentry-testkit: 5.0.5
@@ -2276,19 +2297,19 @@ importers:
   packages/common/telemetry:
     specifiers:
       '@dxos/config': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/sentry': workspace:*
       '@segment/snippet': ^4.15.3
       '@types/analytics-node': ^3.1.9
       analytics-node: ^6.2.0
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/config': link:../../sdk/config
+      '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/sentry': link:../sentry
       '@segment/snippet': 4.15.3
       analytics-node: 6.2.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/analytics-node': 3.1.9
 
@@ -2306,6 +2327,28 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
 
+  packages/common/tracing:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+    dependencies:
+      '@dxos/async': link:../async
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/context': link:../context
+      '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
+      '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../util
+
   packages/common/typings:
     specifiers: {}
 
@@ -2313,14 +2356,14 @@ importers:
     specifiers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/crypto': link:../crypto
 
@@ -2334,6 +2377,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
@@ -2358,6 +2402,7 @@ importers:
       '@dxos/credentials': link:../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../echo/echo-schema
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../protocols
@@ -2379,6 +2424,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
@@ -2391,11 +2437,11 @@ importers:
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       minisearch: ^3.0.2
-      tiny-invariant: ^1.3.1
       yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
@@ -2404,7 +2450,6 @@ importers:
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       minisearch: 3.3.0
-      tiny-invariant: 1.3.1
       yjs: 13.6.7
     devDependencies:
       '@faker-js/faker': 8.0.2
@@ -2421,6 +2466,7 @@ importers:
       '@dxos/document-model': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
@@ -2429,7 +2475,6 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -2437,6 +2482,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
       '@dxos/errors': link:../../../sdk/errors
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
@@ -2444,7 +2490,6 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/typings': link:../../../common/typings
@@ -2462,6 +2507,7 @@ importers:
       '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2478,13 +2524,13 @@ importers:
       '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       crc-32: ^1.2.2
       fast-check: ~3.3.0
       hypercore-protocol: ^8.0.7
       source-map-support: ^0.5.12
-      tiny-invariant: ^1.3.1
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -2498,6 +2544,7 @@ importers:
       '@dxos/errors': link:../../../sdk/errors
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/hypercore': link:../../../common/hypercore
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -2513,10 +2560,10 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
+      '@dxos/tracing': link:../../../common/tracing
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
       crc-32: 1.2.2
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/text-model': link:../text-model
       fast-check: 3.3.0
@@ -2532,6 +2579,7 @@ importers:
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-pipeline': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
@@ -2540,7 +2588,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       protobufjs: ^7.2.2
-      tiny-invariant: ^1.3.1
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -2549,6 +2596,7 @@ importers:
       '@dxos/document-model': link:../document-model
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-pipeline': link:../echo-pipeline
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
@@ -2557,7 +2605,6 @@ importers:
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       protobufjs: 7.2.2
-      tiny-invariant: 1.3.1
     devDependencies:
       wait-for-expect: 3.0.2
 
@@ -2632,26 +2679,26 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
 
   packages/core/echo/text-model:
     specifiers:
@@ -2659,6 +2706,7 @@ importers:
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
@@ -2666,18 +2714,17 @@ importers:
       '@dxos/protocols': workspace:*
       '@faker-js/faker': ^8.0.2
       '@types/node': ^18.11.9
-      tiny-invariant: ^1.3.1
       yjs: ^13.6.7
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@types/node': 18.11.9
-      tiny-invariant: 1.3.1
       yjs: 13.6.7
     devDependencies:
       '@dxos/document-model': link:../document-model
@@ -2690,6 +2737,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/context': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
@@ -2701,6 +2749,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/echo-schema': link:../echo/echo-schema
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/util': link:../../common/util
@@ -2717,6 +2766,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2746,7 +2796,6 @@ importers:
       performance-now: ^2.1.0
       pump: ^3.0.0
       stream-to-array: ^2.3.0
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -2754,6 +2803,7 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keyring': link:../keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -2773,7 +2823,6 @@ importers:
       performance-now: 2.1.0
       pump: 3.0.0
       stream-to-array: 2.3.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@types/encoding-down': 5.0.0
@@ -2792,6 +2841,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -2799,19 +2849,18 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/node': ^18.11.9
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       '@types/node': 18.11.9
 
@@ -2820,6 +2869,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -2830,7 +2880,6 @@ importers:
       '@types/node': ^18.11.9
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
@@ -2838,6 +2887,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/context': link:../../../common/context
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
@@ -2845,7 +2895,6 @@ importers:
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
       isomorphic-ws: 4.0.1_ws@7.5.9
-      tiny-invariant: 1.3.1
       ws: 7.5.9
     devDependencies:
       '@dxos/signal': link:../signal
@@ -2863,6 +2912,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/errors': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -2882,7 +2932,6 @@ importers:
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.1
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       ws: ^7.4.4
       xor-distance: ^2.0.0
@@ -2894,6 +2943,7 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/errors': link:../../../sdk/errors
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/messaging': link:../messaging
@@ -2906,7 +2956,6 @@ importers:
       isomorphic-ws: 4.0.1_ws@7.5.9
       nanomessage-rpc: 3.2.0
       simple-peer: 9.11.1
-      tiny-invariant: 1.3.1
       ws: 7.5.9
       xor-distance: 2.0.0
     devDependencies:
@@ -2924,22 +2973,22 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       earljs: ~0.1.10
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       earljs: 0.1.12_typescript@5.0.4
       typescript: 5.0.4
@@ -2983,6 +3032,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -2992,7 +3042,6 @@ importers:
       '@types/randombytes': ^2.0.0
       '@types/varint': 6.0.0
       randombytes: ^2.1.0
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       varint: 6.0.0
       wait-for-expect: ^3.0.2
@@ -3000,6 +3049,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
@@ -3007,7 +3057,6 @@ importers:
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
       randombytes: 2.1.0
-      tiny-invariant: 1.3.1
       varint: 6.0.0
     devDependencies:
       '@types/randombytes': 2.0.0
@@ -3020,6 +3069,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -3027,12 +3077,12 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
       '@dxos/util': workspace:*
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/context': link:../../../common/context
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
@@ -3040,7 +3090,6 @@ importers:
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       typescript: 5.0.4
 
@@ -3050,6 +3099,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -3058,13 +3108,13 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
       '@dxos/util': workspace:*
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/context': link:../../../common/context
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
@@ -3073,7 +3123,6 @@ importers:
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       typescript: 5.0.4
 
@@ -3083,6 +3132,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -3094,13 +3144,13 @@ importers:
       '@dxos/util': workspace:*
       add: ^2.0.6
       fast-check: ~3.3.0
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
@@ -3108,7 +3158,6 @@ importers:
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/random-access-storage': link:../../../common/random-access-storage
@@ -3150,13 +3199,11 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/hypercore': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/timeframe': workspace:*
       glob: ~7.1.6
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/hypercore': link:../../common/hypercore
       '@dxos/keys': link:../../common/keys
       '@dxos/timeframe': link:../../common/timeframe
     devDependencies:
@@ -3174,12 +3221,12 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/functions': workspace:*
       '@dxos/hello-template': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
-      '@dxos/tasks-template': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@oclif/core': ^2.9.4
@@ -3226,12 +3273,12 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/functions': link:../../core/functions
       '@dxos/hello-template': link:../../apps/templates/hello-template
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
-      '@dxos/tasks-template': link:../../apps/templates/tasks-template
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
@@ -3276,14 +3323,17 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
-      '@dxos/mosaic': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -3295,24 +3345,33 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@radix-ui/react-tabs': ^1.0.4
       '@types/bytes': ^3.1.1
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
+      change-case: ^4.1.2
       date-fns: ^2.29.3
+      deepsignal: ^1.3.3
+      flame-chart-js: ^2.3.1
       localforage: ^1.10.0
       lodash.defaultsdeep: ^4.6.1
       postcss: ^8.4.21
       react: ^18.2.0
+      react-charts: beta
       react-dom: ^18.2.0
       react-json-tree: ^0.18.0
+      react-resize-detector: ^7.1.2
       react-router-dom: ^6.4.0
+      react-syntax-highlighter: ^15.5.0
       react-vis: ^1.11.12
       tailwindcss: ~3.3.2
       typescript: ^5.0.4
+      use-resize-observer: ^9.0.0
       vite: ^4.3.9
       vite-plugin-fonts: ^0.7.0
       vite-plugin-pwa: ^0.14.1
@@ -3320,12 +3379,16 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
+      '@dxos/gem-core': link:../../experimental/gem-core
+      '@dxos/gem-spore': link:../../experimental/gem-spore
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
-      '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
@@ -3336,23 +3399,31 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-tabs': 1.0.4_5uumaiclxbdbzaqafclbf6maf4
       '@types/bytes': 3.1.1
       bytes: 3.1.2
+      change-case: 4.1.2
       date-fns: 2.29.3
+      deepsignal: 1.3.4_react@18.2.0
+      flame-chart-js: 2.3.1
       localforage: 1.10.0
       lodash.defaultsdeep: 4.6.1
       react: 18.2.0
+      react-charts: 3.0.0-beta.55_biqbaboplfbrettd7655fr4n2y
       react-dom: 18.2.0_react@18.2.0
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      react-syntax-highlighter: 15.5.0_react@18.2.0
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
+      use-resize-observer: 9.1.0_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@dxos/config': link:../../sdk/config
-      '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/react-shell': link:../../sdk/react-shell
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
       '@types/react-vis': 1.11.11
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
       postcss: 8.4.21
@@ -3480,19 +3551,6 @@ importers:
       '@types/minimist': 1.2.2
       typescript: 5.0.4
 
-  packages/devtools/initializers/create-tasks:
-    specifiers:
-      '@dxos/tasks-template': workspace:*
-      '@types/minimist': ^1.2.2
-      minimist: ^1.2.7
-      typescript: ^5.0.4
-    dependencies:
-      '@dxos/tasks-template': link:../../../apps/templates/tasks-template
-      minimist: 1.2.8
-    devDependencies:
-      '@types/minimist': 1.2.2
-      typescript: 5.0.4
-
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3571,6 +3629,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/aurora': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/node-std': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
@@ -3585,8 +3644,8 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
-      tiny-invariant: ^1.3.1
     dependencies:
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/node-std': link:../../common/node-std
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -3595,7 +3654,6 @@ importers:
       d3: 7.6.1
       lodash.defaultsdeep: 4.6.1
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
-      tiny-invariant: 1.3.1
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/aurora': link:../../ui/aurora
@@ -3612,6 +3670,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/gem-core': workspace:*
+      '@dxos/invariant': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@faker-js/faker': ^8.0.2
@@ -3626,10 +3685,10 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/gem-core': link:../gem-core
+      '@dxos/invariant': link:../../common/invariant
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       assert: 2.0.0
@@ -3639,7 +3698,6 @@ importers:
       immutability-helper: 3.1.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      tiny-invariant: 1.3.1
     optionalDependencies:
       '@faker-js/faker': 8.0.2
     devDependencies:
@@ -3793,7 +3851,7 @@ importers:
       '@types/express': ^4.17.17
       '@types/http-proxy': ^1.17.10
       cors: ^2.8.5
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       express: 4.17.1
       http-proxy: ^1.18.1
       node-http-proxy: ^0.2.4
@@ -3809,7 +3867,7 @@ importers:
       '@types/express': 4.17.17
       '@types/http-proxy': 1.17.10
       cors: 2.8.5
-      esbuild: 0.16.17
+      esbuild: 0.19.2
       express: 4.17.1
       http-proxy: 1.18.1
       node-http-proxy: 0.2.4
@@ -3835,6 +3893,7 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/kai-sandbox': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
@@ -3906,7 +3965,6 @@ importers:
       simple-peer: 9.11.1
       string-hash: ~1.1.3
       tailwindcss: ~3.3.2
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       url-join: ^5.0.0
       vite: ^4.3.9
@@ -3931,6 +3989,7 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/kai-sandbox': link:../kai-sandbox
       '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
@@ -3981,7 +4040,6 @@ importers:
       remark-parse-frontmatter: 1.0.3
       simple-peer: 9.11.1
       string-hash: 1.1.3
-      tiny-invariant: 1.3.1
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
@@ -4033,6 +4091,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/kai-frames': workspace:*
       '@dxos/kai-sandbox': workspace:*
       '@dxos/kai-types': workspace:*
@@ -4087,7 +4146,6 @@ importers:
       react-syntax-highlighter: ^15.5.0
       storybook-addon-react-router-v6: ^0.3.2
       tailwindcss: ~3.3.2
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       url-join: ^5.0.0
       vite: ^4.3.9
@@ -4113,6 +4171,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/kai-frames': link:../kai-frames
       '@dxos/kai-sandbox': link:../kai-sandbox
       '@dxos/kai-types': link:../kai-types
@@ -4148,7 +4207,6 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
-      tiny-invariant: 1.3.1
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
@@ -4191,6 +4249,7 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/functions': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -4234,6 +4293,7 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../../sdk/errors
       '@dxos/functions': link:../../core/functions
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/kai-types': link:../kai-types
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -4414,7 +4474,7 @@ importers:
       clipboardy: ^3.0.0
       compare-semver: ~1.1.0
       date-format: ~4.0.11
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       ink: ^3.2.0
       ink-select-input: ~4.2.1
       ink-spinner: ~4.0.3
@@ -4459,7 +4519,7 @@ importers:
       '@types/qrcode-terminal': 0.12.0
       '@types/react': 18.0.21
       '@types/yargs': 16.0.4
-      esbuild: 0.16.14
+      esbuild: 0.19.2
       supervisor: 0.12.0
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4
@@ -4647,6 +4707,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/util': workspace:*
@@ -4670,7 +4731,6 @@ importers:
       react-resize-detector: ^7.1.2
       react-table: ^7.8.0
       tailwindcss: ~3.3.2
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       vite: ^4.3.9
       vite-plugin-fonts: ^0.7.0
@@ -4686,6 +4746,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/debug': link:../../common/debug
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/util': link:../../common/util
@@ -4698,7 +4759,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-table: 7.8.0_react@18.2.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@babel/core': 7.20.12
       '@dxos/config': link:../../sdk/config
@@ -4840,6 +4900,7 @@ importers:
 
   packages/experimental/spyglass:
     specifiers:
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/util': workspace:*
@@ -4850,11 +4911,11 @@ importers:
       isomorphic-fetch: ^3.0.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
-      tiny-invariant: ^1.3.1
       ts-node: 10.9.1
       typescript: ^5.0.4
       url-join: ^5.0.0
     dependencies:
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/util': link:../../common/util
@@ -4862,7 +4923,6 @@ importers:
       isomorphic-fetch: 3.0.0
       preact: 10.11.2
       preact-render-to-string: 5.2.5_preact@10.11.2
-      tiny-invariant: 1.3.1
       url-join: 5.0.0
     devDependencies:
       '@faker-js/faker': 8.0.2
@@ -4878,6 +4938,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -4900,6 +4961,7 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
@@ -4978,6 +5040,9 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-pipeline': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -4986,6 +5051,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
@@ -5005,6 +5071,9 @@ importers:
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
+      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/invariant': link:../../common/invariant
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -5013,6 +5082,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/signal': link:../../core/mesh/signal
+      '@dxos/teleport-extension-replicator': link:../../core/mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 8.0.2
@@ -5069,6 +5139,7 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/errors': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -5091,11 +5162,11 @@ importers:
       lodash.isequal: ^4.5.0
       lodash.isequalwith: ^4.4.0
       source-map-support: ^0.5.12
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
@@ -5105,6 +5176,7 @@ importers:
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../errors
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -5121,10 +5193,8 @@ importers:
       base-x: 3.0.9
       lodash.isequal: 4.5.0
       lodash.isequalwith: 4.4.0
-      tiny-invariant: 1.3.1
     devDependencies:
       '@braneframe/types': link:../../apps/types
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6
@@ -5137,9 +5207,11 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
@@ -5147,13 +5219,14 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
       base-x: ~3.0.9
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/node-std': link:../../common/node-std
@@ -5161,7 +5234,6 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/text-model': link:../../core/echo/text-model
       base-x: 3.0.9
-      tiny-invariant: 1.3.1
 
   packages/sdk/client-services:
     specifiers:
@@ -5178,6 +5250,7 @@ importers:
       '@dxos/echo-pipeline': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/lock-file': workspace:*
@@ -5195,9 +5268,9 @@ importers:
       '@dxos/teleport-extension-object-sync': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
       '@types/readable-stream': ^2.3.9
-      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-protocol': link:../client-protocol
@@ -5212,6 +5285,7 @@ importers:
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
       '@dxos/errors': link:../errors
       '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/lock-file': link:../../common/lock-file
@@ -5228,8 +5302,8 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../core/mesh/teleport-extension-object-sync
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/tracing': link:../../common/tracing
       '@dxos/util': link:../../common/util
-      tiny-invariant: 1.3.1
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
       '@types/readable-stream': 2.3.14
@@ -5320,6 +5394,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-signals': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/react-async': workspace:*
@@ -5333,7 +5408,6 @@ importers:
       '@types/react-dom': ^18.0.6
       react: ^18.2.0
       react-dom: ^18.2.0
-      tiny-invariant: ^1.3.1
       yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../common/async
@@ -5342,11 +5416,11 @@ importers:
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-signals': link:../../core/echo/echo-signals
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/react-async': link:../../common/react-async
       '@dxos/util': link:../../common/util
-      tiny-invariant: 1.3.1
     optionalDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/text-model': link:../../core/echo/text-model
@@ -5370,6 +5444,7 @@ importers:
       '@dxos/aurora-types': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/display-name': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -5403,6 +5478,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/aurora-types': link:../../ui/aurora-types
       '@dxos/debug': link:../../common/debug
+      '@dxos/display-name': link:../../common/display-name
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -5435,8 +5511,11 @@ importers:
 
   packages/sdk/react-surface:
     specifiers:
+      '@dxos/log': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
+    dependencies:
+      '@dxos/log': link:../../common/log
     devDependencies:
       '@types/react': 18.0.21
       react: 18.2.0
@@ -5450,7 +5529,9 @@ importers:
       '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/echo-signals': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -5472,7 +5553,6 @@ importers:
       pkg-dir: ^5.0.0
       react: ^18.2.0
       react-dom: ^18.2.0
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       url-join: ^5.0.0
       vite: ^4.3.9
@@ -5484,7 +5564,9 @@ importers:
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/echo-signals': link:../../core/echo/echo-signals
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -5499,7 +5581,6 @@ importers:
       pkg-dir: 5.0.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      tiny-invariant: 1.3.1
       url-join: 5.0.0
       yargs: 16.2.0
     devDependencies:
@@ -5535,11 +5616,13 @@ importers:
       '@radix-ui/react-popover': ^1.0.6
       '@radix-ui/react-primitive': ^1.0.2
       '@radix-ui/react-scroll-area': ^1.0.3
+      '@radix-ui/react-select': ^1.2.1
       '@radix-ui/react-separator': ^1.0.3
       '@radix-ui/react-slot': ^1.0.1
       '@radix-ui/react-toast': ^1.1.3
       '@radix-ui/react-toggle': ^1.0.2
       '@radix-ui/react-toggle-group': ^1.0.3
+      '@radix-ui/react-toolbar': ^1.0.3
       '@radix-ui/react-tooltip': ^1.0.5
       '@radix-ui/react-use-controllable-state': ^1.0.0
       '@types/react': ^18.0.21
@@ -5567,11 +5650,13 @@ importers:
       '@radix-ui/react-popover': 1.0.6_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-scroll-area': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-select': 1.2.1_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-separator': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
       '@radix-ui/react-toast': 1.1.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toggle': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toggle-group': 1.0.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-toolbar': 1.0.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       i18next: 21.10.0
@@ -5609,6 +5694,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/display-name': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
@@ -5659,6 +5745,7 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/debug': link:../../common/debug
+      '@dxos/display-name': link:../../common/display-name
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
@@ -5698,6 +5785,47 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
+  packages/ui/aurora-grid:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/aurora-types': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@tanstack/react-table': ^8.9.3
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chromatic: ^6.17.0
+      date-fns: ^2.29.3
+      lodash.defaultsdeep: ^4.6.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    dependencies:
+      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/aurora-types': link:../aurora-types
+      '@dxos/invariant': link:../../common/invariant
+      '@dxos/util': link:../../common/util
+      '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+      date-fns: 2.29.3
+      lodash.defaultsdeep: 4.6.1
+    devDependencies:
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
+
   packages/ui/aurora-theme:
     specifiers:
       '@dxos/aurora-types': workspace:*
@@ -5710,7 +5838,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/lodash.merge': ^4.6.6
       autoprefixer: ^10.4.12
-      esbuild: ^0.16.14
+      esbuild: ^0.19.2
       esbuild-style-plugin: ^1.6.1
       lodash.get: ^4.4.2
       lodash.merge: ^4.6.2
@@ -5740,7 +5868,7 @@ importers:
       '@dxos/aurora-types': link:../aurora-types
       '@types/lodash.get': 4.4.7
       '@types/lodash.merge': 4.6.7
-      esbuild: 0.16.17
+      esbuild: 0.19.2
       vite: 4.3.9
 
   packages/ui/aurora-types:
@@ -9575,20 +9703,13 @@ packages:
   /@emotion/weak-memoize/0.3.0:
     resolution: {integrity: sha512-AHPmaAx+RYfZz0eYu6Gviiagpmiyw98ySSlQvCUhVGDRtDFe4DBS0x1bSjdF3gqUDYOczB+yYvBTtEylYSdRhg==}
 
-  /@esbuild/android-arm/0.16.14:
-    resolution: {integrity: sha512-u0rITLxFIeYAvtJXBQNhNuV4YZe+MD1YvIWT7Nicj8hZAtRVZk2PgNH6KclcKDVHz1ChLKXRfX7d7tkbQBUfrg==}
-    engines: {node: '>=12'}
-    cpu: [arm]
-    os: [android]
-    requiresBuild: true
-    optional: true
-
   /@esbuild/android-arm/0.16.17:
     resolution: {integrity: sha512-N9x1CMXVhtWEAMS7pNNONyA14f71VPQN9Cnavj1XQh6T7bskqiLLrSca4O0Vr8Wdcga943eThxnVp3JLnBMYtw==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [android]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/android-arm/0.17.12:
@@ -9600,10 +9721,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/android-arm64/0.16.14:
-    resolution: {integrity: sha512-hTqB6Iq13pW4xaydeqQrs8vPntUnMjbkq+PgGiBMi69eYk74naG2ftHWqKnxn874kNrt5Or3rQ0PJutx2doJuQ==}
+  /@esbuild/android-arm/0.19.2:
+    resolution: {integrity: sha512-tM8yLeYVe7pRyAu9VMi/Q7aunpLwD139EY1S99xbQkT4/q2qa6eA4ige/WJQYdJ8GBL1K33pPFhPfPdJ/WzT8Q==}
     engines: {node: '>=12'}
-    cpu: [arm64]
+    cpu: [arm]
     os: [android]
     requiresBuild: true
     optional: true
@@ -9614,6 +9735,7 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/android-arm64/0.17.12:
@@ -9625,10 +9747,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/android-x64/0.16.14:
-    resolution: {integrity: sha512-jir51K4J0K5Rt0KOcippjSNdOl7akKDVz5I6yrqdk4/m9y+rldGptQUF7qU4YpX8U61LtR+w2Tu2Ph+K/UaJOw==}
+  /@esbuild/android-arm64/0.19.2:
+    resolution: {integrity: sha512-lsB65vAbe90I/Qe10OjkmrdxSX4UJDjosDgb8sZUKcg3oefEuW2OT2Vozz8ef7wrJbMcmhvCC+hciF8jY/uAkw==}
     engines: {node: '>=12'}
-    cpu: [x64]
+    cpu: [arm64]
     os: [android]
     requiresBuild: true
     optional: true
@@ -9639,6 +9761,7 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/android-x64/0.17.12:
@@ -9650,11 +9773,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/darwin-arm64/0.16.14:
-    resolution: {integrity: sha512-vrlaP81IuwPaw1fyX8fHCmivP3Gr73ojVEZy+oWJLAiZVcG8o8Phwun/XDnYIFUHxIoUnMFEpg9o38MIvlw8zw==}
+  /@esbuild/android-x64/0.19.2:
+    resolution: {integrity: sha512-qK/TpmHt2M/Hg82WXHRc/W/2SGo/l1thtDHZWqFq7oi24AjZ4O/CpPSu6ZuYKFkEgmZlFoa7CooAyYmuvnaG8w==}
     engines: {node: '>=12'}
-    cpu: [arm64]
-    os: [darwin]
+    cpu: [x64]
+    os: [android]
     requiresBuild: true
     optional: true
 
@@ -9664,6 +9787,7 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/darwin-arm64/0.17.12:
@@ -9675,10 +9799,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/darwin-x64/0.16.14:
-    resolution: {integrity: sha512-KV1E01eC2hGYA2qzFDRCK4wdZCRUvMwCNcobgpiiOzp5QXpJBqFPdxI69j8vvzuU7oxFXDgANwEkXvpeQqyOyg==}
+  /@esbuild/darwin-arm64/0.19.2:
+    resolution: {integrity: sha512-Ora8JokrvrzEPEpZO18ZYXkH4asCdc1DLdcVy8TGf5eWtPO1Ie4WroEJzwI52ZGtpODy3+m0a2yEX9l+KUn0tA==}
     engines: {node: '>=12'}
-    cpu: [x64]
+    cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
@@ -9689,6 +9813,7 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/darwin-x64/0.17.12:
@@ -9700,11 +9825,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/freebsd-arm64/0.16.14:
-    resolution: {integrity: sha512-xRM1RQsazSvL42BNa5XC7ytD4ZDp0ZyJcH7aB0SlYUcHexJUKiDNKR7dlRVlpt6W0DvoRPU2nWK/9/QWS4u2fw==}
+  /@esbuild/darwin-x64/0.19.2:
+    resolution: {integrity: sha512-tP+B5UuIbbFMj2hQaUr6EALlHOIOmlLM2FK7jeFBobPy2ERdohI4Ka6ZFjZ1ZYsrHE/hZimGuU90jusRE0pwDw==}
     engines: {node: '>=12'}
-    cpu: [arm64]
-    os: [freebsd]
+    cpu: [x64]
+    os: [darwin]
     requiresBuild: true
     optional: true
 
@@ -9714,6 +9839,7 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/freebsd-arm64/0.17.12:
@@ -9725,10 +9851,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/freebsd-x64/0.16.14:
-    resolution: {integrity: sha512-7ALTAn6YRRf1O6fw9jmn0rWmOx3XfwDo7njGtjy1LXhDGUjTY/vohEPM3ii5MQ411vJv1r498EEx2aBQTJcrEw==}
+  /@esbuild/freebsd-arm64/0.19.2:
+    resolution: {integrity: sha512-YbPY2kc0acfzL1VPVK6EnAlig4f+l8xmq36OZkU0jzBVHcOTyQDhnKQaLzZudNJQyymd9OqQezeaBgkTGdTGeQ==}
     engines: {node: '>=12'}
-    cpu: [x64]
+    cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
     optional: true
@@ -9739,6 +9865,7 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/freebsd-x64/0.17.12:
@@ -9750,11 +9877,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-arm/0.16.14:
-    resolution: {integrity: sha512-X6xULug66ulrr4IzrW7qq+eq9n4MtEyagdWvj4o4cmWr+JXOT47atjpDF9j5M2zHY0UQBmqnHhwl+tXpkpIb2w==}
+  /@esbuild/freebsd-x64/0.19.2:
+    resolution: {integrity: sha512-nSO5uZT2clM6hosjWHAsS15hLrwCvIWx+b2e3lZ3MwbYSaXwvfO528OF+dLjas1g3bZonciivI8qKR/Hm7IWGw==}
     engines: {node: '>=12'}
-    cpu: [arm]
-    os: [linux]
+    cpu: [x64]
+    os: [freebsd]
     requiresBuild: true
     optional: true
 
@@ -9764,6 +9891,7 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-arm/0.17.12:
@@ -9775,10 +9903,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-arm64/0.16.14:
-    resolution: {integrity: sha512-TLh2OcbBUQcMYRH4GbiDkDZfZ4t1A3GgmeXY27dHSI6xrU7IkO00MGBiJySmEV6sH3Wa6pAN6UtaVL0DwkGW4Q==}
+  /@esbuild/linux-arm/0.19.2:
+    resolution: {integrity: sha512-Odalh8hICg7SOD7XCj0YLpYCEc+6mkoq63UnExDCiRA2wXEmGlK5JVrW50vZR9Qz4qkvqnHcpH+OFEggO3PgTg==}
     engines: {node: '>=12'}
-    cpu: [arm64]
+    cpu: [arm]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9789,6 +9917,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-arm64/0.17.12:
@@ -9800,10 +9929,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-ia32/0.16.14:
-    resolution: {integrity: sha512-oBZkcZ56UZDFCAfE3Fd/Jgy10EoS7Td77NzNGenM+HSY8BkdQAcI9VF9qgwdOLZ+tuftWD7UqZ26SAhtvA3XhA==}
+  /@esbuild/linux-arm64/0.19.2:
+    resolution: {integrity: sha512-ig2P7GeG//zWlU0AggA3pV1h5gdix0MA3wgB+NsnBXViwiGgY77fuN9Wr5uoCrs2YzaYfogXgsWZbm+HGr09xg==}
     engines: {node: '>=12'}
-    cpu: [ia32]
+    cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9814,6 +9943,7 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-ia32/0.17.12:
@@ -9825,6 +9955,14 @@ packages:
     dev: true
     optional: true
 
+  /@esbuild/linux-ia32/0.19.2:
+    resolution: {integrity: sha512-mLfp0ziRPOLSTek0Gd9T5B8AtzKAkoZE70fneiiyPlSnUKKI4lp+mGEnQXcQEHLJAcIYDPSyBvsUbKUG2ri/XQ==}
+    engines: {node: '>=12'}
+    cpu: [ia32]
+    os: [linux]
+    requiresBuild: true
+    optional: true
+
   /@esbuild/linux-loong64/0.14.54:
     resolution: {integrity: sha512-bZBrLAIX1kpWelV0XemxBZllyRmM6vgFQQG2GdNb+r3Fkp0FOh1NJSvekXDs7jq70k4euu1cryLMfU+mTXlEpw==}
     engines: {node: '>=12'}
@@ -9834,20 +9972,13 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-loong64/0.16.14:
-    resolution: {integrity: sha512-udz/aEHTcuHP+xdWOJmZ5C9RQXHfZd/EhCnTi1Hfay37zH3lBxn/fNs85LA9HlsniFw2zccgcbrrTMKk7Cn1Qg==}
-    engines: {node: '>=12'}
-    cpu: [loong64]
-    os: [linux]
-    requiresBuild: true
-    optional: true
-
   /@esbuild/linux-loong64/0.16.17:
     resolution: {integrity: sha512-dTzNnQwembNDhd654cA4QhbS9uDdXC3TKqMJjgOWsC0yNCbpzfWoXdZvp0mY7HU6nzk5E0zpRGGx3qoQg8T2DQ==}
     engines: {node: '>=12'}
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.17.12:
@@ -9859,10 +9990,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-mips64el/0.16.14:
-    resolution: {integrity: sha512-kJ2iEnikUOdC1SiTGbH0fJUgpZwa0ITDTvj9EHf9lm3I0hZ4Yugsb3M6XSl696jVxrEocLe519/8CbSpQWFSrg==}
+  /@esbuild/linux-loong64/0.19.2:
+    resolution: {integrity: sha512-hn28+JNDTxxCpnYjdDYVMNTR3SKavyLlCHHkufHV91fkewpIyQchS1d8wSbmXhs1fiYDpNww8KTFlJ1dHsxeSw==}
     engines: {node: '>=12'}
-    cpu: [mips64el]
+    cpu: [loong64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9873,6 +10004,7 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-mips64el/0.17.12:
@@ -9884,10 +10016,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-ppc64/0.16.14:
-    resolution: {integrity: sha512-kclKxvZvX5YhykwlJ/K9ljiY4THe5vXubXpWmr7q3Zu3WxKnUe1VOZmhkEZlqtnJx31GHPEV4SIG95IqTdfgfg==}
+  /@esbuild/linux-mips64el/0.19.2:
+    resolution: {integrity: sha512-KbXaC0Sejt7vD2fEgPoIKb6nxkfYW9OmFUK9XQE4//PvGIxNIfPk1NmlHmMg6f25x57rpmEFrn1OotASYIAaTg==}
     engines: {node: '>=12'}
-    cpu: [ppc64]
+    cpu: [mips64el]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9898,6 +10030,7 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-ppc64/0.17.12:
@@ -9909,10 +10042,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-riscv64/0.16.14:
-    resolution: {integrity: sha512-fdwP9Dc+Kx/cZwp9T9kNqjAE/PQjfrxbio4rZ3XnC3cVvZBjuxpkiyu/tuCwt6SbAK5th6AYNjFdEV9kGC020A==}
+  /@esbuild/linux-ppc64/0.19.2:
+    resolution: {integrity: sha512-dJ0kE8KTqbiHtA3Fc/zn7lCd7pqVr4JcT0JqOnbj4LLzYnp+7h8Qi4yjfq42ZlHfhOCM42rBh0EwHYLL6LEzcw==}
     engines: {node: '>=12'}
-    cpu: [riscv64]
+    cpu: [ppc64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9923,6 +10056,7 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-riscv64/0.17.12:
@@ -9934,10 +10068,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-s390x/0.16.14:
-    resolution: {integrity: sha512-++fw3P4fQk9nqvdzbANRqimKspL8pDCnSpXomyhV7V/ISha/BZIYvZwLBWVKp9CVWKwWPJ4ktsezuLIvlJRHqA==}
+  /@esbuild/linux-riscv64/0.19.2:
+    resolution: {integrity: sha512-7Z/jKNFufZ/bbu4INqqCN6DDlrmOTmdw6D0gH+6Y7auok2r02Ur661qPuXidPOJ+FSgbEeQnnAGgsVynfLuOEw==}
     engines: {node: '>=12'}
-    cpu: [s390x]
+    cpu: [riscv64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9948,6 +10082,7 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-s390x/0.17.12:
@@ -9959,10 +10094,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/linux-x64/0.16.14:
-    resolution: {integrity: sha512-TomtswAuzBf2NnddlrS4W01Tv85RM9YtATB3OugY6On0PLM4Ksz5qvQKVAjtzPKoLgL1FiZtfc8mkZc4IgoMEA==}
+  /@esbuild/linux-s390x/0.19.2:
+    resolution: {integrity: sha512-U+RinR6aXXABFCcAY4gSlv4CL1oOVvSSCdseQmGO66H+XyuQGZIUdhG56SZaDJQcLmrSfRmx5XZOWyCJPRqS7g==}
     engines: {node: '>=12'}
-    cpu: [x64]
+    cpu: [s390x]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -9973,6 +10108,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/linux-x64/0.17.12:
@@ -9984,11 +10120,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/netbsd-x64/0.16.14:
-    resolution: {integrity: sha512-U06pfx8P5CqyoPNfqIJmnf+5/r4mJ1S62G4zE6eOjS59naQcxi6GnscUCPH3b+hRG0qdKoGX49RAyiqW+M9aSw==}
+  /@esbuild/linux-x64/0.19.2:
+    resolution: {integrity: sha512-oxzHTEv6VPm3XXNaHPyUTTte+3wGv7qVQtqaZCrgstI16gCuhNOtBXLEBkBREP57YTd68P0VgDgG73jSD8bwXQ==}
     engines: {node: '>=12'}
     cpu: [x64]
-    os: [netbsd]
+    os: [linux]
     requiresBuild: true
     optional: true
 
@@ -9998,6 +10134,7 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/netbsd-x64/0.17.12:
@@ -10009,11 +10146,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/openbsd-x64/0.16.14:
-    resolution: {integrity: sha512-/Jl8XVaWEZNu9rZw+n792GIBupQwHo6GDoapHSb/2xp/Ku28eK6QpR2O9cPBkzHH4OOoMH0LB6zg/qczJ5TTGg==}
+  /@esbuild/netbsd-x64/0.19.2:
+    resolution: {integrity: sha512-WNa5zZk1XpTTwMDompZmvQLHszDDDN7lYjEHCUmAGB83Bgs20EMs7ICD+oKeT6xt4phV4NDdSi/8OfjPbSbZfQ==}
     engines: {node: '>=12'}
     cpu: [x64]
-    os: [openbsd]
+    os: [netbsd]
     requiresBuild: true
     optional: true
 
@@ -10023,6 +10160,7 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/openbsd-x64/0.17.12:
@@ -10034,11 +10172,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/sunos-x64/0.16.14:
-    resolution: {integrity: sha512-2iI7D34uTbDn/TaSiUbEHz+fUa8KbN90vX5yYqo12QGpu6T8Jl+kxODsWuMCwoTVlqUpwfPV22nBbFPME9OPtw==}
+  /@esbuild/openbsd-x64/0.19.2:
+    resolution: {integrity: sha512-S6kI1aT3S++Dedb7vxIuUOb3oAxqxk2Rh5rOXOTYnzN8JzW1VzBd+IqPiSpgitu45042SYD3HCoEyhLKQcDFDw==}
     engines: {node: '>=12'}
     cpu: [x64]
-    os: [sunos]
+    os: [openbsd]
     requiresBuild: true
     optional: true
 
@@ -10048,6 +10186,7 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/sunos-x64/0.17.12:
@@ -10059,11 +10198,11 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/win32-arm64/0.16.14:
-    resolution: {integrity: sha512-SjlM7AHmQVTiGBJE/nqauY1aDh80UBsXZ94g4g60CDkrDMseatiqALVcIuElg4ZSYzJs8hsg5W6zS2zLpZTVgg==}
+  /@esbuild/sunos-x64/0.19.2:
+    resolution: {integrity: sha512-VXSSMsmb+Z8LbsQGcBMiM+fYObDNRm8p7tkUDMPG/g4fhFX5DEFmjxIEa3N8Zr96SjsJ1woAhF0DUnS3MF3ARw==}
     engines: {node: '>=12'}
-    cpu: [arm64]
-    os: [win32]
+    cpu: [x64]
+    os: [sunos]
     requiresBuild: true
     optional: true
 
@@ -10073,6 +10212,7 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/win32-arm64/0.17.12:
@@ -10084,10 +10224,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/win32-ia32/0.16.14:
-    resolution: {integrity: sha512-z06t5zqk8ak0Xom5HG81z2iOQ1hNWYsFQp3sczVLVx+dctWdgl80tNRyTbwjaFfui2vFO12dfE3trCTvA+HO4g==}
+  /@esbuild/win32-arm64/0.19.2:
+    resolution: {integrity: sha512-5NayUlSAyb5PQYFAU9x3bHdsqB88RC3aM9lKDAz4X1mo/EchMIT1Q+pSeBXNgkfNmRecLXA0O8xP+x8V+g/LKg==}
     engines: {node: '>=12'}
-    cpu: [ia32]
+    cpu: [arm64]
     os: [win32]
     requiresBuild: true
     optional: true
@@ -10098,6 +10238,7 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/win32-ia32/0.17.12:
@@ -10109,10 +10250,10 @@ packages:
     dev: true
     optional: true
 
-  /@esbuild/win32-x64/0.16.14:
-    resolution: {integrity: sha512-ED1UpWcM6lAbalbbQ9TrGqJh4Y9TaASUvu8bI/0mgJcxhSByJ6rbpgqRhxYMaQ682WfA71nxUreaTO7L275zrw==}
+  /@esbuild/win32-ia32/0.19.2:
+    resolution: {integrity: sha512-47gL/ek1v36iN0wL9L4Q2MFdujR0poLZMJwhO2/N3gA89jgHp4MR8DKCmwYtGNksbfJb9JoTtbkoe6sDhg2QTA==}
     engines: {node: '>=12'}
-    cpu: [x64]
+    cpu: [ia32]
     os: [win32]
     requiresBuild: true
     optional: true
@@ -10123,6 +10264,7 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@esbuild/win32-x64/0.17.12:
@@ -10132,6 +10274,14 @@ packages:
     os: [win32]
     requiresBuild: true
     dev: true
+    optional: true
+
+  /@esbuild/win32-x64/0.19.2:
+    resolution: {integrity: sha512-tcuhV7ncXBqbt/Ybf0IyrMcwVOAPDckMK9rXNHtF17UTK18OKLpg08glminN06pt2WCoALhXdLfSPbVvK/6fxw==}
+    engines: {node: '>=12'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
     optional: true
 
   /@eslint-community/eslint-utils/4.4.0_eslint@8.36.0:
@@ -13839,6 +13989,34 @@ packages:
       react: 18.2.0
     dev: false
 
+  /@radix-ui/react-tabs/1.0.4_5uumaiclxbdbzaqafclbf6maf4:
+    resolution: {integrity: sha512-egZfYY/+wRNCflXNHx+dePvnz9FbmssDTJBtgRfDY7e8SE5oIo3Py2eCB1ckAbh1Q7cQ/6yJZThJ++sgbxibog==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.21.0
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-context': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-direction': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-id': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-presence': 1.0.1_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-primitive': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-roving-focus': 1.0.4_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-use-controllable-state': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@radix-ui/react-toast/1.1.3_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-yHFgpxi9wjbfPvpSPdYAzivCqw48eA1ofT8m/WqYOVTxKPdmQMuVKRYPlMmj4C1d6tJdFj/LBa1J4iY3fL4OwQ==}
     peerDependencies:
@@ -16022,6 +16200,23 @@ packages:
       tailwindcss: 3.3.2
     dev: true
 
+  /@tanstack/react-table/8.9.3_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Ng9rdm3JPoSCi6cVZvANsYnF+UoGVRxflMb270tVj0+LjeT/ZtZ9ckxF6oLPLcKesza6VKBqtdF9mQ+vaz24Aw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+    dependencies:
+      '@tanstack/table-core': 8.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@tanstack/table-core/8.9.3:
+    resolution: {integrity: sha512-NpHZBoHTfqyJk0m/s/+CSuAiwtebhYK90mDuf5eylTvgViNOujiaOaxNDxJkQQAsVvHWZftUGAx1EfO1rkKtLg==}
+    engines: {node: '>=12'}
+    dev: false
+
   /@tensorflow/tfjs-backend-cpu/3.21.0_aipmo6igpprgzt4umpaa3m6sn4:
     resolution: {integrity: sha512-88S21UAdzyK0CsLUrH17GPTD+26E85OP9CqmLZslaWjWUmBkeTQ5Zqyp6iK+gELnLxPx6q7JsNEeFuPv4254lQ==}
     engines: {yarn: '>= 1.3.2'}
@@ -16880,7 +17075,6 @@ packages:
 
   /@types/d3-array/3.0.3:
     resolution: {integrity: sha512-Reoy+pKnvsksN0lQUlcH6dOGjRZ/3WRwXR//m+/8lt1BXeI4xyaUZoqULNjyXXRuh0Mj4LNpkCvhUpQlY3X5xQ==}
-    dev: true
 
   /@types/d3-axis/3.0.1:
     resolution: {integrity: sha512-zji/iIbdd49g9WN0aIsGcwcTBUkgLsCSwB+uH+LPVDAiKWENMtI3cJEWt+7/YYwelMoZmbBfzA3qCdrZ2XFNnw==}
@@ -16963,7 +17157,6 @@ packages:
 
   /@types/d3-path/3.0.0:
     resolution: {integrity: sha512-0g/A+mZXgFkQxN3HniRDbXMN79K3CdTpLsevj+PXiTcb2hVyvkZUBg37StmgCQkaD84cUJ4uaDAWq7UJOQy2Tg==}
-    dev: true
 
   /@types/d3-polygon/3.0.0:
     resolution: {integrity: sha512-D49z4DyzTKXM0sGKVqiTDTYr+DHg/uxsiWDAkNrwXYuiZVd9o9wXZIo+YsHkifOiyBkmSWlEngHCQme54/hnHw==}
@@ -16985,7 +17178,6 @@ packages:
     resolution: {integrity: sha512-Yk4htunhPAwN0XGlIwArRomOjdoBFXC3+kCxK2Ubg7I9shQlVSJy/pG/Ht5ASN+gdMIalpk8TJ5xV74jFsetLA==}
     dependencies:
       '@types/d3-time': 3.0.0
-    dev: true
 
   /@types/d3-selection/3.0.3:
     resolution: {integrity: sha512-Mw5cf6nlW1MlefpD9zrshZ+DAWL4IQ5LnWfRheW6xwsdaWOb6IRRu2H7XPAQcyXEx1D7XQWgdoKR83ui1/HlEA==}
@@ -16995,7 +17187,6 @@ packages:
     resolution: {integrity: sha512-jYIYxFFA9vrJ8Hd4Se83YI6XF+gzDL1aC5DCsldai4XYYiVNdhtpGbA/GM6iyQ8ayhSp3a148LY34hy7A4TxZA==}
     dependencies:
       '@types/d3-path': 3.0.0
-    dev: true
 
   /@types/d3-time-format/4.0.0:
     resolution: {integrity: sha512-yjfBUe6DJBsDin2BMIulhSHmr5qNR5Pxs17+oW4DoVPyVIXZ+m6bs7j1UVKP08Emv6jRmYrYqxYzO63mQxy1rw==}
@@ -17003,7 +17194,6 @@ packages:
 
   /@types/d3-time/3.0.0:
     resolution: {integrity: sha512-sZLCdHvBUcNby1cB6Fd3ZBrABbjz3v1Vm90nysCQ6Vt7vd6e/h9Lt7SiJUoEX0l4Dzc7P5llKyhqSi1ycSf1Hg==}
-    dev: true
 
   /@types/d3-timer/3.0.0:
     resolution: {integrity: sha512-HNB/9GHqu7Fo8AQiugyJbv6ZxYz58wef0esl4Mv828w1ZKpAshw/uFWVDUcIB9KKFeFKoxS3cHY07FFgtTRZ1g==}
@@ -17659,6 +17849,10 @@ packages:
   /@types/qs/6.9.7:
     resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
 
+  /@types/raf/3.4.0:
+    resolution: {integrity: sha512-taW5/WYqo36N7V39oYyHP9Ipfd5pNFvGTIQsNGj86xV88YQ7GnI30/yMfKDF7Zgin0m3e+ikX88FvImnK4RjGw==}
+    dev: false
+
   /@types/randombytes/2.0.0:
     resolution: {integrity: sha512-bz8PhAVlwN72vqefzxa14DKNT8jK/mV66CSjwdVQM/k3Th3EPKfUtdMniwZgMedQTFuywAsfjnZsg+pEnltaMA==}
     dependencies:
@@ -17692,6 +17886,12 @@ packages:
       '@types/react': 18.0.21
     dev: true
 
+  /@types/react-dom/17.0.20:
+    resolution: {integrity: sha512-4pzIjSxDueZZ90F52mU3aPoogkHIoSIDG+oQ+wQK7Cy2B9S+MvOqY0uEA/qawKz381qrEDkvpwyt8Bm31I8sbA==}
+    dependencies:
+      '@types/react': 17.0.65
+    dev: false
+
   /@types/react-dom/18.0.6:
     resolution: {integrity: sha512-/5OFZgfIPSwy+YuIBP/FgJnQnsxhZhjjrnxudMddeblOouIodEQ75X14Rr4wGSG/bknL+Omy9iWlLo1u/9GzAA==}
     dependencies:
@@ -17714,6 +17914,14 @@ packages:
     dependencies:
       '@types/react': 18.0.21
     dev: true
+
+  /@types/react/17.0.65:
+    resolution: {integrity: sha512-oxur785xZYHvnI7TRS61dXbkIhDPnGfsXKv0cNXR/0ml4SipRIFpSMzA7HMEfOywFwJ5AOnPrXYTEiTRUQeGlQ==}
+    dependencies:
+      '@types/prop-types': 15.7.5
+      '@types/scheduler': 0.16.2
+      csstype: 3.1.2
+    dev: false
 
   /@types/react/18.0.21:
     resolution: {integrity: sha512-7QUCOxvFgnD5Jk8ZKlUAhVcRj7GuJRjnjjiY/IUBWKgOlnvDvTMLD4RTF7NPyVmbRhNrbomZiOepg7M/2Kj1mA==}
@@ -19774,6 +19982,22 @@ packages:
       postcss: 8.4.21
       postcss-value-parser: 4.2.0
 
+  /autoprefixer/10.4.13_postcss@8.4.24:
+    resolution: {integrity: sha512-49vKpMqcZYsJjwotvt4+h/BCjJVnhGwcLpDt5xkcaOG3eLrG/HUYLagrihYsQ+qrIBgIzX1Rw7a6L8I/ZA1Atg==}
+    engines: {node: ^10 || ^12 || >=14}
+    hasBin: true
+    peerDependencies:
+      postcss: ^8.1.0
+    dependencies:
+      browserslist: 4.21.4
+      caniuse-lite: 1.0.30001442
+      fraction.js: 4.2.0
+      normalize-range: 0.1.2
+      picocolors: 1.0.0
+      postcss: 8.4.24
+      postcss-value-parser: 4.2.0
+    dev: true
+
   /autosize/6.0.1:
     resolution: {integrity: sha512-f86EjiUKE6Xvczc4ioP1JBlWG7FKrE13qe/DxBCpe8GCipCq2nFw73aO8QEBKHfSbYGDN5eB9jXWKen7tspDqQ==}
     dev: true
@@ -20910,7 +21134,7 @@ packages:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
     dependencies:
       no-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
       upper-case-first: 2.0.2
 
   /capture-exit/2.0.0:
@@ -21077,7 +21301,7 @@ packages:
       path-case: 3.0.4
       sentence-case: 3.0.4
       snake-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /char-regex/1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
@@ -21215,7 +21439,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.5.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /chokidar/3.5.3:
@@ -21230,7 +21454,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /chownr/1.1.4:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
@@ -21825,7 +22049,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -21931,7 +22155,7 @@ packages:
     resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
     dependencies:
       no-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
       upper-case: 2.0.2
 
   /content-disposition/0.5.2:
@@ -22362,6 +22586,12 @@ packages:
     resolution: {integrity: sha512-KHW6M86R+FUPYGb3R5XiYjXPq7VzwxZ22buHhAEVG5ztoEcZZMLov530mmccaqA1GghZArjQV46fuc8kUqhhHw==}
     dev: false
 
+  /d3-array/2.12.1:
+    resolution: {integrity: sha512-B0ErZK/66mHtEsR1TkPEEkwdy+WDesimkM5gpZr5Dsg54BiTA5RXtYW5qTLIAcekaS9xfZrzBLF/OAkB3Qn1YQ==}
+    dependencies:
+      internmap: 1.0.1
+    dev: false
+
   /d3-array/3.2.0:
     resolution: {integrity: sha512-3yXFQo0oG3QCxbF06rMPFyGRMGJNS7NvsV1+2joOjbBE+9xvWQ8+GcMJAjRCzw06zQ3/arXeJgbPYcjUCuC+3g==}
     engines: {node: '>=12'}
@@ -22411,6 +22641,12 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       d3-array: 3.2.0
+
+  /d3-delaunay/5.3.0:
+    resolution: {integrity: sha512-amALSrOllWVLaHTnDLHwMIiz0d1bBu9gZXd1FiLfXf8sHcX9jrcj81TVZOqD4UX7MgBZZ07c8GxzEgBpJqc74w==}
+    dependencies:
+      delaunator: 4.0.1
+    dev: false
 
   /d3-delaunay/6.0.2:
     resolution: {integrity: sha512-IMLNldruDQScrcfT+MWnazhHbDJhcRJyOEBAJfwQnHle1RPh6WDuLvxNArUju2VSMSUuKlY5BGHRJ2cYyoFLQQ==}
@@ -22547,6 +22783,16 @@ packages:
       d3-time-format: 2.3.0
     dev: false
 
+  /d3-scale/3.3.0:
+    resolution: {integrity: sha512-1JGp44NQCt5d1g+Yy+GeOnZP7xHo0ii8zsQp6PGzd+C1/dl0KGsp9A7Mxwp+1D1o4unbTTxVdU/ZOIEBoeZPbQ==}
+    dependencies:
+      d3-array: 2.12.1
+      d3-format: 1.4.5
+      d3-interpolate: 1.4.0
+      d3-time: 2.1.1
+      d3-time-format: 2.3.0
+    dev: false
+
   /d3-scale/4.0.2:
     resolution: {integrity: sha512-GZW464g1SH7ag3Y7hXjf8RoUuAFIqklOAq3MRl4OaWabTFJY9PN/E1YklhXLh+OQ3fM9yS2nOkCoS+WLZ6kvxQ==}
     engines: {node: '>=12'}
@@ -22563,6 +22809,12 @@ packages:
 
   /d3-shape/1.3.7:
     resolution: {integrity: sha512-EUkvKjqPFUAZyOlhY5gzCxCeI0Aep04LwIRpsZ/mLFelJiUfnK56jo5JMDSE7yyP2kLSb6LtF+S5chMk7uqPqw==}
+    dependencies:
+      d3-path: 1.0.9
+    dev: false
+
+  /d3-shape/2.1.0:
+    resolution: {integrity: sha512-PnjUqfM2PpskbSLTJvAzp2Wv4CZsnAgTfcVRTwW03QR3MkXF8Uo7B1y/lWkAsmbKwuecto++4NlsYcvYpXpTHA==}
     dependencies:
       d3-path: 1.0.9
     dev: false
@@ -22587,6 +22839,12 @@ packages:
 
   /d3-time/1.1.0:
     resolution: {integrity: sha512-Xh0isrZ5rPYYdqhAVk8VLnMEidhz5aP7htAADH6MfzgmmicPkTo8LhkLxci61/lCB7n7UmE3bN0leRt+qvkLxA==}
+    dev: false
+
+  /d3-time/2.1.1:
+    resolution: {integrity: sha512-/eIQe/eR4kCQwq7yxi7z4c6qEXf2IYGcjoWB5OOQy4Tq9Uv39/947qlDcN2TLkiTzQWzvnsuYPB9TrWaNfipKQ==}
+    dependencies:
+      d3-array: 2.12.1
     dev: false
 
   /d3-time/3.0.0:
@@ -23074,6 +23332,10 @@ packages:
       p-map: 3.0.0
       rimraf: 3.0.2
       slash: 3.0.0
+    dev: false
+
+  /delaunator/4.0.1:
+    resolution: {integrity: sha512-WNPWi1IRKZfCt/qIDMfERkDp93+iZEmOxN2yy4Jg+Xhv8SLk2UTqqbe1sfiipn0and9QrE914/ihdx82Y/Giag==}
     dev: false
 
   /delaunator/5.0.0:
@@ -23869,12 +24131,12 @@ packages:
     resolution: {integrity: sha512-pw3ZgN2phh32Z7BpKrhRDtmI+iVCl+Gc0BLOT9croXg1MnMjRuN7aXhIQirhLeK39erkIwfFlhy6xieroBGc1Q==}
     dev: true
 
-  /esbuild-plugin-raw/0.1.7_esbuild@0.16.14:
+  /esbuild-plugin-raw/0.1.7_esbuild@0.19.2:
     resolution: {integrity: sha512-kYfu+XBzKm1/ryjjITSMkj/D+JsVHRWD48vM/EWTufUledFlnCw8envwgjz29R3bXj6g+wguhUW8Q2qjxCQNXw==}
     peerDependencies:
       esbuild: ^0.16.0
     dependencies:
-      esbuild: 0.16.14
+      esbuild: 0.19.2
     dev: true
 
   /esbuild-plugin-yaml/0.0.1:
@@ -23977,35 +24239,6 @@ packages:
       esbuild-windows-arm64: 0.14.54
     dev: true
 
-  /esbuild/0.16.14:
-    resolution: {integrity: sha512-6xAn3O6ZZyoxZAEkwfI9hw4cEqSr/o1ViJtnkvImVkblmUN65Md04o0S/7H1WNu1XGf1Cjij/on7VO4psIYjkw==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    optionalDependencies:
-      '@esbuild/android-arm': 0.16.14
-      '@esbuild/android-arm64': 0.16.14
-      '@esbuild/android-x64': 0.16.14
-      '@esbuild/darwin-arm64': 0.16.14
-      '@esbuild/darwin-x64': 0.16.14
-      '@esbuild/freebsd-arm64': 0.16.14
-      '@esbuild/freebsd-x64': 0.16.14
-      '@esbuild/linux-arm': 0.16.14
-      '@esbuild/linux-arm64': 0.16.14
-      '@esbuild/linux-ia32': 0.16.14
-      '@esbuild/linux-loong64': 0.16.14
-      '@esbuild/linux-mips64el': 0.16.14
-      '@esbuild/linux-ppc64': 0.16.14
-      '@esbuild/linux-riscv64': 0.16.14
-      '@esbuild/linux-s390x': 0.16.14
-      '@esbuild/linux-x64': 0.16.14
-      '@esbuild/netbsd-x64': 0.16.14
-      '@esbuild/openbsd-x64': 0.16.14
-      '@esbuild/sunos-x64': 0.16.14
-      '@esbuild/win32-arm64': 0.16.14
-      '@esbuild/win32-ia32': 0.16.14
-      '@esbuild/win32-x64': 0.16.14
-
   /esbuild/0.16.17:
     resolution: {integrity: sha512-G8LEkV0XzDMNwXKgM0Jwu3nY3lSTwSGY6XbxM9cr9+s0T/qSV1q1JVPBGzm3dcjhCic9+emZDmMffkwgPeOeLg==}
     engines: {node: '>=12'}
@@ -24034,6 +24267,7 @@ packages:
       '@esbuild/win32-arm64': 0.16.17
       '@esbuild/win32-ia32': 0.16.17
       '@esbuild/win32-x64': 0.16.17
+    dev: true
 
   /esbuild/0.17.12:
     resolution: {integrity: sha512-bX/zHl7Gn2CpQwcMtRogTTBf9l1nl+H6R8nUbjk+RuKqAE3+8FDulLA+pHvX7aA7Xe07Iwa+CWvy9I8Y2qqPKQ==}
@@ -24064,6 +24298,35 @@ packages:
       '@esbuild/win32-ia32': 0.17.12
       '@esbuild/win32-x64': 0.17.12
     dev: true
+
+  /esbuild/0.19.2:
+    resolution: {integrity: sha512-G6hPax8UbFakEj3hWO0Vs52LQ8k3lnBhxZWomUJDxfz3rZTLqF5k/FCzuNdLx2RbpBiQQF9H9onlDDH1lZsnjg==}
+    engines: {node: '>=12'}
+    hasBin: true
+    requiresBuild: true
+    optionalDependencies:
+      '@esbuild/android-arm': 0.19.2
+      '@esbuild/android-arm64': 0.19.2
+      '@esbuild/android-x64': 0.19.2
+      '@esbuild/darwin-arm64': 0.19.2
+      '@esbuild/darwin-x64': 0.19.2
+      '@esbuild/freebsd-arm64': 0.19.2
+      '@esbuild/freebsd-x64': 0.19.2
+      '@esbuild/linux-arm': 0.19.2
+      '@esbuild/linux-arm64': 0.19.2
+      '@esbuild/linux-ia32': 0.19.2
+      '@esbuild/linux-loong64': 0.19.2
+      '@esbuild/linux-mips64el': 0.19.2
+      '@esbuild/linux-ppc64': 0.19.2
+      '@esbuild/linux-riscv64': 0.19.2
+      '@esbuild/linux-s390x': 0.19.2
+      '@esbuild/linux-x64': 0.19.2
+      '@esbuild/netbsd-x64': 0.19.2
+      '@esbuild/openbsd-x64': 0.19.2
+      '@esbuild/sunos-x64': 0.19.2
+      '@esbuild/win32-arm64': 0.19.2
+      '@esbuild/win32-ia32': 0.19.2
+      '@esbuild/win32-x64': 0.19.2
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -25383,6 +25646,13 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /flame-chart-js/2.3.1:
+    resolution: {integrity: sha512-wi3g+BEYEWcxnFrakPt7A/oXVfMnun6Uvjve3kfscXXCrgP6f1O8o5LOseXfHnVI1jxTWOINnzdXPN/NLw9guQ==}
+    dependencies:
+      color: 3.2.1
+      events: 3.3.0
+    dev: false
+
   /flat-cache/3.0.4:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -25722,6 +25992,14 @@ packages:
 
   /fsevents/2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /fsevents/2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -26540,7 +26818,7 @@ packages:
     resolution: {integrity: sha512-H/vuk5TEEVZwrR0lp2zed9OCo1uAILMlx0JEMgC26rzyJJ3N1v6XkwHHXJQdR2doSjcGPM6OKPYoJgf0plJ11Q==}
     dependencies:
       capital-case: 1.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /heap/0.2.7:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
@@ -27316,6 +27594,10 @@ packages:
       has: 1.0.3
       side-channel: 1.0.4
 
+  /internmap/1.0.1:
+    resolution: {integrity: sha512-lDB5YccMydFBtasVtxnZ3MRBHuaoE8GKsppq+EchKL2U4nK/DmEpPHNH8MZe5HkMtpSiTSOZwfN0tzYjO/lJEw==}
+    dev: false
+
   /internmap/2.0.3:
     resolution: {integrity: sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg==}
     engines: {node: '>=12'}
@@ -27354,6 +27636,7 @@ packages:
 
   /ipfs-core-types/0.10.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-GNid2lRBjR5qgScCglgk7w9Hk3TZAwPHQXxOLQx72wgyc0jF2U5NXRoKW0GRvX8NPbHmsrFszForIqxd23I1Gw==}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       '@ipld/dag-pb': 2.1.18
       interface-datastore: 6.1.1
@@ -27367,6 +27650,7 @@ packages:
 
   /ipfs-core-utils/0.14.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-aBkewVhgAj3NWXPwu6imj0wADGiGVZmJzqKzODOJsibDjkx6FGdMv8kvvqtLnK8LS/dvSk9yk32IDtuDyYoV7Q==}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       any-signal: 3.0.1
       blob-to-it: 1.0.4
@@ -27396,6 +27680,7 @@ packages:
   /ipfs-http-client/56.0.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-E3L5ylVl6BjyRUsNehvfuRBYp1hj8vQ8in4zskVPMNzXs6JiCFUbif5a6BtcAlSK4xPQyJCeLNNAWLUeFQTLNA==}
     engines: {node: '>=15.0.0', npm: '>=3.0.0'}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       '@ipld/dag-cbor': 7.0.3
       '@ipld/dag-json': 8.0.11
@@ -28524,7 +28809,7 @@ packages:
       micromatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /jest-haste-map/29.5.0:
@@ -28543,7 +28828,7 @@ packages:
       micromatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /jest-leak-detector/28.1.3:
@@ -33247,7 +33532,7 @@ packages:
     resolution: {integrity: sha512-qO4qCFjXqVTrcbPt/hQfhTQ+VhFsqNKOPtytgNKkKxSoEp3XPUQ8ObFuePylOIok5gjn69ry8XiULxCwot3Wfg==}
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /path-dirname/1.0.2:
     resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
@@ -34544,6 +34829,30 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-overlays: 5.2.1_biqbaboplfbrettd7655fr4n2y
       uncontrollable: 7.2.1_react@18.2.0
+    dev: false
+
+  /react-charts/3.0.0-beta.55_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-PuPGoK/3B4SgmnANqh1+biuJAN/iYAvLO/juLKJ2dtF0+Wzfa0KarGbgAij2o8P83bAn9bZnu46RCevNvYwOjQ==}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+    dependencies:
+      '@babel/runtime': 7.21.0
+      '@types/d3-array': 3.0.3
+      '@types/d3-scale': 4.0.2
+      '@types/d3-shape': 3.1.0
+      '@types/raf': 3.4.0
+      '@types/react': 17.0.65
+      '@types/react-dom': 17.0.20
+      d3-array: 2.12.1
+      d3-delaunay: 5.3.0
+      d3-scale: 3.3.0
+      d3-shape: 2.1.0
+      d3-time: 2.1.1
+      d3-time-format: 4.1.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      ts-toolbelt: 9.6.0
     dev: false
 
   /react-chessboard/2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce:
@@ -35904,7 +36213,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /rollup/3.23.0:
@@ -35912,7 +36221,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /rope-sequence/1.3.3:
@@ -36215,7 +36524,7 @@ packages:
     resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
     dependencies:
       no-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
       upper-case-first: 2.0.2
 
   /sentry-testkit/5.0.5:
@@ -36633,7 +36942,7 @@ packages:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /snapdragon-node/2.1.1:
     resolution: {integrity: sha512-O27l4xaMYt/RSQ5TR3vpWCAB5Kb/czIcqUFOM/C4fYcLnbZUc1PkjTAMjof2pBWaSTwOUd6qUHcFGVGj7aIwnw==}
@@ -37963,10 +38272,6 @@ packages:
     resolution: {integrity: sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw==}
     dev: true
 
-  /tiny-invariant/1.3.1:
-    resolution: {integrity: sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==}
-    dev: false
-
   /tiny-lru/10.4.1:
     resolution: {integrity: sha512-buLIzw7ppqymuO3pt10jHk/6QMeZLbidihMQU+N6sogF6EnBzG0qtDWIHuhw1x3dyNgVL/KTGIZsTK81+yCzLg==}
     engines: {node: '>=12'}
@@ -38211,7 +38516,7 @@ packages:
   /ts-interface-checker/0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
-  /ts-jest/28.0.8_7arsnux5ydamigscd2bfhbseqi:
+  /ts-jest/28.0.8_hhea6e55xty6rkiwieslux7lzi:
     resolution: {integrity: sha512-5FaG0lXmRPzApix8oFG8RKjAz4ehtm8yMKOTy5HX3fY6W8kmvOrmcY0hKDElW52FJov+clhUbrKAqofnj4mXTg==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -38233,7 +38538,7 @@ packages:
         optional: true
     dependencies:
       bs-logger: 0.2.6
-      esbuild: 0.16.14
+      esbuild: 0.19.2
       fast-json-stable-stringify: 2.1.0
       jest: 28.1.3_odkjkoia5xunhxkdrka32ib6vi
       jest-util: 28.1.3
@@ -38314,6 +38619,10 @@ packages:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     patched: true
+
+  /ts-toolbelt/9.6.0:
+    resolution: {integrity: sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w==}
+    dev: false
 
   /tsconfig-paths/3.14.1:
     resolution: {integrity: sha512-fxDhWnFSLt3VuTwtvJt5fpwxBHg5AdKWMsgcPOOIilyjymcYVZoCQF8fvFRezCNfblEXmi+PcM1eYHeOAgXCOQ==}
@@ -38930,12 +39239,12 @@ packages:
   /upper-case-first/2.0.2:
     resolution: {integrity: sha512-514ppYHBaKwfJRK/pNC6c/OxfGa0obSnAl106u97Ed0I625Nin96KAjttZF6ZL3e1XLtphxnqrOi9iWgm+u+bg==}
     dependencies:
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /upper-case/2.0.2:
     resolution: {integrity: sha512-KgdgDGJt2TpuwBUIjgG6lzw2GWFRCW9Qkfkiv0DxqHHLYJHmtmdUIKcZd8rHgFSjopVTlw6ggzCm1b8MFQwikg==}
     dependencies:
-      tslib: 2.5.0
+      tslib: 2.6.0
 
   /uri-js/4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -39464,7 +39773,7 @@ packages:
       postcss: 8.4.24
       rollup: 3.23.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /vitest/0.31.2_jsdom@20.0.1:

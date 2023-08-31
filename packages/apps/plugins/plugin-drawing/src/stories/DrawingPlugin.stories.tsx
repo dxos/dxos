@@ -11,7 +11,7 @@ import React from 'react';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { mx } from '@dxos/aurora-theme';
-import { PluginContextProvider, Surface } from '@dxos/react-surface';
+import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import { DrawingPlugin } from '../DrawingPlugin';
 
@@ -43,7 +43,7 @@ const DrawingPluginStoryPlugin = () => ({
 });
 
 const DrawingSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), DrawingPlugin(), DrawingPluginStoryPlugin()]} />
+  <PluginProvider plugins={[ThemePlugin(), DrawingPlugin(), DrawingPluginStoryPlugin()]} />
 );
 
 export default {

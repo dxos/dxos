@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTask } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
@@ -110,6 +109,10 @@ export class Item<M extends Model = Model> {
 
   get deleted() {
     return this._deleted;
+  }
+
+  set deleted(value: boolean) {
+    this._deleted = value;
   }
 
   get parent(): ItemID | null {

@@ -21,6 +21,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
   };
 
   async run(): Promise<any> {
+    const storage = this.clientConfig?.get('runtime.client.storage.path');
     const profile = this.flags.profile;
     const paths = [
       ...new Set<string>(
@@ -29,10 +30,21 @@ export default class Reset extends BaseCommand<typeof Reset> {
           getProfilePath(DX_DATA, profile),
           getProfilePath(DX_STATE, profile),
           getProfilePath(DX_RUNTIME, profile),
-          this.clientConfig?.get('runtime.client.storage.path'),
-        ].filter(Boolean) as string[],
+          storage,
+        ]
+          .sort()
+          .filter(Boolean) as string[],
       ),
     ];
+
+    if (storage && storage !== getProfilePath(DX_DATA, profile)) {
+      this.warn(
+        chalk`The config storage path does not match the default:\n- config: {yellow ${storage}}\n- expected: {green ${getProfilePath(
+          DX_DATA,
+          profile,
+        )}}`,
+      );
+    }
 
     const dryRun =
       this.flags['dry-run'] ||

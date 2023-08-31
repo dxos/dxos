@@ -4,10 +4,10 @@
 
 import { getIndices } from '@tldraw/indices';
 
-import { GraphNode } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import { Query, SpaceProxy, subscribe, TypedObject } from '@dxos/react-client/echo';
+import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
 import { defaultMap } from '@dxos/util';
 
 export { getIndices } from '@tldraw/indices';
@@ -15,46 +15,88 @@ export { getIndices } from '@tldraw/indices';
 export class GraphNodeAdapter<T extends TypedObject> {
   private readonly _queries = new Map<string, Query<T>>();
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _previousObjects = new Map<string, T[]>();
 
   constructor(
     private readonly _filter: Filter<T>,
-    private readonly _adapter: (parent: GraphNode, object: T, index: string) => GraphNode,
+    private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node,
+    private readonly _propertySubscriptions?: string[],
   ) {}
 
   clear() {
+    this._queries.clear();
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.clear();
-    this._queries.clear();
+    this._previousObjects.clear();
   }
 
-  createNodes(space: SpaceProxy, parent: GraphNode, emit: (node?: GraphNode) => void) {
-    // Subscribe to query.
-    const query = defaultMap(this._queries, parent.id, () => {
-      const query = space.db.query<T>(this._filter as any); // TODO(burdon): Fix types.
-      this._subscriptions.set(
-        parent.id,
-        query.subscribe(() => emit()),
-      );
+  createNodes(space: Space, parent: Graph.Node) {
+    if (space.state.get() !== SpaceState.READY) {
+      return;
+    }
 
-      return query;
-    });
+    const query = defaultMap(
+      this._queries,
+      parent.id,
+      () => space.db.query<T>(this._filter as any), // TODO(burdon): Fix types.
+    );
+    this._previousObjects.set(parent.id, query.objects);
 
     // TODO(burdon): Provided by graph?
-    const stackIndices = getIndices(query.objects.length);
+    const indices = getIndices(query.objects.length);
+
+    // Subscribe to query.
+    this._subscriptions.set(
+      parent.id,
+      query.subscribe(() => {
+        const previousObjects = this._previousObjects.get(parent.id) ?? [];
+        const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+        this._previousObjects.set(parent.id, query.objects);
+        removedObjects.forEach((object) => parent.remove(object.id));
+        query.objects.forEach((object, index) => this._adapter(parent, object, indices[index]));
+      }),
+    );
 
     // Subscribe to all objects.
-    return query.objects.map((object, index) => {
-      defaultMap(this._subscriptions, object.id, () =>
+    query.objects.forEach((object, index) => {
+      const id = `${parent.id}:${object.id}`;
+      this._subscriptions.set(
+        id,
         object[subscribe](() => {
           if (object.__deleted) {
-            this._subscriptions.delete(object.id);
+            this._subscriptions.get(id)?.();
+            this._subscriptions.delete(id);
           } else {
-            emit(this._adapter(parent, object, stackIndices[index]));
+            parent.add(this._adapter(parent, object, indices[index]));
           }
         }),
       );
-
-      return this._adapter(parent, object, stackIndices[index]);
+      // TODO(thure): Related issue: https://github.com/dxos/dxos/issues/3675; Looks like `object[property][subscribe]` on `Text` objects accepts a callback, but the callback isn’t getting called?
+      this._propertySubscriptions?.forEach((property) => {
+        const id = `${parent.id}:${object.id}:${property}`;
+        return this._subscriptions.set(
+          id,
+          object[property][subscribe](() => {
+            console.log('[Extra property subscription callback]', property);
+            if (object.__deleted) {
+              this._subscriptions.get(id)?.();
+              this._subscriptions.delete(id);
+            } else {
+              parent.add(this._adapter(parent, object, indices[index]));
+            }
+          }),
+        );
+      });
+      this._adapter(parent, object, indices[index]);
     });
+
+    return () => {
+      Array.from(this._subscriptions.keys())
+        .filter((key) => key.startsWith(parent.id))
+        .forEach((key) => {
+          this._subscriptions.get(key)?.();
+          this._subscriptions.delete(key);
+        });
+    };
   }
 }

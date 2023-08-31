@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

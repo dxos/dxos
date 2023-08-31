@@ -71,8 +71,10 @@ type EmptyInvitationEvent = {
 
 type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitationEvent | EmptyInvitationEvent;
 
+type Kind = 'Space' | 'Halo';
+
 const getInvitationSubscribable = (
-  Kind: 'Space' | 'Halo',
+  Kind: Kind,
   invitation: AuthenticatingInvitationObservable,
 ): Subscribable<InvitationEvent> => {
   log('[subscribing to invitation]', invitation);
@@ -131,7 +133,7 @@ const getInvitationSubscribable = (
   } as Subscribable<InvitationEvent>;
 };
 
-const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: string) => {
+const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
   const config: StateNodeConfig<JoinMachineContext, any, InvitationEvent> = {
     initial: `unknown${Kind}`,
     states: {
@@ -142,21 +144,20 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             target: '#join.finishingJoiningHalo',
           },
           {
-            // cond: `no${Kind}Invitation`,
+            cond: (context) => !!context[Kind.toLowerCase() as Lowercase<typeof Kind>].unredeemedCode,
+            target: `acceptingRedeemed${Kind}Invitation`,
+            actions: [`redeem${Kind}InvitationCode`, `invalidate${Kind}InvitationCode`, 'log'],
+          },
+          {
             target: `inputting${Kind}InvitationCode`,
             actions: 'log',
           },
-          // TODO(thure): Restore this transition that redeems the invitation code on init.
-          // {
-          //   target: `acceptingRedeemed${Kind}Invitation`,
-          //   actions: [`redeem${Kind}InvitationCode`, 'log']
-          // }
         ],
       },
       [`inputting${Kind}InvitationCode`]: {},
       [`acceptingRedeemed${Kind}Invitation`]: {
         invoke: {
-          src: (context) => context[Kind.toLowerCase() as 'space' | 'halo'].invitationSubscribable!,
+          src: (context) => context[Kind.toLowerCase() as Lowercase<Kind>].invitationSubscribable!,
         },
         initial: `unknown${Kind}Invitation`,
         states: {
@@ -164,7 +165,7 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             always: [
               {
                 cond: (context) => {
-                  const invitation = context[Kind.toLowerCase() as 'space' | 'halo'].invitation;
+                  const invitation = context[Kind.toLowerCase() as Lowercase<Kind>].invitation;
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
                 target: `connecting${Kind}Invitation`,
@@ -216,11 +217,8 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             target: `.failing${Kind}Invitation`,
             actions: [
               assign({
-                [Kind.toLowerCase() as 'space' | 'halo']: (
-                  context: JoinMachineContext,
-                  event: FailInvitationEvent,
-                ) => ({
-                  ...context[Kind.toLowerCase() as 'space' | 'halo'],
+                [Kind.toLowerCase()]: (context: JoinMachineContext, event: FailInvitationEvent) => ({
+                  ...context[Kind.toLowerCase() as Lowercase<Kind>],
                   failReason: event.reason,
                 }),
               }),
@@ -235,12 +233,13 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
         target: `.acceptingRedeemed${Kind}Invitation`,
         actions: [
           assign({
-            [Kind.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
-              ...context[Kind.toLowerCase() as 'space' | 'halo'],
+            [Kind.toLowerCase()]: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
+              ...context[Kind.toLowerCase() as Lowercase<Kind>],
               unredeemedCode: event.code,
             }),
           }),
           `redeem${Kind}InvitationCode`,
+          `invalidate${Kind}InvitationCode`,
           'log',
         ],
       },
@@ -401,18 +400,26 @@ const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   }
 };
 
-const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<JoinMachine>>[1]) => {
+const useJoinMachine = (
+  client: Client,
+  options?: Parameters<typeof useMachine<JoinMachine>>[1] & { onInvalidateInvitationCode?: (code: string) => void },
+) => {
   const redeemHaloInvitationCode = useCallback(
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
-        const invitationObservable = client.halo.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
-        );
-        return {
-          ...halo,
-          invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
-        };
+        try {
+          const invitationObservable = client.halo.acceptInvitation(
+            InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
+          );
+          return {
+            ...halo,
+            invitationObservable,
+            invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
+          };
+        } catch (err) {
+          log.error('Could not redeem device invitation code', err);
+          return halo;
+        }
       } else {
         return halo;
       }
@@ -423,19 +430,54 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
   const redeemSpaceInvitationCode = useCallback(
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
-        const invitationObservable = client.acceptInvitation(
-          InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
-        );
-        return {
-          ...space,
-          invitationObservable,
-          invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
-        };
+        try {
+          const invitationObservable = client.acceptInvitation(
+            InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
+          );
+          return {
+            ...space,
+            invitationObservable,
+            invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
+          };
+        } catch (err) {
+          log.error('Could not redeem space invitation code', err);
+          return space;
+        }
       } else {
         return space;
       }
     },
     [client],
+  );
+
+  const invalidateHaloInvitationCode = useCallback(
+    ({ halo }: JoinMachineContext) => {
+      if (halo.unredeemedCode) {
+        options?.onInvalidateInvitationCode?.(halo.unredeemedCode);
+        return {
+          ...halo,
+          unredeemedCode: undefined,
+        };
+      } else {
+        return halo;
+      }
+    },
+    [options?.onInvalidateInvitationCode],
+  );
+
+  const invalidateSpaceInvitationCode = useCallback(
+    ({ space }: JoinMachineContext) => {
+      if (space.unredeemedCode) {
+        options?.onInvalidateInvitationCode?.(space.unredeemedCode);
+        return {
+          ...space,
+          unredeemedCode: undefined,
+        };
+      } else {
+        return space;
+      }
+    },
+    [options?.onInvalidateInvitationCode],
   );
 
   return useMachine(joinMachine, {
@@ -444,6 +486,12 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
       ...options?.actions,
       redeemHaloInvitationCode: assign<JoinMachineContext>({ halo: redeemHaloInvitationCode }),
       redeemSpaceInvitationCode: assign<JoinMachineContext>({ space: redeemSpaceInvitationCode }),
+      invalidateHaloInvitationCode: assign<JoinMachineContext>({
+        halo: invalidateHaloInvitationCode,
+      }),
+      invalidateSpaceInvitationCode: assign<JoinMachineContext>({
+        space: invalidateSpaceInvitationCode,
+      }),
     },
   });
 };

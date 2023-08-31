@@ -6,7 +6,6 @@ import { Command, Config as OclifConfig, Flags, Interfaces } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
-import assert from 'node:assert';
 import fs from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -27,7 +26,8 @@ import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+import { log, LogLevel } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -48,6 +48,9 @@ import {
   selectSpace,
   waitForSpace,
 } from './util';
+
+// Set config if not overridden by env.
+log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 
@@ -153,7 +156,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   get clientConfig() {
-    assert(this._clientConfig);
+    invariant(this._clientConfig);
     return this._clientConfig!;
   }
 
@@ -166,7 +169,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   done() {
-    log('ok');
+    this.log('ok');
   }
 
   /**
@@ -196,7 +199,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     {
       if (group === 'dxos') {
-        log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
+        this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
       }
 
       await showTelemetryBanner(DX_DATA);
@@ -358,7 +361,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Lazily create the client.
    */
   async getClient() {
-    assert(this._clientConfig);
+    invariant(this._clientConfig);
     if (!this._client) {
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
@@ -448,9 +451,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async execWithPublisher<T>(callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: PublisherRpcPeer | undefined;
     try {
-      assert(this._clientConfig);
+      invariant(this._clientConfig);
       const wsEndpoint = this._clientConfig.get('runtime.services.publisher.server');
-      assert(wsEndpoint);
+      invariant(wsEndpoint);
       rpc = new PublisherRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
@@ -466,9 +469,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async execWithTunneling<T>(callback: (rpc: TunnelRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: TunnelRpcPeer | undefined;
     try {
-      assert(this._clientConfig);
+      invariant(this._clientConfig);
       const wsEndpoint = this._clientConfig.get('runtime.services.tunneling.server');
-      assert(wsEndpoint);
+      invariant(wsEndpoint);
       rpc = new TunnelRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
@@ -484,9 +487,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async execWithSupervisor<T>(callback: (rpc: SupervisorRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: SupervisorRpcPeer | undefined;
     try {
-      assert(this._clientConfig);
+      invariant(this._clientConfig);
       const wsEndpoint = this._clientConfig.get('runtime.services.supervisor.server');
-      assert(wsEndpoint);
+      invariant(wsEndpoint);
       rpc = new SupervisorRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);

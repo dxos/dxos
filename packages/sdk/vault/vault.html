@@ -30,12 +30,16 @@
       window.parent.postMessage({ channel: 'dxos:vault', payload: 'loaded' }, '*');
     </script>
     <script>
-      function setTheme(darkMode) {
+      function setDarkTheme(darkMode) {
         document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
       }
       const paletteMatch = window.matchMedia('(prefers-color-scheme: dark)');
-      setTheme(paletteMatch.matches)
-      paletteMatch.addEventListener('change', ({matches})=>setTheme(matches))
+      if (window.top === window) {
+        setDarkTheme(paletteMatch.matches);
+        paletteMatch.addEventListener('change', ({ matches })=> setDarkTheme(matches));
+      } else {
+        setDarkTheme(true);
+      }
     </script>
   </head>
   <body>

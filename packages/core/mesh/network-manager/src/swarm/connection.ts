@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { CancelledError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -68,6 +67,7 @@ export class Connection {
 
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
+  closeReason?: string;
 
   private _incomingSignalBuffer: Signal[] = [];
   private _outgoingSignalBuffer: Signal[] = [];
@@ -92,7 +92,15 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
-  ) {}
+  ) {
+    log.trace('dxos.mesh.connection.construct', {
+      sessionId: this.sessionId,
+      topic: this.topic,
+      localPeerId: this.ownId,
+      remotePeerId: this.remoteId,
+      initiator: this.initiator,
+    });
+  }
 
   get state() {
     return this._state;
@@ -109,10 +117,16 @@ export class Connection {
   /**
    * Create an underlying transport and prepares it for the connection.
    */
-  // TODO(burdon): Make async?
-  openConnection() {
+  async openConnection() {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.mesh.connection.open', {
+      sessionId: this.sessionId,
+      topic: this.topic,
+      localPeerId: this.ownId,
+      remotePeerId: this.remoteId,
+      initiator: this.initiator,
+    });
 
     this._changeState(ConnectionState.CONNECTING);
 
@@ -144,6 +158,9 @@ export class Connection {
     });
 
     this._transport.errors.handle((err) => {
+      if (!this.closeReason) {
+        this.closeReason = err?.message;
+      }
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         this.errors.raise(err);
       }
@@ -160,7 +177,10 @@ export class Connection {
   }
 
   @synchronized
-  async close() {
+  async close(err?: Error) {
+    if (!this.closeReason) {
+      this.closeReason = err?.message;
+    }
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
@@ -199,8 +219,10 @@ export class Connection {
     }
 
     try {
-      await cancelWithContext(this._ctx, sleep(this._signallingDelay));
-      this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      if (process.env.NODE_ENV !== 'test') {
+        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+      }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;

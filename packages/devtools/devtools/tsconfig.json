@@ -6,7 +6,12 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types"
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
   },
   "include": [
     "src"
@@ -20,6 +25,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -49,13 +57,16 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/gem-core"
+    },
+    {
       "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/mosaic"
+      "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/mosaic"
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -68,6 +79,9 @@
     },
     {
       "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-grid"
     },
     {
       "path": "../../ui/aurora-theme"

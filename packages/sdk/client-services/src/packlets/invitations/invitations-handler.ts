@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
@@ -14,6 +12,7 @@ import {
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
@@ -187,6 +186,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
+        label: 'invitation host',
       });
       ctx.onDispose(() => swarmConnection.close());
 
@@ -363,6 +363,7 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
+        label: 'invitation guest',
       });
       ctx.onDispose(() => swarmConnection.close());
 

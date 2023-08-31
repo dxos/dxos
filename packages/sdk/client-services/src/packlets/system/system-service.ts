@@ -6,18 +6,22 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
+  GetDiagnosticsRequest,
   SystemService,
   SystemStatus,
   UpdateStatusRequest,
   QueryStatusRequest,
   QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { MaybePromise } from '@dxos/util';
+import { jsonKeyReplacer, MaybePromise } from '@dxos/util';
+
+import { Diagnostics } from '../services';
 
 export type SystemServiceOptions = {
   config?: Config;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
+  getDiagnostics: () => Promise<Partial<Diagnostics>>;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
 };
@@ -28,17 +32,45 @@ export class SystemServiceImpl implements SystemService {
   private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
   private readonly _onUpdateStatus: SystemServiceOptions['onUpdateStatus'];
   private readonly _onReset: SystemServiceOptions['onReset'];
+  private readonly _getDiagnostics: SystemServiceOptions['getDiagnostics'];
 
-  constructor({ config, statusUpdate, onUpdateStatus, getCurrentStatus, onReset }: SystemServiceOptions) {
+  constructor({
+    config,
+    statusUpdate,
+    getDiagnostics,
+    onUpdateStatus,
+    getCurrentStatus,
+    onReset,
+  }: SystemServiceOptions) {
     this._config = config;
     this._statusUpdate = statusUpdate;
     this._getCurrentStatus = getCurrentStatus;
+    this._getDiagnostics = getDiagnostics;
     this._onUpdateStatus = onUpdateStatus;
     this._onReset = onReset;
   }
 
   async getConfig() {
     return this._config?.values ?? {};
+  }
+
+  /**
+   * NOTE: Since this is serialized as a JSON object, we allow the option to serialize keys.
+   */
+  async getDiagnostics({ keys }: GetDiagnosticsRequest = {}) {
+    const diagnostics = await this._getDiagnostics();
+    return {
+      timestamp: new Date(),
+      diagnostics: JSON.parse(
+        JSON.stringify(
+          diagnostics,
+          jsonKeyReplacer({
+            truncate: keys === GetDiagnosticsRequest.KEY_OPTION.TRUNCATE,
+            humanize: keys === GetDiagnosticsRequest.KEY_OPTION.HUMANIZE,
+          }),
+        ),
+      ),
+    };
   }
 
   async updateStatus({ status }: UpdateStatusRequest) {

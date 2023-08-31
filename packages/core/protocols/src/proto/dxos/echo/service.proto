@@ -23,6 +23,12 @@ message EchoEvent {
   optional dxos.keys.PublicKey feed_key = 2;
   optional int32 seq = 3;
 
+  enum DatabaseAction {
+    RESET = 0;
+  }
+
+  optional DatabaseAction action = 4;
+
   dxos.echo.object.EchoObjectBatch batch = 10;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-agent",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",

@@ -3,9 +3,9 @@
 //
 
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
-import invariant from 'tiny-invariant';
 
 import { createKeyPair } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { KeyPair } from '@dxos/keys';
 
 // Util functions for Identity: export, import, create.

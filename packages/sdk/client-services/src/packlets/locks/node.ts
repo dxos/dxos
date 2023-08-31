@@ -3,8 +3,8 @@
 //
 
 import { FileHandle } from 'node:fs/promises';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
 

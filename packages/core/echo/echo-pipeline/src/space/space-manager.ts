@@ -122,6 +122,7 @@ export class SpaceManager {
       memberKey,
     });
     this._spaces.set(space.key, space);
+
     log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));
     return space;
   }

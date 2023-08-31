@@ -2,55 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { FC } from 'react';
 
-import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { focusRing, mx } from '@dxos/aurora-theme';
+import { isGraphNode } from '@braneframe/plugin-graph';
+import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { Document } from '@braneframe/types';
+import { useTextModel } from '@dxos/aurora-composer';
+import { isTypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { findPlugin, Surface, usePlugins } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../types';
-import { EmbeddedLayout } from './EmbeddedLayout';
-import { StandaloneLayout } from './StandaloneLayout';
+export const isDocument = (data: unknown): data is Document =>
+  isTypedObject(data) && Document.type.name === data.__typename;
 
-export const MarkdownMain = ({
-  model,
-  properties,
-  layout,
-  onChange,
-}: {
-  model: ComposerModel;
-  properties: MarkdownProperties;
-  layout: 'standalone' | 'embedded';
-  onChange?: MarkdownComposerProps['onChange'];
-}) => {
-  const editorRef = useRef<MarkdownComposerRef>(null);
-  const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
+export const MarkdownMain: FC<{ data: unknown }> = ({ data }) => {
+  const node = data && typeof data === 'object' && 'active' in data && isGraphNode(data.active) ? data.active : null;
+  const document = node && isDocument(node.data) ? node.data : undefined;
 
-  return (
-    <Root properties={properties} model={model} editorRef={editorRef}>
-      <MarkdownComposer
-        ref={editorRef}
-        model={model}
-        onChange={onChange}
-        slots={{
-          root: {
-            role: 'none',
-            className: mx(focusRing, 'shrink-0 grow flex flex-col'),
-            'data-testid': 'composer.markdownRoot',
-          } as HTMLAttributes<HTMLDivElement>,
-          editor: {
-            markdownTheme: {
-              '&, & .cm-scroller': {
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 0 auto',
-                inlineSize: '100%',
-              },
-              '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-              '& .cm-line': { paddingInline: '1.5rem' },
-            },
-          },
-        }}
-      />
-    </Root>
-  );
+  const identity = useIdentity();
+  const { plugins } = usePlugins();
+  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+
+  const textModel = useTextModel({
+    identity,
+    space: spacePlugin?.provides.space.current,
+    text: document?.content,
+  });
+
+  // Fall back to other surfaces to handle.
+  if (!document) {
+    return <Surface data={data} role='main' />;
+  }
+
+  return <Surface data={{ composer: textModel, properties: node?.data }} role='main' />;
 };

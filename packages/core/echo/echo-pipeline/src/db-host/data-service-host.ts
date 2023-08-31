@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -55,12 +54,19 @@ export class DataServiceHost {
         },
       });
 
-      // subscribe to mutations
+      // Subscribe to clear events on Epoch processing.
+      this._itemDemuxer.snapshot.on(ctx, (snapshot) => {
+        next({
+          action: EchoEvent.DatabaseAction.RESET,
+          batch: { objects: snapshot.items },
+        });
+      });
 
+      // Subscribe to mutations.
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
         invariant(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
-        log('message', { batch, meta });
+        log('message', { batch: batch.objects?.length, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
         // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.

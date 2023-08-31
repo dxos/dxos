@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, sleep, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
@@ -205,9 +204,6 @@ export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(new Timeframe());
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
-  // Inbound feed stream.
-  private _feedSetIterator?: FeedSetIterator<FeedMessage>;
-
   // External state accessor.
   private readonly _state: PipelineState = new PipelineState(this._feeds, this._timeframeClock);
 
@@ -215,13 +211,19 @@ export class Pipeline implements PipelineAccessor {
   private readonly _processingTrigger = new Trigger().wake();
   private readonly _pauseTrigger = new Trigger().wake();
 
-  private _isStopping = false;
-  private _isStarted = false;
-  private _isOpen = false;
-  private _isPaused = false;
+  // Pending downloads.
+  private readonly _downloads = new ComplexMap<FeedWrapper<FeedMessage>, any>((value) => PublicKey.hash(value.key));
+
+  // Inbound feed stream.
+  private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
   // Outbound feed writer.
   private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+
+  private _isStopping = false;
+  private _isStarted = false;
+  private _isBeingConsumed = false;
+  private _isPaused = false;
 
   get state() {
     return this._state;
@@ -244,10 +246,14 @@ export class Pipeline implements PipelineAccessor {
   // which might be opening feeds during the mutation processing, which w
   async addFeed(feed: FeedWrapper<FeedMessage>) {
     this._feeds.set(feed.key, feed);
+
     if (this._feedSetIterator) {
       await this._feedSetIterator.addFeed(feed);
     }
-    this._setFeedDownloadState(feed);
+
+    if (this._isStarted && !this._isPaused) {
+      this._setFeedDownloadState(feed);
+    }
   }
 
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
@@ -265,17 +271,28 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async start() {
+    invariant(!this._isStarted, 'Pipeline is already started.');
     log('starting...');
     await this._initIterator();
     await this._feedSetIterator!.open();
     this._isStarted = true;
     log('started');
+
+    if (!this._isPaused) {
+      for (const feed of this._feeds.values()) {
+        this._setFeedDownloadState(feed);
+      }
+    }
   }
 
   @synchronized
   async stop() {
     log('stopping...');
     this._isStopping = true;
+    for (const [feed, handle] of this._downloads.entries()) {
+      feed.undownload(handle);
+    }
+    this._downloads.clear();
     await this._feedSetIterator?.close();
     await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
     await this._state._ctx.dispose();
@@ -297,10 +314,6 @@ export class Pipeline implements PipelineAccessor {
     this._timeframeClock.setTimeframe(timeframe);
 
     // Cancel downloads of mutations before the cursor.
-    for (const feed of this._feeds.values()) {
-      this._setFeedDownloadState(feed);
-    }
-
     if (this._feedSetIterator) {
       await this._feedSetIterator.close();
       await this._initIterator();
@@ -313,7 +326,6 @@ export class Pipeline implements PipelineAccessor {
    */
   @synchronized
   async pause() {
-    invariant(this._isStarted, 'Pipeline is not open.');
     if (this._isPaused) {
       return;
     }
@@ -325,11 +337,14 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async unpause() {
-    invariant(this._isStarted, 'Pipeline is not open.');
     invariant(this._isPaused, 'Pipeline is not paused.');
 
     this._pauseTrigger.wake();
     this._isPaused = false;
+
+    for (const feed of this._feeds.values()) {
+      this._setFeedDownloadState(feed);
+    }
   }
 
   /**
@@ -337,8 +352,8 @@ export class Pipeline implements PipelineAccessor {
    * Updates the timeframe clock after the message has bee processed.
    */
   async *consume(): AsyncIterable<FeedMessageBlock> {
-    invariant(!this._isOpen, 'Pipeline is already being consumed.');
-    this._isOpen = true;
+    invariant(!this._isBeingConsumed, 'Pipeline is already being consumed.');
+    this._isBeingConsumed = true;
 
     invariant(this._feedSetIterator, 'Iterator not initialized.');
     let lastFeedSetIterator = this._feedSetIterator;
@@ -354,6 +369,7 @@ export class Pipeline implements PipelineAccessor {
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
+      // Will be canceled when the iterator gets closed.
       const { done, value } = await iterable.next();
       if (!done) {
         const block = value ?? failUndefined();
@@ -366,17 +382,27 @@ export class Pipeline implements PipelineAccessor {
     }
 
     // TODO(burdon): Test re-entrant?
-    this._isOpen = false;
+    this._isBeingConsumed = false;
   }
 
   private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
-    const timeframe = this._state._startTimeframe;
-    const seq = timeframe.get(feed.key) ?? 0;
+    let handle = this._downloads.get(feed); // TODO(burdon): Always undefined?
+    if (handle) {
+      feed.undownload(handle);
+    }
 
-    feed.undownload({ callback: () => log('undownload') });
-    feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
-      log('failed to download feed', { err });
+    const timeframe = this._state._startTimeframe;
+    const seq = timeframe.get(feed.key) ?? -1;
+    log('download', { feed: feed.key.truncate(), seq, length: feed.length });
+    handle = feed.download({ start: seq + 1, linear: true }, (err: any, data: any) => {
+      if (err) {
+        // log.warn(err); // TODO(burdon): Feed is closed/Download was cancelled.
+      } else {
+        log.info('downloaded', { data }); // TODO(burdon): Never called.
+      }
     });
+
+    this._downloads.set(feed, handle);
   }
 
   private async _initIterator() {

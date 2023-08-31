@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import { deepSignal } from 'deepsignal/react';
+import React, { FC } from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { DensityProvider } from '@dxos/aurora';
-import { appkitTranslations, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
-import { ClientServices, Client, ClientContext } from '@dxos/react-client';
+import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
+import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
+import { useTelemetry } from '@dxos/react-appkit';
+import { Client, ClientContext, ClientServices } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -21,25 +23,29 @@ const Telemetry = ({ namespace }: { namespace: string }) => {
   return null;
 };
 
-// Entry point that does not have opinion on Client, so it can be reused in extension.
-export const Devtools = ({
-  context,
+/**
+ * Entrypoint for app and extension (no direct dependency on Client).
+ */
+export const Devtools: FC<{ client: Client; services: ClientServices; namespace?: string }> = ({
+  client,
+  services,
   namespace = telemetryNamespace,
-}: {
-  context?: { client: Client; services?: ClientServices };
-  namespace?: string;
 }) => {
-  // const fallback = <Fallback message='Loading...' />;
-  const fallback = null;
-  if (!context) {
-    return fallback;
-  }
+  const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const devtoolsTx = bindTheme({
+    ...auroraTheme,
+    toolbar: {
+      root: (props, ...etc) => {
+        return toolbarRoot(props, 'p-2', ...etc);
+      },
+    },
+  });
 
   return (
-    <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
-          <ClientContext.Provider value={context}>
+          <ClientContext.Provider value={{ client, services }}>
             <DevtoolsContextProvider>
               <HashRouter>
                 <Telemetry namespace={namespace} />

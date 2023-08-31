@@ -7,7 +7,7 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup } from '@dxos/aurora';
+import { Button, ButtonGroup, List } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Group } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
@@ -94,15 +94,15 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
       return (
         <Group label={{ children: header }}>
-          <ul>
-            {spaces.length > 0 ? (
-              spaces.map((space) => (
+          {spaces.length > 0 ? (
+            <List>
+              {spaces.map((space) => (
                 <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-              ))
-            ) : (
-              <div className='text-center'>No spaces</div>
-            )}
-          </ul>
+              ))}
+            </List>
+          ) : (
+            <div className='text-center'>No spaces</div>
+          )}
         </Group>
       );
     }
@@ -194,7 +194,9 @@ const Invitations = ({ id }: { id: number }) => {
     <div className='flex flex-col p-4 flex-1 min-w-0' data-testid={`peer-${id}`}>
       <Group label={{ children: header }} className='mbe-2'>
         {identity ? (
-          <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+          <List>
+            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+          </List>
         ) : (
           <div className='text-center'>No identity</div>
         )}

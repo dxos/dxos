@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",

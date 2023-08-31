@@ -54,20 +54,22 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content align='end' classNames='z-50'>
-            {actions?.map((action, i) => (
-              <div key={i}>
-                {i > 0 && <DropdownMenu.Separator />}
-                {action?.map((action, i) => {
-                  const { label, Icon } = action;
-                  return (
-                    <DropdownMenu.Item key={i} onClick={() => handleAction(action)}>
-                      <Icon className={getSize(5)} />
-                      <span className='mis-2'>{label}</span>
-                    </DropdownMenu.Item>
-                  );
-                })}
-              </div>
-            ))}
+            <DropdownMenu.Viewport>
+              {actions?.map((action, i) => (
+                <div key={i}>
+                  {i > 0 && <DropdownMenu.Separator />}
+                  {action?.map((action, i) => {
+                    const { label, Icon } = action;
+                    return (
+                      <DropdownMenu.Item key={i} onClick={() => handleAction(action)}>
+                        <Icon className={getSize(5)} />
+                        <span className='mis-2'>{label}</span>
+                      </DropdownMenu.Item>
+                    );
+                  })}
+                </div>
+              ))}
+            </DropdownMenu.Viewport>
             <DropdownMenu.Arrow />
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
