@@ -87,10 +87,12 @@ for APP in "${APPS[@]}"; do
       --verbose
   fi
 
-  if [ $? -eq 0 ]; then
-      notifySuccess $PACKAGE
-  else
-      notifyFailure $PACKAGE
+  if [[ $BRANCH = "production" || $BRANCH = "staging" || ($BRANCH = "main" && $APP = "./docs") ]]; then
+    if [ $? -eq 0 ]; then
+        notifySuccess $PACKAGE
+    else
+        notifyFailure $PACKAGE
+    fi
   fi
 
   popd
