@@ -1267,10 +1267,15 @@ importers:
   packages/apps/plugins/plugin-settings:
     specifiers:
       '@braneframe/plugin-treeview': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
+      deepsignal: ^1.3.3
       react: ^18.2.0
       vite: ^4.3.9
+    dependencies:
+      '@dxos/debug': link:../../../common/debug
+      deepsignal: 1.3.4_react@18.2.0
     devDependencies:
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/react-surface': link:../../../sdk/react-surface

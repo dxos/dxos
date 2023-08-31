@@ -6,7 +6,7 @@ import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { SETTINGS_PLUGIN, SettingsPluginProvides } from '@braneframe/plugin-settings';
+import { SETTINGS_PLUGIN, SettingsPluginProvides, SettingsStore } from '@braneframe/plugin-settings';
 import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
@@ -15,8 +15,11 @@ import { DebugMain, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
+export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
+
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
+  let settingsStore: SettingsStore | undefined;
 
   const isDebug = (data: unknown) =>
     data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
@@ -28,7 +31,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     ready: async (plugins) => {
       // TODO(burdon): Copy pattern (with PLUGIN const).
       const settingsPlugin = findPlugin<SettingsPluginProvides>(plugins, SETTINGS_PLUGIN);
-      console.log(settingsPlugin?.provides.store);
+      settingsStore = settingsPlugin?.provides.store;
     },
     provides: {
       translations,
@@ -70,7 +73,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               },
             });
             return;
-          } else if (!(parent.data instanceof SpaceProxy)) {
+          } else if (!(parent.data instanceof SpaceProxy) || !settingsStore?.getKey(SETTINGS_KEY)) {
             return;
           }
 
@@ -108,19 +111,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       component: (data, role) => {
         switch (role) {
           case 'main': {
-            if (isDebug(data)) {
-              return DebugMain;
-            }
-            break;
-          }
-          case 'dialog': {
-            if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-              return DebugSettings;
-            }
-            break;
+            return settingsStore?.getKey(SETTINGS_KEY) ? DebugMain : null;
           }
           case 'status': {
-            return DebugStatus;
+            return settingsStore?.getKey(SETTINGS_KEY) ? DebugStatus : null;
+          }
+          case 'dialog': {
+            return data === 'dxos.org/plugin/splitview/ProfileSettings' ? DebugSettings : null;
           }
         }
 
