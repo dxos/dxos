@@ -308,14 +308,16 @@ export class DatabaseProxy {
   }
 
   async batchCycle() {
+    let created = false;
     if (!this._currentBatch) {
-      this.beginBatch();
+      created = this.beginBatch();
     }
 
     await cancelWithContext(this._ctx, sleep(BATCH_INTERVAL));
 
-    if (this._currentBatch?.data.objects?.length !== 0) {
+    if (this._currentBatch?.data.objects?.length !== 0 && created) {
       this.commitBatch();
+      created = false;
     }
   }
 
