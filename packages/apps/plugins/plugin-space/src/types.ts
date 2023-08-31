@@ -24,14 +24,16 @@ export enum SpaceAction {
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
 }
 
+/**
+ * The state of the space plugin.
+ */
 export type SpaceState = {
   /**
-   * The space which is associated with the currently active graph node.
+   * The space that is associated with the currently active graph node.
    * If the current graph node does not itself represent a space, then it is the space of the nearest ancestor.
    * If no ancestor represents a space, then it is undefined.
    */
-  // TODO(wittjosiah): Rename active to align with treeview.
-  current: Space | undefined;
+  active: Space | undefined;
 };
 
 export type SpacePluginProvides = GraphProvides &

@@ -7,6 +7,11 @@ import React, { createContext, useContext } from 'react';
 
 import { Plugin, PluginDefinition, findPlugin } from '@dxos/react-surface';
 
+// Intents inspired by https://developer.android.com/reference/android/content/Intent.
+
+/**
+ * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
+ */
 export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
   const state = deepSignal<{ sendIntent: SendIntent }>({ sendIntent: async () => {} });
 
@@ -60,6 +65,10 @@ export type IntentPluginProvides = {
   };
 };
 
+/**
+ * An intent is an abstract description of an operation to be performed.
+ * Intents allow actions to be performed across plugins.
+ */
 export type Intent = {
   /**
    * Plugin ID.

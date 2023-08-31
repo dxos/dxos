@@ -77,14 +77,23 @@ export namespace Graph {
     onVisitNode?: (node: Node) => void;
   };
 
+  /**
+   * Represents a node in the graph.
+   */
   export type Node<TData = any, TProperties extends { [key: string]: any } = { [key: string]: any }> = {
     /**
-     * Globally unique identifier for the node.
+     * Globally unique ID.
      */
     id: string;
 
     /**
+     * Parent node in the graph.
+     */
+    parent: Node | null;
+
+    /**
      * Label to be used when displaying the node.
+     * For default labels, use a translated string.
      *
      * @example 'My Node'
      * @example ['unknown node label, { ns: 'example-plugin' }]
@@ -94,6 +103,7 @@ export namespace Graph {
 
     /**
      * Description to be used when displaying a detailed view of the node.
+     * For default descriptions, use a translated string.
      */
     description?: string | [string, { ns: string; count?: number }];
 
@@ -106,11 +116,6 @@ export namespace Graph {
      * Data the node represents.
      */
     data: TData;
-
-    /**
-     * Parent node in the graph.
-     */
-    parent: Node | null;
 
     /**
      * Properties of the node relevant to displaying the node.
@@ -151,14 +156,18 @@ export namespace Graph {
     removeProperty(key: string): void;
   };
 
+  /**
+   * An action on a node in the graph which may be invoked by sending the associated intent.
+   */
   export type Action<TProperties extends { [key: string]: any } = { [key: string]: any }> = {
     /**
-     * Locally unique identifier for the action.
+     * Locally unique ID.
      */
     id: string;
 
     /**
      * Label to be used when displaying the node.
+     * For default labels, use a translated string.
      *
      * @example 'My Action'
      * @example ['unknown action label, { ns: 'example-plugin' }]

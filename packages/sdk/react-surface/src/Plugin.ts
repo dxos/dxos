@@ -7,11 +7,15 @@ import { FC, PropsWithChildren } from 'react';
 /**
  * Props passed to a component by the `Surface` resolver.
  */
-export type ComponentProps = PropsWithChildren<{
+export type PluginComponentProps = PropsWithChildren<{
   data: any;
   role?: string;
 }>;
 
+/**
+ * Capabilities provided by a plugin.
+ * The base surface capabilities are always included.
+ */
 export type PluginProvides<TProvides> = TProvides & {
   /**
    * React Context which is wrapped around the application to enable any hooks the plugin may provide.
@@ -25,18 +29,22 @@ export type PluginProvides<TProvides> = TProvides & {
     data: unknown,
     role?: string,
     props?: Partial<P>,
-  ) => FC<ComponentProps> | undefined | null | false | 0;
+  ) => FC<PluginComponentProps> | undefined | null | false | 0;
 
   /**
    * Used by the `Surface` resolver to find a component by name.
    */
-  components?: Record<string, FC<ComponentProps>> & { default?: FC };
+  components?: Record<string, FC<PluginComponentProps>> & { default?: FC };
 };
 
+/**
+ * A unit of containment of modular functionality that can be provided to an application.
+ * Plugins provide things like components, state, actions, etc. to the application.
+ */
 export type Plugin<TProvides = {}> = {
   meta: {
     /**
-     * Globally unique identifier for the plugin.
+     * Globally unique ID.
      *
      * Expected to be in the form of a valid URL.
      *
@@ -59,6 +67,9 @@ export type Plugin<TProvides = {}> = {
   provides: PluginProvides<TProvides>;
 };
 
+/**
+ * Plugin definitions extend the base `Plugin` interface with additional lifecycle methods.
+ */
 export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Plugin, 'provides'> & {
   /**
    * Capabilities provided by the plugin.
