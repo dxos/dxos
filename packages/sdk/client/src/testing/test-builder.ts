@@ -133,6 +133,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
   const objectId = PublicKey.random().toHex();
 
   const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+  create.commitBatch();
 
   await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
