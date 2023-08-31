@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { scheduleTask, synchronized } from '@dxos/async';
+import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CancelledError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -73,7 +73,6 @@ export class Peer {
   private readonly _ctx = new Context();
   private _connectionCtx?: Context;
 
-  public displacedConnection?: Connection;
   public connection?: Connection;
 
   /**
@@ -82,6 +81,8 @@ export class Peer {
   public advertizing = false;
 
   public initiating = false;
+
+  public readonly connectionDisplaced = new Event<Connection>();
 
   // TODO(burdon): Convert to map?
   constructor(
@@ -115,9 +116,9 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          this.displacedConnection = this.connection;
+          this.connectionDisplaced.emit(this.connection);
+          await this.closeConnection(this.connection, new Error('Connection displaced by remote initiator.'));
           this.connection = undefined;
-          await this.closeConnection(this.displacedConnection, new Error('Connection displaced by remote initiator.'));
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.

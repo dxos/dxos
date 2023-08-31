@@ -100,9 +100,10 @@ describe('Swarm', () => {
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
 
-    await connectSwarms(peer1, peer2);
+    const connectionDisplaced = peer2.swarm._peers.get(peerId1)?.connectionDisplaced.waitForCount(1);
 
-    expect(peer2.swarm._peers.get(peerId1)?.displacedConnection?.state).to.equal(ConnectionState.CLOSED);
+    await connectSwarms(peer1, peer2);
+    await asyncTimeout(connectionDisplaced!, 1000);
   }).timeout(5_000);
 
   test('second peer discovered after delay', async () => {
