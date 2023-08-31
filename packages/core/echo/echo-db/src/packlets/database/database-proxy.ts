@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTaskInterval, sleep, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { cancelWithContext, Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -19,6 +19,8 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
+
+const BATCH_INTERVAL = 500;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -82,11 +84,10 @@ export class DatabaseProxy {
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item.modelType === model.meta.type) {
-          await this._itemManager.initializeModel(item.id);
+          this._itemManager.initializeModel(item.id);
         }
       }
     });
-
     const loaded = new Trigger();
 
     invariant(!this._entities);
@@ -168,6 +169,7 @@ export class DatabaseProxy {
     await loaded.wait();
 
     this._open = true;
+    scheduleTaskInterval(this._ctx, () => this.batchCycle(), 0);
   }
 
   async close(): Promise<void> {
@@ -303,6 +305,18 @@ export class DatabaseProxy {
           batch.receiptTrigger!.throw(err);
         },
       );
+  }
+
+  async batchCycle() {
+    if (!this._currentBatch) {
+      this.beginBatch();
+    }
+
+    await cancelWithContext(this._ctx, sleep(BATCH_INTERVAL));
+
+    if (this._currentBatch?.data.objects?.length !== 0) {
+      this.commitBatch();
+    }
   }
 
   // TODO(dmaretskyi): Revert batch.
