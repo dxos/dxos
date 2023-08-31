@@ -108,6 +108,30 @@ describe('Ordering', () => {
 
       expect(queue.getMutations().length).toEqual(2);
     });
+
+    test('pushing mutation with same tag throws', async () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation(['1', '2', '3', '4']));
+      expect(() => queue.pushOptimistic(createOptimisticMutation(['5', '6', '2', '7']))).toThrowError('2');
+    });
+
+    test('confirming mutation with more than one tag throws', async () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation(['1', '2', '3', '4']));
+      expect(() => queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['1', '2']))).toThrow();
+    });
+
+    test('mutation is confirmed if at one tag matches', async () => {
+      const queue = new MutationQueue();
+
+      const mutation = createOptimisticMutation(['1', '2', '3', '4']);
+      queue.pushOptimistic(mutation);
+      expect(queue.getConfirmedMutations().length).toEqual(0);
+      queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), ['2']));
+      expect(queue.getConfirmedMutations().length).toEqual(1);
+    });
   });
 });
 
