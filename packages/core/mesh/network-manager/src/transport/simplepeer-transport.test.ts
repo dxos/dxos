@@ -9,7 +9,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { SimplePeerTransport } from './simplepeer-transport';
 
-describe('WebRTCTransport', () => {
+describe('SimplePeerTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const connection = new SimplePeerTransport({

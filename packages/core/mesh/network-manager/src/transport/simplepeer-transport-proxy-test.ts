@@ -11,10 +11,10 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { WebRTCTransportProxy } from './simplepeer-transport-proxy';
-import { WebRTCTransportService } from './simplepeer-transport-service';
+import { SimplePeerTransportProxy } from './simplepeer-transport-proxy';
+import { SimplePeerTransportService } from './simplepeer-transport-service';
 
-describe('WebRTCTransportProxy', () => {
+describe('SimplePeerTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new TestStream(),
@@ -27,7 +27,7 @@ describe('WebRTCTransportProxy', () => {
     const [port1, port2] = createLinkedPorts();
 
     // Starting BridgeService
-    const webRTCTransportService: BridgeService = new WebRTCTransportService();
+    const simplePeerTransportService: BridgeService = new SimplePeerTransportService();
 
     // Starting BridgeService
     const rpcService = createProtoRpcPeer({
@@ -35,7 +35,7 @@ describe('WebRTCTransportProxy', () => {
       exposed: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
       },
-      handlers: { BridgeService: webRTCTransportService },
+      handlers: { BridgeService: simplePeerTransportService },
       port: port1,
       noHandshake: true,
       encodingOptions: {
@@ -59,20 +59,20 @@ describe('WebRTCTransportProxy', () => {
     await rpcClient.open();
     afterTest(() => rpcClient.close());
 
-    const webRTCTransportProxy = new WebRTCTransportProxy({
+    const simplePeerTransportProxy = new SimplePeerTransportProxy({
       initiator,
       stream,
       sendSignal,
       bridgeService: rpcClient.rpc.BridgeService,
     });
-    afterTest(async () => await webRTCTransportProxy.destroy());
+    afterTest(async () => await simplePeerTransportProxy.destroy());
 
-    return { webRTCService: rpcService, webRTCTransportProxy };
+    return { simplePeerService: rpcService, SimplePeerTransportProxy: simplePeerTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const { webRTCTransportProxy: connection } = await setupProxy();
+    const { SimplePeerTransportProxy: connection } = await setupProxy();
 
     const wait = connection.closed.waitForCount(1);
     await connection.destroy();
@@ -81,7 +81,7 @@ describe('WebRTCTransportProxy', () => {
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
-    const { webRTCTransportProxy: connection1 } = await setupProxy({
+    const { SimplePeerTransportProxy: connection1 } = await setupProxy({
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
@@ -91,7 +91,7 @@ describe('WebRTCTransportProxy', () => {
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
-    const { webRTCTransportProxy: connection2 } = await setupProxy({
+    const { SimplePeerTransportProxy: connection2 } = await setupProxy({
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
@@ -109,12 +109,12 @@ describe('WebRTCTransportProxy', () => {
     beforeAll(async () => {
       const [port1, port2] = createLinkedPorts();
 
-      const webRTCTransportService: BridgeService = new WebRTCTransportService();
+      const simplePeerTransportService: BridgeService = new SimplePeerTransportService();
       service = createProtoRpcPeer({
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
         },
-        handlers: { BridgeService: webRTCTransportService },
+        handlers: { BridgeService: simplePeerTransportService },
         port: port1,
         noHandshake: true,
         encodingOptions: {
@@ -143,7 +143,7 @@ describe('WebRTCTransportProxy', () => {
 
     test('establish connection and send data through with protocol', async () => {
       const stream1 = new TestStream();
-      const proxy1 = new WebRTCTransportProxy({
+      const proxy1 = new SimplePeerTransportProxy({
         initiator: true,
         stream: stream1,
         sendSignal: async (signal) => {
@@ -157,7 +157,7 @@ describe('WebRTCTransportProxy', () => {
       });
 
       const stream2 = new TestStream();
-      const proxy2 = new WebRTCTransportProxy({
+      const proxy2 = new SimplePeerTransportProxy({
         initiator: false,
         stream: stream2,
         sendSignal: async (signal) => {

@@ -15,7 +15,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { Transport } from './transport';
 import { wrtc } from './webrtc';
 
-export type WebRTCTransportParams = {
+export type SimplePeerTransportParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   webrtcConfig?: any;
@@ -35,7 +35,7 @@ export class SimplePeerTransport implements Transport {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor(private readonly params: WebRTCTransportParams) {
+  constructor(private readonly params: SimplePeerTransportParams) {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);
     this._peer = new SimplePeerConstructor({

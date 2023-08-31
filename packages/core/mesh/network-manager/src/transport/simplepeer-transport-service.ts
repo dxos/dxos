@@ -27,7 +27,7 @@ type TransportState = {
   writeCallbacks: (() => void)[];
 };
 
-export class WebRTCTransportService implements BridgeService {
+export class SimplePeerTransportService implements BridgeService {
   private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
   // prettier-ignore
