@@ -6,25 +6,28 @@ import {
   ChartLine,
   CreditCard,
   Database,
+  Devices,
+  FireSimple,
   Gear,
   Graph,
   HardDrive,
   HardDrives,
+  Icon,
   IdentificationBadge,
   Key,
-  PaperPlane,
   Planet,
+  Polygon,
   Queue,
   Receipt,
   Users,
   UsersThree,
+  WifiHigh,
 } from '@phosphor-icons/react';
-import { FC } from 'react';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon?: FC;
+  Icon: Icon;
   items?: SectionItem[];
 };
 
@@ -33,11 +36,6 @@ export type SectionItem = {
  */
 export const useSections = (): SectionItem[] => {
   return [
-    {
-      id: '/diagnostics',
-      title: 'Diagnostics',
-      Icon: ChartLine,
-    },
     {
       id: '/client',
       title: 'Client',
@@ -58,6 +56,16 @@ export const useSections = (): SectionItem[] => {
           title: 'Logs',
           Icon: Receipt,
         },
+        {
+          id: '/client/diagnostics',
+          title: 'Diagnostics',
+          Icon: ChartLine,
+        },
+        {
+          id: '/client/tracing',
+          title: 'Tracing',
+          Icon: FireSimple,
+        },
       ],
     },
     {
@@ -69,6 +77,11 @@ export const useSections = (): SectionItem[] => {
           id: '/halo/identity',
           title: 'Identity',
           Icon: IdentificationBadge,
+        },
+        {
+          id: '/halo/devices',
+          title: 'Devices',
+          Icon: Devices,
         },
         {
           id: '/halo/keyring',
@@ -103,8 +116,8 @@ export const useSections = (): SectionItem[] => {
           Icon: Queue,
         },
         {
-          id: '/echo/items',
-          title: 'Items',
+          id: '/echo/objects',
+          title: 'Objects',
           Icon: Database,
         },
         {
@@ -129,20 +142,20 @@ export const useSections = (): SectionItem[] => {
       title: 'MESH',
       Icon: Graph,
       items: [
-        // {
-        //   id: '/mesh/network',
-        //   title: 'Network Graph',
-        //   Icon: SwarmIcon
-        // },
+        {
+          id: '/mesh/signal',
+          title: 'Signal',
+          Icon: WifiHigh,
+        },
         {
           id: '/mesh/swarm',
           title: 'Swarm',
           Icon: UsersThree,
         },
         {
-          id: '/mesh/signal',
-          title: 'Signal',
-          Icon: PaperPlane,
+          id: '/mesh/network',
+          title: 'Network',
+          Icon: Polygon,
         },
       ],
     },

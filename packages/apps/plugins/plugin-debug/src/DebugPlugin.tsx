@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hammer, IconProps } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { Bug, IconProps } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain } from './components';
+import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -17,14 +18,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
 
   const isDebug = (data: unknown) =>
-    data &&
-    typeof data === 'object' &&
-    'node' in data &&
-    data.node &&
-    typeof data.node === 'object' &&
-    'id' in data.node &&
-    typeof data.node.id === 'string' &&
-    nodeIds.has(data.node.id);
+    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
 
   return {
     meta: {
@@ -33,19 +27,21 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     provides: {
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = useState<NodeJS.Timeout>();
+        const [timer, setTimer] = useState<Timer>();
+        useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
+        useEffect(() => {
+          timer?.stop();
+        }, []);
+
         return (
           <DebugContext.Provider
             value={{
-              running: !!running,
-              start: (cb: () => void, interval: number) => {
-                clearInterval(running);
-                setRunning(setInterval(cb, interval));
+              running: !!timer,
+              start: (cb, options) => {
+                timer?.stop();
+                setTimer(new Timer(cb).start(options));
               },
-              stop: () => {
-                clearInterval(running);
-                setRunning(undefined);
-              },
+              stop: () => timer?.stop(),
             }}
           >
             {children}
@@ -54,42 +50,34 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+          if (parent.id === 'root') {
+            parent.addAction({
+              id: 'open-devtools',
+              label: ['open devtools label', { ns: DEBUG_PLUGIN }],
+              icon: (props) => <Bug {...props} />,
+              intent: {
+                plugin: DEBUG_PLUGIN,
+                action: 'debug-openDevtools',
+              },
+              properties: {
+                testId: 'spacePlugin.openDevtools',
+              },
+            });
+            return;
+            // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
+          } else if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
+            return;
           }
 
           const nodeId = parent.id + '-debug';
           nodeIds.add(nodeId);
 
-          return [
-            {
-              id: nodeId,
-              index: 'a0', // TODO(burdon): Prevent drag? Dragging causes bug.
-              label: 'Debug',
-              icon: (props: IconProps) => <Hammer {...props} />,
-              data: { id: nodeId },
-              parent,
-            },
-          ];
-        },
-        actions: (parent) => {
-          if (parent.id !== 'root') {
-            return [];
-          }
-
-          return [
-            {
-              id: 'open-devtools',
-              index: 'z', // indices[2],
-              testId: 'spacePlugin.openDevtools',
-              label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Hammer {...props} />,
-              intent: {
-                plugin: DEBUG_PLUGIN,
-                action: 'debug-openDevtools',
-              },
-            },
-          ];
+          parent.add({
+            id: nodeId,
+            label: 'Debug',
+            icon: (props: IconProps) => <Bug {...props} />,
+            data: { id: nodeId, space: parent.data },
+          });
         },
       },
       intent: {
@@ -105,7 +93,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
               }
               return true;
             }
@@ -114,11 +102,24 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       component: (data, role) => {
         switch (role) {
-          case 'main':
+          case 'main': {
             if (isDebug(data)) {
               return DebugMain;
             }
+            break;
+          }
+          case 'dialog': {
+            if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+              return DebugSettings;
+            }
+            break;
+          }
+          case 'status': {
+            return DebugStatus;
+          }
         }
+
+        return null;
       },
       components: {
         DebugMain,

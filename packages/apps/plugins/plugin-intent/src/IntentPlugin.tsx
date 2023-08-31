@@ -8,14 +8,14 @@ import React, { createContext, useContext } from 'react';
 import { Plugin, PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<{ sendIntent: (intent: Intent) => void }>({ sendIntent: () => {} });
+  const state = deepSignal<{ sendIntent: SendIntent }>({ sendIntent: async () => {} });
 
   return {
     meta: {
       id: 'dxos.org/plugin/intent',
     },
     ready: async (plugins) => {
-      state.sendIntent = (intent: Intent) => {
+      const sendIntent = (intent: Intent) => {
         const plugin = intent.plugin && findPlugin<IntentProvides>(plugins, intent.plugin);
         if (plugin) {
           return plugin.provides.intent.resolver(intent, plugins);
@@ -29,6 +29,15 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           return plugin.provides.intent.resolver(intent, plugins);
         }, null);
       };
+
+      state.sendIntent = async (...intents) => {
+        let result: any = null;
+        for (const intent of intents) {
+          const data = intent.data ? { ...result, ...intent.data } : result;
+          result = await sendIntent({ ...intent, data });
+        }
+        return result;
+      };
     },
     provides: {
       context: ({ children }) => (
@@ -41,7 +50,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
 export type IntentPluginProvides = {
   intent: {
-    sendIntent: (intent: Intent) => any;
+    sendIntent: SendIntent;
   };
 };
 
@@ -51,11 +60,13 @@ export type Intent = {
   data?: any;
 };
 
+export type SendIntent = (...intents: Intent[]) => Promise<any>;
+
 export type IntentContextValue = {
-  sendIntent: (intent: Intent) => any;
+  sendIntent: SendIntent;
 };
 
-const IntentContext = createContext<IntentContextValue>({ sendIntent: () => {} });
+const IntentContext = createContext<IntentContextValue>({ sendIntent: async () => {} });
 
 export const useIntent = () => useContext(IntentContext);
 

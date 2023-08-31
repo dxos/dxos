@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { ListeningHandle, Messenger } from '@dxos/messaging';
@@ -21,6 +20,7 @@ import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
@@ -34,16 +34,16 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  /**
-   * @internal
-   */
-  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
-
   private readonly _swarmMessenger: SwarmMessenger;
 
   private _ctx = new Context();
 
   private _listeningHandle?: ListeningHandle = undefined;
+
+  /**
+   * @internal
+   */
+  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -82,6 +82,7 @@ export class Swarm {
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined,
+    private readonly _connectionLimiter: ConnectionLimiter,
   ) {
     log.trace(
       'dxos.mesh.swarm.constructor',
@@ -217,7 +218,6 @@ export class Swarm {
     return answer;
   }
 
-  @synchronized
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
     if (this._ctx.disposed) {
@@ -258,6 +258,7 @@ export class Swarm {
         this._swarmMessenger,
         this._protocolProvider,
         this._transportFactory,
+        this._connectionLimiter,
         {
           onInitiated: (connection) => {
             this.connectionAdded.emit(connection);

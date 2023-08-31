@@ -110,6 +110,7 @@ message Runtime {
     optional Storage storage = 2;
 
     // TODO(burdon): Structure snapshot/epoch related props.
+
     optional bool enable_snapshots = 3;
 
     /// Milliseconds
@@ -119,6 +120,7 @@ message Runtime {
     optional int32 invitation_expiration = 5;
 
     /// Location of the remote client host.
+    // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop vault.html).
     optional string remote_source = 6;
   }
 

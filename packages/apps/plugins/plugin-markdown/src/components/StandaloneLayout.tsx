@@ -2,87 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { PropsWithChildren, RefObject } from 'react';
+import React, { MutableRefObject, PropsWithChildren } from 'react';
 
-import { Button, DropdownMenu, Main, Input, useTranslation } from '@dxos/aurora';
+import { Main } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { blockSeparator, getSize, mx, paperSurface } from '@dxos/aurora-theme';
-import { Surface } from '@dxos/react-surface';
+import { coarseBlockPaddingStart, inputSurface, mx, surfaceElevation, textBlockWidth } from '@dxos/aurora-theme';
 
-import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
+import { MarkdownProperties } from '../types';
 
 export const StandaloneLayout = ({
   children,
-  model,
-  properties,
-  editorRef,
 }: PropsWithChildren<{
   model: ComposerModel;
   properties: MarkdownProperties;
   // TODO(wittjosiah): ForwardRef.
-  editorRef?: RefObject<MarkdownComposerRef>;
+  editorRef?: MutableRefObject<MarkdownComposerRef>;
 }>) => {
-  const { t } = useTranslation(MARKDOWN_PLUGIN);
   return (
-    <Main.Content classNames='min-bs-full' bounce>
-      <div role='none' className={mx('mli-auto max-is-[60rem] min-bs-[100dvh] flex flex-col', paperSurface)}>
-        <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
-          <Input.Root id={`input--${model.id}`}>
-            <Input.Label srOnly>{t('document title label')}</Input.Label>
-            <Input.TextInput
-              variant='subdued'
-              disabled={properties.readOnly}
-              placeholder={t('document title placeholder')}
-              value={properties.title ?? ''}
-              onChange={({ target: { value } }) => (properties.title = value)}
-              classNames='flex-1 min-is-0 is-auto pis-4 plb-3.5 pointer-fine:plb-2.5'
-              data-testid='composer.documentTitle'
-            />
-          </Input.Root>
-          {!properties.readOnly && (
-            <DropdownMenu.Root modal={false}>
-              <DropdownMenu.Trigger asChild>
-                <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
-                  <DotsThreeVertical className={getSize(6)} />
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content sideOffset={10} classNames='z-10'>
-                  <Surface data={[model, properties, editorRef]} role='menuitem' />
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+    <Main.Content bounce classNames={coarseBlockPaddingStart}>
+      <div role='none' className={mx(textBlockWidth, 'pli-2')}>
+        <div
+          role='none'
+          className={mx(
+            inputSurface,
+            surfaceElevation({ elevation: 'group' }),
+            'mbs-2 mbe-6 pli-6 rounded',
+            'min-bs-[calc(100dvh-5rem)] flex flex-col',
           )}
+        >
+          {children}
         </div>
-        <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
-        {children}
       </div>
-      {/* <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}> */}
-      {/*  {handleFileImport && ( */}
-      {/*    <Dialog */}
-      {/*      open={fileImportDialogOpen} */}
-      {/*      onOpenChange={setFileImportDialogOpen} */}
-      {/*      title={t('confirm import title')} */}
-      {/*      slots={{ overlay: { classNames: 'backdrop-blur-sm' } }} */}
-      {/*    > */}
-      {/*      <p className='mlb-4'>{t('confirm import body')}</p> */}
-      {/*      <FileUploader */}
-      {/*        types={['md']} */}
-      {/*        classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer' */}
-      {/*        dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }} */}
-      {/*        handleChange={handleFileImport} */}
-      {/*      > */}
-      {/*        <FilePlus weight='duotone' className={getSize(8)} /> */}
-      {/*        <span>{t('upload file message')}</span> */}
-      {/*      </FileUploader> */}
-      {/*      <Button classNames='block is-full' onClick={() => setFileImportDialogOpen?.(false)}> */}
-      {/*        {t('cancel label', { ns: 'appkit' })} */}
-      {/*      </Button> */}
-      {/*    </Dialog> */}
-      {/*  )} */}
-      {/* </ThemeContext.Provider> */}
     </Main.Content>
   );
 };

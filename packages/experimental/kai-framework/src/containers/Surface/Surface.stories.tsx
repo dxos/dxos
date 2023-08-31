@@ -7,7 +7,7 @@ import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import { Button, Main, ThemeProvider, useSidebar } from '@dxos/aurora';
+import { Button, Main, ThemeProvider, useSidebars } from '@dxos/aurora';
 import { getSize, mx, auroraTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
@@ -113,7 +113,7 @@ const SurfaceOutlet = () => {
 const SIDEBAR_SURFACE_NAME = 'KaiFrameworkSidebarSurface';
 
 const SidebarSurface = () => {
-  const { toggleSidebar } = useSidebar(SIDEBAR_SURFACE_NAME);
+  const { toggleNavigationSidebar } = useSidebars(SIDEBAR_SURFACE_NAME);
   const { controller } = useContext(SurfaceControllerContext);
 
   return (
@@ -128,7 +128,7 @@ const SidebarSurface = () => {
           </Button>
         </div>
         <div>
-          <Button variant='ghost' onClick={toggleSidebar}>
+          <Button variant='ghost' onClick={toggleNavigationSidebar}>
             <CaretLeft className={getSize(5)} />
           </Button>
         </div>
@@ -271,13 +271,13 @@ const Component3 = () => (
 const PANEL_SIDEBAR_CONTENT_NAME = 'PanelSidebarContent';
 
 const PanelSidebarContent: FC<{ children: ReactNode }> = ({ children }) => {
-  const { sidebarOpen, openSidebar } = useSidebar(PANEL_SIDEBAR_CONTENT_NAME);
+  const { navigationSidebarOpen, openNavigationSidebar } = useSidebars(PANEL_SIDEBAR_CONTENT_NAME);
   return (
     <div className='flex grow overflow-hidden'>
-      {!sidebarOpen && (
+      {!navigationSidebarOpen && (
         <div className='flex flex-col h-full px-2'>
           <div className='flex h-[32px] items-center'>
-            <Button variant='ghost' onClick={openSidebar}>
+            <Button variant='ghost' onClick={openNavigationSidebar}>
               <CaretRight className={getSize(5)} />
             </Button>
           </div>
@@ -303,9 +303,9 @@ const Layout = () => {
   return (
     <Main.Root>
       <Main.Overlay />
-      <Main.Sidebar>
+      <Main.NavigationSidebar>
         <Surface id='sidebar' element={<SidebarSurface />} />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <Main.Content>
         <PanelSidebarContent>
           <Surface id='main' element={<MainSurface />} />

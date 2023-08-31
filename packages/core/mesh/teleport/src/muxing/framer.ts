@@ -3,7 +3,8 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
+
+import { invariant } from '@dxos/invariant';
 
 import { RpcPort } from './rpc-port';
 
@@ -16,9 +17,9 @@ const FRAME_LENGTH_SIZE = 2;
  */
 export class Framer {
   // private readonly _tagBuffer = Buffer.alloc(4)
-  private _messageCb?: (msg: Uint8Array) => void;
-  private _subscribeCb?: () => void;
-  private _buffer?: Buffer; // The rest of the bytes from the previous write call.
+  private _messageCb?: (msg: Uint8Array) => void = undefined;
+  private _subscribeCb?: () => void = undefined;
+  private _buffer?: Buffer = undefined; // The rest of the bytes from the previous write call.
   private _sendCallbacks: (() => void)[] = [];
 
   private _bytesSent = 0;

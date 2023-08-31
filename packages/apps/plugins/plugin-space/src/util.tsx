@@ -6,14 +6,14 @@ import { Download, PaperPlane, PencilSimpleLine, Planet, Upload, X } from '@phos
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
+import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
-import { Plugin, findPlugin } from '@dxos/react-surface';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
+
+type Index = ReturnType<typeof getIndices>[number];
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
@@ -25,7 +25,7 @@ export const getSpaceId = (spaceKey: PublicKeyLike) => {
     spaceKey = spaceKey.toHex();
   }
 
-  return `${SPACE_PLUGIN_SHORT_ID}/${spaceKey}`;
+  return `${SPACE_PLUGIN_SHORT_ID}:${spaceKey}`;
 };
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
@@ -37,95 +37,100 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string): GraphNode<Space> => {
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-  if (!clientPlugin) {
-    throw new Error('Client plugin not found');
-  }
-
+export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
-  const actionIndices = getIndices(5);
   const state = space.state.get();
   const disabled = state !== SpaceState.READY;
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
-  const node: GraphNode = {
+
+  const [node] = parent.add({
     id,
-    index,
     label: getSpaceDisplayName(space),
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
     data: space,
-    // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
-    onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
-      log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
-      if (child.data) {
+    properties: {
+      role: 'branch',
+      hidden: inactive,
+      disabled,
+      error,
+      index,
+      onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
         // TODO(burdon): Decouple from object's data structure.
         child.data.meta = {
           ...child.data?.meta,
           index: nextIndex,
         };
-      }
+      },
+      acceptMigrationClass: new Set(['spaceObject']),
+      onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        // create clone of child and add to migration destination
+        const object = clone(child.data, {
+          retainId: true,
+          additional: [
+            ...(child.data.content ? [child.data.content] : []),
+            ...(child.data.meta ? [child.data.meta] : []),
+          ],
+        });
+        space.db.add(object);
+        object.meta = {
+          ...object.meta,
+          index: nextIndex,
+        };
+      },
+      onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
+        // remove child being replicated from migration origin
+        space.db.remove(child.data);
+      },
     },
-    onMoveNode: (
-      source: GraphNode<TypedObject>,
-      target: GraphNode<TypedObject>,
-      child: GraphNode<TypedObject>,
-      nextIndex,
-    ) => {
-      log.info('onParentMove', { source: source.id, target: target.id, child: child.id, nextIndex });
+  });
+
+  node.addAction(
+    {
+      id: 'rename-space',
+      label: ['rename space label', { ns: SPACE_PLUGIN }],
+      icon: (props) => <PencilSimpleLine {...props} />,
+      intent: { ...baseIntent, action: SpaceAction.RENAME },
+      properties: {
+        disabled: disabled || error,
+      },
     },
-    attributes: {
-      role: 'branch',
-      hidden: inactive,
-      disabled,
-      error,
+    {
+      id: 'share-space',
+      label: ['share space', { ns: SPACE_PLUGIN }],
+      icon: (props) => <PaperPlane {...props} />,
+      intent: { ...baseIntent, action: SpaceAction.SHARE },
+      properties: {
+        disabled: disabled || error,
+      },
     },
-    pluginActions: {
-      [SPACE_PLUGIN]: [
-        {
-          id: 'rename-space',
-          index: actionIndices[0],
-          label: ['rename space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <PencilSimpleLine {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.RENAME },
-          disabled: disabled || error,
-        },
-        {
-          id: 'view-invitations',
-          index: actionIndices[1],
-          label: ['view invitations label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <PaperPlane {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.SHARE },
-          disabled: disabled || error,
-        },
-        {
-          id: 'backup-space',
-          index: actionIndices[3],
-          label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <Download {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.BACKUP },
-          disabled: disabled || error,
-        },
-        {
-          id: 'restore-space',
-          index: actionIndices[4],
-          label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <Upload {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.RESTORE },
-          disabled: disabled || error,
-        },
-        {
-          id: 'close-space',
-          index: actionIndices[2],
-          label: ['close space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <X {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.CLOSE },
-        },
-      ],
+    {
+      id: 'backup-space',
+      label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
+      icon: (props) => <Download {...props} />,
+      intent: { ...baseIntent, action: SpaceAction.BACKUP },
+      properties: {
+        disabled: disabled || error,
+      },
     },
-  };
+    {
+      id: 'restore-space',
+      label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
+      icon: (props) => <Upload {...props} />,
+      intent: { ...baseIntent, action: SpaceAction.RESTORE },
+      properties: {
+        disabled: disabled || error,
+      },
+    },
+    {
+      id: 'close-space',
+      label: ['close space label', { ns: SPACE_PLUGIN }],
+      icon: (props) => <X {...props} />,
+      intent: { ...baseIntent, action: SpaceAction.CLOSE },
+    },
+  );
 
   return node;
 };

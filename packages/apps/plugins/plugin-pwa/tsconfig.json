@@ -30,7 +30,10 @@
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../../../ui/react-appkit"
+      "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../../../ui/aurora-theme"
     }
   ]
 }

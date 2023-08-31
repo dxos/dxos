@@ -6,7 +6,7 @@ import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, Message, useTranslation, DropdownMenu } from '@dxos/aurora';
-import { Config, DEFAULT_CLIENT_ORIGIN } from '@dxos/react-client';
+import { Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
 import { getAsyncValue, Provider } from '@dxos/util';
 
 import { Dialog, DialogProps } from '../Dialog';
@@ -88,16 +88,18 @@ export const ResetDialog = ({
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content side='top' classNames='z-[51]'>
-              <DropdownMenu.Item
-                onClick={async () => {
-                  // TODO(wittjosiah): This is a hack.
-                  //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
-                  const config = await getAsyncValue(configProvider);
-                  window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN}#reset`, '_blank');
-                }}
-              >
-                {t('reset client confirm label')}
-              </DropdownMenu.Item>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item
+                  onClick={async () => {
+                    // TODO(wittjosiah): This is a hack.
+                    //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
+                    const config = await getAsyncValue(configProvider);
+                    window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_VAULT_URL}#reset`, '_blank');
+                  }}
+                >
+                  {t('reset client confirm label')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
               <DropdownMenu.Arrow />
             </DropdownMenu.Content>
           </DropdownMenu.Portal>

@@ -77,14 +77,14 @@ jobs:
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport --environments=nodejs
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
+            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
       - *codecov_upload
       - *store_test_results
 
@@ -116,7 +116,9 @@ jobs:
             REMOTE_SOURCE: http://localhost:3967/vault.html
             # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
             NODE_OPTIONS: --max_old_space_size=10240
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
+          when: always
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
@@ -136,7 +138,7 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=flaky --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=unit,flaky --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
 
@@ -171,6 +173,13 @@ workflows:
           context:
             - Github
       - e2e:
+          # Only run e2e tests on pushes to main & release branches.
+          filters:
+            branches:
+              only:
+                - main
+                - /^rc-.*/
+                - /^hotfix-.*/
           context:
             - Github
 

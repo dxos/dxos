@@ -4,14 +4,19 @@
 
 import { FC, PropsWithChildren } from 'react';
 
+export type ComponentProps = PropsWithChildren<{
+  data: any;
+  role?: string;
+}>;
+
 export type PluginProvides<TProvides> = TProvides & {
   context?: FC<PropsWithChildren>;
   component?: <P extends PropsWithChildren = PropsWithChildren>(
     data: unknown,
     role?: string,
     props?: Partial<P>,
-  ) => FC<PropsWithChildren<{ data: any; role?: string }>> | undefined | null | false | 0;
-  components?: Record<string, FC<any>> & { default?: FC };
+  ) => FC<ComponentProps> | undefined | null | false | 0;
+  components?: Record<string, FC<ComponentProps>> & { default?: FC };
 };
 
 export type Plugin<TProvides = {}> = {
@@ -23,9 +28,9 @@ export type Plugin<TProvides = {}> = {
   provides: PluginProvides<TProvides>;
 };
 
-export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 'provides'> & {
+export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Plugin, 'provides'> & {
   provides?: Plugin<TProvides>['provides'];
-  init?: () => Promise<PluginProvides<TInitProvides>>; // TODO(burdon): Standardize: initialize.
+  initialize?: () => Promise<PluginProvides<TInitializeProvides>>;
   ready?: (plugins: Plugin[]) => Promise<void>;
   unload?: () => Promise<void>;
 };

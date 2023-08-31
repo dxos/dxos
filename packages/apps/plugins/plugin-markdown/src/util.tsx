@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
+import { Article, ArticleMedium, PencilSimpleLine, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/client/echo'; // TODO(burdon): Should not expose.
+import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
@@ -63,25 +63,57 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
-export const documentToGraphNode = (parent: GraphNode<Space>, document: Document, index: string): GraphNode => ({
-  id: document.id,
-  index: get(document, 'meta.index', index),
-  label: document.title ?? 'New document',
-  icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
-  data: document,
-  parent,
-  pluginActions: {
-    [MARKDOWN_PLUGIN]: [
-      {
-        id: 'delete',
-        index: 'a1',
-        label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
-        icon: (props) => <Trash {...props} />,
-        intent: {
-          action: SpaceAction.REMOVE_OBJECT,
-          data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
-        },
-      },
-    ],
-  },
-});
+const nonTitleChars = /[^\w ]/g;
+
+const getFallbackTitle = (document: Document) => {
+  return document.content?.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+};
+
+export const documentToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
+  const fallbackProps = document.title
+    ? {}
+    : (() => {
+        const fallbackTitle = getFallbackTitle(document);
+        return fallbackTitle?.length && fallbackTitle?.length > 0
+          ? {
+              fallbackTitle,
+              preferFallbackTitle: true,
+            }
+          : {};
+      })();
+
+  const [child] = parent.add({
+    id: document.id,
+    label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) =>
+      document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
+    data: document,
+    properties: {
+      index: get(document, 'meta.index', index),
+      migrationClass: 'spaceObject',
+      ...fallbackProps,
+    },
+  });
+
+  child.addAction({
+    id: 'delete',
+    label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) => <Trash {...props} />,
+    intent: {
+      action: SpaceAction.REMOVE_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+    },
+  });
+
+  child.addAction({
+    id: 'rename',
+    label: ['rename document label', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) => <PencilSimpleLine {...props} />,
+    intent: {
+      action: SpaceAction.RENAME_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: document.id },
+    },
+  });
+
+  return child;
+};

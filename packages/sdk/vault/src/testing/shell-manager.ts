@@ -77,7 +77,7 @@ export class ShellManager extends NaturalShellManager {
 
   async authenticate(authCode: string) {
     // Wait for focus to shift before typing.
-    await sleep(1000);
+    await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
     await this.doneInvitation('space', this.shell);
   }

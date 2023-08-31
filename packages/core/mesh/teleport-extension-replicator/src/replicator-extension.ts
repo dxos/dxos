@@ -4,12 +4,12 @@
 
 import type { ProtocolStream } from 'hypercore-protocol';
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
@@ -213,21 +213,32 @@ export class ReplicatorExtension implements TeleportExtension {
     const networkStream = await this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore',
     });
+
+    // https://github.com/holepunchto/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     const replicationStream = feed.replicate(true, {
       live: true,
       upload: info.upload,
       download: info.download,
       noise: false,
       encrypted: false,
+      maxRequests: 1024,
     });
 
-    // left for testing
-    // feed.on('download', (index: number, data: any) => {
-    //   log('download', {
-    //     key: info.feedKey,
-    //     index
+    // Left for testing.
+    // const debug = true;
+    // if (debug) {
+    //   feed.on('sync', () => {
+    //     log.info('sync', { key: feed.key, length: feed.length });
     //   });
-    // });
+    //   feed.on('download', (index: number, data: any) => {
+    //     log.info('download', {
+    //       key: feed.key,
+    //       index,
+    //       length: feed.length,
+    //       data: data.length,
+    //     });
+    //   });
+    // }
 
     replicationStream.on('error', (err) => {
       if (

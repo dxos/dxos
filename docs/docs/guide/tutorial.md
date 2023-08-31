@@ -12,10 +12,10 @@ The code completed application can be found [here](https://github.com/dxos/share
 
 ::: note In this tutorial, we will:
 
-- Build a `react` app using a [DXOS app template](#create-an-app).
-- Use [ECHO](#updating-the-counter) for real-time state consensus.
-- Create a decentralized identity with [HALO](#creating-a-user-identity).
-- [Deploy](#deploying-the-app) the app to Netlify.
+*   Build a `react` app using a [DXOS app template](#create-an-app).
+*   Use [ECHO](#updating-the-counter) for real-time state consensus.
+*   Create a decentralized identity with [HALO](#creating-a-user-identity).
+*   [Deploy](#deploying-the-app) the app to Netlify.
 
 :::
 
@@ -89,10 +89,10 @@ DXOS apps enable users to control their data and identity by storing it in a [va
 
 The other wrapper components are part of the DXOS [UI system](./react/ui.md):
 
-- The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
-- `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
-- `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
-- `<GenericFallback>` is a loading indicator.
+*   The `<ServiceWorkerToastContainer>` pops a toast with a reload prompt whenever a new version of the PWA is ready to go.
+*   `<ErrorBoundary>` catches errors that bubble up from the application and `<ResetDialog>` provides a user-friendly way to reset the application in the event of a crash.
+*   `<ThemeProvider>` enables default DXOS styles and [`tailwindcss`](https://tailwindcss.com).
+*   `<GenericFallback>` is a loading indicator.
 
 ## Creating a User Identity
 
@@ -100,13 +100,14 @@ Before an application can read or write user data, the device must be authentica
 
 Let's create a simple component called `Counter.tsx`.
 
-```tsx{6,8} file=./snippets/tutorial/counter.tsx#L5-14
-import { useIdentity, useSpaces } from '@dxos/react-client';
+```tsx{6,8} file=./snippets/counter.tsx#L5-
 import React from 'react';
+import { useIdentity } from '@dxos/react-client/halo';
+import { useSpaces } from '@dxos/react-client/echo';
 
 export const Counter = () => {
   // Get the user to log in before a space can be obtained.
-  const identity = useIdentity();
+  useIdentity();
   // Get the first available space, created with the identity.
   const [space] = useSpaces();
   return <></>;
@@ -121,24 +122,26 @@ export const Counter = () => {
 
 Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. Add the `useQuery` hook to your imports:
 
-```tsx file=./snippets/tutorial/counter-1.tsx#L6
-import { useIdentity, useSpaces, useQuery } from '@dxos/react-client';
+```tsx file=./snippets/counter-1.tsx#L6
+import { useSpaces, useQuery } from '@dxos/react-client/echo';
 ```
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx file=./snippets/tutorial/counter-1.tsx#L14-24
-const [counter] = useQuery(space, { type: 'counter' });
+```tsx file=./snippets/counter-1.tsx#L14-
 
-return (
-  <div>
-    {counter && (
-      <div className='text-center'>
-        Clicked {counter.values.length ?? 0} times.
-      </div>
-    )}
-  </div>
-);
+  const [counter] = useQuery(space, { type: 'counter' });
+
+  return (
+    <div>
+      {counter && (
+        <div className='text-center'>
+          Clicked {counter.values.length ?? 0} times.
+        </div>
+      )}
+    </div>
+  );
+};
 ```
 
 `useQuery` allows you to search the database for objects that match the query. In our case, we are searching for objects that have a key and value of `type: 'counter'`. The first time this query executes, there is no object that matches it.
@@ -147,19 +150,39 @@ We need an empty counter that we can increment.
 
 Grab an `Expando`:
 
-```tsx file=./snippets/tutorial/counter-2.tsx#L6
-import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
+```tsx file=./snippets/counter-2.tsx#L6
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 ```
 
 Above the `return` statement, add the following effect:
 
-```tsx file=./snippets/tutorial/counter-2.tsx#L13-18
-useEffect(() => {
-  if (space && !counter) {
-    const counter = new Expando({ type: 'counter', values: [] });
-    space.db.add(counter);
-  }
-}, [space, counter]);
+```tsx file=./snippets/counter-2.tsx#L13-
+
+  useEffect(() => {
+    if (space && !counter) {
+      const counter = new Expando({ type: 'counter', values: [] });
+      space.db.add(counter);
+    }
+  }, [space, counter]);
+
+  return (
+    <div>
+      {counter && (
+        <div className='text-center'>
+          <button
+            className='border bg-white py-2 px-4 rounded'
+            onClick={() => {
+              counter.values.push(1);
+            }}
+          >
+            Click me
+          </button>
+          <p>Clicked {counter.values.length ?? 0} times.</p>
+        </div>
+      )}
+    </div>
+  );
+};
 ```
 
 When the app refreshes, you should now see `Clicked 0 times.`
@@ -174,9 +197,10 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{20-27} file=./snippets/tutorial/counter-2.tsx#L5-37
+```tsx{20-27} file=./snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
-import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   useIdentity();
@@ -230,11 +254,11 @@ What's going on behind the scenes? The two peers are communicating directly, pee
 
 You may wonder why we chose to represent a counter as an array when an integer would be simpler. ECHO uses [CRDTs](https://crdt.tech/) to ensure the state remains consistent. If we used an integer to represent the count, the algorithm for updating the state effectively becomes "last write wins" and short-circuits the CRDT. Consider how each client would update the count, assuming it was an integer:
 
-1. Grab the most recent count value.
-2. Increment the count value by 1.
-3. Save the count value to the shared state.
+1.  Grab the most recent count value.
+2.  Increment the count value by 1.
+3.  Save the count value to the shared state.
 
-If both peers click the button at the exact same time, the count _should_ increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
+If both peers click the button at the exact same time, the count *should* increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
 
 With an array, each time a client pushes an element onto the array, the CRDT algorithm merges those changes together, preserving all elements from all clients.
 
@@ -242,9 +266,9 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 ## Recap
 
-- A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-- Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
-- The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+*   Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
+*   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ## Deploying the app
 
@@ -252,11 +276,11 @@ DXOS apps are static apps that rely on peer-to-peer networking and client-side r
 
 For the sake of simplicity, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
-1. Go to "Add new site" in Netlify, and click "Import an existing project."
-2. Link to your application's repository.
-   - Set the build command to `npm run build`
-   - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
-3. Publish!
+1.  Go to "Add new site" in Netlify, and click "Import an existing project."
+2.  Link to your application's repository.
+    *   Set the build command to `npm run build`
+    *   Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+3.  Publish!
 
 That's it. Your app is now live!
 
@@ -270,14 +294,14 @@ This guide demonstrated how to create and deploy a local-first DXOS application.
 
 For more info on using DXOS, see:
 
-- ECHO with [React](./react/)
-- ECHO with [TypeScript](./typescript/)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+*   ECHO with [React](./react/)
+*   ECHO with [TypeScript](./typescript/)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-- DXOS [repository on GitHub](https://github.com/dxos/dxos)
-- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
+*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀

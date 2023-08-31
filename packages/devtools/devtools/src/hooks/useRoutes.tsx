@@ -9,20 +9,23 @@ import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
+  DeviceListPanel,
   DiagnosticsPanel,
   FeedsPanel,
   IdentityPanel,
-  ItemsPanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
+  MetadataPanel,
+  NetworkPanel,
+  ObjectsPanel,
   SignalPanel,
   SpaceInfoPanel,
-  SpacesPanel,
+  SpaceListPanel,
   StoragePanel,
   SwarmPanel,
+  TracingPanel,
 } from '../panels';
-import MetadataPanel from '../panels/echo/MetadataPanel';
 
 export const namespace = 'devtools';
 
@@ -36,10 +39,6 @@ export const useRoutes = () => {
       path: '/',
       element: <RootContainer />,
       children: [
-        {
-          path: '/diagnostics',
-          element: <DiagnosticsPanel />,
-        },
         {
           path: '/client',
           children: [
@@ -55,6 +54,14 @@ export const useRoutes = () => {
               path: '/client/logs',
               element: <LoggingPanel />,
             },
+            {
+              path: '/client/diagnostics',
+              element: <DiagnosticsPanel />,
+            },
+            {
+              path: '/client/tracing',
+              element: <TracingPanel />,
+            },
           ],
         },
         {
@@ -63,6 +70,10 @@ export const useRoutes = () => {
             {
               path: '/halo/identity',
               element: <IdentityPanel />,
+            },
+            {
+              path: '/halo/devices',
+              element: <DeviceListPanel />,
             },
             {
               path: '/halo/keyring',
@@ -79,7 +90,7 @@ export const useRoutes = () => {
           children: [
             {
               path: '/echo/spaces',
-              element: <SpacesPanel />,
+              element: <SpaceListPanel />,
             },
             {
               path: '/echo/space',
@@ -90,8 +101,8 @@ export const useRoutes = () => {
               element: <FeedsPanel />,
             },
             {
-              path: '/echo/items',
-              element: <ItemsPanel />,
+              path: '/echo/objects',
+              element: <ObjectsPanel />,
             },
             {
               path: '/echo/members',
@@ -107,12 +118,16 @@ export const useRoutes = () => {
           path: '/mesh',
           children: [
             {
+              path: '/mesh/signal',
+              element: <SignalPanel />,
+            },
+            {
               path: '/mesh/swarm',
               element: <SwarmPanel />,
             },
             {
-              path: '/mesh/signal',
-              element: <SignalPanel />,
+              path: '/mesh/network',
+              element: <NetworkPanel />,
             },
           ],
         },

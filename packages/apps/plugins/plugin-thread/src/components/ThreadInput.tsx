@@ -6,7 +6,7 @@ import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { FC, KeyboardEvent, useState } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 
 import { THREAD_PLUGIN } from '../types';
 
@@ -36,7 +36,7 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className={mx('flex w-full shadow p-2', groupSurface)}>
+    <div className={mx('flex w-full shadow p-2', inputSurface)}>
       <Input.Root>
         <Input.Label srOnly>{t('block input label')}</Input.Label>
         <Input.TextArea

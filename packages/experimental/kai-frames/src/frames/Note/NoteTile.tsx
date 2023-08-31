@@ -65,7 +65,9 @@ export const NoteTile = ({ item, onDelete }: TileContentProps<Note>) => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content classNames='z-50'>
-                <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
+                <DropdownMenu.Viewport>
+                  <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
+                </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>
             </DropdownMenu.Portal>

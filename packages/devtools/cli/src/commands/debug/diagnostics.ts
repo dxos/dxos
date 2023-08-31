@@ -8,6 +8,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { ConfigProto } from '@dxos/config';
 
 import { BaseCommand } from '../../base-command';
 
@@ -42,17 +43,21 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
         this.flags.timeout,
       );
 
-      return defaultsDeep({}, data, {
-        config: {
-          runtime: {
-            app: {
-              build: {
-                timestamp: rev.date().toISOString(),
-                hash: rev.long(),
-                branch: rev.branch(),
-              },
+      const config: ConfigProto = {
+        runtime: {
+          app: {
+            build: {
+              timestamp: rev.date().toISOString(),
+              commitHash: rev.long(),
+              branch: rev.branch(),
             },
           },
+        },
+      };
+
+      return defaultsDeep({}, data, {
+        diagnostics: {
+          config,
         },
       });
     });

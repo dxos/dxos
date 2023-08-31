@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { PluginContextProvider } from '@dxos/react-surface';
+import { PluginProvider } from '@dxos/react-surface';
 
 import { DndPlugin } from '../DndPlugin';
 import { DndPluginDefaultStoryPlugin } from './DndPluginDefaultStoryPlugin';
@@ -14,7 +14,7 @@ import { DndPluginDefaultStoryPluginA } from './DndPluginDefaultStoryPluginA';
 import { DndPluginDefaultStoryPluginB } from './DndPluginDefaultStoryPluginB';
 
 const DndSurfacesApp = () => (
-  <PluginContextProvider
+  <PluginProvider
     plugins={[
       ThemePlugin(),
       DndPlugin(),

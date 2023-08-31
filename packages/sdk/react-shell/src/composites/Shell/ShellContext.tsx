@@ -21,7 +21,7 @@ import {
   ShellLayout,
   IFrameClientServicesHost,
   useClient,
-  useShellProvider,
+  useShell as useShellNatural,
   LayoutRequest,
 } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
@@ -87,7 +87,7 @@ export const ShellProvider = ({
   // IFrame Shell
   //
 
-  useShellProvider({ spaceKey: space?.key, onJoinedSpace });
+  useShellNatural({ spaceKey: space?.key, onJoinedSpace });
 
   //
   // Component Shell
@@ -153,7 +153,9 @@ export const ShellProvider = ({
     }
 
     return shellRuntime.contextUpdate.on(({ display, spaceKey }) => {
-      setDisplay(display);
+      if (display) {
+        setDisplay(display);
+      }
       onJoinedSpace?.(spaceKey);
     });
   }, [shellRuntime]);

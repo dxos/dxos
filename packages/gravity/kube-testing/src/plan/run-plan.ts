@@ -12,8 +12,8 @@ import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
-import { AgentEnv } from './agent-env';
-import { AgentParams, PlanResults, TestPlan } from './spec-base';
+import { AgentEnv } from './env';
+import { AgentParams, PlanResults, TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
@@ -45,52 +45,45 @@ export type RunPlanParams<S, C> = {
 };
 
 // TODO(mykola): Introduce Executor class.
-export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
-    // Analysis mode
+    // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.finish(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
       summary.results,
     );
+
     return;
   }
 
   if (!process.env.GRAVITY_AGENT_PARAMS) {
-    // Planner mode
-    await runPlanner({ plan, spec, options });
+    // Planner mode.
+    await runPlanner(name, { plan, spec, options });
   } else {
-    // Agent mode
+    // Agent mode.
     const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
     await runAgent(plan, params);
   }
 };
 
-const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
-  const testId = genTestId();
+const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
+  const testId = createTestPathname();
   const outDir = `${process.cwd()}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
-
   log.info('starting plan', {
     outDir,
   });
 
-  const agentsArray = await plan.init({
-    spec,
-    outDir,
-    testId,
-  });
+  const agentsArray = await plan.init({ spec, outDir, testId });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
-
   log.info('starting agents', {
     count: agentsArray.length,
   });
 
   const children: ChildProcess[] = [];
-  const planResults: PlanResults = {
-    agents: {},
-  };
+  const planResults: PlanResults = { agents: {} };
   const promises: Promise<void>[] = [];
 
   {
@@ -138,8 +131,10 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         env: {
           ...process.env,
           GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+          GRAVITY_SPEC: name,
         },
       });
+
       children.push(childProcess);
       promises.push(
         Event.wrap<number>(childProcess, 'exit')
@@ -163,14 +158,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   let stats: any;
   try {
-    stats = await await plan.finish(
-      {
-        spec,
-        outDir,
-        testId,
-      },
-      planResults,
-    );
+    stats = await plan.finish({ spec, outDir, testId }, planResults);
   } catch (err) {
     log.warn('error finishing plan', err);
   }
@@ -186,8 +174,8 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     results: planResults,
     agents,
   };
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
 
+  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
 };
@@ -203,7 +191,6 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
     const env = new AgentEnv<S, C>(params);
     await env.open();
-
     await plan.run(env);
   } catch (err) {
     console.error(err);
@@ -214,4 +201,4 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   }
 };
 
-const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;
+const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');

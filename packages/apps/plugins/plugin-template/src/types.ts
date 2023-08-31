@@ -7,6 +7,7 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
 
+// TODO(burdon): Copy pattern to other plugins.
 export const TEMPLATE_PLUGIN = 'dxos.org/plugin/template';
 
 const TEMPLATE_ACTION = `${TEMPLATE_PLUGIN}/action`;

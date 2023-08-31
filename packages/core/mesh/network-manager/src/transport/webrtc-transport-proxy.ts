@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { Writable } from 'node:stream';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -20,6 +21,7 @@ export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   bridgeService: BridgeService;
+  // TODO(burdon): Rename onSignal.
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
@@ -28,11 +30,10 @@ export class WebRTCTransportProxy implements Transport {
   private readonly _ctx = new Context();
 
   readonly closed = new Event();
-  private _closed = false;
   readonly connected = new Event();
-
   readonly errors = new ErrorStream();
 
+  private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
   // prettier-ignore
@@ -57,18 +58,19 @@ export class WebRTCTransportProxy implements Transport {
           }
         });
 
-        const dataListener = async (data: Uint8Array) => {
-          try {
-            await this._params.bridgeService.sendData({
+        this._params.stream.pipe(new Writable({
+          write: (chunk, _, callback) => {
+            this._params.bridgeService.sendData({
               proxyId: this._proxyId,
-              payload: data
-            });
-          } catch (err: any) {
-            log.catch(err);
-          }
-        };
-        this._params.stream.on('data', dataListener);
-        this._ctx.onDispose(() => { this._params.stream.off('data', dataListener); });
+              payload: chunk
+            }).then(
+              () => callback(),
+              (err: any) => {
+                log.catch(err);
+              }
+            );
+          },
+        }));
       },
       (error) => log.catch(error)
     );
@@ -116,7 +118,7 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
 
-    this._serviceStream.close();
+    await this._serviceStream.close();
 
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
@@ -133,7 +135,7 @@ export class WebRTCTransportProxy implements Transport {
    */
   // TODO(burdon): Option on close method.
   forceClose() {
-    this._serviceStream.close();
+    void this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
   }

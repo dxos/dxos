@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vault",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "DXOS web browser vault",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,7 +42,9 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -57,7 +59,6 @@
     "pkg-dir": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tiny-invariant": "^1.3.1",
     "url-join": "^5.0.0",
     "yargs": "~16.2.0"
   },

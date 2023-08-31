@@ -4,27 +4,20 @@
 
 import { defaultMap } from './map';
 
-const getMicroseconds = () => {
-  if (typeof process.hrtime !== 'function') {
-    return 0;
-  }
-  const [seconds, nano] = process.hrtime();
-  return seconds * 1e6 + nano / 1e3;
-};
-
 /**
  * Tracer events form a graph.
  */
 export type Event = {
   id: string;
-  timestamp: number; // Microseconds.
-  duration?: number; // Microseconds.
+  timestamp: number; // ms.
+  duration?: number; // ms (float).
   value?: any;
 };
 
 /**
  * Event sink.
  */
+// TODO(burdon): Reconcile with log.trace.
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 
@@ -37,6 +30,10 @@ export class Tracer {
 
   get recording() {
     return this._recording;
+  }
+
+  keys() {
+    return Array.from(this._events.keys());
   }
 
   get(id: string, filter?: Record<string, any>): Event[] | undefined {
@@ -66,18 +63,20 @@ export class Tracer {
     this._post(this._createEvent(id, value));
   }
 
-  mark(id: string, value?: any): { end: () => void } {
+  mark(id: string, value?: any): { start: number; end: () => void } {
     const event = this._createEvent(id, value);
+    const start = performance.now();
     return {
+      start,
       end: () => {
-        event.duration = Math.floor(getMicroseconds() - event.timestamp!);
+        event.duration = performance.now() - start;
         this._post(event);
       },
     };
   }
 
   private _createEvent(id: string, value?: any): Event {
-    const event: Event = { id, timestamp: getMicroseconds() };
+    const event: Event = { id, timestamp: Date.now() };
     if (value !== undefined) {
       event.value = value;
     }

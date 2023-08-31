@@ -1,0 +1,5 @@
+version: 1
+
+runtime:
+  client:
+    remoteSource: http://localhost:3967/vault.html

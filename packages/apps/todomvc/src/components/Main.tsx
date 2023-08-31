@@ -7,7 +7,6 @@ import { generatePath, Navigate, Outlet, useNavigate, useParams } from 'react-ro
 
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 
 import { SpaceList } from './SpaceList';
 
@@ -15,7 +14,6 @@ export const Main = () => {
   const navigate = useNavigate();
   const { spaceKey } = useParams();
 
-  useIdentity();
   const client = useClient();
   const space = useSpace(PublicKey.safeFrom(spaceKey ?? ''));
   const spaces = useSpaces();

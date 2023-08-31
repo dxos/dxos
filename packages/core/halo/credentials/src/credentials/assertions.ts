@@ -31,3 +31,8 @@ export const checkCredentialType = <K extends keyof TYPES>(
   credential: Credential,
   type: K,
 ): credential is SpecificCredential<TYPES[K]> => credential.subject.assertion['@type'] === type;
+
+export const credentialTypeFilter =
+  <K extends keyof TYPES>(type: K) =>
+  (credential: Credential): credential is SpecificCredential<TYPES[K]> =>
+    checkCredentialType(credential, type);

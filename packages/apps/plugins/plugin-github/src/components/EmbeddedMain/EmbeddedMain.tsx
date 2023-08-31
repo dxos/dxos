@@ -32,7 +32,7 @@ import { useTextModel } from '@dxos/aurora-composer';
 import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
+import { Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { useDocGhId } from '../../hooks';
 import { EditorViewState, GITHUB_PLUGIN } from '../../props';
@@ -53,7 +53,7 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
-  const { plugins } = usePluginContext();
+  const { plugins } = usePlugins();
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
   const handleCloseEmbed = useCallback(() => {
@@ -161,42 +161,44 @@ const EmbeddedLayoutImpl = () => {
                 </DropdownMenu.Trigger>
               </Tooltip.Trigger>
               <DropdownMenu.Content {...overlayAttrs}>
-                <DropdownMenu.Item asChild>
-                  <a
-                    target='_blank'
-                    rel='noreferrer'
-                    href={
-                      space && document
-                        ? `${location.origin}/dxos/space/${space?.key.toHex() ?? 'never'}/${document.id}`
-                        : '#'
-                    }
-                  >
-                    <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
-                    <span className='grow'>{t('open in composer label', { ns: 'composer' })}</span>
-                  </a>
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator />
-                <DropdownMenu.GroupLabel>
-                  {t('active space label', { ns: 'composer' })}
-                  <Avatar.Root size={5} variant='circle'>
-                    <div role='none' className='flex gap-1 mlb-1 items-center'>
-                      <Avatar.Frame>
-                        <Avatar.Fallback href={spaceJdenticon} />
-                      </Avatar.Frame>
-                      <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                        {Array.isArray(name) ? t(...name) : name}
-                      </Avatar.Label>
-                    </div>
-                  </Avatar.Root>
-                </DropdownMenu.GroupLabel>
-                <DropdownMenu.Item onClick={() => setRenameDialogOpen(true)}>
-                  <span className='grow'>{t('rename space label', { ns: 'composer' })}</span>
-                  <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
-                  <span className='grow'>{t('unset repo space label')}</span>
-                  <Option className={mx('shrink-0', getSize(5))} />
-                </DropdownMenu.Item>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item asChild>
+                    <a
+                      target='_blank'
+                      rel='noreferrer'
+                      href={
+                        space && document
+                          ? `${location.origin}/dxos/space/${space?.key.toHex() ?? 'never'}/${document.id}`
+                          : '#'
+                      }
+                    >
+                      <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
+                      <span className='grow'>{t('open in composer label', { ns: 'composer' })}</span>
+                    </a>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator />
+                  <DropdownMenu.GroupLabel>
+                    {t('active space label', { ns: 'composer' })}
+                    <Avatar.Root size={5} variant='circle'>
+                      <div role='none' className='flex gap-1 mlb-1 items-center'>
+                        <Avatar.Frame>
+                          <Avatar.Fallback href={spaceJdenticon} />
+                        </Avatar.Frame>
+                        <Avatar.Label classNames='text-sm text-[--surface-text]'>
+                          {Array.isArray(name) ? t(...name) : name}
+                        </Avatar.Label>
+                      </div>
+                    </Avatar.Root>
+                  </DropdownMenu.GroupLabel>
+                  <DropdownMenu.Item onClick={() => setRenameDialogOpen(true)}>
+                    <span className='grow'>{t('rename space label', { ns: 'composer' })}</span>
+                    <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
+                    <span className='grow'>{t('unset repo space label')}</span>
+                    <Option className={mx('shrink-0', getSize(5))} />
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>
               <Tooltip.Content {...overlayAttrs}>
@@ -217,14 +219,16 @@ const EmbeddedLayoutImpl = () => {
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content {...overlayAttrs}>
-                  <DropdownMenu.Item onClick={handleSaveAndCloseEmbed} classNames='block'>
-                    <p>{t('save and close label')}</p>
-                    <p className={descriptionText}>{t('save and close description')}</p>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={handleCloseEmbed} classNames='block'>
-                    <p>{t('close label', { ns: 'appkit' })}</p>
-                    <p className={descriptionText}>{t('close embed description')}</p>
-                  </DropdownMenu.Item>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={handleSaveAndCloseEmbed} classNames='block'>
+                      <p>{t('save and close label')}</p>
+                      <p className={descriptionText}>{t('save and close description')}</p>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={handleCloseEmbed} classNames='block'>
+                      <p>{t('close label', { ns: 'appkit' })}</p>
+                      <p className={descriptionText}>{t('close embed description')}</p>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
@@ -233,7 +237,7 @@ const EmbeddedLayoutImpl = () => {
         </div>
         {space && document ? (
           editorViewState === 'preview' ? (
-            <Main.Content classNames='min-bs-[100vh] flex flex-col p-0.5'>
+            <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>
               <GfmPreview
                 markdown={document.content?.toString() ?? ''}
                 {...(docGhId && { owner: docGhId.owner, repo: docGhId.repo })}

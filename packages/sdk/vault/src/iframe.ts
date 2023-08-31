@@ -7,11 +7,12 @@ import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
 import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
-const cssStyle = 'color:#C026D3;font-weight:bold';
+const cssLogStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement, StrictMode } = await import('react');
@@ -67,6 +68,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     }
   });
 
+  const info: string[] = [];
+
   if (safariCheck()) {
     log.info('Running DXOS shell from app client.');
     const origin = (window as any).__DXOS_APP_ORIGIN__;
@@ -76,7 +79,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled && port) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     if (shellClientProxy) {
@@ -88,9 +91,10 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     return;
   } else {
+    // TODO(burdon): Remove hardcoded path.
     const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
     const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${window.location.href}`;
-    console.log(`%cOpen devtools to inspect the application: ${vaultUrl}`, cssStyle);
+    info.push(`%cOpen devtools: ${vaultUrl}`);
   }
 
   if (typeof SharedWorker === 'undefined') {
@@ -127,8 +131,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    console.log(`%cDXOS vault (shared worker) connection: ${window.location.origin}`, cssStyle);
-    console.log('%cInspect the worker using: chrome://inspect/#workers (URL must be copied manually).', cssStyle);
+    // info.push(`%cDXOS vault (shared worker) connection: ${window.location.origin}`);
+    info.push('%cTo inspect/reset the vault (shared worker) copy the URL: chrome://inspect/#workers');
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
       const { command, payload } = event.data;
@@ -154,7 +158,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port: shellPort }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     const { IFrameProxyRuntime } = await import('@dxos/client-services');
@@ -168,6 +172,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     if (shellClientProxy && iframeRuntime.shell) {
       await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
     }
+
+    info.forEach((message) => console.log(message, cssLogStyle));
 
     window.addEventListener('beforeunload', () => {
       iframeRuntime.close().catch((err: Error) => log.catch(err));

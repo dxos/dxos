@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-shell",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",

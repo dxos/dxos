@@ -16,7 +16,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_pro
 
 export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(
-    'flex select-none touch-none p-0.5 ease-out data-[orientation=vertical]:is-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-2.5',
+    'flex select-none touch-none p-0.5 ease-out data-[orientation=vertical]:is-1.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:bs-1.5',
     ...etc,
   );
 

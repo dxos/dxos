@@ -3,3 +3,4 @@
 //
 
 export * from './keyring';
+export * from './testing';

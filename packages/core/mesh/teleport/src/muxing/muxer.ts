@@ -3,11 +3,11 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -32,16 +32,56 @@ export type CreateChannelOpts = {
 };
 
 export type MuxerStats = {
+  timestamp: number;
   channels: ConnectionInfo.StreamStats[];
   bytesSent: number;
   bytesReceived: number;
+  bytesSentRate?: number;
+  bytesReceivedRate?: number;
 };
 
-const STATS_INTERVAL = 1000;
-
+const STATS_INTERVAL = 1_000;
 const MAX_SAFE_FRAME_SIZE = 1_000_000;
-
 const SYSTEM_CHANNEL_ID = 0;
+
+type Channel = {
+  /**
+   * Our local channel ID.
+   * Incoming Data commands will have this ID.
+   */
+  id: number;
+  tag: string;
+
+  /**
+   * Remote id is set when we receive an OpenChannel command.
+   * The originating Data commands should carry this id.
+   */
+  remoteId: null | number;
+
+  contentType?: string;
+
+  /**
+   * Send buffer.
+   */
+  buffer: Uint8Array[];
+
+  /**
+   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
+   */
+  push: null | ((data: Uint8Array) => void);
+
+  destroy: null | ((err?: Error) => void);
+
+  stats: {
+    bytesSent: number;
+    bytesReceived: number;
+  };
+};
+
+type CreateChannelInternalParams = {
+  tag: string;
+  contentType?: string;
+};
 
 /**
  * Channel based multiplexer.
@@ -62,6 +102,9 @@ export class Muxer {
   private _nextId = 1;
   private _destroyed = false;
   private _destroying = false;
+
+  private _lastStats?: MuxerStats = undefined;
+  private readonly _lastChannelStats = new Map<number, Channel['stats']>();
 
   public close = new Event<Error | undefined>();
   public statsUpdated = new Event<MuxerStats>();
@@ -240,6 +283,10 @@ export class Muxer {
     log('Received command', { cmd });
 
     if (this._destroyed || this._destroying) {
+      if (cmd.destroy) {
+        return;
+      }
+
       log.warn('Received command after destroy', { cmd });
       return;
     }
@@ -306,6 +353,7 @@ export class Muxer {
       this._channelsByLocalId.set(channel.id, channel);
       this._balancer.addChannel(channel.id);
     }
+
     return channel;
   }
 
@@ -335,67 +383,51 @@ export class Muxer {
     if (channel.destroy) {
       channel.destroy(err);
     }
+
     this._channelsByLocalId.delete(channel.id);
     this._channelsByTag.delete(channel.tag);
   }
 
   private async _emitStats() {
     if (this._destroyed || this._destroying) {
+      this._lastStats = undefined;
+      this._lastChannelStats.clear();
       return;
     }
 
     const bytesSent = this._balancer.bytesSent;
     const bytesReceived = this._balancer.bytesReceived;
 
-    this.statsUpdated.emit({
-      channels: Array.from(this._channelsByTag.values()).map((channel) => ({
-        id: channel.id,
-        tag: channel.tag,
-        contentType: channel.contentType,
-        bytesSent: channel.stats.bytesSent,
-        bytesReceived: channel.stats.bytesReceived,
-      })),
+    const now = Date.now();
+    const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1_000 : 0;
+    const calculateThroughput = (current: Channel['stats'], last: Channel['stats'] | undefined) =>
+      last
+        ? {
+            bytesSentRate: interval ? (current.bytesSent - last.bytesSent) / interval : undefined,
+            bytesReceivedRate: interval ? (current.bytesReceived - last.bytesReceived) / interval : undefined,
+          }
+        : {};
+
+    this._lastStats = {
+      timestamp: now,
+      channels: Array.from(this._channelsByTag.values()).map((channel) => {
+        const stats: ConnectionInfo.StreamStats = {
+          id: channel.id,
+          tag: channel.tag,
+          contentType: channel.contentType,
+          bytesSent: channel.stats.bytesSent,
+          bytesReceived: channel.stats.bytesReceived,
+          ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
+        };
+
+        this._lastChannelStats.set(channel.id, stats);
+        return stats;
+      }),
       bytesSent,
       bytesReceived,
-    });
+      ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
+    };
+
+    this.statsUpdated.emit(this._lastStats);
   }
 }
-
-type Channel = {
-  /**
-   * Our local channel ID.
-   * Incoming Data commands will have this ID.
-   */
-  id: number;
-  tag: string;
-
-  /**
-   * Remote id is set when we receive an OpenChannel command.
-   * The originating Data commands should carry this id.
-   */
-  remoteId: null | number;
-
-  contentType?: string;
-
-  /**
-   * Send buffer.
-   */
-  buffer: Uint8Array[];
-
-  /**
-   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
-   */
-  push: null | ((data: Uint8Array) => void);
-
-  destroy: null | ((err?: Error) => void);
-
-  stats: {
-    bytesSent: number;
-    bytesReceived: number;
-  };
-};
-
-type CreateChannelInternalParams = {
-  tag: string;
-  contentType?: string;
-};

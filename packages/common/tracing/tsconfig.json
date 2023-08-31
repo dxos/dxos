@@ -1,0 +1,43 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}
