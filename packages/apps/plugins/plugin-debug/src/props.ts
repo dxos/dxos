@@ -23,4 +23,10 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
   stop: () => {},
 });
 
-export type DebugPluginProvides = IntentProvides & GraphProvides & TranslationsProvides;
+export type DebugState = { nodeIds: string[]; debug: boolean };
+
+export type DebugPluginProvides = IntentProvides &
+  GraphProvides &
+  TranslationsProvides & {
+    debug: DebugState;
+  };
