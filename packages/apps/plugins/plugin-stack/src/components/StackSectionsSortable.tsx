@@ -102,11 +102,11 @@ export const StackSectionsSortable: FC<{
       } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
-        const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
+        const nextIndex = sections.findIndex((section) => section?.object?.id === over?.id);
         if (activeSectionId) {
           dnd.overlayDropAnimation = 'around';
           if (activeSectionId !== overSectionId) {
-            const activeIndex = sections.findIndex((section) => section.object.id === active.id);
+            const activeIndex = sections.findIndex((section) => section?.object?.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
             setSectionModels(getSectionModels(sections));
           }
