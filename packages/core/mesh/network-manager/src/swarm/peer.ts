@@ -117,7 +117,7 @@ export class Peer {
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
           this.connectionDisplaced.emit(this.connection);
-          await this.closeConnection(this.connection, new Error('Connection displaced by remote initiator.'));
+          await this.closeConnection(new Error('Connection displaced by remote initiator.'));
           this.connection = undefined;
         }
       } else {
@@ -141,7 +141,7 @@ export class Peer {
           }
 
           // Calls `onStateChange` with CLOSED state.
-          await this.closeConnection(connection, err);
+          await this.closeConnection(err);
         }
 
         return { accept: true };
@@ -187,7 +187,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
       // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection(connection, err);
+      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -293,7 +293,7 @@ export class Peer {
       });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection(connection, err);
+      void this.closeConnection(err);
     });
 
     this.connection = connection;
@@ -301,18 +301,18 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(connection?: Connection, err?: Error) {
-    if (!connection) {
+  async closeConnection(err?: Error) {
+    if (!this.connection) {
       return;
     }
 
-    log('closing...', { peerId: this.id, sessionId: connection.sessionId });
+    log('closing...', { peerId: this.id, sessionId: this.connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await connection.close(err);
+    await this.connection.close(err);
 
-    log('closed', { peerId: this.id, sessionId: connection.sessionId });
+    log('closed', { peerId: this.id, sessionId: this.connection.sessionId });
   }
 
   async onSignal(message: SignalMessage) {
