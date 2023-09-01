@@ -20,7 +20,7 @@ import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
 
-const BATCH_COMMIT_AFTER = 200;
+export const BATCH_COMMIT_AFTER = 200;
 /**
  * Maximum number of mutations in a batch.
  * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
