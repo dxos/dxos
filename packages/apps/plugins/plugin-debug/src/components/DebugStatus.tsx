@@ -138,7 +138,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.current;
+  const space = spacePlugin?.provides.space.active;
   useEffect(() => {
     if (!space) {
       return;
