@@ -218,6 +218,29 @@ export class DataSpace {
     }
 
     this._state = SpaceState.INITIALIZING;
+
+    await this._initializeAndReadControlPipeline();
+
+    log('waiting for data pipeline to reach target timeframe');
+    // Wait for the data pipeline to catch up to its desired timeframe.
+    await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
+      ctx: this._ctx,
+      breakOnStall: false,
+    });
+
+    this.metrics.dataPipelineReady = new Date();
+
+    log('data pipeline ready');
+    await this._callbacks.beforeReady?.();
+
+    this._state = SpaceState.READY;
+    this.stateUpdate.emit();
+
+    await this._callbacks.afterReady?.();
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
+  private async _initializeAndReadControlPipeline() {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
@@ -246,23 +269,6 @@ export class DataSpace {
 
     // Wait for the first epoch.
     await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
-
-    log('waiting for data pipeline to reach target timeframe');
-    // Wait for the data pipeline to catch up to its desired timeframe.
-    await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
-      breakOnStall: false,
-    });
-
-    this.metrics.dataPipelineReady = new Date();
-
-    log('data pipeline ready');
-    await this._callbacks.beforeReady?.();
-
-    this._state = SpaceState.READY;
-    this.stateUpdate.emit();
-
-    await this._callbacks.afterReady?.();
   }
 
   @timed(10_000)
