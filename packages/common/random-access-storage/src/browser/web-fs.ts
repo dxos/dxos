@@ -76,7 +76,7 @@ export class WebFS implements Storage {
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
       async () => {
-        await Promise.all(Array.from(this._getFiles(sub)).map(([path, file]) => file.flush()))
+        await Promise.all(Array.from(this._getFiles(sub)).map(([path, file]) => file.flush()));
       },
     );
   }

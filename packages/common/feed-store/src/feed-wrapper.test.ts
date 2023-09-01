@@ -13,8 +13,7 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { FeedWrapper } from './feed-wrapper';
-import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
+import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();

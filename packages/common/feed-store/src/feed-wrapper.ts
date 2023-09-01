@@ -11,10 +11,10 @@ import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hy
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
-import { Directory } from '@dxos/random-access-storage';
 
 /**
  * Async feed wrapper.

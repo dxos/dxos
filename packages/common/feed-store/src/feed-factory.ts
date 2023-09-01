@@ -3,15 +3,15 @@
 //
 
 import defaultsDeep from 'lodash.defaultsdeep';
-import { RandomAccessStorageConstructor } from 'random-access-storage';
 
 import { Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import type { Hypercore, HypercoreOptions } from '@dxos/hypercore';
+import type { HypercoreOptions } from '@dxos/hypercore';
 import { createCrypto, hypercore } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
+
 import { FeedWrapper } from './feed-wrapper';
 
 export type FeedFactoryOptions = {
@@ -35,7 +35,6 @@ export type FeedOptions = HypercoreOptions & {
  * Hypercore factory.
  */
 export class FeedFactory<T extends {}> {
-
   private readonly _root: Directory;
   private readonly _signer?: Signer;
   private readonly _hypercoreOptions?: HypercoreOptions;
@@ -88,6 +87,6 @@ export class FeedFactory<T extends {}> {
     };
 
     const core = hypercore(makeStorage, Buffer.from(key), opts);
-    return new FeedWrapper(core, publicKey, storageDir)
+    return new FeedWrapper(core, publicKey, storageDir);
   }
 }

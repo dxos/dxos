@@ -11,7 +11,6 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FeedQueue } from './feed-queue';
-import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
 
 describe('FeedQueue', () => {

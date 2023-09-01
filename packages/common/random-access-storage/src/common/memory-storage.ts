@@ -5,7 +5,6 @@
 import ram from 'random-access-memory';
 import { Callback, RandomAccessStorage } from 'random-access-storage';
 
-import { log } from '@dxos/log';
 import { arrayToBuffer } from '@dxos/util';
 
 import { AbstractStorage } from './abstract-storage';
