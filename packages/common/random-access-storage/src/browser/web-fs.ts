@@ -6,14 +6,12 @@ import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
 
-import { DeferredTask, sleep, synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
-import { Context } from '@dxos/context';
+import { TimeSeriesCounter, trace } from '@dxos/tracing';
 
-import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
-import { STORAGE_MONITOR } from '../monitor';
+import { Directory, DiskInfo, File, Storage, StorageType, getFullPath } from '../common';
 
 /**
  * Web file systems.
@@ -24,7 +22,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) {}
+  constructor(public readonly path: string) { }
 
   public get size() {
     return this._files.size;
@@ -164,7 +162,7 @@ export class WebFS implements Storage {
 // TODO(mykola): Remove EventEmitter.
 @trace.resource()
 export class WebFile extends EventEmitter implements File {
-  
+
   @trace.info()
   private readonly _fileName: string;
 
@@ -184,8 +182,9 @@ export class WebFile extends EventEmitter implements File {
 
   private _flushPromise: Promise<void> | null = null;
 
-  @trace.metricsCounter()
-  private _usage = new TimeUsageCounter();
+  //
+  // Metrics
+  // 
 
   @trace.metricsCounter()
   private _flushes = new TimeSeriesCounter();
@@ -205,7 +204,10 @@ export class WebFile extends EventEmitter implements File {
   @trace.metricsCounter()
   private _writeBytes = new TimeSeriesCounter();
 
-  
+  @trace.info()
+  get _bufferSize() {
+    return this._buffer?.length;
+  }
 
   constructor({
     fileName,
@@ -268,7 +270,7 @@ export class WebFile extends EventEmitter implements File {
   }
 
   private async _flushCache() {
-    if(this._closed) {
+    if (this._closed) {
       return;
     }
 
@@ -284,7 +286,7 @@ export class WebFile extends EventEmitter implements File {
   }
 
   private _flushLater() {
-    if(this._flushScheduled) {
+    if (this._flushScheduled) {
       return;
     }
 
@@ -300,130 +302,94 @@ export class WebFile extends EventEmitter implements File {
   }
 
   async read(offset: number, size: number) {
-    const span = this._usage.beginRecording();
     this._operations.inc();
     this._reads.inc();
     this._readBytes.inc(size);
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
-    try {
-      if(!this._buffer) {
-        await this._loadBufferGuarded();
-        invariant(this._buffer);
-      }
-
-      if (offset + size > this._buffer.length) {
-        throw new Error('Read out of bounds');
-      }
-
-      // Copy data into a new buffer.
-      return Buffer.from(this._buffer.slice(offset, offset + size));
-    } finally {
-      span.end();
-      metric.end();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
     }
+
+    if (offset + size > this._buffer.length) {
+      throw new Error('Read out of bounds');
+    }
+
+    // Copy data into a new buffer.
+    return Buffer.from(this._buffer.slice(offset, offset + size));
   }
 
   async write(offset: number, data: Buffer) {
-    const span = this._usage.beginRecording();
     this._operations.inc();
     this._writes.inc();
     this._writeBytes.inc(data.length);
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
-    try {
-      if(!this._buffer) {
-        await this._loadBufferGuarded();
-        invariant(this._buffer);
-      }
-
-      if(offset + data.length <= this._buffer.length) {
-        this._buffer.set(data, offset);
-      } else {
-        // TODO(dmaretskyi): Optimize re-allocations.
-        const newCache = new Uint8Array(offset + data.length);
-        newCache.set(this._buffer);
-        newCache.set(data, offset);
-        this._buffer = newCache;
-      }
-
-      this._flushLater();
-
-    } finally {
-      span.end();
-      metric.end();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
     }
+
+    if (offset + data.length <= this._buffer.length) {
+      this._buffer.set(data, offset);
+    } else {
+      // TODO(dmaretskyi): Optimize re-allocations.
+      const newCache = new Uint8Array(offset + data.length);
+      newCache.set(this._buffer);
+      newCache.set(data, offset);
+      this._buffer = newCache;
+    }
+
+    this._flushLater();
   }
 
   async del(offset: number, size: number) {
-    const span = this._usage.beginRecording();
     this._operations.inc();
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'delete', size });
-    try {
-      if (offset < 0 || size < 0) {
-        return;
-      }
-
-      if(!this._buffer) {
-        await this._loadBufferGuarded();
-        invariant(this._buffer);
-      }
-
-      let leftoverSize = 0;
-      if (offset + size < this._buffer.length) {
-        leftoverSize = this._buffer.length - (offset + size);
-        this._buffer.set(this._buffer.slice(offset + size, offset + size + leftoverSize), offset);
-      } 
-
-      this._buffer = this._buffer.slice(0, offset + leftoverSize);
-
-      this._flushLater();
-    } finally {
-      span.end();
-      metric.end();
+    if (offset < 0 || size < 0) {
+      return;
     }
+
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
+    }
+
+    let leftoverSize = 0;
+    if (offset + size < this._buffer.length) {
+      leftoverSize = this._buffer.length - (offset + size);
+      this._buffer.set(this._buffer.slice(offset + size, offset + size + leftoverSize), offset);
+    }
+
+    this._buffer = this._buffer.slice(0, offset + leftoverSize);
+
+    this._flushLater();
   }
 
   async stat() {
-    const span = this._usage.beginRecording();
     this._operations.inc();
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
-    try {
-      // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
-      if(!this._buffer) {
-        await this._loadBufferGuarded();
-        invariant(this._buffer);
-      }
-
-      return {
-        size: this._buffer.length,
-      };
-    } finally {
-      span.end();
-      metric.end();
+    // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
     }
+
+    return {
+      size: this._buffer.length,
+    };
   }
 
   async truncate(offset: number) {
-    const span = this._usage.beginRecording();
     this._operations.inc();
 
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
-    try {
-      if(!this._buffer) {
-        await this._loadBufferGuarded();
-        invariant(this._buffer);
-      }
-
-      this._buffer = this._buffer.slice(0, offset);
-
-      this._flushLater();
-    } finally {
-      span.end();
-      metric.end();
+    if (!this._buffer) {
+      await this._loadBufferGuarded();
+      invariant(this._buffer);
     }
+
+    this._buffer = this._buffer.slice(0, offset);
+
+    this._flushLater();
   }
 
   async close(): Promise<void> {
