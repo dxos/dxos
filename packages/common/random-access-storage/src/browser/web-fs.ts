@@ -85,6 +85,8 @@ export class WebFS implements Storage {
     const fullName = this._getFullFilename(path, filename);
     const existingFile = this._files.get(fullName);
     if (existingFile) {
+      // Files are recycled even if they are closed.
+      existingFile._closed = false;
       return existingFile;
     }
     const file = this._createFile(fullName);
@@ -171,7 +173,10 @@ export class WebFile extends EventEmitter implements File {
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
   private readonly _destroy: () => Promise<void>;
 
-  private _closed = false;
+  /**
+   * @internal
+   */
+  _closed = false;
 
   /**
    * Current view of the file contents.
