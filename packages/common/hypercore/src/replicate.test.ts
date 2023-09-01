@@ -16,12 +16,11 @@ import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { inspect } from 'util';
 
 const noop = () => { };
 
 describe('Replication', () => {
-  const storage = createStorage({ type: StorageType.WEBFS, root: 'x' })
+  const storage = createStorage({ type: StorageType.RAM, root: 'x' })
   const factory1 = new HypercoreFactory(storage.createDirectory('one'));
   const factory2 = new HypercoreFactory(storage.createDirectory('two'));
 
@@ -245,7 +244,7 @@ describe('Replication', () => {
     await done();
   }).timeout(5_000);
 
-  test.only('replication bench', async () => {
+  test.skip('replication bench', async () => {
     const numBlocks = 1_000;
     const maxRequests = 1024;
     const sparse = true;
@@ -318,7 +317,7 @@ describe('Replication', () => {
       });
 
 
-      const onClose = err => {
+      const onClose = (err: any) => {
         console.log('onclose')
         if (err && !err.message.includes('Writable stream closed prematurely')) {
           console.error(err)
