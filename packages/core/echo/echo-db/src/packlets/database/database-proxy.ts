@@ -20,7 +20,12 @@ import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
 
-const BATCH_INTERVAL = 200;
+export const BATCH_COMMIT_AFTER = 200;
+/**
+ * Maximum number of mutations in a batch.
+ * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
+ */
+const BATCH_SIZE_LIMIT = 64;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -269,6 +274,8 @@ export class DatabaseProxy {
     }
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
+
     return true;
   }
 
@@ -276,6 +283,7 @@ export class DatabaseProxy {
   commitBatch() {
     // Discard scheduled commit.
     void this._currentBatchCtx?.dispose();
+    this._currentBatchCtx = undefined;
 
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
@@ -341,10 +349,22 @@ export class DatabaseProxy {
         batch,
       };
     } finally {
+      // Note: Commit batch after BATCH_COMMIT_AFTER idling without new mutations.
       if (batchCreated) {
+        // Commit batch after last mutation with delay if there will be no new mutations.
         this._currentBatchCtx = this._ctx.derive();
-        // Commit batch after a delay to allow for batching.
-        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_INTERVAL);
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+      } else if (this._currentBatchCtx) {
+        // Reset the timer.
+        // If `this._currentBatchCtx` is set then Batch was created by one of the previous calls of `.mutate()`.
+        invariant(this._currentBatch);
+        void this._currentBatchCtx.dispose();
+        if (this._currentBatch.data.objects && this._currentBatch.data.objects.length >= BATCH_SIZE_LIMIT) {
+          this.commitBatch();
+        } else {
+          this._currentBatchCtx = this._ctx.derive();
+          scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+        }
       }
     }
   }
