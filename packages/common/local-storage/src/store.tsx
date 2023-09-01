@@ -67,7 +67,9 @@ export class LocalStorageStore<T extends object> {
     prop.value = type.get(key);
     this._subscriptions.push(
       prop.subscribe((value) => {
-        type.set(key, value);
+        if (value !== prop.value) {
+          type.set(key, value);
+        }
       }),
     );
 

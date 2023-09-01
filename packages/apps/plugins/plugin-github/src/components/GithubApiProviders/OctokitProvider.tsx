@@ -5,8 +5,11 @@
 import { Octokit } from 'octokit';
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
-import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
+import { usePlugin } from '@dxos/react-surface';
+
+import { GithubPluginProvides } from '../../GithubPlugin';
+import { GITHUB_PLUGIN } from '../../props';
 
 export type OctokitContextValue = {
   pat: string;
@@ -27,14 +30,13 @@ export const useOctokitContext = () => useContext(OctokitContext);
 export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   const [octokit, setOctokit] = useState<Octokit | null>(null);
   const [patError, setPatError] = useState<OctokitContextValue['patError']>(null);
+  const githubPlugin = usePlugin<GithubPluginProvides>(GITHUB_PLUGIN);
+  if (!githubPlugin) {
+    return null;
+  }
 
-  const settings = new LocalStorageStore<{ pat: string }>();
-  useEffect(() => {
-    settings.bind(settings.values.$pat!, 'braneframe.plugin-github.pat', LocalStorageStore.string);
-    return () => settings.close();
-  }, []);
-
-  const pat = settings.values.pat;
+  const settings = githubPlugin.provides.settings;
+  const pat = settings.pat;
   useEffect(() => {
     if (pat && !octokit) {
       void setPat(pat);
@@ -42,7 +44,7 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   }, [pat, octokit]);
 
   const setPat = async (nextPat: string) => {
-    settings.values.pat = nextPat;
+    settings.pat = nextPat;
     if (nextPat) {
       const nextOctokit = new Octokit({ auth: nextPat });
       return nextOctokit.rest.users.getAuthenticated().then(

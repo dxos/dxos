@@ -34,13 +34,14 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     },
     ready: async (plugins) => {
       settings
-        .bind(settings.values.$debug!, 'debug', LocalStorageStore.bool)
-        .bind(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+        .bind(settings.values.$debug!, 'braneframe.plugin-debug.debug', LocalStorageStore.bool)
+        .bind(settings.values.$devtools!, 'braneframe.plugin-debug.devtools', LocalStorageStore.bool);
     },
     unload: async () => {
       settings.close();
     },
     provides: {
+      settings: settings.values,
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -161,7 +162,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       components: {
         DebugMain,
       },
-      settings: settings.values,
     },
   };
 };
