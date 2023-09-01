@@ -274,6 +274,8 @@ export class DatabaseProxy {
     }
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
+
     return true;
   }
 
