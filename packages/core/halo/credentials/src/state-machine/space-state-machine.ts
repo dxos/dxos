@@ -28,6 +28,16 @@ export interface SpaceState {
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
 
+export type ProcessOptions = {
+  sourceFeed: PublicKey;
+  skipVerification?: boolean;
+}
+
+export type CredentialEntry = {
+  credential: Credential;
+  sourceFeed: PublicKey;
+}
+
 /**
  * Validates and processes credentials for a single space.
  * Keeps a list of members and feeds.
@@ -36,7 +46,7 @@ export interface SpaceState {
 export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
-  private readonly _credentials: Credential[] = [];
+  private readonly _credentials: CredentialEntry[] = [];
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _genesisCredential: Credential | undefined;
@@ -64,8 +74,13 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   get credentials(): Credential[] {
+    return this._credentials.map((entry) => entry.credential);
+  }
+
+  get credentialEntries(): CredentialEntry[] {
     return this._credentials;
   }
+
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
@@ -79,7 +94,7 @@ export class SpaceStateMachine implements SpaceState {
     const consumer = new CredentialConsumer(
       processor,
       async () => {
-        for (const credential of this._credentials) {
+        for (const credential of this.credentials) {
           await consumer._process(credential);
         }
 
@@ -103,14 +118,14 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
-    return this._credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+    return this.credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
   }
 
   /**
    * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
+  async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
     if (credential.id) {
       if (this._processedCredentials.has(credential.id)) {
         return true;
@@ -118,10 +133,12 @@ export class SpaceStateMachine implements SpaceState {
       this._processedCredentials.add(credential.id);
     }
 
-    const result = await verifyCredential(credential);
-    if (result.kind !== 'pass') {
-      log.warn(`Invalid credential: ${result.errors.join(', ')}`);
-      return false;
+    if (!skipVerification) {
+      const result = await verifyCredential(credential);
+      if (result.kind !== 'pass') {
+        log.warn(`Invalid credential: ${result.errors.join(', ')}`);
+        return false;
+      }
     }
 
     const assertion = getCredentialAssertion(credential);
@@ -173,13 +190,13 @@ export class SpaceStateMachine implements SpaceState {
         }
 
         // TODO(dmaretskyi): Check that the feed owner is a member of the space.
-        await this._feeds.process(credential, fromFeed);
+        await this._feeds.process(credential, sourceFeed);
         break;
       }
     }
 
     // TODO(burdon): Await or void?
-    void this._credentials.push(credential);
+    void this._credentials.push({ credential, sourceFeed });
 
     for (const processor of this._credentialProcessors) {
       if (processor._isReadyForLiveCredentials) {
@@ -217,7 +234,7 @@ class CredentialConsumer<T extends CredentialProcessor> {
     public readonly processor: T,
     private readonly _onOpen: () => Promise<void>,
     private readonly _onClose: () => Promise<void>,
-  ) {}
+  ) { }
 
   /**
    * @internal
