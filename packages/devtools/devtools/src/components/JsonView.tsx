@@ -86,14 +86,15 @@ export const JsonTreeView: FC<{
 const replacer =
   (truncate = false) =>
   (key: any, value: any) => {
-    if (typeof value === 'string') {
-      if (truncate) {
-        const k = PublicKey.safeFrom(value);
-        if (k) {
-          return k.truncate();
-        }
-      }
-    }
+    // TODO(dmaretskyi): Overly aggressive and breaks lots of other strings.
+    // if (typeof value === 'string') {
+    //   if (truncate) {
+    //     const k = PublicKey.safeFrom(value);
+    //     if (k) {
+    //       return k.truncate();
+    //     }
+    //   }
+    // }
 
     if (typeof value === 'object') {
       if (truncate) {
