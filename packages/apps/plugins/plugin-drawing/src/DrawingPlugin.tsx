@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, Plus } from '@phosphor-icons/react';
+import { ArticleMedium, CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
@@ -36,7 +36,14 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
 
           const space = parent.data;
 
-          parent.addAction({
+          const [presentationNode] = parent.add({
+            id: `${DRAWING_PLUGIN}:${space.key.toHex()}`,
+            label: ['plugin name', { ns: DRAWING_PLUGIN }],
+            icon: (props) => <ArticleMedium {...props} />,
+            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
+          });
+
+          presentationNode.addAction({
             id: `${DRAWING_PLUGIN}/create`,
             label: ['create drawing label', { ns: DRAWING_PLUGIN }],
             icon: (props) => <Plus {...props} />,
@@ -58,7 +65,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter.createNodes(space, presentationNode);
         },
       },
       stack: {
