@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { AlertDialog, Button } from '@dxos/aurora';
-
+import { Action } from '../Panel';
 import { useViewportContext, Viewport, ViewportScopedProps } from './Viewport';
 
 type StorybookViewportProps = {};
@@ -19,19 +19,19 @@ const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
         <p>One</p>
         <p className='invisible'>Two</p>
         <p className='invisible'>Three</p>
-        <Button onClick={() => setActiveView('two')}>Next</Button>
+        <Action onClick={() => setActiveView('two')}>Next</Action>
       </Viewport.View>
       <Viewport.View id='two' classNames='p-4'>
         <p className='invisible'>One</p>
         <p>Two</p>
         <p className='invisible'>Three</p>
-        <Button onClick={() => setActiveView('three')}>Next</Button>
+        <Action onClick={() => setActiveView('three')}>Next</Action>
       </Viewport.View>
       <Viewport.View id='three' classNames='p-4'>
         <p className='invisible'>One</p>
         <p className='invisible'>Two</p>
         <p>Three</p>
-        <Button onClick={() => setActiveView('one')}>Next</Button>
+        <Action onClick={() => setActiveView('one')}>Next</Action>
       </Viewport.View>
     </Viewport.Views>
   );

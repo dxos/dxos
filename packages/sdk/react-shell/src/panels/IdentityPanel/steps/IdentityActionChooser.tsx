@@ -12,6 +12,7 @@ import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
+import { Action } from '../../../components';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
 
@@ -59,7 +60,7 @@ export const IdentityActionChooserImpl = ({
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
         <div className='grow justify-center flex flex-col gap-1'>
-          <Button
+          <Action
             disabled={!active}
             data-testid='devices-panel.create-invitation'
             onClick={onCreateInvitationClick}
@@ -68,13 +69,13 @@ export const IdentityActionChooserImpl = ({
             <Plus className={getSize(6)} />
             <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
-          </Button>
-          <Button data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
+          </Action>
+          <Action data-testid='manage-profile' onClick={() => send?.({ type: 'chooseProfile' })} classNames='plb-4'>
             <UserGear className={getSize(6)} />
             <span className='grow mli-3'>{t('choose profile label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
-          </Button>
-          <Button
+          </Action>
+          <Action
             disabled
             data-testid='sign-out'
             onClick={() => {} /* send({ type: 'chooseSignOut' }) */}
@@ -83,7 +84,7 @@ export const IdentityActionChooserImpl = ({
             <Power className={getSize(6)} />
             <span className='grow mli-3'>{t('choose sign out label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
-          </Button>
+          </Action>
         </div>
       </DensityProvider>
       {/* <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions> */}
