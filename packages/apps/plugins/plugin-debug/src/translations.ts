@@ -12,6 +12,7 @@ export default [
         'mutation count': 'Number of mutations',
         'mutation period': 'Mutation period',
         'open devtools label': 'Open DevTools',
+        'devtools label': 'DevTools',
         'show debug panel': 'Show debug panel',
       },
     },

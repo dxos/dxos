@@ -38,7 +38,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ current: undefined });
+  const state = deepSignal<SpaceState>({ active: undefined });
   const subscriptions = new EventSubscriptions();
   let disposeSetSpaceProvider: () => void;
 
@@ -82,7 +82,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           resolve(undefined);
         });
 
-        state.current = space;
+        state.active = space;
 
         if (
           space instanceof SpaceProxy &&
@@ -100,7 +100,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state as SpaceState,
       translations,
       component: (data, role) => {
-        // console.log(':::', role, data);
         switch (role) {
           case 'main':
             switch (true) {
@@ -109,7 +108,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
-          case 'tree--empty': // TODO(burdon): Why double-hyphen?
+          // (burdon): Why double-hyphen?
+          // (thure): This is BEM syntax, which we use for a few other features.
+          case 'tree--empty':
             switch (true) {
               case data === SPACE_PLUGIN:
                 return EmptyTree;
@@ -171,6 +172,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const client = clientPlugin.provides.client;
           const spaces = client.spaces.get();
           const indices = spaces?.length ? getIndices(spaces.length) : [];
+
           spaces.forEach((space, index) => spaceToGraphNode(space, groupNode, indices[index]));
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {

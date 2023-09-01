@@ -14,7 +14,7 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.current;
+  const space = spacePlugin?.provides?.space.active;
 
   return (
     // TODO(burdon): Boilerplate.
