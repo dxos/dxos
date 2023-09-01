@@ -14,6 +14,7 @@ export default [
         'open devtools label': 'Open DevTools',
         'devtools label': 'DevTools',
         'show debug panel': 'Show debug panel',
+        'show devtools panel': 'Show DevTools panel',
       },
     },
   },
