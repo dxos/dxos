@@ -3,26 +3,40 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { Timer } from '@dxos/async';
+import { Timer, UnsubscribeCallback } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus } from './components';
-import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
+import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides, DebugState } from './props';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const nodeIds = new Set<string>();
+  let unsubscribe: UnsubscribeCallback;
+  const state = deepSignal<DebugState>({ nodeIds: [], debug: localStorage.getItem(DebugPanelKey) === 'true' });
 
   const isDebug = (data: unknown) =>
-    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    state.nodeIds.some((nodeId) => nodeId === data.id);
 
   return {
     meta: {
       id: DEBUG_PLUGIN,
+    },
+    ready: async () => {
+      state.$debug?.subscribe((debug) => {
+        localStorage.setItem(DebugPanelKey, debug ? 'true' : 'false');
+      });
+    },
+    unload: async () => {
+      unsubscribe?.();
     },
     provides: {
       translations,
@@ -64,20 +78,42 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               },
             });
             return;
+          } else if (parent.id === 'space:all-spaces') {
+            const unsubscribe = state.$debug?.subscribe((debug) => {
+              debug
+                ? parent.add({
+                    id: 'devtools',
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props) => <Bug {...props} />,
+                    data: 'dxos-devtools',
+                  })
+                : parent.remove('devtools');
+            });
+
+            return () => unsubscribe?.();
             // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
-          } else if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
+          } else if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const nodeId = parent.id + '-debug';
-          nodeIds.add(nodeId);
+          state.nodeIds.push(nodeId);
 
-          parent.add({
-            id: nodeId,
-            label: 'Debug',
-            icon: (props: IconProps) => <Bug {...props} />,
-            data: { id: nodeId, space: parent.data },
+          const unsubscribe = state.$debug?.subscribe((debug) => {
+            debug
+              ? parent.add({
+                  id: nodeId,
+                  label: 'Debug',
+                  icon: (props: IconProps) => <Bug {...props} />,
+                  data: { id: nodeId, space: parent.data },
+                })
+              : parent.remove(nodeId);
           });
+
+          return () => {
+            unsubscribe?.();
+            state.nodeIds = state.nodeIds.filter((id) => id !== nodeId);
+          };
         },
       },
       intent: {
@@ -105,6 +141,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           case 'main': {
             if (isDebug(data)) {
               return DebugMain;
+            } else if (data === 'dxos-devtools') {
+              return DevtoolsMain;
             }
             break;
           }
@@ -124,6 +162,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       components: {
         DebugMain,
       },
+      debug: state,
     },
   };
 };
