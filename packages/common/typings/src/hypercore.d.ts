@@ -141,6 +141,7 @@ declare module 'hypercore' {
     crypto?: Crypto;
     writable?: boolean;
     stats?: boolean;
+    eagerUpdate?: boolean;
   };
 
   /**

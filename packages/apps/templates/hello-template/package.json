@@ -22,7 +22,7 @@
     "tailwindcss": "~3.3.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

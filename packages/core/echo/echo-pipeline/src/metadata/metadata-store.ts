@@ -123,6 +123,7 @@ export class MetadataStore {
 
       log('saved', { size: encoded.length, checksum });
     } finally {
+      // Flushes the file to disk.
       await file.close();
     }
   }

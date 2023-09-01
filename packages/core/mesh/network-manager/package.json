@@ -50,7 +50,7 @@
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
     "fast-check": "~3.3.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

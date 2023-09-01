@@ -15,6 +15,7 @@ let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
 const SENTRY_INITIALIZED = new Trigger();
 const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
+ctx.maxSafeDisposeCallbacks = 10_000;
 
 export const configureTracing = () => {
   runInContext(ctx, () => {

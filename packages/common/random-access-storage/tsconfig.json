@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "types": [
       "@dxos/typings",
-      "node"
+      "node",
+      "wicg-file-system-access"
     ]
   },
   "exclude": [
@@ -22,6 +23,9 @@
   "references": [
     {
       "path": "../async"
+    },
+    {
+      "path": "../context"
     },
     {
       "path": "../debug"
