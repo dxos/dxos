@@ -24,6 +24,7 @@ import { ComplexSet } from '@dxos/util';
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
+import { trace } from '@dxos/tracing';
 
 export type DataSpaceCallbacks = {
   /**
@@ -210,6 +211,7 @@ export class DataSpace {
     });
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async initializeDataPipeline() {
     if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
