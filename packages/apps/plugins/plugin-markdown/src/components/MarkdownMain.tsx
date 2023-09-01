@@ -25,7 +25,7 @@ export const MarkdownMain: FC<{ data: unknown }> = ({ data }) => {
 
   const textModel = useTextModel({
     identity,
-    space: spacePlugin?.provides.space.current,
+    space: spacePlugin?.provides.space.active,
     text: document?.content,
   });
 

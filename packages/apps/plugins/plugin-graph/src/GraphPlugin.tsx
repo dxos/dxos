@@ -12,6 +12,11 @@ import { Graph, GraphStore } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
+/**
+ * Manages the state of the graph for the application.
+ * Enables other plugins to register node builders to add nodes to the graph.
+ * This includes actions and annotation each other's nodes.
+ */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const graph = new GraphStore();
 
