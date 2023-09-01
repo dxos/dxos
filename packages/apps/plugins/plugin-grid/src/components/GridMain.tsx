@@ -16,7 +16,7 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 export const GridMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.current;
+  const space = spacePlugin?.provides?.space.active;
 
   return (
     <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>

@@ -18,7 +18,7 @@ export const SpacePresence = () => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-  const space = spacePlugin?.provides.space.current;
+  const space = spacePlugin?.provides.space.active;
   const identity = useIdentity();
   if (!identity) {
     return null;
