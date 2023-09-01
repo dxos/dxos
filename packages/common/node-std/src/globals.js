@@ -3,7 +3,7 @@
 //
 
 import { Buffer } from 'buffer/';
-import process from 'process/';
+import { process } from './process';
 
 globalThis.global = globalThis;
 globalThis.Buffer = Buffer;
