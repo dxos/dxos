@@ -27,6 +27,18 @@ const STARTING_SIGNALLING_DELAY = 10;
  */
 const MAX_SIGNALLING_DELAY = 300;
 
+interface ConnectionCallbacks {
+  /**
+   * Connection opened.
+   */
+  onConnected?: () => void;
+
+  /**
+   * Connection closed.
+   */
+  onClosed?: (err?: Error) => void;
+}
+
 /**
  * State machine for each connection.
  */
@@ -92,6 +104,7 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
+    private readonly _callbacks?: ConnectionCallbacks,
   ) {
     log.trace('dxos.mesh.connection.construct', {
       sessionId: this.sessionId,
@@ -150,6 +163,7 @@ export class Connection {
 
     this._transport.connected.once(() => {
       this._changeState(ConnectionState.CONNECTED);
+      this._callbacks?.onConnected?.();
     });
 
     this._transport.closed.once(() => {
@@ -206,6 +220,7 @@ export class Connection {
 
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
+    this._callbacks?.onClosed?.(err);
   }
 
   private _sendSignal(signal: Signal) {

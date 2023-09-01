@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { scheduleTask, synchronized } from '@dxos/async';
+import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CancelledError } from '@dxos/errors';
+import { CancelledError, SystemError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,6 +15,12 @@ import { TransportFactory } from '../transport';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
+
+export class ConnectionDisplacedError extends SystemError {
+  constructor() {
+    super('Connection displaced by remote initiator.');
+  }
+}
 
 interface PeerCallbacks {
   /**
@@ -82,6 +88,8 @@ export class Peer {
 
   public initiating = false;
 
+  public readonly connectionDisplaced = new Event<Connection>();
+
   // TODO(burdon): Convert to map?
   constructor(
     public readonly id: PublicKey,
@@ -114,7 +122,7 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          await this.closeConnection(new Error('Connection displaced by remote initiator.'));
+          await this.closeConnection(new ConnectionDisplacedError());
         }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -214,15 +222,8 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory,
-    );
-    this._callbacks.onInitiated(connection);
-
-    void this._connectionCtx?.dispose();
-    this._connectionCtx = this._ctx.derive();
-
-    connection.stateChanged.on((state) => {
-      switch (state) {
-        case ConnectionState.CONNECTED: {
+      {
+        onConnected: () => {
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
@@ -235,11 +236,13 @@ export class Peer {
             sessionId,
             initiator,
           });
-          break;
-        }
-
-        case ConnectionState.CLOSED: {
+        },
+        onClosed: (err) => {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
+
+          // Make sure none of the connections are stuck in the limiter.
+          this._connectionLimiter.doneConnecting(sessionId);
+
           invariant(this.connection === connection, 'Connection mismatch (race condition).');
 
           log.trace('dxos.mesh.connection.closed', {
@@ -250,31 +253,37 @@ export class Peer {
             initiator,
           });
 
-          if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
-            // If we're closing the connection, and it has been connected for a while, reset the backoff.
-            this._availableAfter = 0;
+          if (err instanceof ConnectionDisplacedError) {
+            this.connectionDisplaced.emit(this.connection);
           } else {
-            this.availableToConnect = false;
-            this._availableAfter = increaseInterval(this._availableAfter);
+            if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
+              // If we're closing the connection, and it has been connected for a while, reset the backoff.
+              this._availableAfter = 0;
+            } else {
+              this.availableToConnect = false;
+              this._availableAfter = increaseInterval(this._availableAfter);
+            }
+            this._callbacks.onDisconnected();
+
+            scheduleTask(
+              this._connectionCtx!,
+              () => {
+                this.availableToConnect = true;
+                this._callbacks.onPeerAvailable();
+              },
+              this._availableAfter,
+            );
           }
 
           this.connection = undefined;
-          this._callbacks.onDisconnected();
-          this._connectionLimiter.doneConnecting(sessionId);
+        },
+      },
+    );
+    this._callbacks.onInitiated(connection);
 
-          scheduleTask(
-            this._connectionCtx!,
-            () => {
-              this.availableToConnect = true;
-              this._callbacks.onPeerAvailable();
-            },
-            this._availableAfter,
-          );
+    void this._connectionCtx?.dispose();
+    this._connectionCtx = this._ctx.derive();
 
-          break;
-        }
-      }
-    });
     connection.errors.handle((err) => {
       log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
       log.trace('dxos.mesh.connection.error', {
@@ -299,7 +308,9 @@ export class Peer {
     if (!this.connection) {
       return;
     }
+
     const connection = this.connection;
+
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
     // Triggers `onStateChange` callback which will clean up the connection.
