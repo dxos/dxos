@@ -59,6 +59,9 @@
     },
     {
       "path": "../model-factory"
+    },
+    {
+      "path": "../text-model"
     }
   ]
 }
