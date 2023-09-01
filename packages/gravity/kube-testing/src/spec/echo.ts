@@ -16,6 +16,7 @@ import { Space as EchoSpace } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
@@ -34,7 +35,7 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
-  transport: 'simple-peer' | 'simple-peer-proxy' | 'libdatachannel';
+  transport: TransportKind;
   showPNG: boolean;
 };
 

@@ -10,6 +10,7 @@ import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring, TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
@@ -60,7 +61,7 @@ export type ReplicationTestSpec = {
   agents: number;
   swarmsPerAgent: number;
   duration: number;
-  transport: 'simplepeer' | 'simplepeer-proxy' | 'libdatachannel';
+  transport: TransportKind;
 
   targetSwarmTimeout: number;
   fullSwarmTimeout: number;
@@ -160,7 +161,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
-      bridge: spec.transport === 'simplepeer-proxy',
       transport: spec.transport,
     });
 

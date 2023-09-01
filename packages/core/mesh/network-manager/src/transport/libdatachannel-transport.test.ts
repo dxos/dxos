@@ -27,6 +27,7 @@ describe('LibDataChannelTransport', () => {
     await connection.destroy();
     await wait;
   })
+    .onlyEnvironments('nodejs')
     .timeout(1_000)
     .retries(3);
 
@@ -57,6 +58,7 @@ describe('LibDataChannelTransport', () => {
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
   })
+    .onlyEnvironments('nodejs')
     .timeout(2_000)
     .retries(3);
 
@@ -66,7 +68,7 @@ describe('LibDataChannelTransport', () => {
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
-        log.info('signal', signal);
+        log.debug('signal', signal);
 
         await sleep(10);
         await connection2.signal(signal);
@@ -80,7 +82,7 @@ describe('LibDataChannelTransport', () => {
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
-        log.info('signal', signal);
+        log.debug('signal', signal);
 
         await sleep(10);
         await connection1.signal(signal);
@@ -91,6 +93,7 @@ describe('LibDataChannelTransport', () => {
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
   })
+    .onlyEnvironments('nodejs')
     .timeout(2_000)
     .retries(3);
 });

@@ -100,8 +100,6 @@ export class LibDataChannelTransport implements Transport {
           .catch((err) => {
             this.errors.raise(err);
           });
-
-        // TODO(nf): better pattern for adding event handlers to existing object?
         this.handleChannel(peer.createDataChannel(DATACHANNEL_LABEL));
         log.debug('created data channel');
         peer.ondatachannel = (event) => {
@@ -137,7 +135,6 @@ export class LibDataChannelTransport implements Transport {
           dataChannel.send(chunk);
 
           if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-            log.debug('bufferedAmount > MAX_BUFFERED_AMOUNT: PAUSING');
             if (this._writeCallback !== null) {
               log.error("consumer trying to write before we're ready for more data");
             }
