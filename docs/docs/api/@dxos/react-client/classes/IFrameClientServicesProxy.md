@@ -18,6 +18,9 @@ Arguments:
 
 
 ## Properties
+### [invalidatedInvitationCode]()
+Type: <code>Event&lt;string&gt;</code>
+
 ### [joinedSpace]()
 Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
 

@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { useMembers, Space } from '@dxos/react-client/echo';
+import { useMembers, Space, useSpace } from '@dxos/react-client/echo';
 import { Identity, useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
@@ -18,7 +18,8 @@ export const SpacePresence = () => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-  const space = spacePlugin?.provides.space.current;
+  const space = spacePlugin?.provides.space.active;
+  const defaultSpace = useSpace();
   const identity = useIdentity();
   if (!identity) {
     return null;
@@ -36,7 +37,7 @@ export const SpacePresence = () => {
     });
   };
 
-  if (!space) {
+  if (!space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
 

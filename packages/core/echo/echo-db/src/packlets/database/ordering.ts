@@ -78,9 +78,11 @@ export class MutationQueue<T> {
    */
   pushOptimistic(entry: MutationInQueue<T>) {
     invariant(entry.mutation.meta!.clientTag);
+    invariant(entry.mutation.meta!.clientTag!.length !== 0);
     invariant(
-      this._optimistic.findIndex((message) => message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag) ===
-        -1,
+      this._optimistic.findIndex((message) =>
+        message.mutation.meta!.clientTag!.find((tag) => entry.mutation.meta!.clientTag!.find((t) => t === tag)),
+      ) === -1,
       `Mutation with the same tag already exists: ${entry.mutation.meta!.clientTag}}`,
     );
     this._optimistic.push(entry);
@@ -97,12 +99,19 @@ export class MutationQueue<T> {
     invariant(entry.mutation.meta!.timeframe);
 
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = !entry.mutation.meta!.clientTag
-      ? -1
-      : this._optimistic.findIndex(
-          (message) =>
-            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag,
-        );
+    let optimisticIndex = -1;
+    if (entry.mutation.meta!.clientTag && entry.mutation.meta!.clientTag.length > 0) {
+      invariant(
+        entry.mutation.meta!.clientTag.length === 1,
+        `Multiple tags are not supported: ${entry.mutation.meta!.clientTag}`,
+      );
+      optimisticIndex = this._optimistic.findIndex(
+        (message) =>
+          message.mutation.meta!.clientTag &&
+          message.mutation.meta!.clientTag.find((tag) => tag === entry.mutation.meta!.clientTag![0]),
+      );
+    }
+
     if (optimisticIndex !== -1) {
       this._optimistic.splice(optimisticIndex, 1);
     }

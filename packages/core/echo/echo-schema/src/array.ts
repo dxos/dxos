@@ -312,6 +312,24 @@ export class EchoArray<T> implements Array<T> {
     return inspect(data, { ...options, depth: typeof options.depth === 'number' ? options.depth - 1 : options.depth });
   };
 
+  toReversed(): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  toSorted(compareFn?: ((a: T, b: T) => number) | undefined): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  toSpliced(start: number, deleteCount: number, ...items: T[]): T[];
+  toSpliced(start: number, deleteCount?: number | undefined): T[];
+  toSpliced(start: unknown, deleteCount?: unknown, ...items: unknown[]): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  with(index: number, value: T): T[] {
+    throw new Error('Method not implemented.');
+  }
+
   //
   // Impl.
   //

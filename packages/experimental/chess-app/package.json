@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
@@ -49,7 +49,7 @@
     "@types/chess.js": "^0.13.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "typescript": "^5.0.4",
+    "typescript": "^5.2.2",
     "vite": "^4.3.9"
   }
 }

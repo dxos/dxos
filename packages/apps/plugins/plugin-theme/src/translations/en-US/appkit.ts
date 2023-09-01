@@ -33,6 +33,7 @@ export const appkit = (appName?: string) => ({
   'validate seed phrase label': 'Validate seed phrase',
   'fatal error label_one': 'The app encountered an error',
   'fatal error label_other': 'The app encountered some errors',
+  // TODO(burdon): Don't expose in production.
   'fatal error message': 'Reloading the app might fix the issue. If it doesn’t, consider resetting the app.',
   'reset dialog label': 'Reload or reset',
   'reset dialog message':

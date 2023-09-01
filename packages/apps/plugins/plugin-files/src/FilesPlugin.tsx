@@ -169,7 +169,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           const [groupNode] = parent.add({
             id: 'all-files',
             label: ['plugin name', { ns: FILES_PLUGIN }],
-            properties: { palette: 'teal' },
+            properties: { palette: 'yellow' },
           });
 
           const fileIndices = getIndices(state.files.length);
