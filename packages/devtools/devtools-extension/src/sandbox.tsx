@@ -11,7 +11,7 @@ import { Defaults } from '@dxos/config';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, ClientServicesProxy, Config, ClientContextProps } from '@dxos/react-client';
+import { Client, ClientServicesProxy, Config, ClientServices } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
 
 import { initSentry } from './utils';
@@ -66,7 +66,7 @@ void initSentry(namespace, new Config(Defaults()));
 const App = () => {
   log('initializing...');
 
-  const [context, setContext] = useState<ClientContextProps>();
+  const [context, setContext] = useState<{ client: Client; services: ClientServices }>();
 
   useAsyncEffect(async () => {
     const rpcPort = windowPort();
@@ -82,7 +82,11 @@ const App = () => {
     log('client initialized');
   }, []);
 
-  return <Devtools context={context} namespace={namespace} />;
+  if (!context) {
+    return null;
+  }
+
+  return <Devtools services={context.services} client={context.client} namespace={namespace} />;
 };
 
 const init = async () => {
