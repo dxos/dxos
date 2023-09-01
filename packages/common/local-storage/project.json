@@ -37,25 +37,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/common/local-storage",
-        "outputPath": "tmp/mocha/packages/common/local-storage",
-        "resultsPath": "test-results/packages/common/local-storage",
-        "testPatterns": [
-          "packages/common/local-storage/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/common/local-storage/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
     }
   },
   "implicitDependencies": [
