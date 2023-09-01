@@ -27,6 +27,8 @@ import { TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginProvider } from '@dxos/react-surface';
 
+import { ProgressBar } from './components/ProgressBar/ProgressBar';
+
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
@@ -50,6 +52,11 @@ createRoot(document.getElementById('root')!).render(
           </abbr>
         </div>
       )}
+      // fallback={
+      //   <div className='flex h-screen justify-center items-center'>
+      //     <ProgressBar indeterminate />
+      //   </div>
+      // }
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Composer' }),
