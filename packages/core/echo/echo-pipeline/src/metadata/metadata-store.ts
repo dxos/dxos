@@ -108,24 +108,23 @@ export class MetadataStore {
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
-    try {
-      const encoded = arrayToBuffer(EchoMetadata.encode(data));
-      const checksum = CRC32.buf(encoded);
+    const encoded = arrayToBuffer(EchoMetadata.encode(data));
+    const checksum = CRC32.buf(encoded);
 
-      const result = Buffer.alloc(8 + encoded.length);
+    const result = Buffer.alloc(8 + encoded.length);
 
-      result.writeInt32LE(encoded.length, 0);
-      result.writeInt32LE(checksum, 4);
-      encoded.copy(result, 8);
+    result.writeInt32LE(encoded.length, 0);
+    result.writeInt32LE(checksum, 4);
+    encoded.copy(result, 8);
 
-      // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
-      await file.write(0, result);
+    // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
+    await file.write(0, result);
 
-      log('saved', { size: encoded.length, checksum });
-    } finally {
-      // Flushes the file to disk.
-      await file.close();
-    }
+    log('saved', { size: encoded.length, checksum });
+  }
+
+  private async _flush() {
+    await this._directory.flush();
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
@@ -157,6 +156,7 @@ export class MetadataStore {
 
     this._metadata.identity = record;
     await this._save();
+    await this._flush();
   }
 
   async addSpace(record: SpaceMetadata) {
@@ -167,6 +167,7 @@ export class MetadataStore {
 
     (this._metadata.spaces ??= []).push(record);
     await this._save();
+    await this._flush();
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
@@ -177,6 +178,7 @@ export class MetadataStore {
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
     this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
+    await this._flush();
   }
 
   async setCache(spaceKey: PublicKey, cache: SpaceCache) {
@@ -189,11 +191,13 @@ export class MetadataStore {
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();
+    await this._flush();
   }
 
   async setSpaceState(spaceKey: PublicKey, state: SpaceState) {
     this._getSpace(spaceKey).state = state;
     await this._save();
+    await this._flush();
   }
 }
 

@@ -275,7 +275,7 @@ export class Item<M extends Model = Model> {
     log('test confirmed state', this.state);
 
     // Notify listeners that the mutation has been processed.
-    scheduleTask(new Context(), () => this._mutationProcessed.emit(queueEntry.mutation.meta!));
+    queueMicrotask(() => this._mutationProcessed.emit(queueEntry.mutation.meta!));
   }
 
   /**
