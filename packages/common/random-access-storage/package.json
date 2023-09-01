@@ -36,7 +36,6 @@
   "devDependencies": {
     "@types/pify": "^3.0.2",
     "@types/randombytes": "^2.0.0",
-    "@types/wicg-file-system-access": "^2020.9.6",
     "randombytes": "^2.1.0",
     "source-map-support": "^0.5.12"
   },

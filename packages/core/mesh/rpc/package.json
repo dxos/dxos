@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "earljs": "~0.1.10",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"
