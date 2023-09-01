@@ -9,6 +9,7 @@ import { latch, sleep, Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util'
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
@@ -243,11 +244,11 @@ describe('Replication', () => {
   }).timeout(5_000);
 
   test.only('replication bench', async () => {
-    const numBlocks = 10_000;
+    const numBlocks = 100_000;
     const maxRequests = 1024;
     const sparse = true;
     const eagerUpdate = false;
-    const linear = true;
+    const linear = false;
 
     const { publicKey, secretKey } = createKeyPair();
 
@@ -262,14 +263,24 @@ describe('Replication', () => {
 
     // Write.
     console.log('begin append')
-    for (let i = 0; i < numBlocks; i++) {
-      await new Promise(resolve => core1.append(`test-${i}`, resolve));
+    const appendChunk = 100;
+    for (let i = 0; i < numBlocks / appendChunk; i++) {
+      const blocks = range(appendChunk).map(x => `test-${i * appendChunk + x}`)
+      await new Promise(resolve => core1.append(blocks, resolve));
     }
+    expect(core1.length).to.eq(numBlocks);
     console.log('end append')
 
     console.log('begin wait')
-    await sleep(5_000);
+    await sleep(1_000);
     console.log('end wait')
+
+    let lastHeartbeat = performance.now()
+    const heartbeat = setInterval(() => {
+      const now = performance.now()
+      console.log(`heartbeat dt=${now - lastHeartbeat}ms time=${now}`)
+      lastHeartbeat = now
+    }, 500)
 
 
     const core2 = factory2.createFeed(publicKey, { sparse, eagerUpdate });
@@ -282,7 +293,7 @@ describe('Replication', () => {
     const begin = performance.now();
 
     const done = new Trigger();
-    const range = core2.download({ start: 0, end: core1.length, linear }, () => done.wake());
+    const download = core2.download({ start: 0, end: core1.length, linear }, () => done.wake());
 
 
     // Replicate.
@@ -349,6 +360,8 @@ describe('Replication', () => {
       core2.close();
       await closed();
     }
+
+    clearInterval(heartbeat)
 
     // expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
     // expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);

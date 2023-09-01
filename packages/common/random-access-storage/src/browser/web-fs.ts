@@ -6,7 +6,7 @@ import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
 
-import { DeferredTask, synchronized } from '@dxos/async';
+import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
@@ -208,9 +208,12 @@ export class WebFile extends EventEmitter implements File {
     destroy: () => Promise<void>;
   }) {
     super();
+    console.log('construct', fileName)
     this._fileName = fileName;
     this._fileHandle = file;
     this._destroy = destroy;
+
+    this._loadCacheP ??= this._loadCache()
   }
 
   destroyed = false;
@@ -229,14 +232,39 @@ export class WebFile extends EventEmitter implements File {
 
   _cache: Uint8Array | null = null;
 
+  private _loadCacheP: Promise<void> | null = null
+
   private async _loadCache() {
-    const fileHandle: any = await this._fileHandle;
-    const file = await fileHandle.getFile();
-    this._cache = new Uint8Array(await file.arrayBuffer());
     // this._cache = new Uint8Array();
+    // return;
+
+    // const start = performance.now();
+
+    const fileHandle: any = await this._fileHandle;
+    // const t1 = performance.now();
+
+    const file = await fileHandle.getFile();
+    // const t2 = performance.now();
+
+    this._cache = new Uint8Array(await file.arrayBuffer());
+
+    // const end = performance.now();
+    // const elapsed = end - start;
+    // console.log('_loadCache', elapsed, this._fileName, this._cache.length)
+    // if(elapsed > 20) {
+    //   log.info('timings', {
+    //     elapsed,
+    //     t1: t1 - start,
+    //     t2: t2 - t1,
+    //     t3: end - t2,
+    //     start,
+    //     end
+    //   })
+    // }
   }
 
   private async _flushCache() {
+    await (this._loadCacheP ??= this._loadCache());
     invariant(this._cache);
 
     const fileHandle: any = await this._fileHandle;
@@ -247,6 +275,7 @@ export class WebFile extends EventEmitter implements File {
 
   private _flushCtx = new Context()
   private _flushTask = new DeferredTask(this._flushCtx, async () => {
+    // await sleep(10) // delay flush for throttling
     await this._flushCache().catch((err) => log.warn('flush fail', { err }));
   });
 
@@ -254,7 +283,7 @@ export class WebFile extends EventEmitter implements File {
     this._flushTask.schedule();
   }
 
-  @synchronized
+  // @synchronized
   async read(offset: number, size: number) {
     // const span = this._usage.beginRecording();
     // this._operations.inc();
@@ -264,7 +293,7 @@ export class WebFile extends EventEmitter implements File {
     // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
     // try {
       if(!this._cache) {
-        await this._loadCache();
+        await (this._loadCacheP ??= this._loadCache());
         invariant(this._cache);
       }
 
@@ -279,7 +308,7 @@ export class WebFile extends EventEmitter implements File {
     // }
   }
 
-  @synchronized
+  // @synchronized
   async write(offset: number, data: Buffer) {
     // const span = this._usage.beginRecording();
     // this._operations.inc();
@@ -289,7 +318,7 @@ export class WebFile extends EventEmitter implements File {
     // const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
     // try {
       if(!this._cache) {
-        await this._loadCache();
+        await (this._loadCacheP ??= this._loadCache())
         invariant(this._cache);
       }
 
@@ -324,7 +353,7 @@ export class WebFile extends EventEmitter implements File {
       }
 
       if(!this._cache) {
-        await this._loadCache();
+        await (this._loadCacheP ??= this._loadCache());
         invariant(this._cache);
       }
 
@@ -375,7 +404,7 @@ export class WebFile extends EventEmitter implements File {
     const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
       if(!this._cache) {
-        await this._loadCache();
+        await (this._loadCacheP ??= this._loadCache());
         invariant(this._cache);
       }
 
