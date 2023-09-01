@@ -16,7 +16,7 @@ import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new(...args: any[]): {} };
+  constructor: { new (...args: any[]): {} };
   instance: any;
 };
 
@@ -29,20 +29,17 @@ export type TraceSpanParams = {
 export class ResourceEntry {
   /**
    * Sometimes bundlers mangle class names: WebFile -> WebFile2.
-   * 
+   *
    * We use a heuristic to remove the suffix.
    */
   public readonly sanitizedClassName: string;
 
-  constructor(
-    public data: Resource,
-    public instance: WeakRef<any>,
-  ) {
+  constructor(public data: Resource, public instance: WeakRef<any>) {
     this.sanitizedClassName = sanitizeClassName(data.className);
   }
 
   getMetric(name: string): Metric | undefined {
-    return this.data.metrics?.find(metric => metric.name === name);
+    return this.data.metrics?.find((metric) => metric.name === name);
   }
 }
 
@@ -141,7 +138,7 @@ export class TraceProcessor {
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) { }
+  addLink(parent: any, child: any, opts: AddLinkOptions) {}
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);

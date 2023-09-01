@@ -22,7 +22,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) { }
+  constructor(public readonly path: string) {}
 
   public get size() {
     return this._files.size;
@@ -162,7 +162,6 @@ export class WebFS implements Storage {
 // TODO(mykola): Remove EventEmitter.
 @trace.resource()
 export class WebFile extends EventEmitter implements File {
-
   @trace.info()
   private readonly _fileName: string;
 
@@ -176,7 +175,7 @@ export class WebFile extends EventEmitter implements File {
    */
   private _buffer: Uint8Array | null = null;
 
-  private _loadBufferPromise: Promise<void> | null = null
+  private _loadBufferPromise: Promise<void> | null = null;
 
   private _flushScheduled = false;
 
@@ -184,7 +183,7 @@ export class WebFile extends EventEmitter implements File {
 
   //
   // Metrics
-  // 
+  //
 
   @trace.metricsCounter()
   private _flushes = new TimeSeriesCounter();
@@ -219,7 +218,7 @@ export class WebFile extends EventEmitter implements File {
     destroy: () => Promise<void>;
   }) {
     super();
-    console.log('construct', fileName)
+    console.log('construct', fileName);
     this._fileName = fileName;
     this._fileHandle = file;
     this._destroy = destroy;
@@ -258,7 +257,6 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
-
   private async _loadBuffer() {
     const fileHandle = await this._fileHandle;
     const file = await fileHandle.getFile();
@@ -296,7 +294,7 @@ export class WebFile extends EventEmitter implements File {
       this._flushScheduled = false;
 
       this._flushPromise = this._flushCache().catch((err) => log.warn(err));
-    })
+    });
 
     this._flushScheduled = true;
   }

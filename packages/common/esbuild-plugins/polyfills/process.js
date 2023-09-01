@@ -3,6 +3,10 @@
 
 // TESTINGTESTING
 
+//
+// Copyright 2023 DXOS.org
+//
+
 globalThis.global = globalThis;
 
 /* eslint-disable */

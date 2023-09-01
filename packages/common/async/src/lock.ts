@@ -78,7 +78,10 @@ interface LockableClass {
   [classLockSymbol]?: Lock;
 }
 
-const IN_TEST = false; // (globalThis as any).mochaExecutor;
+const FORCE_DISABLE_WARNING = false;
+
+// Enabled only in tests by default.
+const enableWarning = !FORCE_DISABLE_WARNING && (globalThis as any).mochaExecutor;
 
 /**
  * Same as `synchronized` in Java.
@@ -98,7 +101,7 @@ export const synchronized = (
 
     // Disable warning in prod to avoid performance penalty.
     let release;
-    if (!IN_TEST) {
+    if (!enableWarning) {
       release = await lock.acquire(tag);
     } else {
       release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
