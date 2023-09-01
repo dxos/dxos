@@ -12,6 +12,7 @@ import { createCrypto, hypercore } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
+import { FeedWrapper } from './feed-wrapper';
 
 export type FeedFactoryOptions = {
   root: Directory;
@@ -34,7 +35,6 @@ export type FeedOptions = HypercoreOptions & {
  * Hypercore factory.
  */
 export class FeedFactory<T extends {}> {
-  private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
 
   private readonly _root: Directory;
   private readonly _signer?: Signer;
@@ -45,18 +45,13 @@ export class FeedFactory<T extends {}> {
     this._root = root ?? failUndefined();
     this._signer = signer;
     this._hypercoreOptions = hypercore;
-    this._storage = (publicKey: PublicKey) => (filename) => {
-      const dir = this._root.createDirectory(publicKey.toHex());
-      const { type, native } = dir.getOrCreateFile(filename);
-      log('created', {
-        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`,
-      });
-
-      return native;
-    };
   }
 
-  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<Hypercore<T>> {
+  get storageRoot() {
+    return this._root;
+  }
+
+  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<FeedWrapper<T>> {
     if (options?.writable && !this._signer) {
       throw new Error('Signer required to create writable feeds.');
     }
@@ -82,6 +77,17 @@ export class FeedFactory<T extends {}> {
       options,
     );
 
-    return hypercore(this._storage(publicKey), Buffer.from(key), opts);
+    const storageDir = this._root.createDirectory(publicKey.toHex());
+    const makeStorage = (filename: string) => {
+      const { type, native } = storageDir.getOrCreateFile(filename);
+      log('created', {
+        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`,
+      });
+
+      return native;
+    };
+
+    const core = hypercore(makeStorage, Buffer.from(key), opts);
+    return new FeedWrapper(core, publicKey, storageDir)
   }
 }

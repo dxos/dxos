@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
+import { Directory } from '@dxos/random-access-storage';
 
 /**
  * Async feed wrapper.
@@ -30,6 +31,7 @@ export class FeedWrapper<T extends {}> {
   constructor(
     private _hypercore: Hypercore<T>,
     private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
+    private _storageDirectory: Directory,
   ) {
     invariant(this._hypercore);
     invariant(this._key);
@@ -103,6 +105,10 @@ export class FeedWrapper<T extends {}> {
           }
 
           const receipt = await this.appendWithReceipt(data);
+
+          // TODO(dmaretskyi): Removing this will make user-intiated writes faster but might result in a data-loss.
+          await this.flushToDisk();
+
           await afterWrite?.(receipt);
 
           return receipt;
@@ -126,6 +132,14 @@ export class FeedWrapper<T extends {}> {
       seq,
     };
     return receipt;
+  }
+
+  /**
+   * Flush pending changes to disk.
+   * Calling this is not required unless you want to explicitly wait for data to be written.
+   */
+  async flushToDisk() {
+    await this._storageDirectory.flush();
   }
 
   get opened() {

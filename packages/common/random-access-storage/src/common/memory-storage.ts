@@ -19,7 +19,6 @@ export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
   protected override _createFile(path: string, filename: string): RandomAccessStorage {
-    log.info('create', { path, filename, type: this.type });
     return this._patchFile(ram());
   }
 

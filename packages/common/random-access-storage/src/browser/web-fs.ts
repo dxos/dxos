@@ -19,7 +19,7 @@ import { Directory, DiskInfo, File, Storage, StorageType, getFullPath } from '..
 export class WebFS implements Storage {
   readonly type = StorageType.WEBFS;
 
-  protected readonly _files = new Map<string, File>();
+  protected readonly _files = new Map<string, WebFile>();
   protected _root?: FileSystemDirectoryHandle;
 
   constructor(public readonly path: string) {}
@@ -28,7 +28,7 @@ export class WebFS implements Storage {
     return this._files.size;
   }
 
-  private _getFiles(path: string): Map<string, File> {
+  private _getFiles(path: string): Map<string, WebFile> {
     const fullName = this._getFullFilename(this.path, path);
     return new Map(
       [...this._files.entries()].filter(([path, file]) => path.includes(fullName) && file.destroyed !== true),
@@ -75,6 +75,9 @@ export class WebFS implements Storage {
       (path) => this._list(path),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
+      async () => {
+        await Promise.all(Array.from(this._getFiles(sub)).map(([path, file]) => file.flush()))
+      },
     );
   }
 
@@ -218,7 +221,6 @@ export class WebFile extends EventEmitter implements File {
     destroy: () => Promise<void>;
   }) {
     super();
-    console.log('construct', fileName);
     this._fileName = fileName;
     this._fileHandle = file;
     this._destroy = destroy;
@@ -267,6 +269,7 @@ export class WebFile extends EventEmitter implements File {
     await (this._loadBufferPromise ??= this._loadBuffer());
   }
 
+  // Do not call directly, use _flushLater or _flushNow.
   private async _flushCache() {
     if (this._closed) {
       return;
@@ -290,13 +293,27 @@ export class WebFile extends EventEmitter implements File {
 
     setTimeout(async () => {
       // Making sure only one flush can run at a time.
+      const promiseBefore = this._flushPromise;
       await this._flushPromise;
       this._flushScheduled = false;
+
+      // _flushNow might have been called. In that case we don't want to run the flush again.
+      if (promiseBefore !== this._flushPromise) {
+        return;
+      }
 
       this._flushPromise = this._flushCache().catch((err) => log.warn(err));
     });
 
     this._flushScheduled = true;
+  }
+
+  private async _flushNow() {
+    this._flushPromise = (this._flushPromise ?? Promise.resolve())
+      .then(() => this._flushCache())
+      .catch((err) => log.warn(err));
+
+    await this._flushPromise;
   }
 
   async read(offset: number, size: number) {
@@ -390,8 +407,12 @@ export class WebFile extends EventEmitter implements File {
     this._flushLater();
   }
 
+  async flush() {
+    await this._flushNow();
+  }
+
   async close(): Promise<void> {
-    await this._flushCache();
+    await this._flushNow();
     this._closed = true;
   }
 
