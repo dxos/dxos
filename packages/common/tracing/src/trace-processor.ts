@@ -16,7 +16,7 @@ import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new (...args: any[]): {} };
+  constructor: { new(...args: any[]): {} };
   instance: any;
 };
 
@@ -26,10 +26,25 @@ export type TraceSpanParams = {
   parentCtx: Context | null;
 };
 
-export type ResourceEntry = {
-  data: Resource;
-  instance: WeakRef<any>;
-};
+export class ResourceEntry {
+  /**
+   * Sometimes bundlers mangle class names: WebFile -> WebFile2.
+   * 
+   * We use a heuristic to remove the suffix.
+   */
+  public readonly sanitizedClassName: string;
+
+  constructor(
+    public data: Resource,
+    public instance: WeakRef<any>,
+  ) {
+    this.sanitizedClassName = sanitizeClassName(data.className);
+  }
+
+  getMetric(name: string): Metric | undefined {
+    return this.data.metrics?.find(metric => metric.name === name);
+  }
+}
 
 export type TraceSubscription = {
   flush: () => void;
@@ -73,8 +88,8 @@ export class TraceProcessor {
       (params.instance[key] as BaseCounter)._assign(params.instance, key);
     }
 
-    const entry: ResourceEntry = {
-      data: {
+    const entry = new ResourceEntry(
+      {
         id,
         className: params.constructor.name,
         instanceId: getPrototypeSpecificInstanceId(params.instance),
@@ -82,8 +97,9 @@ export class TraceProcessor {
         links: [],
         metrics: this.getResourceMetrics(params.instance),
       },
-      instance: new WeakRef(params.instance),
-    };
+      new WeakRef(params.instance),
+    );
+
     this.resources.set(id, entry);
     this.resourceInstanceIndex.set(params.instance, entry);
     this.resourceIdList.push(id);
@@ -125,7 +141,7 @@ export class TraceProcessor {
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) {}
+  addLink(parent: any, child: any, opts: AddLinkOptions) { }
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
@@ -168,6 +184,16 @@ export class TraceProcessor {
     for (const subscription of this.subscriptions) {
       subscription.flush();
     }
+  }
+
+  findResourcesByClassName(className: string): ResourceEntry[] {
+    const res: ResourceEntry[] = [];
+    for (const entry of this.resources.values()) {
+      if (entry.data.className === className || entry.sanitizedClassName === className) {
+        res.push(entry);
+      }
+    }
+    return res;
   }
 
   /**
@@ -368,4 +394,14 @@ const areEqualShallow = (a: any, b: any) => {
     }
   }
   return true;
+};
+
+export const sanitizeClassName = (className: string) => {
+  const SANITIZE_REGEX = /[^_](\d+)$/;
+  const m = className.match(SANITIZE_REGEX);
+  if (!m) {
+    return className;
+  } else {
+    return className.slice(0, -m[1].length);
+  }
 };

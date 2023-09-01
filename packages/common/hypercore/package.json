@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@types/randombytes": "^2.0.0",

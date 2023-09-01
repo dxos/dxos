@@ -18,11 +18,11 @@
     "tty-browserify": "~0.0.1",
     "util": "^0.12.4"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "devDependencies": {
     "base64-js": "^1.5.1",
     "ieee754": "^1.2.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -9,12 +9,14 @@ import { latch, sleep, Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
-import { range } from '@dxos/util'
+import { range, sum } from '@dxos/util'
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { inspect } from 'util';
 
 const noop = () => { };
 
@@ -244,7 +246,7 @@ describe('Replication', () => {
   }).timeout(5_000);
 
   test.only('replication bench', async () => {
-    const numBlocks = 100_000;
+    const numBlocks = 1_000;
     const maxRequests = 1024;
     const sparse = true;
     const eagerUpdate = false;
@@ -344,9 +346,27 @@ describe('Replication', () => {
     }
 
     const end = performance.now();
+
+    // Make sure flushes are counted.
+    await sleep(1000)
+
+    TRACE_PROCESSOR.refresh();
+
+    // console.log(inspect(TRACE_PROCESSOR.findResourcesByClassName('WebFile').map(r => [
+    //   r.data.info._fileName,
+    //   ...r.data.metrics!.map(m => [m.name, m.timeSeries!.tracks![0].total])
+    // ])), false, null, true)
+    const totalFlushes = sum(TRACE_PROCESSOR.findResourcesByClassName('WebFile').map((resource) => resource.getMetric('_flushes')!.timeSeries!.tracks![0].total));
+
     log.info('time', {
       timeMs: end - begin,
-      numBlocks, maxRequests, storage: storage.type, sparse, eagerUpdate, linear
+      numBlocks,
+      maxRequests,
+      storage: storage.type,
+      sparse,
+      eagerUpdate,
+      linear,
+      totalFlushes
     });
 
     expect(await core2.has(0, numBlocks)).to.eq(true)

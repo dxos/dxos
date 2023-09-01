@@ -1954,6 +1954,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
@@ -1984,6 +1985,7 @@ importers:
       streamx: 2.12.5
     devDependencies:
       '@dxos/log': link:../log
+      '@dxos/tracing': link:../tracing
       '@faker-js/faker': 8.0.2
       '@types/randombytes': 2.0.0
       '@types/readable-stream': 2.3.14
@@ -2218,6 +2220,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/pify': ^3.0.2
       '@types/randombytes': ^2.0.0
+      '@types/wicg-file-system-access': ^2020.9.6
       del: ^5.1.0
       pify: ~5.0.0
       random-access-file: ^2.2.1
@@ -2246,6 +2249,7 @@ importers:
     devDependencies:
       '@types/pify': 3.0.2
       '@types/randombytes': 2.0.0
+      '@types/wicg-file-system-access': 2020.9.6
       randombytes: 2.1.0
       source-map-support: 0.5.21
 
@@ -3350,6 +3354,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-tabs': ^1.0.4
@@ -3404,6 +3409,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/tracing': link:../../common/tracing
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tabs': 1.0.4_5uumaiclxbdbzaqafclbf6maf4
@@ -18158,6 +18164,10 @@ packages:
 
   /@types/webxr/0.5.1:
     resolution: {integrity: sha512-xlFXPfgJR5vIuDefhaHuUM9uUgvPaXB6GKdXy2gdEh8gBWQZ2ul24AJz3foUd8NNKlSTQuWYJpCb1/pL81m1KQ==}
+    dev: true
+
+  /@types/wicg-file-system-access/2020.9.6:
+    resolution: {integrity: sha512-6hogE75Hl2Ov/jgp8ZhDaGmIF/q3J07GtXf8nCJCwKTHq7971po5+DId7grft09zG7plBwpF6ZU0yx9Du4/e1A==}
     dev: true
 
   /@types/ws/7.4.7:
