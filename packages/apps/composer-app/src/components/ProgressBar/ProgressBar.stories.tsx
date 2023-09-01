@@ -14,12 +14,12 @@ export default {
 
 export const Normal = (props: any) => {
   return (
-    <>
-      <ProgressBar className='m-4' progress={0} {...props} />
-      <ProgressBar className='m-4' progress={0.3} {...props} />
-      <ProgressBar className='m-4' progress={0.7} {...props} />
-      <ProgressBar className='m-4' progress={1} {...props} />
-    </>
+    <div className='flex flex-col gap-5'>
+      <ProgressBar progress={0} {...props} />
+      <ProgressBar progress={0.3} {...props} />
+      <ProgressBar progress={0.7} {...props} />
+      <ProgressBar progress={1} {...props} />
+    </div>
   );
 };
 
