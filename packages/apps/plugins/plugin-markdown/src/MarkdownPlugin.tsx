@@ -69,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
@@ -100,7 +100,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
