@@ -4,7 +4,7 @@
 
 import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CancelledError } from '@dxos/errors';
+import { CancelledError, SystemError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,7 +16,7 @@ import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 
-export class ConnectionDisplacedError extends Error {
+export class ConnectionDisplacedError extends SystemError {
   constructor() {
     super('Connection displaced by remote initiator.');
   }
