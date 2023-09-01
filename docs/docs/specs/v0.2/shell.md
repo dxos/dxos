@@ -11,7 +11,11 @@ For end users:
 3. Users can sign-in to applications with their HALO identity
 4. Users can recover their identity on a new device using a paper key or passphrase (P3)
 
-For developers: 5. Developers use the DXOS Shell to guide users through identity acquisition or recovery during login 6. Developers use the DXOS Shell to guide users through joining a space with an invite code 7. Developers use the DXOS Shell to guide users through inviting others to their spaces
+For developers: 
+
+5. Developers use the DXOS Shell to guide users through identity acquisition or recovery during login 
+6. Developers use the DXOS Shell to guide users through joining a space with an invite code 
+7. Developers use the DXOS Shell to guide users through inviting others to their spaces
 
 ## Requirements
 
