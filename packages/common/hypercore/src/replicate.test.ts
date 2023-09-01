@@ -292,7 +292,7 @@ describe('Replication', () => {
       const begin = performance.now();
 
       const done = new Trigger();
-      const download = core2.download({ start: 0, end: core1.length, linear }, () => done.wake());
+      core2.download({ start: 0, end: core1.length, linear }, () => done.wake());
 
       // Replicate.
       {

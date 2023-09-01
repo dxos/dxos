@@ -1,11 +1,9 @@
-// shim for using process in browser
-// based off https://github.com/defunctzombie/node-process/blob/master/browser.js
-
-// TESTINGTESTING
-
 //
 // Copyright 2023 DXOS.org
 //
+
+// shim for using process in browser
+// based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
 globalThis.global = globalThis;
 
