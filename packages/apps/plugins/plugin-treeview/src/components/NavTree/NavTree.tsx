@@ -13,7 +13,7 @@ import { Tree } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
 import { getPersistenceParent, sortByIndex } from '../../util';
-import { SortableTreeViewItem, NavTreeItem } from './NavTreeItem';
+import { SortableTreeViewItem } from './NavTreeItem';
 
 export type TreeViewProps = {
   level: number;
@@ -178,20 +178,6 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   );
 };
 
-const branchIsSortable = (node: TreeViewProps['parent']) => {
-  if (typeof node !== 'object') {
-    console.log('[branch is sortable]', 'node not object');
-    return false;
-  }
-  const persistenceClass = node?.properties?.childrenPersistenceClass;
-  if (!persistenceClass) {
-    console.log('[branch is sortable]', 'no persistence class', node?.properties);
-    return false;
-  }
-  console.log('[branch is sortable]', persistenceClass, getPersistenceParent(node!, persistenceClass));
-  return !!getPersistenceParent(node!, persistenceClass);
-};
-
 export const NavTree = (props: TreeViewProps) => {
   const { items, level, parent } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
@@ -199,11 +185,7 @@ export const NavTree = (props: TreeViewProps) => {
   return (
     <Tree.Branch>
       {visibleItems?.length ? (
-        branchIsSortable(parent) ? (
-          <TreeViewSortableImpl items={visibleItems} parent={parent as Graph.Node} level={level} />
-        ) : (
-          visibleItems.sort(sortByIndex).map((item) => <NavTreeItem key={item.id} node={item} level={level} />)
-        )
+        <TreeViewSortableImpl items={visibleItems} parent={parent as Graph.Node} level={level} />
       ) : (
         <Surface role='tree--empty' data={props.parent} />
       )}
