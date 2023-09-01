@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import { Main } from '@dxos/aurora';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Devtools } from '@dxos/devtools';
 import { ClientServices, useClient } from '@dxos/react-client';
 
@@ -11,8 +13,8 @@ export const DevtoolsMain = () => {
   const client = useClient();
 
   return (
-    <div className='mbs-12'>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <Devtools client={client} services={client.services.services as ClientServices} />
-    </div>
+    </Main.Content>
   );
 };

@@ -3,42 +3,45 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal/react';
 import React, { useEffect, useState } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { Timer, UnsubscribeCallback } from '@dxos/async';
+import type { ClientPluginProvides } from '@braneframe/plugin-client';
+import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings, DebugStatus, DevtoolsMain } from './components';
-import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides, DebugState } from './props';
+import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
 import translations from './translations';
 
-export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  let unsubscribe: UnsubscribeCallback;
-  const state = deepSignal<DebugState>({ nodeIds: [], debug: localStorage.getItem(DebugPanelKey) === 'true' });
+export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
+export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
+  const settings = new LocalStorageStore<DebugSettingsProps>();
+
+  const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
     data &&
     typeof data === 'object' &&
     'id' in data &&
     typeof data.id === 'string' &&
-    state.nodeIds.some((nodeId) => nodeId === data.id);
+    nodeIds.some((nodeId) => nodeId === data.id);
 
   return {
     meta: {
       id: DEBUG_PLUGIN,
     },
-    ready: async () => {
-      state.$debug?.subscribe((debug) => {
-        localStorage.setItem(DebugPanelKey, debug ? 'true' : 'false');
-      });
+    ready: async (plugins) => {
+      settings
+        .bind(settings.values.$debug!, 'braneframe.plugin-debug.debug', LocalStorageStore.bool)
+        .bind(settings.values.$devtools!, 'braneframe.plugin-debug.devtools', LocalStorageStore.bool);
     },
     unload: async () => {
-      unsubscribe?.();
+      settings.close();
     },
     provides: {
+      settings: settings.values,
       translations,
       context: ({ children }) => {
         const [timer, setTimer] = useState<Timer>();
@@ -64,42 +67,40 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          if (parent.id === 'root') {
+          if (parent.id === 'space:all-spaces') {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
               icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
-                action: 'debug-openDevtools',
+                action: 'open-devtools',
               },
               properties: {
                 testId: 'spacePlugin.openDevtools',
               },
             });
-            return;
-          } else if (parent.id === 'space:all-spaces') {
-            const unsubscribe = state.$debug?.subscribe((debug) => {
+
+            const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
               debug
                 ? parent.add({
                     id: 'devtools',
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props) => <Bug {...props} />,
-                    data: 'dxos-devtools',
+                    data: 'devtools',
                   })
                 : parent.remove('devtools');
             });
 
             return () => unsubscribe?.();
-            // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
           } else if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const nodeId = parent.id + '-debug';
-          state.nodeIds.push(nodeId);
+          nodeIds.push(nodeId);
 
-          const unsubscribe = state.$debug?.subscribe((debug) => {
+          const unsubscribe = settings.values.$debug?.subscribe((debug) => {
             debug
               ? parent.add({
                   id: nodeId,
@@ -112,14 +113,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
           return () => {
             unsubscribe?.();
-            state.nodeIds = state.nodeIds.filter((id) => id !== nodeId);
           };
         },
       },
       intent: {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
-            case 'debug-openDevtools': {
+            case 'open-devtools': {
               // TODO(burdon): Access config.
               const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               if (!clientPlugin) {
@@ -137,24 +137,24 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       component: (data, role) => {
+        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+          return DebugSettings;
+        }
+
+        if (!settings.values.debug) {
+          return null;
+        }
+
         switch (role) {
-          case 'main': {
+          case 'main':
             if (isDebug(data)) {
               return DebugMain;
-            } else if (data === 'dxos-devtools') {
+            } else if (data === 'devtools') {
               return DevtoolsMain;
             }
             break;
-          }
-          case 'dialog': {
-            if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-              return DebugSettings;
-            }
-            break;
-          }
-          case 'status': {
+          case 'status':
             return DebugStatus;
-          }
         }
 
         return null;
@@ -162,7 +162,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       components: {
         DebugMain,
       },
-      debug: state,
     },
   };
 };

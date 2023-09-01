@@ -51,9 +51,13 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
           'h-full',
           // TODO(burdon): Hack to override z-index.
           '[&>div>span>div]:z-0',
-          // TODO(burdon): Hack to hide menu.
-          '[&>div>main>div:first-child>div:first-child>div]:invisible',
-          // TODO(burdon): Hack to hide statusbar.
+          // TODO(burdon): Hide .tlui-menu-zone
+          '[&>div>main>div:nth-child(1)>div:nth-child(1)]:hidden',
+          // TODO(burdon): Hide .tlui-navigation-zone
+          '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(1)]:hidden',
+          // TODO(burdon): Hide .tlui-help-menu
+          '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)]:hidden',
+          // TODO(burdon): Hide .tlui-debug-panel
           '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
         )}
       >
