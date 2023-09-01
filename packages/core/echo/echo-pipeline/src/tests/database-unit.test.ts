@@ -4,8 +4,9 @@
 
 import expect from 'expect';
 
+import { sleep } from '@dxos/async';
 import { DocumentModel, MutationBuilder, OrderedArray } from '@dxos/document-model';
-import { Item, createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
+import { BATCH_COMMIT_AFTER, Item, createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -246,6 +247,30 @@ describe('database (unit)', () => {
 
       peer1.replicate(peer2.timeframe);
       expect(model.textContent).toBe('Hello DXOS World!');
+    });
+
+    test('consecutive mutations are batched', async () => {
+      const rig = new DatabaseTestBuilder();
+      const peer = await rig.createPeer();
+
+      const id = PublicKey.random().toHex();
+      peer.proxy.mutate(genesisMutation(id, TextModel.meta.type));
+      const model = peer.getModel(id);
+      invariant(model instanceof TextModel);
+      model.insert('Hello', 0);
+      model.insert(' World!', 5);
+      // Wait for batch commit.
+      await sleep(BATCH_COMMIT_AFTER + 10);
+
+      // Mutations got merged.
+      expect(peer.feedMessages.length).toEqual(1);
+
+      model.insert(' DXOS', 5);
+      // New batch is still not committed.
+      expect(peer.feedMessages.length).toEqual(1);
+      await sleep(BATCH_COMMIT_AFTER + 10);
+      // New batch is committed.
+      expect(peer.feedMessages.length).toEqual(2);
     });
   });
 
