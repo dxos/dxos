@@ -83,12 +83,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         });
 
         state.active = space;
+        const defaultSpace = client.getSpace();
 
         if (
           space instanceof SpaceProxy &&
           (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
         ) {
-          client.services.setSpaceProvider(() => space.key);
+          client.services.setSpaceProvider(() => {
+            if (defaultSpace && space.key.equals(defaultSpace.key)) {
+              return undefined;
+            } else {
+              return space.key;
+            }
+          });
         }
       });
     },
@@ -163,29 +170,32 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
+          const client = clientPlugin.provides.client;
+          const defaultSpace = client.getSpace();
+          if (defaultSpace) {
+            // Ensure default space is always first.
+            spaceToGraphNode(defaultSpace, parent);
+          }
+
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
             properties: { palette: 'blue' },
           });
 
-          const client = clientPlugin.provides.client;
-          const spaces = client.spaces.get();
-          const indices = spaces?.length ? getIndices(spaces.length) : [];
-
-          spaces.forEach((space, index) => spaceToGraphNode(space, groupNode, indices[index]));
-
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             subscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              const handle = createSubscription(() => {
-                spaceToGraphNode(space, groupNode, indices[index]);
-              });
+              const update = () => {
+                const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
+                isDefaultSpace ? spaceToGraphNode(space, parent) : spaceToGraphNode(space, groupNode, indices[index]);
+              };
+
+              const handle = createSubscription(() => update());
               handle.update([space.properties]);
               subscriptions.add(handle.unsubscribe);
-
-              spaceToGraphNode(space, groupNode, indices[index]);
+              update();
             });
           });
 

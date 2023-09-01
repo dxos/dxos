@@ -37,7 +37,7 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string): Graph.Node<Space> => {
+export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: string): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
   const disabled = state !== SpaceState.READY;
@@ -47,11 +47,12 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
 
   const [node] = parent.add({
     id,
-    label: getSpaceDisplayName(space),
+    label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
     data: space,
     properties: {
+      palette: parent.id === 'root' ? 'teal' : undefined,
       role: 'branch',
       hidden: inactive,
       disabled,
@@ -87,25 +88,30 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
     },
   });
 
+  if (parent.id !== 'root') {
+    node.addAction(
+      {
+        id: 'rename-space',
+        label: ['rename space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PencilSimpleLine {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.RENAME },
+        properties: {
+          disabled: disabled || error,
+        },
+      },
+      {
+        id: 'share-space',
+        label: ['share space', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PaperPlane {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.SHARE },
+        properties: {
+          disabled: disabled || error,
+        },
+      },
+    );
+  }
+
   node.addAction(
-    {
-      id: 'rename-space',
-      label: ['rename space label', { ns: SPACE_PLUGIN }],
-      icon: (props) => <PencilSimpleLine {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.RENAME },
-      properties: {
-        disabled: disabled || error,
-      },
-    },
-    {
-      id: 'share-space',
-      label: ['share space', { ns: SPACE_PLUGIN }],
-      icon: (props) => <PaperPlane {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.SHARE },
-      properties: {
-        disabled: disabled || error,
-      },
-    },
     {
       id: 'backup-space',
       label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
@@ -124,13 +130,16 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
         disabled: disabled || error,
       },
     },
-    {
+  );
+
+  if (parent.id !== 'root') {
+    node.addAction({
       id: 'close-space',
       label: ['close space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <X {...props} />,
       intent: { ...baseIntent, action: SpaceAction.CLOSE },
-    },
-  );
+    });
+  }
 
   return node;
 };
