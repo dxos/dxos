@@ -6,7 +6,7 @@ import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
 import { TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
-import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
+import { descriptionText, getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { getTreeItemLabel } from '../../util';
@@ -52,8 +52,8 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
         // TODO(wittjosiah): Why space plugin? This is treeview.
         data-testid={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
       >
-        <OpenTriggerIcon weight='fill' className={mx('shrink-0', getSize(2))} />
-        {node.icon && <node.icon className={getSize(4)} />}
+        <OpenTriggerIcon weight='fill' className={mx('shrink-0', descriptionText, getSize(2))} />
+        {node.icon && <node.icon className={mx(descriptionText, 'shrink-0', getSize(4))} />}
         <TreeItem.Heading
           data-testid='spacePlugin.spaceTreeItemHeading'
           classNames={[navTreeHeading, collapsibleSpacing, treeItemText, error && valenceColorText('error')]}

@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
-import { auroraTx, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
+import { auroraTx, descriptionText, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
@@ -65,7 +65,7 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
           {...(active && { 'aria-current': 'page' })}
           ref={forwardedRef}
         >
-          {node.icon && <node.icon className={mx(getSize(4), 'shrink-0')} />}
+          {node.icon && <node.icon className={mx(descriptionText, 'shrink-0', getSize(4))} />}
           <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
             {getTreeItemLabel(node, t)}
           </span>
