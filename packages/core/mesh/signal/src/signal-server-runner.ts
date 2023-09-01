@@ -19,6 +19,7 @@ interface TestBrokerOptions {
   port?: number;
   timeout?: number;
   env?: Record<string, string>;
+  killExisting?: boolean;
 
   /**
    * Allows arbitrary commands. WARNING: It stalls on Linux machine if `true`.
@@ -33,10 +34,11 @@ export class SignalServerRunner {
   private readonly _cwd?: string;
   private readonly _env: Record<string, string>;
   private readonly _shell: boolean;
+  private readonly _killExisting: boolean;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
-  private _port: number;
+  private _port: number | undefined;
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
@@ -44,10 +46,11 @@ export class SignalServerRunner {
     binCommand,
     signalArguments,
     cwd,
-    port = 8080,
+    port,
     timeout = 5_000,
     env = {},
     shell = false,
+    killExisting = false,
   }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
@@ -56,6 +59,7 @@ export class SignalServerRunner {
     this._timeout = timeout;
     this._env = env;
     this._shell = shell;
+    this._killExisting = killExisting;
 
     this._serverProcess = this.startProcess();
   }
@@ -64,6 +68,28 @@ export class SignalServerRunner {
     if (this._cwd && !fs.existsSync(this._cwd)) {
       throw new Error(`CWD not exists: ${this._cwd}`);
     }
+    if (!this._port) {
+      // find a port that does not have another process listening on it.
+      while (true) {
+        this._port = randomInt(10000, 50000);
+        const pid = checkPort(this._port);
+
+        if (pid.length === 0) {
+          break;
+        }
+      }
+    } else {
+      const pid = checkPort(this._port);
+      if (pid.length > 0) {
+        if (this._killExisting) {
+          log.warn(`Port ${this._port} is already in use by process ${pid}, killing it`);
+          // TODO(nf): verify the process is actually a signal server
+          process.kill(-Number(pid), 'SIGINT');
+        } else {
+          throw new Error(`Port ${this._port} is already in use by process ${pid}`);
+        }
+      }
+    }
 
     log('starting', {
       binCommand: this._binCommand,
@@ -71,8 +97,6 @@ export class SignalServerRunner {
       cwd: this._cwd,
       port: this._port,
     });
-
-    killProcessOnPort(this._port, true);
 
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
@@ -122,8 +146,6 @@ export class SignalServerRunner {
 
     if (waited >= this._timeout) {
       await this.stop();
-      // Change port to avoid conflicts with other processes.
-      this._port++;
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
@@ -173,6 +195,7 @@ const OS = process.platform;
 export const runTestSignalServer = async ({
   port,
   mode = 'server',
+  killExisting = false,
 }: {
   port?: number;
 
@@ -181,6 +204,7 @@ export const runTestSignalServer = async ({
    * @see https://github.com/dxos/kube
    */
   mode?: 'client' | 'server' | 'p2pserver' | 'keypair' | 'pubsubserver';
+  killExisting?: boolean;
 } = {}): Promise<SignalServerRunner> => {
   if (ARCH === '32') {
     throw new Error('32 bit architecture not supported');
@@ -195,22 +219,26 @@ export const runTestSignalServer = async ({
     binCommand: binPath,
     signalArguments: [mode],
     cwd: path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'),
-    port: port ?? randomInt(10000, 50000),
+    port,
+    killExisting,
   });
   await server.waitUntilStarted();
   return server;
 };
 
-const killProcessOnPort = (port: number, silent = false) => {
+export const checkPort = (port: number) => {
+  let pid = '';
   try {
-    const pid = execSync(`lsof -t -i:${port}`).toString().trim();
-    if (pid) {
-      log.info('killing process occupying signal port', { port, pid });
-      process.kill(-Number(pid), 'SIGINT');
-    }
+    pid = execSync(`lsof -t -i:${port}`).toString().trim();
   } catch (err) {
-    if (!silent) {
-      log.warn('failed to kill process occupying signal port', { port, err });
+    if (typeof err === 'object' && err !== null) {
+      // lsof responds with status 1 if pattern does match, along with other errors :(, so this is the best we can do
+      if ((err as Record<string, unknown>).status !== 1) {
+        throw err;
+      }
+    } else {
+      throw err;
     }
   }
+  return pid;
 };

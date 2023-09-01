@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -49,9 +52,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

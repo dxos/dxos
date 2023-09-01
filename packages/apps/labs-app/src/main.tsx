@@ -22,7 +22,6 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
-import { SettingsPlugin } from '@braneframe/plugin-settings';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
@@ -70,7 +69,6 @@ const main = async () => {
           GraphPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
-          SettingsPlugin(),
           SplitViewPlugin({ enableComplementarySidebar: true }),
           SpacePlugin(),
 

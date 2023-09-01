@@ -72,6 +72,9 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   // Snapshot codecs are distinct from the mutation codecs.
   snapshotCodec?: Codec<TSnasphot>;
 
+  // Merge Mutations
+  mergeMutations?: (mutations: TMutation[]) => TMutation;
+
   // Manages state and state transitions vis mutations.
   stateMachine: () => StateMachine<TState, TMutation, TSnasphot>;
 };

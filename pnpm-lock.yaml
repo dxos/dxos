@@ -515,7 +515,6 @@ importers:
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
-      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
@@ -562,7 +561,6 @@ importers:
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
-      '@braneframe/plugin-settings': link:../plugins/plugin-settings
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
@@ -677,7 +675,6 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -686,9 +683,11 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/devtools': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/local-storage': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
@@ -711,13 +710,14 @@ importers:
     dependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
-      '@braneframe/plugin-settings': link:../plugin-settings
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/async': link:../../../common/async
       '@dxos/client': link:../../../sdk/client
+      '@dxos/devtools': link:../../../devtools/devtools
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
+      '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
@@ -910,7 +910,6 @@ importers:
     specifiers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-settings': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -918,6 +917,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/local-storage': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -937,9 +937,9 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@braneframe/plugin-settings': link:../plugin-settings
       '@braneframe/types': link:../../types
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/log': link:../../../common/log
       '@dxos/react-appkit': link:../../../ui/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
@@ -1264,25 +1264,6 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
-
-  packages/apps/plugins/plugin-settings:
-    specifiers:
-      '@braneframe/plugin-treeview': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@types/react': ^18.0.21
-      deepsignal: ^1.3.3
-      react: ^18.2.0
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/debug': link:../../../common/debug
-      deepsignal: 1.3.4_react@18.2.0
-    devDependencies:
-      '@braneframe/plugin-treeview': link:../plugin-treeview
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@types/react': 18.0.21
-      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-space:
@@ -2040,6 +2021,16 @@ importers:
     devDependencies:
       '@types/randombytes': 2.0.0
 
+  packages/common/local-storage:
+    specifiers:
+      '@dxos/node-std': workspace:*
+      '@preact/signals-core': ^1.3.1
+      deepsignal: ^1.3.3
+    dependencies:
+      '@dxos/node-std': link:../node-std
+      '@preact/signals-core': 1.3.1
+      deepsignal: 1.3.4
+
   packages/common/lock-file:
     specifiers:
       '@dxos/async': workspace:*
@@ -2497,6 +2488,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
@@ -2517,6 +2509,7 @@ importers:
       '@dxos/util': link:../../../common/util
     devDependencies:
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/text-model': link:../text-model
       '@dxos/typings': link:../../../common/typings
 
   packages/core/echo/echo-pipeline:
@@ -2729,7 +2722,6 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/document-model': workspace:*
-      '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
@@ -2742,7 +2734,6 @@ importers:
       yjs: ^13.6.7
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/echo-db': link:../echo-db
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -3383,6 +3374,7 @@ importers:
       date-fns: ^2.29.3
       deepsignal: ^1.3.3
       flame-chart-js: ^2.3.1
+      isomorphic-ws: ^4.0.1
       localforage: ^1.10.0
       lodash.defaultsdeep: ^4.6.1
       postcss: ^8.4.21
@@ -3401,6 +3393,7 @@ importers:
       vite-plugin-fonts: ^0.7.0
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
+      ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
@@ -3431,6 +3424,7 @@ importers:
       date-fns: 2.29.3
       deepsignal: 1.3.4_react@18.2.0
       flame-chart-js: 2.3.1
+      isomorphic-ws: 4.0.1_ws@7.5.9
       localforage: 1.10.0
       lodash.defaultsdeep: 4.6.1
       react: 18.2.0
@@ -3442,6 +3436,7 @@ importers:
       react-syntax-highlighter: 15.5.0_react@18.2.0
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
       use-resize-observer: 9.1.0_biqbaboplfbrettd7655fr4n2y
+      ws: 7.5.9
     devDependencies:
       '@dxos/config': link:../../sdk/config
       '@dxos/react-shell': link:../../sdk/react-shell
@@ -5295,6 +5290,7 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
+      '@dxos/websocket-rpc': workspace:*
       '@types/readable-stream': ^2.3.9
     dependencies:
       '@dxos/async': link:../../common/async
@@ -5329,6 +5325,7 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/tracing': link:../../common/tracing
       '@dxos/util': link:../../common/util
+      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
       '@types/readable-stream': 2.3.14
@@ -12972,6 +12969,15 @@ packages:
     resolution: {integrity: sha512-DL+3kDssZ3UOMz9HufwSYE/gK0+TnT1jzegfF5rstgyPrnyfjz4BHAoxmzQA6Mkp4UlKe8qjsgl3v5a/obzNig==}
     dev: false
 
+  /@preact/signals-react/1.3.4:
+    resolution: {integrity: sha512-+MIGr7ZXpRwGhk9VrK4sT5SGQSzzNCgNHuPRJ1so4rwj/DY0Ks1//2ie0sMyPhWjO7NDA91Mp4ph1Nzo3hDHhA==}
+    peerDependencies:
+      react: ^16.14.0 || 17.x || 18.x
+    dependencies:
+      '@preact/signals-core': 1.3.1
+      use-sync-external-store: 1.2.0
+    dev: false
+
   /@preact/signals-react/1.3.4_react@18.2.0:
     resolution: {integrity: sha512-+MIGr7ZXpRwGhk9VrK4sT5SGQSzzNCgNHuPRJ1so4rwj/DY0Ks1//2ie0sMyPhWjO7NDA91Mp4ph1Nzo3hDHhA==}
     peerDependencies:
@@ -15634,7 +15640,7 @@ packages:
       ts-dedent: 2.2.0
       util-deprecate: 1.0.2
       watchpack: 2.4.0
-      ws: 8.9.0
+      ws: 8.13.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -23269,6 +23275,15 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
+  /deepsignal/1.3.4:
+    resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
+    dependencies:
+      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4
+    transitivePeerDependencies:
+      - react
+    dev: false
+
   /deepsignal/1.3.4_react@18.2.0:
     resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
     dependencies:
@@ -29640,7 +29655,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
-      ws: 8.9.0
+      ws: 8.13.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -36222,7 +36237,7 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /rollup/3.19.1:
@@ -36230,7 +36245,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /rollup/3.20.4:
@@ -39390,6 +39405,12 @@ packages:
       use-sync-external-store: 1.2.0_react@18.2.0
     dev: false
 
+  /use-sync-external-store/1.2.0:
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dev: false
+
   /use-sync-external-store/1.2.0_react@18.2.0:
     resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
     peerDependencies:
@@ -41326,19 +41347,6 @@ packages:
     peerDependencies:
       bufferutil: ^4.0.1
       utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dev: true
-
-  /ws/8.9.0:
-    resolution: {integrity: sha512-Ja7nszREasGaYUYCI2k4lCKIRTt+y7XuqVoHR44YpI49TtryyqbqvDMn5eqfW7e6HzTukDRIsXqzVHScqRcafg==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
     peerDependenciesMeta:
       bufferutil:
         optional: true

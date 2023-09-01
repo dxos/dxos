@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTask, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
@@ -19,6 +19,13 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
+
+export const BATCH_COMMIT_AFTER = 200;
+/**
+ * Maximum number of mutations in a batch.
+ * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
+ */
+const BATCH_SIZE_LIMIT = 64;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -39,6 +46,7 @@ export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
+  private _currentBatchCtx?: Context;
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
   public readonly pendingBatch = new Event<BatchUpdate>();
@@ -82,11 +90,10 @@ export class DatabaseProxy {
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item.modelType === model.meta.type) {
-          await this._itemManager.initializeModel(item.id);
+          this._itemManager.initializeModel(item.id);
         }
       }
     });
-
     const loaded = new Trigger();
 
     invariant(!this._entities);
@@ -267,11 +274,17 @@ export class DatabaseProxy {
     }
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
+
     return true;
   }
 
   // TODO(burdon): Make async?
   commitBatch() {
+    // Discard scheduled commit.
+    void this._currentBatchCtx?.dispose();
+    this._currentBatchCtx = undefined;
+
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
@@ -289,7 +302,7 @@ export class DatabaseProxy {
 
     this._service
       .write({
-        batch: batch.data,
+        batch: this._itemManager.mergeMutations(batch.data),
         spaceKey: this._spaceKey,
         clientTag: batch.clientTag!,
       })
@@ -336,8 +349,22 @@ export class DatabaseProxy {
         batch,
       };
     } finally {
+      // Note: Commit batch after BATCH_COMMIT_AFTER idling without new mutations.
       if (batchCreated) {
-        this.commitBatch();
+        // Commit batch after last mutation with delay if there will be no new mutations.
+        this._currentBatchCtx = this._ctx.derive();
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+      } else if (this._currentBatchCtx) {
+        // Reset the timer.
+        // If `this._currentBatchCtx` is set then Batch was created by one of the previous calls of `.mutate()`.
+        invariant(this._currentBatch);
+        void this._currentBatchCtx.dispose();
+        if (this._currentBatch.data.objects && this._currentBatch.data.objects.length >= BATCH_SIZE_LIMIT) {
+          this.commitBatch();
+        } else {
+          this._currentBatchCtx = this._ctx.derive();
+          scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+        }
       }
     }
   }

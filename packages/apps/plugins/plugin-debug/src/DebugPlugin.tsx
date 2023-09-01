@@ -5,33 +5,40 @@
 import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { SETTINGS_PLUGIN, SettingsPluginProvides, SettingsStore } from '@braneframe/plugin-settings';
+import type { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugSettings, DebugStatus } from './components';
-import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
+import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const nodeIds = new Set<string>();
-  let settingsStore: SettingsStore | undefined;
+  const settings = new LocalStorageStore<DebugSettingsProps>();
 
+  const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
-    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    nodeIds.some((nodeId) => nodeId === data.id);
 
   return {
     meta: {
       id: DEBUG_PLUGIN,
     },
     ready: async (plugins) => {
-      // TODO(burdon): Copy pattern (with PLUGIN const).
-      const settingsPlugin = findPlugin<SettingsPluginProvides>(plugins, SETTINGS_PLUGIN);
-      settingsStore = settingsPlugin?.provides.store;
+      settings
+        .bind(settings.values.$debug!, 'debug', LocalStorageStore.bool)
+        .bind(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+    },
+    unload: async () => {
+      settings.close();
     },
     provides: {
       translations,
@@ -58,9 +65,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        // TODO(burdon): Invalidate graph when toggling visibility.
         nodes: (parent) => {
-          if (parent.id === 'root') {
+          if (parent.id === 'space:all-spaces') {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
@@ -73,20 +79,40 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 testId: 'spacePlugin.openDevtools',
               },
             });
-            return;
-          } else if (!(parent.data instanceof SpaceProxy) || !settingsStore?.getKey(SETTINGS_KEY)) {
+
+            const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
+              debug
+                ? parent.add({
+                    id: 'devtools',
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props) => <Bug {...props} />,
+                    data: 'devtools',
+                  })
+                : parent.remove('devtools');
+            });
+
+            return () => unsubscribe?.();
+          } else if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const nodeId = parent.id + '-debug';
-          nodeIds.add(nodeId);
+          nodeIds.push(nodeId);
 
-          parent.add({
-            id: nodeId,
-            label: 'Debug',
-            icon: (props: IconProps) => <Bug {...props} />,
-            data: { id: nodeId, space: parent.data },
+          const unsubscribe = settings.values.$debug?.subscribe((debug) => {
+            debug
+              ? parent.add({
+                  id: nodeId,
+                  label: 'Debug',
+                  icon: (props: IconProps) => <Bug {...props} />,
+                  data: { id: nodeId, space: parent.data },
+                })
+              : parent.remove(nodeId);
           });
+
+          return () => {
+            unsubscribe?.();
+          };
         },
       },
       intent: {
@@ -110,16 +136,24 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       component: (data, role) => {
+        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+          return DebugSettings;
+        }
+
+        if (!settings.values.debug) {
+          return null;
+        }
+
         switch (role) {
-          case 'main': {
-            return isDebug(data) && settingsStore?.getKey(SETTINGS_KEY) ? DebugMain : null;
-          }
-          case 'status': {
-            return settingsStore?.getKey(SETTINGS_KEY) ? DebugStatus : null;
-          }
-          case 'dialog': {
-            return data === 'dxos.org/plugin/splitview/ProfileSettings' ? DebugSettings : null;
-          }
+          case 'main':
+            if (isDebug(data)) {
+              return DebugMain;
+            } else if (data === 'devtools') {
+              return DevtoolsMain;
+            }
+            break;
+          case 'status':
+            return DebugStatus;
         }
 
         return null;
@@ -127,6 +161,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       components: {
         DebugMain,
       },
+      settings: settings.values,
     },
   };
 };

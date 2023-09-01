@@ -72,7 +72,7 @@ message MutationMeta {
   optional timeframe.TimeframeVector timeframe = 4;
 
   /// If this mutation was created by this client, this field will be set to the tag in the mutation.
-  optional string client_tag = 5;
+  repeated string client_tag = 5;
 }
 
 message EchoObjectBatch {

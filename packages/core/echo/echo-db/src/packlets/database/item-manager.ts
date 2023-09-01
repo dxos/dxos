@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import { ProtoCodec } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Item } from './item';
 
@@ -130,5 +131,83 @@ export class ItemManager {
     invariant(model, 'Model not registered');
 
     item.initialize(model.constructor);
+  }
+
+  /**
+   * Merge mutations for the same items.
+   */
+  mergeMutations(mutations: EchoObjectBatch): EchoObjectBatch {
+    if (!mutations.objects) {
+      return mutations;
+    }
+
+    // Get batch of mutations per item.
+    // [(objectId=1), (objectId=1), (objectId=2), (objectId=1)] -> [[(objectId=1), (objectId=1)], [(objectId=2)], [(objectId=1)]]
+    const itemsMutations: EchoObject[][] = mutations.objects?.reduce((acc, mutation) => {
+      const itemMutations = acc.at(-1);
+      if (mutation.genesis || mutation.snapshot) {
+        acc.push([mutation]);
+      } else if (itemMutations?.[0]?.objectId === mutation.objectId) {
+        itemMutations.push(mutation);
+      } else {
+        acc.push([mutation]);
+      }
+      return acc;
+    }, [] as EchoObject[][]);
+
+    // Merge mutations for each item.
+    for (const index in itemsMutations) {
+      const mutations = itemsMutations[index];
+      const item = this._entities.get(mutations[0]?.objectId);
+
+      if (typeof item?.modelMeta?.mergeMutations !== 'function') {
+        continue;
+      }
+
+      const notEmptyMutations = mutations.filter((mutation) => mutation.mutations);
+      if (notEmptyMutations.length === 0) {
+        continue;
+      }
+
+      const mergedMutation = (item.modelMeta.mutationCodec as ProtoCodec).encodeAsAny(
+        item.modelMeta.mergeMutations(
+          notEmptyMutations
+            .map((mutation) => mutation.mutations!.map((m) => item.modelMeta!.mutationCodec.decode(m.model.value)))
+            .flat(),
+        ),
+      );
+
+      const newMutation: EchoObject = {
+        genesis: mutations[0].genesis,
+        snapshot: mutations[0].snapshot,
+        objectId: mutations[0].objectId,
+        meta: mutations[0].meta,
+        mutations: [
+          {
+            meta: {
+              clientTag: notEmptyMutations
+                .map((mutation) =>
+                  mutation.mutations!.map((m) => {
+                    invariant(!m.meta!.feedKey);
+                    invariant(!m.meta!.memberKey);
+                    invariant(!m.meta!.seq);
+                    invariant(!m.meta!.timeframe);
+                    invariant(m.meta!.clientTag && m.meta!.clientTag.length === 1);
+                    return m.meta!.clientTag!;
+                  }),
+                )
+                .flat(2),
+            },
+            model: mergedMutation,
+          },
+        ],
+      };
+      itemsMutations[index] = [newMutation];
+    }
+
+    // Return flattened mutations.
+    return {
+      objects: itemsMutations.flat(),
+    };
   }
 }
