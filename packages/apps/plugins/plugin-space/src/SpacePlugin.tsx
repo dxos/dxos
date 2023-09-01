@@ -38,7 +38,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ current: undefined });
+  const state = deepSignal<SpaceState>({ active: undefined });
   const subscriptions = new EventSubscriptions();
   let disposeSetSpaceProvider: () => void;
 
@@ -82,7 +82,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           resolve(undefined);
         });
 
-        state.current = space;
+        state.active = space;
 
         if (
           space instanceof SpaceProxy &&

@@ -138,14 +138,17 @@ const SavingIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.current;
+  const space = spacePlugin?.provides.space.active;
   useEffect(() => {
     if (!space) {
       return;
     }
-    const { start, stop } = timer((err) => setState(err ? 2 : 0), { min: 250, max: 2000 });
-    return space.db.pendingBatch.on(({ duration }) => {
-      if (duration === undefined) {
+    const { start, stop } = timer(() => setState(0), { min: 250 });
+    return space.db.pendingBatch.on(({ duration, error }) => {
+      if (error) {
+        setState(2);
+        stop();
+      } else if (duration === undefined) {
         setState(1);
         start();
       } else {

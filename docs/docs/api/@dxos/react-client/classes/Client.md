@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:30]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:29]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -19,14 +19,14 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.55"</code>
+Type: <code>"0.1.56"</code>
 
-The version of this client API
+The version of this client API.
 
 ### [config]()
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
-Current configuration object
+Current configuration object.
 
 ### [dbRouter]()
 Type: <code>DatabaseRouter</code>
@@ -39,17 +39,12 @@ HALO credentials.
 ### [initialized]()
 Type: <code>boolean</code>
 
-Returns true if the client has been initialized. Initialize by calling  `.initialize()`
+Returns true if the client has been initialized. Initialize by calling  `.initialize()` .
 
 ### [mesh]()
 Type: <code>MeshProxy</code>
 
 MESH networking.
-
-### [monitor]()
-Type: <code>Monitor</code>
-
-Debug monitor.
 
 ### [services]()
 Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
@@ -124,24 +119,26 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [diagnostics(\[opts\])]()
+### [diagnostics(\[options\])]()
 
 
 
 Get client diagnostics data.
 
 
-Returns: <code>Promise&lt;Diagnostics&gt;</code>
+Returns: <code>Promise&lt;any&gt;</code>
 
 Arguments: 
 
-`opts`: <code>JsonStringifyOptions</code>
+`options`: <code>JsonKeyOptions</code>
 
-### [getSpace(spaceKey)]()
+### [getSpace(\[spaceKey\])]()
 
 
 
 Get an existing space by its key.
+
+If no key is specified the default space is returned.
 
 
 Returns: <code>undefined | Space</code>
