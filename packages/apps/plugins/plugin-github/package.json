@@ -17,6 +17,7 @@
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
