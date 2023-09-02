@@ -180,15 +180,15 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
 
 const branchIsSortable = (node: TreeViewProps['parent']) => {
   if (typeof node !== 'object') {
-    console.log('[branch is sortable]', 'node not object');
+    // console.log('[branch is sortable]', 'node not object');
     return false;
   }
   const persistenceClass = node?.properties?.childrenPersistenceClass;
   if (!persistenceClass) {
-    console.log('[branch is sortable]', 'no persistence class', node?.properties);
+    // console.log('[branch is sortable]', 'no persistence class', node?.properties);
     return false;
   }
-  console.log('[branch is sortable]', persistenceClass, getPersistenceParent(node!, persistenceClass));
+  // console.log('[branch is sortable]', persistenceClass, getPersistenceParent(node!, persistenceClass));
   return !!getPersistenceParent(node!, persistenceClass);
 };
 
