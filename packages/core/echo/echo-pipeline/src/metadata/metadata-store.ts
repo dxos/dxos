@@ -14,7 +14,7 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache, ControlPipelineSnapshot, LargeSpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory, File } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap, arrayToBuffer } from '@dxos/util';
+import { ComplexMap, arrayToBuffer, isNotNullOrUndefined } from '@dxos/util';
 import { Codec } from '@dxos/codec-protobuf';
 
 export interface AddSpaceOptions {
@@ -130,13 +130,12 @@ export class MetadataStore {
       this._metadata = emptyEchoMetadata();
     }
 
-    await Promise.all((this._metadata.spaces ?? []).map(async (space) => {
-      const file = this._directory.getOrCreateFile(`space_${space.key.toHex()}_large`);
+    await Promise.all([
+      this._metadata.identity?.haloSpace.key,
+      ...this._metadata.spaces?.map((space) => space.key) ?? [],
+    ].filter(isNotNullOrUndefined).map(async (key) => {
       try {
-        const metadata = await this._readFile(file, LargeSpaceMetadata);
-        if (metadata) {
-          this._spaceLargeMetadata.set(space.key, metadata);
-        }
+        await this._loadSpaceLargeMetadata(key)
       } catch (err: any) {
         log.error('failed to load space large metadata', { err });
       }
@@ -156,6 +155,18 @@ export class MetadataStore {
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
     await this._writeFile(file, EchoMetadata, data);
+  }
+  
+  private async _loadSpaceLargeMetadata(key: PublicKey): Promise<void> {
+    const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
+    try {
+      const metadata = await this._readFile(file, LargeSpaceMetadata);
+      if (metadata) {
+        this._spaceLargeMetadata.set(key, metadata);
+      }
+    } catch (err: any) {
+      log.error('failed to load space large metadata', { err });
+    }
   }
 
   @synchronized
