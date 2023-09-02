@@ -5,11 +5,13 @@
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
-import { runInContext, scheduleTask, Trigger } from '@dxos/async';
+import { runInContext, scheduleMicroTask, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 import { humanize } from '@dxos/util';
+
+const REPORT_SPANS = false;
 
 let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
@@ -55,7 +57,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.level !== LogLevel.TRACE) {
     return;
   }
-  scheduleTask(ctx, async () => {
+  scheduleMicroTask(ctx, async () => {
     await SENTRY_INITIALIZED.wait();
     const context = getContextFromEntry(entry);
 
@@ -65,7 +67,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
       });
     }
 
-    if (context?.span) {
+    if (REPORT_SPANS && context?.span) {
       switch (context.span.command) {
         case 'begin': {
           const id = context.span.id;
