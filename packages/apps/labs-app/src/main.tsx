@@ -19,6 +19,7 @@ import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
+import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
@@ -82,11 +83,11 @@ const main = async () => {
           DebugPlugin(),
           GridPlugin(),
           IpfsPlugin(),
-          TemplatePlugin(),
           SketchPlugin(),
           KanbanPlugin(),
           ThreadPlugin(),
           ChessPlugin(),
+          MapPlugin(),
           TemplatePlugin(),
         ]}
       />
