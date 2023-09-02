@@ -5,6 +5,7 @@
 import { GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { AppState } from '@braneframe/types';
 import { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
@@ -34,6 +35,10 @@ export type SpaceState = {
    * If no ancestor represents a space, then it is undefined.
    */
   active: Space | undefined;
+  /**
+   * The AppState persistor object for the active client.
+   */
+  appState: AppState | undefined;
 };
 
 export type SpacePluginProvides = GraphProvides &

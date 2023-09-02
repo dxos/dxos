@@ -12,6 +12,7 @@ import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
@@ -38,7 +39,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ active: undefined });
+  const state = deepSignal<SpaceState>({ active: undefined, appState: undefined });
   const subscriptions = new EventSubscriptions();
   let disposeSetSpaceProvider: () => void;
 
@@ -98,6 +99,21 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           });
         }
       });
+
+      // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
+      const defaultSpace = client.getSpace() ?? client.spaces?.get()[0];
+      if (defaultSpace) {
+        // Ensure defaultSpace has the app state persistor
+        await defaultSpace.waitUntilReady();
+        const appStates = defaultSpace.db.query(AppState.filter()).objects;
+        if (appStates.length < 1) {
+          const appState = new AppState();
+          defaultSpace.db.add(appState);
+          state.appState = appState;
+        } else {
+          state.appState = (appStates as AppState[])[0];
+        }
+      }
     },
     unload: async () => {
       subscriptions.clear();
