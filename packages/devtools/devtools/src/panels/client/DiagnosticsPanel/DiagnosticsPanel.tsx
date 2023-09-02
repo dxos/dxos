@@ -11,7 +11,7 @@ import { useFileDownload } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
-import { JsonView, PanelContainer } from '../../../components';
+import { JsonView, PanelContainer, Tree } from '../../../components';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
@@ -93,7 +93,7 @@ export const DiagnosticsPanel = () => {
         )
       }
     >
-      <JsonView data={data} />
+      {(false && <JsonView data={data} />) || <Tree data={data} />}
     </PanelContainer>
   );
 };

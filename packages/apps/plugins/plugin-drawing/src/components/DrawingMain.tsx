@@ -13,33 +13,31 @@ import { coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-
 
 import '@tldraw/tldraw/tldraw.css';
 
-import { useDrawingModel } from '../hooks';
+import { useDrawingStore } from '../hooks';
 
 export type DrawingMainParams = {
   readonly?: boolean;
   data: DrawingType;
 };
 
-export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
-  const { store } = useDrawingModel(drawing.data);
+export const DrawingMain: FC<DrawingMainParams> = ({ data: object }) => {
   const { themeMode } = useThemeContext();
+  const store = useDrawingStore(object.data);
+
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
       editor.setDarkMode(themeMode === 'dark');
 
-      // TODO(burdon): Config.
+      // TODO(burdon): Config options.
       editor.setSnapMode(true);
       editor.setGridMode(true);
     }
   }, [editor, themeMode]);
 
-  // Tool events.
-  const handleUiEvent = (name: string, data: any) => {
-    // console.log('handleUiEvent', name, data);
-  };
-
-  // TODO(burdon): Error if switch DIRECTLY between drawings (store changed).
+  if (!store) {
+    return null;
+  }
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
@@ -49,7 +47,7 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
       <div
         className={mx(
           'h-full',
-          // TODO(burdon): Hack to override z-index.
+          // TODO(burdon): Override z-index.
           '[&>div>span>div]:z-0',
           // TODO(burdon): Hide .tlui-menu-zone
           '[&>div>main>div:nth-child(1)>div:nth-child(1)]:hidden',
@@ -61,15 +59,15 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
           '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
         )}
       >
-        <Tldraw autoFocus store={store} onUiEvent={handleUiEvent} onMount={setEditor} />
+        <Tldraw autoFocus store={store} onMount={setEditor} />
       </div>
     </Main.Content>
   );
 };
 
 export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing }) => {
-  const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
+  const store = useDrawingStore(drawing.data);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
@@ -110,7 +108,7 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing }) => {
 
   return (
     <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
-      <Tldraw store={store} hideUi={true} onMount={setEditor} />
+      <Tldraw store={store} onMount={setEditor} hideUi={true} />
     </div>
   );
 };
