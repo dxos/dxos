@@ -36,7 +36,7 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className={mx('flex w-full shadow p-2', inputSurface)}>
+    <div className={mx('flex w-full p-2 shadow rounded', inputSurface)}>
       <Input.Root>
         <Input.Label srOnly>{t('block input label')}</Input.Label>
         <Input.TextArea

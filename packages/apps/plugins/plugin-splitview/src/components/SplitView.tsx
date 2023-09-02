@@ -86,6 +86,7 @@ export const SplitView = () => {
         </Main.Content>
 
         {/* Status info. */}
+        {/* TODO(burdon): Currently covered by complementary sidebar. */}
         <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]', fixedSurface)}>
           <Surface name='status' role='status' />
         </div>
