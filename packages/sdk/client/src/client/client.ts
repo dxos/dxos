@@ -211,8 +211,8 @@ export class Client {
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
-        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-        : undefined,
+          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+          : undefined,
     });
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
@@ -230,6 +230,11 @@ export class Client {
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     const { fromHost, fromIFrame } = await import('../services');
+
+    this._config = this._options.config ?? new Config();
+    // NOTE: Must currently match the host.
+    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
+
     const { EchoProxy, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
@@ -239,10 +244,7 @@ export class Client {
       defaultSpace.properties[defaultKey] = identityKey.toHex();
     };
 
-    this._config = this._options.config ?? new Config();
-    // NOTE: Must currently match the host.
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
-    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
     const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
     const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
