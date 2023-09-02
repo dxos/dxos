@@ -30,6 +30,8 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
 const CONTROL_PIPELINE_SNAPSHOT_DELAY = 10_000;
 
+const USE_SNAPSHOTS = true;
+
 /**
  * Processes HALO credentials, which include genesis and invitations.
  */
@@ -104,7 +106,7 @@ export class ControlPipeline {
   @trace.span({ showInBrowserTimeline: true })
   async start() {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
-    if (snapshot) {
+    if (USE_SNAPSHOTS && snapshot) {
       await this._processSnapshot(snapshot);
     }
 
