@@ -13,7 +13,6 @@ import { PublicKey } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
-import { humanize } from '@dxos/util';
 
 import { ThreadChannel } from './ThreadChannel';
 
@@ -26,15 +25,18 @@ import { ThreadChannel } from './ThreadChannel';
 const colors = [
   'text-blue-300',
   'text-green-300',
-  'text-teal-300',
   'text-red-300',
+  'text-cyan-300',
+  'text-indigo-300',
+  'text-teal-300',
   'text-orange-300',
   'text-purple-300',
 ];
 
 // TODO(burdon): Move to key.
 const colorHash = (key: PublicKey) => {
-  return colors[Number('0x' + key) % colors.length];
+  const num = Number('0x' + key.toHex().slice(0, 8));
+  return colors[num % colors.length];
 };
 
 export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
@@ -53,15 +55,17 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
 };
 
 export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
-  const identity = useIdentity(); // TODO(burdon): Requires context for storybook? No profile in personal space?
+  const identity = useIdentity()!; // TODO(burdon): Requires context for storybook? No profile in personal space?
   const members = useMembers(space.key);
   const identityKey = identity!.identityKey;
 
   const getBlockProperties = (identityKey: PublicKey) => {
-    const member = members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey));
+    const author = PublicKey.equals(identityKey, identity.identityKey)
+      ? identity
+      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
     return {
-      displayName: member?.identity.profile?.displayName ?? humanize(identityKey.toHex()),
-      classes: colorHash(identityKey),
+      displayName: author.profile?.displayName ?? author.identityKey.toHex(),
+      classes: colorHash(author.identityKey),
     };
   };
 

@@ -30,7 +30,7 @@ export type GithubPluginProvides = TranslationsProvides & {
 };
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
-  const settings = new LocalStorageStore<GithubSettingsProps>();
+  const settings = new LocalStorageStore<GithubSettingsProps>('braneframe.plugin-github');
 
   return {
     meta: {
@@ -38,7 +38,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       shortId: 'github',
     },
     ready: async () => {
-      settings.bind(settings.values.$pat!, 'braneframe.plugin-github.pat', LocalStorageStore.string);
+      settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
     },
     unload: async () => {
       settings.close();

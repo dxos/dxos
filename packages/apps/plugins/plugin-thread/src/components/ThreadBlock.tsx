@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/react-client';
 import { useSubscription } from './util';
 
 export type BlockProperties = {
-  displayName: string;
+  displayName?: string;
   classes: string;
 };
 

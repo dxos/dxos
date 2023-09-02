@@ -18,7 +18,7 @@ import translations from './translations';
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const settings = new LocalStorageStore<DebugSettingsProps>();
+  const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
 
   const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
@@ -34,8 +34,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     },
     ready: async (plugins) => {
       settings
-        .bind(settings.values.$debug!, 'braneframe.plugin-debug.debug', LocalStorageStore.bool)
-        .bind(settings.values.$devtools!, 'braneframe.plugin-debug.devtools', LocalStorageStore.bool);
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
+        .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
     },
     unload: async () => {
       settings.close();
