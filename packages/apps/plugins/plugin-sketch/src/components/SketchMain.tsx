@@ -6,23 +6,23 @@ import { Editor, Tldraw } from '@tldraw/tldraw';
 import React, { FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
-import { useDrawingStore } from '../hooks';
+import { useSketchStore } from '../hooks';
 
-export type DrawingMainParams = {
+export type SketchMainParams = {
   readonly?: boolean;
-  data: DrawingType;
+  data: SketchType;
 };
 
-export const DrawingMain: FC<DrawingMainParams> = ({ data: object }) => {
+export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
   const { themeMode } = useThemeContext();
-  const store = useDrawingStore(object.data);
+  const store = useSketchStore(object.data);
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -65,9 +65,9 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: object }) => {
   );
 };
 
-export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing }) => {
+export const SketchSection: FC<SketchMainParams> = ({ data: sketch }) => {
   const { themeMode } = useThemeContext();
-  const store = useDrawingStore(drawing.data);
+  const store = useSketchStore(sketch.data);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {

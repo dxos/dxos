@@ -9,19 +9,19 @@ import React from 'react';
 import type { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { getPersistenceParent } from '@braneframe/plugin-treeview'; // TODO(burdon): Move to graph?
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Sketch as SketchType } from '@braneframe/types';
 import { Space } from '@dxos/client/echo';
 
-import { DRAWING_PLUGIN } from './types';
+import { SKETCH_PLUGIN } from './types';
 
 export const objectToGraphNode = (
   parent: Graph.Node<Space>,
-  object: DrawingType,
+  object: SketchType,
   index: string,
-): Graph.Node<DrawingType> => {
+): Graph.Node<SketchType> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],
+    label: object.title ?? ['sketch title placeholder', { ns: SKETCH_PLUGIN }],
     icon: (props) => <CompassTool {...props} />,
     data: object,
     properties: {
@@ -33,7 +33,7 @@ export const objectToGraphNode = (
   // TODO(burdon): Add create/rename/delete by default (or helper).
   child.addAction({
     id: 'rename',
-    label: ['rename drawing label', { ns: DRAWING_PLUGIN }],
+    label: ['rename sketch label', { ns: SKETCH_PLUGIN }],
     icon: (props) => <PencilSimpleLine {...props} />,
     intent: {
       action: SpaceAction.RENAME_OBJECT,
@@ -43,7 +43,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'delete',
-    label: ['delete drawing label', { ns: DRAWING_PLUGIN }],
+    label: ['delete sketch label', { ns: SKETCH_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,

@@ -7,21 +7,21 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { DrawingMain, DrawingSection } from './components';
+import { SketchMain, SketchSection } from './components';
 import translations from './translations';
-import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction } from './types';
+import { isSketch, SKETCH_PLUGIN, SketchPluginProvides, SketchAction } from './types';
 import { objectToGraphNode } from './util';
 
-export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
-  const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
+export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
+  const adapter = new GraphNodeAdapter(SketchType.filter(), objectToGraphNode);
 
   return {
     meta: {
-      id: DRAWING_PLUGIN,
+      id: SKETCH_PLUGIN,
     },
     unload: async () => {
       adapter.clear();
@@ -37,20 +37,20 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           const space = parent.data;
 
           const [presentationNode] = parent.add({
-            id: `${DRAWING_PLUGIN}:${space.key.toHex()}`,
-            label: ['plugin name', { ns: DRAWING_PLUGIN }],
+            id: `${SKETCH_PLUGIN}:${space.key.toHex()}`,
+            label: ['plugin name', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Folder {...props} />,
             properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
           });
 
           presentationNode.addAction({
-            id: `${DRAWING_PLUGIN}/create`,
-            label: ['create drawing label', { ns: DRAWING_PLUGIN }],
+            id: `${SKETCH_PLUGIN}/create`,
+            label: ['create sketch label', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             intent: [
               {
-                plugin: DRAWING_PLUGIN,
-                action: DrawingAction.CREATE,
+                plugin: SKETCH_PLUGIN,
+                action: SketchAction.CREATE,
               },
               {
                 action: SpaceAction.ADD_OBJECT,
@@ -61,7 +61,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'drawingPlugin.createDrawing',
+              testId: 'sketchPlugin.createSketch',
             },
           });
 
@@ -71,47 +71,47 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-stack-section-drawing',
-            testId: 'drawingPlugin.createSectionSpaceDrawing',
-            label: ['create stack section label', { ns: DRAWING_PLUGIN }],
+            id: 'create-stack-section-sketch',
+            testId: 'sketchPlugin.createSectionSpaceSketch',
+            label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
             intent: {
-              plugin: DRAWING_PLUGIN,
-              action: DrawingAction.CREATE,
+              plugin: SKETCH_PLUGIN,
+              action: SketchAction.CREATE,
             },
           },
         ],
         choosers: [
           {
-            id: 'choose-stack-section-drawing', // TODO(burdon): Standardize.
-            testId: 'drawingPlugin.createSectionSpaceDrawing',
-            label: ['choose stack section label', { ns: DRAWING_PLUGIN }],
+            id: 'choose-stack-section-sketch', // TODO(burdon): Standardize.
+            testId: 'sketchPlugin.createSectionSpaceSketch',
+            label: ['choose stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            filter: isDrawing,
+            filter: isSketch,
           },
         ],
       },
       component: (data, role) => {
         // TODO(burdon): SurfaceResolver error if component not defined.
-        if (!data || typeof data !== 'object' || !isDrawing(data)) {
+        if (!data || typeof data !== 'object' || !isSketch(data)) {
           return null;
         }
 
         switch (role) {
           case 'main':
-            return DrawingMain;
+            return SketchMain;
           case 'section':
-            return DrawingSection;
+            return SketchSection;
         }
       },
       components: {
-        DrawingMain,
+        SketchMain,
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case DrawingAction.CREATE: {
-              return { object: new DrawingType() };
+            case SketchAction.CREATE: {
+              return { object: new SketchType() };
             }
           }
         },

@@ -178,7 +178,7 @@ export class EchoStore {
   }
 }
 
-export const useDrawingStore = (data: Text, options = { timeout: 250 }): TLStore => {
+export const useSketchStore = (data: Text, options = { timeout: 250 }): TLStore => {
   const store = useMemo(() => new EchoStore(data, options), [data.id]);
   useEffect(() => {
     store.open();
