@@ -67,7 +67,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-  ) {}
+  ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -84,10 +84,8 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(spaceMetadata);
-        if (spaceMetadata.state !== SpaceState.INACTIVE) {
-          space.initializeDataPipelineAsync();
-        }
+        await this._constructSpace(spaceMetadata);
+
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
@@ -95,6 +93,13 @@ export class DataSpaceManager {
 
     this._isOpen = true;
     this.updated.emit();
+
+    for (const space of this._spaces.values()) {
+      if(space.state !== SpaceState.INACTIVE) {
+        space.initializeDataPipelineAsync();
+      }
+    }
+
     log.trace('dxos.echo.data-space-manager.open', trace.end({ id: this._instanceId }));
   }
 
