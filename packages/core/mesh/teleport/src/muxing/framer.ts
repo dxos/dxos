@@ -11,8 +11,7 @@ import { RpcPort } from './rpc-port';
 const FRAME_LENGTH_SIZE = 2;
 
 /**
- * Framer that turns a stream of binary messages into a framed RpcPort.
- *
+ * Converts a stream of binary messages into a framed RpcPort.
  * Buffers are written prefixed by their length encoded as a varint.
  */
 export class Framer {
