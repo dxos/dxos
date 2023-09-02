@@ -9,6 +9,7 @@ import { ProtoCodec } from './codec';
 import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
+import { invariant } from '@dxos/invariant';
 
 export class Schema<T, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(
@@ -21,7 +22,7 @@ export class Schema<T, S extends {} = {}> {
 
   private readonly _mapping: BidirectionalMapingDescriptors;
 
-  private readonly _codecCache: Record<string, ProtoCodec> = {};
+  private readonly _codecCache = new Map<string, ProtoCodec>();
 
   constructor(private _typesRoot: protobufjs.Root, substitutions: Substitutions) {
     this._mapping = createMappingDescriptors(substitutions);
@@ -31,17 +32,35 @@ export class Schema<T, S extends {} = {}> {
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
+
+    let codec = this._codecCache.get(typeName);
+    if (codec) {
+      return codec;
+    }
+
+    if (codec === null) {
+      throw new Error(`Type not found: "${typeName}"`);
+    }
+
     const type = this._typesRoot.lookupType(typeName);
-    this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
-    return this._codecCache[type.fullName];
+
+    codec = new ProtoCodec(type, this._mapping, this);
+    this._codecCache.set(typeName, codec);
+
+    return codec;
   }
 
   hasType(typeName: string): boolean {
     if (typeName === '') {
       return false;
     }
+
+    if (this._codecCache.has(typeName)) {
+      return true;
+    }
+
     try {
-      this._typesRoot.lookupType(typeName);
+      this.tryGetCodecForType(typeName);
       return true;
     } catch {
       return false;
@@ -56,9 +75,22 @@ export class Schema<T, S extends {} = {}> {
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
+
+    let codec = this._codecCache.get(typeName);
+    if (codec) {
+      return codec;
+    }
+
+    if (codec === null) {
+      throw new Error(`Type not found: "${typeName}"`);
+    }
+
     const type = this._typesRoot.lookupType(typeName);
-    this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
-    return this._codecCache[type.fullName];
+
+    codec = new ProtoCodec(type, this._mapping, this);
+    this._codecCache.set(typeName, codec);
+
+    return codec;
   }
 
   getService<K extends keyof S & string>(name: K): ServiceDescriptor<S[K]> {
