@@ -331,7 +331,7 @@ export class Muxer {
       this._balancer.pushData(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
-      this.destroy(err);
+      await this.destroy(err);
     }
   }
 
