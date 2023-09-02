@@ -136,13 +136,13 @@ declare module 'hypercore' {
   export type HypercoreOptions = {
     sparse?: boolean; // Do not mark the entire feed to be downloaded.
     eagerUpdate?: boolean;
+    maxRequests?: number;
     createIfMissing?: boolean;
     secretKey?: Buffer;
     valueEncoding?: ValueEncoding;
     crypto?: Crypto;
     writable?: boolean;
     stats?: boolean;
-    maxRequests?: number;
   };
 
   /**

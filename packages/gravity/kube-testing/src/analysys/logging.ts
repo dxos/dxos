@@ -13,8 +13,8 @@ export enum TestingEvent {
   AGENT_ERROR = 'AGENT_ERROR',
 
   // Swarm events.
-  JOIN_SWARM = '',
-  LEAVE_SWARM = '',
+  JOIN_SWARM = 'JOIN_SWARM',
+  LEAVE_SWARM = 'LEAVE_SWARM',
 }
 
 export type TraceEvent =

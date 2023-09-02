@@ -19,11 +19,13 @@ import { GenericStackObject, getSectionModels, STACK_PLUGIN, StackSectionModel, 
 import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 
-export const StackSectionsPanel: FC<{
+export const StackSectionsSortable: FC<{
   sections: StackSections;
   id: string;
   onAdd: (sectionObject: GenericStackObject, start: number) => StackSectionModel[];
-}> = ({ sections, id: stackId, onAdd }) => {
+  persistenceId?: string;
+  StackSectionComponent?: typeof StackSection;
+}> = ({ sections, id: stackId, onAdd, persistenceId, StackSectionComponent = StackSection }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const dnd = useDnd();
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
@@ -102,11 +104,11 @@ export const StackSectionsPanel: FC<{
       } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
-        const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
+        const nextIndex = sections.findIndex((section) => section?.object?.id === over?.id);
         if (activeSectionId) {
           dnd.overlayDropAnimation = 'around';
           if (activeSectionId !== overSectionId) {
-            const activeIndex = sections.findIndex((section) => section.object.id === active.id);
+            const activeIndex = sections.findIndex((section) => section?.object?.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
             setSectionModels(getSectionModels(sections));
           }
@@ -126,11 +128,12 @@ export const StackSectionsPanel: FC<{
       <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
         {sectionModels.map((sectionModel, start) => {
           return (
-            <StackSection
+            <StackSectionComponent
               key={sectionModel.id}
               onRemove={() => handleRemove(start)}
               section={sectionModel}
               rearranging={overIsMember && activeId === sectionModel.id}
+              persistenceId={persistenceId}
             />
           );
         })}

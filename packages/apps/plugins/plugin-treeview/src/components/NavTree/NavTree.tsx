@@ -5,15 +5,14 @@
 import { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
-import get from 'lodash.get';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver } from '@braneframe/plugin-dnd';
+import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { Tree } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
-import { sortByIndex } from '../../util';
+import { getPersistenceParent, sortByIndex } from '../../util';
 import { SortableTreeViewItem, NavTreeItem } from './NavTreeItem';
 
 export type TreeViewProps = {
@@ -22,88 +21,186 @@ export type TreeViewProps = {
   parent?: string | Graph.Node | null;
 };
 
+type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
+
 const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; items: Graph.Node[]; level: number }) => {
-  // todo(thure): `observer` does not trigger updates when node indices are updated.
-  const itemsInOrder = items.sort(sortByIndex);
-  const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
   const dnd = useDnd();
 
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overIsMember, setOverIsMember] = useState(false);
+  const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);
+  const [overIsDroppable, setOverIsDroppable] = useState<NavTreeDropType>(null);
+
+  const [itemsInOrder, setItemsInOrder] = useState(items.sort(sortByIndex));
+  const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
+
+  const persistParent = useMemo(
+    () => getPersistenceParent(parent, parent.properties.childrenPersistenceClass),
+    [parent],
+  );
+
+  useEffect(() => {
+    return setItemsInOrder(items.sort(sortByIndex));
+  }, [items, parent.id]);
+
+  useDragStart(({ active }) => {
+    setActiveNode(active.data?.current?.treeitem ?? null);
+  }, []);
 
   useDragEnd(
-    ({ active, over }: DragEndEvent) => {
-      // TODO(burdon): Use traversal instead of `get`?
-      const activeNode = active?.data?.current?.treeitem as Graph.Node | null;
-      const overNode = over?.data?.current?.treeitem as Graph.Node | null;
-      if (activeNode && overNode && activeNode.parent?.id === parent.id) {
-        if (parent.properties.onChildrenRearrange && overNode.parent?.id === parent.id) {
+    ({ over }: DragEndEvent) => {
+      const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
+      if (activeNode && overNode && persistParent) {
+        if (overIsDroppable === 'rearrange') {
+          dnd.overlayDropAnimation = 'around';
           if (overNode.id !== activeNode.id) {
-            dnd.overlayDropAnimation = 'around';
             const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
 
             const beforeNode = itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1];
             const afterNode = itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex];
             if (beforeNode?.properties.index === afterNode?.properties.index) {
-              const nextActiveIndex = getIndexAbove(beforeNode.properties.index);
+              const nextActiveIndex = getIndexAbove(beforeNode?.properties.index);
               const nextAfterIndex = getIndexAbove(nextActiveIndex);
-              parent.properties.onChildrenRearrange(activeNode, nextActiveIndex);
-              parent.properties.onChildrenRearrange(afterNode, nextAfterIndex);
+              persistParent.properties.onRearrangeChild(activeNode, nextActiveIndex);
+              persistParent.properties.onRearrangeChild(afterNode, nextAfterIndex);
             } else {
-              parent.properties.onChildrenRearrange(
+              persistParent.properties.onRearrangeChild(
                 activeNode,
                 overIndex < 1
-                  ? getIndexBelow(itemsInOrder[0].properties.index)
-                  : getIndexBetween(beforeNode.properties.index, afterNode?.properties.index),
+                  ? getIndexBelow(itemsInOrder[0]?.properties.index)
+                  : getIndexBetween(beforeNode?.properties.index, afterNode?.properties.index),
               );
             }
+            setItemsInOrder(parent.children.sort(sortByIndex));
           }
-        } else if (overNode.parent?.properties.onMoveNode) {
-          dnd.overlayDropAnimation = 'into';
-          overNode.parent?.properties.onMoveNode(overNode.parent, activeNode.parent!, activeNode, 'a1'); // TODO(burdon): Index.
+        } else if (overIsDroppable === 'migrate-destination') {
+          dnd.overlayDropAnimation = 'around';
+          const overPersistParent = getPersistenceParent(overNode, activeNode.properties.persistenceClass);
+          if (overPersistParent?.properties.onMigrateStartChild) {
+            const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
+            const migratedIndex =
+              overIndex < 1
+                ? getIndexBelow(itemsInOrder[overIndex + 1]?.properties.index)
+                : getIndexBetween(
+                    itemsInOrder[overIndex - 1]?.properties.index,
+                    itemsInOrder[overIndex + 1]?.properties.index,
+                  );
+            overPersistParent?.properties.onMigrateStartChild(activeNode, overPersistParent, migratedIndex);
+          }
+        } else if (overIsDroppable === 'migrate-origin') {
+          const activePersistParent = getPersistenceParent(activeNode, activeNode.properties.persistenceClass);
+          activePersistParent?.properties.onMigrateEndChild?.(activeNode);
         }
       }
-      setActiveId(null);
-      setOverIsMember(false);
+      setActiveNode(null);
+      setOverIsDroppable(null);
     },
-    [parent, itemsInOrder],
+    [parent, persistParent, activeNode, overIsDroppable, itemsInOrder],
   );
 
   useDragOver(
-    ({ active, over }) => {
-      const node: Graph.Node | null = get(active, 'data.current.treeitem', null);
-      setOverIsMember(
-        !!node && get(node, 'parent.id') === parent.id && get(over, 'data.current.treeitem.parent.id') === parent.id,
-      );
-      setActiveId(node?.id ?? null);
+    ({ over }) => {
+      let dropType: NavTreeDropType = null;
+
+      if (over?.data?.current?.treeitem && activeNode) {
+        const overNode: Graph.Node = over.data.current.treeitem;
+        const overPersistParent = getPersistenceParent(overNode, parent.properties.childrenPersistenceClass);
+        const activePersistParent = getPersistenceParent(activeNode, parent.properties.childrenPersistenceClass);
+        if (
+          persistParent?.properties.onRearrangeChild &&
+          activePersistParent?.id === persistParent.id &&
+          overPersistParent?.id === persistParent.id
+        ) {
+          // rearrange relevant & supported
+          dropType = 'rearrange';
+        } else if (
+          persistParent &&
+          activePersistParent?.id !== overPersistParent?.id &&
+          activeNode.properties?.persistenceClass &&
+          overPersistParent?.properties?.acceptPersistenceClass?.has(activeNode.properties.persistenceClass)
+        ) {
+          // migration relevant
+          if (overPersistParent?.id === persistParent.id) {
+            dropType = 'migrate-destination';
+          } else if (activePersistParent?.id === persistParent.id) {
+            dropType = 'migrate-origin';
+          }
+        }
+      }
+
+      setOverIsDroppable(dropType);
+
+      setItemsInOrder((itemsCurrent) => {
+        const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
+        if (overNode && activeNode) {
+          const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode?.id);
+          switch (dropType) {
+            case 'migrate-origin':
+              return itemsCurrent.filter(({ id }) => id !== activeNode?.id);
+            case 'migrate-destination':
+              if (overIndex >= 0) {
+                return [
+                  ...items.slice(0, overIndex),
+                  {
+                    ...activeNode!,
+                    id: 'migration-subject',
+                    parent: persistParent,
+                    properties: { isPreview: true },
+                  },
+                  ...items.slice(overIndex, items.length),
+                ];
+              } else {
+                return itemsCurrent;
+              }
+            case 'rearrange':
+            default:
+              return itemsCurrent.length !== items.length ? items.sort(sortByIndex) : itemsCurrent;
+          }
+        } else {
+          return itemsCurrent;
+        }
+      });
     },
-    [parent],
+    [activeNode, persistParent, items],
   );
 
   return (
-    <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
+    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) => (
         <SortableTreeViewItem
           key={item.id}
           node={item}
           level={level}
-          rearranging={overIsMember && activeId === item.id}
+          rearranging={overIsDroppable === 'rearrange' && activeNode?.id === item.id}
+          isPreview={item.properties?.isPreview}
         />
       ))}
     </SortableContext>
   );
 };
 
+const branchIsSortable = (node: TreeViewProps['parent']) => {
+  if (typeof node !== 'object') {
+    // console.log('[branch is sortable]', 'node not object');
+    return false;
+  }
+  const persistenceClass = node?.properties?.childrenPersistenceClass;
+  if (!persistenceClass) {
+    // console.log('[branch is sortable]', 'no persistence class', node?.properties);
+    return false;
+  }
+  // console.log('[branch is sortable]', persistenceClass, getPersistenceParent(node!, persistenceClass));
+  return !!getPersistenceParent(node!, persistenceClass);
+};
+
 export const NavTree = (props: TreeViewProps) => {
-  const { items, level } = props;
+  const { items, level, parent } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
   return (
     <Tree.Branch>
       {visibleItems?.length ? (
-        typeof props.parent === 'object' && props.parent?.properties.onChildrenRearrange ? (
-          <TreeViewSortableImpl items={visibleItems} parent={props.parent} level={level} />
+        branchIsSortable(parent) ? (
+          <TreeViewSortableImpl items={visibleItems} parent={parent as Graph.Node} level={level} />
         ) : (
           visibleItems.sort(sortByIndex).map((item) => <NavTreeItem key={item.id} node={item} level={level} />)
         )

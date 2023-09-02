@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { composeContext } from './Context';
 import { Plugin, PluginDefinition, PluginProvides, findPlugin } from './Plugin';
 
-export type PluginContextValue = {
+type PluginContextValue = {
   plugins: Plugin[];
 };
 
@@ -17,13 +17,37 @@ const defaultContext: PluginContextValue = { plugins: [] };
 
 const PluginContext = createContext<PluginContextValue>(defaultContext);
 
-export const usePlugins = () => useContext(PluginContext);
+/**
+ * Get all plugins.
+ */
+export const usePlugins = (): PluginContextValue => useContext(PluginContext);
 
+/**
+ * Get a plugin by ID.
+ */
 export const usePlugin = <T,>(id: string): Plugin<T> | undefined => {
   const { plugins } = usePlugins();
   return findPlugin<T>(plugins, id);
 };
 
+/**
+ * This provider initializes plugins and provides them to the application.
+ * It also provides a `PluginContext` which can be used to access plugins.
+ * Expected usage is for this to be the entrypoint of the application.
+ *
+ * @example
+ * createRoot(document.getElementById('root')!).render(
+ *   <StrictMode>
+ *     <PluginProvider
+ *       fallback={<div>Initializing Plugins...</div>}
+ *       plugins={[...]}
+ *     />
+ *   </StrictMode>,
+ * );
+ *
+ * @param options.plugins List of plugin definitions to initialize.
+ * @param options.fallback Fallback component to render while plugins are initializing.
+ */
 export const PluginProvider = ({
   plugins: definitions,
   fallback,
@@ -68,6 +92,9 @@ export const PluginProvider = ({
   );
 };
 
+/**
+ * Resolve a `PluginDefinition` into a fully initialized `Plugin`.
+ */
 export const initializePlugin = async <T, U>(pluginDefinition: PluginDefinition<T, U>): Promise<Plugin<T & U>> => {
   const provides = await pluginDefinition.initialize?.();
   return {

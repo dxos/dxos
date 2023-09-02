@@ -77,7 +77,7 @@ message Kanban {
   repeated Column columns = 2;
 }
 
-message Drawing {
+message Sketch {
   option (object) = true;
 
   string title = 1;

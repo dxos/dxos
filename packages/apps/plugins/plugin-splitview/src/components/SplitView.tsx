@@ -6,7 +6,7 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { coarseBlockSize, fixedSurface, getSize } from '@dxos/aurora-theme';
+import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -29,6 +29,9 @@ export const SplitView = () => {
         }
       }}
     >
+      <div role='none' className='sr-only'>
+        <Surface name='documentTitle' limit={1} />
+      </div>
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
@@ -83,15 +86,10 @@ export const SplitView = () => {
         </Main.Content>
 
         {/* Status info. */}
-        {/* TODO(burdon): name/role? */}
-        <Main.Content asChild classNames={['fixed bottom-0 z-[1] flex w-full gap-1', fixedSurface]}>
-          <div>
-            <div role='none' className='grow' />
-            <div role='none' aria-label={t('status label')}>
-              <Surface name='status' role='status' />
-            </div>
-          </div>
-        </Main.Content>
+        {/* TODO(burdon): Currently covered by complementary sidebar. */}
+        <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]', fixedSurface)}>
+          <Surface name='status' role='status' />
+        </div>
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />

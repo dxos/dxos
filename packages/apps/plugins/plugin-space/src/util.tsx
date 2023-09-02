@@ -7,8 +7,8 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
+import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
@@ -37,7 +37,7 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string): Graph.Node<Space> => {
+export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: string): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
   const disabled = state !== SpaceState.READY;
@@ -47,57 +47,71 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
 
   const [node] = parent.add({
     id,
-    label: getSpaceDisplayName(space),
+    label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
     data: space,
     properties: {
+      palette: parent.id === 'root' ? 'teal' : undefined,
       role: 'branch',
       hidden: inactive,
       disabled,
       error,
       index,
-      // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
-      onChildrenRearrange: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
-        log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
-        if (child.data) {
-          // TODO(burdon): Decouple from object's data structure.
-          child.data.meta = {
-            ...child.data?.meta,
-            index: nextIndex,
-          };
-        }
+      onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
+        // TODO(burdon): Decouple from object's data structure.
+        child.data.meta = {
+          ...child.data?.meta,
+          index: nextIndex,
+        };
       },
-      onMoveNode: (
-        source: Graph.Node<TypedObject>,
-        target: Graph.Node<TypedObject>,
-        child: Graph.Node<TypedObject>,
-        nextIndex: Index,
-      ) => {
-        log.info('onParentMove', { source: source.id, target: target.id, child: child.id, nextIndex });
+      acceptPersistenceClass: new Set(['spaceObject']),
+      onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        // create clone of child and add to migration destination
+        const object = clone(child.data, {
+          retainId: true,
+          additional: [
+            ...(child.data.content ? [child.data.content] : []),
+            ...(child.data.meta ? [child.data.meta] : []),
+          ],
+        });
+        space.db.add(object);
+        object.meta = {
+          ...object.meta,
+          index: nextIndex,
+        };
+      },
+      onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
+        // remove child being replicated from migration origin
+        space.db.remove(child.data);
       },
     },
   });
 
+  if (parent.id !== 'root') {
+    node.addAction(
+      {
+        id: 'rename-space',
+        label: ['rename space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PencilSimpleLine {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.RENAME },
+        properties: {
+          disabled: disabled || error,
+        },
+      },
+      {
+        id: 'share-space',
+        label: ['share space', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PaperPlane {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.SHARE },
+        properties: {
+          disabled: disabled || error,
+        },
+      },
+    );
+  }
+
   node.addAction(
-    {
-      id: 'rename-space',
-      label: ['rename space label', { ns: SPACE_PLUGIN }],
-      icon: (props) => <PencilSimpleLine {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.RENAME },
-      properties: {
-        disabled: disabled || error,
-      },
-    },
-    {
-      id: 'share-space',
-      label: ['share space', { ns: SPACE_PLUGIN }],
-      icon: (props) => <PaperPlane {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.SHARE },
-      properties: {
-        disabled: disabled || error,
-      },
-    },
     {
       id: 'backup-space',
       label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
@@ -116,13 +130,16 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
         disabled: disabled || error,
       },
     },
-    {
+  );
+
+  if (parent.id !== 'root') {
+    node.addAction({
       id: 'close-space',
       label: ['close space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <X {...props} />,
       intent: { ...baseIntent, action: SpaceAction.CLOSE },
-    },
-  );
+    });
+  }
 
   return node;
 };

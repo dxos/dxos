@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, IconProps, WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import { Circle, IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { TimeoutError } from '@dxos/async';
@@ -13,16 +13,18 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 const styles = {
-  success: 'text-green-400 dark:text-green-600',
-  warning: 'text-red-400 dark:text-red-600',
+  success: 'text-green-500 dark:text-green-600',
+  warning: 'text-orange-500 dark:text-orange-600',
+  error: 'text-red-500 dark:text-red-600',
 };
 
-// TODO(burdon): Make pluggable.
-// TODO(burdon): Connected to Swarm (global scope)?
-// TODO(burdon): Vault heartbeat (global scope)?
-// TODO(burdon): Error handling (global scope)?
+// TODO(burdon): Make pluggable (move indicators to relevant plugins).
+// TODO(burdon): Vault heartbeat indicator (global scope)?
 
-// TODO(burdon): Move to @dxos/async.
+/**
+ * Ensure light doesn't flicker immediately after start.
+ */
+// TODO(burdon): Move to @dxos/async (debounce?)
 const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
   const min = options?.min ?? 500;
   let start: number;
@@ -51,6 +53,62 @@ const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number
   };
 };
 
+/**
+ * Global error handler.
+ */
+// TODO(burdon): Integrate with Sentry?
+const ErrorIndicator: FC<IconProps> = (props) => {
+  const [, forceUpdate] = useState({});
+  const error = useRef<Error>();
+  const debug = true; // TODO(burdon): From config?
+  useEffect(() => {
+    const errorListener = (event: any) => {
+      event.preventDefault();
+      // Handler is called twice.
+      if (error.current !== event.error) {
+        error.current = event.error;
+        if (debug) {
+          console.error(event.error);
+        }
+        forceUpdate({});
+      }
+    };
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event
+    window.addEventListener('error', errorListener);
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
+    window.addEventListener('unhandledrejection', errorListener);
+
+    return () => {
+      window.removeEventListener('error', errorListener);
+      window.removeEventListener('unhandledrejection', errorListener);
+    };
+  }, []);
+
+  const handleReset = () => {
+    error.current = undefined;
+    forceUpdate({});
+  };
+
+  if (error.current) {
+    return (
+      <span title={error.current.message} onClick={handleReset}>
+        <Circle weight='fill' className={mx(styles.error, getSize(3))} {...props} />
+      </span>
+    );
+  } else {
+    return (
+      <span title='No errors.'>
+        <Circle weight='fill' className={getSize(3)} {...props} />
+      </span>
+    );
+  }
+};
+
+/**
+ * Swarm connection handler.
+ */
 const SwarmIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
   const { swarm } = useNetworkStatus();
@@ -59,24 +117,38 @@ const SwarmIndicator: FC<IconProps> = (props) => {
   }, [swarm]);
 
   if (state === 0) {
-    return <WifiHigh className={getSize(5)} {...props} />;
+    return (
+      <span title='Connected to swarm.'>
+        <Lightning className={getSize(4)} {...props} />
+      </span>
+    );
   } else {
-    return <WifiSlash className={mx(styles.warning, getSize(5))} {...props} />;
+    return (
+      <span title='Disconnected from swarm.'>
+        <LightningSlash className={mx(styles.warning, getSize(4))} {...props} />
+      </span>
+    );
   }
 };
 
+/**
+ * Space saving indicator.
+ */
 const SavingIndicator: FC<IconProps> = (props) => {
   const [state, setState] = useState(0);
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.current;
+  const space = spacePlugin?.provides.space.active;
   useEffect(() => {
     if (!space) {
       return;
     }
-    const { start, stop } = timer((err) => setState(err ? 2 : 0), { min: 250, max: 2000 });
-    return space.db.pendingBatch.on(({ duration }) => {
-      if (duration === undefined) {
+    const { start, stop } = timer(() => setState(0), { min: 250 });
+    return space.db.pendingBatch.on(({ duration, error }) => {
+      if (error) {
+        setState(2);
+        stop();
+      } else if (duration === undefined) {
         setState(1);
         start();
       } else {
@@ -87,19 +159,31 @@ const SavingIndicator: FC<IconProps> = (props) => {
 
   switch (state) {
     case 2:
-      return <Circle weight='fill' className={mx(styles.warning, getSize(4))} {...props} />;
+      return (
+        <span title='Edit not saved.'>
+          <Circle weight='fill' className={mx(styles.warning, getSize(3))} {...props} />
+        </span>
+      );
     case 1:
-      return <Circle weight='fill' className={mx(styles.success, getSize(4))} {...props} />;
+      return (
+        <span title='Saving...'>
+          <Circle weight='fill' className={mx(styles.success, getSize(3))} {...props} />
+        </span>
+      );
     case 0:
     default:
-      return <Circle weight='fill' className={getSize(4)} {...props} />;
+      return (
+        <span title='Modified indicator.'>
+          <Circle weight='fill' className={getSize(3)} {...props} />
+        </span>
+      );
   }
 };
 
-export const DebugStatus: FC<{}> = () => {
-  const indicators = useMemo(() => [SavingIndicator, SwarmIndicator], []);
+export const DebugStatus = () => {
+  const indicators = useMemo(() => [SavingIndicator, ErrorIndicator, SwarmIndicator], []);
   return (
-    <div className='flex items-center p-2 gap-1 h-8 text-neutral-300 dark:text-neutral-700'>
+    <div className='flex items-center px-1 gap-1 h-6 text-neutral-300 dark:text-neutral-700 border-l border-t'>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}

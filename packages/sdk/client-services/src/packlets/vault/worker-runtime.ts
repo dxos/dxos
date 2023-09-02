@@ -29,9 +29,9 @@ export type CreateSessionParams = {
 export class WorkerRuntime {
   private readonly _transportFactory = new WebRTCTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
-  private readonly sessions = new Set<WorkerSession>();
-  private _sessionForNetworking?: WorkerSession;
-  private _clientServices!: ClientServicesHost;
+  private readonly _sessions = new Set<WorkerSession>();
+  private readonly _clientServices!: ClientServicesHost;
+  private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
 
   // prettier-ignore
@@ -86,12 +86,12 @@ export class WorkerRuntime {
 
     // When tab is closed.
     session.onClose.set(async () => {
-      this.sessions.delete(session);
+      this._sessions.delete(session);
       this._reconnectWebrtc();
     });
 
     await session.open();
-    this.sessions.add(session);
+    this._sessions.add(session);
 
     this._reconnectWebrtc();
   }
@@ -103,14 +103,14 @@ export class WorkerRuntime {
     log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
-      if (!this.sessions.has(this._sessionForNetworking)) {
+      if (!this._sessions.has(this._sessionForNetworking)) {
         this._sessionForNetworking = undefined;
       }
     }
 
     // Select existing session.
     if (!this._sessionForNetworking) {
-      const selected = Array.from(this.sessions).find((session) => session.bridgeService);
+      const selected = Array.from(this._sessions).find((session) => session.bridgeService);
       if (selected) {
         this._sessionForNetworking = selected;
         this._transportFactory.setBridgeService(selected.bridgeService);

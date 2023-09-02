@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plate",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "@types/recursive-readdir": "^2.2.1",
     "@types/yargs": "~16.0.1",
     "ts-node": "10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

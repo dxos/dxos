@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-drawing/src",
+  "sourceRoot": "packages/apps/plugins/plugin-sketch/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-drawing/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-drawing/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-drawing/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-sketch/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-sketch/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-sketch/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-drawing/src/index.ts"
+          "packages/apps/plugins/plugin-sketch/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-drawing/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-sketch/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-drawing/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-sketch/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -48,7 +48,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-drawing/.storybook"
+        "configDir": "packages/apps/plugins/plugin-sketch/.storybook"
       }
     }
   },

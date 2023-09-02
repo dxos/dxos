@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/labs-app",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "private": true,
   "description": "DXOS labs application.",
   "homepage": "https://dxos.org",
@@ -13,7 +13,6 @@
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-dnd": "workspace:*",
-    "@braneframe/plugin-drawing": "workspace:*",
     "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
@@ -24,6 +23,7 @@
     "@braneframe/plugin-kanban": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
+    "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",

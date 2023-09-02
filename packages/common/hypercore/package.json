@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@types/randombytes": "^2.0.0",

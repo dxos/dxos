@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-dnd",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -32,11 +32,14 @@
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "peerDependencies": {
     "@dxos/react-surface": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

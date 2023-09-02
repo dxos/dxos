@@ -213,7 +213,7 @@ export class SignalClient implements SignalMethods {
     this._performance.leaveCounter++;
     log('leaving', { topic, peerId });
 
-    this._swarmStreams.get({ topic, peerId })?.close();
+    void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });
   }
@@ -234,7 +234,7 @@ export class SignalClient implements SignalMethods {
   async unsubscribeMessages(peerId: PublicKey) {
     log('unsubscribing from messages', { peerId });
     this._subscribedMessages.delete({ peerId });
-    this._messageStreams.get(peerId)?.close();
+    void this._messageStreams.get(peerId)?.close();
     this._messageStreams.delete(peerId);
   }
 
@@ -365,7 +365,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      this._swarmStreams.get({ topic, peerId })?.close();
+      void this._swarmStreams.get({ topic, peerId })?.close();
       this._swarmStreams.delete({ topic, peerId });
     }
 
@@ -405,7 +405,7 @@ export class SignalClient implements SignalMethods {
         continue;
       }
 
-      this._messageStreams.get(peerId)?.close();
+      void this._messageStreams.get(peerId)?.close();
       this._messageStreams.delete(peerId);
     }
 

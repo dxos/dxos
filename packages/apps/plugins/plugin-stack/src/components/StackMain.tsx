@@ -5,7 +5,9 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { FC, useCallback } from 'react';
 
+import { useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
+import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
 import { chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 
@@ -18,11 +20,15 @@ import {
   StackModel,
   StackProperties,
 } from '../types';
-import { StackSectionsPanel } from './StackSectionsPanel';
+import { StackSectionsSortable } from './StackSectionsSortable';
 
 export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
+  const { graph } = useGraph();
+  const node = graph.find(stack.id);
+  const persistParent = node ? getPersistenceParent(node, node.properties?.persistenceClass) : null;
+  console.log('[stack node]', node, persistParent);
   const handleAdd = useCallback(
     (sectionObject: GenericStackObject, start: number) => {
       const sectionModel = getSectionModel(sectionObject);
@@ -34,7 +40,12 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
 
   return (
     <Main.Content bounce classNames={coarseBlockPaddingStart}>
-      <StackSectionsPanel sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+      <StackSectionsSortable
+        sections={stack.sections}
+        id={stack.id}
+        onAdd={handleAdd}
+        persistenceId={persistParent?.id}
+      />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
