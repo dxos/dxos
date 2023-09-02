@@ -28,6 +28,7 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
 
   const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);
   const [overIsDroppable, setOverIsDroppable] = useState<NavTreeDropType>(null);
+  const [migrateIntoId, setMigrateIntoId] = useState<string | null>(null);
 
   const [itemsInOrder, setItemsInOrder] = useState(items.sort(sortByIndex));
   const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
@@ -71,7 +72,7 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
             setItemsInOrder([...node.children.sort(sortByIndex)]);
           }
         } else if (overIsDroppable === 'migrate-destination') {
-          dnd.overlayDropAnimation = 'around';
+          dnd.overlayDropAnimation = 'into';
           const overPersistParent = getPersistenceParent(overNode, activeNode?.properties.persistenceClass);
           if (overPersistParent?.properties.onMigrateStartChild) {
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
@@ -98,11 +99,12 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
   useDragOver(
     ({ over }) => {
       let dropType: NavTreeDropType = null;
+      let dropId: string | null = null;
 
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
-        const overPersistParent = getPersistenceParent(overNode, overNode.properties.persistenceClass);
         const activePersistParent = getPersistenceParent(activeNode, activeNode.properties.persistenceClass);
+        const overPersistParent = getPersistenceParent(overNode, activeNode.properties.persistenceClass);
         if (
           activePersistParent?.properties.onRearrangeChild &&
           activeNode.parent?.id === node.id &&
@@ -111,12 +113,14 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
           // rearrange relevant & supported
           dropType = 'rearrange';
         } else if (
-          activePersistParent?.id !== overPersistParent?.id &&
-          overPersistParent?.properties?.acceptPersistenceClass?.has(activeNode.properties.persistenceClass)
+          activeNode.properties.persistenceClass &&
+          activeNode.properties.persistenceClass === overNode.properties.persistenceClass &&
+          activePersistParent?.id !== overPersistParent?.id
         ) {
           // migration relevant
-          if (overNode.parent?.id === node.id) {
+          if (itemIds.includes(`treeitem:${overPersistParent?.id}`)) {
             dropType = 'migrate-destination';
+            dropId = overPersistParent!.id;
           } else if (activeNode.parent?.id === node.id) {
             dropType = 'migrate-origin';
           }
@@ -124,38 +128,9 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
       }
 
       setOverIsDroppable(dropType);
-
-      setItemsInOrder((itemsCurrent) => {
-        const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
-        if (overNode && activeNode) {
-          const overIndex = itemsCurrent.findIndex(({ id }) => id === overNode?.id);
-          switch (dropType) {
-            case 'migrate-origin':
-              return itemsCurrent.filter(({ id }) => id !== activeNode?.id);
-            case 'migrate-destination':
-              if (overIndex >= 0) {
-                return [
-                  ...items.slice(0, overIndex),
-                  {
-                    ...activeNode!,
-                    id: 'migration-subject',
-                    properties: { isPreview: true, persistenceClass: activeNode.properties.persistenceClass },
-                  },
-                  ...items.slice(overIndex, items.length),
-                ];
-              } else {
-                return itemsCurrent;
-              }
-            case 'rearrange':
-            default:
-              return itemsCurrent.length !== items.length ? items.sort(sortByIndex) : itemsCurrent;
-          }
-        } else {
-          return itemsCurrent;
-        }
-      });
+      setMigrateIntoId(dropId);
     },
-    [activeNode, items],
+    [activeNode, node, items],
   );
 
   return (
@@ -166,6 +141,13 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
           node={item}
           level={level}
           rearranging={overIsDroppable === 'rearrange' && activeNode?.id === item.id}
+          migrating={
+            overIsDroppable === 'migrate-origin' && activeNode?.id === item.id
+              ? ('away' as const)
+              : overIsDroppable === 'migrate-destination' && migrateIntoId === item.id
+              ? ('into' as const)
+              : undefined
+          }
           isPreview={item.properties?.isPreview}
         />
       ))}

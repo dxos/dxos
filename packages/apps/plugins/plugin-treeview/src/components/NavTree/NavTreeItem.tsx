@@ -21,6 +21,7 @@ import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import {
+  dropRing,
   focusRing,
   getSize,
   hoverableControlItem,
@@ -40,12 +41,14 @@ import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
 
-type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging' | 'isPreview'>;
+type SortableBranchTreeViewItemProps = SharedTreeItemProps &
+  Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
 
 export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
   node,
   level,
   rearranging,
+  migrating,
   isPreview,
 }: SortableBranchTreeViewItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -60,6 +63,7 @@ export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
       draggableListeners={listeners}
       rearranging={rearranging}
       isPreview={isPreview}
+      migrating={migrating}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       ref={setNodeRef}
     />
@@ -73,7 +77,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   TreeViewItemProps
 >(
   (
-    { node, level, draggableListeners, draggableAttributes, style, rearranging, isPreview, isOverlay },
+    { node, level, draggableListeners, draggableAttributes, style, rearranging, migrating, isPreview, isOverlay },
     forwardedRef,
   ) => {
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
@@ -129,7 +133,10 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           'rounded block',
           hoverableFocusedKeyboardControls,
           focusRing,
-          (rearranging || isPreview) && 'invisible',
+          'transition-opacity',
+          (rearranging || isPreview) && 'opacity-0',
+          migrating === 'away' && 'opacity-40',
+          migrating === 'into' && dropRing,
         ]}
         {...draggableAttributes}
         {...draggableListeners}
