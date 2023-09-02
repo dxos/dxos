@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-drawing",
+  "name": "@braneframe/plugin-sketch",
   "version": "0.1.56",
-  "description": "Braneframe drawing plugin",
+  "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
