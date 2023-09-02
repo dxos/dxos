@@ -48,7 +48,7 @@ export const getTreeItemLabel = (node: Graph.Node, t: TFunction) =>
     : node.label;
 
 export const getPersistenceParent = (node: Graph.Node, persistenceClass: string): Graph.Node | null => {
-  if (!node.parent) {
+  if (!node || !node.parent) {
     return null;
   }
 

@@ -18,12 +18,12 @@ import { SortableTreeViewItem } from './NavTreeItem';
 export type TreeViewProps = {
   level: number;
   items?: Graph.Node[];
-  parent?: string | Graph.Node | null;
+  node?: string | Graph.Node | null;
 };
 
 type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
 
-const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; items: Graph.Node[]; level: number }) => {
+const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items: Graph.Node[]; level: number }) => {
   const dnd = useDnd();
 
   const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);
@@ -32,18 +32,9 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   const [itemsInOrder, setItemsInOrder] = useState(items.sort(sortByIndex));
   const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
 
-  const persistParent = useMemo(
-    () =>
-      // persistParent may be self or ancestor
-      parent.properties.acceptPersistenceClass?.has(parent.properties.childrenPersistenceClass)
-        ? parent
-        : getPersistenceParent(parent, parent.properties.childrenPersistenceClass),
-    [parent],
-  );
-
   useEffect(() => {
     return setItemsInOrder(items.sort(sortByIndex));
-  }, [items, parent.id]);
+  }, [items, node.id]);
 
   useDragStart(({ active }) => {
     setActiveNode(active.data?.current?.treeitem ?? null);
@@ -52,8 +43,8 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   useDragEnd(
     ({ over }: DragEndEvent) => {
       const overNode: Graph.Node | null = over?.data?.current?.treeitem ?? null;
-      if (activeNode && overNode && persistParent) {
-        if (overIsDroppable === 'rearrange') {
+      if (activeNode && overNode) {
+        if (overIsDroppable === 'rearrange' && activeNode.parent?.id === node.id) {
           dnd.overlayDropAnimation = 'around';
           if (overNode.id !== activeNode.id) {
             const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
@@ -64,21 +55,24 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
             if (beforeNode?.properties.index === afterNode?.properties.index) {
               const nextActiveIndex = getIndexAbove(beforeNode?.properties.index);
               const nextAfterIndex = getIndexAbove(nextActiveIndex);
-              persistParent.properties.onRearrangeChild(activeNode, nextActiveIndex);
-              persistParent.properties.onRearrangeChild(afterNode, nextAfterIndex);
+              const activePersistParent = getPersistenceParent(activeNode, activeNode?.properties.persistenceClass);
+              activePersistParent?.properties.onRearrangeChild(activeNode, nextActiveIndex);
+              const afterPersistParent = getPersistenceParent(afterNode, afterNode?.properties.persistenceClass);
+              afterPersistParent?.properties.onRearrangeChild(afterNode, nextAfterIndex);
             } else {
-              persistParent.properties.onRearrangeChild(
+              const activePersistParent = getPersistenceParent(activeNode, activeNode?.properties.persistenceClass);
+              activePersistParent?.properties.onRearrangeChild(
                 activeNode,
                 overIndex < 1
                   ? getIndexBelow(itemsInOrder[0]?.properties.index)
                   : getIndexBetween(beforeNode?.properties.index, afterNode?.properties.index),
               );
             }
-            setItemsInOrder([...parent.children.sort(sortByIndex)]);
+            setItemsInOrder([...node.children.sort(sortByIndex)]);
           }
         } else if (overIsDroppable === 'migrate-destination') {
           dnd.overlayDropAnimation = 'around';
-          const overPersistParent = getPersistenceParent(overNode, activeNode.properties.persistenceClass);
+          const overPersistParent = getPersistenceParent(overNode, activeNode?.properties.persistenceClass);
           if (overPersistParent?.properties.onMigrateStartChild) {
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
             const migratedIndex =
@@ -91,14 +85,14 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
             overPersistParent?.properties.onMigrateStartChild(activeNode, overPersistParent, migratedIndex);
           }
         } else if (overIsDroppable === 'migrate-origin') {
-          const activePersistParent = getPersistenceParent(activeNode, activeNode.properties.persistenceClass);
-          activePersistParent?.properties.onMigrateEndChild?.(activeNode);
+          const activePersistParent = getPersistenceParent(activeNode, activeNode?.properties.persistenceClass);
+          activePersistParent?.properties?.onMigrateEndChild?.(activeNode);
         }
       }
       setActiveNode(null);
       setOverIsDroppable(null);
     },
-    [parent, persistParent, activeNode, overIsDroppable, itemsInOrder],
+    [node, activeNode, overIsDroppable, itemsInOrder],
   );
 
   useDragOver(
@@ -107,25 +101,23 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
 
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
-        const overPersistParent = getPersistenceParent(overNode, parent.properties.childrenPersistenceClass);
-        const activePersistParent = getPersistenceParent(activeNode, parent.properties.childrenPersistenceClass);
+        const overPersistParent = getPersistenceParent(overNode, overNode.properties.persistenceClass);
+        const activePersistParent = getPersistenceParent(activeNode, activeNode.properties.persistenceClass);
         if (
-          persistParent?.properties.onRearrangeChild &&
-          activePersistParent?.id === persistParent.id &&
-          overPersistParent?.id === persistParent.id
+          activePersistParent?.properties.onRearrangeChild &&
+          activeNode.parent?.id === node.id &&
+          overNode.parent?.id === node.id
         ) {
           // rearrange relevant & supported
           dropType = 'rearrange';
         } else if (
-          persistParent &&
           activePersistParent?.id !== overPersistParent?.id &&
-          activeNode.properties?.persistenceClass &&
           overPersistParent?.properties?.acceptPersistenceClass?.has(activeNode.properties.persistenceClass)
         ) {
           // migration relevant
-          if (overPersistParent?.id === persistParent.id) {
+          if (overNode.parent?.id === node.id) {
             dropType = 'migrate-destination';
-          } else if (activePersistParent?.id === persistParent.id) {
+          } else if (activeNode.parent?.id === node.id) {
             dropType = 'migrate-origin';
           }
         }
@@ -147,8 +139,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
                   {
                     ...activeNode!,
                     id: 'migration-subject',
-                    parent: persistParent,
-                    properties: { isPreview: true },
+                    properties: { isPreview: true, persistenceClass: activeNode.properties.persistenceClass },
                   },
                   ...items.slice(overIndex, items.length),
                 ];
@@ -164,7 +155,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
         }
       });
     },
-    [activeNode, persistParent, items],
+    [activeNode, items],
   );
 
   return (
@@ -183,15 +174,15 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
 };
 
 export const NavTree = (props: TreeViewProps) => {
-  const { items, level, parent } = props;
+  const { items, level, node } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
   return (
     <Tree.Branch>
-      {visibleItems?.length ? (
-        <TreeViewSortableImpl items={visibleItems} parent={parent as Graph.Node} level={level} />
+      {node && visibleItems?.length ? (
+        <TreeViewSortableImpl items={visibleItems} node={node as Graph.Node} level={level} />
       ) : (
-        <Surface role='tree--empty' data={props.parent} />
+        <Surface role='tree--empty' data={node} />
       )}
     </Tree.Branch>
   );

@@ -236,7 +236,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
         </HeadingWithActionsRoot>
         {isBranch && (
           <TreeItem.Body>
-            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />
+            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
           </TreeItem.Body>
         )}
       </TreeItem.Root>
