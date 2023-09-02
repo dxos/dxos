@@ -237,7 +237,8 @@ export class Muxer {
   /**
    * Force-close with optional error.
    */
-  destroy(err?: Error) {
+  // TODO(burdon): Make async.
+  async destroy(err?: Error) {
     if (this._destroying) {
       return;
     }
@@ -257,6 +258,7 @@ export class Muxer {
       .catch((err: any) => {
         this._dispose(err);
       });
+
     void this._ctx.dispose();
   }
 
@@ -329,7 +331,7 @@ export class Muxer {
       this._balancer.pushData(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
-      this.destroy(err);
+      await this.destroy(err);
     }
   }
 
