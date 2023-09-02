@@ -59,11 +59,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-drawing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-error/package.json",
           "jsonpath": "$.version"
         },
@@ -110,6 +105,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-pwa/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
         {

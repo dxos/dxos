@@ -506,7 +506,6 @@ importers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-debug': workspace:*
       '@braneframe/plugin-dnd': workspace:*
-      '@braneframe/plugin-drawing': workspace:*
       '@braneframe/plugin-error': workspace:*
       '@braneframe/plugin-files': workspace:*
       '@braneframe/plugin-github': workspace:*
@@ -517,6 +516,7 @@ importers:
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
+      '@braneframe/plugin-sketch': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
@@ -552,7 +552,6 @@ importers:
       '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/plugin-debug': link:../plugins/plugin-debug
       '@braneframe/plugin-dnd': link:../plugins/plugin-dnd
-      '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
       '@braneframe/plugin-error': link:../plugins/plugin-error
       '@braneframe/plugin-files': link:../plugins/plugin-files
       '@braneframe/plugin-github': link:../plugins/plugin-github
@@ -563,6 +562,7 @@ importers:
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
+      '@braneframe/plugin-sketch': link:../plugins/plugin-sketch
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
@@ -780,73 +780,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       typescript: 5.2.2
-
-  packages/apps/plugins/plugin-drawing:
-    specifiers:
-      '@braneframe/plugin-graph': workspace:*
-      '@braneframe/plugin-intent': workspace:*
-      '@braneframe/plugin-space': workspace:*
-      '@braneframe/plugin-splitview': workspace:*
-      '@braneframe/plugin-stack': workspace:*
-      '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
-      '@braneframe/types': workspace:*
-      '@dxos/async': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@faker-js/faker': ^8.0.2
-      '@phosphor-icons/react': ^2.0.5
-      '@tldraw/assets': 2.0.0-alpha.14
-      '@tldraw/editor': 2.0.0-alpha.14
-      '@tldraw/state': 2.0.0-alpha.14
-      '@tldraw/tldraw': 2.0.0-alpha.14
-      '@tldraw/tlschema': 2.0.0-alpha.14
-      '@types/lodash.get': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      lodash.get: ^4.4.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-resize-detector: ^7.1.2
-      signia: ^0.1.4
-      signia-react: ^0.1.4
-      vite: ^4.3.9
-      yjs: ^13.6.7
-    dependencies:
-      '@braneframe/plugin-stack': link:../plugin-stack
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@tldraw/assets': 2.0.0-alpha.14
-      '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
-      '@tldraw/state': 2.0.0-alpha.14_react@18.2.0
-      '@tldraw/tldraw': 2.0.0-alpha.14_5uumaiclxbdbzaqafclbf6maf4
-      '@tldraw/tlschema': 2.0.0-alpha.14_react@18.2.0
-      lodash.get: 4.4.2
-      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
-      signia: 0.1.4
-      signia-react: 0.1.4_react@18.2.0
-      yjs: 13.6.7
-    devDependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
-      '@braneframe/plugin-intent': link:../plugin-intent
-      '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-splitview': link:../plugin-splitview
-      '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
-      '@braneframe/types': link:../../types
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@faker-js/faker': 8.0.2
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/lodash.get': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
 
   packages/apps/plugins/plugin-error:
     specifiers:
@@ -1262,6 +1195,73 @@ importers:
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-sketch:
+    specifiers:
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@tldraw/assets': 2.0.0-alpha.14
+      '@tldraw/editor': 2.0.0-alpha.14
+      '@tldraw/state': 2.0.0-alpha.14
+      '@tldraw/tldraw': 2.0.0-alpha.14
+      '@tldraw/tlschema': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
+      signia: ^0.1.4
+      signia-react: ^0.1.4
+      vite: ^4.3.9
+      yjs: ^13.6.7
+    dependencies:
+      '@braneframe/plugin-stack': link:../plugin-stack
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@tldraw/assets': 2.0.0-alpha.14
+      '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
+      '@tldraw/state': 2.0.0-alpha.14_react@18.2.0
+      '@tldraw/tldraw': 2.0.0-alpha.14_5uumaiclxbdbzaqafclbf6maf4
+      '@tldraw/tlschema': 2.0.0-alpha.14_react@18.2.0
+      lodash.get: 4.4.2
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      signia: 0.1.4
+      signia-react: 0.1.4_react@18.2.0
+      yjs: 13.6.7
+    devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
