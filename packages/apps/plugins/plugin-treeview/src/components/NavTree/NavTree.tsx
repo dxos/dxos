@@ -33,7 +33,11 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
   const itemIds = useMemo(() => itemsInOrder.map(({ id }) => `treeitem:${id}`), [itemsInOrder]);
 
   const persistParent = useMemo(
-    () => getPersistenceParent(parent, parent.properties.childrenPersistenceClass),
+    () =>
+      // persistParent may be self or ancestor
+      parent.properties.acceptPersistenceClass?.has(parent.properties.childrenPersistenceClass)
+        ? parent
+        : getPersistenceParent(parent, parent.properties.childrenPersistenceClass),
     [parent],
   );
 
@@ -70,7 +74,7 @@ const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; it
                   : getIndexBetween(beforeNode?.properties.index, afterNode?.properties.index),
               );
             }
-            setItemsInOrder(parent.children.sort(sortByIndex));
+            setItemsInOrder([...parent.children.sort(sortByIndex)]);
           }
         } else if (overIsDroppable === 'migrate-destination') {
           dnd.overlayDropAnimation = 'around';
