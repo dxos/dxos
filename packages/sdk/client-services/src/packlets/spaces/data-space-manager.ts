@@ -18,7 +18,7 @@ import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap, deferFunction } from '@dxos/util';
+import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
@@ -78,10 +78,9 @@ export class DataSpaceManager {
   async open() {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', trace.begin({ id: this._instanceId }));
-    await this._metadataStore.load();
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
-    for (const spaceMetadata of this._metadataStore.spaces) {
+    await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
         await this._constructSpace(spaceMetadata);
@@ -89,7 +88,7 @@ export class DataSpaceManager {
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
-    }
+    });
 
     this._isOpen = true;
     this.updated.emit();
