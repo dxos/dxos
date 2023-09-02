@@ -37,17 +37,17 @@ export const ThreadBlock: FC<{
     <div
       key={block.id}
       className={mx(
-        'flex flex-col overflow-hidden shadow',
+        'flex flex-col overflow-hidden rounded shadow',
         inputSurface,
-        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
+        // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >
-      <div className='flex __divide-x'>
+      <div className='flex'>
         <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
           <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
         </div>
         <div className='flex flex-col w-full overflow-hidden'>
-          <div className='flex text-sm px-2 py-1 space-x-1 __rounded-tl __rounded-tr truncate'>
+          <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
             <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
             {date && (
               <>
@@ -57,7 +57,7 @@ export const ThreadBlock: FC<{
             )}
           </div>
 
-          <div className='overflow-hidden __divide-y pb-1'>
+          <div className='overflow-hidden pb-1'>
             {block.messages.map((message, i) => (
               <div key={i} className='flex overflow-hidden px-2 py-1 group'>
                 {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}

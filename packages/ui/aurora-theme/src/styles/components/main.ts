@@ -15,6 +15,20 @@ export type MainStyleProps = Partial<{
   bounce: boolean;
 }>;
 
+// TODO(burdon): Review with will (was 270).
+// Sidebar constants (used by main and complementary sidebar).
+const sidebarSlots = {
+  width: 'sm:is-[270px]',
+  sidebar: {
+    inlineStartSidebarOpen: 'sm:-inline-start-[270px]',
+    inlineEndSidebarOpen: 'sm:-inline-end-[270px]',
+  },
+  content: {
+    inlineStartSidebarOpen: 'pis-[270px]',
+    inlineEndSidebarOpen: 'pie-[270px]',
+  },
+};
+
 export const mainSidebar: ComponentFunction<MainStyleProps> = (
   { inlineStartSidebarOpen, inlineEndSidebarOpen, side },
   ...etc
@@ -35,6 +49,27 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
     ...etc,
   );
 
+export const mainSidebar2: ComponentFunction<MainStyleProps> = (
+  { inlineStartSidebarOpen, inlineEndSidebarOpen, side },
+  ...etc
+) =>
+  mx(
+    'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
+    'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+    'border-neutral-200 dark:border-neutral-800',
+    sidebarSlots.width,
+    side === 'inline-start'
+      ? inlineStartSidebarOpen
+        ? 'inline-start-0'
+        : mx('-inline-start-[100vw]', sidebarSlots.sidebar.inlineStartSidebarOpen)
+      : inlineEndSidebarOpen
+      ? 'inline-end-0'
+      : mx('-inline-end-[100vw]', sidebarSlots.sidebar.inlineEndSidebarOpen),
+    side === 'inline-start' ? 'border-ie' : 'border-is',
+    fixedSurface,
+    ...etc,
+  );
+
 export const mainOverlay: ComponentFunction<MainStyleProps> = (
   { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, side },
   ...etc
@@ -44,6 +79,18 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (
     'transition-opacity duration-200 ease-in-out',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',
+    ...etc,
+  );
+
+export const mainContent2: ComponentFunction<MainStyleProps> = (
+  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, bounce },
+  ...etc
+) =>
+  mx(
+    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
+    isLg && inlineStartSidebarOpen ? sidebarSlots.content.inlineStartSidebarOpen : 'pis-0',
+    isLg && inlineEndSidebarOpen ? sidebarSlots.content.inlineEndSidebarOpen : 'pie-0',
+    bounce && bounceLayout,
     ...etc,
   );
 

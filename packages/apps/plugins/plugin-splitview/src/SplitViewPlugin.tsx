@@ -25,7 +25,7 @@ export const SplitViewPlugin = ({
 }: SplitViewPluginConfig = {}): PluginDefinition<SplitViewProvides> => {
   const state = deepSignal({
     sidebarOpen: true,
-    complementarySidebarOpen: enableComplementarySidebar ? false : null,
+    complementarySidebarOpen: enableComplementarySidebar ? true : null, // TODO(burdon): Store state in local storage.
     dialogContent: 'never',
     dialogOpen: false,
   });
