@@ -69,7 +69,7 @@ const main = async () => {
           GraphPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
-          SplitViewPlugin({ enableComplementarySidebar: true }),
+          SplitViewPlugin(),
           SpacePlugin(),
 
           // Composer
