@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
@@ -221,6 +221,16 @@ export class DataSpace {
 
     await this._initializeAndReadControlPipeline();
 
+    // Allow other tasks to run before loading the data pipeline.
+    await sleep(1);
+
+    await this._inner.initializeDataPipeline();
+
+    this.metrics.dataPipelineOpen = new Date();
+
+    // Wait for the first epoch.
+    await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
+
     log('waiting for data pipeline to reach target timeframe');
     // Wait for the data pipeline to catch up to its desired timeframe.
     await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
@@ -262,13 +272,6 @@ export class DataSpace {
         ),
       );
     }
-
-    await this._inner.initializeDataPipeline();
-
-    this.metrics.dataPipelineOpen = new Date();
-
-    // Wait for the first epoch.
-    await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
   }
 
   @timed(10_000)
@@ -315,10 +318,11 @@ export class DataSpace {
     if (credentials.length > 0) {
       // Never times out
       await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+
+      // Set this after credentials are notarized so that on failure we will retry.
+      await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
     }
 
-    // Set this after credentials are notarized so that on failure we will retry.
-    await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
   }
 
   async createEpoch() {
