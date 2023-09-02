@@ -11,6 +11,7 @@ export default [
         'plugin name': 'Drawing',
         'drawing title placeholder': 'New drawing',
         'create drawing label': 'Create drawing',
+        'rename drawing label': 'Rename',
         'delete drawing label': 'Delete',
         'create stack section label': 'Create drawing',
         'choose stack section label': 'Select drawing from this Space',
