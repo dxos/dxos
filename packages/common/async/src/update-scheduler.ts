@@ -4,7 +4,7 @@
 
 import { Context } from '@dxos/context';
 
-import { scheduleTask } from './task-scheduling';
+import { scheduleMicroTask, scheduleTask } from './task-scheduling';
 
 export type UpdateSchedulerOptions = {
   /**
@@ -43,7 +43,7 @@ export class UpdateScheduler {
       return;
     }
 
-    scheduleTask(this._ctx, async () => {
+    scheduleMicroTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       await this._promise; // Can't be rejected.
 

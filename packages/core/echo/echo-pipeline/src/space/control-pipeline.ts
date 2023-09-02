@@ -17,7 +17,7 @@ import { AsyncCallback, Callback, tracer } from '@dxos/util';
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { DeferredTask, sleep } from '@dxos/async';
+import { DeferredTask, Lock, sleep } from '@dxos/async';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;
@@ -72,12 +72,14 @@ export class ControlPipeline {
 
       // TODO(burdon): Check not stopping.
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
-        try {
-          const feed = await feedProvider(info.key);
-          await this._pipeline.addFeed(feed);
-        } catch (err: any) {
-          log.catch(err);
-        }
+        queueMicrotask(async () => {
+          try {
+            const feed = await feedProvider(info.key);
+            await this._pipeline.addFeed(feed);
+          } catch (err: any) {
+            log.catch(err);
+          }
+        })
       }
 
       await this.onFeedAdmitted.callIfSet(info);

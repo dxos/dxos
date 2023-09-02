@@ -90,7 +90,7 @@ export class Space {
 
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
-        await this._addFeedLock.executeSynchronized(async () => {
+        queueMicrotask(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
               return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
@@ -100,7 +100,9 @@ export class Space {
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+        queueMicrotask(async () => {
+          this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+        })
       }
     });
 
