@@ -8,25 +8,10 @@ import { Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
-import { humanize } from '@dxos/util';
 
 import { THREAD_PLUGIN } from '../types';
-import { ThreadBlock } from './ThreadBlock';
+import { BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
-
-// TODO(burdon): Resolve username (and avatar) from identityKey/members.
-const colors = [
-  'text-blue-300',
-  'text-green-300',
-  'text-teal-300',
-  'text-red-300',
-  'text-orange-300',
-  'text-purple-300',
-];
-const getBlockProperties = (identityKey: PublicKey) => ({
-  displayName: humanize(identityKey),
-  classes: [colors[Number('0x' + identityKey) % colors.length]].join(' '),
-});
 
 // type DailyBlock = {
 //   date?: Date;
@@ -49,8 +34,9 @@ const getBlockProperties = (identityKey: PublicKey) => ({
 export const ThreadChannel: FC<{
   identityKey: PublicKey;
   thread: ThreadType;
+  getBlockProperties: (identityKey: PublicKey) => BlockProperties;
   onAddMessage: (text: string) => boolean | undefined;
-}> = ({ identityKey, thread, onAddMessage }) => {
+}> = ({ identityKey, thread, getBlockProperties, onAddMessage }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -63,12 +49,14 @@ export const ThreadChannel: FC<{
     }
   };
 
-  // TODO(burdon): Different width form factors.
   return (
     <div
-      className={mx('flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-4 p-2', groupSurface)}
+      className={mx(
+        'flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 lg:m-auto',
+        groupSurface,
+      )}
     >
-      <div className='flex px-6 pb-4'>
+      <div className='flex px-2'>
         <Input.Root>
           <Input.Label srOnly>{t('thread name placeholder')}</Input.Label>
           <Input.TextInput
@@ -84,7 +72,7 @@ export const ThreadChannel: FC<{
       <div className='flex flex-grow overflow-hidden'>
         {/* TODO(burdon): Scroll panel. */}
         {/* TODO(burdon): Break into days. */}
-        <div className='flex flex-col-reverse grow overflow-auto px-6 pt-4'>
+        <div className='flex flex-col-reverse grow overflow-auto px-2 pt-4'>
           <div ref={bottomRef} />
           {thread.blocks
             .map((block) => (
@@ -95,7 +83,7 @@ export const ThreadChannel: FC<{
             .reverse()}
         </div>
       </div>
-      <div className='flex px-6 pt-2 pb-4'>
+      <div className='flex px-2 py-2'>
         <ThreadInput onMessage={handleAddMessage} />
       </div>
     </div>
