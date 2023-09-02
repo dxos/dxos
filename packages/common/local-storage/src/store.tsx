@@ -7,7 +7,7 @@ import { DeepSignal, deepSignal } from 'deepsignal';
 
 import { UnsubscribeCallback } from '@dxos/async';
 
-export type ISettingType<T> = {
+export type PropType<T> = {
   get: (key: string) => T | undefined;
   set: (key: string, value: T | undefined) => void;
 };
@@ -16,7 +16,7 @@ export type ISettingType<T> = {
  * Local storage backed store.
  */
 export class LocalStorageStore<T extends object> {
-  static string: ISettingType<string> = {
+  static string: PropType<string> = {
     get: (key) => {
       const value = localStorage.getItem(key);
       return value === null ? undefined : value;
@@ -30,7 +30,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  static number: ISettingType<number> = {
+  static number: PropType<number> = {
     get: (key) => {
       const value = parseInt(localStorage.getItem(key) ?? '');
       return isNaN(value) ? undefined : value;
@@ -44,7 +44,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  static bool: ISettingType<boolean> = {
+  static bool: PropType<boolean> = {
     get: (key) => {
       return localStorage.getItem(key) === 'true';
     },
@@ -57,17 +57,22 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  public readonly values: DeepSignal<T> = deepSignal<T>({} as T);
   private readonly _subscriptions: UnsubscribeCallback[] = [];
+
+  // TODO(burdon): Defaults (overwrite undefined).
+  // TODO(burdon): Treat undefined as default value.
+  constructor(public readonly values: DeepSignal<T> = deepSignal<T>({} as T)) {}
 
   /**
    * Binds signal property to local storage key.
    */
-  bind<T>(prop: Signal<T | undefined>, key: string, type: ISettingType<T>) {
+  bind<T>(prop: Signal<T | undefined>, key: string, type: PropType<T>) {
     prop.value = type.get(key);
     this._subscriptions.push(
       prop.subscribe((value) => {
-        if (value !== prop.value) {
+        const current = type.get(key);
+        console.log('###', current, value);
+        if (value !== current) {
           type.set(key, value);
         }
       }),

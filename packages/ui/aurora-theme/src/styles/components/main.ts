@@ -15,17 +15,18 @@ export type MainStyleProps = Partial<{
   bounce: boolean;
 }>;
 
-// TODO(burdon): Review with will (was 270).
-// Sidebar constants (used by main and complementary sidebar).
+// Sidebar widths (used by main and complementary sidebar).
 const sidebarSlots = {
-  width: 'sm:is-[270px]',
-  sidebar: {
-    inlineStartSidebarOpen: 'sm:-inline-start-[270px]',
-    inlineEndSidebarOpen: 'sm:-inline-end-[270px]',
+  start: {
+    width: 'sm:is-[270px]',
+    sidebar: 'sm:-inline-start-[270px]',
+    content: 'pis-[270px]',
   },
-  content: {
-    inlineStartSidebarOpen: 'pis-[270px]',
-    inlineEndSidebarOpen: 'pie-[270px]',
+  // TODO(burdon): Maximal size for phone.
+  end: {
+    width: 'sm:is-[360px]',
+    sidebar: 'sm:-inline-end-[360px]',
+    content: 'pie-[360px]',
   },
 };
 
@@ -34,39 +35,31 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
   ...etc
 ) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
+    'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
     'border-neutral-200 dark:border-neutral-800',
+    side === 'inline-start' ? sidebarSlots.start.width : sidebarSlots.end.width,
     side === 'inline-start'
       ? inlineStartSidebarOpen
         ? 'inline-start-0'
-        : '-inline-start-[100vw] sm:-inline-start-[270px]'
+        : mx('-inline-start-[100vw]', sidebarSlots.start.sidebar)
       : inlineEndSidebarOpen
       ? 'inline-end-0'
-      : '-inline-end-[100vw] sm:-inline-end-[270px]',
+      : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
     side === 'inline-start' ? 'border-ie' : 'border-is',
     fixedSurface,
     ...etc,
   );
 
-export const mainSidebar2: ComponentFunction<MainStyleProps> = (
-  { inlineStartSidebarOpen, inlineEndSidebarOpen, side },
+export const mainContent: ComponentFunction<MainStyleProps> = (
+  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, bounce },
   ...etc
 ) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
-    'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-    'border-neutral-200 dark:border-neutral-800',
-    sidebarSlots.width,
-    side === 'inline-start'
-      ? inlineStartSidebarOpen
-        ? 'inline-start-0'
-        : mx('-inline-start-[100vw]', sidebarSlots.sidebar.inlineStartSidebarOpen)
-      : inlineEndSidebarOpen
-      ? 'inline-end-0'
-      : mx('-inline-end-[100vw]', sidebarSlots.sidebar.inlineEndSidebarOpen),
-    side === 'inline-start' ? 'border-ie' : 'border-is',
-    fixedSurface,
+    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
+    isLg && inlineStartSidebarOpen ? sidebarSlots.start.content : 'pis-0',
+    isLg && inlineEndSidebarOpen ? sidebarSlots.end.content : 'pie-0',
+    bounce && bounceLayout,
     ...etc,
   );
 
@@ -79,30 +72,6 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (
     'transition-opacity duration-200 ease-in-out',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
     !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',
-    ...etc,
-  );
-
-export const mainContent2: ComponentFunction<MainStyleProps> = (
-  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, bounce },
-  ...etc
-) =>
-  mx(
-    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
-    isLg && inlineStartSidebarOpen ? sidebarSlots.content.inlineStartSidebarOpen : 'pis-0',
-    isLg && inlineEndSidebarOpen ? sidebarSlots.content.inlineEndSidebarOpen : 'pie-0',
-    bounce && bounceLayout,
-    ...etc,
-  );
-
-export const mainContent: ComponentFunction<MainStyleProps> = (
-  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, bounce },
-  ...etc
-) =>
-  mx(
-    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
-    isLg && inlineStartSidebarOpen ? 'pis-[270px]' : 'pis-0',
-    isLg && inlineEndSidebarOpen ? 'pie-[270px]' : 'pie-0',
-    bounce && bounceLayout,
     ...etc,
   );
 

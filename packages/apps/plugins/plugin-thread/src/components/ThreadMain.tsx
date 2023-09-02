@@ -59,8 +59,6 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
 
   const getBlockProperties = (identityKey: PublicKey) => {
     const member = members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey));
-    console.log(members);
-    console.log(identity);
     return {
       displayName: member?.identity.profile?.displayName ?? humanize(identityKey.toHex()),
       classes: colorHash(identityKey),
