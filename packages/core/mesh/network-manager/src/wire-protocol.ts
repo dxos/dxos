@@ -25,6 +25,7 @@ export interface WireProtocol {
 
   initialize(): Promise<void>;
   destroy(): Promise<void>;
+  abort(): Promise<void>;
 }
 
 /**
@@ -45,6 +46,9 @@ export const createTeleportProtocolFactory = (
       },
       destroy: async () => {
         await teleport.close();
+      },
+      abort: async () => {
+        await teleport.abort();
       },
     };
   };

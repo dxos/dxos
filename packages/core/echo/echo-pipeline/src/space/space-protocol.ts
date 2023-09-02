@@ -250,7 +250,12 @@ export class SpaceProtocolSession implements WireProtocol {
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
+  // TODO(nf): why destroy and not close?
   async destroy(): Promise<void> {
     await this._teleport.close();
+  }
+
+  async abort(): Promise<void> {
+    await this._teleport.abort();
   }
 }
