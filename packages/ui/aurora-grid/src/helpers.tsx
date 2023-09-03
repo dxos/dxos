@@ -27,6 +27,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 // TODO(burdon): Add accessor options and spread.
 type BaseColumnOptions<TData, TValue, TMeta = ColumnMeta<TData, TValue>> = Partial<ColumnDef<TData, TValue>> & {
   meta?: TMeta;
+  className?: string;
   editable?: boolean; // TODO(burdon): Add accessor.
   header?: string;
 };
@@ -90,7 +91,7 @@ export class ColumnBuilder<TData extends RowData> {
           }
         : (cell) => {
             const value = cell.getValue();
-            return <div>{value}</div>;
+            return <div className={options.className}>{value}</div>;
           },
     });
   }
@@ -104,7 +105,7 @@ export class ColumnBuilder<TData extends RowData> {
       },
       cell: (cell) => {
         const value = cell.getValue();
-        return <div className='font-mono text-right'>{value?.toLocaleString()}</div>;
+        return <div className={mx('font-mono text-right', options.className)}>{value?.toLocaleString()}</div>;
       },
     });
   }
@@ -121,7 +122,7 @@ export class ColumnBuilder<TData extends RowData> {
           : options?.relative
           ? formatDistanceToNow(value, { addSuffix: true })
           : value.toISOString();
-        return <div className='font-mono'>{str}</div>;
+        return <div className={mx('font-mono', options.className)}>{str}</div>;
       },
     });
   }
