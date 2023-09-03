@@ -79,11 +79,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-grid/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-intent/package.json",
           "jsonpath": "$.version"
         },
@@ -125,6 +120,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {

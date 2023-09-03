@@ -125,6 +125,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 100,
       minSize: 100,
+      header: (cell) => <div className='w-full text-right pr-2'>{cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
         return <div className={mx('font-mono text-right', className)}>{value?.toLocaleString()}</div>;

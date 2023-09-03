@@ -18,6 +18,43 @@ message Meta {
   repeated ForeignKey keys = 1;
 }
 
+/**
+ * Expando schema definition.
+ */
+message Schema {
+  option (object) = true;
+
+  enum PropType {
+    NONE = 0;
+    STRING = 1;
+    NUMBER = 2;
+    BOOLEAN = 3;
+    DATE = 4;
+  }
+
+  message Prop {
+    string id = 1;
+    PropType type = 2;
+    string label = 3;
+  }
+
+  // FQ type name (e.g., dxos.org/type/Document
+  string typename = 1;
+  repeated Prop props = 2;
+}
+
+/**
+ * Table view.
+ */
+message Table {
+  option (object) = true;
+
+  Schema schema = 1;
+}
+
+/**
+ *
+ */
 message File {
   option (object) = true;
 
@@ -29,6 +66,9 @@ message File {
   string cid = 10;
 }
 
+/**
+ *
+ */
 message Document {
   option (object) = true;
 
@@ -39,6 +79,9 @@ message Document {
   Meta meta = 1000;
 }
 
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 
@@ -53,6 +96,9 @@ message Stack {
   repeated Section sections = 2;
 }
 
+/**
+ *
+ */
 message Kanban {
   option (object) = true;
 
@@ -77,6 +123,9 @@ message Kanban {
   repeated Column columns = 2;
 }
 
+/**
+ *
+ */
 message Sketch {
   option (object) = true;
 
@@ -85,6 +134,9 @@ message Sketch {
   dxos.schema.Text data = 2;
 }
 
+/**
+ *
+ */
 // TODO(burdon): Channel > Thread > Block > Message.
 message Thread {
   option (object) = true;

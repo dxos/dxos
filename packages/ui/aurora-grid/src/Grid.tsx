@@ -258,7 +258,7 @@ export const Grid = <TData extends RowData>({
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
 
-                      {/* TODO(burdon): Menu option. */}
+                      {/* TODO(burdon): Provide helper for renderer. */}
                       {header.column.columnDef.meta?.menu && (
                         <>
                           <div className='grow' />
