@@ -286,7 +286,7 @@ export const Grid = <TData extends RowData>({
                   .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
                   .map((cell) => {
                     return (
-                      <td key={cell.id} className={mx('truncate', slots?.cell?.className)}>
+                      <td key={cell.id} className={mx('overflow-hidden truncate', slots?.cell?.className)}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     );

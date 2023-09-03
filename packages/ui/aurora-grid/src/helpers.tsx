@@ -6,6 +6,7 @@ import { Check, ClipboardText, X } from '@phosphor-icons/react';
 import { ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
+import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
 import { Input, Tooltip } from '@dxos/aurora';
@@ -13,9 +14,8 @@ import { chromeSurface, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { GridSlots } from './Grid';
+import { GridColumnDef, GridSlots } from './Grid';
 
-// TODO(burdon): Combine?
 export const createColumnBuilder = <TData extends RowData>() => ({
   helper: createColumnHelper<TData>(),
   builder: new ColumnBuilder<TData>(),
@@ -28,7 +28,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 type BaseColumnOptions<TData, TValue, TMeta = ColumnMeta<TData, TValue>> = Partial<ColumnDef<TData, TValue>> & {
   meta?: TMeta;
   className?: string;
-  editable?: boolean; // TODO(burdon): Add accessor.
+  editable?: boolean; // TODO(burdon): Accessor.
   header?: string;
 };
 
@@ -47,6 +47,13 @@ type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> &
 
 type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
 
+const defaults = <TData extends RowData, TValue>(
+  options: Partial<ColumnDef<TData, TValue>>,
+  ...sources: Partial<ColumnDef<TData, TValue>>[]
+): Partial<ColumnDef<TData, TValue>> => {
+  return stripUndefinedValues(defaultsDeep({}, options, ...sources));
+};
+
 /**
  * Util to create column definitions.
  */
@@ -54,7 +61,7 @@ type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean
 // TODO(burdon): Helper to add classname? Extend def/slot, etc? (e.g., monospace).
 export class ColumnBuilder<TData extends RowData> {
   string(options: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       header: (column) => {
         return <div className={mx(options.editable && 'px-2')}>{options?.header ?? column.header.id}</div>;
       },
@@ -90,14 +97,13 @@ export class ColumnBuilder<TData extends RowData> {
           }
         : (cell) => {
             const value = cell.getValue();
-            return <div className={options.className}>{value}</div>;
+            return <div className={mx('truncate', options.className)}>{value}</div>;
           },
-      ...options,
     });
   }
 
   number(options: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       size: 100,
       header: (column) => {
         return <div className='text-right'>{options?.header ?? column.header.id}</div>;
@@ -106,13 +112,12 @@ export class ColumnBuilder<TData extends RowData> {
         const value = cell.getValue();
         return <div className={mx('font-mono text-right', options.className)}>{value?.toLocaleString()}</div>;
       },
-      ...options,
     });
   }
 
   // TODO(burdon): Date picker (pluggable renderers?)
   date(options: DateColumnOptions<TData> = {}): Partial<ColumnDef<TData, Date>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       size: options?.size ?? 220, // TODO(burdon): Depends on format.
       cell: (cell) => {
         const value = cell.getValue();
@@ -123,12 +128,11 @@ export class ColumnBuilder<TData extends RowData> {
           : value.toISOString();
         return <div className={mx('font-mono', options.className)}>{str}</div>;
       },
-      ...options,
     });
   }
 
   key(options: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       size: options?.size ?? 100,
       cell: (cell) => {
         const value = cell.getValue();
@@ -161,12 +165,11 @@ export class ColumnBuilder<TData extends RowData> {
           </div>
         );
       },
-      ...options,
     });
   }
 
   checkbox(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       size: options?.size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
@@ -182,13 +185,12 @@ export class ColumnBuilder<TData extends RowData> {
           </Input.Root>
         );
       },
-      ...options,
     });
   }
 
   // TODO(burdon): Options.
   icon(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
-    return stripUndefinedValues({
+    return defaults(options, {
       size: options?.size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
@@ -200,10 +202,39 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
-      ...options,
     });
   }
 }
+
+/**
+ * Serializable schema.
+ */
+export type GridSchema = {
+  columns: {
+    key: string;
+    type: 'number' | 'boolean' | 'string';
+    size?: number;
+    header?: string;
+  }[];
+};
+
+/**
+ * Create column definitions from schema metadata.
+ */
+export const createColumns = <TData extends RowData>(schema: GridSchema): GridColumnDef<TData, any>[] => {
+  const { helper, builder } = createColumnBuilder<any>();
+  return schema.columns.map(({ key, type, size, header }) => {
+    switch (type) {
+      case 'number':
+        return helper.accessor(key, builder.number({ size, header }));
+      case 'boolean':
+        return helper.accessor(key, builder.checkbox({ size, header }));
+      case 'string':
+      default:
+        return helper.accessor(key, builder.string({ size, header }));
+    }
+  }) as GridColumnDef<TData, any>[];
+};
 
 // TODO(burdon): Integrate with aurora theme (direct dependency -- see aurora-composer, tailwind.ts).
 //  See Link.tsx const { tx } = useThemeContext();
