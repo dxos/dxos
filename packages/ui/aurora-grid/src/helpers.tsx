@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, ClipboardText, X } from '@phosphor-icons/react';
-import { ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
+import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
+import { CellContext, ColumnDef, createColumnHelper, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -21,15 +21,22 @@ export const createColumnBuilder = <TData extends RowData>() => ({
   builder: new ColumnBuilder<TData>(),
 });
 
+// TODO(burdon): Add context.
+export type ValueUpdater<TData, TValue> = (cell: CellContext<TData, TValue>, value: TValue) => void;
+
+// export interface GridMeta<TData, TValue> extends ColumnMeta<TData, TValue> {
+//   updater?: ValueUpdater<TData, TValue>;
+// }
+
 /**
  * NOTE: Can use `meta` for custom properties.
  */
 // TODO(burdon): Add accessor options and spread.
-type BaseColumnOptions<TData, TValue, TMeta = ColumnMeta<TData, TValue>> = Partial<ColumnDef<TData, TValue>> & {
-  meta?: TMeta;
+type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
+  // meta?: GridMeta<TData, TValue>;
+  header?: string; // TODO(burdon): Collides with ColumdDef (rename label).
   className?: string;
-  editable?: boolean; // TODO(burdon): Accessor.
-  header?: string;
+  onUpdate?: ValueUpdater<TData, TValue>;
 };
 
 type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -45,7 +52,12 @@ type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> &
   relative?: boolean;
 };
 
-type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
+type BooleanColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
+
+type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {
+  IconOn?: Icon;
+  IconOff?: Icon;
+};
 
 const defaults = <TData extends RowData, TValue>(
   options: Partial<ColumnDef<TData, TValue>>,
@@ -57,15 +69,18 @@ const defaults = <TData extends RowData, TValue>(
 /**
  * Util to create column definitions.
  */
-// TODO(burdon): Configure styles and base options (e.g., slots for tooltip). Compact mode.
-// TODO(burdon): Helper to add classname? Extend def/slot, etc? (e.g., monospace).
 export class ColumnBuilder<TData extends RowData> {
-  string(options: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
-    return defaults(options, {
+  /**
+   * String formats.
+   */
+  string({ header, className, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, string>
+  > {
+    return defaults(props, {
       header: (column) => {
-        return <div className={mx(options.editable && 'px-2')}>{options?.header ?? column.header.id}</div>;
+        return <div className={mx(onUpdate && 'px-2')}>{header ?? column.header.id}</div>;
       },
-      cell: options.editable
+      cell: onUpdate
         ? (cell) => {
             // https://tanstack.com/table/v8/docs/examples/react/editable-data
             const initialValue = cell.getValue();
@@ -74,7 +89,7 @@ export class ColumnBuilder<TData extends RowData> {
               setValue(initialValue);
             };
             const handleSave = () => {
-              console.log('update', { value });
+              onUpdate?.(cell, value);
             };
 
             // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div).
@@ -97,43 +112,54 @@ export class ColumnBuilder<TData extends RowData> {
           }
         : (cell) => {
             const value = cell.getValue();
-            return <div className={mx('truncate', options.className)}>{value}</div>;
+            return <div className={mx('truncate', className)}>{value}</div>;
           },
     });
   }
 
-  number(options: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
-    return defaults(options, {
-      size: 100,
+  /**
+   * Number formats.
+   */
+  number({ size, header, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
+    return defaults(props, {
+      size: size ?? 100,
       header: (column) => {
-        return <div className='text-right'>{options?.header ?? column.header.id}</div>;
+        return <div className='text-right'>{header ?? column.header.id}</div>;
       },
       cell: (cell) => {
         const value = cell.getValue();
-        return <div className={mx('font-mono text-right', options.className)}>{value?.toLocaleString()}</div>;
+        return <div className={mx('font-mono text-right', className)}>{value?.toLocaleString()}</div>;
       },
     });
   }
 
+  /**
+   * Date formats.
+   */
   // TODO(burdon): Date picker (pluggable renderers?)
-  date(options: DateColumnOptions<TData> = {}): Partial<ColumnDef<TData, Date>> {
-    return defaults(options, {
-      size: options?.size ?? 220, // TODO(burdon): Depends on format.
+  date({ size, format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, Date>
+  > {
+    return defaults(props, {
+      size: size ?? 220, // TODO(burdon): Depends on format.
       cell: (cell) => {
         const value = cell.getValue();
-        const str = options?.format
-          ? format(value, options.format)
-          : options?.relative
+        const str = formatSpec
+          ? format(value, formatSpec)
+          : relative
           ? formatDistanceToNow(value, { addSuffix: true })
           : value.toISOString();
-        return <div className={mx('font-mono', options.className)}>{str}</div>;
+        return <div className={mx('font-mono', className)}>{str}</div>;
       },
     });
   }
 
-  key(options: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
-    return defaults(options, {
-      size: options?.size ?? 100,
+  /**
+   * PublicKey with tooltip.
+   */
+  key({ size, tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+    return defaults(props, {
+      size: size ?? 100,
       cell: (cell) => {
         const value = cell.getValue();
         if (!value) {
@@ -142,7 +168,7 @@ export class ColumnBuilder<TData extends RowData> {
 
         // TODO(burdon): Factor out styles.
         const element = <div className='font-mono font-thin text-green-500'>{value.truncate()}</div>;
-        if (!options.tooltip) {
+        if (!tooltip) {
           return element;
         }
 
@@ -168,18 +194,25 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 
-  checkbox(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
-    return defaults(options, {
-      size: options?.size ?? 32,
+  /**
+   * Checkbox.
+   */
+  checkbox({ size, className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, boolean>
+  > {
+    return defaults(props, {
+      size: size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
         return (
           <Input.Root>
             <Input.Checkbox
-              disabled={!options.editable}
+              onClick={(event) => event.stopPropagation()}
+              classNames={className}
+              disabled={!onUpdate}
               checked={!!value}
               onCheckedChange={(value) => {
-                console.log('update', { value });
+                onUpdate?.(cell, !!value);
               }}
             />
           </Input.Root>
@@ -188,16 +221,21 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 
-  // TODO(burdon): Options.
-  icon(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
-    return defaults(options, {
-      size: options?.size ?? 32,
+  /**
+   * Icon based on boolean value.
+   */
+  // TODO(burdon): Options to switch icon.
+  icon({ size, IconOn = Check, IconOff = X, ...props }: IconColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, boolean>
+  > {
+    return defaults(props, {
+      size: size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
         if (value) {
-          return <Check className='text-green-700' />;
+          return <IconOn className='text-green-700' />;
         } else if (value === false) {
-          return <X className='text-red-700' />;
+          return <IconOff className='text-red-700' />;
         } else {
           return null;
         }
@@ -215,23 +253,28 @@ export type GridSchema = {
     type: 'number' | 'boolean' | 'string';
     size?: number;
     header?: string;
+    editable?: boolean;
   }[];
 };
 
 /**
  * Create column definitions from schema metadata.
  */
-export const createColumns = <TData extends RowData>(schema: GridSchema): GridColumnDef<TData, any>[] => {
+// TODO(burdon): Specialize for TypedObject and move to plugin-grid.
+export const createColumns = <TData extends RowData>(
+  schema: GridSchema,
+  onUpdate: ValueUpdater<TData, any>,
+): GridColumnDef<TData, any>[] => {
   const { helper, builder } = createColumnBuilder<any>();
-  return schema.columns.map(({ key, type, size, header }) => {
+  return schema.columns.map(({ key, type, ...props }) => {
     switch (type) {
       case 'number':
-        return helper.accessor(key, builder.number({ size, header }));
+        return helper.accessor(key, builder.number({ onUpdate, ...props }));
       case 'boolean':
-        return helper.accessor(key, builder.checkbox({ size, header }));
+        return helper.accessor(key, builder.checkbox({ onUpdate, ...props }));
       case 'string':
       default:
-        return helper.accessor(key, builder.string({ size, header }));
+        return helper.accessor(key, builder.string({ onUpdate, ...props }));
     }
   }) as GridColumnDef<TData, any>[];
 };

@@ -3,6 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
+import { deepSignal } from 'deepsignal';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { DensityProvider } from '@dxos/aurora';
@@ -12,7 +13,7 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Grid, GridColumnDef } from './Grid';
-import { createColumnBuilder, createColumns, GridSchema } from './helpers';
+import { createColumnBuilder, createColumns, GridSchema, ValueUpdater } from './helpers';
 
 type Item = {
   publicKey: PublicKey;
@@ -24,42 +25,48 @@ type Item = {
 
 faker.seed(999);
 const createItems = (count: number) =>
-  range(count).map(() => ({
-    publicKey: PublicKey.random(),
-    name: faker.lorem.sentence(),
-    count: faker.number.int({ min: 0, max: 10_000 }),
-    started: faker.date.recent(),
-    complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
-  }));
+  range(count).map(
+    () =>
+      deepSignal<Item>({
+        publicKey: PublicKey.random(),
+        name: faker.lorem.sentence(),
+        count: faker.number.int({ min: 0, max: 10_000 }),
+        started: faker.date.recent(),
+        complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
+      }) as Item,
+  );
 
 const schema: GridSchema = {
   columns: [
     {
+      key: 'complete',
+      type: 'boolean',
+      header: 'ok',
+      editable: true,
+    },
+    {
       key: 'name',
       type: 'string',
       size: 300,
+      editable: true,
     },
     {
       key: 'count',
       type: 'number',
       size: 160,
-    },
-    {
-      key: 'complete',
-      type: 'boolean',
-      header: 'ok',
+      editable: true,
     },
   ],
 };
 
 const { helper, builder } = createColumnBuilder<Item>();
-const columns = (editable = false): GridColumnDef<Item, any>[] => [
-  helper.accessor('complete', builder.checkbox({ header: '', id: 'done', editable })),
+const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[] => [
+  helper.accessor('complete', builder.checkbox({ header: '', onUpdate })),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
-  helper.accessor('name', builder.string({ editable, footer: (props) => props.table.getRowModel().rows.length })),
+  helper.accessor('name', builder.string({ onUpdate, footer: (props) => props.table.getRowModel().rows.length })),
   helper.accessor('started', builder.date({ relative: true })),
   helper.accessor('count', builder.number()),
-  helper.accessor('complete', builder.icon({ header: '' })),
+  helper.accessor('complete', builder.icon({ id: 'done', header: '' })),
 ];
 
 export default {
@@ -89,7 +96,7 @@ export const Controlled = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={items}
           selected={selected}
           onSelectedChange={setSelected}
@@ -100,14 +107,23 @@ export const Controlled = {
   },
 };
 
+const update = <TValue = any,>(items: Item[], key: PublicKey, id: string, value: TValue) => {
+  return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
+};
+
 export const Editable = {
   render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+    const onUpdate: ValueUpdater<Item, any> = (cell, value) => {
+      setItems((items) => update(items, cell.row.original.publicKey, cell.column.id, value));
+    };
+
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(true)}
-          data={createItems(10)}
+          columns={columns(onUpdate)}
+          data={items}
           select='single'
           footer
         />
@@ -118,12 +134,17 @@ export const Editable = {
 
 export const Schema = {
   render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+    const onUpdate: ValueUpdater<Item, any> = (cell, value) => {
+      setItems((items) => update(items, cell.row.original.publicKey, cell.column.id, value));
+    };
+
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={createColumns<Item>(schema)}
-          data={createItems(10)}
+          columns={createColumns<Item>(schema, onUpdate)}
+          data={items}
         />
       </div>
     );
@@ -136,7 +157,7 @@ export const SingleSelect = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={createItems(10)}
           select='single-toggle'
           footer
@@ -152,7 +173,7 @@ export const MultiSelect = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={createItems(20)}
           select='multiple-toggle'
         />
@@ -167,7 +188,7 @@ export const NoHeader = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={createItems(10)}
           header={false}
         />
@@ -182,7 +203,7 @@ export const SingleColumn = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={[columns(false)[1]]}
+          columns={[columns()[1]]}
           data={createItems(10)}
         />
       </div>
@@ -196,7 +217,7 @@ export const Scrolling = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={createItems(200)}
           footer
         />
@@ -225,7 +246,7 @@ export const Dynamic = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
           data={items}
           pinToBottom
           footer
@@ -241,7 +262,7 @@ export const Empty = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns(false)}
+          columns={columns()}
         />
       </div>
     );
