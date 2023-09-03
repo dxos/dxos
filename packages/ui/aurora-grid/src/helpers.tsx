@@ -10,7 +10,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
 import { Input, Tooltip } from '@dxos/aurora';
-import { chromeSurface, inputSurface, mx } from '@dxos/aurora-theme';
+import { chromeSurface, getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -55,8 +55,14 @@ type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> &
 type BooleanColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
 
 type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {
-  IconOn?: Icon;
-  IconOff?: Icon;
+  on?: {
+    Icon?: Icon;
+    className?: string;
+  };
+  off?: {
+    Icon?: Icon;
+    className?: string;
+  };
 };
 
 const defaults = <TData extends RowData, TValue>(
@@ -97,7 +103,7 @@ export class ColumnBuilder<TData extends RowData> {
               <Input.Root>
                 <Input.TextInput
                   variant='subdued'
-                  classNames='w-full px-2 border-none bg-transparent focus:bg-white' // TODO(burdon): Color.
+                  classNames={['w-full px-2 border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Color.
                   value={value as string}
                   // TODO(burdon): Stop propagation if already selected to avoid toggling.
                   // onClick={(event) => event.stopPropagation()}
@@ -167,7 +173,9 @@ export class ColumnBuilder<TData extends RowData> {
         }
 
         // TODO(burdon): Factor out styles.
-        const element = <div className='font-mono font-thin text-green-500'>{value.truncate()}</div>;
+        const element = (
+          <div className='font-mono font-thin text-green-500 dark:text-green-300'>{value.truncate()}</div>
+        );
         if (!tooltip) {
           return element;
         }
@@ -225,17 +233,17 @@ export class ColumnBuilder<TData extends RowData> {
    * Icon based on boolean value.
    */
   // TODO(burdon): Options to switch icon.
-  icon({ size, IconOn = Check, IconOff = X, ...props }: IconColumnOptions<TData> = {}): Partial<
-    ColumnDef<TData, boolean>
-  > {
+  icon({ size, on, off, ...props }: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+    const IconOn = on?.Icon ?? Check;
+    const IconOff = off?.Icon ?? X;
     return defaults(props, {
       size: size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
         if (value) {
-          return <IconOn className='text-green-700' />;
+          return <IconOn className={mx(getSize(6), on?.className ?? 'text-green-700')} />;
         } else if (value === false) {
-          return <IconOff className='text-red-700' />;
+          return <IconOff className={mx(getSize(6), off?.className ?? 'text-red-700')} />;
         } else {
           return null;
         }
@@ -288,8 +296,8 @@ export const defaultGridSlots: GridSlots = {
   header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
   footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
   cell: { className: 'pr-2' },
-  row: { className: 'cursor-pointer hover:bg-neutral-50' },
+  row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
   focus: { className: 'ring-1 ring-teal-500 ring-inset' },
-  selected: { className: '!bg-teal-100' },
+  selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
   margin: { className: 'w-4' },
 };

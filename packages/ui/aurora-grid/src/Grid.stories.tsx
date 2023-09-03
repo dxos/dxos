@@ -3,6 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
+import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -29,7 +30,7 @@ const createItems = (count: number) =>
     () =>
       deepSignal<Item>({
         publicKey: PublicKey.random(),
-        name: faker.lorem.sentence(),
+        name: faker.commerce.productName(),
         count: faker.number.int({ min: 0, max: 10_000 }),
         started: faker.date.recent(),
         complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
@@ -67,6 +68,15 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
   helper.accessor('started', builder.date({ relative: true })),
   helper.accessor('count', builder.number()),
   helper.accessor('complete', builder.icon({ id: 'done', header: '' })),
+  helper.accessor(
+    'complete',
+    builder.icon({
+      id: 'connected',
+      on: { Icon: PlugsConnected, className: 'text-blue-500' },
+      off: { Icon: Plugs, className: 'text-blue-200' },
+      header: '',
+    }),
+  ),
 ];
 
 export default {
@@ -124,8 +134,7 @@ export const Editable = {
         <Grid<Item>
           columns={columns(onUpdate)}
           data={items}
-          select='single'
-          footer
+          select='single-toggle'
         />
       </div>
     );
@@ -145,6 +154,7 @@ export const Schema = {
         <Grid<Item>
           columns={createColumns<Item>(schema, onUpdate)}
           data={items}
+          select='single-toggle'
         />
       </div>
     );
