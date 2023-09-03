@@ -26,7 +26,6 @@ import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
-import { TemplatePlugin } from '@braneframe/plugin-template';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -74,21 +73,20 @@ const main = async () => {
           SpacePlugin(),
 
           // Composer
+          FilesPlugin(),
+          GithubPlugin(),
           MarkdownPlugin(),
           StackPlugin(),
-          GithubPlugin(),
-          FilesPlugin(),
 
           // Labs
+          ChessPlugin(),
           DebugPlugin(),
           GridPlugin(),
           IpfsPlugin(),
-          SketchPlugin(),
           KanbanPlugin(),
-          ThreadPlugin(),
-          ChessPlugin(),
           MapPlugin(),
-          TemplatePlugin(),
+          SketchPlugin(),
+          ThreadPlugin(),
         ]}
       />
     </StrictMode>,

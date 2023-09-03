@@ -60,6 +60,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-drawing/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-grid/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-map/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-space/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
