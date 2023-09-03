@@ -37,7 +37,7 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     columns: [
-      helper.accessor('receivedAt', builder.createDate({ header: 'received' })),
+      helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor(
         (response) => {
           if (response.swarmEvent?.peerAvailable) {
@@ -52,12 +52,12 @@ const views: View<SignalResponse>[] = [
         (response) =>
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer)) ||
           (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer)),
-        { id: 'peer', ...builder.createKey({ tooltip: true }) },
+        { id: 'peer', ...builder.key({ tooltip: true }) },
       ),
       // TODO(burdon): Time delta since last message?
       helper.accessor((response) => response.swarmEvent!.peerAvailable?.since, {
         id: 'since',
-        ...builder.createDate(),
+        ...builder.date(),
       }),
     ],
   },
@@ -68,19 +68,19 @@ const views: View<SignalResponse>[] = [
       return !!response.message;
     },
     columns: [
-      helper.accessor('receivedAt', builder.createDate({ header: 'received' })),
+      helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
         id: 'recipient',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.payload.messageId, { id: 'message' }),
       helper.accessor((response) => response.message!.payload?.payload?.topic, {
         id: 'topic',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
     ],
   },
@@ -91,18 +91,18 @@ const views: View<SignalResponse>[] = [
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     columns: [
-      helper.accessor('receivedAt', builder.createDate({ header: 'received' })),
+      helper.accessor('receivedAt', builder.date({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
         id: 'recipient',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.payload.messageId, {
         id: 'message',
-        ...builder.createKey({ tooltip: true }),
+        ...builder.key({ tooltip: true }),
       }),
     ],
   },

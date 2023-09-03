@@ -31,7 +31,7 @@ const colors: { [index: number]: string } = {
 
 const { helper, builder } = createColumnBuilder<LogEntry>();
 const columns: GridColumnDef<LogEntry, any>[] = [
-  helper.accessor('timestamp', builder.createDate()),
+  helper.accessor('timestamp', builder.date()),
   helper.accessor(
     (entry) =>
       Object.entries(levels)

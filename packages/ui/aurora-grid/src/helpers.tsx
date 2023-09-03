@@ -53,9 +53,8 @@ type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean
 // TODO(burdon): Configure styles and base options (e.g., slots for tooltip). Compact mode.
 // TODO(burdon): Helper to add classname? Extend def/slot, etc? (e.g., monospace).
 export class ColumnBuilder<TData extends RowData> {
-  createString(options: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
+  string(options: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
     return stripUndefinedValues({
-      ...options,
       header: (column) => {
         return <div className={mx(options.editable && 'px-2')}>{options?.header ?? column.header.id}</div>;
       },
@@ -93,13 +92,13 @@ export class ColumnBuilder<TData extends RowData> {
             const value = cell.getValue();
             return <div className={options.className}>{value}</div>;
           },
+      ...options,
     });
   }
 
-  createNumber(options: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
+  number(options: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
     return stripUndefinedValues({
       size: 100,
-      ...options,
       header: (column) => {
         return <div className='text-right'>{options?.header ?? column.header.id}</div>;
       },
@@ -107,13 +106,13 @@ export class ColumnBuilder<TData extends RowData> {
         const value = cell.getValue();
         return <div className={mx('font-mono text-right', options.className)}>{value?.toLocaleString()}</div>;
       },
+      ...options,
     });
   }
 
   // TODO(burdon): Date picker (pluggable renderers?)
-  createDate(options: DateColumnOptions<TData> = {}): Partial<ColumnDef<TData, Date>> {
+  date(options: DateColumnOptions<TData> = {}): Partial<ColumnDef<TData, Date>> {
     return stripUndefinedValues({
-      ...options,
       size: options?.size ?? 220, // TODO(burdon): Depends on format.
       cell: (cell) => {
         const value = cell.getValue();
@@ -124,12 +123,12 @@ export class ColumnBuilder<TData extends RowData> {
           : value.toISOString();
         return <div className={mx('font-mono', options.className)}>{str}</div>;
       },
+      ...options,
     });
   }
 
-  createKey(options: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+  key(options: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return stripUndefinedValues({
-      ...options,
       size: options?.size ?? 100,
       cell: (cell) => {
         const value = cell.getValue();
@@ -162,12 +161,12 @@ export class ColumnBuilder<TData extends RowData> {
           </div>
         );
       },
+      ...options,
     });
   }
 
-  createCheckbox(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+  checkbox(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     return stripUndefinedValues({
-      ...options,
       size: options?.size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
@@ -183,13 +182,13 @@ export class ColumnBuilder<TData extends RowData> {
           </Input.Root>
         );
       },
+      ...options,
     });
   }
 
   // TODO(burdon): Options.
-  createIcon(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+  icon(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     return stripUndefinedValues({
-      ...options,
       size: options?.size ?? 32,
       cell: (cell) => {
         const value = cell.getValue();
@@ -201,6 +200,7 @@ export class ColumnBuilder<TData extends RowData> {
           return null;
         }
       },
+      ...options,
     });
   }
 }

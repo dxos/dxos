@@ -34,12 +34,12 @@ const createItems = (count: number) =>
 
 const { helper, builder } = createColumnBuilder<Item>();
 const createColumns = (editable = false): GridColumnDef<Item, any>[] => [
-  helper.accessor('complete', builder.createCheckbox({ header: '', id: 'done', editable })),
-  helper.accessor((item) => item.publicKey, { id: 'key', ...builder.createKey({ tooltip: true }) }),
-  helper.accessor('name', builder.createString({ editable, footer: (props) => props.table.getRowModel().rows.length })),
-  helper.accessor('started', builder.createDate({ relative: true })),
-  helper.accessor('value', builder.createNumber()),
-  helper.accessor('complete', builder.createIcon({ header: '' })),
+  helper.accessor('complete', builder.checkbox({ header: '', id: 'done', editable })),
+  helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
+  helper.accessor('name', builder.string({ editable, footer: (props) => props.table.getRowModel().rows.length })),
+  helper.accessor('started', builder.date({ relative: true })),
+  helper.accessor('value', builder.number()),
+  helper.accessor('complete', builder.icon({ header: '' })),
 ];
 
 export default {
