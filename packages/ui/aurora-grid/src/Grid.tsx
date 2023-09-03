@@ -275,10 +275,22 @@ export const Grid = <TData extends RowData>({
                 <td>
                   {/* Dummy button for focus. */}
                   <button
-                    style={{ width: 1 }}
+                    role='button'
+                    style={{ width: 1, height: 1 }}
                     className='focus:outline-none'
                     onFocus={() => setFocus(row.id)}
                     onBlur={() => setFocus(undefined)}
+                    onKeyDown={(event) => {
+                      // TODO(burdon): Move focus.
+                      switch (event.key) {
+                        case 'ArrowUp': {
+                          break;
+                        }
+                        case 'ArrowDown': {
+                          break;
+                        }
+                      }
+                    }}
                   />
                 </td>
                 {row

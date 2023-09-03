@@ -295,9 +295,9 @@ export const defaultGridSlots: GridSlots = {
   root: { className: inputSurface },
   header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
   footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
-  cell: { className: 'pr-2' },
+  cell: { className: 'px-1' },
   row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
-  focus: { className: 'ring-1 ring-teal-500 ring-inset' },
+  focus: { className: 'ring ring-primary-600 ring-inset' },
   selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
   margin: { className: 'w-4' },
 };
