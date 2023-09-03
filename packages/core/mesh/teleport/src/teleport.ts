@@ -23,6 +23,9 @@ export type TeleportParams = {
   remotePeerId: PublicKey;
 };
 
+/**
+ * TODO(burdon): Comment: what is this?
+ */
 export class Teleport {
   public readonly initiator: boolean;
   public readonly localPeerId: PublicKey;
@@ -138,7 +141,7 @@ export class Teleport {
       }
     }
 
-    this._muxer.destroy(err);
+    await this._muxer.destroy(err);
   }
 
   addExtension(name: string, extension: TeleportExtension) {

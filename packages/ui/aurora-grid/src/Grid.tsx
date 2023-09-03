@@ -106,6 +106,10 @@ export const updateSelection = (
   return selectionState;
 };
 
+const defaultColumn: Partial<ColumnDef<RowData>> = {
+  size: undefined, // NOTE: Required in order remove default width.
+};
+
 export type GridProps<TData extends RowData> = {
   columns?: GridColumnDef<TData>[];
   data?: TData[];
@@ -151,17 +155,22 @@ export const Grid = <TData extends RowData>({
   const table = useReactTable({
     data,
     columns,
+    defaultColumn: defaultColumn as Partial<ColumnDef<TData>>,
+    // TODO(burdon): Filtering.
+    // TODO(burdon): Paging.
     getCoreRowModel: getCoreRowModel(),
     state: {
       rowSelection: selectionState,
-    },
-    defaultColumn: {
-      size: undefined,
     },
     enableRowSelection: select === 'single' || select === 'single-toggle',
     enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
     onRowSelectionChange: (rows) => {
       setSelectionState(rows);
+    },
+    meta: {
+      updateData: (rowIndex: number, columnId: string, value: unknown) => {
+        console.log('>>', { rowIndex, columnId, value });
+      },
     },
     // debugTable: true, // TODO(burdon): Research perf for us.
   });
