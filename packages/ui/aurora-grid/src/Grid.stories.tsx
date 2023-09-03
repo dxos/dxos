@@ -5,6 +5,7 @@
 import { faker } from '@faker-js/faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { DensityProvider } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
@@ -32,9 +33,10 @@ const createItems = (count: number) =>
   }));
 
 const { helper, builder } = createColumnBuilder<Item>();
-const columns: GridColumnDef<Item, any>[] = [
+const createColumns = (editable = false): GridColumnDef<Item, any>[] => [
+  helper.accessor('complete', builder.createCheckbox({ header: '', id: 'done', editable })),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.createKey({ tooltip: true }) }),
-  helper.accessor('name', { footer: (props) => props.table.getRowModel().rows.length }),
+  helper.accessor('name', builder.createString({ editable, footer: (props) => props.table.getRowModel().rows.length })),
   helper.accessor('started', builder.createDate({ relative: true })),
   helper.accessor('value', builder.createNumber()),
   helper.accessor('complete', builder.createIcon({ header: '' })),
@@ -45,8 +47,10 @@ export default {
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden bg-zinc-200'>
-        <div className='flex w-[600px] h-full'>
-          <Story />
+        <div className='flex w-[800px] h-full'>
+          <DensityProvider density='fine'>
+            <Story />
+          </DensityProvider>
         </div>
       </div>
     ),
@@ -65,10 +69,27 @@ export const Controlled = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={items}
           selected={selected}
           onSelectedChange={setSelected}
+          slots={defaultGridSlots}
+          footer
+        />
+      </div>
+    );
+  },
+};
+
+export const Editable = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columns={createColumns(true)}
+          data={createItems(10)}
+          select='single'
           slots={defaultGridSlots}
           footer
         />
@@ -83,7 +104,7 @@ export const SingleSelect = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={createItems(10)}
           select='single-toggle'
           slots={defaultGridSlots}
@@ -100,7 +121,7 @@ export const MultiSelect = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={createItems(20)}
           select='multiple-toggle'
           slots={defaultGridSlots}
@@ -116,7 +137,7 @@ export const NoHeader = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={createItems(10)}
           slots={defaultGridSlots}
           header={false}
@@ -132,7 +153,7 @@ export const SingleColumn = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={[columns[0]]}
+          columns={[createColumns(false)[1]]}
           data={createItems(10)}
           slots={defaultGridSlots}
         />
@@ -147,7 +168,7 @@ export const Scrolling = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={createItems(200)}
           slots={defaultGridSlots}
           footer
@@ -177,7 +198,7 @@ export const Dynamic = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           data={items}
           slots={defaultGridSlots}
           pinToBottom
@@ -194,7 +215,7 @@ export const Empty = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={columns}
+          columns={createColumns(false)}
           slots={defaultGridSlots}
         />
       </div>
