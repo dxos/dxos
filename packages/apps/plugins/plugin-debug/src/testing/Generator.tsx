@@ -4,7 +4,7 @@
 
 import type { Faker } from '@faker-js/faker';
 
-import { Document } from '@braneframe/types';
+import { Document as DocumentType } from '@braneframe/types';
 import { Space, Text } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,10 +24,10 @@ export class Generator {
     return this;
   }
 
-  createObject({ type = Document.type.name, createContent = false } = {}) {
+  createObject({ type = DocumentType.type.name, createContent = false } = {}) {
     log('update', { type });
     switch (type) {
-      case Document.type.name: {
+      case DocumentType.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
         const content = createContent
@@ -36,16 +36,16 @@ export class Generator {
               .join('\n\n')
           : '';
 
-        this._space.db.add(new Document({ title, content: new Text(content) }));
+        this._space.db.add(new DocumentType({ title, content: new Text(content) }));
         break;
       }
     }
   }
 
-  async updateObject(type = Document.type.name) {
+  async updateObject(type = DocumentType.type.name) {
     switch (type) {
-      case Document.type.name: {
-        const { objects } = this._space.db.query(Document.filter());
+      case DocumentType.type.name: {
+        const { objects } = this._space.db.query(DocumentType.filter());
         if (objects.length) {
           // TODO(burdon): Standardize faker deps.
           const object = this._faker!.helpers.arrayElement(objects);
