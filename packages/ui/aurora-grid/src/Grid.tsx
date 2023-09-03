@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DotsThreeVertical } from '@phosphor-icons/react';
 import {
   ColumnDef,
   Row,
@@ -10,21 +11,24 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  VisibilityState,
 } from '@tanstack/react-table';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { defaultGridSlots } from './theme';
 
 // Meta definition.
 declare module '@tanstack/react-table' {
-  interface TableMeta<TData extends RowData> {
-    resize?: boolean;
-  }
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  interface TableMeta<TData extends RowData> {}
 
+  // eslint-disable-next-line unused-imports/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     resize?: boolean;
+    menu?: boolean;
   }
 }
 
@@ -126,11 +130,13 @@ const defaultColumn: Partial<ColumnDef<RowData>> = {
 
 export type GridProps<TData extends RowData> = {
   columns?: GridColumnDef<TData>[];
+  columnVisibility?: VisibilityState;
   data?: TData[];
   slots?: GridSlots;
   header?: boolean;
   footer?: boolean;
   pinToBottom?: boolean;
+  debug?: boolean;
 } & GridSelection<TData>;
 
 /**
@@ -139,6 +145,7 @@ export type GridProps<TData extends RowData> = {
 export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
+  columnVisibility,
   slots = defaultGridSlots,
   select,
   selected,
@@ -146,6 +153,7 @@ export const Grid = <TData extends RowData>({
   header: showHeader = true,
   footer: showFooter = false,
   pinToBottom,
+  debug,
 }: GridProps<TData>) => {
   const [focus, setFocus] = useState<string>();
 
@@ -170,10 +178,13 @@ export const Grid = <TData extends RowData>({
     data,
     columns,
     defaultColumn: defaultColumn as Partial<ColumnDef<TData>>,
-    // TODO(burdon): Filtering.
-    // TODO(burdon): Paging.
     getCoreRowModel: getCoreRowModel(),
+
+    // TODO(burdon): Pagination.
+    // TODO(burdon): Sorting.
+    // TODO(burdon): Filtering.
     state: {
+      columnVisibility,
       rowSelection: selectionState,
     },
 
@@ -184,19 +195,14 @@ export const Grid = <TData extends RowData>({
     },
 
     // TODO(burdon): Drag to re-order columns.
-
-    // TODO(burdon): Min size.
-    enableColumnResizing: true,
     columnResizeMode: 'onChange',
-    // onColumnSizingInfoChange: (state) => {
-    //   console.log('>>>', state);
-    // },
-    // onStateChange: (state) => {
-    //   console.log('::::', state);
-    // },
+    enableColumnResizing: true,
 
-    // debugTable: true,
+    debugTable: debug,
   });
+
+  // Pin scrollbar to bottom.
+  const containerRef = usePinToBottom(data, pinToBottom);
 
   const handleSelect = (row: Row<TData>) => {
     if (select) {
@@ -215,38 +221,6 @@ export const Grid = <TData extends RowData>({
       onSelectedChange?.([row.original]);
     }
   };
-
-  // Pin scrollbar to bottom.
-  // TODO(burdon): Factor out.
-  // TODO(burdon): Causes scrollbar to be constantly visible.
-  //  https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  {
-    const [stickyScrolling, setStickyScrolling] = useState(true);
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!pinToBottom || !container) {
-        return;
-      }
-
-      // TODO(burdon): Set when scrolled to bottom and unset when manually scrolled away.
-      const handler = () => {
-        const bottom = container.scrollHeight - container.scrollTop - container.clientHeight === 0;
-        setStickyScrolling(bottom);
-      };
-
-      container.addEventListener('scroll', handler);
-      return () => container.removeEventListener('scroll', handler);
-    }, []);
-
-    useEffect(() => {
-      if (!pinToBottom || !containerRef.current || !stickyScrolling) {
-        return;
-      }
-
-      containerRef.current?.scroll({ top: containerRef.current.scrollHeight });
-    }, [data]);
-  }
 
   // TODO(burdon): Add flex if not resizable.
   // Create additional expansion column if all columns have fixed width.
@@ -273,50 +247,55 @@ export const Grid = <TData extends RowData>({
               <tr key={headerGroup.id} className='flex w-fit items-center'>
                 <th className={mx(slots?.margin?.className)} />
 
-                {headerGroup.headers
-                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
-                  .map((header) => {
-                    return (
-                      <th
-                        key={header.id}
-                        style={{ width: header.getSize() }}
-                        className={mx('relative', slots?.cell?.className)}
-                      >
-                        {/* TODO(burdon): Add Right margin to all cells if resizable. */}
-                        <div className={mx(header.column.columnDef.meta?.resize && 'pr-2')}>
-                          {!showHeader || header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <th
+                      key={header.id}
+                      style={{ width: header.getSize() }}
+                      className={mx('flex items-center relative', slots?.cell?.className)}
+                    >
+                      {!showHeader || header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
 
-                        {/*
-                         * Resize handle.
-                         * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
-                         */}
-                        {header.column.columnDef.meta?.resize && (
-                          <div
-                            className={mx(
-                              'absolute right-0 top-0 px-1 h-full',
-                              'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
-                              // TODO(burdon): Hidden due to render bug while dragging.
-                              header.column.getIsResizing() && 'hidden',
-                            )}
-                            style={{
-                              transform: header.column.getIsResizing()
-                                ? `translateX(${table.getState().columnSizingInfo.deltaOffset}px)`
-                                : undefined,
-                            }}
-                            onMouseDown={header.getResizeHandler()}
-                            onTouchStart={header.getResizeHandler()}
-                            onMouseUp={() => console.log('stop')}
-                            onTouchEnd={() => console.log('stop')}
-                          >
-                            <div className='flex border-r border-neutral-300 w-[1px] h-full' />
-                          </div>
-                        )}
-                      </th>
-                    );
-                  })}
+                      {/* TODO(burdon): Menu option. */}
+                      {header.column.columnDef.meta?.menu && (
+                        <>
+                          <div className='grow' />
+                          <Button variant='ghost'>
+                            <DotsThreeVertical className={getSize(5)} />
+                          </Button>
+                        </>
+                      )}
+
+                      {/*
+                       * Resize handle.
+                       * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
+                       */}
+                      {header.column.columnDef.meta?.resize && (
+                        <div
+                          className={mx(
+                            'absolute right-0 top-0 px-1 h-full',
+                            'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+                            // TODO(burdon): Hidden due to render bug while dragging.
+                            header.column.getIsResizing() && 'hidden',
+                          )}
+                          style={{
+                            transform: header.column.getIsResizing()
+                              ? `translateX(${table.getState().columnSizingInfo.deltaOffset}px)`
+                              : undefined,
+                          }}
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onMouseUp={() => console.log('stop')}
+                          onTouchEnd={() => console.log('stop')}
+                        >
+                          <div className='flex border-r border-neutral-300 w-[1px] h-full' />
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
 
                 {addFlex && <th />}
                 <th className={mx(slots?.margin?.className)} />
@@ -364,24 +343,19 @@ export const Grid = <TData extends RowData>({
                   />
                 </td>
 
-                {row
-                  .getVisibleCells()
-                  // TODO(burdon): Option to filter?
-                  // TODO(burdon): Meta type.
-                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
-                  .map((cell) => {
-                    return (
-                      <td
-                        key={cell.id}
-                        className={mx('overflow-hidden', slots?.cell?.className)}
-                        style={{
-                          width: cell.column.getSize(),
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <td
+                      key={cell.id}
+                      className={mx('flex items-center overflow-hidden', slots?.cell?.className)}
+                      style={{
+                        width: cell.column.getSize(),
+                      }}
+                    >
+                      <div className='grow pr-2'>{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
+                    </td>
+                  );
+                })}
 
                 {addFlex && <td />}
                 <td className={mx(slots?.margin?.className)} />
@@ -399,15 +373,13 @@ export const Grid = <TData extends RowData>({
               <tr key={footerGroup.id} className='flex w-fit items-center'>
                 <th className={mx(slots?.margin?.className)} />
 
-                {footerGroup.headers
-                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
-                  .map((footer) => {
-                    return (
-                      <th key={footer.id} className={mx(slots?.footer?.className)}>
-                        {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
-                      </th>
-                    );
-                  })}
+                {footerGroup.headers.map((footer) => {
+                  return (
+                    <th key={footer.id} className={mx(slots?.footer?.className)}>
+                      {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
+                    </th>
+                  );
+                })}
 
                 {addFlex && <th />}
                 <th className={mx(slots?.margin?.className)} />
@@ -417,9 +389,46 @@ export const Grid = <TData extends RowData>({
         )}
       </table>
 
-      <pre className='font-mono text-xs text-neutral-500 my-4 p-2 ring'>
-        <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
-      </pre>
+      {debug && (
+        <pre className='font-mono text-xs text-neutral-500 my-4 p-2 ring'>
+          <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
+        </pre>
+      )}
     </div>
   );
+};
+
+/**
+ * Glue to bottom as rows are added.
+ */
+// TODO(burdon): Causes scrollbar to be constantly visible.
+//  https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom
+const usePinToBottom = <TData extends RowData>(data: TData[], pinToBottom?: boolean) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [stickyScrolling, setStickyScrolling] = useState(true);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!pinToBottom || !container) {
+      return;
+    }
+
+    // TODO(burdon): Set when scrolled to bottom and unset when manually scrolled away.
+    const handler = () => {
+      const bottom = container.scrollHeight - container.scrollTop - container.clientHeight === 0;
+      setStickyScrolling(bottom);
+    };
+
+    container.addEventListener('scroll', handler);
+    return () => container.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!pinToBottom || !containerRef.current || !stickyScrolling) {
+      return;
+    }
+
+    containerRef.current?.scroll({ top: containerRef.current.scrollHeight });
+  }, [data]);
+
+  return containerRef;
 };

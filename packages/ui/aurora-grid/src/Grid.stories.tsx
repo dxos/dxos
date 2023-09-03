@@ -213,13 +213,14 @@ export const NoHeader = {
   },
 };
 
-export const SingleColumn = {
+export const Visibility = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={[columns()[1]]}
+          columns={columns()}
+          columnVisibility={{ key: false, started: false }}
           data={createItems(10)}
         />
       </div>
