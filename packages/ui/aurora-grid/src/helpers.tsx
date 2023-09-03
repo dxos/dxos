@@ -3,18 +3,16 @@
 //
 
 import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
-import { CellContext, ColumnDef, createColumnHelper, RowData } from '@tanstack/react-table';
+import { CellContext, ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
 import { Input, Tooltip } from '@dxos/aurora';
-import { chromeSurface, getSize, inputSurface, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
-
-import { GridColumnDef, GridSlots } from './Grid';
 
 export const createColumnBuilder = <TData extends RowData>() => ({
   helper: createColumnHelper<TData>(),
@@ -24,16 +22,12 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 // TODO(burdon): Add context.
 export type ValueUpdater<TData, TValue> = (cell: CellContext<TData, TValue>, value: TValue) => void;
 
-// export interface GridMeta<TData, TValue> extends ColumnMeta<TData, TValue> {
-//   updater?: ValueUpdater<TData, TValue>;
-// }
-
 /**
  * NOTE: Can use `meta` for custom properties.
  */
 // TODO(burdon): Add accessor options and spread.
 type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
-  // meta?: GridMeta<TData, TValue>;
+  meta?: ColumnMeta<TData, TValue>;
   header?: string; // TODO(burdon): Collides with ColumdDef (rename label).
   className?: string;
   onUpdate?: ValueUpdater<TData, TValue>;
@@ -83,6 +77,7 @@ export class ColumnBuilder<TData extends RowData> {
     ColumnDef<TData, string>
   > {
     return defaults(props, {
+      minSize: 100,
       header: (column) => {
         return <div className={mx(onUpdate && 'px-2')}>{header ?? column.header.id}</div>;
       },
@@ -104,7 +99,7 @@ export class ColumnBuilder<TData extends RowData> {
                 <Input.TextInput
                   variant='subdued'
                   classNames={['w-full px-2 border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Color.
-                  value={value as string}
+                  value={(value as string) ?? ''}
                   // TODO(burdon): Stop propagation if already selected to avoid toggling.
                   // onClick={(event) => event.stopPropagation()}
                   onChange={(event) => setValue(event.target.value)}
@@ -126,9 +121,10 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Number formats.
    */
-  number({ size, header, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
+  number({ minSize, header, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
     return defaults(props, {
-      size: size ?? 100,
+      size: 100,
+      minSize: 100,
       header: (column) => {
         return <div className='text-right'>{header ?? column.header.id}</div>;
       },
@@ -143,11 +139,12 @@ export class ColumnBuilder<TData extends RowData> {
    * Date formats.
    */
   // TODO(burdon): Date picker (pluggable renderers?)
-  date({ size, format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
+  date({ format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, Date>
   > {
     return defaults(props, {
-      size: size ?? 220, // TODO(burdon): Depends on format.
+      size: 220, // TODO(burdon): Depends on format.
+      minSize: 100,
       cell: (cell) => {
         const value = cell.getValue();
         const str = formatSpec
@@ -163,9 +160,10 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * PublicKey with tooltip.
    */
-  key({ size, tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+  key({ tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return defaults(props, {
-      size: size ?? 100,
+      size: 100,
+      minSize: 100,
       cell: (cell) => {
         const value = cell.getValue();
         if (!value) {
@@ -205,11 +203,10 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Checkbox.
    */
-  checkbox({ size, className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<
-    ColumnDef<TData, boolean>
-  > {
+  checkbox({ className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     return defaults(props, {
-      size: size ?? 32,
+      size: 32,
+      minSize: 32,
       cell: (cell) => {
         const value = cell.getValue();
         return (
@@ -251,53 +248,3 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 }
-
-/**
- * Serializable schema.
- */
-export type GridSchema = {
-  columns: {
-    key: string;
-    type: 'number' | 'boolean' | 'string';
-    size?: number;
-    header?: string;
-    editable?: boolean;
-  }[];
-};
-
-/**
- * Create column definitions from schema metadata.
- */
-// TODO(burdon): Specialize for TypedObject and move to plugin-grid.
-export const createColumns = <TData extends RowData>(
-  schema: GridSchema,
-  onUpdate: ValueUpdater<TData, any>,
-): GridColumnDef<TData, any>[] => {
-  const { helper, builder } = createColumnBuilder<any>();
-  return schema.columns.map(({ key, type, ...props }) => {
-    switch (type) {
-      case 'number':
-        return helper.accessor(key, builder.number({ onUpdate, ...props }));
-      case 'boolean':
-        return helper.accessor(key, builder.checkbox({ onUpdate, ...props }));
-      case 'string':
-      default:
-        return helper.accessor(key, builder.string({ onUpdate, ...props }));
-    }
-  }) as GridColumnDef<TData, any>[];
-};
-
-// TODO(burdon): Integrate with aurora theme (direct dependency -- see aurora-composer, tailwind.ts).
-//  See Link.tsx const { tx } = useThemeContext();
-//  Reuse button fragments for hoverColors, selected, primary, etc.
-// TODO(burdon): Compact mode (smaller than density fine).
-export const defaultGridSlots: GridSlots = {
-  root: { className: inputSurface },
-  header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
-  footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
-  cell: { className: 'px-1' },
-  row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
-  focus: { className: 'ring ring-primary-600 ring-inset' },
-  selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
-  margin: { className: 'w-4' },
-};

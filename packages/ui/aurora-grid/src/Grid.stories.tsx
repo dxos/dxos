@@ -14,7 +14,8 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Grid, GridColumnDef } from './Grid';
-import { createColumnBuilder, createColumns, GridSchema, ValueUpdater } from './helpers';
+import { createColumnBuilder, ValueUpdater } from './helpers';
+import { createColumns, GridSchema, GridSchemaColumn } from './schema';
 
 type Item = {
   publicKey: PublicKey;
@@ -37,7 +38,7 @@ const createItems = (count: number) =>
       }) as Item,
   );
 
-const schema: GridSchema = {
+const testSchema: GridSchema = {
   columns: [
     {
       key: 'complete',
@@ -50,12 +51,14 @@ const schema: GridSchema = {
       type: 'string',
       size: 300,
       editable: true,
+      resize: true,
     },
     {
       key: 'count',
       type: 'number',
       size: 160,
       editable: true,
+      resize: true,
     },
   ],
 };
@@ -143,18 +146,21 @@ export const Editable = {
 
 export const Schema = {
   render: () => {
-    const [items, setItems] = useState<Item[]>(createItems(10));
+    const [schema, setSchema] = useState(testSchema);
+    const [items, setItems] = useState(createItems(10));
     const onUpdate: ValueUpdater<Item, any> = (cell, value) => {
       setItems((items) => update(items, cell.row.original.publicKey, cell.column.id, value));
+    };
+    const onAddColumn = (column: GridSchemaColumn) => {
+      setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
     };
 
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={createColumns<Item>(schema, onUpdate)}
+          columns={createColumns<Item>(schema, onUpdate, onAddColumn)}
           data={items}
-          select='single-toggle'
         />
       </div>
     );
