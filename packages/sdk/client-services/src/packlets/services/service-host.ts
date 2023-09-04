@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createSimplePeerTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
@@ -194,7 +194,7 @@ export class ClientServicesHost {
 
     const {
       connectionLog = true,
-      transportFactory = createWebRTCTransportFactory({
+      transportFactory = createSimplePeerTransportFactory({
         iceServers: this._config?.get('runtime.services.ice'),
       }),
       signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),

@@ -3,29 +3,22 @@
 //
 
 import { ArrowLineLeft } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal/react';
 import React, { PropsWithChildren } from 'react';
 
+import { LocalStorageStore } from '@dxos/local-storage';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { SplitViewContext } from './SplitViewContext';
 import { SplitView, SplitViewMainContentEmpty } from './components';
 import translations from './translations';
-import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
-
-export type SplitViewPluginConfig = Partial<{
-  enableComplementarySidebar: boolean;
-}>;
+import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides, SplitViewState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
  */
-export const SplitViewPlugin = ({
-  enableComplementarySidebar,
-}: SplitViewPluginConfig = {}): PluginDefinition<SplitViewProvides> => {
-  const state = deepSignal({
+export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
+  const settings = new LocalStorageStore<SplitViewState>('braneframe.plugin-splitview', {
     sidebarOpen: true,
-    complementarySidebarOpen: enableComplementarySidebar ? false : null,
     dialogContent: 'never',
     dialogOpen: false,
   });
@@ -34,9 +27,17 @@ export const SplitViewPlugin = ({
     meta: {
       id: SPLITVIEW_PLUGIN,
     },
+    ready: async () => {
+      settings
+        .prop(settings.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
+        .prop(settings.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+    },
+    unload: async () => {
+      settings.close();
+    },
     provides: {
       context: (props: PropsWithChildren) => (
-        <SplitViewContext.Provider value={state}>{props.children}</SplitViewContext.Provider>
+        <SplitViewContext.Provider value={settings.values}>{props.children}</SplitViewContext.Provider>
       ),
       components: { SplitView, SplitViewMainContentEmpty },
       graph: {
@@ -61,13 +62,13 @@ export const SplitViewPlugin = ({
         resolver: (intent) => {
           switch (intent.action) {
             case SplitViewAction.TOGGLE_SIDEBAR: {
-              state.sidebarOpen = intent.data.state ?? !state.sidebarOpen;
+              settings.values.sidebarOpen = intent.data.state ?? !settings.values.sidebarOpen;
               return true;
             }
           }
         },
       },
-      splitView: state,
+      splitView: settings.values,
       translations,
     },
   };

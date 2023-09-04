@@ -12,7 +12,7 @@ import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
-import { createWebRTCTransportFactory } from '../transport';
+import { createSimplePeerTransportFactory } from '../transport';
 import { ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
@@ -48,7 +48,8 @@ describe('Swarm', () => {
       new FullyConnectedTopology(),
       protocol.factory,
       new Messenger({ signalManager }),
-      createWebRTCTransportFactory(),
+      // TODO(nf): configure?
+      createSimplePeerTransportFactory(),
       undefined,
       connectionLimiter,
       initiationDelay,

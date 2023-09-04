@@ -63,13 +63,13 @@ export const fromHost = async (
  */
 const setupNetworking = async (config: Config, options: Partial<NetworkManagerOptions> = {}) => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
-  const { createWebRTCTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
+  const { createSimplePeerTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   if (signals) {
     const {
       signalManager = new WebsocketSignalManager(signals),
-      transportFactory = createWebRTCTransportFactory({
+      transportFactory = createSimplePeerTransportFactory({
         iceServers: config.get('runtime.services.ice'),
       }),
     } = options;

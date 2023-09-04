@@ -23,6 +23,9 @@ export type TeleportParams = {
   remotePeerId: PublicKey;
 };
 
+/**
+ * TODO(burdon): Comment: what is this?
+ */
 export class Teleport {
   public readonly initiator: boolean;
   public readonly localPeerId: PublicKey;

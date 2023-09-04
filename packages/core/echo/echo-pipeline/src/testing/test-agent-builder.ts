@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createSimplePeerTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -39,7 +39,7 @@ export const WebsocketNetworkManagerProvider =
   () =>
     new NetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createWebRTCTransportFactory(),
+      transportFactory: createSimplePeerTransportFactory(),
     });
 
 export type TestAgentBuilderOptions = {

@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+// !!! Duplicated in @dxos/node-std
+// TODO(dmaretskyi): Unify.
+
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
@@ -91,7 +94,7 @@ function uptime () {
   return dif / 1000;
 }
 
-export var process = {
+export var process = (globalThis.process ??= {
   nextTick: nextTick,
   title: title,
   browser: browser,
@@ -115,7 +118,7 @@ export var process = {
   release: release,
   config: config,
   uptime: uptime,
-};
+});
 
 // replace process.env.VAR with define
 
