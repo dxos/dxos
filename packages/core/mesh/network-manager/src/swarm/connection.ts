@@ -144,7 +144,7 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
-    this._protocol.initialize().catch((err) => {
+    this._protocol.open().catch((err) => {
       this.errors.raise(err);
     });
 
@@ -201,7 +201,7 @@ export class Connection {
   @synchronized
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
   async abort(err?: Error) {
-    log('abort');
+    log('aborting...', { err });
     if (!this.closeReason) {
       this.closeReason = err?.message;
     }
@@ -216,7 +216,7 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      log('aborting... protocol  ', { proto: this._protocol });
+      log('aborting protocol... ', { proto: this._protocol });
       await this._protocol.abort();
     } catch (err: any) {
       log.catch(err);
@@ -249,7 +249,7 @@ export class Connection {
 
     try {
       // Gracefully close the stream flushing any unsent data packets.
-      await this._protocol.destroy();
+      await this._protocol.close();
     } catch (err: any) {
       log.catch(err);
     }
@@ -298,7 +298,7 @@ export class Connection {
       }
 
       // If signal fails treat connection as failed
-      log.warn('Signal failed, closing', { err });
+      log.warn('signal failed', { err });
       await this.close();
     }
   }

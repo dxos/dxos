@@ -136,7 +136,7 @@ export class Teleport {
       }
     }
 
-    this._muxer.destroy(err);
+    await this._muxer.destroy(err);
   }
 
   @synchronized
@@ -155,7 +155,7 @@ export class Teleport {
       }
     }
 
-    this._muxer.destroy(err);
+    await this._muxer.destroy(err);
   }
 
   addExtension(name: string, extension: TeleportExtension) {

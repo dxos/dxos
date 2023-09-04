@@ -237,7 +237,7 @@ export class Muxer {
   /**
    * Force-close with optional error.
    */
-  destroy(err?: Error) {
+  async destroy(err?: Error) {
     if (this._destroying) {
       return;
     }
