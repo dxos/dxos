@@ -63,9 +63,8 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   const debug = true; // TODO(burdon): From config?
   useEffect(() => {
     const errorListener = (event: any) => {
-      console.error(event);
       event.preventDefault();
-      // Handler is called twice.
+      // TODO(burdon): Handler is called twice.
       if (error.current !== event.error) {
         error.current = event.error;
         if (debug) {
@@ -75,15 +74,17 @@ const ErrorIndicator: FC<IconProps> = (props) => {
       }
     };
 
+    console.log('addEventListener.error');
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event
-    window.addEventListener('error', errorListener);
+    // window.addEventListener('error', errorListener);
 
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
-    window.addEventListener('unhandledrejection', errorListener);
+    // window.addEventListener('unhandledrejection', errorListener);
 
     return () => {
-      window.removeEventListener('error', errorListener);
-      window.removeEventListener('unhandledrejection', errorListener);
+      console.log('removeEventListener.error');
+      // window.removeEventListener('error', errorListener);
+      // window.removeEventListener('unhandledrejection', errorListener);
     };
   }, []);
 

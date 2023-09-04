@@ -27,7 +27,8 @@ export type GridSchemaColumn = {
   resize?: boolean;
 };
 
-type ColumnOption<TData extends RowData, TValue> = {
+// TODO(burdon): Create builder.
+type CreateColumnsOptions<TData extends RowData, TValue> = {
   onUpdate?: (row: TData, id: string, value: TValue) => void;
   onRowDelete?: (row: TData) => void;
   onColumnCreate?: (column: GridSchemaColumn) => void;
@@ -39,7 +40,7 @@ type ColumnOption<TData extends RowData, TValue> = {
 // TODO(burdon): Specialize for TypedObject and move to plugin-grid.
 export const createColumns = <TData extends RowData>(
   schema: GridSchema,
-  { onUpdate, onRowDelete, onColumnCreate }: ColumnOption<TData, any> = {},
+  { onUpdate, onRowDelete, onColumnCreate }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   const columns: ColumnDef<TData>[] = schema.columns.map(({ id, type, resize, ...props }) => {
@@ -77,6 +78,7 @@ export const createColumns = <TData extends RowData>(
               </Button>
             )
           : undefined,
+        // TODO(burdon): Check option.
         // TODO(burdon): Show on hover.
         cell: onRowDelete
           ? (cell) => (

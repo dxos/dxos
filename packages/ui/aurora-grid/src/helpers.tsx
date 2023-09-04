@@ -78,7 +78,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       minSize: 100,
       header: (column) => {
-        return <div className={mx(onUpdate && 'px-2')}>{header ?? column.header.id}</div>;
+        return <div className={mx('truncate', onUpdate && 'px-2')}>{header ?? column.header.id}</div>;
       },
       cell: onUpdate
         ? (cell) => {
@@ -124,7 +124,7 @@ export class ColumnBuilder<TData extends RowData> {
     return defaults(props, {
       size: 100,
       minSize: 100,
-      header: (cell) => <div className='w-full text-right pr-2'>{cell.header.id}</div>,
+      header: (cell) => <div className='w-full px-2 truncate text-right'>{cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
         return <div className={mx('font-mono text-right', className)}>{value?.toLocaleString()}</div>;

@@ -12,6 +12,7 @@ import {
   getCoreRowModel,
   useReactTable,
   VisibilityState,
+  ColumnSizingInfoState,
 } from '@tanstack/react-table';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -135,6 +136,7 @@ export type GridProps<TData extends RowData> = {
   slots?: GridSlots;
   header?: boolean;
   footer?: boolean;
+  onColumnResize?: (state: Record<string, number>) => void;
   pinToBottom?: boolean;
   debug?: boolean;
 } & GridSelection<TData>;
@@ -152,6 +154,7 @@ export const Grid = <TData extends RowData>({
   onSelectedChange,
   header: showHeader = true,
   footer: showFooter = false,
+  onColumnResize,
   pinToBottom,
   debug,
 }: GridProps<TData>) => {
@@ -159,9 +162,9 @@ export const Grid = <TData extends RowData>({
 
   // Update controlled selection.
   // https://tanstack.com/table/v8/docs/api/features/row-selection
-  const [selectionState, setSelectionState] = useState<RowSelectionState>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   useEffect(() => {
-    setSelectionState(
+    setRowSelection(
       selected?.reduce((selectionState: RowSelectionState, selected) => {
         const row = table.getRowModel().rows.find((row) => row.original === selected);
         if (row) {
@@ -171,6 +174,14 @@ export const Grid = <TData extends RowData>({
       }, {}) ?? {},
     );
   }, [select, selected]);
+
+  // Resizing.
+  const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+  useEffect(() => {
+    if (columnSizingInfo.columnSizingStart?.length === 0) {
+      onColumnResize?.(table.getState().columnSizing);
+    }
+  }, [columnSizingInfo]);
 
   // Update table model.
   // https://tanstack.com/table/v8/docs/api/core/table
@@ -185,18 +196,20 @@ export const Grid = <TData extends RowData>({
     // TODO(burdon): Filtering.
     state: {
       columnVisibility,
-      rowSelection: selectionState,
+      columnSizingInfo,
+      rowSelection,
     },
 
     enableRowSelection: select === 'single' || select === 'single-toggle',
     enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
     onRowSelectionChange: (rows) => {
-      setSelectionState(rows);
+      setRowSelection(rows);
     },
 
     // TODO(burdon): Drag to re-order columns.
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
+    onColumnSizingInfoChange: setColumnSizingInfo,
 
     debugTable: debug,
   });
@@ -211,7 +224,7 @@ export const Grid = <TData extends RowData>({
   const handleSelect = (row: Row<TData>) => {
     if (select) {
       // Uncontrolled.
-      setSelectionState((selectionState: RowSelectionState) => {
+      setRowSelection((selectionState: RowSelectionState) => {
         const newSelectionState = updateSelection(selectionState, row.id, select);
         if (onSelectedChange) {
           const rows: TData[] = Object.keys(newSelectionState).map((id) => table.getRowModel().rowsById[id].original);
@@ -233,7 +246,7 @@ export const Grid = <TData extends RowData>({
       <table
         className={mx('w-fit border-collapse', slots?.table?.className)}
         style={{
-          width: table.getCenterTotalSize(),
+          width: table.getTotalSize(),
         }}
       >
         {/*
@@ -252,6 +265,7 @@ export const Grid = <TData extends RowData>({
                       style={{ width: header.getSize() }}
                       className={mx('flex items-center relative', slots?.cell?.className)}
                     >
+                      {/* TODO(burdon): Standardize rendering, applying classNames, etc. */}
                       {!showHeader || header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -285,9 +299,6 @@ export const Grid = <TData extends RowData>({
                           }}
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
-                          // TODO(burdon): Update size.
-                          onMouseUp={() => console.log('stop')}
-                          onTouchEnd={() => console.log('stop')}
                         >
                           <div className='flex border-r border-neutral-300 w-[1px] h-full' />
                         </div>
@@ -315,7 +326,7 @@ export const Grid = <TData extends RowData>({
                 role='button'
                 className={mx(
                   'flex w-fit items-center group',
-                  selectionState[row.id] && slots?.selected?.className,
+                  rowSelection[row.id] && slots?.selected?.className,
                   focus === row.id && slots?.focus?.className,
                   slots?.row?.className,
                 )}

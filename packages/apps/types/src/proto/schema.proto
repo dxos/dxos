@@ -50,7 +50,13 @@ message Schema {
 message Table {
   option (object) = true;
 
+  message Prop {
+    string id = 1;
+    int32 size = 2;
+  }
+
   Schema schema = 1;
+  repeated Prop props = 2;
 
   // TODO(burdon): Filter.
   // TODO(burdon): Visible columns.

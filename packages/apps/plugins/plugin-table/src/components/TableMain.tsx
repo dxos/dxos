@@ -52,13 +52,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     {} as Expando,
   ];
 
+  // TODO(burdon): useMemo.
   // TODO(burdon): Settings dialog to change typename.
   const columns = createColumns<TypedObject>(
     {
       columns: table.schema?.props.map(({ id, type, label, size }) => ({
         id: id!,
         type: getColumnType(type),
-        size,
+        size: table.props?.find((prop) => prop.id === id)?.size ?? size,
         header: label,
         editable: true,
         resize: true,
@@ -72,7 +73,6 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         // TODO(burdon): Check only called if value changed.
         object[prop] = value;
         if (!object.id) {
-          console.log(2, space, object);
           // TODO(burdon): Set __typename?
           // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
           space!.db.add(new Expando(Object.assign(object, { type: table.schema.typename })));
@@ -88,9 +88,27 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     },
   );
 
+  const handleColumnResize = (state: Record<string, number>) => {
+    Object.entries(state).forEach(([id, size]) => {
+      const idx = table.props?.findIndex((prop) => prop.id === id);
+      if (idx !== -1) {
+        // TODO(burdon): Doesn't save if update directly.
+        table.props.splice(idx, 1, { id, size });
+      } else {
+        const props = { id, size };
+        // TODO(burdon): Can't push to empty array.
+        if (!table.props) {
+          table.props = [props];
+        } else {
+          table.props.push(props);
+        }
+      }
+    });
+  };
+
   return (
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Grid<TypedObject> columns={columns} data={objects} />
+      <Grid<TypedObject> columns={columns} data={objects} onColumnResize={handleColumnResize} />
     </Main.Content>
   );
 };
