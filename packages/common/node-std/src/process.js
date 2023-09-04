@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// !!! Duplicated in @dxos/node-std
+// !!! Duplicated in @dxos/esbuild-plugins
 // TODO(dmaretskyi): Unify.
 
 // shim for using process in browser
