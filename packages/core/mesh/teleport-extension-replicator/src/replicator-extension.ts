@@ -145,6 +145,16 @@ export class ReplicatorExtension implements TeleportExtension {
     }
   }
 
+  async onAbort(err?: Error | undefined) {
+    log('abort', { err });
+
+    await this._ctx.dispose();
+    await this._rpc?.abort();
+    for (const feedKey of this._streams.keys()) {
+      await this._stopReplication(feedKey);
+    }
+  }
+
   @synchronized
   private async _reevaluateFeeds() {
     log('_reevaluateFeeds');
