@@ -17,7 +17,7 @@ import { arrayToBuffer } from '@dxos/util';
 
 import { Transport, TransportFactory, TransportOptions } from './transport';
 
-export type WebRTCTransportProxyParams = {
+export type SimplePeerTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   bridgeService: BridgeService;
@@ -25,7 +25,7 @@ export type WebRTCTransportProxyParams = {
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
-export class WebRTCTransportProxy implements Transport {
+export class SimplePeerTransportProxy implements Transport {
   private readonly _proxyId = PublicKey.random();
   private readonly _ctx = new Context();
 
@@ -38,7 +38,7 @@ export class WebRTCTransportProxy implements Transport {
 
   // prettier-ignore
   constructor(
-    private readonly _params: WebRTCTransportProxyParams
+    private readonly _params: SimplePeerTransportProxyParams
   ) {
     this._serviceStream = this._params.bridgeService.open({
       proxyId: this._proxyId,
@@ -48,7 +48,7 @@ export class WebRTCTransportProxy implements Transport {
     this._serviceStream.waitUntilReady().then(
       () => {
         this._serviceStream.subscribe(async (event: BridgeEvent) => {
-          log('WebRTCTransportProxy: event', event);
+          log('SimplePeerTransportProxy: event', event);
           if (event.connection) {
             await this._handleConnection(event.connection);
           } else if (event.data) {
@@ -142,9 +142,9 @@ export class WebRTCTransportProxy implements Transport {
 }
 
 // TODO(burdon): Why is this named Proxy?
-export class WebRTCTransportProxyFactory implements TransportFactory {
+export class SimplePeerTransportProxyFactory implements TransportFactory {
   private _bridgeService: BridgeService | undefined;
-  private _connections = new Set<WebRTCTransportProxy>();
+  private _connections = new Set<SimplePeerTransportProxy>();
 
   /**
    * Sets the current BridgeService to be used to open connections.
@@ -160,9 +160,9 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
   }
 
   createTransport(options: TransportOptions): Transport {
-    invariant(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
+    invariant(this._bridgeService, 'SimplePeerTransportProxyFactory is not ready to open connections');
 
-    const transport = new WebRTCTransportProxy({
+    const transport = new SimplePeerTransportProxy({
       ...options,
       bridgeService: this._bridgeService,
     });

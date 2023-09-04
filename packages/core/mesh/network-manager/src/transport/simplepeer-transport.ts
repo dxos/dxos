@@ -3,10 +3,10 @@
 //
 
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -15,47 +15,34 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { Transport, TransportFactory } from './transport';
 import { wrtc } from './webrtc';
 
-export type WebRTCTransportParams = {
+export type SimplePeerTransportParams = {
   initiator: boolean;
-  // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection
-  webrtcConfig?: any;
   stream: NodeJS.ReadWriteStream;
-  // TODO(burdon): Rename onSignal.
+  webrtcConfig?: any;
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
-// TODO(burdon): Refs:
-//  https://webrtc.github.io/samples
-//  Simple peer discord.
-
 /**
- * Implements WebRTC transport using simple-peer (used by WebTorrent).
+ * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
-export class WebRTCTransport implements Transport {
-  private readonly _instanceId = PublicKey.random().toHex();
+export class SimplePeerTransport implements Transport {
   private readonly _peer: SimplePeer;
-
   private _closed = false;
+
   readonly closed = new Event();
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  constructor(private readonly params: WebRTCTransportParams) {
+  private readonly _instanceId = PublicKey.random().toHex();
+
+  constructor(private readonly params: SimplePeerTransportParams) {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);
-
-    // https://www.npmjs.com/package/simple-peer#api
-    // NOTE: Set localStorage.debug = 'simple-peer*' to enable debug logging. (Or show verbose in Chrome).
-    // View throughput via: chrome://webrtc-internals (data-channel)
     this._peer = new SimplePeerConstructor({
+      channelName: 'dxos.mesh.transport',
       initiator: this.params.initiator,
-      config: this.params.webrtcConfig,
-      // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel
-      channelConfig: {
-        protocol: 'dxos.mesh',
-      },
-      // Custom WebRTC implementation (for Node); otherwise get-browser-rtc.
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
+      config: this.params.webrtcConfig,
     });
 
     this._peer.on('signal', async (data) => {
@@ -119,10 +106,9 @@ export class WebRTCTransport implements Transport {
   }
 }
 
-// TODO(dmaretskyi): Convert to class.
-export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+export const createSimplePeerTransportFactory = (webrtcConfig?: any): TransportFactory => ({
   createTransport: (params) =>
-    new WebRTCTransport({
+    new SimplePeerTransport({
       ...params,
       webrtcConfig,
     }),

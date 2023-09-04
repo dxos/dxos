@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createWebRTCTransportFactory } from '../transport';
+import { createSimplePeerTransportFactory } from '../transport';
 import { Connection } from './connection';
 
 describe('Connection', () => {
@@ -37,7 +37,8 @@ describe('Connection', () => {
         remotePeerId: peerId2,
         topic,
       }),
-      createWebRTCTransportFactory(),
+      // TODO(nf): configure?
+      createSimplePeerTransportFactory(),
     );
 
     const protocol2 = new TestWireProtocol(peerId2);
@@ -58,7 +59,8 @@ describe('Connection', () => {
         },
       },
       protocol2.factory({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1, topic }),
-      createWebRTCTransportFactory(),
+      // TODO(nf): configure?
+      createSimplePeerTransportFactory(),
     );
 
     await connection2.openConnection();

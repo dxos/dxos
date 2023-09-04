@@ -7,7 +7,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { SimplePeerTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
@@ -27,7 +27,7 @@ export type CreateSessionParams = {
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
 export class WorkerRuntime {
-  private readonly _transportFactory = new WebRTCTransportProxyFactory();
+  private readonly _transportFactory = new SimplePeerTransportProxyFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
