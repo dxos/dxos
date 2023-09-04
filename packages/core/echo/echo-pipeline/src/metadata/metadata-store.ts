@@ -127,7 +127,7 @@ export class MetadataStore {
    */
   @synchronized
   async load(): Promise<void> {
-    if(!this._metadataFile || this._metadataFile.closed) {
+    if (!this._metadataFile || this._metadataFile.closed) {
       this._metadataFile = this._directory.getOrCreateFile('EchoMetadata');
     }
 
