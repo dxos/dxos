@@ -14,11 +14,13 @@ import { ExtensionContext, TeleportExtension } from '../teleport';
 interface TestExtensionCallbacks {
   onOpen?: () => Promise<void>;
   onClose?: () => Promise<void>;
+  onAbort?: () => Promise<void>;
 }
 
 export class TestExtension implements TeleportExtension {
   public readonly open = new Trigger();
   public readonly closed = new Trigger();
+  public readonly aborted = new Trigger();
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
 
@@ -67,6 +69,13 @@ export class TestExtension implements TeleportExtension {
     await this.callbacks.onClose?.();
     this.closed.wake();
     await this._rpc?.close();
+  }
+
+  async onAbort(err?: Error) {
+    log('onAbort', { err });
+    await this.callbacks.onAbort?.();
+    this.aborted.wake();
+    await this._rpc?.abort();
   }
 
   async test(message = 'test') {
