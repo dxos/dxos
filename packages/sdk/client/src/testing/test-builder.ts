@@ -14,7 +14,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, MemoryTransportFactory } from '@dxos/network-manager';
+import {
+  createSimplePeerTransportFactory,
+  createLibDataChannelTransportFactory,
+  MemoryTransportFactory,
+  TransportKind,
+  TransportFactory,
+} from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
@@ -46,14 +52,18 @@ export class TestBuilder {
   public config: Config;
 
   public storage?: Storage;
+  _transport: TransportKind;
 
   // prettier-ignore
   constructor (
     config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
-    public signalManagerContext = new MemorySignalManagerContext()
+    public signalManagerContext = new MemorySignalManagerContext(),
+    transport = TransportKind.SIMPLE_PEER,
   ) {
     this.config = config ?? new Config();
+    this._transport = transport;
+
   }
 
   /**
@@ -62,12 +72,30 @@ export class TestBuilder {
   private get networking() {
     const signals = this.config.get('runtime.services.signaling');
     if (signals) {
+      log.info(`using transport ${this._transport}`);
+      let transportFactory: TransportFactory;
+      switch (this._transport) {
+        case TransportKind.SIMPLE_PEER:
+          transportFactory = createSimplePeerTransportFactory({
+            iceServers: this.config.get('runtime.services.ice'),
+          });
+          break;
+        case TransportKind.LIBDATACHANNEL:
+          transportFactory = createLibDataChannelTransportFactory({
+            iceServers: this.config.get('runtime.services.ice'),
+          });
+          break;
+        default:
+          throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
+      }
+
       return {
         signalManager: new WebsocketSignalManager(signals),
-        transportFactory: createWebRTCTransportFactory({
-          iceServers: this.config.get('runtime.services.ice'),
-        }),
+        transportFactory,
       };
+    }
+    if (this._transport !== TransportKind.MEMORY) {
+      log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
     }
 
     // Memory transport with shared context.
