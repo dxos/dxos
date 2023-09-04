@@ -30,24 +30,39 @@ const info = () => (target: any, propertyKey: string, descriptor?: PropertyDescr
   getTracingContext(target).infoProperties[propertyKey] = {};
 };
 
-const span = () => (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
-  const method = descriptor.value!;
-
-  descriptor.value = async function (this: any, ...args: any) {
-    const parentCtx = args[0] instanceof Context ? args[0] : null;
-    const span = TRACE_PROCESSOR.traceSpan({ parentCtx, methodName: propertyKey, instance: this });
-
-    const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
-    try {
-      return await method.apply(this, callArgs);
-    } catch (err) {
-      span.markError(err);
-      throw err;
-    } finally {
-      span.markSuccess();
-    }
-  };
+const mark = (name: string) => {
+  performance.mark(name);
 };
+
+export type SpanOptions = {
+  showInBrowserTimeline?: boolean;
+};
+
+const span =
+  ({ showInBrowserTimeline = false }: SpanOptions = {}) =>
+  (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
+    const method = descriptor.value!;
+
+    descriptor.value = async function (this: any, ...args: any) {
+      const parentCtx = args[0] instanceof Context ? args[0] : null;
+      const span = TRACE_PROCESSOR.traceSpan({
+        parentCtx,
+        methodName: propertyKey,
+        instance: this,
+        showInBrowserTimeline,
+      });
+
+      const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
+      try {
+        return await method.apply(this, callArgs);
+      } catch (err) {
+        span.markError(err);
+        throw err;
+      } finally {
+        span.markSuccess();
+      }
+    };
+  };
 
 /**
  * Attaches metrics counter to the resource.
@@ -65,6 +80,7 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
 export const trace = {
   resource,
   info,
+  mark,
   span,
   metricsCounter,
 

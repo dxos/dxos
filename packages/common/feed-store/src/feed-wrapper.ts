@@ -176,6 +176,7 @@ export class FeedWrapper<T extends {}> {
       });
     }
     this._closed = true;
+    await this.flushToDisk();
     await this._close();
   };
 

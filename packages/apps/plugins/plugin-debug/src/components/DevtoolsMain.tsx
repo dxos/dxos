@@ -18,3 +18,5 @@ export const DevtoolsMain = () => {
     </Main.Content>
   );
 };
+
+export default DevtoolsMain;
