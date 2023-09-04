@@ -41,12 +41,18 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-  // TODO(burdon): Option to show deleted.
+  // TODO(burdon): Not updated when object deleted.
   const objects = useQuery<TypedObject>(
     space,
     (object) => table.schema?.typename && object.type === table.schema.typename,
+    {}, // TODO(burdon): Toggle deleted.
+    [table.schema?.typename],
   );
 
+  // TODO(burdon): Don't show delete icon for temporary row.
+  const rows = [...objects, {} as any];
+
+  // TODO(burdon): Settings dialog to change typename.
   const columns = useMemo(() => {
     const schema = {
       columns: table.schema?.props.map(({ id, type, label, size }) => ({
@@ -59,7 +65,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       })),
     };
 
-    // TODO(burdon): Settings dialog to change typename.
+    // TODO(burdon): Column menu.
     return createColumns<TypedObject>(schema, {
       onColumnCreate: ({ id, type, header }) => {
         table.schema?.props.push({ id, type: getPropType(type), label: header });
@@ -100,7 +106,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
 
   return (
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Grid<TypedObject> columns={columns} data={objects} onColumnResize={handleColumnResize} />
+      <Grid<TypedObject> columns={columns} data={rows} onColumnResize={handleColumnResize} />
     </Main.Content>
   );
 };
