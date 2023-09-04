@@ -24,3 +24,4 @@ export * from './uint8array';
 export * from './instance-id';
 export * from './sum';
 export * from './for-each-async';
+export * from './weak';
