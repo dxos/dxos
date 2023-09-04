@@ -4,7 +4,7 @@
 
 import { Context } from '@dxos/context';
 
-import { scheduleMicroTask, scheduleTask } from './task-scheduling';
+import { scheduleMicroTask } from './task-scheduling';
 
 export type UpdateSchedulerOptions = {
   /**

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DeferredTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
@@ -9,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
@@ -16,8 +18,6 @@ import { AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
-import { ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { DeferredTask, Lock, sleep } from '@dxos/async';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;
@@ -81,7 +81,7 @@ export class ControlPipeline {
           } catch (err: any) {
             log.catch(err);
           }
-        })
+        });
       }
 
       await this.onFeedAdmitted.callIfSet(info);
@@ -106,7 +106,7 @@ export class ControlPipeline {
   @trace.span({ showInBrowserTimeline: true })
   async start() {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
-    log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe })
+    log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
     if (USE_SNAPSHOTS && snapshot) {
       await this._processSnapshot(snapshot);
     }
@@ -124,10 +124,10 @@ export class ControlPipeline {
     await this._pipeline.setCursor(snapshot.timeframe);
 
     for (const message of snapshot.messages ?? []) {
-      const result = await this._spaceStateMachine.process(
-        message.credential,
-        { sourceFeed: message.feedKey, skipVerification: true }
-      );
+      const result = await this._spaceStateMachine.process(message.credential, {
+        sourceFeed: message.feedKey,
+        skipVerification: true,
+      });
 
       if (!result) {
         log.warn('credential processing failed from snapshot', { message });
@@ -139,14 +139,14 @@ export class ControlPipeline {
     await this._pipeline.pause();
     const snapshot: ControlPipelineSnapshot = {
       timeframe: this._pipeline.state.timeframe,
-      messages: this._spaceStateMachine.credentialEntries.map(entry => ({
+      messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
         feedKey: entry.sourceFeed,
-        credential: entry.credential
-      }))
-    }
+        credential: entry.credential,
+      })),
+    };
     await this._pipeline.unpause();
-    
-    log('save snapshot', { key: this._spaceKey, snapshot })
+
+    log('save snapshot', { key: this._spaceKey, snapshot });
     await this._metadata.setSpaceControlPipelineSnapshot(this._spaceKey, snapshot);
   }
 
@@ -172,10 +172,9 @@ export class ControlPipeline {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(
-        msg.data.payload.credential.credential,
-        { sourceFeed: PublicKey.from(msg.feedKey) },
-      );
+      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential, {
+        sourceFeed: PublicKey.from(msg.feedKey),
+      });
 
       timer.end();
       if (!result) {

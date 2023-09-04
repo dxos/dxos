@@ -5,7 +5,7 @@
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
-import { runInContext, scheduleMicroTask, scheduleTask, Trigger } from '@dxos/async';
+import { runInContext, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';

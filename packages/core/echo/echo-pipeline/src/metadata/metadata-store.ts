@@ -5,17 +5,24 @@
 import CRC32 from 'crc-32';
 
 import { synchronized, Event } from '@dxos/async';
+import { Codec } from '@dxos/codec-protobuf';
 import { DataCorruptionError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache, ControlPipelineSnapshot, LargeSpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import {
+  EchoMetadata,
+  SpaceMetadata,
+  IdentityRecord,
+  SpaceCache,
+  ControlPipelineSnapshot,
+  LargeSpaceMetadata,
+} from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory, File } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNotNullOrUndefined } from '@dxos/util';
-import { Codec } from '@dxos/codec-protobuf';
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -29,8 +36,7 @@ const emptyEchoMetadata = (): EchoMetadata => ({
   updated: new Date(),
 });
 
-const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({
-});
+const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
 
 const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
@@ -131,18 +137,17 @@ export class MetadataStore {
     }
 
     await forEachAsync(
-      [
-        this._metadata.identity?.haloSpace.key,
-        ...this._metadata.spaces?.map((space) => space.key) ?? [],
-      ].filter(isNotNullOrUndefined),
+      [this._metadata.identity?.haloSpace.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])].filter(
+        isNotNullOrUndefined,
+      ),
       async (key) => {
         try {
-          await this._loadSpaceLargeMetadata(key)
+          await this._loadSpaceLargeMetadata(key);
         } catch (err: any) {
           log.error('failed to load space large metadata', { err });
         }
-      }
-    )
+      },
+    );
   }
 
   @synchronized

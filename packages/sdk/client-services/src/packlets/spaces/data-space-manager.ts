@@ -67,7 +67,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-  ) { }
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -84,7 +84,6 @@ export class DataSpaceManager {
       try {
         log('load space', { spaceMetadata });
         await this._constructSpace(spaceMetadata);
-
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
@@ -94,7 +93,7 @@ export class DataSpaceManager {
     this.updated.emit();
 
     for (const space of this._spaces.values()) {
-      if(space.state !== SpaceState.INACTIVE) {
+      if (space.state !== SpaceState.INACTIVE) {
         space.initializeDataPipelineAsync();
       }
     }

@@ -9,7 +9,6 @@ import { ProtoCodec } from './codec';
 import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
-import { invariant } from '@dxos/invariant';
 
 export class Schema<T, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(

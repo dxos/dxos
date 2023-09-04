@@ -258,7 +258,7 @@ export class DataPipeline implements CredentialProcessor {
 
       span.end();
 
-      if(++messageCounter > 1_000) {
+      if (++messageCounter > 1_000) {
         messageCounter = 0;
         // Allow other tasks to process.
         await sleep(1);
@@ -304,7 +304,7 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
-    if(!this._pipeline?.state.reachedTarget) {
+    if (!this._pipeline?.state.reachedTarget) {
       return;
     }
 

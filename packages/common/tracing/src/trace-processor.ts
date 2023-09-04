@@ -16,7 +16,7 @@ import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new(...args: any[]): {} };
+  constructor: { new (...args: any[]): {} };
   instance: any;
 };
 
@@ -139,7 +139,7 @@ export class TraceProcessor {
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) { }
+  addLink(parent: any, child: any, opts: AddLinkOptions) {}
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
@@ -352,7 +352,9 @@ export class TracingSpan {
 
   private _markInBrowserTimeline() {
     const resource = this._traceProcessor.resources.get(this.resourceId!);
-    const name = resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
+    const name = resource
+      ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}`
+      : this.methodName;
     performance.measure(name, { start: this.startTs, end: this.endTs! });
   }
 }

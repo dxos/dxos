@@ -67,7 +67,8 @@ export class FeedStore<T extends {}> {
           throw new Error(`Read-only feed is already open: ${feedKey.truncate()}`);
         } else if ((sparse ?? false) !== feed.properties.sparse) {
           throw new Error(
-            `Feed already open with different sparse setting: ${feedKey.truncate()} [${sparse} !== ${feed.properties.sparse
+            `Feed already open with different sparse setting: ${feedKey.truncate()} [${sparse} !== ${
+              feed.properties.sparse
             }]`,
           );
         } else {
@@ -84,7 +85,6 @@ export class FeedStore<T extends {}> {
       log('opened', { feedKey });
       return feed;
     });
-
   }
 
   /**

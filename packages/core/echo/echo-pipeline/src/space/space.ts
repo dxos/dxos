@@ -102,7 +102,7 @@ export class Space {
       if (!info.key.equals(params.genesisFeed.key)) {
         queueMicrotask(async () => {
           this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
-        })
+        });
       }
     });
 

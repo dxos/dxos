@@ -19,12 +19,12 @@ import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/creden
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
+import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
-import { trace } from '@dxos/tracing';
 
 export type DataSpaceCallbacks = {
   /**
@@ -322,7 +322,6 @@ export class DataSpace {
       // Set this after credentials are notarized so that on failure we will retry.
       await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
     }
-
   }
 
   async createEpoch() {

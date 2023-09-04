@@ -211,8 +211,8 @@ export class Client {
       keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
-          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-          : undefined,
+        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+        : undefined,
     });
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
@@ -302,7 +302,7 @@ export class Client {
     await this._runtime!.close();
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    this._statusStream!.close();
+    await this._statusStream!.close();
     await this.services.close(new Context());
 
     this._initialized = false;

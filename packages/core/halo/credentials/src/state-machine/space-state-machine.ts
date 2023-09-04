@@ -31,12 +31,12 @@ export interface SpaceState {
 export type ProcessOptions = {
   sourceFeed: PublicKey;
   skipVerification?: boolean;
-}
+};
 
 export type CredentialEntry = {
   credential: Credential;
   sourceFeed: PublicKey;
-}
+};
 
 /**
  * Validates and processes credentials for a single space.
@@ -80,7 +80,6 @@ export class SpaceStateMachine implements SpaceState {
   get credentialEntries(): CredentialEntry[] {
     return this._credentials;
   }
-
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
@@ -234,7 +233,7 @@ class CredentialConsumer<T extends CredentialProcessor> {
     public readonly processor: T,
     private readonly _onOpen: () => Promise<void>,
     private readonly _onClose: () => Promise<void>,
-  ) { }
+  ) {}
 
   /**
    * @internal

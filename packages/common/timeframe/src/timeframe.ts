@@ -6,12 +6,11 @@ import { inspect } from 'node:util';
 
 import { equalsSymbol, Equatable } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
 
 type Entry = {
   key: PublicKey;
   seq: number;
-}
+};
 
 /**
  * A vector clock that implements ordering over a set of feed messages.
@@ -73,11 +72,7 @@ export class Timeframe implements Equatable {
    * @param keys
    */
   withoutKeys(keys: PublicKey[]): Timeframe {
-    return new Timeframe(
-      this.frames().filter(([frameKey]) =>
-        keys.every((key) => !key.equals(frameKey)),
-      ),
-    );
+    return new Timeframe(this.frames().filter(([frameKey]) => keys.every((key) => !key.equals(frameKey))));
   }
 
   map(fn: (frame: [key: PublicKey, seq: number]) => [PublicKey, number]): Timeframe {
@@ -96,7 +91,7 @@ export class Timeframe implements Equatable {
    */
   newMessages(base: Timeframe) {
     return Array.from(this._frames.entries()).reduce(
-      (result, [hex, {seq}]) => result + Math.max(seq - (base._frames.get(hex)?.seq ?? -1), 0),
+      (result, [hex, { seq }]) => result + Math.max(seq - (base._frames.get(hex)?.seq ?? -1), 0),
       0,
     );
   }

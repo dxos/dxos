@@ -152,7 +152,7 @@ export class PipelineState {
         rejectOnDispose(this._ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
-          this._reachedTarget =  true;
+          this._reachedTarget = true;
         }),
         sleep(timeout).then(() => {
           if (done) {
