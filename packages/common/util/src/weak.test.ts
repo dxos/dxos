@@ -10,7 +10,8 @@ import { test, describe } from '@dxos/test';
 import { WeakDictionary } from './weak';
 
 describe('WeakDictionary', () => {
-  // Skipped because it takes a long time for garbage collection to kick in. But it works otherwise.
+  // Skipped because it takes a long time for garbage collection to kick in (~8 sec)
+  // but it works otherwise.
   test
     .skip('unref item gets garbage collected', async () => {
       const map = new WeakDictionary<string, any>();
@@ -35,9 +36,9 @@ describe('WeakDictionary', () => {
       // Garbage collection should remove the item because no references exist.
       await waitForExpect(() => {
         expect(map.size).to.equal(0);
-      }, 100000);
+      }, 20000);
 
       expect(map.has(key)).to.equal(false);
     })
-    .timeout(100000);
+    .timeout(20000);
 });
