@@ -67,11 +67,10 @@ export class IdentityManager {
     return this._identity;
   }
 
-  @Trace.span()
+  @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
-    await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });

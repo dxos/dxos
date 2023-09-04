@@ -61,6 +61,15 @@ export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<voi
   }
 };
 
+export const scheduleMicroTask = (ctx: Context, fn: () => MaybePromise<void>) => {
+  queueMicrotask(async () => {
+    if (ctx.disposed) {
+      return;
+    }
+    await runInContextAsync(ctx, fn);
+  });
+};
+
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
   const clearTracking = trackResource({
     name: `task (${fn.name || 'anonymous'})`,

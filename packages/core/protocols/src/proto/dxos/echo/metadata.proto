@@ -12,6 +12,7 @@ import "dxos/keys.proto";
 
 package dxos.echo.metadata;
 
+/// Main metadata record.
 message EchoMetadata {
   /**
    * Version number that is inceremnted every time there's a breaking change to the storage schema.
@@ -30,6 +31,16 @@ message EchoMetadata {
   repeated SpaceMetadata spaces = 11;
 }
 
+/// Per-space metadata. Frequent updates. Keep small.
+message SmallSpaceMetadata {
+
+}
+
+/// Per-space metadata. Infrequent updates.
+message LargeSpaceMetadata {
+  optional ControlPipelineSnapshot control_pipeline_snapshot = 1;
+}
+
 message SpaceCache {
   /// Properties snapshot.
   optional dxos.echo.model.document.ObjectSnapshot properties = 1;
@@ -39,6 +50,10 @@ message SpaceCache {
 message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
+
+
+  /// ACTIVE, INACTIVE, etc.
+  optional SpaceState state = 10;
 
   optional dxos.keys.PublicKey genesis_feed_key = 6;
 
@@ -59,9 +74,19 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional SpaceCache cache = 9;
+}
 
-  /// ACTIVE, INACTIVE, etc.
-  optional SpaceState state = 10;
+message ControlPipelineSnapshot {
+  message ControlMessage {
+    dxos.keys.PublicKey feed_key = 1;
+    dxos.halo.credentials.Credential credential = 2;
+  }
+
+  /// Timeframe of the last message included in the snapshot.
+  timeframe.TimeframeVector timeframe = 1;
+
+
+  repeated ControlMessage messages = 2;  
 }
 
 /// Information needed to bootstrap an Identity.

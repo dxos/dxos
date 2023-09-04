@@ -9,11 +9,11 @@ import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Sketch as SketchType } from '@braneframe/types';
 import { mx } from '@dxos/aurora-theme';
 import { PluginProvider, Surface } from '@dxos/react-surface';
 
-import { DrawingPlugin } from '../DrawingPlugin';
+import { SketchPlugin } from '../SketchPlugin';
 
 faker.seed(7);
 
@@ -26,28 +26,26 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
-const DefaultDrawingPluginStory = () => {
-  const object = new DrawingType({});
+const DefaultSketchPluginStory = () => {
+  const object = new SketchType({});
   return <Surface role='main' data={[object, object]} />;
 };
 
-const DrawingPluginStoryPlugin = () => ({
+const SketchPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/drawing-story',
+    id: 'dxos.org/plugin/sketch-story',
   },
   provides: {
     components: {
-      default: DefaultDrawingPluginStory,
+      default: DefaultSketchPluginStory,
     },
   },
 });
 
-const DrawingSurfacesApp = () => (
-  <PluginProvider plugins={[ThemePlugin(), DrawingPlugin(), DrawingPluginStoryPlugin()]} />
-);
+const SketchSurfacesApp = () => <PluginProvider plugins={[ThemePlugin(), SketchPlugin(), SketchPluginStoryPlugin()]} />;
 
 export default {
-  component: DrawingSurfacesApp,
+  component: SketchSurfacesApp,
 };
 
 export const Default = {

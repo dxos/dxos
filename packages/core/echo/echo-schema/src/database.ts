@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
+import { WeakDictionary } from '@dxos/util';
 
 import { base, db } from './defs';
 import { EchoObject } from './object';
@@ -26,10 +27,7 @@ export class EchoDatabase {
   /**
    * Objects that have been removed from the database.
    */
-  private readonly _removed = new Map<string, WeakRef<EchoObject>>();
-  private readonly _finalization = new FinalizationRegistry((cleanUpCallback: () => void) => {
-    cleanUpCallback();
-  });
+  private readonly _removed = new WeakDictionary<string, EchoObject>();
 
   /**
    * @internal
@@ -96,7 +94,7 @@ export class EchoDatabase {
           },
         ],
       });
-      this._popRemovedObject(obj[base]._id);
+      this._removed.delete(obj[base]._id);
       return obj;
     }
 
@@ -159,7 +157,7 @@ export class EchoDatabase {
       ],
     });
 
-    this._saveRemovedObject(obj);
+    this._removed.set(obj[base]._id, obj);
   }
 
   /**
@@ -194,7 +192,8 @@ export class EchoDatabase {
   private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
-        let obj = this._popRemovedObject(object.id);
+        let obj = this._removed.get(object.id);
+        this._removed.delete(object.id);
         if (!obj) {
           obj = this._createObjectInstance(object);
         }
@@ -218,7 +217,7 @@ export class EchoDatabase {
         obj[base]._itemUpdate();
         this._objects.delete(id);
         obj[base]._database = undefined;
-        this._saveRemovedObject(obj);
+        this._removed.set(obj[base]._id, obj);
       }
     }
 
@@ -256,23 +255,5 @@ export class EchoDatabase {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
     }
-  }
-
-  private _saveRemovedObject(obj: EchoObject) {
-    this._removed.set(obj[base]._id, new WeakRef(obj));
-    this._finalization.register(
-      obj,
-      () => {
-        this._removed.delete(obj[base]._id);
-      },
-      obj,
-    );
-  }
-
-  private _popRemovedObject(id: string): EchoObject | undefined {
-    const obj = this._removed.get(id)?.deref();
-    this._removed.delete(id);
-    obj && this._finalization.unregister(obj);
-    return obj;
   }
 }

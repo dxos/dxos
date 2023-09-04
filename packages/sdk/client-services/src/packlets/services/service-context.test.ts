@@ -50,7 +50,7 @@ describe('services/ServiceContext', () => {
       );
 
       await space1.createEpoch();
-      log.info('epoch', { number: space1.dataPipeline.currentEpoch?.subject.assertion.number });
+      log('epoch', { number: space1.dataPipeline.currentEpoch?.subject.assertion.number });
     }
 
     const device2 = createServiceContext({ signalContext: networkContext });
@@ -59,7 +59,7 @@ describe('services/ServiceContext', () => {
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
 
-    log.info('peer 2', {
+    log('peer 2', {
       currentEpoch: space2!.dataPipeline.currentEpoch?.subject.assertion.number,
       appliedEpoch: space2!.dataPipeline.appliedEpoch?.subject.assertion.number,
     });
