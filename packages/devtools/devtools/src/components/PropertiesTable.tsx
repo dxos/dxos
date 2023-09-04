@@ -98,7 +98,7 @@ export const PropertiesTable: FC<{
           <tr key={key} className='align-baseline leading-6'>
             <td className={slots?.key?.className}>{sentenceCase(key).toLowerCase()}</td>
             <td>
-              <div className='font-mono overflow-x-scroll'>{schema?.[key]?.format(value) ?? String(value)}</div>
+              <div className='font-mono'>{schema?.[key]?.format(value) ?? String(value)}</div>
             </td>
           </tr>
         ))}
