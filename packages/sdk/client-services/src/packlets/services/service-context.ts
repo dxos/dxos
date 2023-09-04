@@ -136,6 +136,8 @@ export class ServiceContext {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
+
+    await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
@@ -157,6 +159,7 @@ export class ServiceContext {
     await this.networkManager.close();
     await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
+    await this.metadataStore.close();
     log('closed');
   }
 

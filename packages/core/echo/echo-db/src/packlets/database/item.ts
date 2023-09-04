@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, scheduleTask } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
@@ -275,7 +274,7 @@ export class Item<M extends Model = Model> {
     log('test confirmed state', this.state);
 
     // Notify listeners that the mutation has been processed.
-    scheduleTask(new Context(), () => this._mutationProcessed.emit(queueEntry.mutation.meta!));
+    queueMicrotask(() => this._mutationProcessed.emit(queueEntry.mutation.meta!));
   }
 
   /**
