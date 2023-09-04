@@ -159,6 +159,7 @@ export class ServiceContext {
     await this.networkManager.close();
     await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
+    await this.metadataStore.close();
     log('closed');
   }
 

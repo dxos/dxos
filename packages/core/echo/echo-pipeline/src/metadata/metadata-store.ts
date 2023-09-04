@@ -114,12 +114,22 @@ export class MetadataStore {
     log('saved', { size: encoded.length, checksum });
   }
 
+  async close() {
+    await this._directory.flush();
+    await this._metadataFile?.close();
+    this._metadataFile = undefined;
+    this._metadata = emptyEchoMetadata();
+    this._spaceLargeMetadata.clear();
+  }
+
   /**
    * Loads metadata from persistent storage.
    */
   @synchronized
   async load(): Promise<void> {
-    this._metadataFile ??= this._directory.getOrCreateFile('EchoMetadata');
+    if(!this._metadataFile || this._metadataFile.closed) {
+      this._metadataFile = this._directory.getOrCreateFile('EchoMetadata');
+    }
 
     try {
       const metadata = await this._readFile(this._metadataFile, EchoMetadata);

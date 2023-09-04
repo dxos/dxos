@@ -151,7 +151,7 @@ export class FeedQueue<T extends {}> {
     });
 
     const onError = (err: Error) => {
-      if (err.message === 'Writable stream closed prematurely') {
+      if (err.message === 'Writable stream closed prematurely' || err.message === 'Feed is closed') {
         return;
       }
 
