@@ -227,7 +227,7 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._teleport.stream;
   }
 
-  async initialize(): Promise<void> {
+  async open(): Promise<void> {
     await this._teleport.open();
     this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
@@ -250,7 +250,12 @@ export class SpaceProtocolSession implements WireProtocol {
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
-  async destroy(): Promise<void> {
+  async close(): Promise<void> {
+    log.info('close');
     await this._teleport.close();
+  }
+
+  async abort(): Promise<void> {
+    await this._teleport.abort();
   }
 }

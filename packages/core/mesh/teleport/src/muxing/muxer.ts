@@ -237,7 +237,6 @@ export class Muxer {
   /**
    * Force-close with optional error.
    */
-  // TODO(burdon): Make async.
   async destroy(err?: Error) {
     if (this._destroying) {
       return;
