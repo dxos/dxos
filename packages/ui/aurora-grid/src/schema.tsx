@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Plus, X } from '@phosphor-icons/react';
 import { ColumnDef, RowData } from '@tanstack/react-table';
 import React from 'react';
 
 import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 
-import { createColumnBuilder, ValueUpdater } from './helpers';
+import { createColumnBuilder } from './helpers';
 
 /**
  * Serializable schema.
@@ -27,15 +27,19 @@ export type GridSchemaColumn = {
   resize?: boolean;
 };
 
+type ColumnOption<TData extends RowData, TValue> = {
+  onUpdate?: (row: TData, id: string, value: TValue) => void;
+  onRowDelete?: (row: TData) => void;
+  onColumnCreate?: (column: GridSchemaColumn) => void;
+};
+
 /**
  * Create column definitions from schema metadata.
  */
 // TODO(burdon): Specialize for TypedObject and move to plugin-grid.
 export const createColumns = <TData extends RowData>(
   schema: GridSchema,
-  // TODO(burdon): Options.
-  onUpdate?: ValueUpdater<TData, any>,
-  onNewColumn?: (column: GridSchemaColumn) => void,
+  { onUpdate, onRowDelete, onColumnCreate }: ColumnOption<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   const columns: ColumnDef<TData>[] = schema.columns.map(({ id, type, resize, ...props }) => {
@@ -51,9 +55,9 @@ export const createColumns = <TData extends RowData>(
   }) as ColumnDef<TData>[];
 
   // TODO(burdon): Dropdown/dialog.
-  if (onNewColumn) {
+  if (onColumnCreate || onRowDelete) {
     const handleAddColumn = () => {
-      onNewColumn({
+      onColumnCreate?.({
         id: 'prop_' + PublicKey.random().toHex().slice(0, 8),
         type: 'string',
         header: 'new column',
@@ -66,11 +70,21 @@ export const createColumns = <TData extends RowData>(
       helper.display({
         id: '__new',
         size: 40,
-        header: () => (
-          <Button variant='ghost' onClick={handleAddColumn}>
-            <Plus />
-          </Button>
-        ),
+        header: onColumnCreate
+          ? () => (
+              <Button variant='ghost' onClick={handleAddColumn}>
+                <Plus />
+              </Button>
+            )
+          : undefined,
+        // TODO(burdon): Show on hover.
+        cell: onRowDelete
+          ? (cell) => (
+              <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)}>
+                <X />
+              </Button>
+            )
+          : undefined,
       }) as ColumnDef<TData>,
     );
   }

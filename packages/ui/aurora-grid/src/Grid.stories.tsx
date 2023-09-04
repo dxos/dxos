@@ -127,8 +127,8 @@ const update = <TValue = any,>(items: Item[], key: PublicKey, id: string, value:
 export const Editable = {
   render: () => {
     const [items, setItems] = useState<Item[]>(createItems(10));
-    const onUpdate: ValueUpdater<Item, any> = (cell, value) => {
-      setItems((items) => update(items, cell.row.original.publicKey, cell.column.id, value));
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => update(items, item.publicKey, prop, value));
     };
 
     return (
@@ -148,10 +148,13 @@ export const Schema = {
   render: () => {
     const [schema, setSchema] = useState(testSchema);
     const [items, setItems] = useState(createItems(10));
-    const onUpdate: ValueUpdater<Item, any> = (cell, value) => {
-      setItems((items) => update(items, cell.row.original.publicKey, cell.column.id, value));
+    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
+      setItems((items) => update(items, item.publicKey, prop, value));
     };
-    const onAddColumn = (column: GridSchemaColumn) => {
+    const onRowDelete = (row: Item) => {
+      setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
+    };
+    const onColumnCreate = (column: GridSchemaColumn) => {
       setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
     };
 
@@ -159,7 +162,7 @@ export const Schema = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={createColumns<Item>(schema, onUpdate, onAddColumn)}
+          columns={createColumns<Item>(schema, { onUpdate, onRowDelete, onColumnCreate })}
           data={items}
         />
       </div>

@@ -43,8 +43,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   // TODO(burdon): Show deleted.
   // TODO(burdon): useQuery hook.
   const subscription = space?.db.query((object) => {
-    console.log('==', object.__typename);
-    return table.schema?.typename && object.__typename === table.schema.typename;
+    return table.schema?.typename && object.type === table.schema.typename; // TODO(burdon): Use __typename.
   });
 
   const objects: Expando[] = [
@@ -65,21 +64,27 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         resize: true,
       })),
     },
+
     // TODO(burdon): Change API.
     // TODO(burdon): Update size.
-    (cell, value) => {
-      // TODO(burdon): Check only called if value changed.
-      const object = cell.row.original;
-      object[cell.column.id] = value;
-      if (!object.id) {
-        console.log(2, space, object);
-        // TODO(burdon): Set __typename?
-        // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
-        space!.db.add(new Expando(Object.assign(object, { __type: table.schema.typename })));
-      }
-    },
-    ({ id, type, header }) => {
-      table.schema?.props.push({ id, type: getPropType(type), label: header });
+    {
+      onUpdate: (object, prop, value) => {
+        // TODO(burdon): Check only called if value changed.
+        object[prop] = value;
+        if (!object.id) {
+          console.log(2, space, object);
+          // TODO(burdon): Set __typename?
+          // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
+          space!.db.add(new Expando(Object.assign(object, { type: table.schema.typename })));
+        }
+      },
+      onRowDelete: (object) => {
+        // TODO(burdon): Rename delete.
+        space!.db.remove(object);
+      },
+      onColumnCreate: ({ id, type, header }) => {
+        table.schema?.props.push({ id, type: getPropType(type), label: header });
+      },
     },
   );
 

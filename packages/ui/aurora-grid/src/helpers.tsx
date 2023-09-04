@@ -3,7 +3,7 @@
 //
 
 import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
-import { CellContext, ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
+import { ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -14,13 +14,12 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
+export type ValueUpdater<TData extends RowData, TValue> = (row: TData, id: string, value: TValue) => void;
+
 export const createColumnBuilder = <TData extends RowData>() => ({
   helper: createColumnHelper<TData>(),
   builder: new ColumnBuilder<TData>(),
 });
-
-// TODO(burdon): Add context.
-export type ValueUpdater<TData, TValue> = (cell: CellContext<TData, TValue>, value: TValue) => void;
 
 /**
  * NOTE: Can use `meta` for custom properties.
@@ -90,7 +89,7 @@ export class ColumnBuilder<TData extends RowData> {
               setValue(initialValue);
             };
             const handleSave = () => {
-              onUpdate?.(cell, value);
+              onUpdate?.(cell.row.original, cell.column.id, value);
             };
 
             // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div).
@@ -215,7 +214,7 @@ export class ColumnBuilder<TData extends RowData> {
               disabled={!onUpdate}
               checked={!!value}
               onCheckedChange={(value) => {
-                onUpdate?.(cell, !!value);
+                onUpdate?.(cell.row.original, cell.column.id, !!value);
               }}
             />
           </Input.Root>
