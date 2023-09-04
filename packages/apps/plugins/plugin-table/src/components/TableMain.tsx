@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
@@ -10,6 +10,7 @@ import { Main } from '@dxos/aurora';
 import { Grid, createColumns, GridSchemaColumn } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => {
@@ -40,22 +41,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-  // TODO(burdon): Show deleted.
-  // TODO(burdon): useQuery hook.
-  const subscription = space?.db.query((object) => {
-    return table.schema?.typename && object.type === table.schema.typename; // TODO(burdon): Use __typename.
-  });
+  // TODO(burdon): Option to show deleted.
+  const objects = useQuery<TypedObject>(
+    space,
+    (object) => table.schema?.typename && object.type === table.schema.typename,
+  );
 
-  const objects: Expando[] = [
-    ...(subscription?.objects ?? []),
-    // TODO(burdon): Pending.
-    {} as Expando,
-  ];
-
-  // TODO(burdon): useMemo.
-  // TODO(burdon): Settings dialog to change typename.
-  const columns = createColumns<TypedObject>(
-    {
+  const columns = useMemo(() => {
+    const schema = {
       columns: table.schema?.props.map(({ id, type, label, size }) => ({
         id: id!,
         type: getColumnType(type),
@@ -64,11 +57,13 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         editable: true,
         resize: true,
       })),
-    },
+    };
 
-    // TODO(burdon): Change API.
-    // TODO(burdon): Update size.
-    {
+    // TODO(burdon): Settings dialog to change typename.
+    return createColumns<TypedObject>(schema, {
+      onColumnCreate: ({ id, type, header }) => {
+        table.schema?.props.push({ id, type: getPropType(type), label: header });
+      },
       onUpdate: (object, prop, value) => {
         // TODO(burdon): Check only called if value changed.
         object[prop] = value;
@@ -82,11 +77,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         // TODO(burdon): Rename delete.
         space!.db.remove(object);
       },
-      onColumnCreate: ({ id, type, header }) => {
-        table.schema?.props.push({ id, type: getPropType(type), label: header });
-      },
-    },
-  );
+    });
+  }, [space, table]);
 
   const handleColumnResize = (state: Record<string, number>) => {
     Object.entries(state).forEach(([id, size]) => {
