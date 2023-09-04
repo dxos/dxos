@@ -201,6 +201,10 @@ export const Grid = <TData extends RowData>({
     debugTable: debug,
   });
 
+  // TODO(burdon): Add flex if not resizable.
+  // Create additional expansion column if all columns have fixed width.
+  const addFlex = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
+
   // Pin scrollbar to bottom.
   const containerRef = usePinToBottom(data, pinToBottom);
 
@@ -222,16 +226,10 @@ export const Grid = <TData extends RowData>({
     }
   };
 
-  // TODO(burdon): Add flex if not resizable.
-  // Create additional expansion column if all columns have fixed width.
-  const addFlex = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
-
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
     <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
-      {/* TODO(burdon): { width: table.getCenterTotalSize() } */}
-      {/*   https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing?embed=1&file=/src/main.tsx:139,15-139,49 */}
       <table
         className={mx('w-fit border-collapse', slots?.table?.className)}
         style={{
@@ -287,6 +285,7 @@ export const Grid = <TData extends RowData>({
                           }}
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
+                          // TODO(burdon): Update size.
                           onMouseUp={() => console.log('stop')}
                           onTouchEnd={() => console.log('stop')}
                         >

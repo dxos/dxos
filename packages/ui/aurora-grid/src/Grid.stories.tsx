@@ -41,20 +41,20 @@ const createItems = (count: number) =>
 const testSchema: GridSchema = {
   columns: [
     {
-      key: 'complete',
+      id: 'complete',
       type: 'boolean',
       header: 'ok',
       editable: true,
     },
     {
-      key: 'name',
+      id: 'name',
       type: 'string',
       size: 300,
       editable: true,
       resize: true,
     },
     {
-      key: 'count',
+      id: 'count',
       type: 'number',
       size: 160,
       editable: true,

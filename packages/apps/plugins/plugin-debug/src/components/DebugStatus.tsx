@@ -63,6 +63,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   const debug = true; // TODO(burdon): From config?
   useEffect(() => {
     const errorListener = (event: any) => {
+      console.error(event);
       event.preventDefault();
       // Handler is called twice.
       if (error.current !== event.error) {

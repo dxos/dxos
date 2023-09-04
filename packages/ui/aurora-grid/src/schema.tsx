@@ -19,8 +19,8 @@ export type GridSchema = {
 };
 
 export type GridSchemaColumn = {
-  key: string;
-  type: 'number' | 'boolean' | 'string';
+  id: string;
+  type: 'number' | 'boolean' | 'string'; // TODO(burdon): Key.
   size?: number;
   header?: string;
   editable?: boolean;
@@ -38,15 +38,15 @@ export const createColumns = <TData extends RowData>(
   onNewColumn?: (column: GridSchemaColumn) => void,
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
-  const columns: ColumnDef<TData>[] = schema.columns.map(({ key, type, resize, ...props }) => {
+  const columns: ColumnDef<TData>[] = schema.columns.map(({ id, type, resize, ...props }) => {
     switch (type) {
       case 'number':
-        return helper.accessor(key, builder.number({ meta: { resize }, onUpdate, ...props }));
+        return helper.accessor(id, builder.number({ meta: { resize }, onUpdate, ...props }));
       case 'boolean':
-        return helper.accessor(key, builder.checkbox({ meta: { resize }, onUpdate, ...props }));
+        return helper.accessor(id, builder.checkbox({ meta: { resize }, onUpdate, ...props }));
       case 'string':
       default:
-        return helper.accessor(key, builder.string({ meta: { resize }, onUpdate, ...props }));
+        return helper.accessor(id, builder.string({ meta: { resize }, onUpdate, ...props }));
     }
   }) as ColumnDef<TData>[];
 
@@ -54,7 +54,7 @@ export const createColumns = <TData extends RowData>(
   if (onNewColumn) {
     const handleAddColumn = () => {
       onNewColumn({
-        key: PublicKey.random().toHex(),
+        id: 'prop_' + PublicKey.random().toHex().slice(0, 8),
         type: 'string',
         header: 'new column',
         editable: true,
