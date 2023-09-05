@@ -6,8 +6,8 @@ import React, { FC, useMemo } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaColumn, createActionColumn } from '@dxos/aurora-grid';
+import { DensityProvider, Main } from '@dxos/aurora';
+import { Grid, createColumns, GridSchemaColumn, createActionColumn, defaultGridSlots } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -64,13 +64,28 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         id: id!,
         type: getColumnType(type),
         size: table.props?.find((prop) => prop.id === id)?.size,
-        header: label,
+        label,
         editable: true,
         resize: true,
       })),
     };
 
     const columns = createColumns<TypedObject>(schema, {
+      // TODO(burdon): Doesn't refresh.
+      // TODO(burdon): Doesn't close popover.
+      onColumnUpdate: (id, column) => {
+        const idx = table.schema?.props.findIndex((prop) => prop.id === id);
+        if (idx !== -1) {
+          const { id, type, label, digits } = column;
+          table.schema?.props.splice(idx, 1, { id, type: getPropType(type), label, digits });
+        }
+      },
+      onColumnDelete: (id) => {
+        const idx = table.schema?.props.findIndex((prop) => prop.id === id);
+        if (idx !== -1) {
+          table.schema?.props.splice(idx, 1);
+        }
+      },
       // TODO(burdon): Check only called by grid if value changed.
       onUpdate: (object, prop, value) => {
         object[prop] = value;
@@ -82,8 +97,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     });
 
     const actionColumn = createActionColumn<TypedObject>(schema, {
-      onColumnCreate: ({ id, type, label }) => {
-        table.schema?.props.push({ id, type: getPropType(type), label });
+      onColumnCreate: ({ id, type, label, digits }) => {
+        table.schema?.props.push({ id, type: getPropType(type), label, digits });
       },
       onRowDelete: (object) => {
         // TODO(burdon): Rename delete.
@@ -110,9 +125,23 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     });
   };
 
+  console.log('!!!');
+
   return (
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Grid<TypedObject> columns={columns} data={rows} onColumnResize={handleColumnResize} />
+      <DensityProvider density='fine'>
+        <Grid<TypedObject>
+          columns={columns}
+          data={rows}
+          onColumnResize={handleColumnResize}
+          border
+          slots={Object.assign({}, defaultGridSlots, {
+            root: {
+              className: 'p-4',
+            },
+          })}
+        />
+      </DensityProvider>
     </Main.Content>
   );
 };

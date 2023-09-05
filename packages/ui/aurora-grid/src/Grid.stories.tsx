@@ -221,26 +221,26 @@ export const Schema = {
     const [items, setItems] = useState(createItems(10));
 
     const columns = createColumns<Item>(schema, {
-      onUpdate: (item, prop, value) => {
-        setItems((items) => updateItems(items, item.publicKey, prop, value));
-      },
-      onColumnUpdate: (id: string, column) => {
+      onColumnUpdate: (id, column) => {
         setSchema(({ columns, ...props }) => ({
           columns: columns.map((c) => (c.id === id ? column : c)),
           ...props,
         }));
       },
-      onColumnDelete: (column) => {
-        setSchema(({ columns, ...props }) => ({ columns: columns.filter((c) => c.id !== column.id), ...props }));
+      onColumnDelete: (id) => {
+        setSchema(({ columns, ...props }) => ({ columns: columns.filter((c) => c.id !== id), ...props }));
+      },
+      onUpdate: (item, prop, value) => {
+        setItems((items) => updateItems(items, item.publicKey, prop, value));
       },
     });
 
     const actionColumn = createActionColumn<Item>(schema, {
-      onRowDelete: (row) => {
-        setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
-      },
       onColumnCreate: (column) => {
         setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
+      },
+      onRowDelete: (row) => {
+        setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
       },
     });
 

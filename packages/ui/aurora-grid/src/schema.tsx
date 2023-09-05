@@ -4,7 +4,7 @@
 
 import { Check, DotsThree, Plus, Trash, X } from '@phosphor-icons/react';
 import { ColumnDef, RowData } from '@tanstack/react-table';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Button, Input, Popover, Select, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
@@ -34,12 +34,11 @@ export type GridSchemaColumn = {
 };
 
 // TODO(burdon): Create builder.
+
 type CreateColumnsOptions<TData extends RowData, TValue> = {
   onUpdate?: (row: TData, id: string, value: TValue) => void;
-  onRowDelete?: (row: TData) => void;
-  onColumnCreate?: (column: GridSchemaColumn) => void;
   onColumnUpdate?: (id: string, column: GridSchemaColumn) => void;
-  onColumnDelete?: (column: ColumnDef<TData, TValue>) => void;
+  onColumnDelete?: (id: string) => void;
 };
 
 /**
@@ -52,14 +51,15 @@ export const createColumns = <TData extends RowData>(
   const { helper, builder } = createColumnBuilder<any>();
   return schema.columns.map((column) => {
     const { type, id, label, fixed, resize, ...props } = column;
+
     const options: BaseColumnOptions<TData, any> = stripUndefinedValues({
+      ...props,
       meta: { resize },
       label,
       header: fixed
         ? undefined
         : () => <ColumnMenu column={column} onUpdate={onColumnUpdate} onDelete={onColumnDelete} />,
       onUpdate,
-      ...props,
     });
 
     switch (type) {
@@ -76,20 +76,14 @@ export const createColumns = <TData extends RowData>(
   }) as ColumnDef<TData>[];
 };
 
-export const createUniqueProp = (schema: GridSchema) => {
-  for (let i = 1; i < 100; i++) {
-    const prop = 'prop_' + i;
-    if (!schema.columns.find((column) => column.id === prop)) {
-      return prop;
-    }
-  }
-
-  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
+type CreateActionColumnOptions<TData extends RowData> = {
+  onRowDelete?: (row: TData) => void;
+  onColumnCreate?: (column: GridSchemaColumn) => void;
 };
 
 export const createActionColumn = <TData extends RowData>(
   schema: GridSchema,
-  { onRowDelete, onColumnCreate }: CreateColumnsOptions<TData, any> = {},
+  { onRowDelete, onColumnCreate }: CreateActionColumnOptions<TData> = {},
 ): ColumnDef<TData> => {
   const { helper } = createColumnBuilder<TData>();
 
@@ -126,10 +120,21 @@ export const createActionColumn = <TData extends RowData>(
   }) as ColumnDef<TData>;
 };
 
+export const createUniqueProp = (schema: GridSchema) => {
+  for (let i = 1; i < 100; i++) {
+    const prop = 'prop_' + i;
+    if (!schema.columns.find((column) => column.id === prop)) {
+      return prop;
+    }
+  }
+
+  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
+};
+
 export type ColumnMenuProps = {
   column: GridSchemaColumn;
   onUpdate?: (id: string, column: GridSchemaColumn) => void;
-  onDelete?: (column: GridSchemaColumn) => void;
+  onDelete?: (id: string) => void;
 };
 
 export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
@@ -137,9 +142,7 @@ export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
   const [type, setType] = useState(String(column.type));
   const [label, setLabel] = useState(column.label ?? column.id);
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
-  useEffect(() => {
-    setLabel(column.label ?? column.id);
-  }, []);
+
   const handleSave = () => {
     onUpdate?.(column.id, {
       ...column,
@@ -166,14 +169,14 @@ export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
               <div className='flex flex-col gap-2'>
                 <div className='flex items-center'>
                   <Input.Root>
-                    <Input.Label classNames='w-24'>Property</Input.Label>
-                    <Input.TextInput autoFocus value={prop} onChange={(event) => setProp(event.target.value)} />
+                    <Input.Label classNames='w-24'>Label</Input.Label>
+                    <Input.TextInput value={label} onChange={(event) => setLabel(event.target.value)} autoFocus />
                   </Input.Root>
                 </div>
                 <div className='flex items-center'>
                   <Input.Root>
-                    <Input.Label classNames='w-24'>Label</Input.Label>
-                    <Input.TextInput value={label} onChange={(event) => setLabel(event.target.value)} />
+                    <Input.Label classNames='w-24'>Property</Input.Label>
+                    <Input.TextInput value={prop} onChange={(event) => setProp(event.target.value)} />
                   </Input.Root>
                 </div>
                 <div className='flex items-center'>
@@ -218,7 +221,7 @@ export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
                   <Check className={getSize(5)} />
                   <span>Save</span>
                 </Button>
-                <Button classNames='flex justify-start items-center gap-2' onClick={() => onDelete?.(column)}>
+                <Button classNames='flex justify-start items-center gap-2' onClick={() => onDelete?.(column.id)}>
                   <Trash className={getSize(5)} />
                   <span>Delete</span>
                 </Button>
