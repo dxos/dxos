@@ -56,8 +56,8 @@ export class SpaceProxy implements Space {
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: SpaceInternal;
-  private readonly _dbBackend?: DatabaseProxy;
-  private readonly _itemManager?: ItemManager;
+  private readonly _dbBackend: DatabaseProxy;
+  private readonly _itemManager: ItemManager;
   private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
@@ -67,7 +67,7 @@ export class SpaceProxy implements Space {
 
   private _error: Error | undefined = undefined;
   private _cachedProperties: Properties;
-  private _properties?: TypedObject;
+  private _properties?: TypedObject = undefined;
 
   // prettier-ignore
   constructor(
@@ -76,6 +76,7 @@ export class SpaceProxy implements Space {
     private _data: SpaceData,
     databaseRouter: DatabaseRouter
   ) {
+    log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
@@ -127,11 +128,10 @@ export class SpaceProxy implements Space {
   }
 
   get properties() {
-    if (this._currentState !== SpaceState.READY) {
-      return this._cachedProperties;
-    } else {
-      invariant(this._properties, 'Properties not initialized.');
+    if (this._properties) {
       return this._properties;
+    } else {
+      return this._cachedProperties;
     }
   }
 
@@ -195,13 +195,29 @@ export class SpaceProxy implements Space {
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
+    const shouldPropertiesUpdate = space.cache?.properties && !this._properties && !isEqualWith(this._data.cache?.properties, space.cache.properties, loadashEqualityFn);
+    const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
+    const isReopening = this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
+    log('update', {
+      key: space.spaceKey,
+      prevState: SpaceState[this._data.state],
+      state: SpaceState[space.state],
+      emitEvent,
+      emitPipelineEvent,
+      emitMembersEvent,
+      shouldPropertiesUpdate,
+      isFirstTimeInitializing,
+      isReopening
+    });
 
     this._data = space;
-    log('update', { space, emitEvent });
 
-    if (space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
+    if (isFirstTimeInitializing) {
       await this._initialize();
+    } else if (isReopening) {
+      await this._initializeDb();
     }
+
     if (space.error) {
       this._error = decodeError(space.error);
     }
@@ -214,6 +230,10 @@ export class SpaceProxy implements Space {
     }
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
+    }
+    if (shouldPropertiesUpdate) {
+      setStateFromSnapshot(this._cachedProperties, space.cache!.properties!);
+      this._cachedProperties._itemUpdate();
     }
   }
 
@@ -228,42 +248,35 @@ export class SpaceProxy implements Space {
 
     await this._invitationsProxy.open();
 
-    await this._dbBackend!.open(this._modelFactory);
-    log('ready');
-    this._databaseInitialized.wake();
+    await this._initializeDb();
 
-    {
-      // Wait for Properties document.
-      const query = this._db.query(Properties.filter());
-      if (query.objects.length === 1) {
-        this._properties = query.objects[0];
-      } else {
-        const waitForSpaceMeta = new Trigger();
-        const subscription = query.subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            waitForSpaceMeta.wake();
-            subscription();
-          }
-        });
-
-        try {
-          await waitForSpaceMeta.wait({ timeout: LOAD_PROPERTIES_TIMEOUT });
-        } catch {
-          log.warn('Space properties not found in time.', { space: this.key, timeout: LOAD_PROPERTIES_TIMEOUT });
-        } finally {
-          subscription();
-        }
-      }
-    }
-
-    invariant(this._properties);
     this._initialized = true;
     this._initializing = false;
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
     log('initialized');
+  }
+
+  private async _initializeDb() {
+    await this._dbBackend!.open(this._modelFactory);
+    log('ready');
+    this._databaseInitialized.wake();
+
+    // Set properties document when it's available.
+    {
+      const query = this._db.query(Properties.filter());
+      if (query.objects.length === 1) {
+        this._properties = query.objects[0];
+      } else {
+        const subscription = query.subscribe((query) => {
+          if (query.objects.length === 1) {
+            this._properties = query.objects[0];
+            subscription();
+          }
+        });
+      }
+    }
   }
 
   /**
@@ -359,6 +372,7 @@ export class SpaceProxy implements Space {
   }
 
   private async _deactivate() {
+    await this._db.flush();
     await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 }

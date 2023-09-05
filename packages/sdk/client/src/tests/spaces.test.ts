@@ -361,7 +361,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.skip('spaces can be activated and deactivated', async () => {
+  test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
