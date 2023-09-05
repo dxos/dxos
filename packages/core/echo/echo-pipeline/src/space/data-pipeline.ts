@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
@@ -53,12 +53,12 @@ const MESSAGES_PER_SNAPSHOT = 10;
 /**
  * Minimum time between automatic snapshots.
  */
-const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
+const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5_000;
 
 /**
  * Minimum time in MS between recording latest timeframe in metadata.
  */
-const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
+const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 5_000;
 
 /**
  * Controls data pipeline in the space.
@@ -212,6 +212,8 @@ export class DataPipeline implements CredentialProcessor {
       await waitForOneEpoch;
     }
 
+    let messageCounter = 0;
+
     invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const span = this._usage.beginRecording();
@@ -255,6 +257,12 @@ export class DataPipeline implements CredentialProcessor {
       }
 
       span.end();
+
+      if (++messageCounter > 1_000) {
+        messageCounter = 0;
+        // Allow other tasks to process.
+        await sleep(1);
+      }
     }
   }
 
@@ -296,6 +304,10 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    if (!this._pipeline?.state.reachedTarget) {
+      return;
+    }
+
     // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
 
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {

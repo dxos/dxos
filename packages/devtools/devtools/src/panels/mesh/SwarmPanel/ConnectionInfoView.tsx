@@ -35,6 +35,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         schema={schema}
         object={{
           state: connection.state,
+          closeReason: connection.closeReason,
           session: connection.sessionId,
           remotePeer: connection.remotePeerId,
           transport: connection.transport ?? 'N/A',

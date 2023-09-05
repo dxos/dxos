@@ -24,6 +24,7 @@ export type TraceSpanParams = {
   instance: any;
   methodName: string;
   parentCtx: Context | null;
+  showInBrowserTimeline: boolean;
 };
 
 export class ResourceEntry {
@@ -291,6 +292,7 @@ export class TracingSpan {
   endTs: number | null = null;
   error: SerializedError | null = null;
 
+  private _showInBrowserTimeline: boolean;
   private readonly _ctx: Context | null = null;
 
   constructor(private _traceProcessor: TraceProcessor, params: TraceSpanParams) {
@@ -298,6 +300,7 @@ export class TracingSpan {
     this.methodName = params.methodName;
     this.resourceId = _traceProcessor.getResourceId(params.instance);
     this.startTs = performance.now();
+    this._showInBrowserTimeline = params.showInBrowserTimeline;
 
     if (params.parentCtx) {
       this._ctx = params.parentCtx.derive({
@@ -319,12 +322,20 @@ export class TracingSpan {
   markSuccess() {
     this.endTs = performance.now();
     this._traceProcessor._flushSpan(this);
+
+    if (this._showInBrowserTimeline) {
+      this._markInBrowserTimeline();
+    }
   }
 
   markError(err: unknown) {
     this.endTs = performance.now();
     this.error = serializeError(err);
     this._traceProcessor._flushSpan(this);
+
+    if (this._showInBrowserTimeline) {
+      this._markInBrowserTimeline();
+    }
   }
 
   serialize(): Span {
@@ -337,6 +348,14 @@ export class TracingSpan {
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
     };
+  }
+
+  private _markInBrowserTimeline() {
+    const resource = this._traceProcessor.resources.get(this.resourceId!);
+    const name = resource
+      ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}`
+      : this.methodName;
+    performance.measure(name, { start: this.startTs, end: this.endTs! });
   }
 }
 

@@ -246,6 +246,8 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   );
 };
 
+export default DebugMain;
+
 // TODO(burdon): Refactor from devtools.
 const replacer = (key: any, value: any) => {
   if (typeof value === 'object') {

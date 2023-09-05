@@ -63,6 +63,7 @@ export class Generator {
       }
     }
 
+    this._space.internal.db.commitBatch();
     // TODO(burdon): Make optional.
     await this._space.db.flush();
   }

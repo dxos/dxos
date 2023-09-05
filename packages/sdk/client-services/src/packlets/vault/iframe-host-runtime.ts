@@ -8,7 +8,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
+import { createSimplePeerTransportFactory, TransportFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
@@ -71,7 +71,7 @@ export class IFrameHostRuntime {
     log('starting...');
     try {
       this._config = await getAsyncValue(this._configProvider);
-      this._transportFactory = createWebRTCTransportFactory({
+      this._transportFactory = createSimplePeerTransportFactory({
         iceServers: this._config.get('runtime.services.ice'),
       });
       const signals = this._config.get('runtime.services.signaling');
