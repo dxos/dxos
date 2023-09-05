@@ -25,7 +25,7 @@
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

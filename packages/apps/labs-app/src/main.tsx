@@ -11,7 +11,6 @@ import { ChessPlugin } from '@braneframe/plugin-chess';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
-import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
@@ -22,6 +21,7 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
@@ -69,7 +69,7 @@ const main = async () => {
           GraphPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
-          SplitViewPlugin({ enableComplementarySidebar: true }),
+          SplitViewPlugin(),
           SpacePlugin(),
 
           // Composer
@@ -83,7 +83,7 @@ const main = async () => {
           GridPlugin(),
           IpfsPlugin(),
           TemplatePlugin(),
-          DrawingPlugin(),
+          SketchPlugin(),
           KanbanPlugin(),
           ThreadPlugin(),
           ChessPlugin(),

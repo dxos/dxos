@@ -114,7 +114,9 @@ export class ShellController {
       await this.setLayout(ShellLayout.DEVICE_INVITATIONS);
     } else if (event.key === '.' && modifier) {
       const spaceKey = await this._spaceProvider?.();
-      await this.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
+      if (spaceKey) {
+        await this.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
+      }
     }
   }
 }

@@ -29,7 +29,6 @@
           "object-is",
           "object-keys",
           "path-browserify",
-          "process",
           "string_decoder",
           "util",
           "util-deprecate",

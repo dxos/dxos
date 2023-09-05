@@ -5,16 +5,24 @@
 import CRC32 from 'crc-32';
 
 import { synchronized, Event } from '@dxos/async';
+import { Codec } from '@dxos/codec-protobuf';
 import { DataCorruptionError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Directory } from '@dxos/random-access-storage';
+import {
+  EchoMetadata,
+  SpaceMetadata,
+  IdentityRecord,
+  SpaceCache,
+  ControlPipelineSnapshot,
+  LargeSpaceMetadata,
+} from '@dxos/protocols/proto/dxos/echo/metadata';
+import { Directory, File } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import { arrayToBuffer } from '@dxos/util';
+import { ComplexMap, arrayToBuffer, forEachAsync, isNotNullOrUndefined } from '@dxos/util';
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -28,16 +36,23 @@ const emptyEchoMetadata = (): EchoMetadata => ({
   updated: new Date(),
 });
 
+const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
+
 const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
+const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
 
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
+  private _spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
+
+  private _metadataFile?: File = undefined;
+
   public readonly update = new Event<EchoMetadata>();
 
   // prettier-ignore
   constructor(
     private readonly _directory: Directory
-  ) {}
+  ) { }
 
   get metadata(): EchoMetadata {
     return this._metadata;
@@ -55,12 +70,7 @@ export class MetadataStore {
     return this._metadata.spaces ?? [];
   }
 
-  /**
-   * Loads metadata from persistent storage.
-   */
-  @synchronized
-  async load(): Promise<void> {
-    const file = this._directory.getOrCreateFile('EchoMetadata');
+  private async _readFile<T>(file: File, codec: Codec<T>): Promise<T | undefined> {
     try {
       const { size: fileLength } = await file.stat();
       if (fileLength < 8) {
@@ -69,7 +79,7 @@ export class MetadataStore {
       // Loading file size from first 4 bytes.
       const dataSize = fromBytesInt32(await file.read(0, 4));
       const checksum = fromBytesInt32(await file.read(4, 4));
-      log('loaded', { size: dataSize, checksum });
+      log('loaded', { size: dataSize, checksum, name: file.filename });
 
       if (fileLength < dataSize + 8) {
         throw new DataCorruptionError('Metadata size is smaller than expected.', { fileLength, dataSize });
@@ -82,7 +92,50 @@ export class MetadataStore {
         throw new DataCorruptionError('Metadata checksum is invalid.');
       }
 
-      this._metadata = EchoMetadata.decode(data);
+      return codec.decode(data);
+    } finally {
+      await file.close();
+    }
+  }
+
+  private async _writeFile<T>(file: File, codec: Codec<T>, data: T): Promise<void> {
+    const encoded = arrayToBuffer(codec.encode(data));
+    const checksum = CRC32.buf(encoded);
+
+    const result = Buffer.alloc(8 + encoded.length);
+
+    result.writeInt32LE(encoded.length, 0);
+    result.writeInt32LE(checksum, 4);
+    encoded.copy(result, 8);
+
+    // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
+    await file.write(0, result);
+
+    log('saved', { size: encoded.length, checksum });
+  }
+
+  async close() {
+    await this._directory.flush();
+    await this._metadataFile?.close();
+    this._metadataFile = undefined;
+    this._metadata = emptyEchoMetadata();
+    this._spaceLargeMetadata.clear();
+  }
+
+  /**
+   * Loads metadata from persistent storage.
+   */
+  @synchronized
+  async load(): Promise<void> {
+    if (!this._metadataFile || this._metadataFile.closed) {
+      this._metadataFile = this._directory.getOrCreateFile('EchoMetadata');
+    }
+
+    try {
+      const metadata = await this._readFile(this._metadataFile, EchoMetadata);
+      if (metadata) {
+        this._metadata = metadata;
+      }
 
       // post-processing
       this._metadata.spaces?.forEach((space) => {
@@ -91,9 +144,20 @@ export class MetadataStore {
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
-    } finally {
-      await file.close();
     }
+
+    await forEachAsync(
+      [this._metadata.identity?.haloSpace.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])].filter(
+        isNotNullOrUndefined,
+      ),
+      async (key) => {
+        try {
+          await this._loadSpaceLargeMetadata(key);
+        } catch (err: any) {
+          log.error('failed to load space large metadata', { err });
+        }
+      },
+    );
   }
 
   @synchronized
@@ -108,23 +172,30 @@ export class MetadataStore {
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
+    await this._writeFile(file, EchoMetadata, data);
+  }
+
+  private async _loadSpaceLargeMetadata(key: PublicKey): Promise<void> {
+    const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
     try {
-      const encoded = arrayToBuffer(EchoMetadata.encode(data));
-      const checksum = CRC32.buf(encoded);
-
-      const result = Buffer.alloc(8 + encoded.length);
-
-      result.writeInt32LE(encoded.length, 0);
-      result.writeInt32LE(checksum, 4);
-      encoded.copy(result, 8);
-
-      // NOTE: This must be done in one write operation, otherwise the file can be corrupted.
-      await file.write(0, result);
-
-      log('saved', { size: encoded.length, checksum });
-    } finally {
-      await file.close();
+      const metadata = await this._readFile(file, LargeSpaceMetadata);
+      if (metadata) {
+        this._spaceLargeMetadata.set(key, metadata);
+      }
+    } catch (err: any) {
+      log.error('failed to load space large metadata', { err });
     }
+  }
+
+  @synchronized
+  private async _saveSpaceLargeMetadata(key: PublicKey): Promise<void> {
+    const data = this._getLargeSpaceMetadata(key);
+    const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
+    await this._writeFile(file, LargeSpaceMetadata, data);
+  }
+
+  private async _flush() {
+    await this._directory.flush();
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
@@ -136,6 +207,17 @@ export class MetadataStore {
     const space = this.spaces.find((space) => space.key === spaceKey);
     invariant(space, 'Space not found');
     return space;
+  }
+
+  private _getLargeSpaceMetadata(key: PublicKey): LargeSpaceMetadata {
+    let entry = this._spaceLargeMetadata.get(key);
+    if (entry) {
+      return entry;
+    }
+
+    entry = emptyLargeSpaceMetadata();
+    this._spaceLargeMetadata.set(key, entry);
+    return entry;
   }
 
   /**
@@ -156,6 +238,7 @@ export class MetadataStore {
 
     this._metadata.identity = record;
     await this._save();
+    await this._flush();
   }
 
   async addSpace(record: SpaceMetadata) {
@@ -166,6 +249,7 @@ export class MetadataStore {
 
     (this._metadata.spaces ??= []).push(record);
     await this._save();
+    await this._flush();
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
@@ -176,6 +260,7 @@ export class MetadataStore {
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
     this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
+    await this._flush();
   }
 
   async setCache(spaceKey: PublicKey, cache: SpaceCache) {
@@ -188,11 +273,23 @@ export class MetadataStore {
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();
+    await this._flush();
   }
 
   async setSpaceState(spaceKey: PublicKey, state: SpaceState) {
     this._getSpace(spaceKey).state = state;
     await this._save();
+    await this._flush();
+  }
+
+  getSpaceControlPipelineSnapshot(spaceKey: PublicKey): ControlPipelineSnapshot | undefined {
+    return this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot;
+  }
+
+  async setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot) {
+    this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot = snapshot;
+    await this._saveSpaceLargeMetadata(spaceKey);
+    await this._flush();
   }
 }
 

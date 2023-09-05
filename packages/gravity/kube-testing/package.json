@@ -48,7 +48,7 @@
     "@types/seedrandom": "^3.0.5",
     "chart.js": "^3.9.1",
     "ts-node": "10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "restricted"

@@ -60,6 +60,11 @@ export class PipelineState {
    */
   _reachedTargetPromise: Promise<void> | undefined;
 
+  /**
+   * @internal
+   */
+  _reachedTarget: boolean = false;
+
   // prettier-ignore
   constructor(
     private _feeds: ComplexMap<PublicKey, FeedWrapper<FeedMessage>>,
@@ -96,6 +101,10 @@ export class PipelineState {
 
   get targetTimeframe() {
     return this._targetTimeframe ? this._targetTimeframe : new Timeframe();
+  }
+
+  get reachedTarget() {
+    return this._reachedTarget;
   }
 
   get feeds() {
@@ -143,6 +152,7 @@ export class PipelineState {
         rejectOnDispose(this._ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
+          this._reachedTarget = true;
         }),
         sleep(timeout).then(() => {
           if (done) {
@@ -298,6 +308,7 @@ export class Pipeline implements PipelineAccessor {
     await this._state._ctx.dispose();
     this._state._ctx = new Context();
     this._state._reachedTargetPromise = undefined;
+    this._state._reachedTarget = false;
     this._isStarted = false;
     log('stopped');
   }

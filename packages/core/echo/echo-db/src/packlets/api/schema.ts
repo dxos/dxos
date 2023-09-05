@@ -61,6 +61,7 @@ export class Schema {
       }
 
       if (field.type) {
+        // eslint-disable-next-line valid-typeof
         if (typeof value !== field.type) {
           return false;
         }
