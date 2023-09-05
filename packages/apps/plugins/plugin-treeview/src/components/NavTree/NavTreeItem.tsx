@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
@@ -21,6 +22,7 @@ import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import {
+  dropRing,
   focusRing,
   getSize,
   hoverableControlItem,
@@ -40,12 +42,14 @@ import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
 
-type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging' | 'isPreview'>;
+type SortableBranchTreeViewItemProps = SharedTreeItemProps &
+  Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
 
 export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
   node,
   level,
   rearranging,
+  migrating,
   isPreview,
 }: SortableBranchTreeViewItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -60,10 +64,25 @@ export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
       draggableListeners={listeners}
       rearranging={rearranging}
       isPreview={isPreview}
+      migrating={migrating}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       ref={setNodeRef}
     />
   );
+};
+
+type DroppableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'migrating'>;
+
+export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
+  node,
+  level,
+  migrating,
+}: DroppableBranchTreeViewItemProps) => {
+  const { setNodeRef } = useDroppable({
+    id: `treeitem:${node.id}`,
+    data: { dragoverlay: node, treeitem: node },
+  });
+  return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
 };
 
 type TreeViewItemProps = SharedTreeItemProps & SortableProps;
@@ -73,7 +92,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   TreeViewItemProps
 >(
   (
-    { node, level, draggableListeners, draggableAttributes, style, rearranging, isPreview, isOverlay },
+    { node, level, draggableListeners, draggableAttributes, style, rearranging, migrating, isPreview, isOverlay },
     forwardedRef,
   ) => {
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
@@ -129,7 +148,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           'rounded block',
           hoverableFocusedKeyboardControls,
           focusRing,
-          (rearranging || isPreview) && 'invisible',
+          'transition-opacity',
+          (rearranging || isPreview) && 'opacity-0',
+          migrating === 'into' && dropRing,
         ]}
         {...draggableAttributes}
         {...draggableListeners}
@@ -236,7 +257,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
         </HeadingWithActionsRoot>
         {isBranch && (
           <TreeItem.Body>
-            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />
+            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
           </TreeItem.Body>
         )}
       </TreeItem.Root>
