@@ -3,12 +3,12 @@
 //
 
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
-import React, { useContext } from 'react';
+import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
 import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
-import { Surface } from '@dxos/react-surface';
 import { useConfig } from '@dxos/react-client';
+import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
@@ -70,21 +70,21 @@ export const SplitView = () => {
               </div>
               <div role='none' className='grow' />
               <div className='backdrop-blur flex pis-1 mbs-2.5'>
-              {/* TODO(burdon): Too specific? status? contentinfo? */}
-              <Surface name='presence' role='presence' limit={1} />
-              {complementarySidebarOpen !== null && (
-                <Button
-                  onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-                  variant='ghost'
-                >
-                  <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <CaretDoubleLeft
-                    mirrored={!!context.complementarySidebarOpen}
-                    weight='light'
-                    className={getSize(4)}
-                  />
-                </Button>
-              )}
+                {/* TODO(burdon): Too specific? status? contentinfo? */}
+                <Surface name='presence' role='presence' limit={1} />
+                {complementarySidebarOpen !== null && (
+                  <Button
+                    onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                    variant='ghost'
+                  >
+                    <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                    <CaretDoubleLeft
+                      mirrored={!!context.complementarySidebarOpen}
+                      weight='light'
+                      className={getSize(4)}
+                    />
+                  </Button>
+                )}
               </div>
             </DensityProvider>
           </div>

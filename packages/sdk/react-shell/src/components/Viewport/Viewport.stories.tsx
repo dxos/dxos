@@ -5,7 +5,8 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { AlertDialog, Button } from '@dxos/aurora';
+import { AlertDialog } from '@dxos/aurora';
+
 import { Action } from '../Panel';
 import { useViewportContext, Viewport, ViewportScopedProps } from './Viewport';
 

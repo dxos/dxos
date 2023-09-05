@@ -1,5 +1,9 @@
-import React from 'react';
+//
+// Copyright 2023 DXOS.org
+//
+
 import formatDistance from 'date-fns/formatDistance';
+import React from 'react';
 
 export type DeployedTimestampProps = {
   className?: string;

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CaretRight } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
@@ -18,7 +19,6 @@ import {
   treeItemText,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
-import { CaretRight } from '@phosphor-icons/react';
 
 export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
   ({ node, level, active }, forwardedRef) => {

@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { DeployedTimestamp } from './DeployedTimestamp';
 import { PoweredByDXOS } from './PoweredByDXOS';
 import { VersionLabel, VersionLabelProps } from './VersionLabel';
-import { DeployedTimestamp } from './DeployedTimestamp';
 
 export type VersionInfoProps = VersionLabelProps & { timestamp?: string; className?: string };
 

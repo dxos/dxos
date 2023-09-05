@@ -6,7 +6,7 @@ import React, { MutableRefObject, PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { coarseBlockPaddingStart, inputSurface, mx, surfaceElevation, textBlockWidth } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, mx, textBlockWidth } from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
