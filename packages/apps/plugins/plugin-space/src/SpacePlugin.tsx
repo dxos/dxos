@@ -9,9 +9,10 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { Graph, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
-import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { TreeViewPluginProvides, setAppStateIndex } from '@braneframe/plugin-treeview';
+import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
@@ -166,6 +167,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+          const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
           if (!clientPlugin) {
             return;
           }
@@ -180,7 +182,18 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
-            properties: { palette: 'blue' },
+            properties: {
+              palette: 'blue',
+              acceptPersistenceClass: new Set(['appState']),
+              childrenPersistenceClass: 'appState',
+              onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
+                child.properties.index = setAppStateIndex(
+                  child.id,
+                  nextIndex,
+                  treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
+                );
+              },
+            },
           });
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
@@ -189,7 +202,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             spaces.forEach((space, index) => {
               const update = () => {
                 const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
-                isDefaultSpace ? spaceToGraphNode(space, parent) : spaceToGraphNode(space, groupNode, indices[index]);
+                isDefaultSpace
+                  ? spaceToGraphNode(space, parent, treeViewPlugin?.provides.treeView?.appState)
+                  : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
               };
 
               const handle = createSubscription(() => update());

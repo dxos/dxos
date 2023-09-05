@@ -3,6 +3,7 @@
 //
 
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { FC, MutableRefObject, RefCallback } from 'react';
@@ -11,8 +12,13 @@ import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Document } from '@braneframe/types';
+import {
+  getAppStateIndex,
+  setAppStateIndex,
+  TreeViewAction,
+  TreeViewPluginProvides,
+} from '@braneframe/plugin-treeview';
+import { AppState, Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -148,18 +154,35 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
 
+          const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
+          const appState = treeViewPlugin?.provides.treeView?.appState as AppState | undefined;
+          const defaultIndices = getIndices(plugins.length);
+
+          const id = `${MARKDOWN_PLUGIN}:${space.key.toHex()}`;
+
           const [presentationNode] = parent.add({
-            id: `${MARKDOWN_PLUGIN}:${space.key.toHex()}`,
+            id,
             label: ['plugin name', { ns: MARKDOWN_PLUGIN }],
             icon: (props) => <ArticleMedium {...props} />,
-            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
+            properties: {
+              palette: 'pink',
+              persistenceClass: 'appState',
+              childrenPersistenceClass: 'spaceObject',
+              index:
+                getAppStateIndex(id, appState) ??
+                setAppStateIndex(
+                  id,
+                  defaultIndices[plugins.findIndex(({ meta: { id } }) => id === MARKDOWN_PLUGIN)],
+                  appState,
+                ),
+            },
           });
 
           presentationNode.addAction({

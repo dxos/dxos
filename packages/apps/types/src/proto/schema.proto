@@ -176,3 +176,14 @@ message Thread {
   string title = 1;
   repeated Block blocks = 2;
 }
+
+message AppState {
+  option (object) = true;
+
+  message Index {
+    string ref = 1;
+    string value = 2;
+  }
+
+  repeated Index indices = 1;
+}
