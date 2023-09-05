@@ -15,7 +15,7 @@ import '@dxosTheme';
 
 import { Grid, GridColumnDef } from './Grid';
 import { createColumnBuilder, ValueUpdater } from './helpers';
-import { createColumns, GridSchema, GridSchemaColumn } from './schema';
+import { createActionColumn, createColumns, GridSchema } from './schema';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.
@@ -29,6 +29,7 @@ type Item = {
 };
 
 faker.seed(999);
+
 const createItems = (count: number) =>
   range(count).map(
     () =>
@@ -51,12 +52,12 @@ const testSchema: GridSchema = {
       id: 'complete',
       type: 'boolean',
       label: 'ok',
+      fixed: true,
       editable: true,
     },
     {
       id: 'name',
       type: 'string',
-      // size: 200,
       editable: true,
       resize: true,
     },
@@ -218,21 +219,36 @@ export const Schema = {
   render: () => {
     const [schema, setSchema] = useState(testSchema);
     const [items, setItems] = useState(createItems(10));
-    const onUpdate: ValueUpdater<Item, any> = (item, prop, value) => {
-      setItems((items) => updateItems(items, item.publicKey, prop, value));
-    };
-    const onRowDelete = (row: Item) => {
-      setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
-    };
-    const onColumnCreate = (column: GridSchemaColumn) => {
-      setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
-    };
+
+    const columns = createColumns<Item>(schema, {
+      onUpdate: (item, prop, value) => {
+        setItems((items) => updateItems(items, item.publicKey, prop, value));
+      },
+      onColumnUpdate: (column) => {
+        setSchema(({ columns, ...props }) => ({
+          columns: columns.map((c) => (c.id === column.id ? column : c)),
+          ...props,
+        }));
+      },
+      onColumnDelete: (column) => {
+        setSchema(({ columns, ...props }) => ({ columns: columns.filter((c) => c.id !== column.id), ...props }));
+      },
+    });
+
+    const actionColumn = createActionColumn<Item>({
+      onRowDelete: (row) => {
+        setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
+      },
+      onColumnCreate: (column) => {
+        setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
+      },
+    });
 
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
-          columns={createColumns<Item>(schema, { onUpdate, onRowDelete, onColumnCreate })}
+          columns={[...columns, actionColumn]}
           data={items}
           border
         />

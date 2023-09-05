@@ -7,7 +7,7 @@ import React, { FC, useMemo } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaColumn } from '@dxos/aurora-grid';
+import { Grid, createColumns, GridSchemaColumn, createActionColumn } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -66,11 +66,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       })),
     };
 
-    // TODO(burdon): Column menu.
-    return createColumns<TypedObject>(schema, {
-      onColumnCreate: ({ id, type, label }) => {
-        table.schema?.props.push({ id, type: getPropType(type), label });
-      },
+    const columns = createColumns<TypedObject>(schema, {
       // TODO(burdon): Check only called by grid if value changed.
       onUpdate: (object, prop, value) => {
         object[prop] = value;
@@ -79,11 +75,19 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
           space!.db.add(new Expando(Object.assign(object, { meta: { schema: table.schema } })));
         }
       },
+    });
+
+    const actionColumn = createActionColumn<TypedObject>({
+      onColumnCreate: ({ id, type, label }) => {
+        table.schema?.props.push({ id, type: getPropType(type), label });
+      },
       onRowDelete: (object) => {
         // TODO(burdon): Rename delete.
         space!.db.remove(object);
       },
     });
+
+    return [...columns, actionColumn];
   }, [space, JSON.stringify(table), JSON.stringify(table.schema)]); // TODO(burdon): Impl. echo useMemo-like hook.
 
   const handleColumnResize = (state: Record<string, number>) => {

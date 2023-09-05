@@ -3,7 +3,7 @@
 //
 
 import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
-import { ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
+import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -25,29 +25,29 @@ export const createColumnBuilder = <TData extends RowData>() => ({
  * NOTE: Can use `meta` for custom properties.
  */
 // TODO(burdon): Add accessor options and spread.
-type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
+export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
   meta?: ColumnMeta<TData, TValue>;
   label?: string;
   className?: string;
   onUpdate?: ValueUpdater<TData, TValue>;
 };
 
-type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
+export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
 
-type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {};
+export type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {};
 
-type KeyColumnOptions<TData extends RowData> = BaseColumnOptions<TData, PublicKey> & {
+export type KeyColumnOptions<TData extends RowData> = BaseColumnOptions<TData, PublicKey> & {
   tooltip?: boolean;
 };
 
-type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> & {
+export type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> & {
   format?: string;
   relative?: boolean;
 };
 
-type BooleanColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
+export type BooleanColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
 
-type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {
+export type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {
   on?: {
     Icon?: Icon;
     className?: string;
@@ -259,15 +259,3 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 }
-
-// TODO(burdon): Menu.
-/*
-  {header.column.columnDef.meta?.menu && (
-    <>
-      <div className='grow' />
-      <Button variant='ghost'>
-        <DotsThreeVertical className={getSize(5)} />
-      </Button>
-    </>
-  )}
-*/
