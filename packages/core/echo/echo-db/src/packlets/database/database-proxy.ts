@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, scheduleTask, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTask, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
@@ -51,6 +51,8 @@ export class DatabaseProxy {
   public readonly itemUpdate = new Event<Item<Model>[]>();
   public readonly pendingBatch = new Event<BatchUpdate>();
 
+  private _initialEventTrigger = new Trigger();
+
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
 
@@ -77,15 +79,27 @@ export class DatabaseProxy {
     return false;
   }
 
+  get isClosed(): boolean {
+    return !this._subscriptionOpen;
+  }
+
   get currentBatch(): Batch | undefined {
     return this._currentBatch;
   }
 
+  @synchronized
   async open(modelFactory: ModelFactory): Promise<void> {
-    invariant(!this._opening);
     this._opening = true;
 
     this._itemManager._debugLabel = 'proxy';
+
+    // Close previous subscription.
+    if (this._entities) {
+      await this._entities.close();
+      this._entities = undefined;
+    }
+
+    this._initialEventTrigger.reset();
 
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
@@ -94,85 +108,23 @@ export class DatabaseProxy {
         }
       }
     });
-    const loaded = new Trigger();
 
     invariant(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
+    this._entities!.subscribe(this._processEvent.bind(this), (err) => {
+      if (err) {
+        log.warn('Connection closed', err);
+      }
+
+      this._subscriptionOpen = false;
+      this._abortBatches();
+    });
     this._subscriptionOpen = true;
-    this._entities.subscribe(
-      async (msg) => {
-        log('process', {
-          clientTag: msg.clientTag,
-          feedKey: msg.feedKey,
-          seq: msg.seq,
-          objectCount: msg.batch.objects?.length ?? 0,
-        });
-
-        const objectsUpdated: Item[] = [];
-
-        if (msg.action === EchoEvent.DatabaseAction.RESET) {
-          const keepIds = new Set<string>(
-            msg.batch.objects?.filter((object) => object.genesis).map((object) => object.objectId) ?? [],
-          );
-          for (const item of this._itemManager.entities.values()) {
-            if (!keepIds.has(item.id)) {
-              this._itemManager.deconstructItem(item.id);
-              objectsUpdated.push(item);
-            }
-          }
-        }
-
-        this._processMessage(msg.batch, objectsUpdated);
-
-        if (msg.clientTag) {
-          const batch = this._pendingBatches.get(msg.clientTag);
-          if (batch) {
-            invariant(msg.feedKey !== undefined);
-            invariant(msg.seq !== undefined);
-            batch.receipt = {
-              feedKey: msg.feedKey,
-              seq: msg.seq,
-            };
-            batch.receiptTrigger!.wake(batch.receipt);
-            batch.processTrigger!.wake();
-            this._pendingBatches.delete(msg.clientTag);
-
-            // TODO(burdon): Not batched (e.g., if create item, then two batches).
-            this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
-          } else {
-            // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
-            // TODO(dmaretskyi): Just ignore the I guess.
-            // log.warn('missing pending batch', { clientTag: msg.clientTag });
-          }
-        }
-
-        // Notify that initial set of items has been loaded.
-        loaded.wake();
-
-        // Emit update event.
-        this.itemUpdate.emit(objectsUpdated);
-      },
-      (err) => {
-        if (err) {
-          log.warn('Connection closed', err);
-        }
-
-        this._subscriptionOpen = false;
-        for (const batch of this._pendingBatches.values()) {
-          batch.processTrigger!.throw(new Error('Service connection closed.'));
-        }
-        this.pendingBatch.emit({
-          size: this._pendingBatches.size,
-          error: new Error('Service connection closed.'),
-        });
-        this._pendingBatches.clear();
-      },
-    );
 
     // Wait for initial set of items.
-    await loaded.wait();
+    await this._initialEventTrigger.wait();
 
     this._open = true;
   }
@@ -192,6 +144,59 @@ export class DatabaseProxy {
 
     await this._entities?.close();
     this._entities = undefined;
+  }
+
+  private _processEvent(msg: EchoEvent) {
+    log('process', {
+      clientTag: msg.clientTag,
+      feedKey: msg.feedKey,
+      seq: msg.seq,
+      objectCount: msg.batch.objects?.length ?? 0,
+    });
+
+    const objectsUpdated: Item[] = [];
+
+    if (msg.action === EchoEvent.DatabaseAction.RESET) {
+      const keepIds = new Set<string>(
+        msg.batch.objects?.filter((object) => object.genesis).map((object) => object.objectId) ?? [],
+      );
+      for (const item of this._itemManager.entities.values()) {
+        if (!keepIds.has(item.id)) {
+          this._itemManager.deconstructItem(item.id);
+          objectsUpdated.push(item);
+        }
+      }
+    }
+
+    this._processMessage(msg.batch, objectsUpdated);
+
+    if (msg.clientTag) {
+      const batch = this._pendingBatches.get(msg.clientTag);
+      if (batch) {
+        invariant(msg.feedKey !== undefined);
+        invariant(msg.seq !== undefined);
+        batch.receipt = {
+          feedKey: msg.feedKey,
+          seq: msg.seq,
+        };
+        batch.receiptTrigger!.wake(batch.receipt);
+        batch.processTrigger!.wake();
+        this._pendingBatches.delete(msg.clientTag);
+
+        // TODO(burdon): Not batched (e.g., if create item, then two batches).
+        this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
+      } else {
+        // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
+        // TODO(dmaretskyi): Just ignore the I guess.
+        // log.warn('missing pending batch', { clientTag: msg.clientTag });
+      }
+    }
+
+    // Notify that initial set of items has been loaded.
+    this._initialEventTrigger.wake();
+
+    // Emit update event.
+    this.itemUpdate.emit(objectsUpdated);
   }
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
@@ -379,5 +384,16 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
+  }
+
+  private _abortBatches() {
+    for (const batch of this._pendingBatches.values()) {
+      batch.processTrigger!.throw(new Error('Service connection closed.'));
+    }
+    this.pendingBatch.emit({
+      size: this._pendingBatches.size,
+      error: new Error('Service connection closed.'),
+    });
+    this._pendingBatches.clear();
   }
 }
