@@ -84,7 +84,6 @@ export class GraphStore implements Graph {
         });
       },
     }) as RevertDeepSignal<Graph.Node>;
-
     return builderNode;
   }
 

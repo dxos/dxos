@@ -99,7 +99,7 @@ export namespace Graph {
      * @example ['unknown node label, { ns: 'example-plugin' }]
      */
     // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
-    label: string | [string, { ns: string; count?: number }];
+    label?: string | [string, { ns: string; count?: number }];
 
     /**
      * Description to be used when displaying a detailed view of the node.

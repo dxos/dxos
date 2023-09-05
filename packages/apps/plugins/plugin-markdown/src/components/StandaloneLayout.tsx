@@ -24,7 +24,7 @@ export const StandaloneLayout = ({
         <div
           role='none'
           className={mx(
-            inputSurface,
+            // inputSurface,
             surfaceElevation({ elevation: 'group' }),
             'mbs-2 mbe-6 pli-6 rounded',
             'min-bs-[calc(100dvh-5rem)] flex flex-col',

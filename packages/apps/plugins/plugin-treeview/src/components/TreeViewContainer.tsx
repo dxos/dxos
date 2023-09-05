@@ -6,28 +6,37 @@ import { GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
-import { useGraph } from '@braneframe/plugin-graph';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
+<<<<<<< HEAD
   Avatar,
+=======
+  Tree,
+>>>>>>> 39698885d (wip cosmetics)
   Button,
   DensityProvider,
   ElevationProvider,
   ScrollArea,
   Tooltip,
-  useJdenticonHref,
   useSidebars,
   useTranslation,
   Separator,
 } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout, useConfig } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
+import { Identity, useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
+<<<<<<< HEAD
 import { NavTree } from './NavTree';
+=======
+import { HaloButton } from './HaloButton';
+import { NavTreeItem } from './NavTree';
+>>>>>>> 39698885d (wip cosmetics)
 import { VersionInfo } from './VersionInfo';
+import { VersionLabelProps } from './VersionLabel';
 
 export const TreeViewContainer = () => {
   const config = useConfig();
@@ -35,64 +44,82 @@ export const TreeViewContainer = () => {
   const { graph } = useGraph();
 
   const identity = useIdentity();
-  const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
-  const splitView = useSplitView();
 
+<<<<<<< HEAD
+=======
+  const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
+  const splitViewContext = useSplitView();
+
+>>>>>>> 39698885d (wip cosmetics)
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
-  const openIdentityPanel = () => {
-    if (clientPlugin) {
-      clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
-    }
-  };
+  return (
+    <TreeView
+      identity={identity}
+      graphNodes={graph.root.children}
+      version={config.values.runtime?.app?.build}
+      sidebarOpen={navigationSidebarOpen}
+      onHaloButtonClick={() => {
+        if (clientPlugin) {
+          clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
+        }
+      }}
+      onSettingsClick={() => {
+        splitViewContext.dialogOpen = true;
+        splitViewContext.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
+      }}
+    />
+  );
+};
+
+export type TreeViewProps = {
+  identity?: Identity | null;
+  graphNodes?: Graph.Node[];
+  sidebarOpen?: boolean;
+  version?: VersionLabelProps;
+  onHaloButtonClick?: () => void;
+  onSettingsClick?: () => void;
+};
+
+export const TreeView = (props: TreeViewProps) => {
+  const { identity, graphNodes, version, sidebarOpen, onHaloButtonClick, onSettingsClick } = props;
+
+  const { t } = useTranslation(TREE_VIEW_PLUGIN);
 
   return (
     <ElevationProvider elevation='chrome'>
       <DensityProvider density='fine'>
         <div role='none' className='flex flex-col bs-full'>
           {identity && (
-            <>
-              <Avatar.Root size={10} variant='circle' status='active'>
-                <div
-                  role='none'
-                  className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
-                >
-                  <Avatar.Frame
-                    data-testid='treeView.haloButton'
-                    classNames='cursor-pointer'
-                    onClick={openIdentityPanel}
-                  >
-                    <Avatar.Fallback href={jdenticon} />
-                  </Avatar.Frame>
-                  <div className='grow'></div>
-                  <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                      <Button
-                        variant='ghost'
-                        classNames='pli-2 pointer-fine:pli-1'
-                        {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                        onClick={() => {
-                          splitView.dialogOpen = true;
-                          splitView.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
-                        }}
-                      >
-                        <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
-                        <GearSix className={mx(getSize(4), 'rotate-90')} />
-                      </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Portal>
-                      <Tooltip.Content classNames='z-[70]'>
-                        {t('settings dialog title', { ns: 'os' })}
-                        <Tooltip.Arrow />
-                      </Tooltip.Content>
-                    </Tooltip.Portal>
-                  </Tooltip.Root>
-                </div>
-              </Avatar.Root>
+            <div
+              role='none'
+              className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
+            >
+              <HaloButton identity={identity} onClick={onHaloButtonClick} />
+              <div className='grow'></div>
               <Separator orientation='horizontal' />
-            </>
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Button
+                      variant='ghost'
+                      classNames='pli-2 pointer-fine:pli-1'
+                      {...(!sidebarOpen && { tabIndex: -1 })}
+                      onClick={onSettingsClick}
+                    >
+                      <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
+                      <GearSix className={mx(getSize(4), 'rotate-90')} />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content classNames='z-[70]'>
+                      {t('settings dialog title', { ns: 'os' })}
+                      <Tooltip.Arrow />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            </div>
           )}
           <ScrollArea.Root classNames='grow min-bs-0'>
             <ScrollArea.Viewport>
@@ -108,7 +135,7 @@ export const TreeViewContainer = () => {
               </ScrollArea.Scrollbar>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-          <VersionInfo config={config} />
+          <VersionInfo {...version} />
         </div>
       </DensityProvider>
     </ElevationProvider>
