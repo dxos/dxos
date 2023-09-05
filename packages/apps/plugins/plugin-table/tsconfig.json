@@ -21,10 +21,16 @@
   ],
   "references": [
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/util"
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"
@@ -33,7 +39,13 @@
       "path": "../../../ui/aurora"
     },
     {
+      "path": "../../../ui/aurora-grid"
+    },
+    {
       "path": "../../../ui/aurora-theme"
+    },
+    {
+      "path": "../../types"
     },
     {
       "path": "../plugin-client"

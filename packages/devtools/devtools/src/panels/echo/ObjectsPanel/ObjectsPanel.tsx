@@ -32,7 +32,7 @@ const textFilter = (text?: string) => {
 
 const { helper, builder } = createColumnBuilder<TypedObject>();
 const columns: GridColumnDef<TypedObject, any>[] = [
-  helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.createKey({ tooltip: true }) }),
+  helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
   helper.accessor((item) => item.toJSON()['@model'], { id: 'model' }),
   helper.accessor((item) => item.__typename, { id: 'type' }),
 ];

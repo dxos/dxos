@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-grid/src",
+  "sourceRoot": "packages/apps/plugins/plugin-table/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-grid/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-grid/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-grid/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-table/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-table/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-table/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-grid/src/index.ts"
+          "packages/apps/plugins/plugin-table/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-grid/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-table/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-grid/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-table/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -48,7 +48,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-grid/.storybook"
+        "configDir": "packages/apps/plugins/plugin-table/.storybook"
       }
     }
   },

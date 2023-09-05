@@ -59,3 +59,12 @@ export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T)
 export const arrayMove = <T>(array: Array<T>, from: number, to: number) => {
   return array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
 };
+
+export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
+  try {
+    const n = parseInt(value ?? '');
+    return isNaN(n) ? defaultValue : n;
+  } catch (err) {
+    return defaultValue;
+  }
+};

@@ -34,11 +34,11 @@ export const SpaceListPanel: FC = () => {
   // TODO(burdon): Get builder from hook.
   const { helper, builder } = createColumnBuilder<Space>();
   const columns: GridColumnDef<Space, any>[] = [
-    helper.accessor('key', builder.createKey({ tooltip: true })),
+    helper.accessor('key', builder.key({ tooltip: true })),
     helper.accessor((space) => space.properties.name, { id: 'name' }),
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
-      ...builder.createNumber(),
+      ...builder.number(),
     }),
     helper.accessor(
       (space) => {
@@ -47,10 +47,10 @@ export const SpaceListPanel: FC = () => {
       },
       {
         id: 'startup',
-        ...builder.createNumber({ size: 80 }),
+        ...builder.number({ size: 80 }),
       },
     ),
-    helper.accessor('isOpen', { header: 'open', ...builder.createIcon() }),
+    helper.accessor('isOpen', { header: 'open', ...builder.icon() }),
     helper.display({
       id: 'open',
       cell: (context) => (

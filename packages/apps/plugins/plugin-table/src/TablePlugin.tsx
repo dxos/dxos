@@ -7,24 +7,25 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { GridMain } from './components';
+import { TableMain } from './components';
 import translations from './translations';
-import { isObject, GRID_PLUGIN, GridAction, GridPluginProvides } from './types';
+import { isObject, TABLE_PLUGIN, TableAction, TablePluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
-export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
+export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
 
   return {
     meta: {
-      id: GRID_PLUGIN,
+      id: TABLE_PLUGIN,
     },
     unload: async () => {
       adapter.clear();
@@ -40,13 +41,13 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           const space = parent.data;
 
           parent.addAction({
-            id: `${GRID_PLUGIN}/create`,
-            label: ['create object label', { ns: GRID_PLUGIN }],
+            id: `${TABLE_PLUGIN}/create`,
+            label: ['create object label', { ns: TABLE_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             intent: [
               {
-                plugin: GRID_PLUGIN,
-                action: GridAction.CREATE,
+                plugin: TABLE_PLUGIN,
+                action: TableAction.CREATE,
               },
               {
                 action: SpaceAction.ADD_OBJECT,
@@ -71,7 +72,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
         switch (role) {
           case 'main': {
-            return isObject(data) ? GridMain : null;
+            return isObject(data) ? TableMain : null;
           }
         }
 
@@ -80,8 +81,17 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case GridAction.CREATE: {
-              return { object: new Expando({ type: 'grid' }) };
+            case TableAction.CREATE: {
+              const schema = new SchemaType({
+                props: [
+                  {
+                    id: 'title',
+                    type: SchemaType.PropType.STRING,
+                  },
+                ],
+              });
+
+              return { object: new TableType({ schema }) };
             }
           }
         },

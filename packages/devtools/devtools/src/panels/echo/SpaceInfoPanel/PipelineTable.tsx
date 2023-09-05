@@ -27,14 +27,14 @@ export type PipelineTableRow = {
 
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
 const columns: GridColumnDef<PipelineTableRow, any>[] = [
-  helper.accessor('feedKey', builder.createKey({ tooltip: true })),
+  helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('type', { size: 60 }),
-  helper.accessor('own', builder.createIcon()),
-  helper.accessor('genesis', builder.createIcon({ header: 'gen' })),
-  helper.accessor('start', builder.createNumber()),
-  helper.accessor('target', builder.createNumber()),
-  helper.accessor('processed', builder.createNumber()),
-  helper.accessor('total', builder.createNumber()),
+  helper.accessor('own', builder.icon()),
+  helper.accessor('genesis', builder.icon({ header: 'gen' })),
+  helper.accessor('start', builder.number()),
+  helper.accessor('target', builder.number()),
+  helper.accessor('processed', builder.number()),
+  helper.accessor('total', builder.number()),
   helper.accessor(
     (row) => {
       const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
