@@ -82,9 +82,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
     window.addEventListener('unhandledrejection', errorListener);
 
-    console.log('addEventListener.error');
     return () => {
-      console.log('removeEventListener.error');
       window.removeEventListener('error', errorListener);
       window.removeEventListener('unhandledrejection', errorListener);
     };

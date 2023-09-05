@@ -1529,6 +1529,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/display-name': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
@@ -1545,6 +1546,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/display-name': link:../../../common/display-name
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util

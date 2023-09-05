@@ -76,9 +76,11 @@ export class LocalStorageStore<T extends object> {
   prop<T>(prop: Signal<T | undefined>, lkey: string, type: PropType<T>) {
     const key = this._prefix + '.' + lkey;
 
+    // TODO(burdon): Check.
     const current = type.get(key);
+    console.log(1, key, current, prop.value);
     if (prop.value === undefined) {
-      prop.value = type.get(key);
+      prop.value = current;
     } else if (current === undefined) {
       type.set(key, prop.value);
     }
@@ -86,6 +88,7 @@ export class LocalStorageStore<T extends object> {
     this._subscriptions.push(
       prop.subscribe((value) => {
         const current = type.get(key);
+        console.log(2, key, current, { before: prop.value, value });
         if (value !== current) {
           type.set(key, value);
         }

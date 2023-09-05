@@ -176,8 +176,8 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-    const identity = await this._constructIdentity(identityRecord);
 
+    const identity = await this._constructIdentity(identityRecord);
     await identity.open(new Context());
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
@@ -205,8 +205,11 @@ export class IdentityManager {
         profile,
       },
     });
+
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return profile;
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
