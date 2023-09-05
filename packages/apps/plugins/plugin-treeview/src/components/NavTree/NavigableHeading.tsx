@@ -18,6 +18,7 @@ import {
   treeItemText,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
+import { CaretRight } from '@phosphor-icons/react';
 
 export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
   ({ node, level, active }, forwardedRef) => {
@@ -65,6 +66,7 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
           {...(active && { 'aria-current': 'page' })}
           ref={forwardedRef}
         >
+          <CaretRight weight='fill' className={mx('shrink-0', descriptionText, getSize(2))} />
           {node.icon && <node.icon className={mx(descriptionText, 'shrink-0', getSize(4))} />}
           <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
             {getTreeItemLabel(node, t)}
