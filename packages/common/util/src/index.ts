@@ -22,3 +22,6 @@ export * from './tracer';
 export * from './types';
 export * from './uint8array';
 export * from './instance-id';
+export * from './sum';
+export * from './for-each-async';
+export * from './weak';

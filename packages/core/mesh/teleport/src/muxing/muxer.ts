@@ -103,6 +103,9 @@ export class Muxer {
   private _destroyed = false;
   private _destroying = false;
 
+  private _lastStats?: MuxerStats = undefined;
+  private readonly _lastChannelStats = new Map<number, Channel['stats']>();
+
   public close = new Event<Error | undefined>();
   public statsUpdated = new Event<MuxerStats>();
 
@@ -234,7 +237,7 @@ export class Muxer {
   /**
    * Force-close with optional error.
    */
-  destroy(err?: Error) {
+  async destroy(err?: Error) {
     if (this._destroying) {
       return;
     }
@@ -254,6 +257,7 @@ export class Muxer {
       .catch((err: any) => {
         this._dispose(err);
       });
+
     void this._ctx.dispose();
   }
 
@@ -326,7 +330,7 @@ export class Muxer {
       this._balancer.pushData(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
-      this.destroy(err);
+      await this.destroy(err);
     }
   }
 
@@ -384,9 +388,6 @@ export class Muxer {
     this._channelsByLocalId.delete(channel.id);
     this._channelsByTag.delete(channel.tag);
   }
-
-  private _lastStats?: MuxerStats;
-  private readonly _lastChannelStats = new Map<number, Channel['stats']>();
 
   private async _emitStats() {
     if (this._destroyed || this._destroying) {

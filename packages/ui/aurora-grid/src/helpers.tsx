@@ -3,13 +3,13 @@
 //
 
 import { Check, ClipboardText, X } from '@phosphor-icons/react';
-import { CellContext, ColumnDef, createColumnHelper, RowData } from '@tanstack/react-table';
+import { ColumnDef, ColumnMeta, createColumnHelper, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Tooltip } from '@dxos/aurora';
-import { chromeSurface } from '@dxos/aurora-theme';
+import { Input, Tooltip } from '@dxos/aurora';
+import { chromeSurface, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -25,50 +25,96 @@ export const createColumnBuilder = <TData extends RowData>() => ({
  * NOTE: Can use `meta` for custom properties.
  */
 // TODO(burdon): Add accessor options and spread.
-type BaseColumnOptions = {
-  meta?: any;
+type BaseColumnOptions<TData, TValue, TMeta = ColumnMeta<TData, TValue>> = Partial<ColumnDef<TData, TValue>> & {
+  meta?: TMeta;
+  editable?: boolean; // TODO(burdon): Add accessor.
   header?: string;
-  size?: number;
 };
 
-type NumberColumnOptions = BaseColumnOptions & {};
+type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
 
-type KeyColumnOptions = BaseColumnOptions & {
+type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {};
+
+type KeyColumnOptions<TData extends RowData> = BaseColumnOptions<TData, PublicKey> & {
   tooltip?: boolean;
 };
 
-type DateColumnOptions = BaseColumnOptions & {
+type DateColumnOptions<TData extends RowData> = BaseColumnOptions<TData, Date> & {
   format?: string;
   relative?: boolean;
 };
 
-type IconColumnOptions = BaseColumnOptions & {};
+type IconColumnOptions<TData extends RowData> = BaseColumnOptions<TData, boolean> & {};
 
 /**
  * Util to create column definitions.
  */
-// TODO(burdon): Configure styles and base options (e.g., slots for tooltip).
+// TODO(burdon): Configure styles and base options (e.g., slots for tooltip). Compact mode.
 // TODO(burdon): Helper to add classname? Extend def/slot, etc? (e.g., monospace).
 export class ColumnBuilder<TData extends RowData> {
-  createNumber(options: NumberColumnOptions = {}): Partial<ColumnDef<TData, number>> {
+  createString(options: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
+    return stripUndefinedValues({
+      ...options,
+      header: (column) => {
+        return <div className={mx(options.editable && 'px-2')}>{options?.header ?? column.header.id}</div>;
+      },
+      cell: options.editable
+        ? (cell) => {
+            // https://tanstack.com/table/v8/docs/examples/react/editable-data
+            const initialValue = cell.getValue();
+            const [value, setValue] = useState(initialValue);
+            const handleCancel = () => {
+              setValue(initialValue);
+            };
+            const handleSave = () => {
+              console.log('update', { value });
+            };
+
+            // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div).
+            return (
+              <Input.Root>
+                <Input.TextInput
+                  variant='subdued'
+                  classNames='w-full px-2 border-none bg-transparent focus:bg-white' // TODO(burdon): Color.
+                  value={value as string}
+                  // TODO(burdon): Stop propagation if already selected to avoid toggling.
+                  // onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => setValue(event.target.value)}
+                  onKeyDown={(event) =>
+                    (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
+                  }
+                  onBlur={handleSave}
+                />
+              </Input.Root>
+            );
+          }
+        : (cell) => {
+            const value = cell.getValue();
+            return <div>{value}</div>;
+          },
+    });
+  }
+
+  createNumber(options: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
     return stripUndefinedValues({
       size: 100,
       ...options,
       header: (column) => {
         return <div className='text-right'>{options?.header ?? column.header.id}</div>;
       },
-      cell: (cell: CellContext<TData, number>) => {
+      cell: (cell) => {
         const value = cell.getValue();
         return <div className='font-mono text-right'>{value?.toLocaleString()}</div>;
       },
     });
   }
 
-  createDate(options: BaseColumnOptions & DateColumnOptions = {}): Partial<ColumnDef<TData, Date>> {
+  // TODO(burdon): Date picker (pluggable renderers?)
+  createDate(options: DateColumnOptions<TData> = {}): Partial<ColumnDef<TData, Date>> {
     return stripUndefinedValues({
       ...options,
       size: options?.size ?? 220, // TODO(burdon): Depends on format.
-      cell: (cell: CellContext<TData, Date>) => {
+      cell: (cell) => {
         const value = cell.getValue();
         const str = options?.format
           ? format(value, options.format)
@@ -80,11 +126,11 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 
-  createKey(options: KeyColumnOptions = {}): Partial<ColumnDef<TData, PublicKey>> {
+  createKey(options: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return stripUndefinedValues({
       ...options,
       size: options?.size ?? 100,
-      cell: (cell: CellContext<TData, PublicKey>) => {
+      cell: (cell) => {
         const value = cell.getValue();
         if (!value) {
           return;
@@ -118,12 +164,33 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 
-  // TODO(burdon): Options.
-  createIcon(options: IconColumnOptions = {}): Partial<ColumnDef<TData, boolean>> {
+  createCheckbox(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     return stripUndefinedValues({
       ...options,
-      size: options?.size ?? 40,
-      cell: (cell: CellContext<TData, boolean>) => {
+      size: options?.size ?? 32,
+      cell: (cell) => {
+        const value = cell.getValue();
+        return (
+          <Input.Root>
+            <Input.Checkbox
+              disabled={!options.editable}
+              checked={!!value}
+              onCheckedChange={(value) => {
+                console.log('update', { value });
+              }}
+            />
+          </Input.Root>
+        );
+      },
+    });
+  }
+
+  // TODO(burdon): Options.
+  createIcon(options: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+    return stripUndefinedValues({
+      ...options,
+      size: options?.size ?? 32,
+      cell: (cell) => {
         const value = cell.getValue();
         if (value) {
           return <Check className='text-green-700' />;
@@ -142,10 +209,10 @@ export class ColumnBuilder<TData extends RowData> {
 //  Reuse button fragments for hoverColors, selected, primary, etc.
 // TODO(burdon): Compact mode (smaller than density fine).
 export const defaultGridSlots: GridSlots = {
-  root: { className: chromeSurface },
+  root: { className: inputSurface },
   header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
   footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
-  // cell: { className: 'p-1' },
+  cell: { className: 'pr-2' },
   row: { className: 'cursor-pointer hover:bg-neutral-50' },
   focus: { className: 'ring-1 ring-teal-500 ring-inset' },
   selected: { className: '!bg-teal-100' },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-gossip",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Gossip extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,7 +32,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public",

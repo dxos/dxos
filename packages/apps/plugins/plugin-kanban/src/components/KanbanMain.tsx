@@ -18,7 +18,7 @@ export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
 
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.current;
+  const space = spacePlugin?.provides?.space.active;
 
   if (!space) {
     return null;

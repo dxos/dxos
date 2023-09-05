@@ -3,61 +3,62 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
+import type { ClientPluginProvides } from '@braneframe/plugin-client';
+import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain, DebugPanelKey, DebugSettings } from './components';
-import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
+import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
 import translations from './translations';
 
-export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const nodeIds = new Set<string>();
+export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
+export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
+  const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
+
+  const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
-    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    nodeIds.some((nodeId) => nodeId === data.id);
 
   return {
     meta: {
       id: DEBUG_PLUGIN,
     },
+    ready: async (plugins) => {
+      settings
+        .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
+        .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
+    },
+    unload: async () => {
+      settings.close();
+    },
     provides: {
+      settings: settings.values,
       translations,
       context: ({ children }) => {
-        const [running, setRunning] = React.useState(false);
-        const timer = useRef<NodeJS.Timer>();
-        const stop = () => {
-          console.log('stop', timer.current);
-          clearInterval(timer.current);
-          timer.current = undefined;
-          setRunning(false);
-        };
+        const [timer, setTimer] = useState<Timer>();
+        useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
+        useEffect(() => {
+          timer?.stop();
+        }, []);
 
         return (
           <DebugContext.Provider
             value={{
-              running,
-              start: (cb, options = {}) => {
-                clearInterval(timer.current);
-                // TODO(burdon): Intervals are paused in Chrome when tab is not visible. Use Web Worker.
-                // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
-                // https://stackoverflow.com/questions/5927284/how-can-i-make-setinterval-also-work-when-a-tab-is-inactive-in-chrome
-                let i = 0;
-                timer.current = setInterval(() => {
-                  // TODO(burdon): Overflows and doesn't stop.
-                  if ((options.count && i >= options.count) || cb(i) === false) {
-                    console.log(i);
-                    stop();
-                  } else {
-                    i++;
-                  }
-                }, Math.max(10, options.interval ?? 100));
-                console.log('start', options, timer.current);
-                setRunning(true);
+              running: !!timer,
+              start: (cb, options) => {
+                timer?.stop();
+                setTimer(new Timer(cb).start(options));
               },
-              stop,
+              stop: () => timer?.stop(),
             }}
           >
             {children}
@@ -66,40 +67,59 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          if (parent.id === 'root') {
+          if (parent.id === 'space:all-spaces') {
             parent.addAction({
               id: 'open-devtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
               icon: (props) => <Bug {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
-                action: 'debug-openDevtools',
+                action: 'open-devtools',
               },
               properties: {
                 testId: 'spacePlugin.openDevtools',
               },
             });
-            return;
-            // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
-          } else if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
+
+            const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
+              debug
+                ? parent.add({
+                    id: 'devtools',
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: (props) => <Bug {...props} />,
+                    data: 'devtools',
+                  })
+                : parent.remove('devtools');
+            });
+
+            return () => unsubscribe?.();
+          } else if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const nodeId = parent.id + '-debug';
-          nodeIds.add(nodeId);
+          nodeIds.push(nodeId);
 
-          parent.add({
-            id: nodeId,
-            label: 'Debug',
-            icon: (props: IconProps) => <Bug {...props} />,
-            data: { id: nodeId, space: parent.data },
+          const unsubscribe = settings.values.$debug?.subscribe((debug) => {
+            debug
+              ? parent.add({
+                  id: nodeId,
+                  label: 'Debug',
+                  icon: (props: IconProps) => <Bug {...props} />,
+                  data: { id: nodeId, space: parent.data },
+                })
+              : parent.remove(nodeId);
           });
+
+          return () => {
+            unsubscribe?.();
+          };
         },
       },
       intent: {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
-            case 'debug-openDevtools': {
+            case 'open-devtools': {
               // TODO(burdon): Access config.
               const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               if (!clientPlugin) {
@@ -117,19 +137,24 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       component: (data, role) => {
+        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+          return DebugSettings;
+        }
+
+        if (!settings.values.debug) {
+          return null;
+        }
+
         switch (role) {
-          case 'main': {
+          case 'main':
             if (isDebug(data)) {
               return DebugMain;
+            } else if (data === 'devtools') {
+              return DevtoolsMain;
             }
             break;
-          }
-          case 'dialog': {
-            if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-              return DebugSettings;
-            }
-            break;
-          }
+          case 'status':
+            return DebugStatus;
         }
 
         return null;

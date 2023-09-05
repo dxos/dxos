@@ -69,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
@@ -100,7 +100,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
@@ -155,7 +155,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           const space = parent.data;
 
-          parent.addAction({
+          const [presentationNode] = parent.add({
+            id: `${MARKDOWN_PLUGIN}:${space.key.toHex()}`,
+            label: ['plugin name', { ns: MARKDOWN_PLUGIN }],
+            icon: (props) => <ArticleMedium {...props} />,
+            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
+          });
+
+          presentationNode.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
             icon: (props) => <Plus {...props} />,
@@ -178,7 +185,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             ],
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter.createNodes(space, presentationNode);
         },
       },
       stack: {

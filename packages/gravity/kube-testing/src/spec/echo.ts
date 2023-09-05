@@ -16,12 +16,13 @@ import { Space as EchoSpace } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPng } from '../analysys';
+import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
@@ -34,6 +35,8 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
+  transport: TransportKind;
+  showPNG: boolean;
 };
 
 export type EchoAgentConfig = {
@@ -56,7 +59,7 @@ export type EchoAgentConfig = {
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
-  builder = new TestBuilder();
+  builder!: TestBuilder;
 
   services!: LocalClientServices;
   client!: Client;
@@ -78,6 +81,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
     const { agentIdx, signalUrl } = config;
+
+    if (!this.builder) {
+      this.builder = new TestBuilder(undefined, undefined, undefined, spec.transport);
+    }
 
     this.builder.config = new Config({
       runtime: {
@@ -269,8 +276,18 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       }
     }
 
+    if (params.spec.showPNG) {
+      await this.generatePNG(params, statsLogs, syncLogs);
+    }
+  }
+
+  private async generatePNG(
+    params: TestParams<EchoTestSpec>,
+    statsLogs: SerializedLogEntry<StatsLog>[],
+    syncLogs: SerializedLogEntry<SyncTimeLog>[],
+  ) {
     if (!params.spec.measureNewAgentSyncTime) {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {
@@ -290,7 +307,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         }),
       );
     } else {
-      showPng(
+      showPNG(
         await renderPNG({
           type: 'scatter',
           data: {

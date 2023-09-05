@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { TransportKind } from '@dxos/network-manager';
 
 import { runPlan, RunPlanParams } from './plan';
 import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
@@ -46,7 +47,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       agents: 2,
       swarmsPerAgent: 1,
       duration: 60_000,
-      transport: 'webrtc-proxy',
+      transport: TransportKind.SIMPLE_PEER,
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,
@@ -55,6 +56,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       repeatInterval: 5_000,
       streamLoadInterval: 1,
       streamLoadChunkSize: 5_000_000,
+      showPNG: true,
     },
     options: {
       staggerAgents: 1000,
@@ -75,6 +77,8 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       insertionSize: 512,
       operationCount: 1000,
       signalArguments: ['globalsubserver'],
+      showPNG: true,
+      transport: TransportKind.SIMPLE_PEER,
     },
     options: {
       staggerAgents: 5,
@@ -89,7 +93,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       agents: 2,
       swarmsPerAgent: 1,
       duration: 3_000,
-      transport: 'webrtc-proxy',
+      transport: TransportKind.SIMPLE_PEER_PROXY,
       targetSwarmTimeout: 1_000,
       fullSwarmTimeout: 10_000,
       signalArguments: ['globalsubserver'],

@@ -16,7 +16,9 @@ import { DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
-  const backend = new DatabaseHost(feed);
+  const backend = new DatabaseHost(feed, async () => {
+    // No-op.
+  });
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({

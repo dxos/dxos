@@ -120,6 +120,10 @@ const MainRoot = ({
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
+const handleOpenAutoFocus = (event: Event) => {
+  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
+};
+
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
   open: boolean;
@@ -127,10 +131,8 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   side: 'inline-start' | 'inline-end';
 };
 
-const handleOpenAutoFocus = (e: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && e.preventDefault();
-};
-
+// TODO(burdon): Factor out Sidebar?
+// TODO(burdon): Style left/right sidebar differently.
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ({ classNames, children, swipeToDismiss, onOpenAutoFocus, open, setOpen, side, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });

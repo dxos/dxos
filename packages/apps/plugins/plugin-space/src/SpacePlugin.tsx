@@ -38,7 +38,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ current: undefined });
+  const state = deepSignal<SpaceState>({ active: undefined });
   const subscriptions = new EventSubscriptions();
   let disposeSetSpaceProvider: () => void;
 
@@ -48,19 +48,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client'); // TODO(burdon): Use const since importing dep anyway?
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      if (!clientPlugin) {
+      if (!clientPlugin || !treeViewPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-
-      if (!treeViewPlugin) {
-        return;
-      }
-
       const treeView = treeViewPlugin.provides.treeView;
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
@@ -87,13 +82,20 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           resolve(undefined);
         });
 
-        state.current = space;
+        state.active = space;
+        const defaultSpace = client.getSpace();
 
         if (
           space instanceof SpaceProxy &&
           (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
         ) {
-          client.services.setSpaceProvider(() => space.key);
+          client.services.setSpaceProvider(() => {
+            if (defaultSpace && space.key.equals(defaultSpace.key)) {
+              return undefined;
+            } else {
+              return space.key;
+            }
+          });
         }
       });
     },
@@ -113,6 +115,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
+          // (burdon): Why double-hyphen?
+          // (thure): This is BEM syntax, which we use for a few other features.
           case 'tree--empty':
             switch (true) {
               case data === SPACE_PLUGIN:
@@ -166,28 +170,32 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
+          const client = clientPlugin.provides.client;
+          const defaultSpace = client.getSpace();
+          if (defaultSpace) {
+            // Ensure default space is always first.
+            spaceToGraphNode(defaultSpace, parent);
+          }
+
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
             properties: { palette: 'blue' },
           });
 
-          const client = clientPlugin.provides.client;
-          const spaces = client.spaces.get();
-          const indices = spaces?.length ? getIndices(spaces.length) : [];
-          spaces.forEach((space, index) => spaceToGraphNode(space, groupNode, indices[index]));
-
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             subscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              const handle = createSubscription(() => {
-                spaceToGraphNode(space, groupNode, indices[index]);
-              });
+              const update = () => {
+                const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
+                isDefaultSpace ? spaceToGraphNode(space, parent) : spaceToGraphNode(space, groupNode, indices[index]);
+              };
+
+              const handle = createSubscription(() => update());
               handle.update([space.properties]);
               subscriptions.add(handle.unsubscribe);
-
-              spaceToGraphNode(space, groupNode, indices[index]);
+              update();
             });
           });
 
@@ -243,7 +251,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
           }
 
-          // todo(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
+          // TODO(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
           const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
           if (!spaceKey) {
             return;

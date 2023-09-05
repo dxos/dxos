@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vault",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "DXOS web browser vault",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -71,7 +71,7 @@
     "@types/react-dom": "^18.0.6",
     "@types/yargs": "~16.0.1",
     "@vitejs/plugin-react": "^3.0.1",
-    "typescript": "^5.0.4",
+    "typescript": "^5.2.2",
     "vite": "^4.3.9"
   },
   "publishConfig": {

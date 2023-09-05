@@ -35,7 +35,9 @@ const createDatabaseWithFeeds = async () => {
   const feed = await feedStore.openFeed(await feedTestBuilder.keyring.createKey(), { writable: true });
 
   const writer = createMappedFeedWriter((data: DataMessage) => ({ data }), feed.createFeedWriter());
-  const host = new DatabaseHost(writer);
+  const host = new DatabaseHost(writer, async () => {
+    /* No-op. */
+  });
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
@@ -58,6 +60,7 @@ describe('database', () => {
       const result = database.backend.mutate(genesisMutation(PublicKey.random().toHex(), DocumentModel.meta.type));
       expect(result.objectsUpdated.length).toEqual(1);
       expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
       expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
@@ -72,6 +75,7 @@ describe('database', () => {
         createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
       );
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);
+      database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
       expect(database.itemManager.getItem(id)!.state.data.test).toEqual(42);

@@ -11,15 +11,14 @@ import { RpcPort } from './rpc-port';
 const FRAME_LENGTH_SIZE = 2;
 
 /**
- * Framer that turns a stream of binary messages into a framed RpcPort.
- *
+ * Converts a stream of binary messages into a framed RpcPort.
  * Buffers are written prefixed by their length encoded as a varint.
  */
 export class Framer {
   // private readonly _tagBuffer = Buffer.alloc(4)
-  private _messageCb?: (msg: Uint8Array) => void;
-  private _subscribeCb?: () => void;
-  private _buffer?: Buffer; // The rest of the bytes from the previous write call.
+  private _messageCb?: (msg: Uint8Array) => void = undefined;
+  private _subscribeCb?: () => void = undefined;
+  private _buffer?: Buffer = undefined; // The rest of the bytes from the previous write call.
   private _sendCallbacks: (() => void)[] = [];
 
   private _bytesSent = 0;

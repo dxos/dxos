@@ -13,12 +13,13 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createSimplePeerTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -82,6 +83,7 @@ export class ClientServicesHost {
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
   private _callbacks?: ClientServicesHostCallbacks;
+  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
   private _serviceContext!: ServiceContext;
 
@@ -121,6 +123,7 @@ export class ClientServicesHost {
       });
     }
 
+    // TODO(wittjosiah): If config is not defined here, system service will always have undefined config.
     this._systemService = new SystemServiceImpl({
       config: this._config,
       statusUpdate: this._statusUpdate,
@@ -191,7 +194,7 @@ export class ClientServicesHost {
 
     const {
       connectionLog = true,
-      transportFactory = createWebRTCTransportFactory({
+      transportFactory = createSimplePeerTransportFactory({
         iceServers: this._config?.get('runtime.services.ice'),
       }),
       signalManager = new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
@@ -277,6 +280,18 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
+
+    const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
+    if (devtoolsProxy) {
+      this._devtoolsProxy = new WebsocketRpcClient({
+        url: devtoolsProxy,
+        requested: {},
+        exposed: clientServiceBundle,
+        handlers: this.services as ClientServices,
+      });
+      void this._devtoolsProxy.open();
+    }
+
     this._opening = false;
     this._open = true;
     this._statusUpdate.emit();
@@ -294,6 +309,7 @@ export class ClientServicesHost {
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
+    await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();

@@ -42,7 +42,7 @@ export class Generator {
     }
   }
 
-  updateObject(type = Document.type.name) {
+  async updateObject(type = Document.type.name) {
     switch (type) {
       case Document.type.name: {
         const { objects } = this._space.db.query(Document.filter());
@@ -62,5 +62,9 @@ export class Generator {
         break;
       }
     }
+
+    this._space.internal.db.commitBatch();
+    // TODO(burdon): Make optional.
+    await this._space.db.flush();
   }
 }

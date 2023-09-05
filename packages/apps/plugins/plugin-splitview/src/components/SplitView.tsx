@@ -6,7 +6,7 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { coarseBlockSize, fixedSurface, getSize } from '@dxos/aurora-theme';
+import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -29,6 +29,9 @@ export const SplitView = () => {
         }
       }}
     >
+      <div role='none' className='sr-only'>
+        <Surface name='documentTitle' limit={1} />
+      </div>
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
@@ -45,6 +48,7 @@ export const SplitView = () => {
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
+            {/* TODO(burdon): name vs. role? */}
             <Surface name='complementary' role='complementary' />
           </Main.ComplementarySidebar>
         )}
@@ -81,6 +85,12 @@ export const SplitView = () => {
           </div>
         </Main.Content>
 
+        {/* Status info. */}
+        {/* TODO(burdon): Currently covered by complementary sidebar. */}
+        <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]', fixedSurface)}>
+          <Surface name='status' role='status' />
+        </div>
+
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
@@ -91,14 +101,14 @@ export const SplitView = () => {
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
-            sideOffset={4}
-            collisionPadding={8}
             onEscapeKeyDown={() => {
               context.popoverOpen = false;
               context.popoverAnchorId = undefined;
             }}
           >
-            <Surface role='popover' data={popoverContent} />
+            <Popover.Viewport>
+              <Surface role='popover' data={popoverContent} />
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>

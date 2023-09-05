@@ -36,22 +36,23 @@ export class AppManager {
   }
 
   async createSpace() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').first().click();
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').nth(1).click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
   }
 
   async joinSpace() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').first().click();
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel0').nth(1).click();
     return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
+  // TODO(wittjosiah): This is not always a space.
   expandSpace() {
     return this.page.getByTestId('spacePlugin.spaceTreeItemOpenTrigger').last().click();
   }
 
   async createDocument() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel1').last().click();
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel2').last().click();
     return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 

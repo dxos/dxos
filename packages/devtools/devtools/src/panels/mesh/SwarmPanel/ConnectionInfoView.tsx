@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
-import { DetailsTable } from '../../../components';
+import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
 const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
@@ -18,6 +18,11 @@ const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
   helper.accessor('tag', {}),
 ];
 
+const schema = {
+  session: PropertySchemaFormat.key(),
+  remotePeer: PropertySchemaFormat.key(),
+};
+
 // TODO(burdon): Stream results.
 export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connection }) => {
   if (!connection) {
@@ -26,11 +31,13 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
 
   return (
     <>
-      <DetailsTable
+      <PropertiesTable
+        schema={schema}
         object={{
           state: connection.state,
-          sessionId: connection.sessionId.truncate(),
-          remotePeerId: connection.remotePeerId.truncate(),
+          closeReason: connection.closeReason,
+          session: connection.sessionId,
+          remotePeer: connection.remotePeerId,
           transport: connection.transport ?? 'N/A',
           extensions: connection.protocolExtensions?.join(',') || 'none',
         }}

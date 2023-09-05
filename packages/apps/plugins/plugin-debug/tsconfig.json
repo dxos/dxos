@@ -21,10 +21,16 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/local-storage"
     },
     {
       "path": "../../../common/log"
@@ -40,6 +46,9 @@
     },
     {
       "path": "../../../core/protocols"
+    },
+    {
+      "path": "../../../devtools/devtools"
     },
     {
       "path": "../../../sdk/client"

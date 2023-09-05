@@ -9,7 +9,13 @@ import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeItemMainHeading, TreeViewContainer, TreeItemDragOverlay } from './components';
+import {
+  Fallback,
+  TreeItemMainHeading,
+  TreeViewContainer,
+  TreeItemDragOverlay,
+  TreeViewDocumentTitle,
+} from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 
@@ -54,9 +60,11 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   complementary: { data: treeView.activeNode.data },
-                  main: { fallback: Fallback, data: treeView.activeNode.data },
+                  main: { data: treeView.activeNode.data, fallback: Fallback },
                   heading: { data: treeView.activeNode /* (thure): Intentionally the node. */ },
                   presence: { data: treeView.activeNode.data },
+                  status: { data: treeView.activeNode.data },
+                  documentTitle: { component: 'dxos.org/plugin/treeview/DocumentTitle' },
                 }}
               />
             );
@@ -67,12 +75,14 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
+                  documentTitle: { component: 'dxos.org/plugin/treeview/DocumentTitle' },
                 }}
               />
             );
           }
         },
         TreeView: TreeViewContainer,
+        DocumentTitle: TreeViewDocumentTitle,
       },
       component: (data, role) => {
         switch (role) {

@@ -27,6 +27,18 @@ const STARTING_SIGNALLING_DELAY = 10;
  */
 const MAX_SIGNALLING_DELAY = 300;
 
+interface ConnectionCallbacks {
+  /**
+   * Connection opened.
+   */
+  onConnected?: () => void;
+
+  /**
+   * Connection closed.
+   */
+  onClosed?: (err?: Error) => void;
+}
+
 /**
  * State machine for each connection.
  */
@@ -92,6 +104,7 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
+    private readonly _callbacks?: ConnectionCallbacks,
   ) {
     log.trace('dxos.mesh.connection.construct', {
       sessionId: this.sessionId,
@@ -131,7 +144,7 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
-    this._protocol.initialize().catch((err) => {
+    this._protocol.open().catch((err) => {
       this.errors.raise(err);
     });
 
@@ -150,17 +163,26 @@ export class Connection {
 
     this._transport.connected.once(() => {
       this._changeState(ConnectionState.CONNECTED);
+      this._callbacks?.onConnected?.();
     });
 
     this._transport.closed.once(() => {
       this._transport = undefined;
-      this.close().catch((err) => this.errors.raise(err));
+      log('abort triggered by transport close');
+      this.abort().catch((err) => this.errors.raise(err));
     });
 
     this._transport.errors.handle((err) => {
+      log('transport error:', { err });
+      // TODO(nf): collect a list of errors?
       if (!this.closeReason) {
         this.closeReason = err?.message;
       }
+      if (err?.message.includes('OperationError')) {
+        log('aborting due to transport OperationError');
+        this.abort().catch((err) => this.errors.raise(err));
+      }
+
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         this.errors.raise(err);
       }
@@ -174,6 +196,41 @@ export class Connection {
     this._incomingSignalBuffer = [];
 
     log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
+  }
+
+  @synchronized
+  // TODO(nf): make the caller responsible for recording the reason and determining flow control.
+  async abort(err?: Error) {
+    log('aborting...', { err });
+    if (!this.closeReason) {
+      this.closeReason = err?.message;
+    }
+    if (this._state === ConnectionState.CLOSED) {
+      log('abort ignored: already closed', this.closeReason);
+      return;
+    }
+    // TODO(nf): different state?
+    this._changeState(ConnectionState.CLOSING);
+
+    await this._ctx.dispose();
+
+    try {
+      // Forcefully close the stream flushing any unsent data packets.
+      log('aborting protocol... ', { proto: this._protocol });
+      await this._protocol.abort();
+    } catch (err: any) {
+      log.catch(err);
+    }
+
+    try {
+      // After the transport is closed streams are disconnected.
+      await this._transport?.destroy();
+    } catch (err: any) {
+      log.catch(err);
+    }
+
+    this._changeState(ConnectionState.CLOSED);
+    this._callbacks?.onClosed?.(err);
   }
 
   @synchronized
@@ -192,7 +249,7 @@ export class Connection {
 
     try {
       // Gracefully close the stream flushing any unsent data packets.
-      await this._protocol.destroy();
+      await this._protocol.close();
     } catch (err: any) {
       log.catch(err);
     }
@@ -206,6 +263,7 @@ export class Connection {
 
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
+    this._callbacks?.onClosed?.(err);
   }
 
   private _sendSignal(signal: Signal) {
@@ -240,7 +298,7 @@ export class Connection {
       }
 
       // If signal fails treat connection as failed
-      log.warn('Signal failed', { err });
+      log.warn('signal failed', { err });
       await this.close();
     }
   }

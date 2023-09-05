@@ -5,7 +5,7 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { arrow, chromeText, surfaceElevation, chromeSurface } from '../fragments';
+import { arrow, chromeText, surfaceElevation, chromeSurface, popperMotion } from '../fragments';
 
 export type TooltipStyleProps = {};
 
@@ -13,6 +13,7 @@ export const tooltipContent: ComponentFunction<TooltipStyleProps> = (_props, ...
   mx(
     'inline-flex items-center rounded-md plb-2 pli-3',
     chromeSurface,
+    popperMotion,
     surfaceElevation({ elevation: 'group' }),
     chromeText,
     ...etc,

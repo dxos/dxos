@@ -1,6 +1,6 @@
 {
   "name": "@dxos/apidoc",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Generate nice API documentation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,7 +35,7 @@
     "remark-prettier": "^2.0.0",
     "remark-stringify": "^10.0.2",
     "typedoc": "^0.23.22",
-    "typescript": "^5.0.4",
+    "typescript": "^5.2.2",
     "unified": "^10.1.2",
     "unist-util-visit": "^4.1.0",
     "vfile": "^5.3.6"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,7 +38,7 @@
     "@types/node": "^18.11.9",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "publishConfig": {
     "access": "public"

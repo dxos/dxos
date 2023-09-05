@@ -18,7 +18,7 @@ export const renderPNG = async (
   return image;
 };
 
-export const showPng = (data: Buffer) => {
+export const showPNG = (data: Buffer) => {
   const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
   writeFileSync(filename, data);
   exec(`open ${filename}`);

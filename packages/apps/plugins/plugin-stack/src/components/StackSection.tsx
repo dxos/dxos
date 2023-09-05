@@ -9,6 +9,8 @@ import get from 'lodash.get';
 import React, { FC, forwardRef } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
+import { useGraph } from '@braneframe/plugin-graph';
+import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { List, ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
 import {
   fineButtonDimensions,
@@ -22,6 +24,7 @@ import {
   hoverableControlItem,
   hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
+  descriptionText,
 } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
@@ -97,7 +100,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
   },
 );
 
-export const StackSection: FC<ListScopedProps<StackSectionProps> & { rearranging?: boolean }> = (props) => {
+export const StackSectionSortable: FC<ListScopedProps<StackSectionProps> & { rearranging?: boolean }> = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props.section.id,
     data: { section: props.section, dragoverlay: props.section },
@@ -114,4 +117,19 @@ export const StackSection: FC<ListScopedProps<StackSectionProps> & { rearranging
       ref={setNodeRef}
     />
   );
+};
+
+const StackSectionTombstone = () => {
+  const { t } = useTranslation(STACK_PLUGIN);
+  return <p className={mx(descriptionText, 'text-center plb-2')}>{t('stack section deleted label')}</p>;
+};
+
+export const StackSection = ({
+  persistenceId,
+  ...props
+}: StackSectionProps & { rearranging?: boolean; persistenceId?: string }) => {
+  const { graph } = useGraph();
+  const node = props.section?.object?.id ? graph.find(props.section.object.id) : undefined;
+  const persistenceParent = node ? getPersistenceParent(node, node.properties?.persistenceClass) : null;
+  return persistenceId === persistenceParent?.id ? <StackSectionSortable {...props} /> : <StackSectionTombstone />;
 };

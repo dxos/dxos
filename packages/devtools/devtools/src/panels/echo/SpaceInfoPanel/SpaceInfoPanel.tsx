@@ -2,72 +2,67 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import { ArrowClockwise } from '@phosphor-icons/react';
+import React, { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { getSize } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
-import { Timeframe } from '@dxos/timeframe';
-import { humanize } from '@dxos/util';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { DetailsTable, PanelContainer } from '../../../components';
+import { Bitbar, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../../hooks';
 import { PipelineTable } from './PipelineTable';
+import { SpaceProperties } from './SpaceProperties';
+
+type FeedInfo = {
+  feedKey: PublicKey;
+  downloaded: Uint8Array;
+  maxLength: number;
+};
+
+const { helper, builder } = createColumnBuilder<FeedInfo>();
+const columns: GridColumnDef<FeedInfo, any>[] = [
+  helper.accessor('feedKey', builder.createKey({ tooltip: true })),
+  helper.accessor('downloaded', {
+    cell: (cell) => (
+      <Bitbar value={cell.getValue()} length={cell.row.original.maxLength} size={6} margin={1} height={8} />
+    ),
+  }),
+];
 
 export const SpaceInfoPanel: FC = () => {
+  const [, forceUpdate] = React.useState({});
   const { space } = useDevtoolsState();
+
+  // TODO(burdon): Constant updates.
+  // TODO(burdon): Out of order with main table.
+  const feedKeys = [
+    ...(space?.internal.data.pipeline?.controlFeeds ?? []),
+    ...(space?.internal.data.pipeline?.dataFeeds ?? []),
+  ];
+  const devtoolsHost = useDevtools();
+  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [feedKeys]);
+  const maxLength = feeds.reduce((max, feed) => (feed?.length > max ? feed.length : max), 0);
+  const updatedFeeds = feeds.map((feed) => ({ ...feed, maxLength }));
+
+  // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
   const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
-  // TODO(burdon): Factor out.
-  // TODO(dmaretskyi): We don't need SpaceInfo anymore?
-  const object = useMemo(() => {
-    if (!metadata) {
-      return undefined;
-    }
-
-    const pipeline = space?.internal.data?.pipeline;
-    const epochTimeframe = pipeline?.currentEpoch?.subject.assertion.timeframe ?? new Timeframe();
-    const currentEpochNumber = pipeline?.currentEpoch?.subject.assertion.number;
-    const appliedEpochNumber = pipeline?.appliedEpoch?.subject.assertion.number;
-
-    const targetControlMessages = pipeline?.targetControlTimeframe?.totalMessages() ?? 0;
-    const currentControlMessages = pipeline?.currentControlTimeframe?.totalMessages() ?? 0;
-
-    const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
-    const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
-    const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
-
-    const controlProgress = Math.min(currentControlMessages / targetControlMessages, 1);
-    const dataProgress = Math.min(
-      Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages) || 1),
-      1,
-    );
-
-    const { open, ready } = space?.internal.data?.metrics ?? {};
-    const startupTime = open && ready && ready.getTime() - open.getTime();
-
-    // TODO(burdon): Factor out numbers, units, formatting, etc. to DetailsTable. Builder.
-    return {
-      id: metadata.key.truncate(),
-      name: space.properties.name ?? humanize(metadata?.key),
-      state: SpaceState[space.state.get()] ?? 'Unknown',
-      currentEpoch:
-        currentEpochNumber === appliedEpochNumber
-          ? currentEpochNumber
-          : `${currentEpochNumber} (${appliedEpochNumber})`,
-      epochStashedMutations: pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages().toLocaleString() ?? 0,
-      currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
-      mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe).toLocaleString(),
-      controlProgress: `${(controlProgress * 100).toFixed(1)}%`,
-      dataProgress: `${(dataProgress * 100).toFixed(1)}%`,
-      startupTime: startupTime && `${startupTime.toLocaleString()}ms`,
-      // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
-    };
-  }, [metadata, pipelineState, space]);
+  const navigate = useNavigate();
+  const setContext = useDevtoolsDispatch();
+  const handleSelect = (selected: FeedInfo[] | undefined) => {
+    setContext((ctx) => ({ ...ctx, feedKey: selected?.[0]?.feedKey }));
+    navigate('/echo/feeds');
+  };
 
   const toggleActive = async () => {
     const state = space!.state.get();
@@ -78,21 +73,32 @@ export const SpaceInfoPanel: FC = () => {
     }
   };
 
+  if (!space || !metadata) {
+    return null;
+  }
+
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
           <SpaceSelector />
+          <Toolbar.Button onClick={() => forceUpdate({})}>
+            <ArrowClockwise className={getSize(5)} />
+          </Toolbar.Button>
+          <div className='grow' />
           <Toolbar.Button onClick={toggleActive}>
             {space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}
           </Toolbar.Button>
         </Toolbar.Root>
       }
     >
-      <div className='flex flex-col gap-4'>
-        {object && <DetailsTable object={object} />}
-        <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-      </div>
+      {space && metadata && (
+        <div className='flex flex-col gap-4'>
+          <SpaceProperties space={space} metadata={metadata} />
+          <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
+          <Grid<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
+        </div>
+      )}
     </PanelContainer>
   );
 };

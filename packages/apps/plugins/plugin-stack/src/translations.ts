@@ -14,6 +14,7 @@ export default [
         'delete stack label': 'Delete',
         'add existing section dialog title': 'Choose an item to add',
         'empty stack message': 'Drag items into the stack.',
+        'stack section deleted label': 'Section deleted',
       },
     },
   },

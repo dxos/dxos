@@ -56,6 +56,7 @@ export class GraphStore implements Graph {
     this._nodeBuilders.delete(builder);
   }
 
+  // TODO(burdon): Separate builder from Graph interface.
   construct(from = this._root as Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): void {
     this._index[from.id] = path;
     const subscriptions = this._unsubscribe.get(from.id) ?? new EventSubscriptions();
@@ -106,6 +107,7 @@ export class GraphStore implements Graph {
       get actions() {
         return Object.values(node.actionsMap);
       },
+      // TODO(burdon): Rename addNode (distinguish from addAction).
       add: (...partials) => {
         return partials.map((partial) => {
           const childPath = [...path, 'childrenMap', partial.id];
@@ -156,9 +158,9 @@ export class GraphStore implements Graph {
       },
       invoke: async () => {
         if (Array.isArray(action.intent)) {
-          return await this._sendIntent?.(...action.intent);
+          return this._sendIntent?.(...action.intent);
         } else if (action.intent) {
-          return await this._sendIntent?.(action.intent);
+          return this._sendIntent?.(action.intent);
         }
       },
       add: (...partials) => {

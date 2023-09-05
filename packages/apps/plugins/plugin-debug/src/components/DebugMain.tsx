@@ -2,7 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, DownloadSimple, HandPalm, Play, Plus } from '@phosphor-icons/react';
+import {
+  ArrowClockwise,
+  DownloadSimple,
+  Flag,
+  FlagPennant,
+  HandPalm,
+  PaperPlaneRight,
+  Play,
+  Plus,
+  PlusMinus,
+  Skull,
+  Timer,
+  Toolbox,
+} from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -12,7 +25,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -23,8 +36,9 @@ import { arrayToBuffer } from '@dxos/util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
-export const DEFAULT_COUNT = 1000;
-export const DEFAULT_PERIOD = 100;
+export const DEFAULT_COUNT = 100;
+export const DEFAULT_PERIOD = 500;
+export const DEFAULT_JITTER = 50;
 
 /**
  * File download anchor.
@@ -75,6 +89,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
 
   const [mutationCount, setMutationCount] = useState(String(DEFAULT_COUNT));
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
+  const [mutationJitter, setMutationJitter] = useState(String(DEFAULT_JITTER));
 
   const generator = useMemo(() => {
     const generator = new Generator(space);
@@ -82,7 +97,16 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     return generator;
   }, [space]);
 
-  // TODO(burdon): Note: this is shared across spaces!
+  // TODO(burdon): Factor out.
+  const safeParseInt = (value: string | undefined, defaultValue = 0): number => {
+    if (!value) {
+      return defaultValue;
+    }
+    const num = parseInt(value);
+    return num === null || isNaN(num) ? defaultValue : num;
+  };
+
+  // TODO(burdon): Note: this is shared across all spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
@@ -90,10 +114,14 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
       void handleRefresh();
     } else {
       start(
-        () => {
-          generator.updateObject();
+        async () => {
+          await generator.updateObject();
         },
-        { count: parseInt(mutationCount), interval: parseInt(mutationInterval) },
+        {
+          count: safeParseInt(mutationCount),
+          interval: safeParseInt(mutationInterval),
+          jitter: safeParseInt(mutationJitter),
+        },
       );
     }
   };
@@ -140,31 +168,44 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
             <Plus className={getSize(5)} />
           </Button>
-          <div>
+          <div className='relative' title='mutation count'>
             <Input.Root>
               <Input.TextInput
-                title={'mutation count'}
                 autoComplete='off'
-                size={6}
-                classNames='w-[100px] text-right'
-                placeholder='#'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
+                placeholder='Count'
                 value={mutationCount}
                 onChange={({ target: { value } }) => setMutationCount(value)}
               />
             </Input.Root>
+            <Flag className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
           </div>
-          <div>
+          <div className='relative' title='mutation period'>
             <Input.Root>
               <Input.TextInput
-                title={'mutation period'}
                 autoComplete='off'
-                size={6}
-                classNames='w-[100px] text-right'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
                 placeholder='Interval'
                 value={mutationInterval}
                 onChange={({ target: { value } }) => setMutationInterval(value)}
               />
             </Input.Root>
+            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          </div>
+          <div className='relative' title='mutation jitter'>
+            <Input.Root>
+              <Input.TextInput
+                autoComplete='off'
+                size={5}
+                classNames='w-[100px] text-right pie-[22px]'
+                placeholder='Jitter'
+                value={mutationJitter}
+                onChange={({ target: { value } }) => setMutationJitter(value)}
+              />
+            </Input.Root>
+            <PlusMinus className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
           </div>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
@@ -177,10 +218,18 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleCreateInvitation}>Invite</Button>
-          <Button onClick={handleOpenDevtools}>Devtools</Button>
-          <Button onClick={handleCreateEpoch}>Create epoch</Button>
-          <Button onClick={handleResetClient}>Reset client</Button>
+          <Button onClick={handleCreateInvitation} title='Space invitation'>
+            <PaperPlaneRight className={getSize(5)} />
+          </Button>
+          <Button onClick={handleOpenDevtools} title='DXOS Dectools'>
+            <Toolbox className={getSize(5)} />
+          </Button>
+          <Button onClick={handleCreateEpoch}>
+            <FlagPennant className={getSize(5)} />
+          </Button>
+          <Button onClick={handleResetClient} title='Reset client'>
+            <Skull className={getSize(5)} />
+          </Button>
         </DensityProvider>
       </div>
 
@@ -205,6 +254,8 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     </Main.Content>
   );
 };
+
+export default DebugMain;
 
 // TODO(burdon): Refactor from devtools.
 const replacer = (key: any, value: any) => {
