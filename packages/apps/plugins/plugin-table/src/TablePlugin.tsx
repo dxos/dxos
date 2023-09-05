@@ -9,7 +9,6 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
-import { PublicKey } from '@dxos/keys';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';
@@ -83,14 +82,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              // TODO(burdon): Dialog to set schema name.
               const schema = new SchemaType({
-                typename: `schema-${PublicKey.random().toHex().slice(0, 8)}`,
                 props: [
                   {
                     id: 'title',
                     type: SchemaType.PropType.STRING,
-                    size: 400,
                   },
                 ],
               });

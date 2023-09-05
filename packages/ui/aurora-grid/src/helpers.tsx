@@ -27,7 +27,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 // TODO(burdon): Add accessor options and spread.
 type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
   meta?: ColumnMeta<TData, TValue>;
-  header?: string; // TODO(burdon): Collides with ColumdDef (rename label).
+  label?: string;
   className?: string;
   onUpdate?: ValueUpdater<TData, TValue>;
 };
@@ -72,13 +72,11 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * String formats.
    */
-  string({ header, className, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<
-    ColumnDef<TData, string>
-  > {
+  string({ label, className, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
     return defaults(props, {
       minSize: 100,
       header: (column) => {
-        return <div className={mx('truncate', onUpdate && 'px-2')}>{header ?? column.header.id}</div>;
+        return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
       cell: onUpdate
         ? (cell) => {
@@ -97,7 +95,7 @@ export class ColumnBuilder<TData extends RowData> {
               <Input.Root>
                 <Input.TextInput
                   variant='subdued'
-                  classNames={['w-full px-2 border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Color.
+                  classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Color.
                   value={(value as string) ?? ''}
                   // TODO(burdon): Stop propagation if already selected to avoid toggling.
                   // onClick={(event) => event.stopPropagation()}
@@ -120,14 +118,14 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Number formats.
    */
-  number({ minSize, header, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
+  number({ label, minSize, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
     return defaults(props, {
       size: 100,
       minSize: 100,
-      header: (cell) => <div className='w-full px-2 truncate text-right'>{cell.header.id}</div>,
+      header: (cell) => <div className='w-full truncate text-right'>{label ?? cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
-        return <div className={mx('font-mono text-right', className)}>{value?.toLocaleString()}</div>;
+        return <div className={mx('grow text-right font-mono', className)}>{value?.toLocaleString()}</div>;
       },
     });
   }
@@ -136,12 +134,13 @@ export class ColumnBuilder<TData extends RowData> {
    * Date formats.
    */
   // TODO(burdon): Date picker (pluggable renderers?)
-  date({ format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
+  date({ label, format: formatSpec, relative, className, ...props }: DateColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, Date>
   > {
     return defaults(props, {
       size: 220, // TODO(burdon): Depends on format.
       minSize: 100,
+      header: (cell) => <div>{label ?? cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
         const str = formatSpec
@@ -157,10 +156,11 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * PublicKey with tooltip.
    */
-  key({ tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+  key({ label, tooltip, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
     return defaults(props, {
-      size: 100,
-      minSize: 100,
+      size: 86,
+      minSize: 86,
+      header: (cell) => <div>{label ?? cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
         if (!value) {
@@ -200,24 +200,30 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Checkbox.
    */
-  checkbox({ className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+  checkbox({ label, className, onUpdate, ...props }: BooleanColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, boolean>
+  > {
     return defaults(props, {
-      size: 32,
-      minSize: 32,
+      size: 40,
+      minSize: 40,
+      header: (column) => <div className={'flex grow justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
+        // TODO(burdon): Center.
         return (
-          <Input.Root>
-            <Input.Checkbox
-              onClick={(event) => event.stopPropagation()}
-              classNames={className}
-              disabled={!onUpdate}
-              checked={!!value}
-              onCheckedChange={(value) => {
-                onUpdate?.(cell.row.original, cell.column.id, !!value);
-              }}
-            />
-          </Input.Root>
+          <div className='flex grow justify-center'>
+            <Input.Root>
+              <Input.Checkbox
+                onClick={(event) => event.stopPropagation()}
+                classNames={className}
+                disabled={!onUpdate}
+                checked={!!value}
+                onCheckedChange={(value) => {
+                  onUpdate?.(cell.row.original, cell.column.id, !!value);
+                }}
+              />
+            </Input.Root>
+          </div>
         );
       },
     });
@@ -226,18 +232,26 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Icon based on boolean value.
    */
-  // TODO(burdon): Options to switch icon.
-  icon({ size, on, off, ...props }: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
+  icon({ label, size, on, off, ...props }: IconColumnOptions<TData> = {}): Partial<ColumnDef<TData, boolean>> {
     const IconOn = on?.Icon ?? Check;
     const IconOff = off?.Icon ?? X;
     return defaults(props, {
       size: size ?? 32,
+      header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
         if (value) {
-          return <IconOn className={mx(getSize(6), on?.className ?? 'text-green-700')} />;
+          return (
+            <div className='flex grow justify-center'>
+              <IconOn className={mx(getSize(6), on?.className ?? 'text-green-700')} />
+            </div>
+          );
         } else if (value === false) {
-          return <IconOff className={mx(getSize(6), off?.className ?? 'text-red-700')} />;
+          return (
+            <div className='flex grow justify-center'>
+              <IconOff className={mx(getSize(6), off?.className ?? 'text-red-700')} />
+            </div>
+          );
         } else {
           return null;
         }
@@ -245,3 +259,15 @@ export class ColumnBuilder<TData extends RowData> {
     });
   }
 }
+
+// TODO(burdon): Menu.
+/*
+  {header.column.columnDef.meta?.menu && (
+    <>
+      <div className='grow' />
+      <Button variant='ghost'>
+        <DotsThreeVertical className={getSize(5)} />
+      </Button>
+    </>
+  )}
+*/

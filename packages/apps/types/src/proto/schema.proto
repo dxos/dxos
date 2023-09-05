@@ -21,6 +21,7 @@ message Meta {
 /**
  * Expando schema definition.
  */
+// TODO(burdon): Used by Table, Kanban, etc.
 message Schema {
   option (object) = true;
 
@@ -36,7 +37,6 @@ message Schema {
     string id = 1;
     PropType type = 2;
     string label = 3;
-    int32 size = 4;
   }
 
   // FQ type name (e.g., dxos.org/type/Document

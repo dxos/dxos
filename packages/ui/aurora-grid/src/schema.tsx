@@ -20,9 +20,11 @@ export type GridSchema = {
 
 export type GridSchemaColumn = {
   id: string;
-  type: 'number' | 'boolean' | 'string'; // TODO(burdon): Key.
+  type: 'number' | 'boolean' | 'string'; // TODO(burdon): 'key'.
   size?: number;
-  header?: string;
+  label?: string;
+
+  // TODO(burdon): Move to meta.
   editable?: boolean;
   resize?: boolean;
 };
@@ -55,41 +57,49 @@ export const createColumns = <TData extends RowData>(
     }
   }) as ColumnDef<TData>[];
 
-  // TODO(burdon): Dropdown/dialog.
   if (onColumnCreate || onRowDelete) {
-    const handleAddColumn = () => {
-      onColumnCreate?.({
-        id: 'prop_' + PublicKey.random().toHex().slice(0, 8),
-        type: 'string',
-        header: 'new column',
-        editable: true,
-        resize: true,
-      });
-    };
-
-    columns.push(
-      helper.display({
-        id: '__new',
-        size: 40,
-        header: onColumnCreate
-          ? () => (
-              <Button variant='ghost' onClick={handleAddColumn}>
-                <Plus />
-              </Button>
-            )
-          : undefined,
-        // TODO(burdon): Check option.
-        // TODO(burdon): Show on hover.
-        cell: onRowDelete
-          ? (cell) => (
-              <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)}>
-                <X />
-              </Button>
-            )
-          : undefined,
-      }) as ColumnDef<TData>,
-    );
+    columns.push(createActionColumn({ onRowDelete, onColumnCreate }));
   }
 
   return columns;
+};
+
+// TODO(burdon): Move to helper.
+export const createActionColumn = <TData extends RowData>({
+  onRowDelete,
+  onColumnCreate,
+}: CreateColumnsOptions<TData, any> = {}): ColumnDef<TData> => {
+  const { helper } = createColumnBuilder<TData>();
+
+  // TODO(burdon): Dropdown/dialog.
+  const handleAddColumn = () => {
+    onColumnCreate?.({
+      id: 'prop_' + PublicKey.random().toHex().slice(0, 8),
+      type: 'string',
+      label: 'new column',
+      editable: true,
+      resize: true,
+    });
+  };
+
+  return helper.display({
+    id: '__new',
+    size: 40,
+    header: onColumnCreate
+      ? () => (
+          <Button variant='ghost' onClick={handleAddColumn}>
+            <Plus />
+          </Button>
+        )
+      : undefined,
+    // TODO(burdon): Check option.
+    // TODO(burdon): Show on hover.
+    cell: onRowDelete
+      ? (cell) => (
+          <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)}>
+            <X />
+          </Button>
+        )
+      : undefined,
+  }) as ColumnDef<TData>;
 };

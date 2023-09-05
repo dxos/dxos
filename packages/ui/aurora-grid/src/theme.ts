@@ -2,22 +2,64 @@
 // Copyright 2023 DXOS.org
 //
 
-import { chromeSurface, inputSurface } from '@dxos/aurora-theme';
+import { chromeSurface } from '@dxos/aurora-theme';
 
-import { GridSlots } from './Grid';
+// TODO(burdon): Remove nested classNames? Add to theme?
+export type GridSlots = {
+  root?: {
+    className?: string | string[];
+  };
+  table?: {
+    className?: string | string[];
+  };
+  header?: {
+    className?: string | string[];
+  };
+  footer?: {
+    className?: string | string[];
+  };
+  row?: {
+    className?: string | string[];
+  };
+  cell?: {
+    className?: string | string[];
+  };
+  focus?: {
+    className?: string | string[];
+  };
+  selected?: {
+    className?: string | string[];
+  };
+  margin?: {
+    className?: string | string[];
+  };
+};
+
+// TODO(burdon): Change to groups.
+/*
+head: {
+  default:
+  cell:
+}
+row: {
+  default: '',
+  selected: ''
+}
+*/
+
+// TODO(burdon): Scrollbar area.
+// TODO(burdon): Overscroll horizontal (full width).
 
 // TODO(burdon): Integrate with aurora theme (direct dependency -- see aurora-composer, tailwind.ts).
 //  See Link.tsx const { tx } = useThemeContext();
 //  Reuse button fragments for hoverColors, selected, primary, etc.
 export const defaultGridSlots: GridSlots = {
-  root: { className: inputSurface },
-  table: { className: '' },
-  header: { className: [chromeSurface, 'border-b text-left font-thin opacity-90 select-none'] },
-  footer: { className: [chromeSurface, 'border-t text-left font-thin opacity-90'] },
-  cell: { className: 'py-0 px-1 truncate' },
+  // TODO(burdon): head/body/table rows.
+  header: { className: [chromeSurface, 'px-1 font-light select-none'] },
+  footer: { className: [chromeSurface, 'px-1 font-light'] },
+  cell: { className: 'px-1' },
   // TODO(burdon): No hover if editing.
-  row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 h-8' }, // TODO(burdon): Compact mode.
+  row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 __h-10' }, // TODO(burdon): Compact mode.
   focus: { className: 'ring ring-primary-600 ring-inset' },
   selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
-  margin: { className: 'w-2' },
 };
