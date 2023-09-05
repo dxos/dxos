@@ -6,6 +6,7 @@ import { EchoProcessor, ItemDemuxer, ItemManager } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 
@@ -19,7 +20,10 @@ export class DatabaseHost {
   private _itemManager!: ItemManager;
   public _itemDemuxer!: ItemDemuxer;
 
-  constructor(private readonly _outboundStream: FeedWriter<DataMessage> | undefined) {}
+  constructor(
+    private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
+    private readonly _flush: () => Promise<void>,
+  ) {}
 
   get isReadOnly(): boolean {
     return !!this._outboundStream;
@@ -43,11 +47,11 @@ export class DatabaseHost {
     return this._outboundStream;
   }
 
-  createSnapshot() {
+  createSnapshot(): EchoSnapshot {
     return this._itemDemuxer.createSnapshot();
   }
 
   createDataServiceHost() {
-    return new DataServiceHost(this._itemManager, this._itemDemuxer, this._outboundStream ?? undefined);
+    return new DataServiceHost(this._itemManager, this._itemDemuxer, this._flush, this._outboundStream ?? undefined);
   }
 }

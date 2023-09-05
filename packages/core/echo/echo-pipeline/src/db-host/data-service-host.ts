@@ -29,6 +29,7 @@ export class DataServiceHost {
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
+    private readonly _flush: () => Promise<void>,
     private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
@@ -111,6 +112,10 @@ export class DataServiceHost {
     });
 
     return receipt;
+  }
+
+  async flush(): Promise<void> {
+    await this._flush();
   }
 }
 

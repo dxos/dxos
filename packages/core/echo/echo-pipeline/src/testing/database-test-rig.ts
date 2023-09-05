@@ -78,29 +78,34 @@ export class DatabaseTestPeer {
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseHost({
-      write: async (message, { afterWrite }: WriteOptions) => {
-        const seq =
-          this.feedMessages.push({
-            timeframe: this.timeframe,
-            payload: {
-              data: message,
-            },
-          }) - 1;
+    this.host = new DatabaseHost(
+      {
+        write: async (message, { afterWrite }: WriteOptions) => {
+          const seq =
+            this.feedMessages.push({
+              timeframe: this.timeframe,
+              payload: {
+                data: message,
+              },
+            }) - 1;
 
-        const request: WriteRequest = {
-          receipt: {
-            seq,
-            feedKey: this.key,
-          },
-          options: { afterWrite },
-          trigger: new Trigger(),
-        };
-        this._writes.add(request);
-        await request.trigger.wait();
-        return request.receipt;
+          const request: WriteRequest = {
+            receipt: {
+              seq,
+              feedKey: this.key,
+            },
+            options: { afterWrite },
+            trigger: new Trigger(),
+          };
+          this._writes.add(request);
+          await request.trigger.wait();
+          return request.receipt;
+        },
       },
-    });
+      async () => {
+        // No-op.
+      },
+    );
 
     await this.host.open(this.hostItems, this.modelFactory);
     if (this.snapshot) {

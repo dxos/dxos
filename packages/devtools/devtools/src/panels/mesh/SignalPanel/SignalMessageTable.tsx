@@ -55,7 +55,7 @@ const views: View<SignalResponse>[] = [
         { id: 'peer', ...builder.key({ tooltip: true }) },
       ),
       // TODO(burdon): Time delta since last message?
-      helper.accessor((response) => response.swarmEvent!.peerAvailable?.since, {
+      helper.accessor((response) => response.swarmEvent!.peerAvailable?.since ?? new Date(), {
         id: 'since',
         ...builder.date(),
       }),

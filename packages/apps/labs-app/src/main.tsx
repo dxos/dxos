@@ -90,6 +90,7 @@ const main = async () => {
           TemplatePlugin(),
         ]}
       />
+      ,
     </StrictMode>,
   );
 };
