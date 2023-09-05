@@ -193,4 +193,4 @@ export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) 
 
 export const forceUpdate = (obj: EchoObject) => {
   obj[base]._itemUpdate();
-}
+};
