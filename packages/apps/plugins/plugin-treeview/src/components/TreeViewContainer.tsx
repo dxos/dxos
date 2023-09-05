@@ -102,7 +102,9 @@ export const TreeView = (props: TreeViewProps) => {
                   </Tooltip.Portal>
                 </Tooltip.Root>
               </Tooltip.Provider>
-              <HaloButton identity={identity} onClick={onHaloButtonClick} />
+              <div className='p-1 flex flex-col items-center'>
+                <HaloButton identity={identity} onClick={onHaloButtonClick} />
+              </div>
             </div>
           )}
           <ScrollArea.Root classNames='grow min-bs-0'>

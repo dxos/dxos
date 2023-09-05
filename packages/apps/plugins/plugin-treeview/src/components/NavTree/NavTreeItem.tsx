@@ -205,7 +205,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                     <Button
                       variant='ghost'
                       classNames={[
-                        'shrink-0 pli-3.5',
+                        'shrink-0 pli-4',
                         hoverableControlItem,
                         hoverableOpenControlItem,
                         isOverlay && 'invisible',

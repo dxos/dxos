@@ -18,7 +18,7 @@ export const SplitView = () => {
   const context = useSplitView();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
-  
+
   const config = useConfig();
   const version = config.values.runtime?.app?.build;
   return (
@@ -58,18 +58,18 @@ export const SplitView = () => {
         )}
 
         {/* Top (header) bar. */}
-        <Main.Content
-          asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, fixedSurface]}
-        >
+        <Main.Content asChild classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize]}>
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>
-              <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
-                <span className='sr-only'>{t('open navigation sidebar label')}</span>
-                <MenuIcon weight='light' className={getSize(4)} />
-              </Button>
-              <Surface name='heading' role='heading' limit={2} />
+              <div className='backdrop-blur flex mbs-2.5'>
+                <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
+                  <span className='sr-only'>{t('open navigation sidebar label')}</span>
+                  <MenuIcon weight='light' className={getSize(4)} />
+                </Button>
+                <Surface name='heading' role='heading' limit={2} />
+              </div>
               <div role='none' className='grow' />
+              <div className='backdrop-blur flex pis-1 mbs-2.5'>
               {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface name='presence' role='presence' limit={1} />
               {complementarySidebarOpen !== null && (
@@ -85,6 +85,7 @@ export const SplitView = () => {
                   />
                 </Button>
               )}
+              </div>
             </DensityProvider>
           </div>
         </Main.Content>
@@ -133,9 +134,8 @@ export const SplitView = () => {
                       {t('done label', { ns: 'os' })}
                     </Button>
                   </Dialog.Close>
-                  
+
                   <VersionInfo className='mbs-2' {...version} />
-                  
                 </Dialog.Content>
               ) : (
                 <Dialog.Content>
