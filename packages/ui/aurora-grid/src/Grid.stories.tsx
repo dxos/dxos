@@ -224,9 +224,9 @@ export const Schema = {
       onUpdate: (item, prop, value) => {
         setItems((items) => updateItems(items, item.publicKey, prop, value));
       },
-      onColumnUpdate: (column) => {
+      onColumnUpdate: (id: string, column) => {
         setSchema(({ columns, ...props }) => ({
-          columns: columns.map((c) => (c.id === column.id ? column : c)),
+          columns: columns.map((c) => (c.id === id ? column : c)),
           ...props,
         }));
       },
@@ -235,7 +235,7 @@ export const Schema = {
       },
     });
 
-    const actionColumn = createActionColumn<Item>({
+    const actionColumn = createActionColumn<Item>(schema, {
       onRowDelete: (row) => {
         setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));
       },

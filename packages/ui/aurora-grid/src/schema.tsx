@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Popover, Select, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
-import { stripUndefinedValues } from '@dxos/util';
+import { safeParseInt, stripUndefinedValues } from '@dxos/util';
 
 import { BaseColumnOptions, createColumnBuilder } from './helpers';
 
@@ -25,6 +25,7 @@ export type GridSchemaColumn = {
   type: 'number' | 'boolean' | 'string'; // TODO(burdon): 'key'.
   size?: number;
   label?: string;
+  digits?: number;
 
   // TODO(burdon): Move to meta.
   fixed?: boolean;
@@ -37,7 +38,7 @@ type CreateColumnsOptions<TData extends RowData, TValue> = {
   onUpdate?: (row: TData, id: string, value: TValue) => void;
   onRowDelete?: (row: TData) => void;
   onColumnCreate?: (column: GridSchemaColumn) => void;
-  onColumnUpdate?: (column: GridSchemaColumn) => void;
+  onColumnUpdate?: (id: string, column: GridSchemaColumn) => void;
   onColumnDelete?: (column: ColumnDef<TData, TValue>) => void;
 };
 
@@ -56,7 +57,7 @@ export const createColumns = <TData extends RowData>(
       label,
       header: fixed
         ? undefined
-        : () => <ColumnMenu column={column} onSave={onColumnUpdate} onDelete={onColumnDelete} />,
+        : () => <ColumnMenu column={column} onUpdate={onColumnUpdate} onDelete={onColumnDelete} />,
       onUpdate,
       ...props,
     });
@@ -73,19 +74,29 @@ export const createColumns = <TData extends RowData>(
   }) as ColumnDef<TData>[];
 };
 
-// TODO(burdon): Move to helper.
-export const createActionColumn = <TData extends RowData>({
-  onRowDelete,
-  onColumnCreate,
-}: CreateColumnsOptions<TData, any> = {}): ColumnDef<TData> => {
+export const createUniqueProp = (schema: GridSchema) => {
+  for (let i = 1; i < 100; i++) {
+    const prop = 'prop_' + i;
+    if (!schema.columns.find((column) => column.id === prop)) {
+      return prop;
+    }
+  }
+
+  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
+};
+
+export const createActionColumn = <TData extends RowData>(
+  schema: GridSchema,
+  { onRowDelete, onColumnCreate }: CreateColumnsOptions<TData, any> = {},
+): ColumnDef<TData> => {
   const { helper } = createColumnBuilder<TData>();
 
   // TODO(burdon): Dropdown/dialog.
   const handleAddColumn = () => {
     onColumnCreate?.({
-      id: 'prop_' + PublicKey.random().toHex().slice(0, 8),
+      id: createUniqueProp(schema),
       type: 'string',
-      label: 'new column',
+      label: 'New column',
       editable: true,
       resize: true,
     });
@@ -97,7 +108,7 @@ export const createActionColumn = <TData extends RowData>({
     header: onColumnCreate
       ? () => (
           <Button variant='ghost' onClick={handleAddColumn}>
-            <Plus />
+            <Plus className={getSize(4)} />
           </Button>
         )
       : undefined,
@@ -106,7 +117,7 @@ export const createActionColumn = <TData extends RowData>({
     cell: onRowDelete
       ? (cell) => (
           <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)}>
-            <X />
+            <X className={getSize(4)} />
           </Button>
         )
       : undefined,
@@ -115,25 +126,33 @@ export const createActionColumn = <TData extends RowData>({
 
 export type ColumnMenuProps = {
   column: GridSchemaColumn;
-  onSave?: (column: GridSchemaColumn) => void;
+  onUpdate?: (id: string, column: GridSchemaColumn) => void;
   onDelete?: (column: GridSchemaColumn) => void;
 };
 
-export const ColumnMenu = ({ column, onSave, onDelete }: ColumnMenuProps) => {
+export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
   const [prop, setProp] = useState(column.id);
+  const [type, setType] = useState(String(column.type));
   const [label, setLabel] = useState(column.label ?? column.id);
+  const [digits, setDigits] = useState(String(column.digits ?? '0'));
   useEffect(() => {
     setLabel(column.label ?? column.id);
   }, []);
   const handleSave = () => {
-    onSave?.({ ...column, label });
+    onUpdate?.(column.id, {
+      ...column,
+      id: prop,
+      type: type as GridSchemaColumn['type'],
+      label,
+      digits: safeParseInt(digits),
+    });
   };
 
   return (
-    <div className='flex grow items-center'>
-      <div>{column.label ?? column.id}</div>
+    <div className='flex grow items-center overflow-hidden'>
+      <div className='truncate'>{column.label ?? column.id}</div>
       <div className='grow' />
-      <div>
+      <div className='flex shrink-0'>
         <Popover.Root>
           <Popover.Trigger asChild>
             <Button variant='ghost' classNames='p-0'>
@@ -141,44 +160,64 @@ export const ColumnMenu = ({ column, onSave, onDelete }: ColumnMenuProps) => {
             </Button>
           </Popover.Trigger>
           <Popover.Content>
-            <Popover.Viewport classNames='p-2'>
-              <div className='flex flex-col mb-2'>
-                <Select.Root>
-                  <Toolbar.Button asChild>
-                    <Select.TriggerButton placeholder='Type' />
-                  </Toolbar.Button>
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {/* TODO(burdon): Map values. */}
-                        <Select.Option value={'string'}>String</Select.Option>
-                        <Select.Option value={'boolean'}>Boolean</Select.Option>
-                        <Select.Option value={'number'}>Number</Select.Option>
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
-                </Select.Root>
-
-                <div className='flex flex-col gap-2'>
+            <Popover.Viewport classNames='flex flex-col p-4 gap-4'>
+              <div className='flex flex-col gap-2'>
+                <div className='flex items-center'>
                   <Input.Root>
-                    <Input.Label classNames='px-2'>Property</Input.Label>
+                    <Input.Label classNames='w-24'>Property</Input.Label>
                     <Input.TextInput autoFocus value={prop} onChange={(event) => setProp(event.target.value)} />
                   </Input.Root>
+                </div>
+                <div className='flex items-center'>
                   <Input.Root>
-                    <Input.Label classNames='px-2'>Label</Input.Label>
+                    <Input.Label classNames='w-24'>Label</Input.Label>
                     <Input.TextInput value={label} onChange={(event) => setLabel(event.target.value)} />
                   </Input.Root>
                 </div>
+                <div className='flex items-center'>
+                  <Input.Root>
+                    <Input.Label classNames='w-24'>Type</Input.Label>
+                    <Input.TextInput value={type} onChange={(event) => setType(event.target.value)} />
+                  </Input.Root>
+                </div>
+                {type === 'number' && (
+                  <div className='flex items-center'>
+                    {/* TODO(burdon): Constrain input to numbers. */}
+                    <Input.Root>
+                      <Input.Label classNames='w-24'>Digits</Input.Label>
+                      <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
+                    </Input.Root>
+                  </div>
+                )}
+
+                {/* TODO(burdon): Error: `RovingFocusGroupItem` must be used within `RovingFocusGroup`. */}
+                {false && (
+                  <Select.Root>
+                    <Toolbar.Button asChild>
+                      <Select.TriggerButton placeholder='Type' />
+                    </Toolbar.Button>
+                    <Select.Portal>
+                      <Select.Content>
+                        <Select.Viewport>
+                          {/* TODO(burdon): Map values. */}
+                          <Select.Option value={'string'}>String</Select.Option>
+                          <Select.Option value={'boolean'}>Boolean</Select.Option>
+                          <Select.Option value={'number'}>Number</Select.Option>
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                )}
               </div>
 
               {/* TODO(burdon): Style as DropdownMenuItem. */}
-              <div className='flex flex-col'>
+              <div className='flex flex-col gap-2'>
                 <Button classNames='flex justify-start items-center gap-2' onClick={handleSave}>
-                  <Check />
+                  <Check className={getSize(5)} />
                   <span>Save</span>
                 </Button>
                 <Button classNames='flex justify-start items-center gap-2' onClick={() => onDelete?.(column)}>
-                  <Trash />
+                  <Trash className={getSize(5)} />
                   <span>Delete</span>
                 </Button>
               </div>

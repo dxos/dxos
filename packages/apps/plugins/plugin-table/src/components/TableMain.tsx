@@ -77,7 +77,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       },
     });
 
-    const actionColumn = createActionColumn<TypedObject>({
+    const actionColumn = createActionColumn<TypedObject>(schema, {
       onColumnCreate: ({ id, type, label }) => {
         table.schema?.props.push({ id, type: getPropType(type), label });
       },

@@ -34,7 +34,9 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
 
-export type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {};
+export type NumberColumnOptions<TData extends RowData> = BaseColumnOptions<TData, number> & {
+  digits?: number;
+};
 
 export type KeyColumnOptions<TData extends RowData> = BaseColumnOptions<TData, PublicKey> & {
   tooltip?: boolean;
@@ -118,14 +120,58 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Number formats.
    */
-  number({ label, minSize, className, ...props }: NumberColumnOptions<TData> = {}): Partial<ColumnDef<TData, number>> {
+  number({ label, minSize, className, digits, onUpdate, ...props }: NumberColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, number>
+  > {
     return defaults(props, {
       size: 100,
       minSize: 100,
       header: (cell) => <div className='w-full truncate text-right'>{label ?? cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
-        return <div className={mx('grow text-right font-mono', className)}>{value?.toLocaleString()}</div>;
+        const [text, setText] = useState<string>();
+        const handleEdit = () => {
+          if (onUpdate) {
+            setText(String(value));
+          }
+        };
+        const handleSave = () => {
+          const value = Number(text);
+          if (!isNaN(value)) {
+            onUpdate?.(cell.row.original, cell.column.id, value);
+          }
+          setText(undefined);
+        };
+        const handleCancel = () => {
+          setText(undefined);
+        };
+
+        if (text !== undefined) {
+          return (
+            <div className={mx('grow text-right font-mono', className)}>
+              <Input.Root>
+                <Input.TextInput
+                  autoFocus
+                  value={text}
+                  onBlur={handleSave}
+                  onChange={(event) => setText(event.target.value)}
+                  onKeyDown={(event) =>
+                    (event.key === 'Escape' && handleCancel()) || (event.key === 'Enter' && handleSave())
+                  }
+                />
+              </Input.Root>
+            </div>
+          );
+        }
+
+        return (
+          <div className={mx('grow text-right font-mono', className)} onClick={handleEdit}>
+            {value?.toLocaleString(undefined, {
+              minimumFractionDigits: digits ?? 0,
+              maximumFractionDigits: digits ?? 2,
+            })}
+          </div>
+        );
       },
     });
   }
