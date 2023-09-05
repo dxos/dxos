@@ -3,20 +3,24 @@
 //
 
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
 import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
+import { useConfig } from '@dxos/react-client';
 
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
+import { VersionInfo } from './VersionInfo';
 
 export const SplitView = () => {
   const context = useSplitView();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
-
+  
+  const config = useConfig();
+  const version = config.values.runtime?.app?.build;
   return (
     <Popover.Root
       open={!!(popoverAnchorId && popoverOpen)}
@@ -129,6 +133,9 @@ export const SplitView = () => {
                       {t('done label', { ns: 'os' })}
                     </Button>
                   </Dialog.Close>
+                  
+                  <VersionInfo className='mbs-2' {...version} />
+                  
                 </Dialog.Content>
               ) : (
                 <Dialog.Content>

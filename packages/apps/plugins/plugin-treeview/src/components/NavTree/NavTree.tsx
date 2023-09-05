@@ -15,13 +15,13 @@ import { Surface } from '@dxos/react-surface';
 import { getPersistenceParent, sortByIndex } from '../../util';
 import { DroppableTreeViewItem, SortableTreeViewItem } from './NavTreeItem';
 
-export type TreeViewProps = {
+export type NavTreeProps = {
   level: number;
   items?: Graph.Node[];
   node?: string | Graph.Node | null;
 } & TreeRootProps;
 
-export const NavTree = (props: TreeViewProps) => {
+export const NavTree = (props: NavTreeProps) => {
   const { items, level, node, ...branchProps } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);

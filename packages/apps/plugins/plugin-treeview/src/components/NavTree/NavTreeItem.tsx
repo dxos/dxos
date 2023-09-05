@@ -138,7 +138,6 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             return groups;
           }, [])
         : [{ id: '', actions }];
-
     return (
       <TreeItem.Root
         collapsible={isBranch}
@@ -206,7 +205,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                     <Button
                       variant='ghost'
                       classNames={[
-                        'shrink-0 pli-2 pointer-fine:pli-1',
+                        'shrink-0 pli-3.5',
                         hoverableControlItem,
                         hoverableOpenControlItem,
                         isOverlay && 'invisible',

@@ -74,7 +74,7 @@ createRoot(document.getElementById('root')!).render(
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
-        FilesPlugin(),
+        // FilesPlugin(),
       ]}
     />
   </StrictMode>,

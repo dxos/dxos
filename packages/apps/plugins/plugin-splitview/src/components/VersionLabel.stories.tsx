@@ -13,5 +13,5 @@ export default {
 };
 
 export const Normal = (props: any) => {
-  return <VersionLabel version='0.1.56' commitHash='cafebabe' timestamp={new Date().toString()} />;
+  return <VersionLabel version='0.1.56' commitHash='cafebabe' />;
 };

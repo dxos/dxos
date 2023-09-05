@@ -36,7 +36,7 @@ export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadi
           navTreeHeading,
           topLevelCollapsibleSpacing,
           topLevelText,
-          'pli-1',
+          'pli-3',
           topLevelHeadingColor(node.properties?.palette),
         ]}
         {...(active && { 'aria-current': 'page' })}

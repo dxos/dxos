@@ -9,11 +9,6 @@ import type { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
-<<<<<<< HEAD
-  Avatar,
-=======
-  Tree,
->>>>>>> 39698885d (wip cosmetics)
   Button,
   DensityProvider,
   ElevationProvider,
@@ -24,40 +19,29 @@ import {
   Separator,
 } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { ShellLayout, useConfig } from '@dxos/react-client';
+import { ShellLayout } from '@dxos/react-client';
 import { Identity, useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
-<<<<<<< HEAD
-import { NavTree } from './NavTree';
-=======
 import { HaloButton } from './HaloButton';
-import { NavTreeItem } from './NavTree';
->>>>>>> 39698885d (wip cosmetics)
-import { VersionInfo } from './VersionInfo';
-import { VersionLabelProps } from './VersionLabel';
+import { NavTree } from './NavTree';
 
 export const TreeViewContainer = () => {
-  const config = useConfig();
   const { plugins } = usePlugins();
   const { graph } = useGraph();
 
   const identity = useIdentity();
 
-<<<<<<< HEAD
-=======
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const splitViewContext = useSplitView();
 
->>>>>>> 39698885d (wip cosmetics)
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
   return (
     <TreeView
       identity={identity}
-      graphNodes={graph.root.children}
-      version={config.values.runtime?.app?.build}
+      rootNode={graph.root}
       sidebarOpen={navigationSidebarOpen}
       onHaloButtonClick={() => {
         if (clientPlugin) {
@@ -74,15 +58,14 @@ export const TreeViewContainer = () => {
 
 export type TreeViewProps = {
   identity?: Identity | null;
-  graphNodes?: Graph.Node[];
+  rootNode?: Graph.Node;
   sidebarOpen?: boolean;
-  version?: VersionLabelProps;
   onHaloButtonClick?: () => void;
   onSettingsClick?: () => void;
 };
 
 export const TreeView = (props: TreeViewProps) => {
-  const { identity, graphNodes, version, sidebarOpen, onHaloButtonClick, onSettingsClick } = props;
+  const { identity, rootNode, sidebarOpen, onHaloButtonClick, onSettingsClick } = props;
 
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
 
@@ -93,9 +76,9 @@ export const TreeView = (props: TreeViewProps) => {
           {identity && (
             <div
               role='none'
-              className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
+              className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
             >
-              <HaloButton identity={identity} onClick={onHaloButtonClick} />
+              <p>Composer</p>
               <div className='grow'></div>
               <Separator orientation='horizontal' />
               <Tooltip.Provider>
@@ -119,6 +102,7 @@ export const TreeView = (props: TreeViewProps) => {
                   </Tooltip.Portal>
                 </Tooltip.Root>
               </Tooltip.Provider>
+              <HaloButton identity={identity} onClick={onHaloButtonClick} />
             </div>
           )}
           <ScrollArea.Root classNames='grow min-bs-0'>
@@ -127,15 +111,14 @@ export const TreeView = (props: TreeViewProps) => {
                 level={0}
                 role='tree'
                 classNames='pbs-1 pbe-4 pli-1'
-                node={graph.root}
-                items={graph.root.children}
+                node={rootNode}
+                items={rootNode?.children}
               />
               <ScrollArea.Scrollbar orientation='vertical' classNames='pointer-events-none'>
                 <ScrollArea.Thumb />
               </ScrollArea.Scrollbar>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-          <VersionInfo {...version} />
         </div>
       </DensityProvider>
     </ElevationProvider>
