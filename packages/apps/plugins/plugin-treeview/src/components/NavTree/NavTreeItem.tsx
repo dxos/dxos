@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
@@ -70,6 +71,20 @@ export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
   );
 };
 
+type DroppableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'migrating'>;
+
+export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
+  node,
+  level,
+  migrating,
+}: DroppableBranchTreeViewItemProps) => {
+  const { setNodeRef } = useDroppable({
+    id: `treeitem:${node.id}`,
+    data: { dragoverlay: node, treeitem: node },
+  });
+  return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
+};
+
 type TreeViewItemProps = SharedTreeItemProps & SortableProps;
 
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
@@ -135,7 +150,6 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           focusRing,
           'transition-opacity',
           (rearranging || isPreview) && 'opacity-0',
-          migrating === 'away' && 'opacity-40',
           migrating === 'into' && dropRing,
         ]}
         {...draggableAttributes}

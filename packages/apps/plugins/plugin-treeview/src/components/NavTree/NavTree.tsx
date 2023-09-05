@@ -9,17 +9,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
-import { Tree } from '@dxos/aurora';
+import { Tree, TreeRootProps } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
 import { getPersistenceParent, sortByIndex } from '../../util';
-import { SortableTreeViewItem } from './NavTreeItem';
+import { DroppableTreeViewItem, SortableTreeViewItem } from './NavTreeItem';
 
 export type TreeViewProps = {
   level: number;
   items?: Graph.Node[];
   node?: string | Graph.Node | null;
-};
+} & TreeRootProps;
 
 type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
 
@@ -133,10 +133,12 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
     [activeNode, node, items],
   );
 
+  const ItemRoot = level === 0 ? DroppableTreeViewItem : SortableTreeViewItem;
+
   return (
     <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) => (
-        <SortableTreeViewItem
+        <ItemRoot
           key={item.id}
           node={item}
           level={level}
@@ -156,16 +158,17 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
 };
 
 export const NavTree = (props: TreeViewProps) => {
-  const { items, level, node } = props;
+  const { items, level, node, ...branchProps } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
+  const Root = level === 0 ? Tree.Root : Tree.Branch;
   return (
-    <Tree.Branch>
+    <Root {...branchProps}>
       {node && visibleItems?.length ? (
         <TreeViewSortableImpl items={visibleItems} node={node as Graph.Node} level={level} />
       ) : (
         <Surface role='tree--empty' data={node} />
       )}
-    </Tree.Branch>
+    </Root>
   );
 };
