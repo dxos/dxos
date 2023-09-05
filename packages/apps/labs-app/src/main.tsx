@@ -15,7 +15,6 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
-import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -26,6 +25,7 @@ import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
+import { TablePlugin } from '@braneframe/plugin-table';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -81,7 +81,7 @@ const main = async () => {
           // Labs
           ChessPlugin(),
           DebugPlugin(),
-          GridPlugin(),
+          TablePlugin(),
           IpfsPlugin(),
           KanbanPlugin(),
           MapPlugin(),
@@ -89,6 +89,7 @@ const main = async () => {
           ThreadPlugin(),
         ]}
       />
+      ,
     </StrictMode>,
   );
 };

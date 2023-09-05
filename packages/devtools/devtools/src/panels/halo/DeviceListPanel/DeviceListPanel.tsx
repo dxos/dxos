@@ -12,8 +12,8 @@ import { MasterDetailTable, PanelContainer } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<Device>();
 const columns: GridColumnDef<Device, any>[] = [
-  helper.accessor((device) => device.deviceKey, { id: 'key', ...builder.createKey({ tooltip: true }) }),
-  helper.accessor('kind', builder.createNumber()),
+  helper.accessor((device) => device.deviceKey, { id: 'key', ...builder.key({ tooltip: true }) }),
+  helper.accessor('kind', builder.number()),
 ];
 
 export const DeviceListPanel = () => {
