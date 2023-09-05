@@ -157,7 +157,7 @@ export class DataPipeline implements CredentialProcessor {
       },
     };
 
-    this.databaseHost = new DatabaseHost(feedWriter);
+    this.databaseHost = new DatabaseHost(feedWriter, () => this._flush());
     this.itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
@@ -398,5 +398,18 @@ export class DataPipeline implements CredentialProcessor {
 
   async ensureEpochInitialized() {
     await this.onNewEpoch.waitForCondition(() => !!this.currentEpoch);
+  }
+
+  private async _flush() {
+    try {
+      await this._saveCache();
+      if (this._pipeline) {
+        await this._saveTargetTimeframe(this._pipeline.state.timeframe);
+      }
+    } catch (err) {
+      log.catch(err);
+    }
+
+    await this._params.metadataStore.flush();
   }
 }

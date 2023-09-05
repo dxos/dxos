@@ -384,6 +384,7 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
+    await this._service.flush({ spaceKey: this._spaceKey });
   }
 
   private _abortBatches() {
