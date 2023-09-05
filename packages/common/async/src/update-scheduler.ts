@@ -74,7 +74,6 @@ export class UpdateScheduler {
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
       this._scheduled = false;
-
       this._promise = this._callback().then(
         () => {
           this._promise = null;
@@ -87,5 +86,11 @@ export class UpdateScheduler {
     });
 
     this._scheduled = true;
+  }
+
+  forceTrigger() {
+    scheduleMicroTask(this._ctx, async () => {
+      this._callback().catch((err) => this._ctx.raise(err));
+    });
   }
 }
