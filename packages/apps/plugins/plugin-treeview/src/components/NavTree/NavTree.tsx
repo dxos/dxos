@@ -73,7 +73,11 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
           }
         } else if (overIsDroppable === 'migrate-destination') {
           dnd.overlayDropAnimation = 'into';
-          const overPersistParent = getPersistenceParent(overNode, activeNode?.properties.persistenceClass);
+          const overPersistParent = overNode?.properties?.acceptPersistenceClass?.has(
+            activeNode.properties.persistenceClass,
+          )
+            ? overNode
+            : getPersistenceParent(overNode, activeNode.properties.persistenceClass);
           if (overPersistParent?.properties.onMigrateStartChild) {
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
             const migratedIndex =
@@ -104,7 +108,11 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
       if (over?.data?.current?.treeitem && activeNode) {
         const overNode: Graph.Node = over.data.current.treeitem;
         const activePersistParent = getPersistenceParent(activeNode, activeNode.properties.persistenceClass);
-        const overPersistParent = getPersistenceParent(overNode, activeNode.properties.persistenceClass);
+        const overPersistParent = overNode?.properties?.acceptPersistenceClass?.has(
+          activeNode.properties.persistenceClass,
+        )
+          ? overNode
+          : getPersistenceParent(overNode, activeNode.properties.persistenceClass);
         if (
           activePersistParent?.properties.onRearrangeChild &&
           activeNode.parent?.id === node.id &&
@@ -114,7 +122,7 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
           dropType = 'rearrange';
         } else if (
           activeNode.properties.persistenceClass &&
-          activeNode.properties.persistenceClass === overNode.properties.persistenceClass &&
+          overPersistParent?.properties?.acceptPersistenceClass.has(activeNode.properties.persistenceClass) &&
           activePersistParent?.id !== overPersistParent?.id
         ) {
           // migration relevant
