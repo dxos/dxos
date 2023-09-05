@@ -30,7 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import type { EchoProxy } from '../echo';
+import { defaultKey, type EchoProxy } from '../echo';
 import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
@@ -185,6 +185,11 @@ export class Client {
    * If no key is specified the default space is returned.
    */
   getSpace(spaceKey?: PublicKey): Space | undefined {
+    if (!spaceKey) {
+      const identityKey = this.halo.identity.get()?.identityKey.toHex();
+      return this.spaces.get().find((space) => space.properties[defaultKey] === identityKey);
+    }
+
     return this._echo.getSpace(spaceKey);
   }
 
@@ -302,7 +307,6 @@ export class Client {
     }
 
     await this._runtime!.close();
-
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream!.close();
     await this.services.close(new Context());
