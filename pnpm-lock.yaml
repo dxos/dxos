@@ -1527,7 +1527,6 @@ importers:
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
-      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/display-name': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -1545,10 +1544,10 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/display-name': link:../../../common/display-name
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-surface': link:../../../sdk/react-surface
       '@dxos/util': link:../../../common/util
       date-fns: 2.29.3
       lodash.get: 4.4.2
@@ -1564,7 +1563,6 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/react-surface': link:../../../sdk/react-surface
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/lodash.get': 4.4.7

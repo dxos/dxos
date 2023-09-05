@@ -119,12 +119,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       if (idx !== -1) {
         table.props[idx] = { id, size };
       } else {
-        const props = { id, size };
-        if (!table.props) {
-          table.props = [props];
-        } else {
-          table.props.push(props);
-        }
+        (table.props ??= []).push({ id, size });
       }
     });
   };
