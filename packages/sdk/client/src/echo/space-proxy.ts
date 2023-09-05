@@ -9,7 +9,7 @@ import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-proto
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -237,7 +237,7 @@ export class SpaceProxy implements Space {
     }
     if (shouldPropertiesUpdate) {
       setStateFromSnapshot(this._cachedProperties, space.cache!.properties!);
-      this._cachedProperties._itemUpdate();
+      forceUpdate(this._cachedProperties);
     }
   }
 

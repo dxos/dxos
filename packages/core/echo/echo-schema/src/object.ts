@@ -190,3 +190,7 @@ export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) 
   invariant(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
 };
+
+export const forceUpdate = (obj: EchoObject) => {
+  obj[base]._itemUpdate();
+}
