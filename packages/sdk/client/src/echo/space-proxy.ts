@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';
+import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
@@ -195,9 +195,13 @@ export class SpaceProxy implements Space {
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
-    const shouldPropertiesUpdate = space.cache?.properties && !this._properties && !isEqualWith(this._data.cache?.properties, space.cache.properties, loadashEqualityFn);
+    const shouldPropertiesUpdate =
+      space.cache?.properties &&
+      !this._properties &&
+      !isEqualWith(this._data.cache?.properties, space.cache.properties, loadashEqualityFn);
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
-    const isReopening = this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
+    const isReopening =
+      this._data.state !== SpaceState.READY && space.state === SpaceState.READY && this._dbBackend.isClosed;
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -207,7 +211,7 @@ export class SpaceProxy implements Space {
       emitMembersEvent,
       shouldPropertiesUpdate,
       isFirstTimeInitializing,
-      isReopening
+      isReopening,
     });
 
     this._data = space;

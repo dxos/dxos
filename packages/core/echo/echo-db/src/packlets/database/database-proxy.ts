@@ -95,7 +95,7 @@ export class DatabaseProxy {
 
     // Close previous subscription.
     if (this._entities) {
-      this._entities.close();
+      await this._entities.close();
       this._entities = undefined;
     }
 
@@ -113,17 +113,14 @@ export class DatabaseProxy {
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
-    this._entities!.subscribe(
-      this._processEvent.bind(this),
-      (err) => {
-        if (err) {
-          log.warn('Connection closed', err);
-        }
+    this._entities!.subscribe(this._processEvent.bind(this), (err) => {
+      if (err) {
+        log.warn('Connection closed', err);
+      }
 
-        this._subscriptionOpen = false;
-        this._abortBatches();
-      },
-    );
+      this._subscriptionOpen = false;
+      this._abortBatches();
+    });
     this._subscriptionOpen = true;
 
     // Wait for initial set of items.

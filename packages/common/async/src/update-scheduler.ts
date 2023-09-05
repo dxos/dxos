@@ -90,7 +90,7 @@ export class UpdateScheduler {
 
   forceTrigger() {
     scheduleMicroTask(this._ctx, async () => {
-      this._callback().catch(err => this._ctx.raise(err));
+      this._callback().catch((err) => this._ctx.raise(err));
     });
   }
 }

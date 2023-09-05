@@ -109,7 +109,7 @@ export class DataSpace {
     this._cache = params.cache;
 
     this._state = params.initialState;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
   }
 
   get key() {
@@ -155,7 +155,7 @@ export class DataSpace {
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open(new Context());
     this._state = SpaceState.CONTROL_ONLY;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
     this.metrics = {};
     this.metrics.open = new Date();
@@ -169,7 +169,7 @@ export class DataSpace {
   private async _close() {
     await this._callbacks.beforeClose?.();
     this._state = SpaceState.CLOSED;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
     this._ctx = new Context();
 
@@ -206,7 +206,7 @@ export class DataSpace {
 
         log.error('Error initializing data pipeline', err);
         this._state = SpaceState.ERROR;
-        log('new state', { state: SpaceState[this._state] })
+        log('new state', { state: SpaceState[this._state] });
         this.error = err as Error;
         this.stateUpdate.emit();
       } finally {
@@ -222,7 +222,7 @@ export class DataSpace {
     }
 
     this._state = SpaceState.INITIALIZING;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
 
     await this._initializeAndReadControlPipeline();
 
@@ -249,7 +249,7 @@ export class DataSpace {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.READY;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
 
     await this._callbacks.afterReady?.();
@@ -381,7 +381,7 @@ export class DataSpace {
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
     await this._close();
     this._state = SpaceState.INACTIVE;
-    log('new state', { state: SpaceState[this._state] })
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }
 }

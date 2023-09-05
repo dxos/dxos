@@ -395,7 +395,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    log.info('host opened')
+    log.info('host opened');
     const [client1, server1] = testBuilder.createClientServer(host);
     void server1.open();
     await client1.initialize();
@@ -406,7 +406,7 @@ describe('Spaces', () => {
     await client2.initialize();
     afterTest(() => client2.destroy());
 
-    log.info('ready')
+    log.info('ready');
 
     await client1.halo.createIdentity({ displayName: 'test-user' });
 
@@ -418,7 +418,7 @@ describe('Spaces', () => {
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
     await waitForExpect(() => {
       expect(space2.db.getObjectById(id)).to.exist;
-    })
+    });
 
     await space1.internal.close();
     // Since updates are throttled we need to wait for the state to change.
@@ -436,7 +436,7 @@ describe('Spaces', () => {
 
     space2.db.getObjectById(id)!.data = 'test2';
     await space2.db.flush();
-  })
+  });
 
   test('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
