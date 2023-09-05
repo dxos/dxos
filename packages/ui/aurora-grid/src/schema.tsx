@@ -22,7 +22,7 @@ export type GridSchema = {
 
 export type GridSchemaColumn = {
   id: string;
-  type: 'number' | 'boolean' | 'string'; // TODO(burdon): 'key'.
+  type: 'number' | 'boolean' | 'date' | 'string';
   size?: number;
   label?: string;
   digits?: number;
@@ -67,6 +67,8 @@ export const createColumns = <TData extends RowData>(
         return helper.accessor(id, builder.number(options));
       case 'boolean':
         return helper.accessor(id, builder.checkbox(options));
+      case 'date':
+        return helper.accessor(id, builder.date(options));
       case 'string':
       default:
         return helper.accessor(id, builder.string(options));

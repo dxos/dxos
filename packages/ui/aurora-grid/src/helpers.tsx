@@ -29,7 +29,7 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
   meta?: ColumnMeta<TData, TValue>;
   label?: string;
   className?: string;
-  onUpdate?: ValueUpdater<TData, TValue>;
+  onUpdate?: ValueUpdater<TData, TValue | undefined>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -130,18 +130,19 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
         const [text, setText] = useState<string>();
+
         const handleEdit = () => {
           if (onUpdate) {
-            setText(String(value));
+            setText(value !== undefined ? String(value) : '');
           }
         };
+
         const handleSave = () => {
-          const value = Number(text);
-          if (!isNaN(value)) {
-            onUpdate?.(cell.row.original, cell.column.id, value);
-          }
+          const value = text?.trim().length ? Number(text) : NaN;
+          onUpdate?.(cell.row.original, cell.column.id, isNaN(value) ? undefined : value);
           setText(undefined);
         };
+
         const handleCancel = () => {
           setText(undefined);
         };
@@ -164,8 +165,12 @@ export class ColumnBuilder<TData extends RowData> {
           );
         }
 
+        // TODO(burdon): Add &nbsp;
         return (
-          <div className={mx('grow text-right font-mono', className)} onClick={handleEdit}>
+          <div
+            className={mx('grow w-full text-right font-mono empty:after:content-["-"] empty:opacity-0', className)}
+            onClick={handleEdit}
+          >
             {value?.toLocaleString(undefined, {
               minimumFractionDigits: digits ?? 0,
               maximumFractionDigits: digits ?? 2,
@@ -189,11 +194,15 @@ export class ColumnBuilder<TData extends RowData> {
       header: (cell) => <div>{label ?? cell.header.id}</div>,
       cell: (cell) => {
         const value = cell.getValue();
-        const str = formatSpec
-          ? format(value, formatSpec)
-          : relative
-          ? formatDistanceToNow(value, { addSuffix: true })
-          : value.toISOString();
+
+        const str = value
+          ? formatSpec
+            ? format(value, formatSpec)
+            : relative
+            ? formatDistanceToNow(value, { addSuffix: true })
+            : value.toISOString()
+          : undefined;
+
         return <div className={mx('font-mono', className)}>{str}</div>;
       },
     });

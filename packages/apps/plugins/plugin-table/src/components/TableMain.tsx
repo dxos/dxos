@@ -19,6 +19,8 @@ const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => 
       return 'boolean';
     case SchemaType.PropType.NUMBER:
       return 'number';
+    case SchemaType.PropType.DATE:
+      return 'date';
     case SchemaType.PropType.STRING:
     default:
       return 'string';
@@ -31,6 +33,8 @@ const getPropType = (type?: GridSchemaColumn['type']): SchemaType.PropType => {
       return SchemaType.PropType.BOOLEAN;
     case 'number':
       return SchemaType.PropType.NUMBER;
+    case 'date':
+      return SchemaType.PropType.DATE;
     case 'string':
     default:
       return SchemaType.PropType.STRING;
