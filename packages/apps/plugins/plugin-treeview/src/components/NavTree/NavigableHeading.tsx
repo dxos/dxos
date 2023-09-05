@@ -66,7 +66,6 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
           {...(active && { 'aria-current': 'page' })}
           ref={forwardedRef}
         >
-          <CaretRight weight='fill' className={mx('shrink-0 invisible', descriptionText, getSize(2))} />
           {node.icon && <node.icon className={mx(descriptionText, 'shrink-0', getSize(4))} />}
           <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
             {getTreeItemLabel(node, t)}
