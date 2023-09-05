@@ -1,0 +1,22 @@
+{
+  "name": "@dxos/daemon",
+  "version": "0.1.56",
+  "description": "Basic node daemon.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^18.11.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

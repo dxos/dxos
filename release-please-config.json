@@ -204,6 +204,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/daemon/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/debug/package.json",
           "jsonpath": "$.version"
         },

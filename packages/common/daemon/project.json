@@ -1,0 +1,71 @@
+{
+  "sourceRoot": "packages/common/daemon/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/common/daemon/src/index.ts",
+        "outputPath": "packages/common/daemon/dist/types",
+        "tsConfig": "packages/common/daemon/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/daemon/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/daemon/dist/lib",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/daemon/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "ciEnvironments": [
+        "nodejs"
+      ],
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/daemon",
+        "outputPath": "tmp/mocha/packages/common/daemon",
+        "resultsPath": "test-results/packages/common/daemon",
+        "testPatterns": [
+          "packages/common/daemon/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/daemon/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
