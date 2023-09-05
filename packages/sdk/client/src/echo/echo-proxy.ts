@@ -187,14 +187,8 @@ export class EchoProxy implements Echo {
 
   /**
    * Returns an individual space by its key.
-   *
-   * If no key is specified the default space is returned.
    */
-  getSpace(spaceKey?: PublicKey): Space | undefined {
-    if (!spaceKey) {
-      return this.spaces.get().find((space) => space.properties[defaultKey]);
-    }
-
+  getSpace(spaceKey: PublicKey): Space | undefined {
     return this._spaces.get().find(({ key }) => key.equals(spaceKey));
   }
 
