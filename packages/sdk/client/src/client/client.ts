@@ -242,6 +242,8 @@ export class Client {
     const handleIdentityCreated = async ({ identityKey }: Identity) => {
       const defaultSpace = await this.createSpace();
       defaultSpace.properties[defaultKey] = identityKey.toHex();
+      // Ensure space properties are cached.
+      await defaultSpace.db.flush();
     };
 
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();

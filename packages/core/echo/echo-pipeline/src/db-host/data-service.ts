@@ -13,6 +13,7 @@ import {
   SubscribeRequest,
   EchoEvent,
   WriteRequest,
+  FlushRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -65,5 +66,12 @@ export class DataServiceImpl implements DataService {
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.write(request);
+  }
+
+  flush(request: FlushRequest): Promise<void> {
+    invariant(request.spaceKey);
+    const host =
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
+    return host.flush();
   }
 }
