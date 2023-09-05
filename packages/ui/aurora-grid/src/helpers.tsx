@@ -137,6 +137,7 @@ export class ColumnBuilder<TData extends RowData> {
           }
         };
 
+        // TODO(burdon): Property is encoded as float (e.g., 6.1 => 6.099)
         const handleSave = () => {
           const value = text?.trim().length ? Number(text) : NaN;
           onUpdate?.(cell.row.original, cell.column.id, isNaN(value) ? undefined : value);

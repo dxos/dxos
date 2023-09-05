@@ -60,7 +60,7 @@ export class LocalStorageStore<T extends object> {
     },
   };
 
-  private readonly _subscriptions: UnsubscribeCallback[] = [];
+  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
   public readonly values: DeepSignal<T>;
 
@@ -75,20 +75,20 @@ export class LocalStorageStore<T extends object> {
    */
   prop<T>(prop: Signal<T | undefined>, lkey: string, type: PropType<T>) {
     const key = this._prefix + '.' + lkey;
-
-    // TODO(burdon): Check.
-    const current = type.get(key);
-    console.log(1, key, current, prop.value);
-    if (prop.value === undefined) {
-      prop.value = current;
-    } else if (current === undefined) {
-      type.set(key, prop.value);
+    if (this._subscriptions.has(key)) {
+      return this;
     }
 
-    this._subscriptions.push(
+    const current = type.get(key);
+    if (current !== undefined) {
+      prop.value = current;
+    }
+
+    // The subscribe callback is always called.
+    this._subscriptions.set(
+      key,
       prop.subscribe((value) => {
         const current = type.get(key);
-        console.log(2, key, current, { before: prop.value, value });
         if (value !== current) {
           type.set(key, value);
         }
@@ -100,6 +100,6 @@ export class LocalStorageStore<T extends object> {
 
   close() {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.length = 0;
+    this._subscriptions.clear();
   }
 }

@@ -96,7 +96,11 @@ const defaultColumn: Partial<ColumnDef<RowData>> = {
   size: 200, // NOTE: Required in order remove default width.
 };
 
+export type KeyValue<TData extends RowData> = (row: Row<TData>) => string | number;
+
+// TODO(burdon): Key selector.
 export type GridProps<TData extends RowData> = {
+  keyAccessor?: KeyValue<TData>;
   columns?: GridColumnDef<TData>[];
   columnVisibility?: VisibilityState;
   data?: TData[];
@@ -114,6 +118,7 @@ export type GridProps<TData extends RowData> = {
  * Simple table.
  */
 export const Grid = <TData extends RowData>({
+  keyAccessor = (row) => row.id,
   columns = [],
   data = [],
   columnVisibility,
@@ -210,6 +215,8 @@ export const Grid = <TData extends RowData>({
     }
   };
 
+  const showRowNumber = debug;
+
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
@@ -231,6 +238,13 @@ export const Grid = <TData extends RowData>({
               // Group element to hover resize handles.
               <tr key={headerGroup.id} className='font-light group'>
                 {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+
+                {/* TODO(burdon): Calc. width. */}
+                {showRowNumber && (
+                  <th className='text-left' style={{ width: 32 }}>
+                    #
+                  </th>
+                )}
 
                 {headerGroup.headers.map((header) => {
                   return (
@@ -272,7 +286,6 @@ export const Grid = <TData extends RowData>({
                     </th>
                   );
                 })}
-
                 {addFlex && <th />}
                 {slots?.margin && <th className={mx(slots?.margin?.className)} />}
               </tr>
@@ -285,9 +298,10 @@ export const Grid = <TData extends RowData>({
          */}
         <tbody>
           {table.getRowModel().rows.map((row) => {
+            // TODO(burdon): ID property.
             return (
               <tr
-                key={row.id}
+                key={keyAccessor(row)}
                 onClick={() => handleSelect(row)}
                 role='button'
                 className={mx(
@@ -321,6 +335,7 @@ export const Grid = <TData extends RowData>({
                   </td>
                 )}
 
+                {showRowNumber && <td>{row.id}</td>}
                 {row.getVisibleCells().map((cell) => {
                   return (
                     <td key={cell.id} className={mx(showBorder && 'border', slots?.cell?.className)}>
@@ -344,6 +359,7 @@ export const Grid = <TData extends RowData>({
             {table.getFooterGroups().map((footerGroup) => (
               <tr key={footerGroup.id} className='font-thin'>
                 {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+                {showRowNumber && <th />}
 
                 {footerGroup.headers.map((footer) => {
                   return (

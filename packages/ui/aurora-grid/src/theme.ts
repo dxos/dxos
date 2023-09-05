@@ -58,8 +58,9 @@ export const defaultGridSlots: GridSlots = {
   header: { className: [chromeSurface, 'px-1 font-light select-none'] },
   footer: { className: [chromeSurface, 'px-1 font-light'] },
   cell: { className: 'px-1' },
+  // TODO(burdon): Compact mode.
   // TODO(burdon): No hover if editing.
-  row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 __h-10' }, // TODO(burdon): Compact mode.
+  // row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
   focus: { className: 'ring ring-primary-600 ring-inset' },
   selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
 };

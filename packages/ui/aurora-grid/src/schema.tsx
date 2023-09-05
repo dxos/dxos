@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, DotsThree, Plus, Trash, X } from '@phosphor-icons/react';
+import { Check, CaretDown, Plus, Trash, X } from '@phosphor-icons/react';
 import { ColumnDef, RowData } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
@@ -153,15 +153,20 @@ export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
     });
   };
 
+  // TODO(burdon): Allow blank label (different from undefined).
+  const title = column.label?.length ? column.label : column.id;
+
   return (
     <div className='flex grow items-center overflow-hidden'>
-      <div className='truncate'>{column.label ?? column.id}</div>
+      <div className='truncate' title={title}>
+        {title}
+      </div>
       <div className='grow' />
       <div className='flex shrink-0'>
         <Popover.Root>
           <Popover.Trigger asChild>
             <Button variant='ghost' classNames='p-0'>
-              <DotsThree className={getSize(5)} />
+              <CaretDown className={getSize(4)} />
             </Button>
           </Popover.Trigger>
           <Popover.Content>

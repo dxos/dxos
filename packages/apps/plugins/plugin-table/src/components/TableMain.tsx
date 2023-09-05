@@ -133,6 +133,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <DensityProvider density='fine'>
         <Grid<TypedObject>
+          keyAccessor={(row) => row.original.id}
           columns={columns}
           data={rows}
           onColumnResize={handleColumnResize}
