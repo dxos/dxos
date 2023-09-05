@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
@@ -43,6 +43,7 @@ const getPropType = (type?: GridSchemaColumn['type']): SchemaType.PropType => {
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const { plugins } = usePlugins();
+  const [, forceUpdate] = useState({});
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
   // TODO(burdon): Not updated when object deleted.
@@ -78,12 +79,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         if (idx !== -1) {
           const { id, type, label, digits } = column;
           table.schema?.props.splice(idx, 1, { id, type: getPropType(type), label, digits });
+          forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
       onColumnDelete: (id) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
           table.schema?.props.splice(idx, 1);
+          forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
       // TODO(burdon): Check only called by grid if value changed.
@@ -99,6 +102,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     const actionColumn = createActionColumn<TypedObject>(schema, {
       onColumnCreate: ({ id, type, label, digits }) => {
         table.schema?.props.push({ id, type: getPropType(type), label, digits });
+        forceUpdate({}); // TODO(burdon): Fix refresh.
       },
       onRowDelete: (object) => {
         // TODO(burdon): Rename delete.
@@ -124,8 +128,6 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       }
     });
   };
-
-  console.log('!!!');
 
   return (
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>

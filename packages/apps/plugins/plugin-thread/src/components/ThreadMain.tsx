@@ -64,7 +64,8 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
       ? identity
       : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
     return {
-      displayName: author.profile?.displayName ?? author.identityKey.toHex(),
+      // TODO(burdon): Use crypto name.
+      displayName: author.profile?.displayName ?? author.identityKey.truncate(),
       classes: colorHash(author.identityKey),
     };
   };

@@ -25,7 +25,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { Provider, humanize } from '@dxos/util';
+import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
@@ -197,7 +197,7 @@ export class SpacesServiceImpl implements SpacesService {
           identity: {
             identityKey: member.key,
             profile: {
-              displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+              displayName: member.assertion.profile?.displayName,
             },
           },
           presence: isMe || peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,

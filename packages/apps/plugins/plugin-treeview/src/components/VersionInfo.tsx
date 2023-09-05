@@ -8,13 +8,12 @@ import React, { FC } from 'react';
 import { Config } from '@dxos/react-client';
 
 // TODO(burdon): Factor out.
-// TODO(burdon): Link to product home page.
 export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const handleOpen = () => {
-    const prod = process.env.NODE_EVN === 'production'; // TODO(burdon): Other env?
+    const prod = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'development';
     const repo = 'https://github.com/dxos/dxos';
-    const url = prod ? `${repo}/releases/tag/v${version}}` : `${repo}/commit/${commitHash}`;
+    const url = prod ? `${repo}/releases/tag/v${version}` : `${repo}/commit/${commitHash}`;
     window.open(url, 'dxos');
   };
 

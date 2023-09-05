@@ -64,9 +64,9 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   useEffect(() => {
     const errorListener = (event: any) => {
       // event.preventDefault();
-      console.log('>>>>>>>>>>>>>>>>>', event);
       // TODO(burdon): Handler is called twice.
       if (error.current !== event.error) {
+        console.error(event);
         error.current = event.error;
         if (debug) {
           console.error(event.error);
@@ -82,6 +82,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
     window.addEventListener('unhandledrejection', errorListener);
 
+    console.log('addEventListener.error');
     return () => {
       console.log('removeEventListener.error');
       window.removeEventListener('error', errorListener);
