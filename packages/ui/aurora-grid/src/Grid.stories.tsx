@@ -41,6 +41,10 @@ const createItems = (count: number) =>
       }) as Item,
   );
 
+const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, value: TValue) => {
+  return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
+};
+
 const testSchema: GridSchema = {
   columns: [
     {
@@ -68,7 +72,7 @@ const testSchema: GridSchema = {
 
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[] => [
-  helper.accessor('complete', builder.checkbox({ header: '', onUpdate })),
+  helper.accessor('complete', builder.checkbox({ label: '', onUpdate })),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
     'name',
@@ -76,17 +80,21 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
   ),
   helper.accessor('started', builder.date({ relative: true })),
   helper.accessor('count', builder.number()),
-  helper.accessor('complete', builder.icon({ id: 'done', header: '' })),
+  helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
   helper.accessor(
     'complete',
     builder.icon({
       id: 'connected',
+      label: '',
       on: { Icon: PlugsConnected, className: 'text-blue-500' },
       off: { Icon: Plugs, className: 'text-blue-200' },
-      header: '',
     }),
   ),
 ];
+
+//
+// Tests
+//
 
 export default {
   component: Grid,
@@ -184,10 +192,6 @@ export const Dynamic = {
       </div>
     );
   },
-};
-
-const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, value: TValue) => {
-  return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
 };
 
 export const Editable = {
