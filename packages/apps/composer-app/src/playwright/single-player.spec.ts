@@ -29,6 +29,7 @@ test.describe('Single-player tests', () => {
   });
 
   test('create document', async () => {
+    await host.createSpace();
     await host.createDocument();
     const textBox = await host.getMarkdownTextbox();
     await waitForExpect(async () => {

@@ -57,6 +57,7 @@ describe('identity/identity-manager', () => {
     const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 
     return {
+      metadataStore,
       identityManager,
       feedStore,
       keyring,
@@ -76,12 +77,15 @@ describe('identity/identity-manager', () => {
     const storage = createStorage({ type: StorageType.RAM });
 
     const peer1 = await setupPeer({ storage });
+    await peer1.metadataStore.load();
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
     await peer1.identityManager.close();
     await peer1.feedStore.close();
+    await peer1.metadataStore.close();
 
     const peer2 = await setupPeer({ storage });
+    await peer2.metadataStore.load();
     await peer2.identityManager.open(new Context());
 
     expect(peer2.identityManager.identity).to.exist;

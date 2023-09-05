@@ -35,7 +35,9 @@ const createDatabaseWithFeeds = async () => {
   const feed = await feedStore.openFeed(await feedTestBuilder.keyring.createKey(), { writable: true });
 
   const writer = createMappedFeedWriter((data: DataMessage) => ({ data }), feed.createFeedWriter());
-  const host = new DatabaseHost(writer);
+  const host = new DatabaseHost(writer, async () => {
+    /* No-op. */
+  });
   await host.open(new ItemManager(modelFactory), new ModelFactory().registerModel(DocumentModel));
 
   const dataServiceSubscriptions = new DataServiceSubscriptions();
