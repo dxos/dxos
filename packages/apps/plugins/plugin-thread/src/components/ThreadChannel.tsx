@@ -74,7 +74,8 @@ export const ThreadChannel: FC<{
         {/* TODO(burdon): Break into days. */}
         <div className='flex flex-col-reverse grow overflow-auto px-2 pt-4'>
           <div ref={bottomRef} />
-          {thread.blocks
+          {/* TODO(wittjosiah): This shouldn't ever be undefined, but it is. */}
+          {(thread.blocks ?? [])
             .map((block) => (
               <div key={block.id} className='my-1'>
                 <ThreadBlock identityKey={identityKey} block={block} getBlockProperties={getBlockProperties} />
