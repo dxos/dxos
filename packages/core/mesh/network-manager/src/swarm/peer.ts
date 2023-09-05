@@ -113,6 +113,7 @@ export class Peer {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         // TODO(burdon): Too verbose.
+        // TODO(nf): gets stuck when remote connection is aborted (i.e. closed tab)
         log('close local connection', {
           localPeerId: this.id,
           topic: this.topic,

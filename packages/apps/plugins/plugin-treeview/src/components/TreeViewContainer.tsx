@@ -38,7 +38,7 @@ export const TreeViewContainer = () => {
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
-  const splitViewContext = useSplitView();
+  const splitView = useSplitView();
 
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
@@ -74,8 +74,8 @@ export const TreeViewContainer = () => {
                         classNames='pli-2 pointer-fine:pli-1'
                         {...(!navigationSidebarOpen && { tabIndex: -1 })}
                         onClick={() => {
-                          splitViewContext.dialogOpen = true;
-                          splitViewContext.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
+                          splitView.dialogOpen = true;
+                          splitView.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
                         }}
                       >
                         <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>

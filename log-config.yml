@@ -7,8 +7,9 @@ filter:
   - warn
   - info
   # - debug
-  - sync:debug
-  - data-space:debug
+  # - sync:debug
+  - data-space.ts:debug
+  - space-proxy.ts:debug
   # - test.ts:debug
   # - database:debug
   # - notarization:debug

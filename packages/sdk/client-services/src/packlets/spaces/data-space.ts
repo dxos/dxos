@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
@@ -19,6 +19,7 @@ import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/creden
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
+import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
@@ -108,6 +109,7 @@ export class DataSpace {
     this._cache = params.cache;
 
     this._state = params.initialState;
+    log('new state', { state: SpaceState[this._state] });
   }
 
   get key() {
@@ -153,6 +155,7 @@ export class DataSpace {
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open(new Context());
     this._state = SpaceState.CONTROL_ONLY;
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
     this.metrics = {};
     this.metrics.open = new Date();
@@ -166,6 +169,7 @@ export class DataSpace {
   private async _close() {
     await this._callbacks.beforeClose?.();
     this._state = SpaceState.CLOSED;
+    log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
     this._ctx = new Context();
 
@@ -202,6 +206,7 @@ export class DataSpace {
 
         log.error('Error initializing data pipeline', err);
         this._state = SpaceState.ERROR;
+        log('new state', { state: SpaceState[this._state] });
         this.error = err as Error;
         this.stateUpdate.emit();
       } finally {
@@ -210,33 +215,19 @@ export class DataSpace {
     });
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async initializeDataPipeline() {
     if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
 
     this._state = SpaceState.INITIALIZING;
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
-      breakOnStall: false,
-    });
+    log('new state', { state: SpaceState[this._state] });
 
-    this.metrics.controlPipelineReady = new Date();
+    await this._initializeAndReadControlPipeline();
 
-    await this._createWritableFeeds();
-    log('writable feeds created');
-    this.stateUpdate.emit();
-
-    if (!this.notarizationPlugin.hasWriter) {
-      this.notarizationPlugin.setWriter(
-        createMappedFeedWriter<Credential, FeedMessage.Payload>(
-          (credential) => ({
-            credential: { credential },
-          }),
-          this._inner.controlPipeline.writer,
-        ),
-      );
-    }
+    // Allow other tasks to run before loading the data pipeline.
+    await sleep(1);
 
     await this._inner.initializeDataPipeline();
 
@@ -258,9 +249,35 @@ export class DataSpace {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.READY;
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
 
     await this._callbacks.afterReady?.();
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
+  private async _initializeAndReadControlPipeline() {
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
+      ctx: this._ctx,
+      breakOnStall: false,
+    });
+
+    this.metrics.controlPipelineReady = new Date();
+
+    await this._createWritableFeeds();
+    log('writable feeds created');
+    this.stateUpdate.emit();
+
+    if (!this.notarizationPlugin.hasWriter) {
+      this.notarizationPlugin.setWriter(
+        createMappedFeedWriter<Credential, FeedMessage.Payload>(
+          (credential) => ({
+            credential: { credential },
+          }),
+          this._inner.controlPipeline.writer,
+        ),
+      );
+    }
   }
 
   @timed(10_000)
@@ -307,10 +324,10 @@ export class DataSpace {
     if (credentials.length > 0) {
       // Never times out
       await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
-    }
 
-    // Set this after credentials are notarized so that on failure we will retry.
-    await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
+      // Set this after credentials are notarized so that on failure we will retry.
+      await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
+    }
   }
 
   async createEpoch() {
@@ -364,6 +381,7 @@ export class DataSpace {
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
     await this._close();
     this._state = SpaceState.INACTIVE;
+    log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }
 }

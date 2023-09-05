@@ -17,11 +17,13 @@ import { ExtensionContext, TeleportExtension } from '../teleport';
 interface TestExtensionWithStreamsCallbacks {
   onOpen?: () => Promise<void>;
   onClose?: () => Promise<void>;
+  onAbort?: () => Promise<void>;
 }
 
 export class TestExtensionWithStreams implements TeleportExtension {
   public readonly open = new Trigger();
   public readonly closed = new Trigger();
+  public readonly aborted = new Trigger();
   private readonly _streams = new Map<string, TestStream>();
 
   public extensionContext: ExtensionContext | undefined;
@@ -183,6 +185,13 @@ export class TestExtensionWithStreams implements TeleportExtension {
       stream.networkStream.destroy();
     }
     await this._rpc?.close();
+  }
+
+  async onAbort(err?: Error) {
+    log('onAbort', { err });
+    await this.callbacks.onAbort?.();
+    this.aborted.wake();
+    await this._rpc?.abort();
   }
 
   async addNewStream(streamLoadInterval: number, streamLoadChunkSize: number, streamTag?: string): Promise<string> {

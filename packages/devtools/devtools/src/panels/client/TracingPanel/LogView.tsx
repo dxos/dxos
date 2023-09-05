@@ -24,7 +24,7 @@ const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 const logColumns = (() => {
   const { helper, builder } = createColumnBuilder<LogEntry>();
   const columns: GridColumnDef<LogEntry, any>[] = [
-    helper.accessor('timestamp', builder.createDate()),
+    helper.accessor('timestamp', builder.date()),
     helper.accessor(
       (entry) =>
         Object.entries(levels)

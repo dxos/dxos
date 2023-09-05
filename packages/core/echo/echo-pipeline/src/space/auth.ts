@@ -82,6 +82,11 @@ export class AuthExtension extends RpcExtension<Services, Services> {
     await this._ctx.dispose();
     await super.onClose();
   }
+
+  override async onAbort(): Promise<void> {
+    await this._ctx.dispose();
+    await super.onAbort();
+  }
 }
 
 type Services = { AuthService: AuthService };

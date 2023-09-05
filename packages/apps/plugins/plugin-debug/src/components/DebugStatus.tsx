@@ -63,9 +63,10 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   const debug = true; // TODO(burdon): From config?
   useEffect(() => {
     const errorListener = (event: any) => {
-      event.preventDefault();
-      // Handler is called twice.
+      // event.preventDefault();
+      // TODO(burdon): Handler is called twice.
       if (error.current !== event.error) {
+        console.error(event);
         error.current = event.error;
         if (debug) {
           console.error(event.error);
@@ -74,6 +75,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
       }
     };
 
+    // TODO(burdon): Register globally?
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event
     window.addEventListener('error', errorListener);
 
@@ -190,3 +192,5 @@ export const DebugStatus = () => {
     </div>
   );
 };
+
+export default DebugStatus;

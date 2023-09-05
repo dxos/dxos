@@ -75,7 +75,6 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           const treeView = useTreeView();
           const [shortId, component] = treeView.active?.split(':') ?? [];
           const plugin = findPlugin(plugins, shortId);
-
           if (plugin && plugin.provides.components?.[component]) {
             return <Surface component={`${plugin.meta.id}/${component}`} />;
           } else if (treeView.activeNode) {

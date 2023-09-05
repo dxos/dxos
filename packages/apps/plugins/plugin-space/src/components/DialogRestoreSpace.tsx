@@ -16,7 +16,7 @@ import { SPACE_PLUGIN } from '../types';
 
 export const DialogRestoreSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const splitViewContext = useSplitView();
+  const splitView = useSplitView();
   return (
     <>
       <Dialog.Title>{t('confirm restore title')}</Dialog.Title>
@@ -26,13 +26,13 @@ export const DialogRestoreSpace = ({ data: [_, space] }: { data: [string, Space]
         classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
         dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
         handleChange={(backupFile: File) =>
-          restoreSpace(space, backupFile).finally(() => (splitViewContext.dialogOpen = false))
+          restoreSpace(space, backupFile).finally(() => (splitView.dialogOpen = false))
         }
       >
         <FilePlus weight='duotone' className={getSize(8)} />
         <span>{t('upload file message')}</span>
       </FileUploader>
-      <Button classNames='block is-full' onClick={() => (splitViewContext.dialogOpen = false)}>
+      <Button classNames='block is-full' onClick={() => (splitView.dialogOpen = false)}>
         {t('cancel label', { ns: 'appkit' })}
       </Button>
     </>

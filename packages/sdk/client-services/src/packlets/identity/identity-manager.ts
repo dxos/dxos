@@ -67,11 +67,10 @@ export class IdentityManager {
     return this._identity;
   }
 
-  @Trace.span()
+  @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
-    await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
@@ -177,8 +176,8 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-    const identity = await this._constructIdentity(identityRecord);
 
+    const identity = await this._constructIdentity(identityRecord);
     await identity.open(new Context());
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
@@ -206,8 +205,11 @@ export class IdentityManager {
         profile,
       },
     });
+
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return profile;
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {

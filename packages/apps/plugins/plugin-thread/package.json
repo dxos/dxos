@@ -15,9 +15,10 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2"
@@ -34,7 +35,6 @@
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
