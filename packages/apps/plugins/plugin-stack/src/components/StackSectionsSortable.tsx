@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
-import { File as FileProto } from '@braneframe/types';
+import { File as FileType } from '@braneframe/types';
 import { List, useTranslation } from '@dxos/aurora';
 import { textBlockWidth } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
@@ -148,7 +148,7 @@ export const StackSectionsSortable: FC<{
       <FileUpload
         classNames='p-2'
         fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-        onUpload={(file: FileProto) => {
+        onUpload={(file: FileType) => {
           setSectionModels(onAdd(file, sectionModels.length));
         }}
       />

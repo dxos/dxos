@@ -18,17 +18,17 @@ type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 // TODO(burdon): Add peers/connect/disconnect/error info.
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
 const columns: GridColumnDef<SwarmConnection, any>[] = [
-  helper.accessor('id', builder.createKey({ header: 'swarm', tooltip: true })),
-  helper.accessor('topic', builder.createKey({ tooltip: true })),
+  helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
+  helper.accessor('topic', builder.key({ tooltip: true })),
   helper.accessor('label', { header: 'label' }), // TODO(burdon): Has promise string.
-  helper.accessor('isActive', builder.createIcon({ header: 'active' })),
+  helper.accessor('isActive', builder.icon({ header: 'active' })),
   helper.accessor((connection) => connection.connection?.sessionId, {
     id: 'session',
-    ...builder.createKey({ tooltip: true }),
+    ...builder.key({ tooltip: true }),
   }),
   helper.accessor((connection) => connection.connection?.remotePeerId, {
     id: 'remote peer',
-    ...builder.createKey({ tooltip: true }),
+    ...builder.key({ tooltip: true }),
   }),
   helper.accessor((connection) => connection.connection?.state, {
     id: 'state',

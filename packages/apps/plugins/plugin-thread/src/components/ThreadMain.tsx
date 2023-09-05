@@ -9,6 +9,7 @@ import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -55,16 +56,19 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
 };
 
 export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
-  const identity = useIdentity()!; // TODO(burdon): Requires context for storybook? No profile in personal space?
+  // TODO(burdon): Requires context for storybook? No profile in personal space?
+  const identity = useIdentity();
   const members = useMembers(space.key);
-  const identityKey = identity!.identityKey;
+  if (!identity || !members) {
+    return null;
+  }
 
   const getBlockProperties = (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
       : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
     return {
-      displayName: author.profile?.displayName ?? author.identityKey.toHex(),
+      displayName: author.profile?.displayName ?? generateName(identityKey.toHex()),
       classes: colorHash(author.identityKey),
     };
   };
@@ -79,7 +83,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
     const block = thread.blocks[thread.blocks.length - 1];
-    if (block?.identityKey && PublicKey.equals(block.identityKey, identityKey)) {
+    if (block?.identityKey && PublicKey.equals(block.identityKey, identity.identityKey)) {
       const previous = block.messages[block.messages.length - 1];
       if (
         previous.timestamp &&
@@ -92,7 +96,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
 
     thread.blocks.push(
       new ThreadType.Block({
-        identityKey: identityKey.toHex(),
+        identityKey: identity.identityKey.toHex(),
         messages: [message],
       }),
     );
@@ -103,7 +107,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
 
   return (
     <ThreadChannel
-      identityKey={identityKey}
+      identityKey={identity.identityKey}
       thread={thread}
       getBlockProperties={getBlockProperties}
       onAddMessage={handleAddMessage}
