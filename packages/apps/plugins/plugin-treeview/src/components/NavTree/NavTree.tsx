@@ -77,11 +77,11 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
           if (overPersistParent?.properties.onMigrateStartChild) {
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
             const migratedIndex =
-              overIndex < 1
-                ? getIndexBelow(itemsInOrder[overIndex + 1]?.properties.index)
+              overIndex < 0
+                ? getIndexBelow(itemsInOrder[0]?.properties.index)
                 : getIndexBetween(
                     itemsInOrder[overIndex - 1]?.properties.index,
-                    itemsInOrder[overIndex + 1]?.properties.index,
+                    itemsInOrder[overIndex]?.properties.index,
                   );
             overPersistParent?.properties.onMigrateStartChild(activeNode, overPersistParent, migratedIndex);
           }
