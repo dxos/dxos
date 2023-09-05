@@ -33,6 +33,17 @@ export type GridSchemaColumn = {
   resize?: boolean;
 };
 
+export const createUniqueProp = (schema: GridSchema) => {
+  for (let i = 1; i < 100; i++) {
+    const prop = 'prop_' + i;
+    if (!schema.columns.find((column) => column.id === prop)) {
+      return prop;
+    }
+  }
+
+  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
+};
+
 // TODO(burdon): Create builder.
 
 type CreateColumnsOptions<TData extends RowData, TValue> = {
@@ -87,12 +98,10 @@ export const createActionColumn = <TData extends RowData>(
 ): ColumnDef<TData> => {
   const { helper } = createColumnBuilder<TData>();
 
-  // TODO(burdon): Dropdown/dialog.
   const handleAddColumn = () => {
     onColumnCreate?.({
       id: createUniqueProp(schema),
       type: 'string',
-      label: 'New column',
       editable: true,
       resize: true,
     });
@@ -101,6 +110,19 @@ export const createActionColumn = <TData extends RowData>(
   return helper.display({
     id: '__new',
     size: 40,
+    meta: {
+      slots: {
+        header: {
+          className: 'p-0',
+        },
+        footer: {
+          className: 'p-0',
+        },
+        cell: {
+          className: 'p-0',
+        },
+      },
+    },
     header: onColumnCreate
       ? () => (
           <Button variant='ghost' onClick={handleAddColumn}>
@@ -118,17 +140,6 @@ export const createActionColumn = <TData extends RowData>(
         )
       : undefined,
   }) as ColumnDef<TData>;
-};
-
-export const createUniqueProp = (schema: GridSchema) => {
-  for (let i = 1; i < 100; i++) {
-    const prop = 'prop_' + i;
-    if (!schema.columns.find((column) => column.id === prop)) {
-      return prop;
-    }
-  }
-
-  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };
 
 export type ColumnMenuProps = {

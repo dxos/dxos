@@ -28,6 +28,17 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     expand?: boolean;
     resize?: boolean;
+    slots?: {
+      header?: {
+        className?: string;
+      };
+      footer?: {
+        className?: string;
+      };
+      cell?: {
+        className?: string;
+      };
+    };
   }
 }
 
@@ -255,7 +266,12 @@ export const Grid = <TData extends RowData>({
                         width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                       }}
                       // Relative for resize handle.
-                      className={mx('relative text-left', showBorder && 'border', slots?.header?.className)}
+                      className={mx(
+                        'relative text-left',
+                        showBorder && 'border',
+                        slots?.header?.className,
+                        header.column.columnDef.meta?.slots?.header?.className,
+                      )}
                     >
                       {!showHeader || header.isPlaceholder
                         ? null
@@ -336,9 +352,18 @@ export const Grid = <TData extends RowData>({
                 )}
 
                 {showRowNumber && <td>{row.id}</td>}
+
                 {row.getVisibleCells().map((cell) => {
+                  // TODO(burdon): Allow class override from column.
                   return (
-                    <td key={cell.id} className={mx(showBorder && 'border', slots?.cell?.className)}>
+                    <td
+                      key={cell.id}
+                      className={mx(
+                        showBorder && 'border',
+                        slots?.cell?.className,
+                        cell.column.columnDef.meta?.slots?.cell?.className,
+                      )}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   );
@@ -363,7 +388,15 @@ export const Grid = <TData extends RowData>({
 
                 {footerGroup.headers.map((footer) => {
                   return (
-                    <th key={footer.id} className={mx(showBorder && 'border', 'text-left', slots?.footer?.className)}>
+                    <th
+                      key={footer.id}
+                      className={mx(
+                        showBorder && 'border',
+                        'text-left',
+                        slots?.footer?.className,
+                        footer.column.columnDef.meta?.slots?.footer?.className,
+                      )}
+                    >
                       {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
                     </th>
                   );

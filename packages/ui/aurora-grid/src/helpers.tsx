@@ -2,17 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
 import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Input, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
+
+// TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?
+const findNextFocusable = (
+  findFirstFocusable: (container: HTMLElement) => HTMLElement | null | undefined,
+  container: HTMLElement,
+): HTMLElement | undefined => {
+  const next = findFirstFocusable(container as any);
+  if (next) {
+    if (next?.tagName === 'INPUT') {
+      return next;
+    }
+    if (container.nextElementSibling) {
+      return findNextFocusable(findFirstFocusable, container.nextSibling as any);
+    }
+  }
+};
 
 export type ValueUpdater<TData extends RowData, TValue> = (row: TData, id: string, value: TValue) => void;
 
@@ -85,27 +102,51 @@ export class ColumnBuilder<TData extends RowData> {
             // https://tanstack.com/table/v8/docs/examples/react/editable-data
             const initialValue = cell.getValue();
             const [value, setValue] = useState(initialValue);
+            const inputRef = useRef<HTMLInputElement>(null);
+            const { findFirstFocusable } = useFocusFinders();
+
+            const handleSave = () => {
+              if (value === initialValue) {
+                return;
+              }
+
+              onUpdate?.(cell.row.original, cell.column.id, value);
+
+              // TODO(burdon): Hack to wait for next row to render.
+              // TODO(burdon): More generally support keyboard navigation.
+              setTimeout(() => {
+                const next = findNextFocusable(
+                  findFirstFocusable,
+                  inputRef.current?.parentElement?.nextSibling as HTMLElement,
+                );
+                next?.focus();
+              });
+            };
+
             const handleCancel = () => {
               setValue(initialValue);
             };
-            const handleSave = () => {
-              onUpdate?.(cell.row.original, cell.column.id, value);
-            };
 
-            // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div).
+            // TODO(burdon): Check if first column of last row.
+            const rows = cell.table.getRowModel().flatRows;
+            const columns = cell.table.getVisibleFlatColumns();
+            const autoFocus = cell.row.index === rows.length - 1 && columns[0].id === cell.column.id;
+
+            // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div)?
             return (
               <Input.Root>
                 <Input.TextInput
+                  ref={inputRef}
+                  autoFocus={autoFocus}
                   variant='subdued'
-                  classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Color.
+                  placeholder={autoFocus ? 'Add row...' : undefined}
+                  classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Move color to theme.
                   value={(value as string) ?? ''}
-                  // TODO(burdon): Stop propagation if already selected to avoid toggling.
-                  // onClick={(event) => event.stopPropagation()}
+                  onBlur={handleSave}
                   onChange={(event) => setValue(event.target.value)}
                   onKeyDown={(event) =>
                     (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
                   }
-                  onBlur={handleSave}
                 />
               </Input.Root>
             );

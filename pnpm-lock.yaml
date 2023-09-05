@@ -5907,6 +5907,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
+      '@fluentui/react-tabster': ^9.12.0
       '@phosphor-icons/react': ^2.0.5
       '@tanstack/react-table': ^8.9.3
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -5927,6 +5928,7 @@ importers:
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/util': link:../../common/util
+      '@fluentui/react-tabster': 9.12.0_5uumaiclxbdbzaqafclbf6maf4
       '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
       date-fns: 2.29.3
       lodash.defaultsdeep: 4.6.1
