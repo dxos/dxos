@@ -5,7 +5,7 @@
 import { Signal } from '@preact/signals-core';
 import { DeepSignal, deepSignal } from 'deepsignal';
 
-import { UnsubscribeCallback } from '@dxos/async';
+import type { UnsubscribeCallback } from '@dxos/async';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
