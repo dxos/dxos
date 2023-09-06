@@ -70,7 +70,15 @@ export const createColumns = <TData extends RowData>(
       label,
       header: fixed
         ? undefined
-        : () => <ColumnMenu schema={schema} column={column} onUpdate={onColumnUpdate} onDelete={onColumnDelete} />,
+        : (context) => (
+            <ColumnMenu<TData, any>
+              context={context}
+              schema={schema}
+              column={column}
+              onUpdate={onColumnUpdate}
+              onDelete={onColumnDelete}
+            />
+          ),
       onUpdate,
     });
 

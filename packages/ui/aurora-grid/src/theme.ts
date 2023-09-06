@@ -18,6 +18,9 @@ export type GridSlots = {
   footer?: {
     className?: string | string[];
   };
+  group?: {
+    className?: string | string[];
+  };
   row?: {
     className?: string | string[];
   };
@@ -61,6 +64,7 @@ export const defaultGridSlots: GridSlots = {
   // TODO(burdon): Compact mode.
   // TODO(burdon): No hover if editing.
   // row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
+  group: { className: 'px-2 font-light text-left' },
   focus: { className: 'ring ring-primary-600 ring-inset' },
   selected: { className: '!bg-teal-100 dark:!bg-teal-700' },
 };

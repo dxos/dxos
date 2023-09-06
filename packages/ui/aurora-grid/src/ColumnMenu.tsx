@@ -3,6 +3,7 @@
 //
 
 import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
+import { HeaderContext, RowData } from '@tanstack/react-table';
 import React, { useRef, useState } from 'react';
 
 import { Button, Input, Popover, Select } from '@dxos/aurora';
@@ -18,20 +19,32 @@ const types = [
   { type: 'date', label: 'Date' },
 ];
 
-export type ColumnMenuProps = {
+export type ColumnMenuProps<TData extends RowData, TValue> = {
+  context: HeaderContext<TData, TValue>;
   schema: GridSchema;
   column: GridSchemaColumn;
   onUpdate?: (id: string, column: GridSchemaColumn) => void;
   onDelete?: (id: string) => void;
 };
 
-export const ColumnMenu = ({ schema, column, onUpdate, onDelete }: ColumnMenuProps) => {
+export const ColumnMenu = <TData extends RowData, TValue>({
+  context,
+  schema,
+  column,
+  onUpdate,
+  onDelete,
+}: ColumnMenuProps<TData, TValue>) => {
   const [open, setOpen] = useState(false);
   const [prop, setProp] = useState(column.id);
   const [type, setType] = useState(String(column.type));
   const [label, setLabel] = useState(column.label);
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
+
+  const groupBy = context.table.options.meta?.groupBy;
+  const handleSetGroupBy = (on: boolean) => {
+    context.table.options.meta?.setGroupBy?.(on ? column.id : undefined);
+  };
 
   const handleCancel = () => {
     setProp(column.id);
@@ -101,6 +114,10 @@ export const ColumnMenu = ({ schema, column, onUpdate, onDelete }: ColumnMenuPro
                     value={prop}
                     onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
                   />
+                </Input.Root>
+                <Input.Root>
+                  <Input.Label>Group by</Input.Label>
+                  <Input.Checkbox checked={!!groupBy} onCheckedChange={(checked) => handleSetGroupBy(!!checked)} />
                 </Input.Root>
                 <Input.Root>
                   <Input.Label>Type</Input.Label>

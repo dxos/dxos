@@ -12,8 +12,11 @@ import {
   useReactTable,
   VisibilityState,
   ColumnSizingInfoState,
+  getGroupedRowModel,
+  HeaderGroup,
+  TableState,
 } from '@tanstack/react-table';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
@@ -21,14 +24,13 @@ import { defaultGridSlots, GridSlots } from './theme';
 
 // Meta definition.
 declare module '@tanstack/react-table' {
-  // TODO(burdon): No direct way to access table meta so added to column meta.
+  // Access via table.options.meta.
   interface TableMeta<TData extends RowData> {
     keyAccessor?: KeyValue<TData>;
   }
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
-    table?: TableMeta<TData>;
     expand?: boolean;
     resizable?: boolean;
     slots?: {
@@ -51,8 +53,7 @@ export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<T
 // TODO(burdon): Drag-and-drop.
 // TODO(burdon): Virtual (e.g., log panel).
 
-// TODO(burdon): Provide id mapper.
-type GridSelection<TData extends RowData> = {
+export type GridSelection<TData extends RowData> = {
   // Controlled if undefined (by default).
   select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;
   selected?: TData[];
@@ -115,6 +116,7 @@ export type GridProps<TData extends RowData> = {
   keyAccessor?: KeyValue<TData>;
   columns?: GridColumnDef<TData>[];
   columnVisibility?: VisibilityState;
+  grouping?: string[];
   data?: TData[];
   slots?: GridSlots;
   header?: boolean;
@@ -129,23 +131,24 @@ export type GridProps<TData extends RowData> = {
 /**
  * Simple table.
  */
-export const Grid = <TData extends RowData>({
-  keyAccessor = (row) => row.id,
-  columns = [],
-  data = [],
-  columnVisibility,
-  slots = defaultGridSlots,
-  select,
-  selected,
-  onColumnResize,
-  onSelectedChange,
-  header: showHeader = true,
-  footer: showFooter = false,
-  border: showBorder,
-  fullWidth,
-  pinToBottom,
-  debug,
-}: GridProps<TData>) => {
+export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
+  const {
+    keyAccessor = (row) => row.id,
+    columns = [],
+    data = [],
+    columnVisibility,
+    grouping = [],
+    slots = defaultGridSlots,
+    footer = false,
+    select,
+    selected,
+    onColumnResize,
+    onSelectedChange,
+    fullWidth,
+    pinToBottom,
+    debug,
+  } = props;
+
   const [focus, setFocus] = useState<string>();
 
   // Update controlled selection.
@@ -189,14 +192,20 @@ export const Grid = <TData extends RowData>({
       columnVisibility,
       columnSizingInfo,
       rowSelection,
+      grouping,
     },
 
+    // Grouping.
+    getGroupedRowModel: getGroupedRowModel(),
+
+    // Selection.
     enableRowSelection: select === 'single' || select === 'single-toggle',
     enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
     onRowSelectionChange: (rows) => {
       setRowSelection(rows);
     },
 
+    // Resize columns.
     // TODO(burdon): Drag to re-order columns.
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
@@ -207,7 +216,7 @@ export const Grid = <TData extends RowData>({
 
   // TODO(burdon): Add flex if not resizable.
   // Create additional expansion column if all columns have fixed width.
-  const addFlex = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
+  const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
   // Pin scrollbar to bottom.
   const containerRef = usePinToBottom(data, pinToBottom);
@@ -230,8 +239,6 @@ export const Grid = <TData extends RowData>({
     }
   };
 
-  const showRowNumber = debug;
-
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
@@ -244,174 +251,56 @@ export const Grid = <TData extends RowData>({
           width: fullWidth ? '100%' : table.getTotalSize(),
         }}
       >
-        {/*
-         * Header
-         */}
-        <thead className={mx(showHeader ? ['sticky top-0 z-10'] : 'collapse')}>
-          {table.getHeaderGroups().map((headerGroup) => {
-            return (
-              // Group element to hover resize handles.
-              <tr key={headerGroup.id} className='font-light group'>
-                {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+        <THead {...props} state={table.getState()} headers={table.getHeaderGroups()} />
 
-                {/* TODO(burdon): Calc. width. */}
-                {showRowNumber && (
-                  <th className='text-left' style={{ width: 32 }}>
-                    #
-                  </th>
-                )}
+        {(table.getState().grouping?.length === 0 && (
+          <TBody
+            {...props}
+            keyAccessor={keyAccessor}
+            rowSelection={rowSelection}
+            expand={expand}
+            focus={focus}
+            onFocus={setFocus}
+            onSelect={handleSelect}
+            rows={table.getRowModel().rows}
+          />
+        )) || (
+          <>
+            {table.getGroupedRowModel().rows.map((row, i) => {
+              return (
+                <Fragment key={i}>
+                  {/* TODO(burdon): Customize group header renderer. */}
+                  <thead>
+                    <tr>
+                      {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+                      {debug && <th />}
+                      <th
+                        // TODO(burdon): Calculate row span.
+                        colSpan={table.getHeaderGroups()[0].headers.length}
+                        className={mx('text-left', slots?.group?.className)}
+                      >
+                        {JSON.stringify(row.getGroupingValue(table.getState().grouping[0]))}
+                      </th>
+                    </tr>
+                  </thead>
 
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <th
-                      key={header.id}
-                      style={{
-                        // Don't set width if fullWidth and no explicit size.
-                        width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
-                      }}
-                      // Relative for resize handle.
-                      className={mx(
-                        'relative text-left',
-                        showBorder && 'border',
-                        slots?.header?.className,
-                        header.column.columnDef.meta?.slots?.header?.className,
-                      )}
-                    >
-                      {!showHeader || header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-
-                      {/*
-                       * Resize handle.
-                       * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
-                       */}
-                      {header.column.columnDef.meta?.resizable && (
-                        <div
-                          className={mx(
-                            'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
-                            'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
-                            header.column.getIsResizing() && 'hidden',
-                          )}
-                          style={{
-                            transform: header.column.getIsResizing()
-                              ? `translateX(${table.getState().columnSizingInfo.deltaOffset}px)`
-                              : undefined,
-                          }}
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                        >
-                          <div className='flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full' />
-                        </div>
-                      )}
-                    </th>
-                  );
-                })}
-                {addFlex && <th />}
-                {slots?.margin && <th className={mx(slots?.margin?.className)} />}
-              </tr>
-            );
-          })}
-        </thead>
-
-        {/*
-         * Body
-         */}
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            // TODO(burdon): ID property.
-            return (
-              <tr
-                key={keyAccessor(row)}
-                onClick={() => handleSelect(row)}
-                role='button'
-                className={mx(
-                  'group',
-                  rowSelection[row.id] && slots?.selected?.className,
-                  focus === row.id && slots?.focus?.className,
-                  slots?.row?.className,
-                )}
-              >
-                {/* TODO(burdon): Dummy button for focus (don't alter geometry). */}
-                {slots?.margin && (
-                  <td className={mx(slots?.margin?.className)}>
-                    <button
-                      role='button'
-                      style={{ width: 1, height: 1 }}
-                      className='focus:outline-none'
-                      onFocus={() => setFocus(row.id)}
-                      onBlur={() => setFocus(undefined)}
-                      onKeyDown={(event) => {
-                        // TODO(burdon): Move focus.
-                        switch (event.key) {
-                          case 'ArrowUp': {
-                            break;
-                          }
-                          case 'ArrowDown': {
-                            break;
-                          }
-                        }
-                      }}
-                    />
-                  </td>
-                )}
-
-                {showRowNumber && <td>{row.id}</td>}
-
-                {row.getVisibleCells().map((cell) => {
-                  // TODO(burdon): Allow class override from column.
-                  return (
-                    <td
-                      key={cell.id}
-                      className={mx(
-                        showBorder && 'border',
-                        slots?.cell?.className,
-                        cell.column.columnDef.meta?.slots?.cell?.className,
-                      )}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
-
-                {addFlex && <td />}
-                {slots?.margin && <td className={mx(slots?.margin?.className)} />}
-              </tr>
-            );
-          })}
-        </tbody>
-
-        {/*
-         * Footer
-         */}
-        {showFooter && (
-          <tfoot className={mx('sticky bottom-0 z-[10]', slots?.footer?.className)}>
-            {table.getFooterGroups().map((footerGroup) => (
-              <tr key={footerGroup.id} className='font-thin'>
-                {slots?.margin && <th className={mx(slots?.margin?.className)} />}
-                {showRowNumber && <th />}
-
-                {footerGroup.headers.map((footer) => {
-                  return (
-                    <th
-                      key={footer.id}
-                      className={mx(
-                        showBorder && 'border',
-                        'text-left',
-                        slots?.footer?.className,
-                        footer.column.columnDef.meta?.slots?.footer?.className,
-                      )}
-                    >
-                      {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
-                    </th>
-                  );
-                })}
-
-                {addFlex && <th />}
-                {slots?.margin && <th className={mx(slots?.margin?.className)} />}
-              </tr>
-            ))}
-          </tfoot>
+                  <TBody
+                    {...props}
+                    keyAccessor={keyAccessor}
+                    rowSelection={rowSelection}
+                    expand={expand}
+                    focus={focus}
+                    onFocus={setFocus}
+                    onSelect={handleSelect}
+                    rows={row.subRows}
+                  />
+                </Fragment>
+              );
+            })}
+          </>
         )}
+
+        {footer && <TFoot {...props} footers={table.getFooterGroups()} />}
       </table>
 
       {debug && (
@@ -456,4 +345,225 @@ const usePinToBottom = <TData extends RowData>(data: TData[], pinToBottom?: bool
   }, [data]);
 
   return containerRef;
+};
+
+//
+// Head.
+//
+
+type THeadProps<TData extends RowData> = Partial<GridProps<TData>> & {
+  state: TableState;
+  headers: HeaderGroup<TData>[];
+  expand?: boolean;
+};
+
+const THead = <TData extends RowData>({
+  state,
+  headers,
+  expand,
+  header,
+  debug,
+  fullWidth,
+  border,
+  slots,
+}: THeadProps<TData>) => {
+  return (
+    <thead className={mx(header ? ['sticky top-0 z-10'] : 'collapse')}>
+      {headers.map((headerGroup) => {
+        return (
+          // Group element to hover resize handles.
+          <tr key={headerGroup.id} className='font-light group'>
+            {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+
+            {/* TODO(burdon): Calc. width. */}
+            {debug && (
+              <th className='text-left' style={{ width: 32 }}>
+                #
+              </th>
+            )}
+
+            {headerGroup.headers.map((header) => {
+              return (
+                <th
+                  key={header.id}
+                  style={{
+                    // Don't set width if fullWidth and no explicit size.
+                    width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
+                  }}
+                  // Relative for resize handle.
+                  className={mx(
+                    'relative text-left',
+                    border && 'border',
+                    slots?.header?.className,
+                    header.column.columnDef.meta?.slots?.header?.className,
+                  )}
+                >
+                  {!header || header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+
+                  {/*
+                   * Resize handle.
+                   * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
+                   */}
+                  {header.column.columnDef.meta?.resizable && (
+                    <div
+                      className={mx(
+                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
+                        'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
+                        header.column.getIsResizing() && 'hidden',
+                      )}
+                      style={{
+                        transform: header.column.getIsResizing()
+                          ? `translateX(${state.columnSizingInfo.deltaOffset}px)`
+                          : undefined,
+                      }}
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                    >
+                      <div className='flex group-hover:bg-neutral-700 -ml-[2px] w-[1px] h-full' />
+                    </div>
+                  )}
+                </th>
+              );
+            })}
+            {expand && <th />}
+            {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+          </tr>
+        );
+      })}
+    </thead>
+  );
+};
+
+//
+// Body.
+//
+
+type TBodyProps<TData extends RowData> = Partial<GridProps<TData>> & {
+  rows: Row<TData>[];
+  rowSelection: RowSelectionState;
+  expand?: boolean;
+  focus?: string;
+  onFocus: (id?: string) => void;
+  onSelect: (row: Row<TData>) => void;
+};
+
+const TBody = <TData extends RowData>({
+  rows,
+  rowSelection,
+  focus,
+  onFocus,
+  onSelect,
+  keyAccessor,
+  debug,
+  border,
+  expand,
+  slots,
+}: TBodyProps<TData>) => {
+  return (
+    <tbody>
+      {rows.map((row) => {
+        return (
+          <tr
+            key={keyAccessor?.(row)}
+            onClick={() => onSelect(row)}
+            role='button'
+            className={mx(
+              'group',
+              rowSelection[row.id] && slots?.selected?.className,
+              focus === row.id && slots?.focus?.className,
+              slots?.row?.className,
+            )}
+          >
+            {/* TODO(burdon): Dummy button for focus (don't alter geometry). */}
+            {slots?.margin && (
+              <td className={mx(slots?.margin?.className)}>
+                <button
+                  role='button'
+                  style={{ width: 1, height: 1 }}
+                  className='focus:outline-none'
+                  onFocus={() => onFocus(row.id)} // TODO(burdon): Use keyAccessor?
+                  onBlur={() => onFocus(undefined)}
+                  onKeyDown={(event) => {
+                    // TODO(burdon): Move focus.
+                    switch (event.key) {
+                      case 'ArrowUp': {
+                        break;
+                      }
+                      case 'ArrowDown': {
+                        break;
+                      }
+                    }
+                  }}
+                />
+              </td>
+            )}
+
+            {debug && <td>{row.id}</td>}
+
+            {row.getVisibleCells().map((cell) => {
+              // TODO(burdon): Allow class override from column.
+              return (
+                <td
+                  key={cell.id}
+                  className={mx(
+                    border && 'border',
+                    slots?.cell?.className,
+                    cell.column.columnDef.meta?.slots?.cell?.className,
+                  )}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              );
+            })}
+
+            {expand && <td />}
+            {slots?.margin && <td className={mx(slots?.margin?.className)} />}
+          </tr>
+        );
+      })}
+    </tbody>
+  );
+};
+
+//
+// Footer
+//
+
+type TFootProps<TData extends RowData> = Partial<GridProps<TData>> & {
+  footers: HeaderGroup<TData>[];
+  expand?: boolean;
+};
+
+const TFoot = <TData extends RowData>({ footers, expand, slots, debug, border }: TFootProps<TData>) => {
+  return (
+    <tfoot className={mx('sticky bottom-0 z-[10]', slots?.footer?.className)}>
+      {footers.map((footerGroup) => (
+        <tr key={footerGroup.id} className='font-thin'>
+          {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+          {debug && <th />}
+
+          {footerGroup.headers.map((footer) => {
+            return (
+              <th
+                key={footer.id}
+                className={mx(
+                  border && 'border',
+                  'text-left',
+                  slots?.footer?.className,
+                  footer.column.columnDef.meta?.slots?.footer?.className,
+                )}
+              >
+                {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
+              </th>
+            );
+          })}
+
+          {expand && <th />}
+          {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+        </tr>
+      ))}
+    </tfoot>
+  );
 };

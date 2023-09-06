@@ -46,6 +46,7 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
   return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
 };
 
+// TODO(burdon): Move to separate test.
 const testSchema: GridSchema = {
   columns: [
     {
@@ -73,14 +74,22 @@ const testSchema: GridSchema = {
 
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[] => [
-  helper.accessor('complete', builder.checkbox({ label: '', onUpdate })),
+  helper.accessor(
+    'complete',
+    builder.checkbox({
+      enableGrouping: true,
+      getGroupingValue: (row) => row.complete === true,
+      label: '',
+      onUpdate,
+    }),
+  ),
   helper.accessor((item) => item.publicKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor(
     'name',
     builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
   ),
   helper.accessor('started', builder.date({ relative: true })),
-  helper.accessor('count', builder.number()),
+  helper.accessor('count', builder.number({})),
   helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
   helper.accessor(
     'complete',
@@ -114,6 +123,14 @@ export default {
     },
     pinToBottom: {
       control: 'boolean',
+    },
+    grouping: {
+      control: 'select',
+      options: [['complete'], undefined],
+    },
+    columnVisibility: {
+      control: 'select',
+      options: [{ key: false, started: false }, undefined],
     },
     select: {
       control: 'select',
