@@ -21,7 +21,10 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[Expando.name] = Expando;
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({
+    filter: (object: TypedObject) => isObject(object),
+    adapter: objectToGraphNode,
+  });
 
   return {
     meta: {

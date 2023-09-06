@@ -3,7 +3,6 @@
 //
 
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { FC, MutableRefObject, RefCallback } from 'react';
@@ -12,13 +11,8 @@ import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
-import {
-  getAppStateIndex,
-  setAppStateIndex,
-  TreeViewAction,
-  TreeViewPluginProvides,
-} from '@braneframe/plugin-treeview';
-import { AppState, Document } from '@braneframe/types';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -52,7 +46,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-  const adapter = new GraphNodeAdapter(Document.filter(), documentToGraphNode, ['content']);
+  let adapter: GraphNodeAdapter<Document> | undefined;
 
   const EditorMainStandalone = ({
     data: { composer, properties },
@@ -102,6 +96,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
+  // TODO(wittjosiah): If this doesn't need any variables from the closure, factor out.
   const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
@@ -126,11 +121,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
+      const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
           state.onChange.push(plugin.provides.markdown.onChange);
         }
+
+        if (plugin.provides.markdown.filter) {
+          filters.push(plugin.provides.markdown.filter);
+        }
       });
+
+      const filter = (document: Document) =>
+        document.__typename === Document.type.name && filters.every((filter) => filter(document));
+      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode, propertySubscriptions: ['content'] });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
@@ -149,7 +153,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
@@ -161,31 +165,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           const space = parent.data;
 
-          const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-          const appState = treeViewPlugin?.provides.treeView?.appState as AppState | undefined;
-          const defaultIndices = getIndices(plugins.length);
-
-          const id = `${MARKDOWN_PLUGIN}:${space.key.toHex()}`;
-
-          const [presentationNode] = parent.add({
-            id,
-            label: ['plugin name', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <ArticleMedium {...props} />,
-            properties: {
-              palette: 'pink',
-              persistenceClass: 'appState',
-              childrenPersistenceClass: 'spaceObject',
-              index:
-                getAppStateIndex(id, appState) ??
-                setAppStateIndex(
-                  id,
-                  defaultIndices[plugins.findIndex(({ meta: { id } }) => id === MARKDOWN_PLUGIN)],
-                  appState,
-                ),
-            },
-          });
-
-          presentationNode.addAction({
+          parent.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
             icon: (props) => <Plus {...props} />,
@@ -208,7 +188,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             ],
           });
 
-          return adapter.createNodes(space, presentationNode);
+          return adapter?.createNodes(space, parent);
         },
       },
       stack: {
