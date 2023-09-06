@@ -32,6 +32,7 @@ describe('Serializer', () => {
         '@id': obj.id,
         '@model': 'dxos:model/document',
         title: 'Test',
+        meta: { keys: [] },
       });
     }
 
