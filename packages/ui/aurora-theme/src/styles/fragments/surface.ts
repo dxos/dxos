@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+// materials
+export const glass = '';
+export const darkGlass = '';
+
 // Main background.
 export const baseSurface = 'bg-white dark:bg-neutral-900';
 
