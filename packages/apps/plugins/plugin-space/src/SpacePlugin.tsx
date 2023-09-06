@@ -37,11 +37,13 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
+(globalThis as any)[PublicKey.name] = PublicKey;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ active: undefined });
+  const state = deepSignal<SpaceState>({ active: undefined, viewers: {} });
+  const graphSubscriptions = new EventSubscriptions();
+  const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
-  let disposeSetSpaceProvider: () => void;
 
   return {
     meta: {
@@ -65,47 +67,93 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         });
       }
 
-      disposeSetSpaceProvider = effect(async () => {
-        if (!treeView.activeNode) {
-          return;
-        }
+      subscriptions.add(
+        effect(async () => {
+          if (!treeView.activeNode) {
+            return;
+          }
 
-        const space = await new Promise<Space | undefined>((resolve) => {
-          graphPlugin?.provides.graph.traverse({
-            from: treeView.activeNode,
-            direction: 'up',
-            onVisitNode: (node) => {
-              if (isSpace(node.data)) {
-                resolve(node.data);
+          const space = await new Promise<Space | undefined>((resolve) => {
+            graphPlugin?.provides.graph.traverse({
+              from: treeView.activeNode,
+              direction: 'up',
+              onVisitNode: (node) => {
+                if (isSpace(node.data)) {
+                  resolve(node.data);
+                }
+              },
+            });
+            resolve(undefined);
+          });
+
+          if (
+            space instanceof SpaceProxy &&
+            (client.services instanceof IFrameClientServicesProxy ||
+              client.services instanceof IFrameClientServicesHost)
+          ) {
+            client.services.setSpaceProvider(() => {
+              const defaultSpace = client.getSpace();
+              if (defaultSpace && space.key.equals(defaultSpace.key)) {
+                return undefined;
+              } else {
+                return space.key;
               }
-            },
-          });
-          resolve(undefined);
-        });
+            });
+          }
 
-        state.active = space;
-        const defaultSpace = client.getSpace();
+          state.active = space;
+        }),
+      );
 
-        if (
-          space instanceof SpaceProxy &&
-          (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
-        ) {
-          client.services.setSpaceProvider(() => {
-            if (defaultSpace && space.key.equals(defaultSpace.key)) {
-              return undefined;
-            } else {
-              return space.key;
+      subscriptions.add(
+        effect(() => {
+          const send = () => {
+            const identity = client.halo.identity.get();
+            const space = state.active;
+            if (identity && space && treeView.active) {
+              console.log('post', treeView.active);
+              void space.postMessage('viewing', {
+                identityKey: identity.identityKey.toHex(),
+                spaceKey: space.key.toHex(),
+                objectId: treeView.active,
+              });
             }
+          };
+
+          setInterval(() => send(), 1_000);
+          send();
+        }),
+      );
+
+      subscriptions.add(
+        client.spaces.subscribe((spaces) => {
+          spaceSubscriptions.clear();
+          spaces.forEach((space) => {
+            spaceSubscriptions.add(
+              space.listen('viewing', (message) => {
+                console.log('viewing', message.payload);
+                const { identityKey, spaceKey, objectId } = message.payload;
+                if (typeof identityKey === 'string' && spaceKey && objectId) {
+                  state.viewers[identityKey] = {
+                    identityKey,
+                    spaceKey,
+                    objectId,
+                    lastSeen: Date.now(),
+                  };
+                }
+              }),
+            );
           });
-        }
-      });
+        }).unsubscribe,
+      );
     },
     unload: async () => {
+      graphSubscriptions.clear();
+      spaceSubscriptions.clear();
       subscriptions.clear();
-      disposeSetSpaceProvider?.();
     },
     provides: {
-      space: state as SpaceState,
+      space: state as unknown as SpaceState,
       translations,
       component: (data, role) => {
         switch (role) {
@@ -197,7 +245,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           });
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            subscriptions.clear();
+            graphSubscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
               const update = () => {
@@ -208,7 +256,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               };
 
               const unsubscribe = space.properties[subscribe](() => update());
-              subscriptions.add(unsubscribe);
+              graphSubscriptions.add(unsubscribe);
               update();
             });
           });
@@ -244,7 +292,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           return () => {
             unsubscribe();
-            subscriptions.clear();
+            graphSubscriptions.clear();
           };
         },
       },
