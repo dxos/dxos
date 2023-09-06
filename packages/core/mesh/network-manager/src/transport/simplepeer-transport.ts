@@ -9,7 +9,7 @@ import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { trace, ConnectionResetError, ConnectivityError, WrappableError, UnknownProtocolError } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -63,7 +63,40 @@ export class SimplePeerTransport implements Transport {
     });
 
     this._peer.on('error', async (err) => {
-      this.errors.raise(err);
+      // https://developer.mozilla.org/en-US/docs/Web/API/RTCError
+      if (err instanceof RTCError) {
+        // Sent when connection is unexpectedly severed
+        if (err.errorDetail === 'sctp-failure') {
+          this.errors.raise(new ConnectionResetError('sctp-failure from RTCError', err));
+        } else {
+          this.errors.raise(new UnknownProtocolError('unknown RTCError', err));
+        }
+
+        // Safari specific? are all errors of code: "DATA_CHANNEL_ERROR" connection aborts?
+      } else if (err.name === 'InvalidStateError') {
+        this.errors.raise(new ConnectionResetError('safari WebRTC error', err));
+        // catch more generic simple-peer errors: https://github.com/feross/simple-peer/blob/master/README.md#error-codes
+      } else if ('code' in err) {
+        switch (err.code) {
+          case 'ERR_WEBRTC_SUPPORT':
+            this.errors.raise(new WrappableError('WebRTC not supported', undefined, err));
+          case 'ERR_ICE_CONNECTION_FAILURE':
+          case 'ERR_DATA_CHANNEL':
+          case 'ERR_CONNECTION_FAILURE':
+          case 'ERR_SIGNALING':
+            this.errors.raise(new ConnectivityError('unknown communication failure', err));
+          case 'ERR_CREATE_OFFER':
+          case 'ERR_CREATE_ANSWER':
+          case 'ERR_SET_LOCAL_DESCRIPTION':
+          case 'ERR_SET_REMOTE_DESCRIPTION':
+          case 'ERR_ADD_ICE_CANDIDATE':
+            this.errors.raise(new UnknownProtocolError('unknown simple-peer library failure', err));
+          default:
+            this.errors.raise(new Error('unknown simple-peer error'));
+        }
+      } else {
+        this.errors.raise(err);
+      }
 
       // Try to gather additional information about the connection.
       try {
@@ -75,7 +108,9 @@ export class SimplePeerTransport implements Transport {
             });
           });
         }
-      } catch {} // TODO(burdon): Ignored?
+      } catch (err) {
+        log.catch(err);
+      }
 
       await this.destroy();
     });
