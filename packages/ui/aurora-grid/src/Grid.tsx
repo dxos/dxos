@@ -105,6 +105,7 @@ export const updateSelection = (
 
 const defaultColumn: Partial<ColumnDef<RowData>> = {
   size: 200, // NOTE: Required in order remove default width.
+  maxSize: 800,
 };
 
 export type KeyValue<TData extends RowData> = (row: Row<TData>) => string | number;
