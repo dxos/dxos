@@ -112,34 +112,37 @@ export class ColumnBuilder<TData extends RowData> {
 
               onUpdate?.(cell.row.original, cell.column.id, value);
 
-              // TODO(burdon): Hack to wait for next row to render.
               // TODO(burdon): More generally support keyboard navigation.
-              setTimeout(() => {
-                const next = findNextFocusable(
-                  findFirstFocusable,
-                  inputRef.current?.parentElement?.nextSibling as HTMLElement,
-                );
-                next?.focus();
-              });
+              const cellElement = inputRef.current?.parentElement;
+              const next = findNextFocusable(findFirstFocusable, cellElement?.nextSibling as HTMLElement);
+              if (next) {
+                next.focus();
+              } else {
+                // TODO(burdon): Hack to wait for next row to render.
+                const rowElement = cellElement?.parentElement;
+                setTimeout(() => {
+                  const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
+                  next?.focus();
+                });
+              }
             };
 
             const handleCancel = () => {
               setValue(initialValue);
             };
 
-            // TODO(burdon): Check if first column of last row.
+            // Check if first input column of last row.
             const rows = cell.table.getRowModel().flatRows;
             const columns = cell.table.getVisibleFlatColumns();
-            const autoFocus = cell.row.index === rows.length - 1 && columns[0].id === cell.column.id;
+            const placeholder = cell.row.index === rows.length - 1 && columns[0].id === cell.column.id;
 
             // TODO(burdon): Don't render inputs unless mouse over (Show ellipsis when div)?
             return (
               <Input.Root>
                 <Input.TextInput
                   ref={inputRef}
-                  autoFocus={autoFocus}
                   variant='subdued'
-                  placeholder={autoFocus ? 'Add row...' : undefined}
+                  placeholder={placeholder ? 'Add row...' : undefined}
                   classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Move color to theme.
                   value={(value as string) ?? ''}
                   onBlur={handleSave}

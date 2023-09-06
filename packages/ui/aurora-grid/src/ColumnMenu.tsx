@@ -5,11 +5,18 @@
 import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { Button, Input, Popover, Select, Toolbar } from '@dxos/aurora';
+import { Button, Input, Popover, Select } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { GridSchema, GridSchemaColumn } from './schema';
+
+const types = [
+  { type: 'string', label: 'Text' },
+  { type: 'boolean', label: 'Checkbox' },
+  { type: 'number', label: 'Number' },
+  { type: 'date', label: 'Date' },
+];
 
 export type ColumnMenuProps = {
   schema: GridSchema;
@@ -71,66 +78,53 @@ export const ColumnMenu = ({ schema, column, onUpdate, onDelete }: ColumnMenuPro
               <CaretDown className={getSize(4)} />
             </Button>
           </Popover.Trigger>
+
+          {/* TODO(burdon): Labs style for popovers. */}
           <Popover.Content>
             <Popover.Viewport classNames='flex flex-col p-4 gap-4'>
               <div className='flex flex-col gap-2'>
-                <div className='flex items-center'>
-                  <Input.Root>
-                    <Input.Label classNames='w-24'>Label</Input.Label>
-                    <Input.TextInput
-                      value={label}
-                      placeholder='Enter label'
-                      onChange={(event) => setLabel(event.target.value)}
-                      autoFocus
-                    />
-                  </Input.Root>
-                </div>
-                <div className='flex items-center'>
-                  <Input.Root>
-                    <Input.Label classNames='w-24'>Property</Input.Label>
-                    <Input.TextInput
-                      ref={propRef}
-                      value={prop}
-                      placeholder='Enter property key'
-                      // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
-                      onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
-                    />
-                  </Input.Root>
-                </div>
-                <div className='flex items-center'>
-                  <Input.Root>
-                    <Input.Label classNames='w-24'>Type</Input.Label>
-                    <Input.TextInput value={type} onChange={(event) => setType(event.target.value)} />
-                  </Input.Root>
-                </div>
-                {type === 'number' && (
-                  <div className='flex items-center'>
-                    {/* TODO(burdon): Constrain input to numbers. */}
-                    <Input.Root>
-                      <Input.Label classNames='w-24'>Digits</Input.Label>
-                      <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
-                    </Input.Root>
-                  </div>
-                )}
-
-                {/* TODO(burdon): Error: `RovingFocusGroupItem` must be used within `RovingFocusGroup`. */}
-                {false && (
-                  <Select.Root>
-                    <Toolbar.Button asChild>
-                      <Select.TriggerButton placeholder='Type' />
-                    </Toolbar.Button>
+                <Input.Root>
+                  <Input.Label>Label</Input.Label>
+                  <Input.TextInput
+                    placeholder='Enter label'
+                    value={label}
+                    onChange={(event) => setLabel(event.target.value)}
+                    autoFocus
+                  />
+                </Input.Root>
+                <Input.Root>
+                  <Input.Label>Property</Input.Label>
+                  <Input.TextInput
+                    ref={propRef}
+                    placeholder='Enter property key'
+                    // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
+                    value={prop}
+                    onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
+                  />
+                </Input.Root>
+                <Input.Root>
+                  <Input.Label>Type</Input.Label>
+                  <Select.Root value={type} onValueChange={setType}>
+                    <Select.TriggerButton placeholder='Type' />
                     <Select.Portal>
                       <Select.Content>
                         <Select.Viewport>
-                          {/* TODO(burdon): Map values. */}
-                          <Select.Option value={'string'}>String</Select.Option>
-                          <Select.Option value={'boolean'}>Boolean</Select.Option>
-                          <Select.Option value={'number'}>Number</Select.Option>
-                          <Select.Option value={'date'}>Date</Select.Option>
+                          {types.map(({ type, label }) => (
+                            <Select.Option key={type} value={type}>
+                              {label}
+                            </Select.Option>
+                          ))}
                         </Select.Viewport>
                       </Select.Content>
                     </Select.Portal>
                   </Select.Root>
+                </Input.Root>
+                {type === 'number' && (
+                  <Input.Root>
+                    <Input.Label>Decimal places</Input.Label>
+                    {/* TODO(burdon): Constrain input to numbers. */}
+                    <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
+                  </Input.Root>
                 )}
               </div>
 
