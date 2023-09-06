@@ -10,7 +10,6 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { DaemonManager } from './daemon-manager';
 import { neverEndingProcess } from './testing-util';
 
 describe('DaemonManager', () => {
@@ -30,10 +29,5 @@ describe('DaemonManager', () => {
 
     expect(stdout).to.equal('');
     await trigger.wait({ timeout: 1_000 });
-  });
-
-  test.skip('start/stop daemon', async () => {
-    const manager = new DaemonManager();
-    manager.start('node', ['-e', `(${neverEndingProcess.toString()})()`]);
   });
 });

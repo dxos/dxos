@@ -10,6 +10,7 @@ import psTree from 'ps-tree';
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
+import { log } from '@dxos/log';
 
 export type DaemonInfo = {
   pid: number;
@@ -138,6 +139,7 @@ export class WatchDog {
 
   @synchronized
   async restart() {
+    log.info('Restarting...');
     await this.kill();
     this._restarts++;
     if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
@@ -156,13 +158,14 @@ const kill = async ({ pid, killTree, signal }: { pid: number; killTree?: boolean
 
   return new Promise<void>((resolve, reject) => {
     if (killTree && process.platform !== 'win32') {
-      psTree(pid, (err: any, children: any[]) => {
+      psTree(pid, (err, children) => {
         if (err) {
           reject(err);
         }
         [pid, ...children.map((p) => p.PID)].forEach((tpid) => {
           try {
-            process.kill(tpid, signal);
+            invariant(tpid, 'Process id is not defined.');
+            process.kill(Number(tpid), signal);
           } catch (ex) {}
         });
 
