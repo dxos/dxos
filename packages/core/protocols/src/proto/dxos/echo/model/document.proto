@@ -108,6 +108,7 @@ message Query {
 message ObjectSnapshot {
   optional string type                = 1;
   Value root                          = 2;
+  optional Value meta                          = 3;
 }
 
 /**
@@ -141,4 +142,7 @@ message YJS {
 message ObjectMutationSet {
   optional string type = 1;
   repeated ObjectMutation mutations   = 2;
+  
+  // Mutations for the `meta` keyspace.
+  repeated ObjectMutation meta_mutations   = 3;
 }
