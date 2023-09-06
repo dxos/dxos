@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, GithubLogo, PencilSimpleLine, Trash } from '@phosphor-icons/react';
+import { GithubLogo, PencilSimpleLine, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -23,12 +23,13 @@ import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
-  MarkdownActions,
-  OctokitProvider,
-  PatInput,
   EmbeddedMain,
   ExportDialog,
   ImportDialog,
+  Issue,
+  MarkdownActions,
+  OctokitProvider,
+  PatInput,
   UrlDialog,
 } from './components';
 import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './props';
@@ -148,7 +149,7 @@ const objectToGraphNode = (parent: Graph.Node<Space>, document: Document, index:
   const [child] = parent.add({
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
-    icon: (props) => <Circle {...props} />,
+    icon: (props) => <Issue {...props} />,
     data: document,
     properties: {
       index: get(document, 'meta.index', index),
