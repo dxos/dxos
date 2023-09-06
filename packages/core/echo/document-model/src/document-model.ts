@@ -13,6 +13,9 @@ import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
 import { validateKey } from './util';
 
+const DEFAULT_META_SNAPSHOT = ValueUtil.createMessage({
+  keys: OrderedArray.fromValues([])
+});
 /**
  * Processes object mutations.
  */
@@ -27,7 +30,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
     invariant(snapshot.root);
     const object: DocumentModelState = { data: {}, meta: {} };
     ValueUtil.applyValue(object, 'data', snapshot.root);
-    ValueUtil.applyValue(object, 'meta', snapshot.meta);
+    ValueUtil.applyValue(object, 'meta', snapshot.meta ?? DEFAULT_META_SNAPSHOT);
     this._object = object;
     this._object.type = snapshot.type;
   }

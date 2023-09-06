@@ -151,6 +151,25 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   /**
+   * Convenience method to set meta fields.
+   * 
+   * @example
+   * ```ts
+   * space.db.add(new Expando().setMeta({ keys: [{ source: 'example.com' }] }));
+   * ```
+   */
+  setMeta(meta: Partial<ObjectMeta>): this {
+    this._inBatch(() => {
+      for (const key in meta) {
+        this.meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
+      }
+    })
+    return this;
+  }
+
+
+
+  /**
    * @internal
    */
   override _itemUpdate(): void {
@@ -437,8 +456,11 @@ export type ForeignKey = {
   id?: string
 }
 
+// TODO(dmaretskyi): Document.
 export type ObjectMeta = {
   keys: ForeignKey[];
+  index?: string;
+  schema?: Expando;
 }
 
 /**

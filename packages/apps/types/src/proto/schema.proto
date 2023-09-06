@@ -8,16 +8,6 @@ import "dxos/schema.proto";
 
 package braneframe;
 
-// TODO(burdon): Move into object.
-message Meta {
-  message ForeignKey {
-    string source = 1;
-    string id = 2;
-  }
-
-  repeated ForeignKey keys = 1;
-}
-
 /**
  * Expando schema definition.
  */
@@ -86,9 +76,6 @@ message Document {
 
   string title = 1;
   dxos.schema.Text content = 2;
-
-  // TODO(wittjosiah): Make system-level prop.
-  Meta meta = 1000;
 }
 
 /**
@@ -168,9 +155,6 @@ message Thread {
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     repeated Message messages = 2;
-
-    // TODO(wittjosiah): Make system-level prop.
-    Meta meta = 1000;
   }
 
   string title = 1;
