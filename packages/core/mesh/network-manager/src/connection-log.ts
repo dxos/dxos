@@ -50,7 +50,7 @@ export class ConnectionLog {
 
     swarm.connectionAdded.on((connection) => {
       const connectionInfo: ConnectionInfo = {
-        state: ConnectionState.INITIAL,
+        state: ConnectionState.CREATED,
         closeReason: connection.closeReason,
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
