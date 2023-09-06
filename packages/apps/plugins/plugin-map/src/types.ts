@@ -7,18 +7,18 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
 
-export const GRID_PLUGIN = 'dxos.org/plugin/grid';
+export const MAP_PLUGIN = 'dxos.org/plugin/map';
 
-const GRID_ACTION = `${GRID_PLUGIN}/action`;
+const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
-export enum GridAction {
-  CREATE = `${GRID_ACTION}/create`,
+export enum MapAction {
+  CREATE = `${MAP_ACTION}/create`,
 }
 
-export type GridProvides = {};
+export type MapProvides = {};
 
-export type GridPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type MapPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && (object as Expando).type === 'grid';
+  return isTypedObject(object) && (object as Expando).type === 'map';
 };

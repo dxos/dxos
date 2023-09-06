@@ -109,12 +109,6 @@ describe('database', () => {
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-
-    task.meta = {};
-    expect(task.meta).to.exist;
-    expect(task.meta).to.be.empty;
-
-    task.meta.keys = [];
     expect(task.meta.keys).to.exist;
     expect(task.meta.keys).to.have.length(0);
 

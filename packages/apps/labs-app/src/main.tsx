@@ -15,17 +15,17 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
-import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
+import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
-import { TemplatePlugin } from '@braneframe/plugin-template';
+import { TablePlugin } from '@braneframe/plugin-table';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -73,23 +73,23 @@ const main = async () => {
           SpacePlugin(),
 
           // Composer
+          FilesPlugin(),
+          GithubPlugin(),
           MarkdownPlugin(),
           StackPlugin(),
-          GithubPlugin(),
-          FilesPlugin(),
 
           // Labs
-          DebugPlugin(),
-          GridPlugin(),
-          IpfsPlugin(),
-          TemplatePlugin(),
-          SketchPlugin(),
-          KanbanPlugin(),
-          ThreadPlugin(),
           ChessPlugin(),
-          TemplatePlugin(),
+          DebugPlugin(),
+          TablePlugin(),
+          IpfsPlugin(),
+          KanbanPlugin(),
+          MapPlugin(),
+          SketchPlugin(),
+          ThreadPlugin(),
         ]}
       />
+      ,
     </StrictMode>,
   );
 };

@@ -5,4 +5,4 @@
 export * from './types';
 export * from './util';
 
-export * from './GridPlugin';
+export * from './MapPlugin';

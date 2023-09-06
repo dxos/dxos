@@ -115,7 +115,7 @@ export class MetadataStore {
   }
 
   async close() {
-    await this._directory.flush();
+    await this.flush();
     await this._metadataFile?.close();
     this._metadataFile = undefined;
     this._metadata = emptyEchoMetadata();
@@ -194,7 +194,7 @@ export class MetadataStore {
     await this._writeFile(file, LargeSpaceMetadata, data);
   }
 
-  private async _flush() {
+  async flush() {
     await this._directory.flush();
   }
 
@@ -238,7 +238,7 @@ export class MetadataStore {
 
     this._metadata.identity = record;
     await this._save();
-    await this._flush();
+    await this.flush();
   }
 
   async addSpace(record: SpaceMetadata) {
@@ -249,7 +249,7 @@ export class MetadataStore {
 
     (this._metadata.spaces ??= []).push(record);
     await this._save();
-    await this._flush();
+    await this.flush();
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
@@ -260,7 +260,7 @@ export class MetadataStore {
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
     this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
-    await this._flush();
+    await this.flush();
   }
 
   async setCache(spaceKey: PublicKey, cache: SpaceCache) {
@@ -273,13 +273,13 @@ export class MetadataStore {
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
     await this._save();
-    await this._flush();
+    await this.flush();
   }
 
   async setSpaceState(spaceKey: PublicKey, state: SpaceState) {
     this._getSpace(spaceKey).state = state;
     await this._save();
-    await this._flush();
+    await this.flush();
   }
 
   getSpaceControlPipelineSnapshot(spaceKey: PublicKey): ControlPipelineSnapshot | undefined {
@@ -289,7 +289,7 @@ export class MetadataStore {
   async setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot) {
     this._getLargeSpaceMetadata(spaceKey).controlPipelineSnapshot = snapshot;
     await this._saveSpaceLargeMetadata(spaceKey);
-    await this._flush();
+    await this.flush();
   }
 }
 

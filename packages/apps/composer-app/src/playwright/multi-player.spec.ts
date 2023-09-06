@@ -47,6 +47,7 @@ test.describe('Basic test', () => {
 
       // TODO(wittjosiah): This should wait for document to be visible in DOM.
       await sleep(1000); // Wait for document to replicate.
+      await guest.expandSpace();
       await guest.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
       await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
@@ -65,6 +66,7 @@ test.describe('Basic test', () => {
       await host.createDocument();
       await perfomInvitation(host, guest);
 
+      await guest.expandSpace();
       await Promise.all([
         host.getDocumentLinks().nth(1).click(),
         guest.getDocumentLinks().nth(1).click(),
@@ -97,6 +99,7 @@ test.describe('Basic test', () => {
       ];
       const allParts = parts.join('');
 
+      await guest.expandSpace();
       await Promise.all([
         host.getDocumentLinks().nth(1).click(),
         guest.getDocumentLinks().nth(1).click(),

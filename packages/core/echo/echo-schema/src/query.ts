@@ -51,6 +51,7 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._cache;
   }
 
+  // TODO(burdon): Option to trigger immediately.
   subscribe(callback: (query: Query<T>) => void): Subscription {
     return this._updateEvent.on((updated) => {
       const changed = updated.some((object) => {

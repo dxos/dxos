@@ -8,16 +8,55 @@ import "dxos/schema.proto";
 
 package braneframe;
 
-// TODO(burdon): Move into object.
-message Meta {
-  message ForeignKey {
-    string source = 1;
-    string id = 2;
+/**
+ * Expando schema definition.
+ */
+// TODO(burdon): Used by Table, Kanban, etc.
+message Schema {
+  option (object) = true;
+
+  enum PropType {
+    NONE = 0;
+    STRING = 1;
+    NUMBER = 2;
+    BOOLEAN = 3;
+    DATE = 4;
   }
 
-  repeated ForeignKey keys = 1;
+  message Prop {
+    string id = 1;
+    PropType type = 2;
+    string label = 3;
+    int32 digits = 4;
+  }
+
+  // FQ type name (e.g., dxos.org/type/Document
+  string typename = 1;
+  repeated Prop props = 2;
 }
 
+/**
+ * Table view.
+ */
+message Table {
+  option (object) = true;
+
+  message Prop {
+    string id = 1;
+    int32 size = 2;
+  }
+
+  Schema schema = 1;
+  repeated Prop props = 2;
+
+  // TODO(burdon): Filter.
+  // TODO(burdon): Visible columns.
+  // TODO(burdon): Column widths.
+}
+
+/**
+ *
+ */
 message File {
   option (object) = true;
 
@@ -29,16 +68,19 @@ message File {
   string cid = 10;
 }
 
+/**
+ *
+ */
 message Document {
   option (object) = true;
 
   string title = 1;
   dxos.schema.Text content = 2;
-
-  // TODO(wittjosiah): Make system-level prop.
-  Meta meta = 1000;
 }
 
+/**
+ *
+ */
 message Stack {
   option (object) = true;
 
@@ -53,6 +95,9 @@ message Stack {
   repeated Section sections = 2;
 }
 
+/**
+ *
+ */
 message Kanban {
   option (object) = true;
 
@@ -77,6 +122,9 @@ message Kanban {
   repeated Column columns = 2;
 }
 
+/**
+ *
+ */
 message Sketch {
   option (object) = true;
 
@@ -85,6 +133,9 @@ message Sketch {
   dxos.schema.Text data = 2;
 }
 
+/**
+ *
+ */
 // TODO(burdon): Channel > Thread > Block > Message.
 message Thread {
   option (object) = true;
@@ -104,11 +155,19 @@ message Thread {
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     repeated Message messages = 2;
-
-    // TODO(wittjosiah): Make system-level prop.
-    Meta meta = 1000;
   }
 
   string title = 1;
   repeated Block blocks = 2;
+}
+
+message AppState {
+  option (object) = true;
+
+  message Index {
+    string ref = 1;
+    string value = 2;
+  }
+
+  repeated Index indices = 1;
 }

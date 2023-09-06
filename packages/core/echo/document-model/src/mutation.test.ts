@@ -166,7 +166,7 @@ describe('Mutations', () => {
 
   test('MutationUtil', () => {
     const data1 = MutationUtil.applyMutationSet(
-      { data: {} },
+      { data: {}, meta: {} },
       {
         mutations: [
           {
@@ -239,6 +239,7 @@ describe('Mutations', () => {
           },
         ],
       },
+      meta: {},
     });
 
     const data2 = MutationUtil.applyMutationSet(data1, {
@@ -269,6 +270,7 @@ describe('Mutations', () => {
         name: 'DXOS',
         labels: ['green'],
       },
+      meta: {},
     });
   });
 });

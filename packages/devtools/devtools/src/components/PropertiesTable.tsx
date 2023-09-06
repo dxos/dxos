@@ -91,6 +91,15 @@ export const PropertiesTable: FC<{
   object: Record<string, any>;
   slots?: PropertiesSlots;
 }> = ({ schema, object, slots = defaultSlots }) => {
+  const format = (key: string, value: any) => {
+    try {
+      return schema?.[key]?.format(value) ?? String(value)
+    } catch (err) {
+      console.error(err);
+      return '<error>'
+    }
+  }
+
   return (
     <table className='table-fixed border-collapse'>
       <tbody>
@@ -98,7 +107,7 @@ export const PropertiesTable: FC<{
           <tr key={key} className='align-baseline leading-6'>
             <td className={slots?.key?.className}>{sentenceCase(key).toLowerCase()}</td>
             <td>
-              <div className='font-mono'>{schema?.[key]?.format(value) ?? String(value)}</div>
+              <div className='font-mono'>{format(key, value)}</div>
             </td>
           </tr>
         ))}

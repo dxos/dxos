@@ -30,7 +30,6 @@ export const objectToGraphNode = (
     },
   });
 
-  // TODO(burdon): Add create/rename/delete by default (or helper).
   child.addAction({
     id: 'rename',
     label: ['rename sketch label', { ns: SKETCH_PLUGIN }],

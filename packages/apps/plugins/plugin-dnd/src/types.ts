@@ -14,6 +14,7 @@ export type SortableProps = Partial<{
   draggableListeners: ReturnType<typeof useSortable>['listeners'];
   style: ListItemRootProps['style'];
   rearranging: boolean;
+  migrating: 'away' | 'into';
   isOverlay: boolean;
   isPreview: boolean;
 }>;
