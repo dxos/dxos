@@ -69,12 +69,11 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         size: table.props?.find((prop) => prop.id === id)?.size,
         label,
         editable: true,
-        resize: true,
+        resizable: true,
       })),
     };
 
     const columns = createColumns<TypedObject>(schema, {
-      // TODO(burdon): Doesn't refresh.
       // TODO(burdon): Doesn't close popover.
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
