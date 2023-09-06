@@ -28,7 +28,6 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   const { graph } = useGraph();
   const node = graph.find(stack.id);
   const persistParent = node ? getPersistenceParent(node, node.properties?.persistenceClass) : null;
-  console.log('[stack node]', node, persistParent);
   const handleAdd = useCallback(
     (sectionObject: GenericStackObject, start: number) => {
       const sectionModel = getSectionModel(sectionObject);

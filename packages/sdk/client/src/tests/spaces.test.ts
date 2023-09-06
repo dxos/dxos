@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document } from '@braneframe/types';
+import { Document as DocumentType } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -457,7 +457,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: hostSpace, guest }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
-    const hostDocument = hostSpace.db.add(new Document());
+    const hostDocument = hostSpace.db.add(new DocumentType());
     await hostSpace.db.flush();
 
     await waitForExpect(() => {
