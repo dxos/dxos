@@ -7,10 +7,8 @@ import { ColumnDef, RowData } from '@tanstack/react-table';
 // Define custom meta definitions.
 declare module '@tanstack/react-table' {
   // Access via table.options.meta.
-  interface TableMeta<TData extends RowData> {
-    // TODO(burdon): Is this used?
-    keyAccessor: KeyValue<TData>;
-  }
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  interface TableMeta<TData extends RowData> {}
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {

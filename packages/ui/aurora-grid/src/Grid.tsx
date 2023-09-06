@@ -79,7 +79,7 @@ export const updateSelection = (
 };
 
 export type GridProps<TData extends RowData> = {
-  keyAccessor: KeyValue<TData>;
+  keyAccessor?: KeyValue<TData>;
   data?: TData[];
   columns?: GridColumnDef<TData>[];
   columnVisibility?: VisibilityState;
@@ -438,8 +438,7 @@ const TableBody = <TData extends RowData>({
       {rows.map((row) => {
         return (
           <tr
-            key={keyAccessor!(row.original)}
-            title={keyAccessor!(row.original)}
+            key={keyAccessor ? keyAccessor(row.original) : row.id}
             onClick={() => onSelect?.(row)}
             role='button' // TODO(burdon): ???
             className={mx(
@@ -456,7 +455,7 @@ const TableBody = <TData extends RowData>({
                   role='button'
                   style={{ width: 1, height: 1 }}
                   className='focus:outline-none'
-                  onFocus={() => onFocus?.(keyAccessor!(row.original))}
+                  onFocus={() => onFocus?.(keyAccessor ? keyAccessor(row.original) : row.id)}
                   onBlur={() => onFocus?.(undefined)}
                   onKeyDown={(event) => {
                     // TODO(burdon): Move focus.
