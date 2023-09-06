@@ -21,6 +21,7 @@ message Schema {
     NUMBER = 2;
     BOOLEAN = 3;
     DATE = 4;
+    REF = 5;
   }
 
   message Prop {
@@ -28,6 +29,7 @@ message Schema {
     PropType type = 2;
     string label = 3;
     int32 digits = 4;
+    string foreignKey = 5;
   }
 
   // FQ type name (e.g., dxos.org/type/Document

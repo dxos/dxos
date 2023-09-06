@@ -13,6 +13,7 @@ import {
   ColumnSizingInfoState,
   HeaderGroup,
   TableState,
+  GroupingState,
   getGroupedRowModel,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
@@ -95,21 +96,20 @@ export type GridProps<TData extends RowData> = {
 } & GridSelection<TData>;
 
 // TODO(burdon): Rename Table.
-export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
+export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props }: GridProps<TData>) => {
   const {
     keyAccessor,
     data = [],
     columns = [],
     onColumnResize,
     columnVisibility,
-    grouping,
+    header = true,
     footer,
     select,
     selected,
     onSelectedChange,
     fullWidth,
     pinToBottom,
-    slots = defaultGridSlots,
     debug,
   } = props;
   invariant(keyAccessor);
@@ -125,6 +125,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
         if (row) {
           selectionState[row.id] = true;
         }
+
         return selectionState;
       }, {}) ?? {},
     );
@@ -138,7 +139,8 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
     }
   }, [columnSizingInfo]);
 
-  const groupedRows = (grouping?.length ?? 0) > 0;
+  const [grouping, setGrouping] = useState<GroupingState>(props.grouping ?? []);
+  useEffect(() => setGrouping(props.grouping ?? []), [props.grouping]);
 
   //
   // Update table state.
@@ -152,9 +154,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
       maxSize: 800,
     },
     getCoreRowModel: getCoreRowModel(),
-    meta: {
-      keyAccessor,
-    },
+    meta: {},
 
     // TODO(burdon): Pagination.
     // TODO(burdon): Sorting.
@@ -163,11 +163,12 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
       columnVisibility,
       columnSizingInfo,
       rowSelection,
-      grouping: grouping ?? [],
+      grouping,
     },
 
     // Grouping.
     getGroupedRowModel: getGroupedRowModel(),
+    onGroupingChange: setGrouping,
 
     // Selection.
     enableRowSelection: select === 'single' || select === 'single-toggle',
@@ -223,12 +224,19 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
         }}
       >
         {/* Head */}
-        <TableHead {...props} state={table.getState()} headers={table.getHeaderGroups()} />
+        <TableHead
+          {...props}
+          slots={slots}
+          header={header}
+          state={table.getState()}
+          headers={table.getHeaderGroups()}
+        />
 
         {/* Rows */}
-        {!groupedRows && (
+        {grouping.length === 0 && (
           <TableBody
             {...props}
+            slots={slots}
             rowSelection={rowSelection}
             expand={expand}
             focus={focus}
@@ -239,7 +247,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
         )}
 
         {/* Groups */}
-        {groupedRows &&
+        {grouping.length !== 0 &&
           table.getGroupedRowModel().rows.map((row, i) => {
             return (
               <Fragment key={i}>
@@ -260,6 +268,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
 
                 <TableBody
                   {...props}
+                  slots={slots}
                   rowSelection={rowSelection}
                   expand={expand}
                   focus={focus}
@@ -272,7 +281,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
           })}
 
         {/* Foot */}
-        {footer && <TableFoot {...props} footers={table.getFooterGroups()} />}
+        {footer && <TableFoot {...props} slots={slots} footers={table.getFooterGroups()} />}
       </table>
 
       {debug && (

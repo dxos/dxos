@@ -12,12 +12,13 @@ import { safeParseInt } from '@dxos/util';
 
 import { GridSchema, GridSchemaColumn } from './schema';
 
-const types = [
-  { type: 'string', label: 'Text' },
-  { type: 'boolean', label: 'Checkbox' },
-  { type: 'number', label: 'Number' },
-  { type: 'date', label: 'Date' },
-];
+const types = new Map<GridSchemaColumn['type'], string>([
+  ['string', 'Text'],
+  ['boolean', 'Checkbox'],
+  ['number', 'Number'],
+  ['date', 'Date'],
+  ['ref', 'Reference'],
+]);
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
@@ -34,13 +35,18 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   onUpdate,
   onDelete,
 }: ColumnMenuProps<TData, TValue>) => {
+  const typeSelectId = useId('columnMenu__type');
   const [open, setOpen] = useState(false);
   const [prop, setProp] = useState(column.id);
+  const [schemaRef, setSchemaRef] = useState(column.ref);
+  const [schemaProp, setSchemaProp] = useState(column.refProp);
   const [type, setType] = useState(String(column.type));
   const [label, setLabel] = useState(column.label);
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
-  const typeSelectId = useId('columnMenu__type');
+
+  const schemaList: { id: string; label?: string }[] = [{ id: 'contact' }, { id: 'organization' }];
+  const schemaPropList: { id: string; label?: string }[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 
   const handleCancel = () => {
     setProp(column.id);
@@ -94,7 +100,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                   <Input.Root>
                     <Input.Label classNames='mbe-1'>Label</Input.Label>
                     <Input.TextInput
-                      placeholder='Enter label'
+                      placeholder='Column label'
                       value={label}
                       onChange={(event) => setLabel(event.target.value)}
                       autoFocus
@@ -104,12 +110,14 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                     <Input.Label classNames='mbe-1 mbs-3'>Property</Input.Label>
                     <Input.TextInput
                       ref={propRef}
-                      placeholder='Enter property key'
+                      placeholder='Property key'
                       // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
                       value={prop}
                       onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
                     />
                   </Input.Root>
+
+                  <Separator orientation='horizontal' classNames='mlb-3' />
                   <Input.Root id={typeSelectId}>
                     <Input.Label classNames='mbe-1 mbs-3'>Type</Input.Label>
                     <Select.Root value={type} onValueChange={setType}>
@@ -117,7 +125,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                       <Select.Portal>
                         <Select.Content>
                           <Select.Viewport>
-                            {types.map(({ type, label }) => (
+                            {Array.from(types.entries()).map(([type, label]) => (
                               <Select.Option key={type} value={type}>
                                 {label}
                               </Select.Option>
@@ -127,6 +135,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                       </Select.Portal>
                     </Select.Root>
                   </Input.Root>
+
                   {type === 'number' && (
                     <Input.Root>
                       <Input.Label classNames='mbe-1 mbs-3'>Decimal places</Input.Label>
@@ -135,19 +144,65 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                     </Input.Root>
                   )}
 
+                  {/* TODO(burdon): Selectors on same line. */}
+                  {type === 'ref' && (
+                    <>
+                      <Input.Root>
+                        <Input.Label classNames='mbe-1 mbs-3'>Table</Input.Label>
+                        <Select.Root value={schemaRef} onValueChange={setSchemaRef}>
+                          <Select.TriggerButton placeholder='Type' classNames='is-full' id={typeSelectId} />
+                          <Select.Portal>
+                            <Select.Content>
+                              <Select.Viewport>
+                                {schemaList.map(({ id, label }) => (
+                                  <Select.Option key={id} value={id}>
+                                    {label ?? id}
+                                  </Select.Option>
+                                ))}
+                              </Select.Viewport>
+                            </Select.Content>
+                          </Select.Portal>
+                        </Select.Root>
+                      </Input.Root>
+
+                      {schemaRef && (
+                        <Input.Root>
+                          <Input.Label classNames='mbe-1 mbs-3'>Table property</Input.Label>
+                          <Select.Root value={schemaProp} onValueChange={setSchemaProp}>
+                            <Select.TriggerButton placeholder='Type' classNames='is-full' id={typeSelectId} />
+                            <Select.Portal>
+                              <Select.Content>
+                                <Select.Viewport>
+                                  {schemaPropList.map(({ id, label }) => (
+                                    <Select.Option key={id} value={id}>
+                                      {label ?? id}
+                                    </Select.Option>
+                                  ))}
+                                </Select.Viewport>
+                              </Select.Content>
+                            </Select.Portal>
+                          </Select.Root>
+                        </Input.Root>
+                      )}
+                    </>
+                  )}
+
                   <Separator orientation='horizontal' classNames='mlb-3' />
                   <div role='none' className='space-b-1.5'>
                     {/* TODO(burdon): Style as DropdownMenuItem. */}
                     <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
                       <span>Save</span>
+                      <div className='grow' />
                       <Check className={getSize(5)} />
                     </Button>
                     <Button classNames='is-full flex gap-2' onClick={handleCancel}>
                       <span>Cancel</span>
+                      <div className='grow' />
                       <X className={getSize(5)} />
                     </Button>
                     <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
                       <span>Delete</span>
+                      <div className='grow' />
                       <Trash className={getSize(5)} />
                     </Button>
                   </div>

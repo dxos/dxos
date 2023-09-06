@@ -23,10 +23,14 @@ export type GridSchema = {
 
 export type GridSchemaColumn = {
   id: string;
-  type: 'number' | 'boolean' | 'date' | 'string';
+  type: 'number' | 'boolean' | 'date' | 'string' | 'ref';
   size?: number;
   label?: string;
+
   digits?: number;
+
+  ref?: string;
+  refProp?: string;
 
   // TODO(burdon): Move to meta.
   fixed?: boolean;
