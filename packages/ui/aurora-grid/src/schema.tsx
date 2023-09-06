@@ -225,6 +225,7 @@ export const ColumnMenu = ({ column, onUpdate, onDelete }: ColumnMenuProps) => {
                           <Select.Option value={'string'}>String</Select.Option>
                           <Select.Option value={'boolean'}>Boolean</Select.Option>
                           <Select.Option value={'number'}>Number</Select.Option>
+                          <Select.Option value={'date'}>Date</Select.Option>
                         </Select.Viewport>
                       </Select.Content>
                     </Select.Portal>
