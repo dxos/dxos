@@ -245,7 +245,7 @@ describe('Database', () => {
       assignee: {
         '@id': task.assignee.id,
       },
-      meta: { keys: []}
+      meta: { keys: [] },
     });
   });
 
@@ -266,8 +266,8 @@ describe('Database', () => {
       '@type': undefined,
       '@model': 'dxos:model/document',
       meta: {
-        keys: [{ id: 'test-key', source: 'test' }]
-      }
+        keys: [{ id: 'test-key', source: 'test' }],
+      },
     });
   });
 });

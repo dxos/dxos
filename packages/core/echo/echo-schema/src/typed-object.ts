@@ -73,9 +73,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     // TODO(burdon): Strip keys.
     // stripKeys(initialProps);
 
-
     // Assign initial meta fields.
-    this._mutate(new MutationBuilder().set('keys', OrderedArray.fromValues([])).build(true))
+    this._mutate(new MutationBuilder().set('keys', OrderedArray.fromValues([])).build(true));
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
@@ -153,7 +152,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
   /**
    * Convenience method to set meta fields.
-   * 
+   *
    * @example
    * ```ts
    * space.db.add(new Expando().setMeta({ keys: [{ source: 'example.com' }] }));
@@ -164,11 +163,9 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       for (const key in meta) {
         this.meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
       }
-    })
+    });
     return this;
   }
-
-
 
   /**
    * @internal
@@ -202,7 +199,6 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       return value;
     }
   }
-
 
   /**
    * @internal
@@ -250,9 +246,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     this._signal?.notifyRead();
 
     let type;
-    const value = meta
-      ? this._model.getMeta(key)
-      : this._model.get(key);
+    const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
     if (!type && this._schemaType) {
       const field = this._schemaType.fields.find((field) => field.name === key);
@@ -453,16 +447,16 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 //
 
 export type ForeignKey = {
-  source?: string
-  id?: string
-}
+  source?: string;
+  id?: string;
+};
 
 // TODO(dmaretskyi): Document.
 export type ObjectMeta = {
   keys: ForeignKey[];
   index?: string;
   schema?: Expando;
-}
+};
 
 /**
  * Base class for generated document types and expando objects.
@@ -499,7 +493,7 @@ type ExpandoConstructor = {
    * Create a new document.
    * @param initialProps Initial properties.
    */
-  new(initialProps?: Record<string, any>): Expando;
+  new (initialProps?: Record<string, any>): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;

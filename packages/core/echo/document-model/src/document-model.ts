@@ -14,7 +14,7 @@ import { OrderedArray } from './ordered-array';
 import { validateKey } from './util';
 
 const DEFAULT_META_SNAPSHOT = ValueUtil.createMessage({
-  keys: OrderedArray.fromValues([])
+  keys: OrderedArray.fromValues([]),
 });
 /**
  * Processes object mutations.
@@ -121,7 +121,7 @@ export class MutationBuilder {
    */
   build(meta = this._meta): ObjectMutationSet {
     if (meta) {
-      return { metaMutations: this._mutations }
+      return { metaMutations: this._mutations };
     } else {
       return { mutations: this._mutations };
     }

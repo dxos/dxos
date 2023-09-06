@@ -53,7 +53,7 @@ export const PluginProvider = ({
   fallback,
 }: {
   plugins: PluginDefinition[];
-  fallback?: ReactNode | FC<{ initializing: PluginDefinition[], loading: PluginDefinition[] }>
+  fallback?: ReactNode | FC<{ initializing: PluginDefinition[]; loading: PluginDefinition[] }>;
 }) => {
   const [plugins, setPlugins] = useState<Plugin[]>();
   const [pluginsInitializing, setPluginsInitializing] = useState<PluginDefinition[]>([]);
@@ -68,16 +68,20 @@ export const PluginProvider = ({
             console.error('Failed to initialize plugin:', definition.meta.id, err);
             return undefined;
           });
-          setPluginsInitializing((pluginsInitializing) => pluginsInitializing.filter((pluginInitialized) => pluginInitialized !== definition))
+          setPluginsInitializing((pluginsInitializing) =>
+            pluginsInitializing.filter((pluginInitialized) => pluginInitialized !== definition),
+          );
           return plugin;
         }),
       ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
       log('plugins initialized', { plugins });
       setPluginsLoading(definitions);
-      await Promise.all(definitions.map(async (pluginDefinition) => {
-        await pluginDefinition.ready?.(plugins);
-        setPluginsLoading((pluginsLoading) => pluginsLoading.filter((plugin) => plugin !== pluginDefinition));
-      }));
+      await Promise.all(
+        definitions.map(async (pluginDefinition) => {
+          await pluginDefinition.ready?.(plugins);
+          setPluginsLoading((pluginsLoading) => pluginsLoading.filter((plugin) => plugin !== pluginDefinition));
+        }),
+      );
       log('plugins ready', { plugins });
       setPlugins(plugins);
     });
