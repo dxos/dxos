@@ -139,6 +139,8 @@ export class Peer {
 
         try {
           await this._connectionLimiter.connecting(message.sessionId);
+          connection.initiate();
+
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
@@ -169,6 +171,7 @@ export class Peer {
 
     try {
       await this._connectionLimiter.connecting(sessionId);
+      connection.initiate();
 
       const answer = await this._signalMessaging.offer({
         author: this.localPeerId,
