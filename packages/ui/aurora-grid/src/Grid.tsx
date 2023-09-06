@@ -384,7 +384,7 @@ export const Grid = <TData extends RowData>({
          * Footer
          */}
         {showFooter && (
-          <tfoot className={mx('sticky bottom-0 z-10', slots?.footer?.className)}>
+          <tfoot className={mx('sticky bottom-0 z-[10]', slots?.footer?.className)}>
             {table.getFooterGroups().map((footerGroup) => (
               <tr key={footerGroup.id} className='font-thin'>
                 {slots?.margin && <th className={mx(slots?.margin?.className)} />}
