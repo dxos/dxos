@@ -5,11 +5,10 @@
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { TimeoutError as ProtocolTimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, trace } from '@dxos/protocols';
+import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 

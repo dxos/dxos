@@ -6,11 +6,10 @@ import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { CredentialProcessor } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
-import { ApiError } from '@dxos/errors';
+import { DataServiceSubscriptions, SpaceManager } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError } from '@dxos/protocols';
+import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
   CreateEpochRequest,
   PostMessageRequest,

@@ -22,6 +22,8 @@
     "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -30,6 +32,8 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

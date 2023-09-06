@@ -9,12 +9,11 @@ import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { trace } from '@dxos/protocols';
+import { ApiError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 

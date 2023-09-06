@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*"
   },
