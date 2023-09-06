@@ -7,11 +7,13 @@ import React, { FC, useMemo, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaColumn, createActionColumn, defaultGridSlots } from '@dxos/aurora-grid';
+import { Grid, createColumns, GridSchemaColumn, createActionColumn } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+
+const EMPTY_ROW_ID = '__new';
 
 const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => {
   switch (type) {
@@ -100,6 +102,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     });
 
     const actionColumn = createActionColumn<TypedObject>(schema, {
+      isDeletable: (row) => !!row.id,
       onColumnCreate: ({ id, type, label, digits }) => {
         table.schema?.props.push({ id, type: getPropType(type), label, digits });
         forceUpdate({}); // TODO(burdon): Fix refresh.
@@ -127,18 +130,15 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   return (
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <DensityProvider density='fine'>
-        <Grid<TypedObject>
-          keyAccessor={(row) => row.original.id}
-          columns={columns}
-          data={rows}
-          onColumnResize={handleColumnResize}
-          border
-          slots={Object.assign({}, defaultGridSlots, {
-            root: {
-              className: 'p-4',
-            },
-          })}
-        />
+        <div className='flex grow -ml-[1px] -mt-[1px] overflow-hidden'>
+          <Grid<TypedObject>
+            keyAccessor={(row) => row.original.id ?? EMPTY_ROW_ID}
+            columns={columns}
+            data={rows}
+            onColumnResize={handleColumnResize}
+            border
+          />
+        </div>
       </DensityProvider>
     </Main.Content>
   );
