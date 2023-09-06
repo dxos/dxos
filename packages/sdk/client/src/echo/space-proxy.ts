@@ -131,6 +131,7 @@ export class SpaceProxy implements Space {
     if (this._properties) {
       return this._properties;
     } else {
+      log('Using cached properties');
       return this._cachedProperties;
     }
   }
