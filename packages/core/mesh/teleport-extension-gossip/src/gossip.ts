@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap, ComplexSet } from '@dxos/util';
+import { RpcClosedError } from '@dxos/protocols';
 
 import { GossipExtension } from './gossip-extension';
 
@@ -88,7 +89,16 @@ export class Gossip {
           timestamp: new Date(),
           payload,
         })
-        .catch((err) => log(err));
+
+        .catch(async (err) => {
+          log(err);
+          // TODO(nf): always destroy on RpcClosedError?
+
+          if (err instanceof RpcClosedError) {
+            await this.destroy();
+            throw err;
+          }
+        });
     }
   }
 

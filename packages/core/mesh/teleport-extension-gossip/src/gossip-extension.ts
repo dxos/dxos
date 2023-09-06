@@ -9,6 +9,7 @@ import { schema } from '@dxos/protocols';
 import { GossipMessage, GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
+import { RpcClosedError } from '@dxos/protocols';
 
 export type GossipCallbacks = {
   /**
@@ -69,7 +70,14 @@ export class GossipExtension implements TeleportExtension {
 
   async onAbort(err?: Error): Promise<void> {
     log('abort', { err });
-    await this._rpc?.abort();
+    try {
+      await this._rpc?.abort();
+      this._sendInterval && clearInterval(this._sendInterval);
+      this.onClose(err);
+    } catch (err) {
+      log.catch(err);
+    }
+    this._closed = true;
   }
 
   async sendAnnounce(message: GossipMessage) {
@@ -78,7 +86,14 @@ export class GossipExtension implements TeleportExtension {
     }
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
-    await this._rpc.rpc.GossipService.announce(message);
+    try {
+      await this._rpc.rpc.GossipService.announce(message);
+    } catch (err) {
+      // TODO(nf): always abort on RpcClosedError? gets stuck in retry loop otherwise
+      if (err instanceof RpcClosedError) {
+        await this._rpc?.abort();
+      }
+    }
   }
 }
 

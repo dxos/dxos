@@ -45,6 +45,8 @@ export class Teleport {
     heartbeatInterval: 10_000,
     heartbeatTimeout: 10_000,
     onTimeout: () => {
+      if (this._destroying || this._aborting) return;
+      log('abort teleport due to onTimeout in ControlExtension');
       this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
   });
