@@ -47,12 +47,9 @@ declare module '@tanstack/react-table' {
 
 export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
-// TODO(burdon): Editable.
 // TODO(burdon): Sort/filter.
-// TODO(burdon): Scroll to selection; sticky bottom.
 // TODO(burdon): Drag-and-drop.
 // TODO(burdon): Virtual (e.g., log panel).
-// TODO(burdon): Resize.
 
 // TODO(burdon): Provide id mapper.
 type GridSelection<TData extends RowData> = {
@@ -108,6 +105,7 @@ export const updateSelection = (
 
 const defaultColumn: Partial<ColumnDef<RowData>> = {
   size: 200, // NOTE: Required in order remove default width.
+  maxSize: 800,
 };
 
 export type KeyValue<TData extends RowData> = (row: Row<TData>) => string | number;

@@ -21,6 +21,22 @@ export type TreeViewProps = {
   node?: string | Graph.Node | null;
 } & TreeRootProps;
 
+export const NavTree = (props: TreeViewProps) => {
+  const { items, level, node, ...branchProps } = props;
+  // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
+  const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
+  const Root = level === 0 ? Tree.Root : Tree.Branch;
+  return (
+    <Root {...branchProps}>
+      {node && visibleItems?.length ? (
+        <TreeViewSortableImpl items={visibleItems} node={node as Graph.Node} level={level} />
+      ) : (
+        <Surface role='tree--empty' data={node} />
+      )}
+    </Root>
+  );
+};
+
 type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
 
 const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items: Graph.Node[]; level: number }) => {
@@ -162,21 +178,5 @@ const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items:
         />
       ))}
     </SortableContext>
-  );
-};
-
-export const NavTree = (props: TreeViewProps) => {
-  const { items, level, node, ...branchProps } = props;
-  // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
-  const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
-  const Root = level === 0 ? Tree.Root : Tree.Branch;
-  return (
-    <Root {...branchProps}>
-      {node && visibleItems?.length ? (
-        <TreeViewSortableImpl items={visibleItems} node={node as Graph.Node} level={level} />
-      ) : (
-        <Surface role='tree--empty' data={node} />
-      )}
-    </Root>
   );
 };
