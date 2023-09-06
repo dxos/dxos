@@ -108,6 +108,9 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
 
 export default {
   component: Grid,
+  args: {
+    keyAccessor: (item: Item) => item.publicKey.toHex(),
+  },
   argTypes: {
     header: {
       control: 'boolean',
@@ -126,11 +129,19 @@ export default {
     },
     grouping: {
       control: 'select',
-      options: [['complete'], undefined],
+      options: ['none', 'complete'],
+      mapping: {
+        none: undefined,
+        complete: ['complete'],
+      },
     },
     columnVisibility: {
       control: 'select',
-      options: [{ key: false, started: false }, undefined],
+      options: ['all', 'limited'],
+      mapping: {
+        all: undefined,
+        limited: { key: false, started: false },
+      },
     },
     select: {
       control: 'select',
@@ -201,6 +212,7 @@ export const Dynamic = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
+          keyAccessor={row => row.publicKey.toHex()}
           columns={columns()}
           data={items}
           fullWidth
@@ -223,6 +235,7 @@ export const Editable = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
+          keyAccessor={row => row.publicKey.toHex()}
           columns={columns(onUpdate)}
           data={items}
           fullWidth
@@ -266,6 +279,7 @@ export const Schema = {
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
         <Grid<Item>
+          keyAccessor={row => row.publicKey.toHex()}
           columns={[...columns, actionColumn]}
           data={items}
           border

@@ -240,15 +240,20 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
 
-        const str = value
-          ? formatSpec
-            ? format(value, formatSpec)
-            : relative
-            ? formatDistanceToNow(value, { addSuffix: true })
-            : value.toISOString()
-          : undefined;
+        try {
+          const str = value
+            ? formatSpec
+              ? format(value, formatSpec)
+              : relative
+              ? formatDistanceToNow(value, { addSuffix: true })
+              : value.toISOString()
+            : undefined;
 
-        return <div className={mx('font-mono', className)}>{str}</div>;
+          return <div className={mx('font-mono', className)}>{str}</div>;
+        } catch (err) {
+          console.log(value);
+          return null;
+        }
       },
     });
   }

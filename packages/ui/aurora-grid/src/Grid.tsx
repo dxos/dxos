@@ -12,13 +12,14 @@ import {
   useReactTable,
   VisibilityState,
   ColumnSizingInfoState,
-  getGroupedRowModel,
   HeaderGroup,
   TableState,
+  getGroupedRowModel,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { inputSurface, mx } from '@dxos/aurora-theme';
+import { invariant } from '@dxos/invariant';
 
 import { defaultGridSlots, GridSlots } from './theme';
 
@@ -26,7 +27,7 @@ import { defaultGridSlots, GridSlots } from './theme';
 declare module '@tanstack/react-table' {
   // Access via table.options.meta.
   interface TableMeta<TData extends RowData> {
-    keyAccessor?: KeyValue<TData>;
+    keyAccessor: KeyValue<TData>;
   }
 
   // eslint-disable-next-line unused-imports/no-unused-vars
@@ -109,22 +110,21 @@ const defaultColumn: Partial<ColumnDef<RowData>> = {
   maxSize: 800,
 };
 
-export type KeyValue<TData extends RowData> = (row: Row<TData>) => string | number;
+export type KeyValue<TData extends RowData> = (row: TData) => string;
 
-// TODO(burdon): Key selector.
 export type GridProps<TData extends RowData> = {
-  keyAccessor?: KeyValue<TData>;
+  keyAccessor: KeyValue<TData>;
+  data?: TData[];
   columns?: GridColumnDef<TData>[];
   columnVisibility?: VisibilityState;
+  onColumnResize?: (state: Record<string, number>) => void;
   grouping?: string[];
-  data?: TData[];
-  slots?: GridSlots;
   header?: boolean;
   footer?: boolean;
-  onColumnResize?: (state: Record<string, number>) => void;
   border?: boolean;
   fullWidth?: boolean;
   pinToBottom?: boolean;
+  slots?: GridSlots;
   debug?: boolean;
 } & GridSelection<TData>;
 
@@ -133,26 +133,26 @@ export type GridProps<TData extends RowData> = {
  */
 export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
   const {
-    keyAccessor = (row) => row.id,
-    columns = [],
+    keyAccessor,
     data = [],
+    columns = [],
+    onColumnResize,
     columnVisibility,
-    grouping = [],
-    slots = defaultGridSlots,
-    footer = false,
+    grouping,
+    footer,
     select,
     selected,
-    onColumnResize,
     onSelectedChange,
     fullWidth,
     pinToBottom,
+    slots = defaultGridSlots,
     debug,
   } = props;
-
-  const [focus, setFocus] = useState<string>();
+  invariant(keyAccessor);
 
   // Update controlled selection.
   // https://tanstack.com/table/v8/docs/api/features/row-selection
+  const [focus, setFocus] = useState<string>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   useEffect(() => {
     setRowSelection(
@@ -174,8 +174,12 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
     }
   }, [columnSizingInfo]);
 
-  // Update table model.
+  const groupedRows = (grouping?.length ?? 0) > 0;
+
+  //
+  // Update table state.
   // https://tanstack.com/table/v8/docs/api/core/table
+  //
   const table = useReactTable({
     data,
     columns,
@@ -192,7 +196,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
       columnVisibility,
       columnSizingInfo,
       rowSelection,
-      grouping,
+      grouping: grouping ?? [],
     },
 
     // Grouping.
@@ -251,12 +255,13 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
           width: fullWidth ? '100%' : table.getTotalSize(),
         }}
       >
-        <THead {...props} state={table.getState()} headers={table.getHeaderGroups()} />
+        {/* Head */}
+        <TableHead {...props} state={table.getState()} headers={table.getHeaderGroups()} />
 
-        {(table.getState().grouping?.length === 0 && (
-          <TBody
+        {/* Rows */}
+        {!groupedRows && (
+          <TableBody
             {...props}
-            keyAccessor={keyAccessor}
             rowSelection={rowSelection}
             expand={expand}
             focus={focus}
@@ -264,43 +269,43 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
             onSelect={handleSelect}
             rows={table.getRowModel().rows}
           />
-        )) || (
-          <>
-            {table.getGroupedRowModel().rows.map((row, i) => {
-              return (
-                <Fragment key={i}>
-                  {/* TODO(burdon): Customize group header renderer. */}
-                  <thead>
-                    <tr>
-                      {slots?.margin && <th className={mx(slots?.margin?.className)} />}
-                      {debug && <th />}
-                      <th
-                        // TODO(burdon): Calculate row span.
-                        colSpan={table.getHeaderGroups()[0].headers.length}
-                        className={mx('text-left', slots?.group?.className)}
-                      >
-                        {JSON.stringify(row.getGroupingValue(table.getState().grouping[0]))}
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <TBody
-                    {...props}
-                    keyAccessor={keyAccessor}
-                    rowSelection={rowSelection}
-                    expand={expand}
-                    focus={focus}
-                    onFocus={setFocus}
-                    onSelect={handleSelect}
-                    rows={row.subRows}
-                  />
-                </Fragment>
-              );
-            })}
-          </>
         )}
 
-        {footer && <TFoot {...props} footers={table.getFooterGroups()} />}
+        {/* Groups */}
+        {groupedRows &&
+          table.getGroupedRowModel().rows.map((row, i) => {
+            return (
+              <Fragment key={i}>
+                {/* TODO(burdon): Customize group header renderer. */}
+                <thead>
+                  <tr>
+                    {slots?.margin && <th className={mx(slots?.margin?.className)} />}
+                    {debug && <th />}
+                    <th
+                      // TODO(burdon): Calculate row span.
+                      colSpan={table.getHeaderGroups()[0].headers.length}
+                      className={mx('text-left', slots?.group?.className)}
+                    >
+                      {JSON.stringify(row.getGroupingValue(table.getState().grouping[0]))}
+                    </th>
+                  </tr>
+                </thead>
+
+                <TableBody
+                  {...props}
+                  rowSelection={rowSelection}
+                  expand={expand}
+                  focus={focus}
+                  onFocus={setFocus}
+                  onSelect={handleSelect}
+                  rows={row.subRows}
+                />
+              </Fragment>
+            );
+          })}
+
+        {/* Foot */}
+        {footer && <TableFoot {...props} footers={table.getFooterGroups()} />}
       </table>
 
       {debug && (
@@ -351,13 +356,13 @@ const usePinToBottom = <TData extends RowData>(data: TData[], pinToBottom?: bool
 // Head.
 //
 
-type THeadProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableHeadProps<TData extends RowData> = Partial<GridProps<TData>> & {
   state: TableState;
   headers: HeaderGroup<TData>[];
   expand?: boolean;
 };
 
-const THead = <TData extends RowData>({
+const TableHead = <TData extends RowData>({
   state,
   headers,
   expand,
@@ -366,7 +371,7 @@ const THead = <TData extends RowData>({
   fullWidth,
   border,
   slots,
-}: THeadProps<TData>) => {
+}: TableHeadProps<TData>) => {
   return (
     <thead className={mx(header ? ['sticky top-0 z-10'] : 'collapse')}>
       {headers.map((headerGroup) => {
@@ -440,35 +445,36 @@ const THead = <TData extends RowData>({
 // Body.
 //
 
-type TBodyProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableBodyProps<TData extends RowData> = Partial<GridProps<TData>> & {
   rows: Row<TData>[];
   rowSelection: RowSelectionState;
   expand?: boolean;
   focus?: string;
-  onFocus: (id?: string) => void;
-  onSelect: (row: Row<TData>) => void;
+  onFocus?: (id?: string) => void;
+  onSelect?: (row: Row<TData>) => void;
 };
 
-const TBody = <TData extends RowData>({
+const TableBody = <TData extends RowData>({
+  keyAccessor,
   rows,
   rowSelection,
   focus,
   onFocus,
   onSelect,
-  keyAccessor,
   debug,
   border,
   expand,
   slots,
-}: TBodyProps<TData>) => {
+}: TableBodyProps<TData>) => {
   return (
     <tbody>
       {rows.map((row) => {
         return (
           <tr
-            key={keyAccessor?.(row)}
-            onClick={() => onSelect(row)}
-            role='button'
+            key={keyAccessor!(row.original)}
+            title={keyAccessor!(row.original)}
+            onClick={() => onSelect?.(row)}
+            role='button' // TODO(burdon): ???
             className={mx(
               'group',
               rowSelection[row.id] && slots?.selected?.className,
@@ -483,8 +489,8 @@ const TBody = <TData extends RowData>({
                   role='button'
                   style={{ width: 1, height: 1 }}
                   className='focus:outline-none'
-                  onFocus={() => onFocus(row.id)} // TODO(burdon): Use keyAccessor?
-                  onBlur={() => onFocus(undefined)}
+                  onFocus={() => onFocus?.(keyAccessor!(row.original))}
+                  onBlur={() => onFocus?.(undefined)}
                   onKeyDown={(event) => {
                     // TODO(burdon): Move focus.
                     switch (event.key) {
@@ -531,12 +537,12 @@ const TBody = <TData extends RowData>({
 // Footer
 //
 
-type TFootProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableFootProps<TData extends RowData> = Partial<GridProps<TData>> & {
   footers: HeaderGroup<TData>[];
   expand?: boolean;
 };
 
-const TFoot = <TData extends RowData>({ footers, expand, slots, debug, border }: TFootProps<TData>) => {
+const TableFoot = <TData extends RowData>({ footers, expand, slots, debug, border }: TableFootProps<TData>) => {
   return (
     <tfoot className={mx('sticky bottom-0 z-[10]', slots?.footer?.className)}>
       {footers.map((footerGroup) => (
