@@ -9,11 +9,11 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { useMembers, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { usePlugin } from '@dxos/react-surface';
 
-import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides, SpaceViewer } from '../types';
+import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides, ObjectViewer } from '../types';
 
 export const SpacePresence = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
@@ -22,9 +22,8 @@ export const SpacePresence = () => {
   const space = spacePlugin?.provides.space.active;
   const defaultSpace = useSpace();
   const identity = useIdentity();
-  const members = useMembers(space?.key);
 
-  if (!identity) {
+  if (!identity || !spacePlugin) {
     return null;
   }
 
@@ -44,19 +43,13 @@ export const SpacePresence = () => {
     return null;
   }
 
-  const viewers = members
-    .map((member) => spacePlugin?.provides.space.viewers[member.identity.identityKey.toHex()])
-    .filter((viewer): viewer is SpaceViewer => {
-      if (!viewer) {
-        return false;
-      }
-
-      return (
-        space.key.equals(viewer.spaceKey) &&
-        treeviewPlugin?.provides.treeView.active === viewer.objectId &&
-        Date.now() - viewer.lastSeen < 30_000
-      );
-    });
+  const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
+    return (
+      space.key.equals(viewer.spaceKey) &&
+      treeviewPlugin?.provides.treeView.active === viewer.objectId &&
+      Date.now() - viewer.lastSeen < 30_000
+    );
+  });
 
   return (
     <div className='flex items-center'>
@@ -70,7 +63,7 @@ export const SpacePresence = () => {
   );
 };
 
-const ObjectViewers: FC<{ viewers: SpaceViewer[] }> = ({ viewers }) => {
+const ObjectViewers: FC<{ viewers: ObjectViewer[] }> = ({ viewers }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
@@ -78,10 +71,10 @@ const ObjectViewers: FC<{ viewers: SpaceViewer[] }> = ({ viewers }) => {
         <AvatarGroup.Root size={4} classNames='mie-5'>
           <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
           {viewers.map((viewer) => (
-            <AvatarGroupItem.Root key={viewer.identityKey}>
+            <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
               <Avatar.Frame>
                 {/* TODO(burdon): Why `href`? */}
-                <Avatar.Fallback href={viewer.identityKey} />
+                <Avatar.Fallback href={viewer.identityKey.toHex()} />
               </Avatar.Frame>
             </AvatarGroupItem.Root>
           ))}

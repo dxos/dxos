@@ -8,10 +8,16 @@ import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
-import { TreeViewPluginProvides, setAppStateIndex } from '@braneframe/plugin-treeview';
+import {
+  TREE_VIEW_PLUGIN,
+  TreeViewAction,
+  TreeViewPluginProvides,
+  setAppStateIndex,
+} from '@braneframe/plugin-treeview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
@@ -40,7 +46,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[PublicKey.name] = PublicKey;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const state = deepSignal<SpaceState>({ active: undefined, viewers: {} });
+  const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
@@ -51,9 +57,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client'); // TODO(burdon): Use const since importing dep anyway?
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
+      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, TREE_VIEW_PLUGIN);
       if (!clientPlugin || !treeViewPlugin) {
         return;
       }
@@ -63,7 +70,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
         client.services.joinedSpace.on((spaceKey) => {
-          treeView.active = getSpaceId(spaceKey);
+          void intentPlugin?.provides.intent.sendIntent({
+            plugin: TREE_VIEW_PLUGIN,
+            action: TreeViewAction.ACTIVATE,
+            data: {
+              id: getSpaceId(spaceKey),
+            },
+          });
         });
       }
 
@@ -111,16 +124,16 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             const identity = client.halo.identity.get();
             const space = state.active;
             if (identity && space && treeView.active) {
-              console.log('post', treeView.active);
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
                 spaceKey: space.key.toHex(),
-                objectId: treeView.active,
+                added: [treeView.active],
+                removed: [treeView.previous],
               });
             }
           };
 
-          setInterval(() => send(), 1_000);
+          setInterval(() => send(), 5_000);
           send();
         }),
       );
@@ -131,15 +144,25 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           spaces.forEach((space) => {
             spaceSubscriptions.add(
               space.listen('viewing', (message) => {
-                console.log('viewing', message.payload);
-                const { identityKey, spaceKey, objectId } = message.payload;
-                if (typeof identityKey === 'string' && spaceKey && objectId) {
-                  state.viewers[identityKey] = {
-                    identityKey,
-                    spaceKey,
-                    objectId,
-                    lastSeen: Date.now(),
-                  };
+                const { added, removed } = message.payload;
+                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+                const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
+                if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
+                  state.viewers = [
+                    ...state.viewers.filter(
+                      (viewer) =>
+                        viewer.identityKey.equals(identityKey) &&
+                        viewer.spaceKey.equals(spaceKey) &&
+                        !removed.some((objectId) => objectId === viewer.objectId) &&
+                        !added.some((objectId) => objectId === viewer.objectId),
+                    ),
+                    ...added.map((objectId) => ({
+                      identityKey,
+                      spaceKey,
+                      objectId,
+                      lastSeen: Date.now(),
+                    })),
+                  ];
                 }
               }),
             );

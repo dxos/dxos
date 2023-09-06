@@ -25,8 +25,8 @@ export enum SpaceAction {
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
 }
 
-export type SpaceViewer = {
-  identityKey: string;
+export type ObjectViewer = {
+  identityKey: PublicKey;
   spaceKey: PublicKey;
   objectId: string;
   lastSeen: number;
@@ -46,9 +46,7 @@ export type SpaceState = {
   /**
    * Which objects peers are currently viewing.
    */
-  viewers: {
-    [identityKey: string]: SpaceViewer;
-  };
+  viewers: ObjectViewer[];
 };
 
 export type SpacePluginProvides = GraphProvides &
