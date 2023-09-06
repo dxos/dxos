@@ -11,7 +11,7 @@ const importPackage = '@dxos/echo-schema';
 const importNamespace = 'dxos_echo_schema';
 
 const reservedTypeNames = [importNamespace];
-const reservedFieldNames = ['id', '__typename', '__deleted'];
+const reservedFieldNames = ['id', '__typename', '__deleted', 'meta'];
 
 // Types that are injected from `importNamespace`.
 // prettier-ignore
