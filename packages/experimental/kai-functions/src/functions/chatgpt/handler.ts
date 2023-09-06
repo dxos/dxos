@@ -87,10 +87,9 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           const response = space.db.add(
             new Thread.Block({
               identityKey,
-              meta: {
-                keys: [{ source: 'openai.com' }],
-              },
               messages,
+            }).setMeta({
+              keys: [{ source: 'openai.com' }],
             }),
           );
 
