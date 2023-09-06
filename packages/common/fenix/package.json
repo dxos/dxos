@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/fenix",
+  "version": "0.1.56",
+  "description": "Basic node daemon.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/lock-file": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "pkg-up": "^3.1.0",
+    "ps-tree": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

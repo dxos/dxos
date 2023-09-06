@@ -1,0 +1,71 @@
+{
+  "sourceRoot": "packages/common/fenix/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/common/fenix/src/index.ts",
+        "outputPath": "packages/common/fenix/dist/types",
+        "tsConfig": "packages/common/fenix/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/fenix/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/fenix/dist/lib",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/fenix/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "ciEnvironments": [
+        "nodejs"
+      ],
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/fenix",
+        "outputPath": "tmp/mocha/packages/common/fenix",
+        "resultsPath": "test-results/packages/common/fenix",
+        "testPatterns": [
+          "packages/common/fenix/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/fenix/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "declarationDir": "dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../lock-file"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}
