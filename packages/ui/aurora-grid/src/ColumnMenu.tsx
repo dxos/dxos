@@ -45,6 +45,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
 
+  // TODO(burdon): Pass in.
   const schemaList: { id: string; label?: string }[] = [{ id: 'contact' }, { id: 'organization' }];
   const schemaPropList: { id: string; label?: string }[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 
