@@ -1,0 +1,14 @@
+#!/usr/bin/env -S node
+
+const { WatchDog } = require('../dist/lib/node/index.cjs');
+
+console.log(JSON.parse(process.argv[3]));
+
+const watchdog = new WatchDog(JSON.parse(process.argv[3]));
+watchdog.start();
+
+process.on('SIGINT', async () => {
+  await watchdog.stop();
+  process.exit(0);
+});
+
