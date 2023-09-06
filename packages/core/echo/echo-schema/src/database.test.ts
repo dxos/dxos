@@ -150,7 +150,7 @@ describe('Database', () => {
       '@model': 'dxos:model/document',
       title: 'Test title',
       description: 'Test description',
-      meta: {},
+      meta: { keys: [] },
     });
   });
 
@@ -245,7 +245,7 @@ describe('Database', () => {
       assignee: {
         '@id': task.assignee.id,
       },
-      meta: {}
+      meta: { keys: []}
     });
   });
 
@@ -253,20 +253,20 @@ describe('Database', () => {
     const { db } = await createDatabase();
 
     const obj = new TypedObject();
-    expect(obj.meta.foreignKey).toEqual(undefined);
-    obj.meta.foreignKey = 'test-key';
-    expect(obj.meta.foreignKey).toEqual('test-key');
+    expect(Array.from(obj.meta.keys)).toEqual([]);
+    obj.meta.keys = [{ id: 'test-key', source: 'test' }];
+    expect(Array.from(obj.meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
 
     db.add(obj);
     await db.flush();
 
-    expect(obj.meta.foreignKey).toEqual('test-key');
+    expect(Array.from(obj.meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
       '@model': 'dxos:model/document',
       meta: {
-        foreignKey: 'test-key',
+        keys: [{ id: 'test-key', source: 'test' }]
       }
     });
   });

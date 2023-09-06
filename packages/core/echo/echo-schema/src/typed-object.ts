@@ -4,7 +4,7 @@
 
 import { inspect, InspectOptionsStylized } from 'node:util';
 
-import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { DocumentModel, MutationBuilder, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
@@ -71,6 +71,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
     // TODO(burdon): Strip keys.
     // stripKeys(initialProps);
+
+
+    // Assign initial meta fields.
+    this._mutate(new MutationBuilder().set('keys', OrderedArray.fromValues([])).build(true))
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
@@ -255,7 +259,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray()._attach(this[base], key);
+        return new EchoArray()._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -285,7 +289,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       } else if (Array.isArray(value)) {
         // TODO(dmaretskyi): Make a single mutation.
         this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
-        this._get(key).push(...value);
+        this._get(key, meta).push(...value);
       } else if (typeof value === 'object' && value !== null) {
         if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
           // Special case for assigning unresolved references in the form of { '@id': '0x123' }
@@ -428,8 +432,13 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 // Generic base class for strongly-typed schema-generated classes.
 //
 
+export type ForeignKey = {
+  source?: string
+  id?: string
+}
+
 export type ObjectMeta = {
-  foreignKey?: string;
+  keys: ForeignKey[];
 }
 
 /**

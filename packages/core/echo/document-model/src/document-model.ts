@@ -53,7 +53,8 @@ export class MutationBuilder {
 
   // prettier-ignore
   constructor(
-    private readonly _model?: DocumentModel
+    private readonly _model?: DocumentModel,
+    private readonly _meta?: boolean,
   ) { }
 
   set(key: string, value: any) {
@@ -63,7 +64,7 @@ export class MutationBuilder {
 
   private _yjsTransact(key: string, tx: (arr: OrderedArray) => void): this {
     invariant(this._model);
-    const arrayInstance = this._model.get(key);
+    const arrayInstance = this._meta ? this._model.getMeta(key) : this._model.get(key);
     invariant(arrayInstance instanceof OrderedArray);
     const mutation = arrayInstance.transact(() => {
       tx(arrayInstance);
@@ -104,18 +105,22 @@ export class MutationBuilder {
 
   async commit() {
     invariant(this._model);
-    return this._model._makeMutation({ mutations: this._mutations });
+    if (this._meta) {
+      return this._model._makeMutation({ metaMutations: this._mutations });
+    } else {
+      return this._model._makeMutation({ mutations: this._mutations });
+    }
   }
 
   /**
    * Returns a mutation object without applying it.
    * @param meta Apply to the `meta` key-space.
    */
-  build(meta?: boolean): ObjectMutationSet {
-    if(meta) {
+  build(meta = this._meta): ObjectMutationSet {
+    if (meta) {
       return { metaMutations: this._mutations }
     } else {
-      return {  mutations: this._mutations };
+      return { mutations: this._mutations };
     }
   }
 }
@@ -153,11 +158,11 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
   }
 
   metaObject() {
-    return this._getState().meta; 
+    return this._getState().meta;
   }
 
-  builder() {
-    return new MutationBuilder(this);
+  builder(meta?: boolean) {
+    return new MutationBuilder(this, meta);
   }
 
   get(key: string, defaultValue?: unknown) {
