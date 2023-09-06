@@ -11,7 +11,7 @@ import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, readOnly, subscribe } from '@dxos/echo-schema';
+import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -19,7 +19,7 @@ import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
-import { getPrototypeSpecificInstanceId, range } from '@dxos/util';
+import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState } from '../echo';

@@ -114,7 +114,7 @@ export class EchoDatabase {
       log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
       invariant(!this._objects.has(obj[base]._id));
       this._objects.set(obj[base]._id, obj);
-      
+
       const result = this._backend.mutate({
         objects: [
           {
