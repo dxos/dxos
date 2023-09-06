@@ -138,9 +138,13 @@ export class WatchDog {
 
   @synchronized
   async restart() {
-    await this.stop();
+    await this.kill();
     this._restarts++;
-    await this.start();
+    if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
+      writeFileSync(this._params.logFile, 'Max restarts number is reached', { flag: 'a+' });
+    } else {
+      await this.start();
+    }
   }
 }
 
