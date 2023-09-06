@@ -36,6 +36,9 @@
       "path": "../../../ui/aurora-theme"
     },
     {
+      "path": "../../types"
+    },
+    {
       "path": "../plugin-client"
     },
     {
