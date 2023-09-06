@@ -30,7 +30,18 @@ export type GridSchemaColumn = {
   // TODO(burdon): Move to meta.
   fixed?: boolean;
   editable?: boolean;
-  resize?: boolean;
+  resizable?: boolean;
+};
+
+export const createUniqueProp = (schema: GridSchema) => {
+  for (let i = 1; i < 100; i++) {
+    const prop = 'prop_' + i;
+    if (!schema.columns.find((column) => column.id === prop)) {
+      return prop;
+    }
+  }
+
+  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };
 
 // TODO(burdon): Create builder.
@@ -50,11 +61,11 @@ export const createColumns = <TData extends RowData>(
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return schema.columns.map((column) => {
-    const { type, id, label, fixed, resize, ...props } = column;
+    const { type, id, label, fixed, resizable, ...props } = column;
 
     const options: BaseColumnOptions<TData, any> = stripUndefinedValues({
       ...props,
-      meta: { resize },
+      meta: { resizable },
       label,
       header: fixed
         ? undefined
@@ -77,58 +88,59 @@ export const createColumns = <TData extends RowData>(
 };
 
 type CreateActionColumnOptions<TData extends RowData> = {
+  isDeletable?: (row: TData) => boolean;
   onRowDelete?: (row: TData) => void;
   onColumnCreate?: (column: GridSchemaColumn) => void;
 };
 
 export const createActionColumn = <TData extends RowData>(
   schema: GridSchema,
-  { onRowDelete, onColumnCreate }: CreateActionColumnOptions<TData> = {},
+  { isDeletable, onRowDelete, onColumnCreate }: CreateActionColumnOptions<TData> = {},
 ): ColumnDef<TData> => {
   const { helper } = createColumnBuilder<TData>();
 
-  // TODO(burdon): Dropdown/dialog.
   const handleAddColumn = () => {
     onColumnCreate?.({
       id: createUniqueProp(schema),
       type: 'string',
-      label: 'New column',
       editable: true,
-      resize: true,
+      resizable: true,
     });
   };
 
   return helper.display({
     id: '__new',
     size: 40,
+    meta: {
+      slots: {
+        header: {
+          className: 'p-0',
+        },
+        footer: {
+          className: 'p-0',
+        },
+        cell: {
+          className: 'p-0',
+        },
+      },
+    },
+    // TODO(burdon): Translation.
     header: onColumnCreate
       ? () => (
-          <Button variant='ghost' onClick={handleAddColumn}>
+          <Button variant='ghost' onClick={handleAddColumn} title='New column'>
             <Plus className={getSize(4)} />
           </Button>
         )
       : undefined,
-    // TODO(burdon): Check option.
-    // TODO(burdon): Show on hover.
     cell: onRowDelete
-      ? (cell) => (
-          <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)}>
-            <X className={getSize(4)} />
-          </Button>
-        )
+      ? (cell) =>
+          isDeletable?.(cell.row.original) ? (
+            <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)} title='Delete row'>
+              <X className={getSize(4)} />
+            </Button>
+          ) : null
       : undefined,
   }) as ColumnDef<TData>;
-};
-
-export const createUniqueProp = (schema: GridSchema) => {
-  for (let i = 1; i < 100; i++) {
-    const prop = 'prop_' + i;
-    if (!schema.columns.find((column) => column.id === prop)) {
-      return prop;
-    }
-  }
-
-  return 'prop_' + PublicKey.random().toHex().slice(0, 8);
 };
 
 export type ColumnMenuProps = {

@@ -12,9 +12,9 @@ import {
   Play,
   Plus,
   PlusMinus,
-  Skull,
   Timer,
   Toolbox,
+  Trash,
 } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
@@ -219,7 +219,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
             <FlagPennant className={getSize(5)} />
           </Button>
           <Button onClick={handleResetClient} title='Reset client'>
-            <Skull className={getSize(5)} />
+            <Trash className={getSize(5)} />
           </Button>
         </DensityProvider>
       </div>
