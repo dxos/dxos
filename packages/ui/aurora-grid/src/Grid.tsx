@@ -21,13 +21,16 @@ import { defaultGridSlots, GridSlots } from './theme';
 
 // Meta definition.
 declare module '@tanstack/react-table' {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface TableMeta<TData extends RowData> {}
+  // TODO(burdon): No direct way to access table meta so added to column meta.
+  interface TableMeta<TData extends RowData> {
+    keyAccessor?: KeyValue<TData>;
+  }
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
+    table?: TableMeta<TData>;
     expand?: boolean;
-    resize?: boolean;
+    resizable?: boolean;
     slots?: {
       header?: {
         className?: string;
@@ -177,6 +180,9 @@ export const Grid = <TData extends RowData>({
     columns,
     defaultColumn: defaultColumn as Partial<ColumnDef<TData>>,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      keyAccessor,
+    },
 
     // TODO(burdon): Pagination.
     // TODO(burdon): Sorting.
@@ -281,7 +287,7 @@ export const Grid = <TData extends RowData>({
                        * Resize handle.
                        * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
                        */}
-                      {header.column.columnDef.meta?.resize && (
+                      {header.column.columnDef.meta?.resizable && (
                         <div
                           className={mx(
                             'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
