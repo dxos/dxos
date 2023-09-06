@@ -44,6 +44,11 @@ interface ConnectionCallbacks {
  */
 export enum ConnectionState {
   /**
+   *  Connection is created, but not yet passed through the connection limiter.
+   */
+  CREATED = 'CREATED',
+
+  /**
    * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed.
    * Might mean that we are waiting for the answer signal from the remote peer.
    */
@@ -77,7 +82,7 @@ export enum ConnectionState {
 export class Connection {
   private readonly _ctx = new Context();
 
-  private _state: ConnectionState = ConnectionState.INITIAL;
+  private _state: ConnectionState = ConnectionState.CREATED;
   private _transport: Transport | undefined;
   closeReason?: string;
 
@@ -322,7 +327,7 @@ export class Connection {
         continue;
       }
 
-      if (this._state === ConnectionState.INITIAL) {
+      if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
         log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
         this._incomingSignalBuffer.push(signal);
       } else {
@@ -331,6 +336,10 @@ export class Connection {
         await this._transport.signal(signal);
       }
     }
+  }
+
+  initiate() {
+    this._changeState(ConnectionState.INITIAL);
   }
 
   private _changeState(state: ConnectionState): void {
