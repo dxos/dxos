@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { createContext, FC, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -53,22 +53,31 @@ export const PluginProvider = ({
   fallback,
 }: {
   plugins: PluginDefinition[];
-  fallback?: ReactNode;
+  fallback?: ReactNode | FC<{ initializing: PluginDefinition[], loading: PluginDefinition[] }>
 }) => {
   const [plugins, setPlugins] = useState<Plugin[]>();
+  const [pluginsInitializing, setPluginsInitializing] = useState<PluginDefinition[]>([]);
+  const [pluginsLoading, setPluginsLoading] = useState<PluginDefinition[]>([]);
   useEffect(() => {
     const timeout = setTimeout(async () => {
       log('initializing plugins', { definitions });
+      setPluginsInitializing(definitions);
       const plugins = await Promise.all(
         definitions.map(async (definition) => {
-          return await initializePlugin(definition).catch((err) => {
+          const plugin = await initializePlugin(definition).catch((err) => {
             console.error('Failed to initialize plugin:', definition.meta.id, err);
             return undefined;
           });
+          setPluginsInitializing((pluginsInitializing) => pluginsInitializing.filter((pluginInitialized) => pluginInitialized !== definition))
+          return plugin;
         }),
       ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
       log('plugins initialized', { plugins });
-      await Promise.all(definitions.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
+      setPluginsLoading(definitions);
+      await Promise.all(definitions.map(async (pluginDefinition) => {
+        await pluginDefinition.ready?.(plugins);
+        setPluginsLoading((pluginsLoading) => pluginsLoading.filter((plugin) => plugin !== pluginDefinition));
+      }));
       log('plugins ready', { plugins });
       setPlugins(plugins);
     });
@@ -80,6 +89,10 @@ export const PluginProvider = ({
   }, []);
 
   if (!plugins) {
+    if (typeof fallback === 'function') {
+      const FallbackComponent = fallback;
+      return <FallbackComponent initializing={pluginsInitializing} loading={pluginsLoading} />;
+    }
     return <>{fallback ?? null}</>;
   }
 
