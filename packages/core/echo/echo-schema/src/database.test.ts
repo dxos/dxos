@@ -150,6 +150,7 @@ describe('Database', () => {
       '@model': 'dxos:model/document',
       title: 'Test title',
       description: 'Test description',
+      meta: {},
     });
   });
 
@@ -244,6 +245,29 @@ describe('Database', () => {
       assignee: {
         '@id': task.assignee.id,
       },
+      meta: {}
+    });
+  });
+
+  test('meta', async () => {
+    const { db } = await createDatabase();
+
+    const obj = new TypedObject();
+    expect(obj.meta.foreignKey).toEqual(undefined);
+    obj.meta.foreignKey = 'test-key';
+    expect(obj.meta.foreignKey).toEqual('test-key');
+
+    db.add(obj);
+    await db.flush();
+
+    expect(obj.meta.foreignKey).toEqual('test-key');
+    expect(obj[data]).toEqual({
+      '@id': obj.id,
+      '@type': undefined,
+      '@model': 'dxos:model/document',
+      meta: {
+        foreignKey: 'test-key',
+      }
     });
   });
 });

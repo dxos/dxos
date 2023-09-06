@@ -166,7 +166,7 @@ describe('Mutations', () => {
 
   test('MutationUtil', () => {
     const data1 = MutationUtil.applyMutationSet(
-      { data: {} },
+      { data: {}, meta: {} },
       {
         mutations: [
           {

@@ -17,7 +17,7 @@ import { validateKey } from './util';
  * Processes object mutations.
  */
 class DocumentModelStateMachine implements StateMachine<DocumentModelState, ObjectMutationSet, ObjectSnapshot> {
-  private _object: DocumentModelState = { data: {} };
+  private _object: DocumentModelState = { data: {}, meta: {} };
 
   getState(): DocumentModelState {
     return this._object;
@@ -25,8 +25,9 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   reset(snapshot: ObjectSnapshot): void {
     invariant(snapshot.root);
-    const object: DocumentModelState = { data: {} };
+    const object: DocumentModelState = { data: {}, meta: {} };
     ValueUtil.applyValue(object, 'data', snapshot.root);
+    ValueUtil.applyValue(object, 'meta', snapshot.meta);
     this._object = object;
     this._object.type = snapshot.type;
   }
@@ -37,8 +38,9 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   snapshot(): ObjectSnapshot {
     return {
-      root: ValueUtil.createMessage(this._object.data),
       type: this._object.type,
+      root: ValueUtil.createMessage(this._object.data),
+      meta: ValueUtil.createMessage(this._object.meta),
     };
   }
 }
@@ -107,9 +109,14 @@ export class MutationBuilder {
 
   /**
    * Returns a mutation object without applying it.
+   * @param meta Apply to the `meta` key-space.
    */
-  build(): ObjectMutationSet {
-    return { mutations: this._mutations };
+  build(meta?: boolean): ObjectMutationSet {
+    if(meta) {
+      return { metaMutations: this._mutations }
+    } else {
+      return {  mutations: this._mutations };
+    }
   }
 }
 
@@ -145,6 +152,10 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     return this._getState().data;
   }
 
+  metaObject() {
+    return this._getState().meta; 
+  }
+
   builder() {
     return new MutationBuilder(this);
   }
@@ -152,6 +163,11 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
   get(key: string, defaultValue?: unknown) {
     validateKey(key);
     return get(this._getState().data, key, defaultValue);
+  }
+
+  getMeta(key: string, defaultValue?: unknown) {
+    validateKey(key);
+    return get(this._getState().meta, key, defaultValue);
   }
 
   async set(key: string, value: unknown) {
