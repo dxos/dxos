@@ -53,6 +53,22 @@ describe('LockFile', () => {
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);
   });
+
+  test('spam with isLocked calls', async () => {
+    const checksNumber = 1000;
+    const filename = join('/tmp', `lock-${Math.random()}.lock`);
+    const handle = await LockFile.acquire(filename);
+
+    for (const _ of Array(checksNumber).keys()) {
+      expect(await LockFile.isLocked(filename)).to.be.true;
+    }
+
+    await LockFile.release(handle);
+
+    for (const _ of Array(checksNumber).keys()) {
+      expect(await LockFile.isLocked(filename)).to.be.false;
+    }
+  });
 });
 
 // NOTE: Self-contained so when function.toString is called the code runs.
