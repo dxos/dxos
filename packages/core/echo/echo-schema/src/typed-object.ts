@@ -27,7 +27,8 @@ const isValidKey = (key: string | symbol) =>
     key === 'id' ||
     key === '__deleted' ||
     key === '__typename' ||
-    key === 'meta'
+    key === 'meta' ||
+    key === 'setMeta'
   );
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
@@ -159,7 +160,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * ```
    */
   setMeta(meta: Partial<ObjectMeta>): this {
-    this._inBatch(() => {
+    this[base]._inBatch(() => {
       for (const key in meta) {
         this.meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
       }
