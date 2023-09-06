@@ -20,6 +20,7 @@ import {
 } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services'
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
@@ -50,7 +51,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       const client = clientPlugin.provides.client;
 
       // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
-      const defaultSpace = client.getSpace() ?? client.spaces?.get()[0];
+      const defaultSpace = client.getSpace() ?? client.spaces?.get().filter(space => space.state.get() !== SpaceState.INACTIVE)[0];
       if (defaultSpace) {
         // Ensure defaultSpace has the app state persistor
         await defaultSpace.waitUntilReady();
