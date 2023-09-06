@@ -6,7 +6,7 @@ import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import { HeaderContext, RowData } from '@tanstack/react-table';
 import React, { useRef, useState } from 'react';
 
-import { Button, Input, Popover, Select } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Popover, Select, Separator, useId } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -40,6 +40,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   const [label, setLabel] = useState(column.label);
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
+  const typeSelectId = useId('columnMenu__type');
 
   const handleCancel = () => {
     setProp(column.id);
@@ -78,82 +79,83 @@ export const ColumnMenu = <TData extends RowData, TValue>({
       </div>
       <div className='grow' />
 
-      {/* TODO(burdon): Click away to close? */}
       <div className='flex shrink-0'>
-        <Popover.Root open={open}>
+        <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
           <Popover.Trigger asChild>
-            <Button variant='ghost' classNames='p-0' onClick={() => setOpen(true)}>
+            <Button variant='ghost' classNames='p-0'>
               <CaretDown className={getSize(4)} />
             </Button>
           </Popover.Trigger>
 
-          {/* TODO(burdon): Labs style for popovers. */}
-          <Popover.Content>
-            <Popover.Viewport classNames='flex flex-col p-4 gap-4'>
-              <div className='flex flex-col gap-2'>
-                <Input.Root>
-                  <Input.Label>Label</Input.Label>
-                  <Input.TextInput
-                    placeholder='Enter label'
-                    value={label}
-                    onChange={(event) => setLabel(event.target.value)}
-                    autoFocus
-                  />
-                </Input.Root>
-                <Input.Root>
-                  <Input.Label>Property</Input.Label>
-                  <Input.TextInput
-                    ref={propRef}
-                    placeholder='Enter property key'
-                    // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
-                    value={prop}
-                    onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
-                  />
-                </Input.Root>
-                <Input.Root>
-                  <Input.Label>Type</Input.Label>
-                  <Select.Root value={type} onValueChange={setType}>
-                    <Select.TriggerButton placeholder='Type' />
-                    <Select.Portal>
-                      <Select.Content>
-                        <Select.Viewport>
-                          {types.map(({ type, label }) => (
-                            <Select.Option key={type} value={type}>
-                              {label}
-                            </Select.Option>
-                          ))}
-                        </Select.Viewport>
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select.Root>
-                </Input.Root>
-                {type === 'number' && (
+          <Popover.Portal>
+            <Popover.Content>
+              <Popover.Viewport classNames='p-3'>
+                <DensityProvider density='fine'>
                   <Input.Root>
-                    <Input.Label>Decimal places</Input.Label>
-                    {/* TODO(burdon): Constrain input to numbers. */}
-                    <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
+                    <Input.Label classNames='mbe-1'>Label</Input.Label>
+                    <Input.TextInput
+                      placeholder='Enter label'
+                      value={label}
+                      onChange={(event) => setLabel(event.target.value)}
+                      autoFocus
+                    />
                   </Input.Root>
-                )}
-              </div>
+                  <Input.Root>
+                    <Input.Label classNames='mbe-1 mbs-3'>Property</Input.Label>
+                    <Input.TextInput
+                      ref={propRef}
+                      placeholder='Enter property key'
+                      // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
+                      value={prop}
+                      onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
+                    />
+                  </Input.Root>
+                  <Input.Root id={typeSelectId}>
+                    <Input.Label classNames='mbe-1 mbs-3'>Type</Input.Label>
+                    <Select.Root value={type} onValueChange={setType}>
+                      <Select.TriggerButton placeholder='Type' classNames='is-full' id={typeSelectId} />
+                      <Select.Portal>
+                        <Select.Content>
+                          <Select.Viewport>
+                            {types.map(({ type, label }) => (
+                              <Select.Option key={type} value={type}>
+                                {label}
+                              </Select.Option>
+                            ))}
+                          </Select.Viewport>
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select.Root>
+                  </Input.Root>
+                  {type === 'number' && (
+                    <Input.Root>
+                      <Input.Label classNames='mbe-1 mbs-3'>Decimal places</Input.Label>
+                      {/* TODO(burdon): Constrain input to numbers. */}
+                      <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
+                    </Input.Root>
+                  )}
 
-              {/* TODO(burdon): Style as DropdownMenuItem. */}
-              <div className='flex flex-col gap-2'>
-                <Button classNames='flex justify-start items-center gap-2' onClick={handleSave}>
-                  <Check className={getSize(5)} />
-                  <span>Save</span>
-                </Button>
-                <Button classNames='flex justify-start items-center gap-2' onClick={handleCancel}>
-                  <X className={getSize(5)} />
-                  <span>Cancel</span>
-                </Button>
-                <Button classNames='flex justify-start items-center gap-2' onClick={() => onDelete?.(column.id)}>
-                  <Trash className={getSize(5)} />
-                  <span>Delete</span>
-                </Button>
-              </div>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
+                  <Separator orientation='horizontal' classNames='mlb-3' />
+                  <div role='none' className='space-b-1.5'>
+                    {/* TODO(burdon): Style as DropdownMenuItem. */}
+                    <Button variant='primary' classNames='is-full flex gap-2' onClick={handleSave}>
+                      <span>Save</span>
+                      <Check className={getSize(5)} />
+                    </Button>
+                    <Button classNames='is-full flex gap-2' onClick={handleCancel}>
+                      <span>Cancel</span>
+                      <X className={getSize(5)} />
+                    </Button>
+                    <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
+                      <span>Delete</span>
+                      <Trash className={getSize(5)} />
+                    </Button>
+                  </div>
+                </DensityProvider>
+              </Popover.Viewport>
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover.Portal>
         </Popover.Root>
       </div>
     </div>
