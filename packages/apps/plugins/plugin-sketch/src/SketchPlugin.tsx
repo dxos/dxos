@@ -17,7 +17,7 @@ import { isSketch, SKETCH_PLUGIN, SketchPluginProvides, SketchAction } from './t
 import { objectToGraphNode } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const adapter = new GraphNodeAdapter(SketchType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: SketchType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {

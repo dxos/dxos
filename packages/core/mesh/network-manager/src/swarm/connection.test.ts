@@ -63,8 +63,11 @@ describe('Connection', () => {
       createSimplePeerTransportFactory(),
     );
 
+    connection2.initiate();
     await connection2.openConnection();
     await sleep(100);
+
+    connection1.initiate();
     await connection1.openConnection();
     await Promise.all([
       protocol1.testConnection(peerId2, 'test message 1'),

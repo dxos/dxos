@@ -41,11 +41,6 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
 
-  const groupBy = context.table.options.meta?.groupBy;
-  const handleSetGroupBy = (on: boolean) => {
-    context.table.options.meta?.setGroupBy?.(on ? column.id : undefined);
-  };
-
   const handleCancel = () => {
     setProp(column.id);
     setOpen(false);
@@ -114,10 +109,6 @@ export const ColumnMenu = <TData extends RowData, TValue>({
                     value={prop}
                     onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
                   />
-                </Input.Root>
-                <Input.Root>
-                  <Input.Label>Group by</Input.Label>
-                  <Input.Checkbox checked={!!groupBy} onCheckedChange={(checked) => handleSetGroupBy(!!checked)} />
                 </Input.Root>
                 <Input.Root>
                   <Input.Label>Type</Input.Label>

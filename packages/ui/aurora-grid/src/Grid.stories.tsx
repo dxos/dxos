@@ -13,9 +13,10 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Grid, GridColumnDef } from './Grid';
+import { Grid } from './Grid';
 import { createColumnBuilder, ValueUpdater } from './helpers';
 import { createActionColumn, createColumns, GridSchema } from './schema';
+import { GridColumnDef } from './types';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.

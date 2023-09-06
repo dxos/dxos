@@ -3,7 +3,6 @@
 //
 
 import {
-  ColumnDef,
   Row,
   RowData,
   RowSelectionState,
@@ -22,33 +21,7 @@ import { inputSurface, mx } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
 
 import { defaultGridSlots, GridSlots } from './theme';
-
-// Meta definition.
-declare module '@tanstack/react-table' {
-  // Access via table.options.meta.
-  interface TableMeta<TData extends RowData> {
-    keyAccessor: KeyValue<TData>;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    expand?: boolean;
-    resizable?: boolean;
-    slots?: {
-      header?: {
-        className?: string;
-      };
-      footer?: {
-        className?: string;
-      };
-      cell?: {
-        className?: string;
-      };
-    };
-  }
-}
-
-export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
+import { GridColumnDef, KeyValue } from './types';
 
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Drag-and-drop.
@@ -105,13 +78,6 @@ export const updateSelection = (
   return selectionState;
 };
 
-const defaultColumn: Partial<ColumnDef<RowData>> = {
-  size: 200, // NOTE: Required in order remove default width.
-  maxSize: 800,
-};
-
-export type KeyValue<TData extends RowData> = (row: TData) => string;
-
 export type GridProps<TData extends RowData> = {
   keyAccessor: KeyValue<TData>;
   data?: TData[];
@@ -128,9 +94,7 @@ export type GridProps<TData extends RowData> = {
   debug?: boolean;
 } & GridSelection<TData>;
 
-/**
- * Simple table.
- */
+// TODO(burdon): Rename Table.
 export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
   const {
     keyAccessor,
@@ -183,7 +147,10 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
   const table = useReactTable({
     data,
     columns,
-    defaultColumn: defaultColumn as Partial<ColumnDef<TData>>,
+    defaultColumn: {
+      size: 200, // Required in order remove default width.
+      maxSize: 800,
+    },
     getCoreRowModel: getCoreRowModel(),
     meta: {
       keyAccessor,

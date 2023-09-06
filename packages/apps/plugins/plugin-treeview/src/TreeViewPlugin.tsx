@@ -8,6 +8,7 @@ import React from 'react';
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -50,7 +51,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       const client = clientPlugin.provides.client;
 
       // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
-      const defaultSpace = client.getSpace() ?? client.spaces?.get()[0];
+      const defaultSpace =
+        client.getSpace() ?? client.spaces?.get().filter((space) => space.state.get() !== SpaceState.INACTIVE)[0];
       if (defaultSpace) {
         // Ensure defaultSpace has the app state persistor
         await defaultSpace.waitUntilReady();

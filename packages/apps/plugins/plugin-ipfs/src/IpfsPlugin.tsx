@@ -12,7 +12,7 @@ import { isFile, IPFS_PLUGIN, IpfsPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
-  const adapter = new GraphNodeAdapter((object: TypedObject) => isFile(object), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: (object: TypedObject) => isFile(object), adapter: objectToGraphNode });
 
   return {
     meta: {

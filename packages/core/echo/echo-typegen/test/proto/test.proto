@@ -40,8 +40,6 @@ message Task {
   Task previous = 4;
   repeated Task sub_tasks = 5;
   dxos.schema.Text description = 6;
-
-  Meta meta = 100;
 }
 
 message Container {
@@ -63,13 +61,4 @@ message Container {
   repeated dxos.schema.TypedObject objects = 1;
   repeated dxos.schema.Expando expandos = 2;
   repeated Record records = 3;
-}
-
-message Meta {
-  message ForeignKey {
-    string source = 1;
-    string id = 2;
-  }
-
-  repeated ForeignKey keys = 1;
 }

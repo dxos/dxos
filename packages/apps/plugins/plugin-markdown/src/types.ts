@@ -5,6 +5,7 @@
 import { GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { Document } from '@braneframe/types';
 import { MarkdownComposerProps } from '@dxos/aurora-composer';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
@@ -24,7 +25,8 @@ export type MarkdownProperties = {
 
 export type MarkdownProvides = {
   markdown: {
-    onChange: MarkdownComposerProps['onChange'];
+    onChange?: MarkdownComposerProps['onChange'];
+    filter?: (document: Document) => boolean;
   };
 };
 
