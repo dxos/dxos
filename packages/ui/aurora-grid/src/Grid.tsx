@@ -21,13 +21,27 @@ import { defaultGridSlots, GridSlots } from './theme';
 
 // Meta definition.
 declare module '@tanstack/react-table' {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface TableMeta<TData extends RowData> {}
+  // TODO(burdon): No direct way to access table meta so added to column meta.
+  interface TableMeta<TData extends RowData> {
+    keyAccessor?: KeyValue<TData>;
+  }
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
+    table?: TableMeta<TData>;
     expand?: boolean;
-    resize?: boolean;
+    resizable?: boolean;
+    slots?: {
+      header?: {
+        className?: string;
+      };
+      footer?: {
+        className?: string;
+      };
+      cell?: {
+        className?: string;
+      };
+    };
   }
 }
 
@@ -166,6 +180,9 @@ export const Grid = <TData extends RowData>({
     columns,
     defaultColumn: defaultColumn as Partial<ColumnDef<TData>>,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      keyAccessor,
+    },
 
     // TODO(burdon): Pagination.
     // TODO(burdon): Sorting.
@@ -255,7 +272,12 @@ export const Grid = <TData extends RowData>({
                         width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                       }}
                       // Relative for resize handle.
-                      className={mx('relative text-left', showBorder && 'border', slots?.header?.className)}
+                      className={mx(
+                        'relative text-left',
+                        showBorder && 'border',
+                        slots?.header?.className,
+                        header.column.columnDef.meta?.slots?.header?.className,
+                      )}
                     >
                       {!showHeader || header.isPlaceholder
                         ? null
@@ -265,7 +287,7 @@ export const Grid = <TData extends RowData>({
                        * Resize handle.
                        * https://codesandbox.io/p/sandbox/github/tanstack/table/tree/main/examples/react/column-sizing
                        */}
-                      {header.column.columnDef.meta?.resize && (
+                      {header.column.columnDef.meta?.resizable && (
                         <div
                           className={mx(
                             'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
@@ -336,9 +358,18 @@ export const Grid = <TData extends RowData>({
                 )}
 
                 {showRowNumber && <td>{row.id}</td>}
+
                 {row.getVisibleCells().map((cell) => {
+                  // TODO(burdon): Allow class override from column.
                   return (
-                    <td key={cell.id} className={mx(showBorder && 'border', slots?.cell?.className)}>
+                    <td
+                      key={cell.id}
+                      className={mx(
+                        showBorder && 'border',
+                        slots?.cell?.className,
+                        cell.column.columnDef.meta?.slots?.cell?.className,
+                      )}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   );
@@ -363,7 +394,15 @@ export const Grid = <TData extends RowData>({
 
                 {footerGroup.headers.map((footer) => {
                   return (
-                    <th key={footer.id} className={mx(showBorder && 'border', 'text-left', slots?.footer?.className)}>
+                    <th
+                      key={footer.id}
+                      className={mx(
+                        showBorder && 'border',
+                        'text-left',
+                        slots?.footer?.className,
+                        footer.column.columnDef.meta?.slots?.footer?.className,
+                      )}
+                    >
                       {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
                     </th>
                   );

@@ -59,14 +59,14 @@ const testSchema: GridSchema = {
       id: 'name',
       type: 'string',
       editable: true,
-      resize: true,
+      resizable: true,
     },
     {
       id: 'count',
       type: 'number',
       size: 160,
       editable: true,
-      resize: true,
+      resizable: true,
     },
   ],
 };
@@ -236,6 +236,7 @@ export const Schema = {
     });
 
     const actionColumn = createActionColumn<Item>(schema, {
+      isDeletable: (row) => !!row.publicKey,
       onColumnCreate: (column) => {
         setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
       },

@@ -55,9 +55,9 @@ row: {
 //  Reuse button fragments for hoverColors, selected, primary, etc.
 export const defaultGridSlots: GridSlots = {
   // TODO(burdon): head/body/table rows.
-  header: { className: [chromeSurface, 'px-1 font-light select-none'] },
-  footer: { className: [chromeSurface, 'px-1 font-light'] },
-  cell: { className: 'px-1' },
+  header: { className: [chromeSurface, 'px-2 font-light select-none'] },
+  footer: { className: [chromeSurface, 'px-2 font-light'] },
+  cell: { className: 'px-2' },
   // TODO(burdon): Compact mode.
   // TODO(burdon): No hover if editing.
   // row: { className: 'cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800' },
