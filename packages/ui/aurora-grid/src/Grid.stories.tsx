@@ -28,7 +28,7 @@ type Item = {
   complete?: boolean;
 };
 
-faker.seed(999);
+faker.seed(911);
 
 const createItems = (count: number) =>
   range(count).map(
@@ -36,7 +36,7 @@ const createItems = (count: number) =>
       deepSignal<Item>({
         publicKey: PublicKey.random(),
         name: faker.commerce.productName(),
-        count: faker.number.int({ min: 0, max: 10_000 }),
+        count: faker.datatype.boolean({ probability: 0.9 }) ? faker.number.int({ min: 0, max: 10_000 }) : undefined,
         started: faker.date.recent(),
         complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
       }) as Item,
@@ -77,7 +77,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
   helper.accessor(
     'complete',
     builder.checkbox({
-      enableGrouping: true,
+      // enableGrouping: true,
       getGroupingValue: (row) => row.complete === true,
       label: '',
       onUpdate,
@@ -89,7 +89,13 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
     builder.string({ onUpdate, meta: { expand: true }, footer: (props) => props.table.getRowModel().rows.length }),
   ),
   helper.accessor('started', builder.date({ relative: true })),
-  helper.accessor('count', builder.number({})),
+  helper.accessor(
+    'count',
+    builder.number({
+      // TODO(burdon): Sorting.
+      getGroupingValue: (row) => (row.count ? (row.count < 2_000 ? 'A' : row.count < 5_000 ? 'B' : 'C') : 'D'),
+    }),
+  ),
   helper.accessor('complete', builder.icon({ id: 'done', label: '' })),
   helper.accessor(
     'complete',
@@ -109,6 +115,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
 export default {
   component: Grid,
   args: {
+    header: true,
     keyAccessor: (item: Item) => item.publicKey.toHex(),
   },
   argTypes: {
@@ -129,10 +136,11 @@ export default {
     },
     grouping: {
       control: 'select',
-      options: ['none', 'complete'],
+      options: ['none', 'complete', 'count'],
       mapping: {
         none: undefined,
         complete: ['complete'],
+        count: ['count'],
       },
     },
     columnVisibility: {
@@ -167,7 +175,7 @@ export default {
 export const Default = {
   args: {
     columns: columns(),
-    data: createItems(10),
+    data: createItems(20),
   },
 };
 

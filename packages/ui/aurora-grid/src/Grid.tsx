@@ -286,7 +286,7 @@ export const Grid = <TData extends RowData>(props: GridProps<TData>) => {
                       colSpan={table.getHeaderGroups()[0].headers.length}
                       className={mx('text-left', slots?.group?.className)}
                     >
-                      {JSON.stringify(row.getGroupingValue(table.getState().grouping[0]))}
+                      {table.getState().grouping[0]}[{String(row.getGroupingValue(table.getState().grouping[0]))}]
                     </th>
                   </tr>
                 </thead>
