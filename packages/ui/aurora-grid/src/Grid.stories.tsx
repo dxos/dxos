@@ -49,7 +49,8 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
 
 // TODO(burdon): Move to separate test.
 const testSchema: GridSchema = {
-  columns: [
+  id: 'test',
+  props: [
     {
       id: 'complete',
       type: 'boolean',
@@ -261,13 +262,13 @@ export const Schema = {
 
     const columns = createColumns<Item>(schema, {
       onColumnUpdate: (id, column) => {
-        setSchema(({ columns, ...props }) => ({
-          columns: columns.map((c) => (c.id === id ? column : c)),
-          ...props,
+        setSchema(({ props, ...rest }) => ({
+          props: props.map((c) => (c.id === id ? column : c)),
+          ...rest,
         }));
       },
       onColumnDelete: (id) => {
-        setSchema(({ columns, ...props }) => ({ columns: columns.filter((c) => c.id !== id), ...props }));
+        setSchema(({ props, ...rest }) => ({ props: props.filter((c) => c.id !== id), ...rest }));
       },
       onUpdate: (item, prop, value) => {
         setItems((items) => updateItems(items, item.publicKey, prop, value));
@@ -277,7 +278,7 @@ export const Schema = {
     const actionColumn = createActionColumn<Item>(schema, {
       isDeletable: (row) => !!row.publicKey,
       onColumnCreate: (column) => {
-        setSchema(({ columns, ...props }) => ({ columns: [...columns, column], ...props }));
+        setSchema(({ props, ...rest }) => ({ props: [...props, column], ...rest }));
       },
       onRowDelete: (row) => {
         setItems((items) => items.filter((item) => !item.publicKey.equals(row.publicKey)));

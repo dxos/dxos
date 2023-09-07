@@ -18,10 +18,11 @@ import { BaseColumnOptions, createColumnBuilder } from './helpers';
  * Serializable schema.
  */
 export type GridSchema = {
-  columns: GridSchemaColumn[];
+  id: string;
+  props: GridSchemaProp[];
 };
 
-export type GridSchemaColumn = {
+export type GridSchemaProp = {
   id: string;
   type: 'number' | 'boolean' | 'date' | 'string' | 'ref';
   size?: number;
@@ -41,7 +42,7 @@ export type GridSchemaColumn = {
 export const createUniqueProp = (schema: GridSchema) => {
   for (let i = 1; i < 100; i++) {
     const prop = 'prop_' + i;
-    if (!schema.columns.find((column) => column.id === prop)) {
+    if (!schema.props.find((column) => column.id === prop)) {
       return prop;
     }
   }
@@ -53,7 +54,7 @@ export const createUniqueProp = (schema: GridSchema) => {
 
 type CreateColumnsOptions<TData extends RowData, TValue> = {
   onUpdate?: (row: TData, id: string, value: TValue) => void;
-  onColumnUpdate?: (id: string, column: GridSchemaColumn) => void;
+  onColumnUpdate?: (id: string, column: GridSchemaProp) => void;
   onColumnDelete?: (id: string) => void;
 };
 
@@ -65,7 +66,7 @@ export const createColumns = <TData extends RowData>(
   { onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
-  return schema.columns.map((column) => {
+  return schema.props.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
     const options: BaseColumnOptions<TData, any> = stripUndefinedValues({
@@ -77,6 +78,7 @@ export const createColumns = <TData extends RowData>(
         : (context) => (
             <ColumnMenu<TData, any>
               context={context}
+              schemas={[schema]}
               schema={schema}
               column={column}
               onUpdate={onColumnUpdate}
@@ -103,7 +105,7 @@ export const createColumns = <TData extends RowData>(
 type CreateActionColumnOptions<TData extends RowData> = {
   isDeletable?: (row: TData) => boolean;
   onRowDelete?: (row: TData) => void;
-  onColumnCreate?: (column: GridSchemaColumn) => void;
+  onColumnCreate?: (column: GridSchemaProp) => void;
 };
 
 export const createActionColumn = <TData extends RowData>(

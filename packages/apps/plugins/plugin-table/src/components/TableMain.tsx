@@ -7,7 +7,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaColumn, createActionColumn } from '@dxos/aurora-grid';
+import { Grid, createColumns, GridSchemaProp, createActionColumn, GridSchema } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -15,7 +15,7 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 const EMPTY_ROW_ID = '__new';
 
-const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => {
+const getColumnType = (type?: SchemaType.PropType): GridSchemaProp['type'] => {
   switch (type) {
     case SchemaType.PropType.BOOLEAN:
       return 'boolean';
@@ -29,7 +29,7 @@ const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => 
   }
 };
 
-const getPropType = (type?: GridSchemaColumn['type']): SchemaType.PropType => {
+const getPropType = (type?: GridSchemaProp['type']): SchemaType.PropType => {
   switch (type) {
     case 'boolean':
       return SchemaType.PropType.BOOLEAN;
@@ -62,8 +62,9 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
 
   // TODO(burdon): Settings dialog to change typename.
   const columns = useMemo(() => {
-    const schema = {
-      columns: table.schema?.props.map(({ id, type, label }) => ({
+    const schema: GridSchema = {
+      id: 'test',
+      props: table.schema?.props.map(({ id, type, label }) => ({
         id: id!,
         type: getColumnType(type),
         size: table.props?.find((prop) => prop.id === id)?.size,

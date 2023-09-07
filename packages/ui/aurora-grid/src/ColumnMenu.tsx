@@ -10,9 +10,9 @@ import { Button, DensityProvider, Input, Popover, Select, Separator, useId } fro
 import { getSize } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { GridSchema, GridSchemaColumn } from './schema';
+import { GridSchema, GridSchemaProp } from './schema';
 
-const types = new Map<GridSchemaColumn['type'], string>([
+const types = new Map<GridSchemaProp['type'], string>([
   ['string', 'Text'],
   ['boolean', 'Checkbox'],
   ['number', 'Number'],
@@ -22,14 +22,16 @@ const types = new Map<GridSchemaColumn['type'], string>([
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
+  schemas: GridSchema[];
   schema: GridSchema;
-  column: GridSchemaColumn;
-  onUpdate?: (id: string, column: GridSchemaColumn) => void;
+  column: GridSchemaProp;
+  onUpdate?: (id: string, column: GridSchemaProp) => void;
   onDelete?: (id: string) => void;
 };
 
 export const ColumnMenu = <TData extends RowData, TValue>({
   context,
+  schemas,
   schema,
   column,
   onUpdate,
@@ -45,7 +47,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
   const [digits, setDigits] = useState(String(column.digits ?? '0'));
   const propRef = useRef<HTMLInputElement>(null);
 
-  // TODO(burdon): Pass in.
+  // TODO(burdon): Pass in as model.
   const schemaList: { id: string; label?: string }[] = [{ id: 'contact' }, { id: 'organization' }];
   const schemaPropList: { id: string; label?: string }[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 
@@ -56,11 +58,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
 
   const handleSave = () => {
     // Check valid and unique.
-    if (
-      !prop.length ||
-      !prop.match(/^[a-zA-Z_].+/i) ||
-      schema.columns.find((c) => c.id !== column.id && c.id === prop)
-    ) {
+    if (!prop.length || !prop.match(/^[a-zA-Z_].+/i) || schema.props.find((c) => c.id !== column.id && c.id === prop)) {
       propRef.current?.focus();
       return;
     }
@@ -68,7 +66,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({
     onUpdate?.(column.id, {
       ...column,
       id: prop,
-      type: type as GridSchemaColumn['type'],
+      type: type as GridSchemaProp['type'],
       label,
       digits: safeParseInt(digits),
     });
