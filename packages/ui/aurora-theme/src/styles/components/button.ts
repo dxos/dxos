@@ -37,7 +37,8 @@ export type ButtonStyleProps = Partial<{
 export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm shrink-0 inline-flex select-none items-center justify-center transition-color duration-100',
+    'font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden',
+    'transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
     props.disabled && staticDisabled,
     !props.inGroup && 'rounded-md',
