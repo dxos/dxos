@@ -5,9 +5,11 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { FileHandle } from 'node:fs/promises';
+import { promisify } from 'node:util';
 import psTree from 'ps-tree';
 
-import { synchronized } from '@dxos/async';
+import { synchronized, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
@@ -19,6 +21,9 @@ export type DaemonInfo = {
   cwd: string;
   timestamp: number;
 };
+
+const LOCK_TIMEOUT = 500;
+const LOCK_CHECK_INTERVAL = 50;
 
 export type WatchDogParams = {
   //
@@ -55,6 +60,7 @@ export class WatchDog {
   private _lock?: FileHandle;
   private _child?: ChildProcessWithoutNullStreams;
   private _restarts = 0;
+  private _processCtx?: Context;
 
   constructor(private readonly _params: WatchDogParams) {}
 
@@ -68,23 +74,63 @@ export class WatchDog {
 
     this._lock = await LockFile.acquire(this._params.lockFile);
     this._child = spawn(command, args, { cwd, shell, env });
+    this._processCtx = new Context();
 
-    this._child.stdout.on('data', (data) => {
-      writeFileSync(this._params.logFile, String(data), { flag: 'a+' });
-    });
+    // Setup stdout handler.
+    {
+      const stdoutHandler = (data: Uint8Array) => {
+        writeFileSync(this._params.logFile, String(data), { flag: 'a+' });
+      };
 
-    this._child.stderr.on('data', (data) => {
-      writeFileSync(this._params.logFile, String(data), { flag: 'a+' });
-    });
+      this._child.stdout.on('data', stdoutHandler);
 
-    this._child.on('exit', async (code) => {
-      if (code && code !== 0) {
-        writeFileSync(this._params.logFile, `Died unexpectedly with exit code ${code}`);
-        await this.restart();
-      } else {
-        writeFileSync(this._params.logFile, 'Stopped.');
-      }
-    });
+      this._processCtx.onDispose(() => {
+        this._child!.stdout.off('data', stdoutHandler);
+      });
+    }
+
+    // Setup stderr handler.
+    {
+      const stderrHandler = (data: Uint8Array) => {
+        writeFileSync(this._params.errFile, String(data), { flag: 'a+' });
+      };
+
+      this._child.stderr.on('data', stderrHandler);
+
+      this._processCtx.onDispose(() => {
+        this._child!.stderr.off('data', stderrHandler);
+      });
+    }
+
+    // Setup restart handler.
+    {
+      const restartHandler = async (code: number, signal: number | NodeJS.Signals) => {
+        if (code && code !== 0) {
+          writeFileSync(this._params.errFile, `Died unexpectedly with exit code ${code} (signal: ${signal}).`);
+          await this.restart();
+        }
+      };
+
+      this._child.on('close', restartHandler);
+
+      // We should unsubscribe from the event when the process is killed by us to not try to restart it.
+      this._processCtx.onDispose(() => {
+        this._child!.off('close', restartHandler);
+      });
+    }
+
+    // Setup exit handler.
+    {
+      const exitHandler = async (code: number, signal: number | NodeJS.Signals) => {
+        writeFileSync(this._params.logFile, `Stopped with exit code ${code} (signal: ${signal}).`);
+      };
+
+      this._child.on('close', exitHandler);
+
+      this._processCtx.onDispose(() => {
+        this._child!.off('close', exitHandler);
+      });
+    }
 
     invariant(this._child.pid, 'Child process has no pid.');
 
@@ -109,13 +155,9 @@ export class WatchDog {
       return;
     }
 
-    invariant(this._child.pid, 'Child process has no pid.');
-    await kill({ pid: this._child.pid, killTree: this._params.killTree, signal: 'SIGINT' });
-    this._child = undefined;
+    await this._killWithSignal('SIGKILL');
 
-    invariant(this._lock, 'Lock is not defined.');
-    await LockFile.release(this._lock);
-    this._lock = undefined;
+    await this._clearLock();
   }
 
   /**
@@ -127,55 +169,55 @@ export class WatchDog {
       return;
     }
 
-    invariant(this._child.pid, 'Child process has no pid.');
-    await kill({ pid: this._child.pid, killTree: this._params.killTree, signal: 'SIGKILL' });
-    this._child = undefined;
+    await this._killWithSignal('SIGKILL');
 
-    invariant(this._lock, 'Lock is not defined.');
-
-    // Lock should automatically be released.
-    this._lock = undefined;
+    await this._clearLock();
   }
 
-  @synchronized
   async restart() {
-    log.info('Restarting...');
     await this.kill();
-    this._restarts++;
     if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
       writeFileSync(this._params.logFile, 'Max restarts number is reached', { flag: 'a+' });
     } else {
+      log.info('Restarting...');
+      this._restarts++;
       await this.start();
     }
   }
-}
 
-/**
- * Kills a process and its children with the given signal.
- */
-const kill = async ({ pid, killTree, signal }: { pid: number; killTree?: boolean; signal?: string }) => {
-  signal = signal || 'SIGKILL';
+  async _killWithSignal(signal: number | NodeJS.Signals) {
+    invariant(this._processCtx, 'Process context is not defined.');
+    await this._processCtx.dispose();
 
-  return new Promise<void>((resolve, reject) => {
-    if (killTree && process.platform !== 'win32') {
-      psTree(pid, (err, children) => {
-        if (err) {
-          reject(err);
-        }
-        [pid, ...children.map((p) => p.PID)].forEach((tpid) => {
-          try {
+    // Kill child process tree.
+    if (this._params.killTree) {
+      if (process.platform !== 'win32') {
+        invariant(this._child?.pid, 'Child process has no pid.');
+        const children = await promisify(psTree)(this._child.pid);
+        children
+          .map((p) => p.PID)
+          .forEach((tpid) => {
             invariant(tpid, 'Process id is not defined.');
             process.kill(Number(tpid), signal);
-          } catch (ex) {}
-        });
-
-        resolve();
-      });
-    } else {
-      try {
-        process.kill(pid, signal);
-      } catch (ex) {}
-      resolve();
+          });
+      }
     }
-  });
-};
+
+    invariant(this._child?.pid, 'Child process has no pid.');
+    this._child.kill(signal);
+    this._child = undefined;
+  }
+
+  private async _clearLock() {
+    invariant(this._lock, 'Lock is not defined.');
+
+    await LockFile.release(this._lock);
+    await waitForCondition({
+      condition: async () => !(await LockFile.isLocked(this._params.lockFile)),
+      timeout: LOCK_TIMEOUT,
+      interval: LOCK_CHECK_INTERVAL,
+      error: new Error('Lock file is not being released.'),
+    });
+    this._lock = undefined;
+  }
+}

@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-import { sleep } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { LockFile } from '@dxos/lock-file';
 import { describe, test } from '@dxos/test';
 
@@ -15,7 +15,7 @@ import { neverEndingProcess } from './testing-util';
 import { WatchDog } from './watchdog';
 
 describe('WatchDog', () => {
-  test.repeat(100)('Start/stop process', async () => {
+  test.repeat(1000)('Start/stop process', async () => {
     const lockFile = '/tmp/dxos/testing/fenix/file.lock';
 
     // Create lock file.
@@ -29,17 +29,15 @@ describe('WatchDog', () => {
       args: ['-e', `(${neverEndingProcess.toString()})()`],
       lockFile,
       logFile: '/tmp/dxos/testing/fenix/file.log',
-      errFile: '/tmp/dxos/testing/fenix/file.err',
+      errFile: '/tmp/dxos/testing/fenix/err.log',
     });
 
-    expect(await LockFile.isLocked(lockFile)).to.be.false;
+    expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
     await watchDog.start();
 
-    expect(await LockFile.isLocked(lockFile)).to.be.true;
+    expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.true;
 
     await watchDog.stop();
-    expect(await LockFile.isLocked(lockFile)).to.be.false;
-
-    await sleep(200);
+    expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
   });
 });

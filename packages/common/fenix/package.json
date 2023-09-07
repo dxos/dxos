@@ -14,6 +14,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
