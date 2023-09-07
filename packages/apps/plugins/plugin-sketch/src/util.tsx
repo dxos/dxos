@@ -21,7 +21,7 @@ export const objectToGraphNode = (
 ): Graph.Node<SketchType> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? ['sketch title placeholder', { ns: SKETCH_PLUGIN }],
+    label: object.title ?? ['object title placeholder', { ns: SKETCH_PLUGIN }],
     icon: (props) => <CompassTool {...props} />,
     data: object,
     properties: {
@@ -32,7 +32,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'rename',
-    label: ['rename sketch label', { ns: SKETCH_PLUGIN }],
+    label: ['rename object label', { ns: SKETCH_PLUGIN }],
     icon: (props) => <PencilSimpleLine {...props} />,
     intent: {
       action: SpaceAction.RENAME_OBJECT,
@@ -42,7 +42,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'delete',
-    label: ['delete sketch label', { ns: SKETCH_PLUGIN }],
+    label: ['delete object label', { ns: SKETCH_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
