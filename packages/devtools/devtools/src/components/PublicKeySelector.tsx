@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select, Toolbar } from '@dxos/aurora';
+import { Select } from '@dxos/aurora';
 import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
@@ -30,14 +30,12 @@ export const PublicKeySelector = ({
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Toolbar.Button asChild>
-        <Select.TriggerButton placeholder={placeholder} />
-      </Toolbar.Button>
+      <Select.TriggerButton placeholder={placeholder} />
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>
             {removeDuplicates(keys).map((key) => (
-              <Select.Option value={key.toHex()} key={key.toHex()}>
+              <Select.Option key={key.toHex()} value={key.toHex()}>
                 <div className='flex items-center gap-2'>
                   <span className='font-mono text-neutral-250'>{key.truncate()}</span>
                   {getLabel(key)}
