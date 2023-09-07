@@ -320,6 +320,7 @@ message SignalResponse {
     dxos.mesh.signal.Message message = 2;
   }
   google.protobuf.Timestamp received_at = 3;
+  optional bytes topic = 4;
 }
 
 //

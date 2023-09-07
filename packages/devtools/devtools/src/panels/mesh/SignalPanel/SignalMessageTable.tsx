@@ -59,6 +59,10 @@ const views: View<SignalResponse>[] = [
         id: 'since',
         ...builder.date(),
       }),
+      helper.accessor((response) => response.topic && PublicKey.from(response.topic), {
+        id: 'topic',
+        ...builder.key({ tooltip: true }),
+      }),
     ],
   },
   {
