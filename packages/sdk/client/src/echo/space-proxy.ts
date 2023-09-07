@@ -131,6 +131,7 @@ export class SpaceProxy implements Space {
     if (this._properties) {
       return this._properties;
     } else {
+      log('using cached properties');
       return this._cachedProperties;
     }
   }
@@ -268,14 +269,19 @@ export class SpaceProxy implements Space {
     this._databaseInitialized.wake();
 
     // Set properties document when it's available.
+    // NOTE: Emits state update event when properties are first available.
+    //   This is needed to ensure reactivity for newly created spaces.
+    // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const query = this._db.query(Properties.filter());
       if (query.objects.length === 1) {
         this._properties = query.objects[0];
+        this._stateUpdate.emit(this._currentState);
       } else {
         const subscription = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
+            this._stateUpdate.emit(this._currentState);
             subscription();
           }
         });

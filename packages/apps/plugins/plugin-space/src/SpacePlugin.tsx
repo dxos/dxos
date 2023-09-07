@@ -14,7 +14,7 @@ import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TreeViewPluginProvides, setAppStateIndex } from '@braneframe/plugin-treeview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { createSubscription } from '@dxos/echo-schema';
+import { subscribe } from '@dxos/echo-schema';
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
 import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -207,9 +207,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
               };
 
-              const handle = createSubscription(() => update());
-              handle.update([space.properties]);
-              subscriptions.add(handle.unsubscribe);
+              const unsubscribe = space.properties[subscribe](() => update());
+              subscriptions.add(unsubscribe);
               update();
             });
           });
