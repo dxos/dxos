@@ -1,3 +1,4 @@
+/* eslint-disable no-fallthrough */
 //
 // Copyright 2020 DXOS.org
 //
