@@ -29,7 +29,8 @@ message Schema {
     PropType type = 2;
     string label = 3;
     int32 digits = 4;
-    string foreignKey = 5;
+    Schema ref = 5;
+    string refProp = 6;
   }
 
   // FQ type name (e.g., dxos.org/type/Document
@@ -48,8 +49,9 @@ message Table {
     int32 size = 2;
   }
 
-  Schema schema = 1;
-  repeated Prop props = 2;
+  string name = 1;
+  Schema schema = 2;
+  repeated Prop props = 3;
 
   // TODO(burdon): Filter.
   // TODO(burdon): Visible columns.

@@ -48,31 +48,56 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
 };
 
 // TODO(burdon): Move to separate test.
-const testSchema: GridSchema = {
-  id: 'test',
-  props: [
-    {
-      id: 'complete',
-      type: 'boolean',
-      label: 'ok',
-      fixed: true,
-      editable: true,
-    },
-    {
-      id: 'name',
-      type: 'string',
-      editable: true,
-      resizable: true,
-    },
-    {
-      id: 'count',
-      type: 'number',
-      size: 160,
-      editable: true,
-      resizable: true,
-    },
-  ],
-};
+const schamas: GridSchema[] = [
+  {
+    id: 'a',
+    props: [
+      {
+        id: 'complete',
+        type: 'boolean',
+        label: 'ok',
+        fixed: true,
+        editable: true,
+      },
+      {
+        id: 'name',
+        type: 'string',
+        editable: true,
+        resizable: true,
+      },
+      {
+        id: 'count',
+        type: 'number',
+        size: 160,
+        editable: true,
+        resizable: true,
+      },
+    ],
+  },
+  {
+    id: 'b',
+    props: [
+      {
+        id: 'name',
+        type: 'string',
+        editable: true,
+        resizable: true,
+      },
+    ],
+  },
+  {
+    id: 'c',
+    props: [
+      {
+        id: 'count',
+        type: 'number',
+        size: 160,
+        editable: true,
+        resizable: true,
+      },
+    ],
+  },
+];
 
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[] => [
@@ -257,10 +282,10 @@ export const Editable = {
 
 export const Schema = {
   render: () => {
-    const [schema, setSchema] = useState(testSchema);
+    const [schema, setSchema] = useState(schamas[0]);
     const [items, setItems] = useState(createItems(10));
 
-    const columns = createColumns<Item>(schema, {
+    const columns = createColumns<Item>(schamas, schema, {
       onColumnUpdate: (id, column) => {
         setSchema(({ props, ...rest }) => ({
           props: props.map((c) => (c.id === id ? column : c)),

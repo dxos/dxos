@@ -19,6 +19,7 @@ import { BaseColumnOptions, createColumnBuilder } from './helpers';
  */
 export type GridSchema = {
   id: string;
+  name?: string;
   props: GridSchemaProp[];
 };
 
@@ -28,8 +29,10 @@ export type GridSchemaProp = {
   size?: number;
   label?: string;
 
+  // type: number
   digits?: number;
 
+  // type: schema
   ref?: string;
   refProp?: string;
 
@@ -62,6 +65,7 @@ type CreateColumnsOptions<TData extends RowData, TValue> = {
  * Create column definitions from schema metadata.
  */
 export const createColumns = <TData extends RowData>(
+  schemas: GridSchema[],
   schema: GridSchema,
   { onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
@@ -78,7 +82,7 @@ export const createColumns = <TData extends RowData>(
         : (context) => (
             <ColumnMenu<TData, any>
               context={context}
-              schemas={[schema]}
+              schemas={schemas}
               schema={schema}
               column={column}
               onUpdate={onColumnUpdate}
