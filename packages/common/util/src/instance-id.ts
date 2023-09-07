@@ -35,3 +35,8 @@ export const getPrototypeSpecificInstanceId = (instance: any): number => {
 
   return id;
 };
+
+export const getDebugName = (instance: any): string => {
+  const prototype = Object.getPrototypeOf(instance);
+  return `${prototype.constructor.name}#${getPrototypeSpecificInstanceId(instance)}`;
+};

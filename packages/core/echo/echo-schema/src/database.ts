@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
-import { WeakDictionary } from '@dxos/util';
+import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { base, db } from './defs';
 import { EchoObject } from './object';
@@ -110,6 +110,11 @@ export class EchoDatabase {
       obj[base]._beforeBind();
 
       const snapshot = obj[base]._createSnapshot();
+
+      log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
+      invariant(!this._objects.has(obj[base]._id));
+      this._objects.set(obj[base]._id, obj);
+
       const result = this._backend.mutate({
         objects: [
           {
@@ -128,8 +133,6 @@ export class EchoDatabase {
 
       obj[base]._bind(result.objectsUpdated[0]);
     } finally {
-      this._objects.set(obj[base]._id, obj);
-
       if (batchCreated) {
         this._backend.commitBatch();
       }
@@ -202,6 +205,8 @@ export class EchoDatabase {
         }
 
         obj[base]._id = object.id;
+        log('add to set', { id: obj[base]._id, instance: getDebugName(obj) });
+        invariant(!this._objects.has(object.id));
         this._objects.set(object.id, obj);
         obj[base]._database = this;
         obj[base]._bind(object);
