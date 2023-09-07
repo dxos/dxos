@@ -9,7 +9,8 @@ import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace, ConnectionResetError, ConnectivityError, WrappableError, UnknownProtocolError } from '@dxos/protocols';
+import { trace } from '@dxos/protocols';
+import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError } from '@dxos/errors';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -79,7 +80,7 @@ export class SimplePeerTransport implements Transport {
       } else if ('code' in err) {
         switch (err.code) {
           case 'ERR_WEBRTC_SUPPORT':
-            this.errors.raise(new WrappableError('WebRTC not supported', undefined, err));
+            this.errors.raise(new ProtocolError('WebRTC not supported', undefined, err));
           case 'ERR_ICE_CONNECTION_FAILURE':
           case 'ERR_DATA_CHANNEL':
           case 'ERR_CONNECTION_FAILURE':

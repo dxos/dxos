@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { ConnectionResetError, ProtocolError } from '@dxos/errors';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
@@ -159,7 +160,7 @@ export class Connection {
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
-      this.close(new Error('protocol stream closed')).catch((err) => this.errors.raise(err));
+      this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
     invariant(!this._transport);
@@ -187,7 +188,7 @@ export class Connection {
       }
 
       // TODO(nf): fix ErrorStream so instanceof works here
-      if (err.message.includes('ConnectionResetError:')) {
+      if (err instanceof ConnectionResetError) {
         log('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err.message.includes('ConnectivityError')) {
