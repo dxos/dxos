@@ -7,8 +7,9 @@ import chaiAsPromised from 'chai-as-promised';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import waitForExpect from 'wait-for-expect';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { LockFile } from './lock-file';
@@ -48,7 +49,9 @@ describe('LockFile', () => {
     processHandle.kill();
 
     // Wait for process to be killed
-    await sleep(400);
+    await waitForExpect(async () => {
+      expect(await LockFile.isLocked(filename)).to.be.false;
+    });
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);
@@ -57,15 +60,11 @@ describe('LockFile', () => {
   test('spam with isLocked calls', async () => {
     const checksNumber = 1000;
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
-    const handle = await LockFile.acquire(filename);
 
     for (const _ of Array(checksNumber).keys()) {
+      const handle = await LockFile.acquire(filename);
       expect(await LockFile.isLocked(filename)).to.be.true;
-    }
-
-    await LockFile.release(handle);
-
-    for (const _ of Array(checksNumber).keys()) {
+      await LockFile.release(handle);
       expect(await LockFile.isLocked(filename)).to.be.false;
     }
   });
