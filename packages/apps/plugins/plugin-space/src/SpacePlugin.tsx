@@ -348,7 +348,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               const object =
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              console.log('[space rename object]', object, splitViewPlugin?.provides.splitView);
+              // console.log('[space rename object]', object, splitViewPlugin?.provides.splitView);
               if (object && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.popoverOpen = true;
                 splitViewPlugin.provides.splitView.popoverContent = [

@@ -20,6 +20,7 @@ export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, Type
           <Input.TextInput
             defaultValue={object.title ?? ''}
             placeholder={t('object title placeholder')}
+            // TODO(burdon): Field should not be hard-code 'title' field.
             onChange={({ target: { value } }) => (object.title = value)}
           />
         </Input.Root>

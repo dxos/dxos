@@ -8,9 +8,9 @@ import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/re
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { Input, Tooltip } from '@dxos/aurora';
+import { Input, Select, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -47,6 +47,12 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
   label?: string;
   className?: string;
   onUpdate?: ValueUpdater<TData, TValue | undefined>;
+};
+
+export type SelectValue = { id: string; value?: any; label?: string };
+
+export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
+  lookupValues?: () => Promise<SelectValue[]>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -89,11 +95,65 @@ const defaults = <TData extends RowData, TValue>(
  */
 export class ColumnBuilder<TData extends RowData> {
   /**
+   * Select value
+   */
+  // TODO(burdon): Make values async.
+  select({ label, className, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
+    ColumnDef<TData, any>
+  > {
+    return defaults(props, {
+      minSize: 100,
+      header: (column) => {
+        return <div className={'truncate'}>{label ?? column.header.id}</div>;
+      },
+      cell: onUpdate
+        ? (cell) => {
+            // TODO(burdon): Support type-ahead.
+            const [values, setValues] = useState<SelectValue[]>([]);
+            useEffect(() => {
+              setTimeout(async () => {
+                setValues((await lookupValues?.()) ?? []);
+              });
+            }, []);
+
+            return (
+              <Select.Root
+                value={cell.getValue()}
+                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+              >
+                <Select.TriggerButton
+                  placeholder={cell.getValue()}
+                  variant='ghost'
+                  classNames='flex w-full justify-start p-0 [&>span:nth-child(1)]:grow [&>span:nth-child(1)]:text-left'
+                />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {values?.map(({ id, value, label }) => (
+                        <Select.Option key={id} value={value ?? id}>
+                          {label ?? String(value) ?? id}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            );
+          }
+        : (cell) => {
+            const value = cell.getValue();
+            return <div className={mx('truncate', className)}>{value}</div>;
+          },
+    });
+  }
+
+  /**
    * String formats.
    */
   string({ label, className, onUpdate, ...props }: StringColumnOptions<TData> = {}): Partial<ColumnDef<TData, string>> {
     return defaults(props, {
       minSize: 100,
+      // TODO(burdon): Default.
       header: (column) => {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
@@ -105,7 +165,7 @@ export class ColumnBuilder<TData extends RowData> {
             const inputRef = useRef<HTMLInputElement>(null);
             const { findFirstFocusable } = useFocusFinders();
 
-            const handleSave = () => {
+            const handleSave = (focusNext = false) => {
               if (value === initialValue) {
                 return;
               }
@@ -113,13 +173,9 @@ export class ColumnBuilder<TData extends RowData> {
               onUpdate?.(cell.row.original, cell.column.id, value);
 
               // TODO(burdon): More generally support keyboard navigation.
-              const cellElement = inputRef.current?.parentElement;
-              const next = findNextFocusable(findFirstFocusable, cellElement?.nextSibling as HTMLElement);
-              if (next) {
-                next.focus();
-              } else {
+              if (focusNext) {
+                const rowElement = inputRef.current?.parentElement?.parentElement;
                 // TODO(burdon): Hack to wait for next row to render.
-                const rowElement = cellElement?.parentElement;
                 setTimeout(() => {
                   const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
                   next?.focus();
@@ -145,10 +201,10 @@ export class ColumnBuilder<TData extends RowData> {
                   placeholder={placeholder ? 'Add row...' : undefined}
                   classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Move color to theme.
                   value={(value as string) ?? ''}
-                  onBlur={handleSave}
+                  onBlur={() => handleSave(false)}
                   onChange={(event) => setValue(event.target.value)}
                   onKeyDown={(event) =>
-                    (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
+                    (event.key === 'Enter' && handleSave(true)) || (event.key === 'Escape' && handleCancel())
                   }
                 />
               </Input.Root>
@@ -240,15 +296,20 @@ export class ColumnBuilder<TData extends RowData> {
       cell: (cell) => {
         const value = cell.getValue();
 
-        const str = value
-          ? formatSpec
-            ? format(value, formatSpec)
-            : relative
-            ? formatDistanceToNow(value, { addSuffix: true })
-            : value.toISOString()
-          : undefined;
+        try {
+          const str = value
+            ? formatSpec
+              ? format(value, formatSpec)
+              : relative
+              ? formatDistanceToNow(value, { addSuffix: true })
+              : value.toISOString()
+            : undefined;
 
-        return <div className={mx('font-mono', className)}>{str}</div>;
+          return <div className={mx('font-mono', className)}>{str}</div>;
+        } catch (err) {
+          console.log(value);
+          return null;
+        }
       },
     });
   }
