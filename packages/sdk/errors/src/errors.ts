@@ -70,33 +70,33 @@ export class InvalidInvitationExtensionRoleError extends SystemError {
 
 export class ConnectionResetError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('connection reset', message, context);
+    super('ConnectionResetError', message, context);
   }
 }
 
 export class TimeoutError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('connection timeout', message, context);
+    super('TimeoutError', message, context);
   }
 }
 
 // general protocol error
 export class ProtocolError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('general protocol error', message, context);
+    super('ProtocolError: general protocol error', message, context);
   }
 }
 
 // general connectivity errors
 export class ConnectivityError extends BaseError {
   constructor(message?: string, context?: any) {
-    super('connectivity error', message, context);
+    super('ConnectivityError', message, context);
   }
 }
 
 // TODO(nf): rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError {
   constructor(message?: string, innerError?: Error) {
-    super('unknown protocol error', message, innerError);
+    super('UnknownProtocolError', message, innerError);
   }
 }

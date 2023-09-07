@@ -80,7 +80,7 @@ export class SimplePeerTransport implements Transport {
       } else if ('code' in err) {
         switch (err.code) {
           case 'ERR_WEBRTC_SUPPORT':
-            this.errors.raise(new ProtocolError('WebRTC not supported', undefined, err));
+            this.errors.raise(new ProtocolError('WebRTC not supported', err));
           case 'ERR_ICE_CONNECTION_FAILURE':
           case 'ERR_DATA_CHANNEL':
           case 'ERR_CONNECTION_FAILURE':

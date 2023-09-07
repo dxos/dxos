@@ -188,13 +188,13 @@ export class Connection {
       }
 
       // TODO(nf): fix ErrorStream so instanceof works here
-      if (err instanceof ConnectionResetError) {
+      if (err.message.includes('ConnectionResetError')) {
         log('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err.message.includes('ConnectivityError')) {
         log('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
-      } else if (err.message.includes('UnknownProtocolError:')) {
+      } else if (err.message.includes('UnknownProtocolError')) {
         log('unsure what to do for UnknownProtocolError', { err });
       }
 

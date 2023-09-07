@@ -8,7 +8,7 @@ import { CancelledError, SystemError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TimeoutError } from '@dxos/protocols';
+import { TimeoutError } from '@dxos/errors';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';

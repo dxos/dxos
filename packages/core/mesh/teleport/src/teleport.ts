@@ -10,10 +10,11 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
+import { TimeoutError } from '@dxos/errors';
 
 import { CreateChannelOpts, Muxer, MuxerStats, RpcPort } from './muxing';
 
