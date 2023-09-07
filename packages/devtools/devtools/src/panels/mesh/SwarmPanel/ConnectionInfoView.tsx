@@ -11,10 +11,10 @@ import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
 const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
-  helper.accessor('bytesSent', builder.createNumber({ header: 'sent' })),
-  helper.accessor('bytesReceived', builder.createNumber({ header: 'received' })),
-  helper.accessor('bytesSentRate', builder.createNumber({ header: 'sent b/s' })),
-  helper.accessor('bytesReceivedRate', builder.createNumber({ header: 'received b/s' })),
+  helper.accessor('bytesSent', builder.number({ header: 'sent' })),
+  helper.accessor('bytesReceived', builder.number({ header: 'received' })),
+  helper.accessor('bytesSentRate', builder.number({ header: 'sent b/s' })),
+  helper.accessor('bytesReceivedRate', builder.number({ header: 'received b/s' })),
   helper.accessor('tag', {}),
 ];
 
@@ -35,6 +35,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         schema={schema}
         object={{
           state: connection.state,
+          closeReason: connection.closeReason,
           session: connection.sessionId,
           remotePeer: connection.remotePeerId,
           transport: connection.transport ?? 'N/A',
@@ -42,7 +43,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} />
+      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} keyAccessor={row => row.id.toString()} />
     </>
   );
 };

@@ -36,7 +36,20 @@ void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defa
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PluginProvider
-      fallback={<div className='flex justify-center mbs-16'>Initializing Plugins...</div>}
+      fallback={({ initializing, loading }) => (
+        <div className='flex justify-center mbs-16'>
+          <abbr
+            className='no-underline'
+            title={
+              (initializing.length > 0
+                ? `initializing: ${initializing.map((plugin) => plugin.meta.id).join(', ')}`
+                : '') + (loading.length > 0 ? `loading: ${loading.map((plugin) => plugin.meta.id).join(', ')}` : '')
+            }
+          >
+            Initializing Plugins...
+          </abbr>
+        </div>
+      )}
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Composer' }),

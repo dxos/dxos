@@ -104,6 +104,9 @@
       "path": "../../core/mesh/teleport-extension-object-sync"
     },
     {
+      "path": "../../core/mesh/websocket-rpc"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

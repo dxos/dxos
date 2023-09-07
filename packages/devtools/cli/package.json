@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -82,7 +82,7 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "shx": "^0.3.3",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "engines": {
     "node": ">=12.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -17,6 +17,10 @@
     "readable-stream": "^3.6.0",
     "tty-browserify": "~0.0.1",
     "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "base64-js": "^1.5.1",
+    "ieee754": "^1.2.1"
   },
   "publishConfig": {
     "access": "public"

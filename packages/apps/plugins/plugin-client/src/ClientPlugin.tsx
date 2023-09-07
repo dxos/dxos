@@ -20,6 +20,8 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides } from './types';
 
+const CLIENT_PLUGIN = 'dxos.org/plugin/client';
+
 const handleInvalidatedInvitationCode = (code: string) => {
   const url = new URL(location.href);
   const params = Array.from(url.searchParams.entries());
@@ -40,7 +42,7 @@ export const ClientPlugin = (
 
   return {
     meta: {
-      id: 'dxos.org/plugin/client',
+      id: CLIENT_PLUGIN,
     },
     initialize: async () => {
       let firstRun = false;

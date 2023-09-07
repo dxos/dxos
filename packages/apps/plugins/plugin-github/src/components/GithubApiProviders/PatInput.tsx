@@ -48,7 +48,7 @@ export const PatInput = () => {
           autoFocus
           spellCheck={false}
           classNames='font-mono mlb-1'
-          value={patValue}
+          value={patValue ?? ''}
           onChange={({ target: { value } }) => setPatValue(value)}
         />
         <Input.DescriptionAndValidation classNames='mbs-0.5'>

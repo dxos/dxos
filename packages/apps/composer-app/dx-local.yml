@@ -3,6 +3,7 @@ version: 1
 runtime:
   client:
     remoteSource: http://localhost:3967/vault.html
+    # devtoolsProxy: wss://192.168.50.25:8080/host
 
   services:
     signaling:

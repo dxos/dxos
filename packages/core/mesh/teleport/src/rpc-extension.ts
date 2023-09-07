@@ -61,6 +61,11 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     await this._rpc?.close();
   }
 
+  async onAbort(err?: Error | undefined): Promise<void> {
+    this._isClosed = true;
+    await this._rpc?.abort();
+  }
+
   close() {
     this._extensionContext.close();
   }

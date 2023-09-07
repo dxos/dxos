@@ -5,13 +5,13 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document } from '@braneframe/types';
+import { Document as DocumentType } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando } from '@dxos/echo-schema';
+import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -361,7 +361,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.skip('spaces can be activated and deactivated', async () => {
+  test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -391,6 +391,53 @@ describe('Spaces', () => {
     await space.db.flush();
   });
 
+  test('spaces can be opened and closed with two clients', async () => {
+    const testBuilder = new TestBuilder();
+    const host = testBuilder.createClientServicesHost();
+    await host.open(new Context());
+    log.info('host opened');
+    const [client1, server1] = testBuilder.createClientServer(host);
+    void server1.open();
+    await client1.initialize();
+    afterTest(() => client1.destroy());
+
+    const [client2, server2] = testBuilder.createClientServer(host);
+    void server2.open();
+    await client2.initialize();
+    afterTest(() => client2.destroy());
+
+    log.info('ready');
+
+    await client1.halo.createIdentity({ displayName: 'test-user' });
+
+    const space1 = await client1.createSpace();
+
+    const { id } = space1.db.add(new Expando({ data: 'test' }));
+    await space1.db.flush();
+
+    const space2 = await waitForSpace(client2, space1.key, { ready: true });
+    await waitForExpect(() => {
+      expect(space2.db.getObjectById(id)).to.exist;
+    });
+
+    await space1.internal.close();
+    // Since updates are throttled we need to wait for the state to change.
+    await waitForExpect(() => {
+      expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
+    }, 1000);
+
+    await space1.internal.open();
+
+    await space2.waitUntilReady();
+    await waitForExpect(() => {
+      expect(space2.state.get()).to.equal(SpaceState.READY);
+    }, 1000);
+    expect(space2.db.getObjectById(id)).to.exist;
+
+    space2.db.getObjectById(id)!.data = 'test2';
+    await space2.db.flush();
+  });
+
   test('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
 
@@ -410,7 +457,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: hostSpace, guest }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
-    const hostDocument = hostSpace.db.add(new Document());
+    const hostDocument = hostSpace.db.add(new DocumentType());
     await hostSpace.db.flush();
 
     await waitForExpect(() => {
@@ -422,5 +469,27 @@ describe('Spaces', () => {
     await waitForExpect(() => {
       expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
     });
+  });
+
+  test('space properties are reactive', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.createSpace();
+    const trigger = new Trigger();
+    space.properties[subscribe](() => {
+      trigger.wake();
+    });
+
+    expect(space.state.get()).to.equal(SpaceState.READY);
+    space.properties.name = 'example';
+    await trigger.wait({ timeout: 500 });
+    expect(space.properties.name).to.equal('example');
   });
 });
