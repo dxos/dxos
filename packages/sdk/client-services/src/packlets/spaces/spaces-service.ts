@@ -25,7 +25,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { Provider, humanize } from '@dxos/util';
+import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
@@ -92,7 +92,9 @@ export class SpacesServiceImpl implements SpacesService {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.trigger()));
+            // TODO(dmaretskyi): This can skip updates and not report intermediate states. Potential race condition here.
+            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
+
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
             subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
@@ -197,7 +199,7 @@ export class SpacesServiceImpl implements SpacesService {
           identity: {
             identityKey: member.key,
             profile: {
-              displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+              displayName: member.assertion.profile?.displayName,
             },
           },
           presence: isMe || peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,

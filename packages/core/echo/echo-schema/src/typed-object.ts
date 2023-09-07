@@ -4,7 +4,7 @@
 
 import { inspect, InspectOptionsStylized } from 'node:util';
 
-import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { DocumentModel, MutationBuilder, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
@@ -26,7 +26,9 @@ const isValidKey = (key: string | symbol) =>
     key === 'toJSON' ||
     key === 'id' ||
     key === '__deleted' ||
-    key === '__typename'
+    key === '__typename' ||
+    key === 'meta' ||
+    key === 'setMeta'
   );
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
@@ -71,6 +73,9 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     // TODO(burdon): Strip keys.
     // stripKeys(initialProps);
 
+    // Assign initial meta fields.
+    this._mutate(new MutationBuilder().set('keys', OrderedArray.fromValues([])).build(true));
+
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schemaType) {
       // Set type.
@@ -107,6 +112,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]?._schemaType?.name ?? this[base]._model?.type ?? undefined;
   }
 
+  get meta(): ObjectMeta {
+    return this[base]._createProxy(this, undefined, true);
+  }
+
   /**
    * Returns the schema type descriptor for the object.
    */
@@ -136,14 +145,26 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   get [data]() {
-    return {
-      '@id': this.id,
-      '@type': this.__typename,
-      '@model': DocumentModel.meta.type,
-      ...this[base]._convert({
-        onRef: (id, obj?) => obj ?? { '@id': id },
-      }),
-    };
+    return this[base]._convert({
+      onRef: (id, obj?) => obj ?? { '@id': id },
+    });
+  }
+
+  /**
+   * Convenience method to set meta fields.
+   *
+   * @example
+   * ```ts
+   * space.db.add(new Expando().setMeta({ keys: [{ source: 'example.com' }] }));
+   * ```
+   */
+  setMeta(meta: Partial<ObjectMeta>): this {
+    this[base]._inBatch(() => {
+      for (const key in meta) {
+        this.meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
+      }
+    });
+    return this;
   }
 
   /**
@@ -154,38 +175,41 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     this._signal?.notifyWrite();
   }
 
+  private _transform(value: any, visitors: ConvertVisitors = {}) {
+    const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
+    const convert = (value: any): any => this._transform(value, visitorsWithDefaults);
+
+    if (value instanceof EchoObject) {
+      return visitorsWithDefaults.onRef!(value.id, value);
+    } else if (value instanceof Reference) {
+      return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
+    } else if (value instanceof OrderedArray) {
+      return value.toArray().map(convert);
+    } else if (value instanceof EchoArray) {
+      return value.map(convert);
+    } else if (Array.isArray(value)) {
+      return value.map(convert);
+    } else if (typeof value === 'object' && value !== null) {
+      const result: any = {};
+      for (const key of Object.keys(value)) {
+        result[key] = convert(value[key]);
+      }
+      return result;
+    } else {
+      return value;
+    }
+  }
+
   /**
    * @internal
    */
   private _convert(visitors: ConvertVisitors = {}) {
-    const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
-    const convert = (value: any): any => {
-      if (value instanceof EchoObject) {
-        return visitorsWithDefaults.onRef!(value.id, value);
-      } else if (value instanceof Reference) {
-        return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
-      } else if (value instanceof OrderedArray) {
-        return value.toArray().map(convert);
-      } else if (value instanceof EchoArray) {
-        return value.map(convert);
-      } else if (Array.isArray(value)) {
-        return value.map(convert);
-      } else if (typeof value === 'object' && value !== null) {
-        const result: any = {};
-        for (const key of Object.keys(value)) {
-          result[key] = convert(value[key]);
-        }
-        return result;
-      } else {
-        return value;
-      }
-    };
-
     return {
       '@id': this.id,
       '@type': this.__typename,
       '@model': DocumentModel.meta.type,
-      ...convert(this._model?.toObject()),
+      ...this._transform(this._model?.toObject(), visitors),
+      meta: this._transform(this._getState().meta, visitors),
     };
   }
 
@@ -216,12 +240,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
   /**
    * @internal
+   * @param meta Get from `meta` key-space.
    */
-  private _get(key: string): any {
+  private _get(key: string, meta?: boolean): any {
     this._signal?.notifyRead();
 
     let type;
-    const value = this._model.get(key);
+    const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
     if (!type && this._schemaType) {
       const field = this._schemaType.fields.find((field) => field.name === key);
@@ -246,9 +271,9 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       case 'ref':
         return this._lookupLink((value as Reference).itemId);
       case 'object':
-        return this._createProxy({}, key);
+        return this._createProxy({}, key, meta);
       case 'array':
-        return new EchoArray()._attach(this[base], key);
+        return new EchoArray()._attach(this[base], key, meta);
       default:
         return value;
     }
@@ -257,11 +282,11 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * @internal
    */
-  private _set(key: string, value: any) {
+  private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
       if (value instanceof EchoObject) {
         this._linkObject(value);
-        this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
+        this._mutate(this._model.builder().set(key, new Reference(value.id)).build(meta));
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
           if (item instanceof EchoObject) {
@@ -273,25 +298,25 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
             return item;
           }
         });
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build(meta));
         value._attach(this[base], key);
       } else if (Array.isArray(value)) {
         // TODO(dmaretskyi): Make a single mutation.
-        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
-        this._get(key).push(...value);
+        this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build(meta));
+        this._get(key, meta).push(...value);
       } else if (typeof value === 'object' && value !== null) {
         if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
           // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
+          this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build(meta));
         } else {
           const sub = this._createProxy({}, key);
-          this._mutate(this._model.builder().set(key, {}).build());
+          this._mutate(this._model.builder().set(key, {}).build(meta));
           for (const [subKey, subValue] of Object.entries(value)) {
             sub[subKey] = subValue;
           }
         }
       } else {
-        this._mutate(this._model.builder().set(key, value).build());
+        this._mutate(this._model.builder().set(key, value).build(meta));
       }
     });
   }
@@ -314,9 +339,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
   /**
    * Create proxy for root or sub-object.
+   * @param meta If true, create proxy for meta object.
    * @internal
    */
-  private _createProxy(object: any, parent?: string): any {
+  private _createProxy(object: any, parent?: string, meta?: boolean): any {
     const getProperty = (property: string) => (parent ? `${parent}.${property}` : property);
 
     /**
@@ -359,7 +385,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           }
         }
 
-        return this._get(getProperty(property as string));
+        return this._get(getProperty(property as string), meta);
       },
 
       set: (target, property, value, receiver) => {
@@ -371,7 +397,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return Reflect.set(this, property, value, receiver);
         }
 
-        this._set(getProperty(property as string), value);
+        this._set(getProperty(property as string), value, meta);
         return true;
       },
     });
@@ -419,6 +445,18 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 // TypedObject
 // Generic base class for strongly-typed schema-generated classes.
 //
+
+export type ForeignKey = {
+  source?: string;
+  id?: string;
+};
+
+// TODO(dmaretskyi): Document.
+export type ObjectMeta = {
+  keys: ForeignKey[];
+  index?: string;
+  schema?: Expando;
+};
 
 /**
  * Base class for generated document types and expando objects.

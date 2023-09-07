@@ -5,6 +5,14 @@ Defined in:
    file://./../../dxos/config.proto
 
 ## Properties
+### [devtoolsProxy]()
+Type: <code>string</code>
+
+Connect to and serve client services to a remote proxy.
+
+Options:
+  - proto3_optional = true
+
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 

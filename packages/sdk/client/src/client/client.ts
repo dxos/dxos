@@ -30,7 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import type { EchoProxy } from '../echo';
+import { defaultKey, type EchoProxy } from '../echo';
 import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
@@ -185,6 +185,11 @@ export class Client {
    * If no key is specified the default space is returned.
    */
   getSpace(spaceKey?: PublicKey): Space | undefined {
+    if (!spaceKey) {
+      const identityKey = this.halo.identity.get()?.identityKey.toHex();
+      return this.spaces.get().find((space) => space.properties[defaultKey] === identityKey);
+    }
+
     return this._echo.getSpace(spaceKey);
   }
 
@@ -230,6 +235,11 @@ export class Client {
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     const { fromHost, fromIFrame } = await import('../services');
+
+    this._config = this._options.config ?? new Config();
+    // NOTE: Must currently match the host.
+    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
+
     const { EchoProxy, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
@@ -237,12 +247,11 @@ export class Client {
     const handleIdentityCreated = async ({ identityKey }: Identity) => {
       const defaultSpace = await this.createSpace();
       defaultSpace.properties[defaultKey] = identityKey.toHex();
+      // Ensure space properties are cached.
+      await defaultSpace.db.flush();
     };
 
-    this._config = this._options.config ?? new Config();
-    // NOTE: Must currently match the host.
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
-    this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
     const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
     const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -298,9 +307,8 @@ export class Client {
     }
 
     await this._runtime!.close();
-
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    this._statusStream!.close();
+    await this._statusStream!.close();
     await this.services.close(new Context());
 
     this._initialized = false;

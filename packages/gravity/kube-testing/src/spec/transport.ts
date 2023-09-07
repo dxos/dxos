@@ -7,6 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
@@ -20,7 +21,7 @@ export type TransportTestSpec = {
   swarmsPerAgent: number;
   duration: number;
 
-  transport: 'webrtc' | 'webrtc-proxy';
+  transport: TransportKind;
 
   streamLoadInterval: number;
   streamLoadChunkSize: number;
@@ -69,7 +70,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
-      bridge: spec.transport === 'webrtc-proxy',
+      transport: spec.transport,
     });
 
     const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.agentId));

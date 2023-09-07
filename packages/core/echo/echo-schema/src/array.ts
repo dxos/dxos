@@ -30,6 +30,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _object?: TypedObject;
   private _property?: string;
+  private _isMeta?: boolean;
 
   [base]: EchoArray<T> = this;
 
@@ -70,7 +71,7 @@ export class EchoArray<T> implements Array<T> {
   get length(): number {
     const model = this._getBackingModel();
     if (model) {
-      const array = model.get(this._property!);
+      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
       if (!array) {
         return 0;
       }
@@ -128,7 +129,7 @@ export class EchoArray<T> implements Array<T> {
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
       void model
-        .builder()
+        .builder(this._isMeta)
         .arrayDelete(this._property!, start, deleteCount)
         .arrayInsert(
           this._property!,
@@ -251,7 +252,7 @@ export class EchoArray<T> implements Array<T> {
   values(): IterableIterator<T> {
     const model = this._getBackingModel();
     if (model) {
-      const array = model.get(this._property!);
+      const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
       if (!array) {
         return [][Symbol.iterator]();
       }
@@ -292,7 +293,7 @@ export class EchoArray<T> implements Array<T> {
     const model = this._getBackingModel();
     if (model) {
       void model
-        .builder()
+        .builder(this._isMeta)
         .arrayPush(
           this._property!,
           items.map((item) => this._encode(item)),
@@ -311,6 +312,24 @@ export class EchoArray<T> implements Array<T> {
 
     return inspect(data, { ...options, depth: typeof options.depth === 'number' ? options.depth - 1 : options.depth });
   };
+
+  toReversed(): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  toSorted(compareFn?: ((a: T, b: T) => number) | undefined): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  toSpliced(start: number, deleteCount: number, ...items: T[]): T[];
+  toSpliced(start: number, deleteCount?: number | undefined): T[];
+  toSpliced(start: unknown, deleteCount?: unknown, ...items: unknown[]): T[] {
+    throw new Error('Method not implemented.');
+  }
+
+  with(index: number, value: T): T[] {
+    throw new Error('Method not implemented.');
+  }
 
   //
   // Impl.
@@ -361,9 +380,10 @@ export class EchoArray<T> implements Array<T> {
   /**
    * @internal
    */
-  _attach(document: TypedObject, property: string) {
+  _attach(document: TypedObject, property: string, isMeta?: boolean) {
     this._object = document;
     this._property = property;
+    this._isMeta = isMeta;
     this._uninitialized = undefined;
 
     return this;
@@ -389,7 +409,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _getModel(index: number): T | undefined {
     const model = this._getBackingModel()!;
-    const array = model.get(this._property!);
+    const array = this._isMeta ? model.getMeta(this._property!) : model.get(this._property!);
     invariant(array instanceof OrderedArray);
 
     return this._decode(array.get(index)) as T | undefined;
@@ -398,7 +418,7 @@ export class EchoArray<T> implements Array<T> {
   private _setModel(index: number, value: T) {
     const model = this._getBackingModel()!;
     void model
-      .builder()
+      .builder(this._isMeta)
       .arrayDelete(this._property!, index)
       .arrayInsert(this._property!, index, [this._encode(value)])
       .commit();

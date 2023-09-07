@@ -29,7 +29,7 @@ type FeedInfo = {
 
 const { helper, builder } = createColumnBuilder<FeedInfo>();
 const columns: GridColumnDef<FeedInfo, any>[] = [
-  helper.accessor('feedKey', builder.createKey({ tooltip: true })),
+  helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('downloaded', {
     cell: (cell) => (
       <Bitbar value={cell.getValue()} length={cell.row.original.maxLength} size={6} margin={1} height={8} />
@@ -72,10 +72,6 @@ export const SpaceInfoPanel: FC = () => {
       await space!.internal.close();
     }
   };
-
-  if (!space || !metadata) {
-    return null;
-  }
 
   return (
     <PanelContainer

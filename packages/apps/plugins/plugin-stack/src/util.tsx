@@ -8,7 +8,7 @@ import React from 'react';
 
 import type { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Stack } from '@braneframe/types';
+import { Stack as StackType } from '@braneframe/types';
 import { EchoObject, Space } from '@dxos/client/echo';
 
 import { GenericStackObject, STACK_PLUGIN, StackModel, StackObject, StackProperties } from './types';
@@ -23,7 +23,7 @@ export const isStack = <T extends StackObject = GenericStackObject>(data: unknow
 
 export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
-export const stackToGraphNode = (parent: Graph.Node<Space>, object: Stack, index: string): Graph.Node => {
+export const stackToGraphNode = (parent: Graph.Node<Space>, object: StackType, index: string): Graph.Node => {
   const [child] = parent.add({
     id: object.id,
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
@@ -31,6 +31,7 @@ export const stackToGraphNode = (parent: Graph.Node<Space>, object: Stack, index
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
+      persistenceClass: 'spaceObject',
     },
   });
 

@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
@@ -20,9 +21,11 @@ import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
   TransportFactory,
-  WebRTCTransport,
-  WebRTCTransportProxyFactory,
-  WebRTCTransportService,
+  SimplePeerTransportProxyFactory,
+  SimplePeerTransportService,
+  createSimplePeerTransportFactory,
+  createLibDataChannelTransportFactory,
+  TransportKind,
 } from '../transport';
 import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 
@@ -35,6 +38,7 @@ export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
+  transport?: TransportKind;
 };
 
 /**
@@ -54,7 +58,7 @@ export class TestBuilder {
   }
 
   createPeer(peerId: PublicKey = PublicKey.random()) {
-    return new TestPeer(this, peerId);
+    return new TestPeer(this, peerId, this.options.transport);
   }
 }
 
@@ -77,49 +81,76 @@ export class TestPeer {
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
-  constructor(private readonly testBuilder: TestBuilder, public readonly peerId: PublicKey) {
+  constructor(
+    private readonly testBuilder: TestBuilder,
+    public readonly peerId: PublicKey,
+    public readonly transport?: TransportKind,
+  ) {
     this._signalManager = this.testBuilder.createSignalManager();
-    this._networkManager = this.createNetworkManager();
+    if (!transport) {
+      if (this.testBuilder.options.signalHosts) {
+        transport = TransportKind.SIMPLE_PEER;
+      } else {
+        transport = TransportKind.MEMORY;
+      }
+    }
+    this._networkManager = this.createNetworkManager(transport);
   }
 
   // TODO(burdon): Move to TestBuilder.
-  createNetworkManager() {
-    let transportFactory: TransportFactory = MemoryTransportFactory;
-
+  createNetworkManager(transport: TransportKind) {
+    let transportFactory: TransportFactory;
     if (this.testBuilder.options.signalHosts) {
-      if (this.testBuilder.options.bridge) {
-        // Simulates bridge to shared worker.
-        const [proxyPort, servicePort] = createLinkedPorts();
+      log.info(`using ${transport} transport with signal server.`);
+      switch (transport) {
+        case TransportKind.MEMORY:
+          throw new Error('Memory transport not supported with signal server.');
+        case TransportKind.SIMPLE_PEER:
+          transportFactory = createSimplePeerTransportFactory();
+          break;
+        case TransportKind.LIBDATACHANNEL:
+          transportFactory = createLibDataChannelTransportFactory();
+          break;
+        case TransportKind.SIMPLE_PEER_PROXY:
+          {
+            // Simulates bridge to shared worker.
+            const [proxyPort, servicePort] = createLinkedPorts();
 
-        this._proxy = createProtoRpcPeer({
-          port: proxyPort,
-          requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
+            this._proxy = createProtoRpcPeer({
+              port: proxyPort,
+              requested: {
+                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              },
+              noHandshake: true,
+              encodingOptions: {
+                preserveAny: true,
+              },
+            });
 
-        this._service = createProtoRpcPeer({
-          port: servicePort,
-          exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          handlers: { BridgeService: new WebRTCTransportService() },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
+            this._service = createProtoRpcPeer({
+              port: servicePort,
+              exposed: {
+                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              },
+              handlers: { BridgeService: new SimplePeerTransportService() },
+              noHandshake: true,
+              encodingOptions: {
+                preserveAny: true,
+              },
+            });
 
-        transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-      } else {
-        transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params),
-        };
+            transportFactory = new SimplePeerTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+          }
+          break;
+        default:
+          throw new Error(`Unsupported transport: ${transport}`);
       }
+    } else {
+      if (transport !== TransportKind.MEMORY) {
+        log.warn(`specified transport ${transport} but no signalling configured, using memory transport instead`);
+      }
+      log.info(`using ${transport} transport without signal server.`);
+      transportFactory = MemoryTransportFactory;
     }
 
     return new NetworkManager({

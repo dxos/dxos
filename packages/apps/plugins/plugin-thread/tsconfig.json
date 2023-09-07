@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/display-name"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -34,9 +37,6 @@
     },
     {
       "path": "../../../ui/aurora"
-    },
-    {
-      "path": "../../../ui/aurora-composer"
     },
     {
       "path": "../../../ui/aurora-theme"

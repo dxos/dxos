@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -48,6 +51,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -58,6 +64,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }

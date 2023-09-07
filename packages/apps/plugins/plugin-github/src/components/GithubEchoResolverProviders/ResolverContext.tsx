@@ -84,11 +84,10 @@ const DocumentResolverProviderImpl = ({
 
       if (event.data.type === 'initial-data') {
         const nextDocument = new Document({
-          meta: {
-            keys: [{ source, id }],
-          },
           content: new Text(event.data.content),
           title: defaultDisplayName,
+        }).setMeta({
+          keys: [{ source, id }],
         });
         space.db.add(nextDocument);
         setDocument(nextDocument);

@@ -13,3 +13,4 @@ export * from './PropertiesTable';
 export * from './PublicKeySelector';
 export * from './Searchbar';
 export * from './Select';
+export * from './Tree';

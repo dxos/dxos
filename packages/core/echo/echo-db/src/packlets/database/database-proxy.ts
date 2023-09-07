@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, scheduleTask, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
@@ -19,6 +19,13 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
+
+export const BATCH_COMMIT_AFTER = 200;
+/**
+ * Maximum number of mutations in a batch.
+ * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
+ */
+const BATCH_SIZE_LIMIT = 64;
 
 export type MutateResult = {
   objectsUpdated: Item<any>[];
@@ -39,9 +46,12 @@ export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
+  private _currentBatchCtx?: Context;
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
   public readonly pendingBatch = new Event<BatchUpdate>();
+
+  private _initialEventTrigger = new Trigger();
 
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
@@ -69,103 +79,52 @@ export class DatabaseProxy {
     return false;
   }
 
+  get isClosed(): boolean {
+    return !this._subscriptionOpen;
+  }
+
   get currentBatch(): Batch | undefined {
     return this._currentBatch;
   }
 
+  @synchronized
   async open(modelFactory: ModelFactory): Promise<void> {
-    invariant(!this._opening);
     this._opening = true;
 
     this._itemManager._debugLabel = 'proxy';
 
+    // Close previous subscription.
+    if (this._entities) {
+      await this._entities.close();
+      this._entities = undefined;
+    }
+
+    this._initialEventTrigger.reset();
+
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item.modelType === model.meta.type) {
-          await this._itemManager.initializeModel(item.id);
+          this._itemManager.initializeModel(item.id);
         }
       }
     });
-
-    const loaded = new Trigger();
 
     invariant(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
+    this._entities!.subscribe(this._processEvent.bind(this), (err) => {
+      if (err) {
+        log.warn('Connection closed', err);
+      }
+
+      this._subscriptionOpen = false;
+      this._abortBatches();
+    });
     this._subscriptionOpen = true;
-    this._entities.subscribe(
-      async (msg) => {
-        log('process', {
-          clientTag: msg.clientTag,
-          feedKey: msg.feedKey,
-          seq: msg.seq,
-          objectCount: msg.batch.objects?.length ?? 0,
-        });
-
-        const objectsUpdated: Item[] = [];
-
-        if (msg.action === EchoEvent.DatabaseAction.RESET) {
-          const keepIds = new Set<string>(
-            msg.batch.objects?.filter((object) => object.genesis).map((object) => object.objectId) ?? [],
-          );
-          for (const item of this._itemManager.entities.values()) {
-            if (!keepIds.has(item.id)) {
-              this._itemManager.deconstructItem(item.id);
-              objectsUpdated.push(item);
-            }
-          }
-        }
-
-        this._processMessage(msg.batch, objectsUpdated);
-
-        if (msg.clientTag) {
-          const batch = this._pendingBatches.get(msg.clientTag);
-          if (batch) {
-            invariant(msg.feedKey !== undefined);
-            invariant(msg.seq !== undefined);
-            batch.receipt = {
-              feedKey: msg.feedKey,
-              seq: msg.seq,
-            };
-            batch.receiptTrigger!.wake(batch.receipt);
-            batch.processTrigger!.wake();
-            this._pendingBatches.delete(msg.clientTag);
-
-            // TODO(burdon): Not batched (e.g., if create item, then two batches).
-            this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
-          } else {
-            // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
-            // TODO(dmaretskyi): Just ignore the I guess.
-            // log.warn('missing pending batch', { clientTag: msg.clientTag });
-          }
-        }
-
-        // Notify that initial set of items has been loaded.
-        loaded.wake();
-
-        // Emit update event.
-        this.itemUpdate.emit(objectsUpdated);
-      },
-      (err) => {
-        if (err) {
-          log.warn('Connection closed', err);
-        }
-
-        this._subscriptionOpen = false;
-        for (const batch of this._pendingBatches.values()) {
-          batch.processTrigger!.throw(new Error('Service connection closed.'));
-        }
-        this.pendingBatch.emit({
-          size: this._pendingBatches.size,
-          error: new Error('Service connection closed.'),
-        });
-        this._pendingBatches.clear();
-      },
-    );
 
     // Wait for initial set of items.
-    await loaded.wait();
+    await this._initialEventTrigger.wait();
 
     this._open = true;
   }
@@ -185,6 +144,59 @@ export class DatabaseProxy {
 
     await this._entities?.close();
     this._entities = undefined;
+  }
+
+  private _processEvent(msg: EchoEvent) {
+    log('process', {
+      clientTag: msg.clientTag,
+      feedKey: msg.feedKey,
+      seq: msg.seq,
+      objectCount: msg.batch.objects?.length ?? 0,
+    });
+
+    const objectsUpdated: Item[] = [];
+
+    if (msg.action === EchoEvent.DatabaseAction.RESET) {
+      const keepIds = new Set<string>(
+        msg.batch.objects?.filter((object) => object.genesis).map((object) => object.objectId) ?? [],
+      );
+      for (const item of this._itemManager.entities.values()) {
+        if (!keepIds.has(item.id)) {
+          this._itemManager.deconstructItem(item.id);
+          objectsUpdated.push(item);
+        }
+      }
+    }
+
+    this._processMessage(msg.batch, objectsUpdated);
+
+    if (msg.clientTag) {
+      const batch = this._pendingBatches.get(msg.clientTag);
+      if (batch) {
+        invariant(msg.feedKey !== undefined);
+        invariant(msg.seq !== undefined);
+        batch.receipt = {
+          feedKey: msg.feedKey,
+          seq: msg.seq,
+        };
+        batch.receiptTrigger!.wake(batch.receipt);
+        batch.processTrigger!.wake();
+        this._pendingBatches.delete(msg.clientTag);
+
+        // TODO(burdon): Not batched (e.g., if create item, then two batches).
+        this.pendingBatch.emit({ size: this._pendingBatches.size, duration: Date.now() - batch.timestamp });
+      } else {
+        // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
+        // TODO(dmaretskyi): Just ignore the I guess.
+        // log.warn('missing pending batch', { clientTag: msg.clientTag });
+      }
+    }
+
+    // Notify that initial set of items has been loaded.
+    this._initialEventTrigger.wake();
+
+    // Emit update event.
+    this.itemUpdate.emit(objectsUpdated);
   }
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
@@ -267,11 +279,17 @@ export class DatabaseProxy {
     }
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
+
     return true;
   }
 
   // TODO(burdon): Make async?
   commitBatch() {
+    // Discard scheduled commit.
+    void this._currentBatchCtx?.dispose();
+    this._currentBatchCtx = undefined;
+
     invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
@@ -289,7 +307,7 @@ export class DatabaseProxy {
 
     this._service
       .write({
-        batch: batch.data,
+        batch: this._itemManager.mergeMutations(batch.data),
         spaceKey: this._spaceKey,
         clientTag: batch.clientTag!,
       })
@@ -336,8 +354,22 @@ export class DatabaseProxy {
         batch,
       };
     } finally {
+      // Note: Commit batch after BATCH_COMMIT_AFTER idling without new mutations.
       if (batchCreated) {
-        this.commitBatch();
+        // Commit batch after last mutation with delay if there will be no new mutations.
+        this._currentBatchCtx = this._ctx.derive();
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+      } else if (this._currentBatchCtx) {
+        // Reset the timer.
+        // If `this._currentBatchCtx` is set then Batch was created by one of the previous calls of `.mutate()`.
+        invariant(this._currentBatch);
+        void this._currentBatchCtx.dispose();
+        if (this._currentBatch.data.objects && this._currentBatch.data.objects.length >= BATCH_SIZE_LIMIT) {
+          this.commitBatch();
+        } else {
+          this._currentBatchCtx = this._ctx.derive();
+          scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+        }
       }
     }
   }
@@ -352,5 +384,17 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
+    await this._service.flush({ spaceKey: this._spaceKey });
+  }
+
+  private _abortBatches() {
+    for (const batch of this._pendingBatches.values()) {
+      batch.processTrigger!.throw(new Error('Service connection closed.'));
+    }
+    this.pendingBatch.emit({
+      size: this._pendingBatches.size,
+      error: new Error('Service connection closed.'),
+    });
+    this._pendingBatches.clear();
   }
 }

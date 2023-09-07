@@ -24,6 +24,7 @@ import { syncItems, TestBuilder } from '../testing';
 describe('Client services', () => {
   test('creates client with local host', async () => {
     const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
 
     const servicesProvider = testBuilder.createLocal();
     await servicesProvider.open();
@@ -37,6 +38,7 @@ describe('Client services', () => {
 
   test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
@@ -53,6 +55,7 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
 
     {
       const peer1 = testBuilder.createClientServicesHost();
@@ -107,6 +110,7 @@ describe('Client services', () => {
 
   test('creates identity and invites peer', async () => {
     const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
@@ -153,6 +157,7 @@ describe('Client services', () => {
 
   test('synchronizes data between two spaces after completing invitation', async () => {
     const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();

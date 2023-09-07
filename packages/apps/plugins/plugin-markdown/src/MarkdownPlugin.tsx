@@ -46,7 +46,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-  const adapter = new GraphNodeAdapter(Document.filter(), documentToGraphNode, ['content']);
+  let adapter: GraphNodeAdapter<Document> | undefined;
 
   const EditorMainStandalone = ({
     data: { composer, properties },
@@ -69,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
@@ -96,11 +96,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
+  // TODO(wittjosiah): If this doesn't need any variables from the closure, factor out.
   const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
     const identity = useIdentity();
     const { plugins } = usePlugins();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.current;
+    const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
       identity,
@@ -120,11 +121,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
+      const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
           state.onChange.push(plugin.provides.markdown.onChange);
         }
+
+        if (plugin.provides.markdown.filter) {
+          filters.push(plugin.provides.markdown.filter);
+        }
       });
+
+      const filter = (document: Document) =>
+        document.__typename === Document.type.name && filters.every((filter) => filter(document));
+      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode, propertySubscriptions: ['content'] });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
@@ -143,12 +153,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
@@ -178,7 +188,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             ],
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
       stack: {

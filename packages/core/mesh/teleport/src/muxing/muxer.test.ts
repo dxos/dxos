@@ -25,10 +25,10 @@ const setupPeers = () => {
     peer1.stream.unpipe(peer2.stream);
     peer2.stream.unpipe(peer1.stream);
   };
-  afterTest(() => {
+  afterTest(async () => {
     unpipe();
-    peer1.destroy();
-    peer2.destroy();
+    await peer1.destroy();
+    await peer2.destroy();
   });
 
   return {
@@ -83,9 +83,7 @@ describe('Muxer', () => {
     const { peer1, peer2 } = setupPeers();
 
     const promise = asyncTimeout(peer1.close.waitForCount(1), 100);
-
-    peer2.destroy();
-
+    await peer2.destroy();
     await promise;
   });
 
@@ -181,7 +179,7 @@ describe('Muxer', () => {
     stream1.once('close', inc);
     stream2.once('close', inc);
 
-    peer1.destroy();
+    await peer1.destroy();
     // Peer2 should also be destroyed.
 
     await wait();

@@ -13,6 +13,11 @@ import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/s
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import {
+  createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
+  TransportFactory,
+} from '@dxos/network-manager';
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -58,7 +63,22 @@ export class Agent {
     log('starting...');
 
     // Create client services.
-    this._clientServices = await fromHost(this._options.config, { lockKey: lockFilePath(this._options.profile) });
+
+    // TODO(nf): move to config
+    let transportFactory: TransportFactory;
+
+    if (process.env.WEBRTCLIBRARY === 'LibDataChannel') {
+      log.info('using LibDataChannel');
+      transportFactory = createLibDataChannelTransportFactory();
+    } else {
+      log.info('using SimplePeer');
+      transportFactory = createSimplePeerTransportFactory();
+    }
+
+    this._clientServices = await fromHost(this._options.config, {
+      lockKey: lockFilePath(this._options.profile),
+      transportFactory,
+    });
     await this._clientServices.open(new Context());
 
     // Create client.

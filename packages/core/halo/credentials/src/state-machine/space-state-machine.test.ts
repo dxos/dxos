@@ -32,7 +32,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -49,7 +49,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -82,7 +82,7 @@ describe('SpaceStateMachine', () => {
           signingKey: device,
           chain,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -132,7 +132,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -150,7 +150,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -182,7 +182,7 @@ describe('SpaceStateMachine', () => {
           signingKey: device,
           chain,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -229,7 +229,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -247,7 +247,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -264,7 +264,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -281,7 +281,7 @@ describe('SpaceStateMachine', () => {
           issuer: identity,
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 
@@ -307,7 +307,7 @@ describe('SpaceStateMachine', () => {
           },
           signer: keyring,
         }),
-        feed,
+        { sourceFeed: feed },
       ),
     ).toEqual(true);
 

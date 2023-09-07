@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import { TextKind, TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
@@ -71,14 +72,13 @@ export class Text extends EchoObject<TextModel> {
   }
 
   protected override _afterBind() {
-    // log.info('_afterBind', { id: this.id });
+    log('_afterBind', { id: this.id });
     this._model.initialize();
   }
 
   override _itemUpdate(): void {
-    // log.info('_itemUpdate', { id: this.id });
-    // TODO(wittjosiah): This stops yjs updates from working.
-    // super._itemUpdate();
+    log('_itemUpdate', { id: this.id });
+    super._itemUpdate();
     this._model.initialize();
     this._signal?.notifyWrite();
   }
