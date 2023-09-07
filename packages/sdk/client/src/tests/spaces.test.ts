@@ -489,7 +489,7 @@ describe('Spaces', () => {
 
     expect(space.state.get()).to.equal(SpaceState.READY);
     space.properties.name = 'example';
-    await trigger.wait({ timeout: 500 }); // <-- Times out here
+    await trigger.wait({ timeout: 500 });
     expect(space.properties.name).to.equal('example');
   });
 });
