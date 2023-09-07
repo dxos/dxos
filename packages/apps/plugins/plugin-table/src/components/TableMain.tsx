@@ -71,7 +71,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const objects = useQuery<TypedObject>(
     space,
     // TODO(burdon): System meta property.
-    (object) => object.meta?.schema?.id === table.schema.id,
+    (object) => object.__meta?.schema?.id === table.schema.id,
     {}, // TODO(burdon): Toggle deleted.
     [table.schema],
   );
@@ -86,7 +86,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     // TODO(burdon): Map other tables.
     const schemasDefs: GridSchema[] = tables.map((table) => ({
       id: table.schema.id,
-      name: table.schema.typename ?? table.name,
+      name: table.schema.typename ?? table.title,
       props: table.schema.props.map(schemaPropMapper(table)),
     }));
 
@@ -96,6 +96,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     }
 
     const columns = createColumns<TypedObject>(schemasDefs, schemaDef, {
+      getRefValues: async ({ ref, refProp }) => {
+        if (!ref || !refProp) {
+          return [];
+        }
+
+        const { objects } = space!.db.query((object) => object.__meta?.schema?.id === ref);
+        return objects.map((object) => ({ id: object.id, value: object, label: (object as any)[refProp] }));
+      },
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
@@ -105,7 +113,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             type: getSchemaType(type),
             label,
             digits,
-            ref: type === 'ref' ? tables.find((s) => s.id === ref) : undefined,
+            ref: type === 'ref' ? tables.find((table) => table.schema.id === ref)?.schema : undefined,
             refProp,
           });
 
@@ -119,12 +127,11 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
           forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
-      // TODO(burdon): Check only called by grid if value changed.
       onUpdate: (object, prop, value) => {
         object[prop] = value;
         if (!object.id) {
           // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
-          space!.db.add(new Expando(Object.assign(object, { meta: { schema: table.schema } })));
+          space!.db.add(new Expando(Object.assign(object, { __meta: { schema: table.schema } })));
         }
       },
     });

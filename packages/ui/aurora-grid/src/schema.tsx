@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { ColumnMenu } from './ColumnMenu';
-import { BaseColumnOptions, createColumnBuilder } from './helpers';
+import { BaseColumnOptions, createColumnBuilder, SelectValue } from './helpers';
 
 /**
  * Serializable schema.
@@ -56,6 +56,7 @@ export const createUniqueProp = (schema: GridSchema) => {
 // TODO(burdon): Create builder.
 
 type CreateColumnsOptions<TData extends RowData, TValue> = {
+  getRefValues?: (column: GridSchemaProp) => Promise<SelectValue[]>;
   onUpdate?: (row: TData, id: string, value: TValue) => void;
   onColumnUpdate?: (id: string, column: GridSchemaProp) => void;
   onColumnDelete?: (id: string) => void;
@@ -67,7 +68,7 @@ type CreateColumnsOptions<TData extends RowData, TValue> = {
 export const createColumns = <TData extends RowData>(
   schemas: GridSchema[],
   schema: GridSchema,
-  { onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
+  { getRefValues, onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return schema.props.map((column) => {
@@ -93,6 +94,11 @@ export const createColumns = <TData extends RowData>(
     });
 
     switch (type) {
+      // TODO(burdon): Get all values.
+      case 'ref':
+        return getRefValues
+          ? helper.accessor(id, builder.select({ ...options, lookupValues: () => getRefValues(column) }))
+          : null;
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':

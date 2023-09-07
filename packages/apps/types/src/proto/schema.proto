@@ -49,7 +49,7 @@ message Table {
     int32 size = 2;
   }
 
-  string name = 1;
+  string title = 1;
   Schema schema = 2;
   repeated Prop props = 3;
 
