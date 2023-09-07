@@ -19,7 +19,6 @@ import {
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { inputSurface, mx } from '@dxos/aurora-theme';
-import { invariant } from '@dxos/invariant';
 
 import { defaultGridSlots, GridSlots } from './theme';
 import { GridColumnDef, KeyValue } from './types';
@@ -98,7 +97,6 @@ export type GridProps<TData extends RowData> = {
 // TODO(burdon): Rename Table.
 export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props }: GridProps<TData>) => {
   const {
-    keyAccessor,
     data = [],
     columns = [],
     onColumnResize,
