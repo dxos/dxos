@@ -26,8 +26,6 @@ import { TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginProvider } from '@dxos/react-surface';
 
-import { ProgressBar } from './components/ProgressBar/ProgressBar';
-
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;

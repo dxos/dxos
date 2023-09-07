@@ -46,17 +46,12 @@ export const Empty = (props: any) => {
 export const Basic = () => {
   return (
     <Sidebar>
-      <TreeViewContext.Provider value={{ active: undefined, activeNode: undefined }}>
+      <TreeViewContext.Provider value={{ active: undefined, activeNode: undefined, appState: undefined }}>
         <TreeView
           identity={{
             identityKey: PublicKey.random(),
           }}
-          version={{
-            commitHash: 'cafebabe',
-            timestamp: new Date().toISOString(),
-            version: '1.0.0',
-          }}
-          graphNodes={store.root.children}
+          rootNode={store.root}
         />
       </TreeViewContext.Provider>
     </Sidebar>

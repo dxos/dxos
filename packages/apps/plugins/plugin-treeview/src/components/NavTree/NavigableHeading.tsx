@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
