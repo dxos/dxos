@@ -16,7 +16,7 @@ import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
-import { Properties, Space, SpaceProxy } from '@dxos/react-client/echo';
+import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
@@ -37,7 +37,6 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
-(globalThis as any)[Properties.name] = Properties;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const state = deepSignal<SpaceState>({ active: undefined });
@@ -197,31 +196,21 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           });
 
-          let prev: Space[] = [];
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             subscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
               const update = () => {
                 const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
-                console.log('update', space.key.truncate());
                 isDefaultSpace
                   ? spaceToGraphNode(space, parent, treeViewPlugin?.provides.treeView?.appState)
                   : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
               };
 
-              // if (!prev.some((s) => s.key.equals(space.key))) {
-              console.log('sub', {
-                key: space.key.truncate(),
-                state: space.state.get(),
-                properties: space.properties,
-              });
               const unsubscribe = space.properties[subscribe](() => update());
               subscriptions.add(unsubscribe);
               update();
             });
-            console.log('prev', prev.length, spaces.length);
-            prev = [...spaces];
           });
 
           groupNode.addAction(

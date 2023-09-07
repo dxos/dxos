@@ -471,7 +471,7 @@ describe('Spaces', () => {
     });
   });
 
-  test.only('space properties are reactive', async () => {
+  test('space properties are reactive', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
