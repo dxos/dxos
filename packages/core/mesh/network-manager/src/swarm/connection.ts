@@ -5,13 +5,12 @@
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { CancelledError } from '@dxos/errors';
+import { CancelledError, ProtocolError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ConnectionResetError, ProtocolError } from '@dxos/errors';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';

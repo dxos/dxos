@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema, RpcClosedError } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { GossipMessage, GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';

@@ -5,11 +5,11 @@
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { TimeoutError as ProtocolTimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
-import { TimeoutError as ProtocolTimeoutError } from '@dxos/errors';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -148,22 +148,24 @@ export class Messenger {
   private async errorLimitCheck() {
     log(`checking error limit ${this._errorCount}`);
     if (this._errorCount++ > ERROR_LIMIT) {
-      this.rebootNetwork();
+      await this.rebootNetwork();
     }
   }
 
   private async rebootNetwork() {
-    if (this._rebooting) return;
+    if (this._rebooting) {
+      return;
+    }
     this._rebooting = true;
 
     log('rebooting Messenger/SignalManager');
-    this.close();
-    this._signalManager.close();
+    await this.close();
+    await this._signalManager.close();
     log('pausing');
-    await new Promise((f) => setTimeout(f, NETWORK_REBOOT_DELAY));
+    await new Promise((resolve) => setTimeout(resolve, NETWORK_REBOOT_DELAY));
     log('done pausing');
-    this.open();
-    this._signalManager.open();
+    await this.open();
+    await this._signalManager.open();
     log('done rebooting');
 
     this._errorCount = 0;

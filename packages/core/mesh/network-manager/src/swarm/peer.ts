@@ -4,11 +4,10 @@
 
 import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CancelledError, SystemError } from '@dxos/errors';
+import { CancelledError, SystemError, TimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TimeoutError } from '@dxos/errors';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
