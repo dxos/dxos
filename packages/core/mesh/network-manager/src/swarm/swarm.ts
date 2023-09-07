@@ -83,6 +83,7 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined,
     private readonly _connectionLimiter: ConnectionLimiter,
+    private readonly _initiationDelay = INITIATION_DELAY,
   ) {
     log.trace(
       'dxos.mesh.swarm.constructor',
@@ -353,7 +354,7 @@ export class Swarm {
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
       log('initiation delay', { remoteId });
-      await sleep(INITIATION_DELAY);
+      await sleep(this._initiationDelay);
     }
     if (ctx.disposed) {
       return;

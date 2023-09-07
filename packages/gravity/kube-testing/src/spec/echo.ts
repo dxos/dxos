@@ -16,6 +16,7 @@ import { Space as EchoSpace } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TransportKind } from '@dxos/network-manager';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
@@ -34,6 +35,7 @@ export type EchoTestSpec = {
   insertionSize: number;
   operationCount: number;
   signalArguments: string[];
+  transport: TransportKind;
   showPNG: boolean;
 };
 
@@ -57,7 +59,7 @@ export type EchoAgentConfig = {
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
-  builder = new TestBuilder();
+  builder!: TestBuilder;
 
   services!: LocalClientServices;
   client!: Client;
@@ -79,6 +81,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
     const { agentIdx, signalUrl } = config;
+
+    if (!this.builder) {
+      this.builder = new TestBuilder(undefined, undefined, undefined, spec.transport);
+    }
 
     this.builder.config = new Config({
       runtime: {

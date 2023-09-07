@@ -47,7 +47,8 @@ describe('schema', () => {
         subTasks: [],
         description: { '@id': task1.description.id },
         title: 'Task 1',
-        assignee: { '@id': contact.id }
+        assignee: { '@id': contact.id },
+        meta: { keys: [] }
       })
     );
   });
@@ -69,7 +70,8 @@ describe('schema', () => {
         {
           '@id': contact.tasks[1].id
         }
-      ]
+      ],
+      meta: { keys: [] }
     });
   });
 

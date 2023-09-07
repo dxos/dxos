@@ -23,6 +23,9 @@ export type TeleportParams = {
   remotePeerId: PublicKey;
 };
 
+/**
+ * TODO(burdon): Comment: what is this?
+ */
 export class Teleport {
   public readonly initiator: boolean;
   public readonly localPeerId: PublicKey;
@@ -122,6 +125,23 @@ export class Teleport {
     await this.destroy(err);
   }
 
+  async abort(err?: Error) {
+    if (this._ctx.disposed) {
+      return;
+    }
+    await this._ctx.dispose();
+
+    for (const extension of this._extensions.values()) {
+      try {
+        await extension.onAbort(err);
+      } catch (err: any) {
+        log.catch(err);
+      }
+    }
+
+    await this._muxer.destroy(err);
+  }
+
   @synchronized
   async destroy(err?: Error) {
     if (this._ctx.disposed) {
@@ -138,7 +158,7 @@ export class Teleport {
       }
     }
 
-    this._muxer.destroy(err);
+    await this._muxer.destroy(err);
   }
 
   addExtension(name: string, extension: TeleportExtension) {
@@ -218,6 +238,7 @@ export type ExtensionContext = {
 export interface TeleportExtension {
   onOpen(context: ExtensionContext): Promise<void>;
   onClose(err?: Error): Promise<void>;
+  onAbort(err?: Error): Promise<void>;
 }
 
 type ControlRpcBundle = {
@@ -293,5 +314,10 @@ class ControlExtension implements TeleportExtension {
   async onClose(err?: Error): Promise<void> {
     await this._ctx.dispose();
     await this._rpc.close();
+  }
+
+  async onAbort(err?: Error | undefined): Promise<void> {
+    await this._ctx.dispose();
+    await this._rpc.abort();
   }
 }

@@ -59,11 +59,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-drawing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-error/package.json",
           "jsonpath": "$.version"
         },
@@ -84,11 +79,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-grid/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-intent/package.json",
           "jsonpath": "$.version"
         },
@@ -104,12 +94,22 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-map/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-pwa/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -125,6 +125,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -230,6 +235,11 @@
         {
           "type": "json",
           "path": "packages/common/keys/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/local-storage/package.json",
           "jsonpath": "$.version"
         },
         {

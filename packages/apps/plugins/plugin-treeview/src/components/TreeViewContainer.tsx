@@ -10,7 +10,6 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Avatar,
-  Tree,
   Button,
   DensityProvider,
   ElevationProvider,
@@ -27,7 +26,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TREE_VIEW_PLUGIN } from '../types';
-import { NavTreeItem } from './NavTree';
+import { NavTree } from './NavTree';
 import { VersionInfo } from './VersionInfo';
 
 export const TreeViewContainer = () => {
@@ -39,9 +38,8 @@ export const TreeViewContainer = () => {
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
-  const splitViewContext = useSplitView();
+  const splitView = useSplitView();
 
-  const branches = graph.root.children;
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
   const openIdentityPanel = () => {
@@ -76,8 +74,8 @@ export const TreeViewContainer = () => {
                         classNames='pli-2 pointer-fine:pli-1'
                         {...(!navigationSidebarOpen && { tabIndex: -1 })}
                         onClick={() => {
-                          splitViewContext.dialogOpen = true;
-                          splitViewContext.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
+                          splitView.dialogOpen = true;
+                          splitView.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
                         }}
                       >
                         <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
@@ -98,11 +96,13 @@ export const TreeViewContainer = () => {
           )}
           <ScrollArea.Root classNames='grow min-bs-0'>
             <ScrollArea.Viewport>
-              <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1'>
-                {branches.map((branch) => (
-                  <NavTreeItem key={branch.id} node={branch} level={0} />
-                ))}
-              </Tree.Root>
+              <NavTree
+                level={0}
+                role='tree'
+                classNames='pbs-1 pbe-4 pli-1'
+                node={graph.root}
+                items={graph.root.children}
+              />
               <ScrollArea.Scrollbar orientation='vertical' classNames='pointer-events-none'>
                 <ScrollArea.Thumb />
               </ScrollArea.Scrollbar>

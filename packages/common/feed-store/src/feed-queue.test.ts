@@ -11,7 +11,6 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FeedQueue } from './feed-queue';
-import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
 
 describe('FeedQueue', () => {
@@ -149,7 +148,7 @@ describe('FeedQueue', () => {
   test
     .skip('responds immediately when feed is appended', async () => {
       const key = await builder.keyring.createKey();
-      const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
+      const feed = await factory.createFeed(key, { writable: true });
       await feed.open();
 
       const queue = new FeedQueue<any>(feed);
@@ -201,7 +200,7 @@ describe('FeedQueue', () => {
 
   test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
+    const feed = await factory.createFeed(key, { writable: true });
     await feed.open();
 
     const queue = new FeedQueue<any>(feed);
@@ -246,7 +245,7 @@ describe('FeedQueue', () => {
     const start = 2;
 
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
+    const feed = await factory.createFeed(key, { writable: true });
     await feed.open();
 
     // Write blocks.

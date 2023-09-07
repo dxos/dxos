@@ -7,6 +7,6 @@ const { runTestSignalServer } = require('@dxos/signal');
 
 module.exports = {
   setup: async ({ port = 4000 }) => {
-    await runTestSignalServer({ port });
+    await runTestSignalServer({ port, killExisting: true });
   },
 };

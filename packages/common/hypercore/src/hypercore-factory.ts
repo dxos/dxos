@@ -28,7 +28,7 @@ export class HypercoreFactory<T> {
    * do not behave uniformly across platforms.
    */
   createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
-    const directory = this._root.createDirectory(publicKey.toString());
+    const directory = this._root.createDirectory(publicKey.toString('hex'));
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
     return hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }

@@ -2,18 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { List, Plus } from '@phosphor-icons/react';
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
-import { Button, Toolbar } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { ThreadMain } from './components';
+import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
 import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
 import { objectToGraphNode } from './util';
@@ -23,7 +21,7 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: ThreadType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {
@@ -76,7 +74,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           }
 
           case 'complementary':
-            return Test;
+            return ThreadSidebar;
         }
       },
       components: {
@@ -93,19 +91,4 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
     },
   };
-};
-
-// TODO(burdon): Get current space.
-const Test = (props: any) => {
-  // console.log(props);
-  return (
-    <div>
-      <Toolbar.Root>
-        <div role='none' className='grow' />
-        <Button variant='ghost'>
-          <List weight='light' className={getSize(4)} />
-        </Button>
-      </Toolbar.Root>
-    </div>
-  );
 };

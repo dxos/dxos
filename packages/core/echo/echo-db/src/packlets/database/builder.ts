@@ -12,11 +12,11 @@ import { EchoObject, EchoObjectBatch, MutationMeta } from '@dxos/protocols/proto
 export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string, startingIndex: number) => {
   batch.objects?.forEach((object, objectIndex) => {
     object.meta ??= {};
-    object.meta.clientTag = `${tag}:${objectIndex}`;
+    object.meta.clientTag = [`${tag}:${objectIndex}`];
 
     object.mutations?.forEach((mutation, mutationIndex) => {
       mutation.meta ??= {};
-      mutation.meta.clientTag = `${tag}:${objectIndex + startingIndex}:${mutationIndex}`;
+      mutation.meta.clientTag = [`${tag}:${objectIndex + startingIndex}:${mutationIndex}`];
     });
   });
 };

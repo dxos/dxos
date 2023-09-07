@@ -41,6 +41,10 @@ export class ProtoRpcPeer<Service> {
   async close() {
     await this._peer.close();
   }
+
+  async abort() {
+    await this._peer.abort();
+  }
 }
 
 export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
