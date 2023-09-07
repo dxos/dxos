@@ -131,7 +131,7 @@ export class ColumnBuilder<TData extends RowData> {
                     <Select.Viewport>
                       {values?.map(({ id, value, label }) => (
                         <Select.Option key={id} value={value ?? id}>
-                          {label ?? value ?? id}
+                          {label ?? String(value) ?? id}
                         </Select.Option>
                       ))}
                     </Select.Viewport>
@@ -165,26 +165,30 @@ export class ColumnBuilder<TData extends RowData> {
             const inputRef = useRef<HTMLInputElement>(null);
             const { findFirstFocusable } = useFocusFinders();
 
-            const handleSave = () => {
+            const handleSave = (focusNext = false) => {
               if (value === initialValue) {
                 return;
               }
+
+              console.log('save', focusNext);
 
               onUpdate?.(cell.row.original, cell.column.id, value);
 
               // TODO(burdon): More generally support keyboard navigation.
               // TODO(burdon): If on temporary row and multiple inputs then selects next input but then repaints.
-              const cellElement = inputRef.current?.parentElement;
-              const next = findNextFocusable(findFirstFocusable, cellElement?.nextSibling as HTMLElement);
-              if (next) {
-                next.focus();
-              } else {
-                // TODO(burdon): Hack to wait for next row to render.
-                const rowElement = cellElement?.parentElement;
-                setTimeout(() => {
-                  const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
-                  next?.focus();
-                });
+              if (focusNext) {
+                const cellElement = inputRef.current?.parentElement;
+                const next = findNextFocusable(findFirstFocusable, cellElement?.nextSibling as HTMLElement);
+                if (next) {
+                  next.focus();
+                } else {
+                  // TODO(burdon): Hack to wait for next row to render.
+                  const rowElement = cellElement?.parentElement;
+                  setTimeout(() => {
+                    const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
+                    next?.focus();
+                  });
+                }
               }
             };
 
@@ -206,10 +210,10 @@ export class ColumnBuilder<TData extends RowData> {
                   placeholder={placeholder ? 'Add row...' : undefined}
                   classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Move color to theme.
                   value={(value as string) ?? ''}
-                  // onBlur={handleSave} // TODO(burdon): Calls twice if already pressed enter.
+                  onBlur={() => handleSave(false)}
                   onChange={(event) => setValue(event.target.value)}
                   onKeyDown={(event) =>
-                    (event.key === 'Enter' && handleSave()) || (event.key === 'Escape' && handleCancel())
+                    (event.key === 'Enter' && handleSave(true)) || (event.key === 'Escape' && handleCancel())
                   }
                 />
               </Input.Root>

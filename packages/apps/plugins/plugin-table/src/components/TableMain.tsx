@@ -7,7 +7,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaProp, createActionColumn, GridSchema } from '@dxos/aurora-grid';
+import { Grid, createColumns, GridSchemaProp, createActionColumn, GridSchema, SelectValue } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -102,7 +102,16 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         }
 
         const { objects } = space!.db.query((object) => object.__meta?.schema?.id === ref);
-        return objects.map((object) => ({ id: object.id, value: object, label: (object as any)[refProp] }));
+        return objects
+          .map((object) => {
+            const label = (object as any)[refProp];
+            if (!label) {
+              return undefined;
+            }
+
+            return { id: object.id, value: object, label };
+          })
+          .filter(Boolean) as SelectValue[];
       },
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
@@ -116,7 +125,6 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             ref: type === 'ref' ? tables.find((table) => table.schema.id === ref)?.schema : undefined,
             refProp,
           });
-
           forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
