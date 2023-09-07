@@ -161,7 +161,7 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = false }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
+  async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
     // NOTE: Kill all processes with the given profile.
