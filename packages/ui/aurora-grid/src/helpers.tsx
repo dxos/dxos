@@ -170,25 +170,16 @@ export class ColumnBuilder<TData extends RowData> {
                 return;
               }
 
-              console.log('save', focusNext);
-
               onUpdate?.(cell.row.original, cell.column.id, value);
 
               // TODO(burdon): More generally support keyboard navigation.
-              // TODO(burdon): If on temporary row and multiple inputs then selects next input but then repaints.
               if (focusNext) {
-                const cellElement = inputRef.current?.parentElement;
-                const next = findNextFocusable(findFirstFocusable, cellElement?.nextSibling as HTMLElement);
-                if (next) {
-                  next.focus();
-                } else {
-                  // TODO(burdon): Hack to wait for next row to render.
-                  const rowElement = cellElement?.parentElement;
-                  setTimeout(() => {
-                    const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
-                    next?.focus();
-                  });
-                }
+                const rowElement = inputRef.current?.parentElement?.parentElement;
+                // TODO(burdon): Hack to wait for next row to render.
+                setTimeout(() => {
+                  const next = findNextFocusable(findFirstFocusable, rowElement as HTMLElement);
+                  next?.focus();
+                });
               }
             };
 
