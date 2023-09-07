@@ -7,7 +7,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaColumn, createActionColumn } from '@dxos/aurora-grid';
+import { Grid, createColumns, GridSchemaProp, createActionColumn, GridSchema, SelectValue } from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -15,8 +15,10 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 const EMPTY_ROW_ID = '__new';
 
-const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => {
+const getPropType = (type?: SchemaType.PropType): GridSchemaProp['type'] => {
   switch (type) {
+    case SchemaType.PropType.REF:
+      return 'ref';
     case SchemaType.PropType.BOOLEAN:
       return 'boolean';
     case SchemaType.PropType.NUMBER:
@@ -29,8 +31,10 @@ const getColumnType = (type?: SchemaType.PropType): GridSchemaColumn['type'] => 
   }
 };
 
-const getPropType = (type?: GridSchemaColumn['type']): SchemaType.PropType => {
+const getSchemaType = (type?: GridSchemaProp['type']): SchemaType.PropType => {
   switch (type) {
+    case 'ref':
+      return SchemaType.PropType.REF;
     case 'boolean':
       return SchemaType.PropType.BOOLEAN;
     case 'number':
@@ -43,43 +47,84 @@ const getPropType = (type?: GridSchemaColumn['type']): SchemaType.PropType => {
   }
 };
 
+const schemaPropMapper =
+  (table: TableType) =>
+  ({ id, type, label, digits, ref, refProp }: SchemaType.Prop): GridSchemaProp => ({
+    id: id!,
+    type: getPropType(type),
+    label,
+    digits,
+    ref: ref?.id,
+    refProp,
+    size: table.props?.find((prop) => prop.id === id)?.size,
+    editable: true,
+    resizable: true,
+  });
+
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const { plugins } = usePlugins();
   const [, forceUpdate] = useState({});
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
   // TODO(burdon): Not updated when object deleted.
+  const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
     // TODO(burdon): System meta property.
-    (object) => object.meta?.schema?.id === table.schema.id,
+    (object) => object.__meta?.schema?.id === table.schema.id,
     {}, // TODO(burdon): Toggle deleted.
     [table.schema],
   );
 
-  // TODO(burdon): Don't show delete icon for placeholder row.
   const rows = [...objects, {} as any];
 
-  // TODO(burdon): Settings dialog to change typename.
   const columns = useMemo(() => {
-    const schema = {
-      columns: table.schema?.props.map(({ id, type, label }) => ({
-        id: id!,
-        type: getColumnType(type),
-        size: table.props?.find((prop) => prop.id === id)?.size,
-        label,
-        editable: true,
-        resizable: true,
-      })),
-    };
+    if (!tables.length) {
+      return [];
+    }
 
-    const columns = createColumns<TypedObject>(schema, {
-      // TODO(burdon): Doesn't close popover.
+    // TODO(burdon): Map other tables.
+    const schemasDefs: GridSchema[] = tables.map((table) => ({
+      id: table.schema.id,
+      name: table.schema.typename ?? table.title,
+      props: table.schema.props.map(schemaPropMapper(table)),
+    }));
+
+    const schemaDef = schemasDefs.find((def) => def.id === table.schema?.id);
+    if (!schemaDef) {
+      return [];
+    }
+
+    const columns = createColumns<TypedObject>(schemasDefs, schemaDef, {
+      getRefValues: async ({ ref, refProp }) => {
+        if (!ref || !refProp) {
+          return [];
+        }
+
+        const { objects } = space!.db.query((object) => object.__meta?.schema?.id === ref);
+        return objects
+          .map((object) => {
+            const label = (object as any)[refProp];
+            if (!label) {
+              return undefined;
+            }
+
+            return { id: object.id, value: object, label };
+          })
+          .filter(Boolean) as SelectValue[];
+      },
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
-          const { id, type, label, digits } = column;
-          table.schema?.props.splice(idx, 1, { id, type: getPropType(type), label, digits });
+          const { id, type, label, digits, ref, refProp } = column;
+          table.schema?.props.splice(idx, 1, {
+            id,
+            type: getSchemaType(type),
+            label,
+            digits,
+            ref: type === 'ref' ? tables.find((table) => table.schema.id === ref)?.schema : undefined,
+            refProp,
+          });
           forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
@@ -90,20 +135,19 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
           forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
-      // TODO(burdon): Check only called by grid if value changed.
       onUpdate: (object, prop, value) => {
         object[prop] = value;
         if (!object.id) {
           // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
-          space!.db.add(new Expando(Object.assign(object, { meta: { schema: table.schema } })));
+          space!.db.add(new Expando(Object.assign(object, { __meta: { schema: table.schema } })));
         }
       },
     });
 
-    const actionColumn = createActionColumn<TypedObject>(schema, {
+    const actionColumn = createActionColumn<TypedObject>(schemaDef, {
       isDeletable: (row) => !!row.id,
       onColumnCreate: ({ id, type, label, digits }) => {
-        table.schema?.props.push({ id, type: getPropType(type), label, digits });
+        table.schema?.props.push({ id, type: getSchemaType(type), label, digits });
         forceUpdate({}); // TODO(burdon): Fix refresh.
       },
       onRowDelete: (object) => {
@@ -113,7 +157,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     });
 
     return [...columns, actionColumn];
-  }, [space, JSON.stringify(table), JSON.stringify(table.schema)]); // TODO(burdon): Impl. echo useMemo-like hook.
+  }, [space, tables, JSON.stringify(table), JSON.stringify(table.schema)]); // TODO(burdon): Impl. echo useMemo-like hook.
 
   const handleColumnResize = (state: Record<string, number>) => {
     Object.entries(state).forEach(([id, size]) => {
@@ -131,7 +175,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       <DensityProvider density='fine'>
         <div className='flex grow -ml-[1px] -mt-[1px] overflow-hidden'>
           <Grid<TypedObject>
-            keyAccessor={(row) => row.original.id ?? EMPTY_ROW_ID}
+            keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
             columns={columns}
             data={rows}
             onColumnResize={handleColumnResize}

@@ -12,21 +12,29 @@ import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { ColumnMenu } from './ColumnMenu';
-import { BaseColumnOptions, createColumnBuilder } from './helpers';
+import { BaseColumnOptions, createColumnBuilder, SelectValue } from './helpers';
 
 /**
  * Serializable schema.
  */
 export type GridSchema = {
-  columns: GridSchemaColumn[];
+  id: string;
+  name?: string;
+  props: GridSchemaProp[];
 };
 
-export type GridSchemaColumn = {
+export type GridSchemaProp = {
   id: string;
-  type: 'number' | 'boolean' | 'date' | 'string';
+  type: 'number' | 'boolean' | 'date' | 'string' | 'ref';
   size?: number;
   label?: string;
+
+  // type: number
   digits?: number;
+
+  // type: schema
+  ref?: string;
+  refProp?: string;
 
   // TODO(burdon): Move to meta.
   fixed?: boolean;
@@ -37,7 +45,7 @@ export type GridSchemaColumn = {
 export const createUniqueProp = (schema: GridSchema) => {
   for (let i = 1; i < 100; i++) {
     const prop = 'prop_' + i;
-    if (!schema.columns.find((column) => column.id === prop)) {
+    if (!schema.props.find((column) => column.id === prop)) {
       return prop;
     }
   }
@@ -48,8 +56,9 @@ export const createUniqueProp = (schema: GridSchema) => {
 // TODO(burdon): Create builder.
 
 type CreateColumnsOptions<TData extends RowData, TValue> = {
+  getRefValues?: (column: GridSchemaProp) => Promise<SelectValue[]>;
   onUpdate?: (row: TData, id: string, value: TValue) => void;
-  onColumnUpdate?: (id: string, column: GridSchemaColumn) => void;
+  onColumnUpdate?: (id: string, column: GridSchemaProp) => void;
   onColumnDelete?: (id: string) => void;
 };
 
@@ -57,11 +66,12 @@ type CreateColumnsOptions<TData extends RowData, TValue> = {
  * Create column definitions from schema metadata.
  */
 export const createColumns = <TData extends RowData>(
+  schemas: GridSchema[],
   schema: GridSchema,
-  { onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
+  { getRefValues, onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
-  return schema.columns.map((column) => {
+  return schema.props.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
 
     const options: BaseColumnOptions<TData, any> = stripUndefinedValues({
@@ -70,11 +80,25 @@ export const createColumns = <TData extends RowData>(
       label,
       header: fixed
         ? undefined
-        : () => <ColumnMenu schema={schema} column={column} onUpdate={onColumnUpdate} onDelete={onColumnDelete} />,
+        : (context) => (
+            <ColumnMenu<TData, any>
+              context={context}
+              schemas={schemas}
+              schema={schema}
+              column={column}
+              onUpdate={onColumnUpdate}
+              onDelete={onColumnDelete}
+            />
+          ),
       onUpdate,
     });
 
     switch (type) {
+      // TODO(burdon): Get all values.
+      case 'ref':
+        return getRefValues
+          ? helper.accessor(id, builder.select({ ...options, lookupValues: () => getRefValues(column) }))
+          : null;
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':
@@ -91,7 +115,7 @@ export const createColumns = <TData extends RowData>(
 type CreateActionColumnOptions<TData extends RowData> = {
   isDeletable?: (row: TData) => boolean;
   onRowDelete?: (row: TData) => void;
-  onColumnCreate?: (column: GridSchemaColumn) => void;
+  onColumnCreate?: (column: GridSchemaProp) => void;
 };
 
 export const createActionColumn = <TData extends RowData>(
