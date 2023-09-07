@@ -48,7 +48,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
       next({
         swarmEvent: swarmEvent.swarmEvent,
         topic: swarmEvent.topic.asUint8Array(),
-        receivedAt: new Date()
+        receivedAt: new Date(),
       });
     });
     return () => {
