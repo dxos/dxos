@@ -72,7 +72,8 @@ export class GossipExtension implements TeleportExtension {
     try {
       await this._rpc?.abort();
       this._sendInterval && clearInterval(this._sendInterval);
-      this.onClose(err);
+      await this._callbacks.onClose?.(err);
+      await this.onClose(err);
     } catch (err) {
       log.catch(err);
     }
@@ -85,14 +86,7 @@ export class GossipExtension implements TeleportExtension {
     }
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
-    try {
-      await this._rpc.rpc.GossipService.announce(message);
-    } catch (err) {
-      // TODO(nf): always abort on RpcClosedError? gets stuck in retry loop otherwise
-      if (err instanceof RpcClosedError) {
-        await this._rpc?.abort();
-      }
-    }
+    await this._rpc.rpc.GossipService.announce(message);
   }
 }
 
