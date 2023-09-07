@@ -109,7 +109,7 @@ export class Peer {
     const remoteId = message.author;
 
     // Check if we are already trying to connect to that peer.
-    if (this.connection || this.initiating) {
+    if (this.connection && this.initiating) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         // TODO(burdon): Too verbose.
