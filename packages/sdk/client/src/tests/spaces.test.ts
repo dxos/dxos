@@ -11,7 +11,7 @@ import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando } from '@dxos/echo-schema';
+import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -469,5 +469,27 @@ describe('Spaces', () => {
     await waitForExpect(() => {
       expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
     });
+  });
+
+  test('space properties are reactive', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.createSpace();
+    const trigger = new Trigger();
+    space.properties[subscribe](() => {
+      trigger.wake();
+    });
+
+    expect(space.state.get()).to.equal(SpaceState.READY);
+    space.properties.name = 'example';
+    await trigger.wait({ timeout: 500 });
+    expect(space.properties.name).to.equal('example');
   });
 });
