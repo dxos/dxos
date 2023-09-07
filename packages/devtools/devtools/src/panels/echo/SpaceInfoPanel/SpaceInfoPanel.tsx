@@ -73,10 +73,6 @@ export const SpaceInfoPanel: FC = () => {
     }
   };
 
-  if (!space || !metadata) {
-    return null;
-  }
-
   return (
     <PanelContainer
       toolbar={

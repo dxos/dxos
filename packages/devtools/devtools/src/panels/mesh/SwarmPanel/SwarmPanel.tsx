@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { ReactChild, ReactElement, useMemo, useState } from 'react';
 
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { PublicKey } from '@dxos/keys';
@@ -12,6 +12,8 @@ import { ComplexMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { ConnectionInfoView } from './ConnectionInfoView';
+import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import bytes from 'bytes';
 
 type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 
@@ -19,22 +21,34 @@ type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
 const columns: GridColumnDef<SwarmConnection, any>[] = [
   helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
-  helper.accessor('topic', builder.key({ tooltip: true })),
+  helper.accessor('topic', builder.key({
+    tooltip: true,
+    getGroupingValue: (value) => value.topic.truncate(),
+  })),
   helper.accessor('label', { header: 'label' }), // TODO(burdon): Has promise string.
-  helper.accessor('isActive', builder.icon({ header: 'active' })),
+  helper.accessor('isActive', { ...builder.icon({ header: 'active' }), size: 80 }),
   helper.accessor((connection) => connection.connection?.sessionId, {
     id: 'session',
     ...builder.key({ tooltip: true }),
   }),
   helper.accessor((connection) => connection.connection?.remotePeerId, {
     id: 'remote peer',
-    ...builder.key({ tooltip: true }),
+    ...builder.key({ tooltip: true, }),
+    getGroupingValue: (value) => value.connection?.remotePeerId?.truncate(),
+    size: 80,
   }),
   helper.accessor((connection) => connection.connection?.state, {
     id: 'state',
+    getGroupingValue: (value) => value.connection?.state,
+    cell: (cell) => <span className={stateFormat[cell.getValue()]?.className}>{cell.getValue()}</span>,
+  }),
+  helper.accessor((connection) => connection.connection && getStats(connection.connection), {
+    id: 'stats',
+    cell: (cell) => cell.getValue() && <span className='flex flex-row items-baseline gap-1'><ArrowUp />{bytes(cell.getValue().bytesSent)}<ArrowDown />{bytes(cell.getValue().bytesReceived)}</span>
   }),
   helper.accessor((connection) => connection.connection?.closeReason, {
     id: 'close reason',
+    size: 400
   }),
 ];
 
@@ -61,12 +75,46 @@ export const SwarmPanel = () => {
     return connections;
   }, []) ?? [swarms];
 
+  // TODO(dmaretskyi): Grid already has some sort features.
+  items.sort(comparer(row => row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity));
+
   return (
     <PanelContainer>
-      <div className='h-1/3 overflow-auto'>
-        <Grid<SwarmConnection> columns={columns} data={items} onSelectedChange={handleSelect} />
+      <div className='h-1/2 overflow-auto'>
+        <Grid<SwarmConnection> columns={columns} data={items} keyAccessor={row => row.id.toHex()} grouping={['topic']} onSelectedChange={handleSelect} />
       </div>
-      <div className='h-2/3 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
+      <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
     </PanelContainer>
   );
 };
+
+const stateFormat: Record<string, { className?: string }> = {
+  'CONNECTED': { className: 'text-green-500' },
+  'CONNECTING': {},
+  'INITIAL': {},
+  'CREATED': {},
+  'CLOSING': { className: 'text-red-500' },
+  'CLOSED': { className: 'text-red-500' },
+}
+
+const getStats = (connection: ConnectionInfo) => {
+  const stats = {
+    bytesSent: 0,
+    bytesReceived: 0,
+    bytesSentRate: 0,
+    bytesReceivedRate: 0,
+  };
+  connection.streams?.forEach(stream => {
+    stats.bytesSent += stream.bytesSent ?? 0;
+    stats.bytesReceived += stream.bytesReceived ?? 0;
+    stats.bytesSentRate += stream.bytesSentRate ?? 0;
+    stats.bytesReceivedRate += stream.bytesReceivedRate ?? 0;
+  })
+
+  return stats;
+}
+
+
+// TODO(dmaretskyi): Move to util.
+const comparer = <T,>(accessor: (x: T) => number, reverse?: boolean) => (a: T, b: T) =>
+  reverse ? accessor(b) - accessor(a) : accessor(a) - accessor(b);

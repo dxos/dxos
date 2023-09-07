@@ -112,7 +112,6 @@ export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props
     pinToBottom,
     debug,
   } = props;
-  invariant(keyAccessor);
 
   // Update controlled selection.
   // https://tanstack.com/table/v8/docs/api/features/row-selection
