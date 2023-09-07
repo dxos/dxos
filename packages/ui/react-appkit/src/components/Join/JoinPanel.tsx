@@ -94,7 +94,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
 
   const onAuthenticateNext = useCallback((secret: string) => {
     setPending(true);
-    authenticate(secret).finally(() => setPending(false));
+    void authenticate(secret).finally(() => setPending(false));
   }, []);
 
   const onChange = useCallback(
