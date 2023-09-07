@@ -112,13 +112,13 @@ export const ColumnPanel = <TData extends RowData, TValue>({
 
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col space-y-1 divide-y'>
+      <div className='flex flex-col w-full space-y-1 divide-y'>
         <Section>
           <Input.Root>
             <Input.Label classNames='mbe-1'>Label</Input.Label>
             <Input.TextInput
               placeholder='Column label'
-              value={column.label}
+              value={label}
               onChange={(event) => setLabel(event.target.value)}
               autoFocus
             />

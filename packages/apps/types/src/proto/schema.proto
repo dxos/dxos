@@ -11,7 +11,7 @@ package braneframe;
 /**
  * Expando schema definition.
  */
-// TODO(burdon): Used by Table, Kanban, etc.
+// TODO(burdon): Use with Table, Kanban, etc.
 message Schema {
   option (object) = true;
 

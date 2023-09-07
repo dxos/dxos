@@ -49,7 +49,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client'); // TODO(burdon): Use const since importing dep anyway?
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
       if (!clientPlugin || !treeViewPlugin) {
@@ -183,7 +183,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
             properties: {
-              palette: 'blue',
+              palette: 'blue', // TODO(burdon): Change palette.
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
