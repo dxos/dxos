@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.1.57](https://github.com/dxos/dxos/compare/v0.1.56...v0.1.57) (2023-09-07)
+
+
+### Features
+
+* Buffer web-fs files in memory ([#4064](https://github.com/dxos/dxos/issues/4064)) ([58106e2](https://github.com/dxos/dxos/commit/58106e20e2f61341dac88ef7ee32ca2a6a1454ff))
+* deploy notifications  ([#4069](https://github.com/dxos/dxos/issues/4069)) ([c28f37d](https://github.com/dxos/dxos/commit/c28f37d1176969cdd42019a6558a54a2d77086cf))
+* Devtools swarm panel ([#4144](https://github.com/dxos/dxos/issues/4144)) ([4d3cefa](https://github.com/dxos/dxos/commit/4d3cefa1df3f1b87f9081968061805a6afc09e33))
+* **devtools:** add proxy for debugging mobile devices ([#4025](https://github.com/dxos/dxos/issues/4025)) ([281294d](https://github.com/dxos/dxos/commit/281294d132fc40173356b55eaf13983e405638b6))
+* **echo-db:** Commit batch after if user idling or batch length reaches the threshold ([#4088](https://github.com/dxos/dxos/issues/4088)) ([6b88579](https://github.com/dxos/dxos/commit/6b88579d2d583705fccfc6ef2a73f0a2e03578db))
+* **echo:** Merge mutations before writing them into feed ([#3983](https://github.com/dxos/dxos/issues/3983)) ([3c00016](https://github.com/dxos/dxos/commit/3c0001699aa5510d54c36c378d83be44cbb673e4))
+* Editable aurora grid. ([#4106](https://github.com/dxos/dxos/issues/4106)) ([99bfb5a](https://github.com/dxos/dxos/commit/99bfb5af0e8095057a40e115a2194c1a9678d9fe))
+* fix drawing plugin dragging ([#4099](https://github.com/dxos/dxos/issues/4099)) ([c7221e3](https://github.com/dxos/dxos/commit/c7221e3be1f206f91aee9a62cc3c85b6647a85e0))
+* Fix min Table ux issues. ([#4125](https://github.com/dxos/dxos/issues/4125)) ([8d5f664](https://github.com/dxos/dxos/commit/8d5f66469c78dc7a490b2a85bb0206dc4be47be2))
+* Map plugin ([#4107](https://github.com/dxos/dxos/issues/4107)) ([7eeea37](https://github.com/dxos/dxos/commit/7eeea3714159f335f9e046dcea5d80da9a549eb0))
+* optionally use libdatachannel for webrtc transport ([#3920](https://github.com/dxos/dxos/issues/3920)) ([dbb7d4d](https://github.com/dxos/dxos/commit/dbb7d4d64606447c03257c96483fd17068f8c7c2))
+* **plugin-debug:** add devtools panel & reactivity ([#4085](https://github.com/dxos/dxos/issues/4085)) ([bd49428](https://github.com/dxos/dxos/commit/bd49428e18a6d6c23473b70c1ca2d224b89505fd))
+* **plugin-github:** group documents tied to github issues ([#4126](https://github.com/dxos/dxos/issues/4126)) ([3a303c4](https://github.com/dxos/dxos/commit/3a303c40ae7e6ba666419bfc98f023183aeab413))
+* **plugin-space:** separate personal space in graph ([#4094](https://github.com/dxos/dxos/issues/4094)) ([c842fae](https://github.com/dxos/dxos/commit/c842faec58c24cd941d5aa5084a6776c22a9e59a))
+* **plugin-treeview:** Indices persistor ([#4100](https://github.com/dxos/dxos/issues/4100)) ([a6e992d](https://github.com/dxos/dxos/commit/a6e992d60ea16aa31ce9d8a8ffe0dd2cdf374460))
+* **plugin-treeview:** Presentational grouping ([#4067](https://github.com/dxos/dxos/issues/4067)) ([ced7eea](https://github.com/dxos/dxos/commit/ced7eeac640ce0c70dc3d5a33f1a3b434ccabc2e))
+* Rename drawing to sketch ([#4105](https://github.com/dxos/dxos/issues/4105)) ([dbb22f6](https://github.com/dxos/dxos/commit/dbb22f6610a6ad27ec2c62360f0db3cacd152f0d))
+* Settings plugin ([#4086](https://github.com/dxos/dxos/issues/4086)) ([0dd0148](https://github.com/dxos/dxos/commit/0dd014884baa302f8f052a805efb4e197a80b3e0))
+* Startup performance optimizations ([#4098](https://github.com/dxos/dxos/issues/4098)) ([871097d](https://github.com/dxos/dxos/commit/871097d16cef59766f278e3621eacee594a691be))
+* System-level meta property for expandos and typed objects ([#4131](https://github.com/dxos/dxos/issues/4131)) ([0fc892c](https://github.com/dxos/dxos/commit/0fc892cbbd5b14e72a869135051a6b4235bc99f9))
+* Table grouping and relations ([#4140](https://github.com/dxos/dxos/issues/4140)) ([e551590](https://github.com/dxos/dxos/commit/e5515907b99fcf49154823ad3dad557f2c63eb06))
+* Table navigation ([#4123](https://github.com/dxos/dxos/issues/4123)) ([c13c335](https://github.com/dxos/dxos/commit/c13c335d894a2f7f0fd4bf19d265f713a6a27c1b))
+* Table navigation fix. ([#4132](https://github.com/dxos/dxos/issues/4132)) ([a89150c](https://github.com/dxos/dxos/commit/a89150cd0c5ee6922371cdb4d30a863e0b2338c2))
+* Table plugin. ([#4108](https://github.com/dxos/dxos/issues/4108)) ([442c472](https://github.com/dxos/dxos/commit/442c472ee8f4b2c43c6b832f811be19410dd6f43))
+* Threads in side bar ([#4104](https://github.com/dxos/dxos/issues/4104)) ([63f7d13](https://github.com/dxos/dxos/commit/63f7d137df41b4e4dcdd88030d8ddfb3d2b34374))
+* **util:** Add WeakDictionary ([#4109](https://github.com/dxos/dxos/issues/4109)) ([9f46c4a](https://github.com/dxos/dxos/commit/9f46c4acd1fedfd9a9568fdff868ffab305f4125))
+
+
+### Bug Fixes
+
+* abort abruptly disconnected connections ([#4101](https://github.com/dxos/dxos/issues/4101)) ([07632d1](https://github.com/dxos/dxos/commit/07632d17e2d77f5cc8d95e822c35db6cb8b545dc))
+* **aurora-theme,plugin-table:** Popover polish ([#4141](https://github.com/dxos/dxos/issues/4141)) ([883a166](https://github.com/dxos/dxos/commit/883a1669ee5beeb9d57707f08e23ed7ef7487549))
+* **client:** flush default space properties to cache ([#4118](https://github.com/dxos/dxos/issues/4118)) ([3dcc4a8](https://github.com/dxos/dxos/commit/3dcc4a8814dcf6523a784da5575cd1e3b0977e8b))
+* default value for since row in swarm events table ([#4119](https://github.com/dxos/dxos/issues/4119)) ([fbfaa19](https://github.com/dxos/dxos/commit/fbfaa196d51233292555fe4934f8ad94b9ea1ec3))
+* devtools table whitespace ([#4111](https://github.com/dxos/dxos/issues/4111)) ([9178ede](https://github.com/dxos/dxos/commit/9178edeef36f952f1f20d08bb8a0d233b1fd6bfa))
+* don't leave any dangling connections ([#4037](https://github.com/dxos/dxos/issues/4037)) ([e87098f](https://github.com/dxos/dxos/commit/e87098fb298590497f6a5dbd7b96c1139ad4c5e0))
+* **echo-schema:** send updates for text objects ([#4120](https://github.com/dxos/dxos/issues/4120)) ([3aaaf10](https://github.com/dxos/dxos/commit/3aaaf100cfe0c5e660b66ada480253f931388c34))
+* Fix object duping ([#4134](https://github.com/dxos/dxos/issues/4134)) ([4afd974](https://github.com/dxos/dxos/commit/4afd974bcab984e33be26430629a31b1985eb5f8))
+* new connection state to differentiate between connections waiting for limiter vs waiting on offer ([#4129](https://github.com/dxos/dxos/issues/4129)) ([525f7eb](https://github.com/dxos/dxos/commit/525f7eb431dd35e57bef4ad14d1c0299e6c28ab0))
+* **plugin-space:** hide space status in personal space ([#4096](https://github.com/dxos/dxos/issues/4096)) ([542a20e](https://github.com/dxos/dxos/commit/542a20ea85e23e4848dc6b84200cd45eba900d4d))
+* Reopening spaces ([#4115](https://github.com/dxos/dxos/issues/4115)) ([a9f4f4e](https://github.com/dxos/dxos/commit/a9f4f4e4594afed76a0fb1e66da38635efacfe97))
+* show swarm topic in events list ([#4143](https://github.com/dxos/dxos/issues/4143)) ([fe4c4b9](https://github.com/dxos/dxos/commit/fe4c4b96bb05824d61c3dd0e8a0dab5b62263167))
+* signal server port selection ([#3971](https://github.com/dxos/dxos/issues/3971)) ([1d5e9f9](https://github.com/dxos/dxos/commit/1d5e9f952e75f2027e70eeef09cb29d963c7b160))
+* workaround Safari console log issue ([#4137](https://github.com/dxos/dxos/issues/4137)) ([41644ca](https://github.com/dxos/dxos/commit/41644ca193e6ce3b36f24c498d24461f032c2f3d))
+
 ## [0.1.56](https://github.com/dxos/dxos/compare/v0.1.55...v0.1.56) (2023-08-31)
 
 
