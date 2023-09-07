@@ -28,6 +28,8 @@ export const PopoverRenameSpace = ({ data: [_, space] }: { data: [string, Space]
             defaultValue={space.properties.name ?? ''}
             placeholder={t('untitled space title')}
             onChange={({ target: { value } }) => setName(value)}
+            // TODO(wittjosiah): Ideally this should access the popover context to close the popover.
+            //   Currently this is not possible because Radix does not expose the popover context.
             onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
           />
         </Input.Root>
