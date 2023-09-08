@@ -45,7 +45,9 @@ export class PhoenixDaemon implements Daemon {
   async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
-      mkdirSync(logDir, { recursive: true });
+      if (!existsSync(logDir)) {
+        mkdirSync(logDir, { recursive: true });
+      }
       log('starting...', { profile, logDir });
 
       const logFile = path.join(logDir, 'daemon.log');
