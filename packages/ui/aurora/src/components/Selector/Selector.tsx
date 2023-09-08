@@ -25,18 +25,16 @@ type SelectorContextValue<T> = {
   adapter: ValueAdapter<T>;
 } & UseComboboxReturnValue<T>;
 
-const usePopperScope = createPopperScope();
-// TODO(burdon): Warning:
-//  TS2742: The inferred type of createSelectorScope cannot be named without a reference to...
-const [createSelectorContext, createSelectorScope] = createContextScope(SELECTOR_NAME, [createPopperScope]);
+const [createSelectorContext] = createContextScope(SELECTOR_NAME, [createPopperScope]);
 const [SelectorProvider, useSelectorContext] = createSelectorContext<SelectorContextValue<any>>(SELECTOR_NAME);
+const usePopperScope = createPopperScope();
 
 type SelectorRootProps<T> = ThemedClassName<
   ScopedProps<
     PropsWithChildren<{
       placeholder?: string;
       items?: T[];
-      value?: T; // TODO(burdon): Rename selected?
+      value?: T;
       adapter: ValueAdapter<T>;
       onChange?: (value: T | undefined) => void;
       onInputChange?: (text?: string) => void;
@@ -192,8 +190,6 @@ const SelectorContent = forwardRef<HTMLDivElement>(
     );
   },
 );
-
-export { createSelectorScope };
 
 // prettier-ignore
 export const Selector = {
