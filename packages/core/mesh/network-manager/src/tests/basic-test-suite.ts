@@ -25,7 +25,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     return;
   }
 
-  test.only('joins swarm, sends messages, and cleanly exits', async () => {
+  test('joins swarm, sends messages, and cleanly exits', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);

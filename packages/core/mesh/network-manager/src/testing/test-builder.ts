@@ -27,8 +27,8 @@ import {
   createLibDataChannelTransportFactory,
   TransportKind,
 } from '../transport';
-import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 import { TcpTransportFactory } from '../transport/tcp-transport';
+import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;
@@ -108,6 +108,7 @@ export class TestPeer {
           throw new Error('Memory transport not supported with signal server.');
         case TransportKind.TCP:
           transportFactory = TcpTransportFactory;
+          break;
         case TransportKind.SIMPLE_PEER:
           transportFactory = createSimplePeerTransportFactory();
           break;
@@ -153,7 +154,7 @@ export class TestPeer {
         log.warn(`specified transport ${transport} but no signalling configured, using memory transport instead`);
       }
       log.info(`using ${transport} transport without signal server.`);
-      transportFactory = TcpTransportFactory;
+      transportFactory = MemoryTransportFactory;
     }
 
     return new NetworkManager({

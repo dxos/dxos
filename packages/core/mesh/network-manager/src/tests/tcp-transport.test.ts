@@ -10,15 +10,15 @@ import { range } from '@dxos/util';
 
 import { TestBuilder } from '../testing';
 import { FullyConnectedTopology } from '../topology';
+import { TransportKind } from '../transport';
 import { basicTestSuite } from './basic-test-suite';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
-import { TransportKind } from '../transport';
 
-describe.only('Tcp transport', () => {
+describe('Tcp transport', () => {
   const testBuilder = new TestBuilder({
     transport: TransportKind.TCP,
   });
-  
+
   basicTestSuite(testBuilder);
 
   test
