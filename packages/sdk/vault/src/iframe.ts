@@ -93,7 +93,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
   } else {
     // TODO(burdon): Remove hardcoded path.
     const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-    const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${window.location.href}`;
+    const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=${window.location.href}`;
     info.push(`%cOpen devtools: ${vaultUrl}`);
   }
 
