@@ -40,7 +40,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             id: `${SKETCH_PLUGIN}:${space.key.toHex()}`,
             label: ['plugin name', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Folder {...props} />,
-            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
+            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject', persistenceClass: 'appState' },
           });
 
           presentationNode.addAction({

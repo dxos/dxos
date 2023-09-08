@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, IconProps, Trash } from '@phosphor-icons/react';
+import { IconProps, StackSimple, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -27,7 +27,7 @@ export const stackToGraphNode = (parent: Graph.Node<Space>, object: StackType, i
   const [child] = parent.add({
     id: object.id,
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
-    icon: (props: IconProps) => <Article {...props} />,
+    icon: (props: IconProps) => <StackSimple {...props} />,
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
