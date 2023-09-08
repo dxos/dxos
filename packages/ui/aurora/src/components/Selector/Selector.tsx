@@ -26,6 +26,8 @@ type SelectorContextValue<T> = {
 } & UseComboboxReturnValue<T>;
 
 const usePopperScope = createPopperScope();
+// TODO(burdon): Warning:
+//  TS2742: The inferred type of createSelectorScope cannot be named without a reference to...
 const [createSelectorContext, createSelectorScope] = createContextScope(SELECTOR_NAME, [createPopperScope]);
 const [SelectorProvider, useSelectorContext] = createSelectorContext<SelectorContextValue<any>>(SELECTOR_NAME);
 
@@ -34,7 +36,7 @@ type SelectorRootProps<T> = ThemedClassName<
     PropsWithChildren<{
       placeholder?: string;
       items?: T[];
-      value?: T; // TODO(burdon): ???
+      value?: T; // TODO(burdon): Rename selected?
       adapter: ValueAdapter<T>;
       onChange?: (value: T | undefined) => void;
       onInputChange?: (text?: string) => void;
@@ -151,17 +153,19 @@ const SelectorContent = forwardRef<HTMLDivElement>(
         role='dialog'
         {...popperScope}
         ref={forwardedRef}
-        style={{
-          // TODO(burdon): This doesn't work.
-          // re-namespace exposed content custom properties
-          ...{
-            '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
-            '--radix-selector-content-available-width': 'var(--radix-popper-available-width)',
-            '--radix-selector-content-available-height': 'var(--radix-popper-available-height)',
-            '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
-            '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
-          },
-        }}
+        style={
+          {
+            // TODO(burdon): This doesn't work.
+            // re-namespace exposed content custom properties
+            ...{
+              '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
+              '--radix-selector-content-available-width': 'var(--radix-popper-available-width)',
+              '--radix-selector-content-available-height': 'var(--radix-popper-available-height)',
+              '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
+              '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
+            },
+          } as any
+        }
       >
         <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
           {isOpen &&
