@@ -155,7 +155,6 @@ const SelectorContent = forwardRef<HTMLDivElement>(
         ref={forwardedRef}
         style={
           {
-            // TODO(burdon): This doesn't work.
             // re-namespace exposed content custom properties
             ...{
               '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
@@ -164,7 +163,7 @@ const SelectorContent = forwardRef<HTMLDivElement>(
               '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
               '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
             },
-          } as any
+          } as any // TODO(burdon): 'selector' values aren't accessible in theme but 'popper' are.
         }
       >
         <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>

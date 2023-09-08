@@ -26,8 +26,10 @@ export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ..
 export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevation }, ...etc) => {
   return mx(
     'z-[50]',
+    // TODO(burdon): Should be -selector-.
     'w-[--radix-popper-anchor-width]',
-    'max-h-[--radix-selector-content-available-height] overflow-y-auto',
+    // TODO(burdon): Height constraint isn't working.
+    'max-h-[--radix-popper-available-height] overflow-y-auto',
     chromeSurface,
     surfaceElevation({ elevation }),
     ...etc,
