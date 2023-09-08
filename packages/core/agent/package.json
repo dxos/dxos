@@ -32,7 +32,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/phoenix": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
