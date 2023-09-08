@@ -73,12 +73,12 @@ export class Generator {
           id: 'email',
           type: SchemaType.PropType.STRING,
         },
-        {
-          id: 'org',
-          type: SchemaType.PropType.REF,
-          ref: org,
-          refProp: 'name',
-        },
+        // {
+        //   id: 'org',
+        //   type: SchemaType.PropType.REF,
+        //   ref: org,
+        //   refProp: 'name',
+        // },
       ],
     });
 

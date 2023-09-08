@@ -145,9 +145,11 @@ const SelectorContent = forwardRef<HTMLDivElement>(
       __scopeSelector,
     );
 
-    if (!isOpen) {
-      return null;
-    }
+    // console.log(items.length);
+
+    // if (!isOpen) {
+    //   return null;
+    // }
 
     return (
       <div>
@@ -170,20 +172,21 @@ const SelectorContent = forwardRef<HTMLDivElement>(
           }
         >
           <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
-            {items.map((item, index) => (
-              <li
-                key={adapter(item).id}
-                data-selected={selectedItem === item ? 'true' : undefined}
-                data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                {...getItemProps({
-                  index,
-                  item,
-                  className: tx('selector.item', 'selector__item', {}, classNames),
-                })}
-              >
-                {adapter(item).text}
-              </li>
-            ))}
+            {!isOpen &&
+              items.map((item, index) => (
+                <li
+                  key={adapter(item).id}
+                  data-selected={selectedItem === item ? 'true' : undefined}
+                  data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                  {...getItemProps({
+                    index,
+                    item,
+                    className: tx('selector.item', 'selector__item', {}, classNames),
+                  })}
+                >
+                  {adapter(item).text}
+                </li>
+              ))}
           </ul>
         </PopperPrimitive.Content>
       </div>
