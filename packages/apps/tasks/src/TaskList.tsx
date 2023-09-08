@@ -11,31 +11,50 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Task } from './proto';
 
 export const TaskList = () => {
-  const [spaceKey, setSpaceKey] = useState<PublicKey>();
-
+  // ECHO
   const client = useClient();
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
+  const space = useSpace(spaceKey);
+  const tasks = useQuery<Task>(space, Task.filter());
+
+  // UI State
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [editingTask, setEditingTask] = useState<number | null>(null);
+  const [showDeleteTask, setShowDeleteTask] = useState<number | null>(null);
+
+  // Redeem invitation code from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const code = searchParams.get('spaceInviteCode');
     if (code) {
       const receivedInvitation = InvitationEncoder.decode(code);
-      const invitationObservable = client.acceptInvitation(receivedInvitation);
-      invitationObservable.subscribe((invitation) => {
-        if (invitation.state === Invitation.State.SUCCESS) {
+      const subscription = client.acceptInvitation(receivedInvitation).subscribe((invitation) => {
+        if (invitation.state === Invitation.State.SUCCESS && invitation.spaceKey) {
           setSpaceKey(invitation.spaceKey);
+          history.pushState(null, '', invitation.spaceKey.toHex());
         }
-        searchParams.delete('spaceInviteCode');
-        window.location.search = searchParams.toString();
       });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, []);
 
-  const space = useSpace(spaceKey);
+  // Listen for browser history changes
+  useEffect(() => {
+    const handleNavigation = () => {
+      setSpaceKey(PublicKey.safeFrom(location.pathname.substring(1)));
+    };
 
-  const tasks = useQuery<Task>(space, Task.filter());
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [editingTask, setEditingTask] = useState<number | null>(null);
-  const [showDeleteTask, setShowDeleteTask] = useState<number | null>(null);
+    if (!spaceKey && location.pathname.length > 1) {
+      handleNavigation();
+    }
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, []);
 
   const handleNewTask = () => {
     if (!space || newTaskTitle === '') {
@@ -55,12 +74,13 @@ export const TaskList = () => {
           if (!space) {
             return;
           }
+
           const invitationObservable = space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
           const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
-          // get the current URL from the window
-          const currentUrl = new URL(window.location.href);
+          // Get the current URL from the window
+          const currentUrl = new URL(location.href);
           const inviteUrl = `${currentUrl}?spaceInviteCode=${encodedInvitation}`;
-          // copy the invite URL to the clipboard
+          // Copy the invite URL to the clipboard
           await navigator.clipboard.writeText(inviteUrl);
         }}
       >
@@ -87,13 +107,7 @@ export const TaskList = () => {
                   checked={task.completed}
                   onChange={() => (task.completed = !task.completed)}
                 />
-                <div
-                  className='hover:pointer-cursor flex-grow'
-                  onClick={() => {
-                    console.log('editing task', index);
-                    setEditingTask(index);
-                  }}
-                >
+                <div className='hover:pointer-cursor flex-grow' onClick={() => setEditingTask(index)}>
                   {editingTask === index ? (
                     <span className='flex justify-between'>
                       <input
