@@ -144,10 +144,6 @@ const ComboBoxContent = forwardRef<HTMLDivElement, ComboBoxContentProps>(
       __scopeComboBox,
     );
 
-    if (!isOpen) {
-      return null;
-    }
-
     return (
       <div>
         <PopperPrimitive.Content
@@ -169,20 +165,21 @@ const ComboBoxContent = forwardRef<HTMLDivElement, ComboBoxContentProps>(
           }
         >
           <ul {...getMenuProps()} className={tx('combobox.content', 'combobox__content', {}, classNames)}>
-            {items.map((item, index) => (
-              <li
-                key={adapter(item).id}
-                data-selected={selectedItem === item ? 'true' : undefined}
-                data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                {...getItemProps({
-                  index,
-                  item,
-                  className: tx('combobox.item', 'combobox__item', {}, classNames),
-                })}
-              >
-                {adapter(item).text}
-              </li>
-            ))}
+            {isOpen &&
+              items.map((item, index) => (
+                <li
+                  key={adapter(item).id}
+                  data-selected={selectedItem === item ? 'true' : undefined}
+                  data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                  {...getItemProps({
+                    index,
+                    item,
+                    className: tx('combobox.item', 'combobox__item', {}, classNames),
+                  })}
+                >
+                  {adapter(item).text}
+                </li>
+              ))}
           </ul>
         </PopperPrimitive.Content>
       </div>
