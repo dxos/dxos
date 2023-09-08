@@ -8,15 +8,7 @@ import React from 'react';
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
 import { useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
-import {
-  Button,
-  DensityProvider,
-  ElevationProvider,
-  Tooltip,
-  useSidebars,
-  useTranslation,
-  Separator,
-} from '@dxos/aurora';
+import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
