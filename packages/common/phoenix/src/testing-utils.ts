@@ -8,7 +8,7 @@ export const TEST_DIR = '/tmp/dxos/testing/phoenix';
 mkdirSync(TEST_DIR, { recursive: true });
 
 export const neverEndingProcess = () => {
-  console.log('started');
+  console.log('neverEndingProcess started');
   setTimeout(() => {}, 1_000_000);
 };
 
