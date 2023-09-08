@@ -147,9 +147,9 @@ const SelectorContent = forwardRef<HTMLDivElement>(
       __scopeSelector,
     );
 
-    // if (!isOpen) {
-    //   return null;
-    // }
+    if (!isOpen) {
+      return null;
+    }
 
     return (
       <div>

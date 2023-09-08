@@ -37,7 +37,7 @@ export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevati
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
   return mx(
-    'inline p-2 truncate',
+    'block p-2 truncate',
     'text-base leading-none select-none cursor-pointer',
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
     // TODO(burdon): Factor out highlight.
