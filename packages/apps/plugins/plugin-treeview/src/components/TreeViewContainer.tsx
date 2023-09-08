@@ -13,7 +13,6 @@ import {
   Button,
   DensityProvider,
   ElevationProvider,
-  ScrollArea,
   Tooltip,
   useJdenticonHref,
   useSidebars,
@@ -94,20 +93,15 @@ export const TreeViewContainer = () => {
               <Separator orientation='horizontal' />
             </>
           )}
-          <ScrollArea.Root classNames='grow min-bs-0'>
-            <ScrollArea.Viewport>
-              <NavTree
-                level={0}
-                role='tree'
-                classNames='pbs-1 pbe-4 pli-1'
-                node={graph.root}
-                items={graph.root.children}
-              />
-              <ScrollArea.Scrollbar orientation='vertical' classNames='pointer-events-none'>
-                <ScrollArea.Thumb />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <div role='none' className='grow min-bs-0 overflow-y-auto'>
+            <NavTree
+              level={0}
+              role='tree'
+              classNames='pbs-1 pbe-4 pli-1'
+              node={graph.root}
+              items={graph.root.children}
+            />
+          </div>
           <VersionInfo config={config} />
         </div>
       </DensityProvider>
