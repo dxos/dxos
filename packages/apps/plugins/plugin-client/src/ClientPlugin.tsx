@@ -40,12 +40,39 @@ export const ClientPlugin = (
   registerSignalFactory();
   const client = new Client(options);
 
+  // Open devtools on keypress
+  const onKeypress = async (e: KeyboardEvent) => {
+    // Cmd + Shift + X
+    if (e.metaKey && e.shiftKey && e.key === 'x') {
+      e.preventDefault();
+
+      const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+
+      // Check if we're serving devtools locally on the usual port.
+      let hasLocalDevtools = false;
+      try {
+        await fetch('http://localhost:5174/');
+        hasLocalDevtools = true;
+      } catch {}
+
+      const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
+      const devtoolsApp = hasLocalDevtools
+        ? 'http://localhost:5174/'
+        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
+      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      window.open(devtoolsUrl, '_blank');
+    }
+  };
+
   return {
     meta: {
       id: CLIENT_PLUGIN,
     },
     initialize: async () => {
       let firstRun = false;
+
+      document.addEventListener('keydown', onKeypress);
+
       await client.initialize();
       const searchParams = new URLSearchParams(location.search);
       if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
@@ -117,6 +144,8 @@ export const ClientPlugin = (
       };
     },
     unload: async () => {
+      document.removeEventListener('keydown', onKeypress);
+
       await client.destroy();
     },
   };
