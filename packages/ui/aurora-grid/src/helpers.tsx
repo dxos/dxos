@@ -4,13 +4,13 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
-import { createColumnHelper, ColumnDef, ColumnMeta, RowData, CellContext } from '@tanstack/react-table';
+import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
-import { Input, Select, Tooltip } from '@dxos/aurora';
+import { Input, Selector, SelectorValue, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -52,7 +52,7 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
 export type SelectValue = { id: string; value?: any; label?: string };
 
 export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
-  lookupValues?: () => Promise<SelectValue[]>;
+  lookupValues?: (text: string) => Promise<SelectValue[]>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -90,50 +90,6 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
-// TODO(burdon): Re-renders on every cell.
-const Selector = <TData extends RowData>({
-  cell,
-  lookupValues,
-  onUpdate,
-}: { cell: CellContext<any, any> } & Pick<SelectColumnOptions<TData>, 'lookupValues' | 'onUpdate'>) => {
-  // TODO(burdon): Support type-ahead.
-  const [values, setValues] = useState<SelectValue[]>([]);
-  useEffect(() => {
-    setTimeout(async () => {
-      setValues((await lookupValues?.()) ?? []);
-    });
-  }, []);
-
-  return null;
-
-  return (
-    <Select.Root
-      value={cell.getValue()}
-      onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
-    >
-      <Select.TriggerButton
-        placeholder={cell.getValue()}
-        variant='ghost'
-        classNames='flex w-full justify-start p-0 [&>span:nth-child(1)]:grow [&>span:nth-child(1)]:text-left'
-      />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {values?.map(({ id, value, label }) => {
-              console.log('!!!');
-              return (
-                <Select.Option key={id} value={value ?? id}>
-                  {label ?? String(value) ?? id}
-                </Select.Option>
-              );
-            })}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-};
-
 /**
  * Util to create column definitions.
  */
@@ -152,7 +108,20 @@ export class ColumnBuilder<TData extends RowData> {
       },
       // TODO(burdon): Forces re-render.
       cell: onUpdate
-        ? (cell) => <Selector<TData> cell={cell} lookupValues={lookupValues} onUpdate={onUpdate} />
+        ? (cell) => () => {
+            const [values, setValues] = useState<SelectorValue[]>();
+            const handleUpdate = async (text?: string) => {
+              if (text?.length) {
+                const objects = await lookupValues!(text);
+                // setValues(objects.map(object => ({ id: object.id, text: object[cell.] });
+              } else {
+                setValues([]);
+              }
+            };
+
+            // TODO(burdon): onUpdate.
+            return <Selector values={values} onInputChange={handleUpdate} />;
+          }
         : (cell) => {
             const value = cell.getValue();
             return <div className={mx('truncate', className)}>{value}</div>;

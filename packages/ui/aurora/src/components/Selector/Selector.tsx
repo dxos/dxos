@@ -3,7 +3,7 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
-import Downshift from 'downshift';
+import { useCombobox } from 'downshift';
 import React from 'react';
 
 import { useThemeContext } from '../../hooks';
@@ -13,86 +13,69 @@ import { Input } from '../Input';
 
 export type SelectorValue = { id: string; text?: string };
 
-// TODO(burdon): Callback.
 type SelectorProps = ThemedClassName<{
-  value?: string;
-  values?: SelectorValue[];
   placeholder?: string;
+  value?: SelectorValue;
+  values?: SelectorValue[];
+  matcher?: (value: SelectorValue, text: string) => boolean;
   onChange?: (value: any) => void;
+  onInputChange?: (text?: string) => void;
 }>;
-
-// TODO(burdon): Case.
-const matches = (value: SelectorValue, text: string) => (value.text ?? value.id).includes(text);
 
 /**
  * Typeahead selector.
  * https://www.downshift-js.com
  */
 // TODO(burdon): Break into Portal, etc? Similarly, provide a simpler wrapped form of <Select />, etc.
-export const Selector = ({ classNames, value, values, onChange, placeholder }: SelectorProps) => {
+const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
   const { tx } = useThemeContext();
 
-  return (
-    <Downshift<SelectorValue>
-      onChange={(selection) => onChange?.(selection)}
-      itemToString={(item) => (item ? item.text ?? item.id : '')}
-    >
-      {({
-        getInputProps,
-        getItemProps,
-        getLabelProps,
-        getMenuProps,
-        getToggleButtonProps,
-        isOpen,
-        inputValue,
-        highlightedIndex,
-        selectedItem,
-        getRootProps,
-        ...rest
-      }) => {
-        return (
-          <div className='flex flex-col w-full'>
-            <div className='flex items-center'>
-              <Input.Root>
-                <Input.TextInput {...getInputProps()} variant='subdued' classNames='px-2' placeholder={placeholder} />
-              </Input.Root>
-              <Button {...getToggleButtonProps()} variant='ghost'>
-                {(isOpen && <CaretUp />) || <CaretDown />}
-              </Button>
-            </div>
+  // TODO(burdon): Case sensitive by default.
+  // https://www.downshift-js.com/use-combobox
+  const { isOpen, selectedItem, getInputProps, getToggleButtonProps, getMenuProps, highlightedIndex, getItemProps } =
+    useCombobox<SelectorValue>({
+      selectedItem: value,
+      items: values ?? [],
+      itemToString: (item) => (item ? item.text ?? item.id : ''),
+      onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
+      onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
+    });
 
-            {/* TODO(burdon): Max height; radix portal? */}
-            <ul {...getMenuProps()} className='relative overflow-y-scroll'>
-              {isOpen
-                ? values
-                    ?.filter((value) => !inputValue || matches(value, inputValue))
-                    .map((value, index) => (
-                      <li
-                        key={value.id}
-                        {...getItemProps({
-                          index,
-                          item: value,
-                          className: tx(
-                            'selector.content',
-                            'selector__content',
-                            {
-                              highlight: highlightedIndex === index,
-                              selected: selectedItem === value,
-                            },
-                            classNames,
-                          ),
-                        })}
-                      >
-                        {value.text ?? value.id}
-                      </li>
-                    ))
-                : null}
-            </ul>
-          </div>
-        );
-      }}
-    </Downshift>
+  return (
+    // TODO(burdon): Should all classes move into theme?
+    <div className={tx('selector.root', 'selector__root', {}, classNames)}>
+      <div className='flex items-center'>
+        <Input.Root>
+          <Input.TextInput {...getInputProps()} variant='subdued' classNames='px-2' placeholder={placeholder} />
+        </Input.Root>
+        <Button {...getToggleButtonProps()} variant='ghost'>
+          {(isOpen && <CaretUp />) || <CaretDown />}
+        </Button>
+      </div>
+
+      {/* TODO(burdon): radix portal? */}
+      <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
+        {isOpen
+          ? values?.map((value, index) => (
+              <li
+                key={value.id}
+                data-selected={selectedItem === value ? 'true' : undefined}
+                data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                {...getItemProps({
+                  index,
+                  item: value,
+                  className: tx('selector.item', 'selector__item', {}, classNames),
+                })}
+              >
+                {value.text ?? value.id}
+              </li>
+            ))
+          : null}
+      </ul>
+    </div>
   );
 };
+
+export { Selector };
 
 export type { SelectorProps };

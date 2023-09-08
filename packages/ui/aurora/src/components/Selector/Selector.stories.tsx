@@ -2,24 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { faker } from '@faker-js/faker';
+import React, { useEffect, useState } from 'react';
 
 import '@dxosTheme';
 
 import { Selector, SelectorValue } from './Selector';
 
-const values: SelectorValue[] = [{ id: 'apple' }, { id: 'pear' }, { id: 'orange' }, { id: 'grape' }, { id: 'banana' }];
-
-const StorybookSelector = () => {
-  return <Selector values={values} placeholder={'Select...'} />;
-};
+const values: SelectorValue[] = faker.helpers
+  .uniqueArray(faker.definitions.animal.fish, 100)
+  .sort()
+  .map((text) => ({
+    id: faker.string.uuid(),
+    text,
+  }));
 
 export default {
-  component: StorybookSelector,
-};
-
-export const Default = {
-  args: {},
+  component: Selector,
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
@@ -32,4 +31,38 @@ export const Default = {
   parameters: {
     layout: 'fullscreen',
   },
+};
+
+export const Default = {
+  args: {
+    placeholder: 'Select...',
+    onChange: (value: any) => console.log('onChange', value),
+    values,
+  },
+};
+
+export const Empty = {
+  args: {},
+};
+
+export const TypeAhead = () => {
+  const [text, setText] = useState<string>();
+  const [selected, setSelected] = useState<SelectorValue>();
+  const [matching, setMatching] = useState<SelectorValue[]>();
+  useEffect(() => {
+    console.log('???');
+    setMatching(
+      text?.length ? values.filter((value) => value.text?.length && value.text?.toLowerCase().includes(text)) : [],
+    );
+  }, [text]);
+
+  return (
+    <Selector
+      placeholder={'Select...'}
+      values={matching}
+      value={selected}
+      onChange={setSelected}
+      onInputChange={(text) => setText(text?.toLowerCase())}
+    />
+  );
 };

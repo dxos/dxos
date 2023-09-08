@@ -5,30 +5,32 @@
 import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { chromeSurface, surfaceElevation } from '../fragments';
 
 export type SelectorStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevation = 'chrome' }, ...etc) => {
-  return mx('p-1 z-[50] rounded', chromeSurface, surfaceElevation({ elevation }), ...etc);
+export const selectorRoot: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
+  return mx('flex flex-col w-full', ...etc);
+};
+
+export const selectorContent: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
+  return mx('relative overflow-y-scroll max-h-[288px]', ...etc);
 };
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  console.log('::::', _props);
   return mx(
-    'text-base leading-none rounded-sm flex items-center pis-6 pie-3 plb-1 relative select-none outline-none',
-    'data-[highlighted]:bg-primary-500 dark:data-[highlighted]:bg-primary-500 data-[highlighted]:text-primary-100',
+    'flex items-center px-2 py-2',
+    'text-base leading-none select-none cursor-pointer truncate',
+    'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
+    // TODO(burdon): Factor out highlight.
+    'data-[highlighted]:bg-neutral-75 dark:data-[highlighted]:bg-neutral-850',
     ...etc,
   );
 };
 
-// highlightedIndex === index && 'bg-neutral-50',
-// selectedItem === value && 'bg-neutral-100',
-// 'px-2 py-1',
-
 export const selectorTheme: Theme<SelectorStyleProps> = {
+  root: selectorRoot,
   content: selectorContent,
   item: selectorItem,
 };
