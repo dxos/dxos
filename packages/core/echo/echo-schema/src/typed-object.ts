@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect, InspectOptionsStylized } from 'node:util';
 import get from 'lodash.get';
+import { inspect, InspectOptionsStylized } from 'node:util';
 
 import { DocumentModel, MutationBuilder, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -290,9 +290,9 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     const value = key ? get(state, key) : state;
 
     if (value instanceof OrderedArray) {
-      return []
+      return [];
     } else if (value instanceof Reference) {
-      return []
+      return [];
     } else if (typeof value === 'object' && value !== null) {
       return Object.keys(value);
     } else {
@@ -375,7 +375,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         if (this._schemaType && !parent && !meta) {
           return target._schemaType?.fields.map(({ name }: EchoSchemaField) => name) ?? [];
         } else {
-          return this._properties(parent, meta)
+          return this._properties(parent, meta);
         }
       },
 
@@ -393,9 +393,9 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         }
 
         if (this._schemaType && !parent && !meta) {
-          return !!this._schemaType?.fields.find(({ name }: EchoSchemaField) => name == property);
+          return !!this._schemaType?.fields.find(({ name }: EchoSchemaField) => name === property);
         } else {
-          return this._properties(parent, meta).includes(property)
+          return this._properties(parent, meta).includes(property);
         }
       },
 
@@ -443,7 +443,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return false;
         }
         if (!isValidKey(property)) {
-          if(!parent && !meta) {
+          if (!parent && !meta) {
             return Reflect.set(this, property, value, receiver);
           } else {
             return Reflect.set(target, property, value, receiver);
@@ -546,7 +546,7 @@ type ExpandoConstructor = {
    * Create a new document.
    * @param initialProps Initial properties.
    */
-  new(initialProps?: Record<string, any>): Expando;
+  new (initialProps?: Record<string, any>): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;

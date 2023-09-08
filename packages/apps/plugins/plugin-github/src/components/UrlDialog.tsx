@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import update from 'lodash.update';
 import React, { useState } from 'react';
 
 import { MarkdownProperties } from '@braneframe/plugin-markdown';
@@ -29,9 +28,9 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
         onChange={({ target: { value } }) => setGhUrlValue(value)}
         {...(ghUrlValue.length > 0 &&
           !ghId && {
-          validationValence: 'error',
-          validationMessage: t('error github markdown path message'),
-        })}
+            validationValence: 'error',
+            validationMessage: t('error github markdown path message'),
+          })}
       />
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>

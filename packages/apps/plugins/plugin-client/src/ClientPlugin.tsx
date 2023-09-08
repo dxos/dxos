@@ -53,15 +53,16 @@ export const ClientPlugin = (
       try {
         await fetch('http://localhost:5174/');
         hasLocalDevtools = true;
-      } catch { }
+      } catch {}
 
       const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-      const devtoolsApp = hasLocalDevtools ? 'http://localhost:5174/' : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
+      const devtoolsApp = hasLocalDevtools
+        ? 'http://localhost:5174/'
+        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
       const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
       window.open(devtoolsUrl, '_blank');
     }
-
-  }
+  };
 
   return {
     meta: {
