@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/common/fenix/src",
+  "sourceRoot": "packages/common/phoenix/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/common/fenix/src/index.ts",
-        "outputPath": "packages/common/fenix/dist/types",
-        "tsConfig": "packages/common/fenix/tsconfig.json"
+        "main": "packages/common/phoenix/src/index.ts",
+        "outputPath": "packages/common/phoenix/dist/types",
+        "tsConfig": "packages/common/phoenix/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/fenix/src/index.ts"
+          "packages/common/phoenix/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/common/fenix/dist/lib",
+        "outputPath": "packages/common/phoenix/dist/lib",
         "platforms": [
           "node"
         ]
@@ -34,7 +34,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/fenix/**/*.{ts,js}"
+          "packages/common/phoenix/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -47,14 +47,14 @@
       ],
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/fenix",
-        "outputPath": "tmp/mocha/packages/common/fenix",
-        "resultsPath": "test-results/packages/common/fenix",
+        "coveragePath": "coverage/packages/common/phoenix",
+        "outputPath": "tmp/mocha/packages/common/phoenix",
+        "resultsPath": "test-results/packages/common/phoenix",
         "testPatterns": [
-          "packages/common/fenix/src/**/*.test.{ts,js}"
+          "packages/common/phoenix/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/common/fenix/src/**/*"
+          "packages/common/phoenix/src/**/*"
         ]
       },
       "outputs": [

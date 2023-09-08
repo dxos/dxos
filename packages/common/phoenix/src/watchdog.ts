@@ -66,19 +66,17 @@ export class WatchDog {
 
   @synchronized
   async start() {
-    if (await LockFile.isLocked(this._params.lockFile)) {
-      throw new Error('Lock file is already locked.');
-    }
+    await this._acquireLock();
 
     const { cwd, shell, env, command, args } = { cwd: process.cwd(), shell: true, ...this._params };
 
-    this._lock = await LockFile.acquire(this._params.lockFile);
     this._child = spawn(command, args, { cwd, shell, env });
     this._processCtx = new Context();
 
     // Setup stdout handler.
     {
       const stdoutHandler = (data: Uint8Array) => {
+        log.info('stdout:' + String(data));
         writeFileSync(this._params.logFile, String(data), { flag: 'a+' });
       };
 
@@ -92,6 +90,7 @@ export class WatchDog {
     // Setup stderr handler.
     {
       const stderrHandler = (data: Uint8Array) => {
+        log.error('stderr:' + String(data));
         writeFileSync(this._params.errFile, String(data), { flag: 'a+' });
       };
 
@@ -106,6 +105,7 @@ export class WatchDog {
     {
       const restartHandler = async (code: number, signal: number | NodeJS.Signals) => {
         if (code && code !== 0) {
+          console.log('Died unexpectedly with exit code %d (signal: %s).', code, signal);
           writeFileSync(this._params.errFile, `Died unexpectedly with exit code ${code} (signal: ${signal}).`);
           await this.restart();
         }
@@ -157,7 +157,7 @@ export class WatchDog {
 
     await this._killWithSignal('SIGKILL');
 
-    await this._clearLock();
+    await this._releaseLock();
   }
 
   /**
@@ -171,7 +171,7 @@ export class WatchDog {
 
     await this._killWithSignal('SIGKILL');
 
-    await this._clearLock();
+    await this._releaseLock();
   }
 
   async restart() {
@@ -208,7 +208,21 @@ export class WatchDog {
     this._child = undefined;
   }
 
-  private async _clearLock() {
+  private async _acquireLock() {
+    if (await LockFile.isLocked(this._params.lockFile)) {
+      log.info('Lock file is already acquired.');
+      throw new Error('Lock file is already locked.');
+    }
+    this._lock = await LockFile.acquire(this._params.lockFile);
+    await waitForCondition({
+      condition: async () => await LockFile.isLocked(this._params.lockFile),
+      timeout: LOCK_TIMEOUT,
+      interval: LOCK_CHECK_INTERVAL,
+      error: new Error('Lock file is not being acquired.'),
+    });
+  }
+
+  private async _releaseLock() {
     invariant(this._lock, 'Lock is not defined.');
 
     await LockFile.release(this._lock);

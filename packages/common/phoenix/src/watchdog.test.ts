@@ -9,6 +9,7 @@ import { dirname } from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { LockFile } from '@dxos/lock-file';
+import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { neverEndingProcess } from './testing-util';
@@ -26,18 +27,25 @@ describe('WatchDog', () => {
 
     const watchDog = new WatchDog({
       command: 'node',
-      args: ['-e', `(${neverEndingProcess.toString()})()`],
+      args: ['-e', `"(${neverEndingProcess.toString()})()"`],
       lockFile,
       logFile: '/tmp/dxos/testing/fenix/file.log',
       errFile: '/tmp/dxos/testing/fenix/err.log',
     });
 
+    log.info('1');
+
     expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
+    log.info('2');
     await watchDog.start();
 
     expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.true;
 
+    log.info('4');
     await watchDog.stop();
+    log.info('5');
     expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
+
+    log.info('6');
   });
 });
