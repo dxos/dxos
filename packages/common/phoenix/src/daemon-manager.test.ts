@@ -9,10 +9,10 @@ import { join } from 'node:path';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { DaemonManager } from './daemon-manager';
-import { TEST_DIR, neverEndingProcess } from './testing-utils';
+import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
 describe('DaemonManager', () => {
   test('kill process by pid', async () => {

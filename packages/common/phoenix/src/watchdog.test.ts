@@ -3,9 +3,7 @@
 //
 
 import { expect } from 'chai';
-import { mkdirSync } from 'node:fs';
-import { open } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { LockFile } from '@dxos/lock-file';
@@ -21,12 +19,6 @@ describe('WatchDog', () => {
     const logFile = join(TEST_DIR, `file-${runId}.log`);
     const errFile = join(TEST_DIR, `err-${runId}.log`);
     afterTest(() => clearFiles(lockFile, logFile, errFile));
-
-    // Create lock file.
-    {
-      mkdirSync(dirname(lockFile), { recursive: true });
-      await open(lockFile, 'w');
-    }
 
     const watchDog = new WatchDog({
       uid: 'test',

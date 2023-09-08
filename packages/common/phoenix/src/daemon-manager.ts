@@ -28,12 +28,16 @@ export type StartParams = Omit<WatchDogParams, 'lockFile'>;
 
 export class DaemonManager {
   constructor(private readonly _rootPath: string) {
-    mkdirSync(join(_rootPath, 'profile'), { recursive: true });
+    if (!existsSync(join(_rootPath, 'profile'))) {
+      mkdirSync(join(_rootPath, 'profile'), { recursive: true });
+    }
   }
 
   private _getConfigFiles(uid: string): ConfigFiles {
     const defaultConfigDir = join(this._rootPath, 'profile', uid);
-    mkdirSync(defaultConfigDir, { recursive: true });
+    if (!existsSync(defaultConfigDir)) {
+      mkdirSync(defaultConfigDir, { recursive: true });
+    }
     return {
       lockFile: join(defaultConfigDir, LOCK_FILE_NAME),
       logFile: join(defaultConfigDir, 'file.log'),
@@ -92,7 +96,7 @@ export class DaemonManager {
       }
     } catch (err) {
       invariant(err instanceof Error, 'Invalid error type.');
-      if (!err.name.includes('ESRCH')) {
+      if (!err.name.includes('ESRCH') && !err.message.includes('ESRCH')) {
         throw err;
       }
     }
@@ -116,7 +120,7 @@ export class DaemonManager {
     if (existsSync(files.lockFile)) {
       return {
         running: await LockFile.isLocked(files.lockFile),
-        ...JSON.parse(readFileSync(files.lockFile, { encoding: 'utf-8' })),
+        ...JSON.parse(readFileSync(files.lockFile, { encoding: 'utf-8' }).trim()),
       };
     } else {
       return { running: false, uid, ...files };
