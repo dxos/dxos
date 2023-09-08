@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { batch } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -26,12 +27,20 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const state = deepSignal<TreeViewContextValue>({
     active: undefined,
+    previous: undefined,
     get activeNode() {
       if (!graphPlugin) {
         throw new Error('Graph plugin not found.');
       }
 
       return this.active && graphPlugin.provides.graph.find(this.active);
+    },
+    get previousNode() {
+      if (!graphPlugin) {
+        throw new Error('Graph plugin not found.');
+      }
+
+      return this.previous && graphPlugin.provides.graph.find(this.previous);
     },
     appState: undefined,
   }) as RevertDeepSignal<TreeViewContextValue>;
@@ -133,7 +142,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           switch (intent.action) {
             case TreeViewAction.ACTIVATE: {
               if (intent.data && typeof intent.data.id === 'string') {
-                state.active = intent.data.id;
+                batch(() => {
+                  state.previous = state.active;
+                  state.active = intent.data.id;
+                });
                 return true;
               }
               break;

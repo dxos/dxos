@@ -1694,12 +1694,14 @@ importers:
 
   packages/apps/plugins/plugin-url-sync:
     specifiers:
+      '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
       vite: ^4.3.9
     devDependencies:
+      '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
@@ -2696,6 +2698,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
+      lodash.get: ^4.4.2
       protobufjs: ^7.2.2
       wait-for-expect: ^3.0.2
     dependencies:
@@ -2713,6 +2716,7 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
+      lodash.get: 4.4.2
       protobufjs: 7.2.2
     devDependencies:
       wait-for-expect: 3.0.2
