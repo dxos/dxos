@@ -83,5 +83,7 @@ export class DaemonManager {
     await waitForLockRelease(lockFile);
   }
 
-  async list(): Promise<ProcessInfo[]> {}
+  async list(): Promise<ProcessInfo[]> {
+    return [];
+  }
 }

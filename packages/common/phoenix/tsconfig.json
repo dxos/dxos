@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/log-hook"
+    },
+    {
       "path": "../async"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../log"
+    },
+    {
+      "path": "../node-std"
     },
     {
       "path": "../util"
