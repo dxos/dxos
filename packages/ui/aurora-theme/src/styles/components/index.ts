@@ -5,6 +5,7 @@
 export * from './avatar';
 export * from './breadcrumb';
 export * from './button';
+export * from './combobox';
 export * from './dialog';
 export * from './dropdown-menu';
 export * from './input';
@@ -15,7 +16,6 @@ export * from './message';
 export * from './popover';
 export * from './scroll-area';
 export * from './select';
-export * from './selector';
 export * from './separator';
 export * from './tag';
 export * from './toast';
