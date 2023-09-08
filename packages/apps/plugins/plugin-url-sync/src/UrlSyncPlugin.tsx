@@ -4,7 +4,8 @@
 
 import { useEffect } from 'react';
 
-import { activeToUri, uriToActive, useTreeView } from '@braneframe/plugin-treeview';
+import { useIntent } from '@braneframe/plugin-intent';
+import { TREE_VIEW_PLUGIN, TreeViewAction, activeToUri, uriToActive, useTreeView } from '@braneframe/plugin-treeview';
 import { PluginDefinition } from '@dxos/react-surface';
 
 export const UrlSyncPlugin = (): PluginDefinition => ({
@@ -15,17 +16,24 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
     components: {
       default: () => {
         const treeView = useTreeView();
+        const { sendIntent } = useIntent();
 
         // Update selection based on browser navigation.
         useEffect(() => {
-          const handleNavigation = () => {
-            treeView.active =
-              // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
-              window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname);
+          const handleNavigation = async () => {
+            await sendIntent({
+              plugin: TREE_VIEW_PLUGIN,
+              action: TreeViewAction.ACTIVATE,
+              data: {
+                // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
+                id:
+                  window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname),
+              },
+            });
           };
 
           if (!treeView.active && window.location.pathname.length > 1) {
-            handleNavigation();
+            void handleNavigation();
           }
 
           window.addEventListener('popstate', handleNavigation);

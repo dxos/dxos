@@ -153,7 +153,7 @@ const ComboBoxContent = forwardRef<HTMLDivElement, ComboBoxContentProps>(
           ref={forwardedRef}
           style={
             {
-              // re-namespace exposed content custom properties
+              // Re-namespace exposed content custom properties.
               ...{
                 '--radix-combobox-content-transform-origin': 'var(--radix-popper-transform-origin)',
                 '--radix-combobox-content-available-width': 'var(--radix-popper-available-width)',

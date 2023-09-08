@@ -69,7 +69,15 @@ export class GossipExtension implements TeleportExtension {
 
   async onAbort(err?: Error): Promise<void> {
     log('abort', { err });
-    await this._rpc?.abort();
+    try {
+      await this._rpc?.abort();
+      this._sendInterval && clearInterval(this._sendInterval);
+      await this._callbacks.onClose?.(err);
+      await this.onClose(err);
+    } catch (err) {
+      log.catch(err);
+    }
+    this._closed = true;
   }
 
   async sendAnnounce(message: GossipMessage) {

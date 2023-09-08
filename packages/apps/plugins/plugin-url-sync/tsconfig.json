@@ -24,6 +24,9 @@
       "path": "../../../sdk/react-surface"
     },
     {
+      "path": "../plugin-intent"
+    },
+    {
       "path": "../plugin-treeview"
     }
   ]
