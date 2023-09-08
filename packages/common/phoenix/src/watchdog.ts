@@ -68,37 +68,28 @@ export class WatchDog {
   async start() {
     await this._acquireLock();
 
-    const { cwd, shell, env, command, args } = { cwd: process.cwd(), shell: true, ...this._params };
+    const { cwd, shell, env, command, args } = { cwd: process.cwd(), ...this._params };
 
-    this._child = spawn(command, args, { cwd, shell, env });
+    this._child = spawn(command, args, { cwd, shell, env, stdio: 'pipe' });
     this._processCtx = new Context();
 
     // Setup stdout handler.
     {
       const stdoutHandler = (data: Uint8Array) => {
         log.info('stdout:' + String(data));
-        writeFileSync(this._params.logFile, String(data), { flag: 'a+' });
+        writeFileSync(this._params.logFile, String(data), { flag: 'a' });
       };
 
       this._child.stdout.on('data', stdoutHandler);
-
-      this._processCtx.onDispose(() => {
-        this._child!.stdout.off('data', stdoutHandler);
-      });
     }
 
     // Setup stderr handler.
     {
       const stderrHandler = (data: Uint8Array) => {
-        log.error('stderr:' + String(data));
-        writeFileSync(this._params.errFile, String(data), { flag: 'a+' });
+        writeFileSync(this._params.errFile, String(data), { flag: 'a' });
       };
 
       this._child.stderr.on('data', stderrHandler);
-
-      this._processCtx.onDispose(() => {
-        this._child!.stderr.off('data', stderrHandler);
-      });
     }
 
     // Setup restart handler.
@@ -126,10 +117,6 @@ export class WatchDog {
       };
 
       this._child.on('close', exitHandler);
-
-      this._processCtx.onDispose(() => {
-        this._child!.off('close', exitHandler);
-      });
     }
 
     invariant(this._child.pid, 'Child process has no pid.');
@@ -177,7 +164,7 @@ export class WatchDog {
   async restart() {
     await this.kill();
     if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
-      writeFileSync(this._params.logFile, 'Max restarts number is reached', { flag: 'a+' });
+      writeFileSync(this._params.logFile, 'Max restarts number is reached', { flag: 'a' });
     } else {
       log.info('Restarting...');
       this._restarts++;
