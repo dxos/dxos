@@ -87,7 +87,7 @@
       "options": {
         "configDir": "packages/apps/composer-app/.storybook"
       }
-    },
+    }
   },
   "implicitDependencies": [
     "serve-with-vault"
