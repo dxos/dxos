@@ -68,16 +68,16 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
   echo: () => ({
     plan: new EchoTestPlan(),
     spec: {
-      agents: 2,
+      agents: 4,
       duration: 300_000,
-      iterationDelay: 300,
+      iterationDelay: 2000,
       epochPeriod: 8,
       // measureNewAgentSyncTime: true,
       measureNewAgentSyncTime: false,
-      insertionSize: 512,
-      operationCount: 1000,
+      insertionSize: 128,
+      operationCount: 20,
       signalArguments: ['globalsubserver'],
-      showPNG: true,
+      showPNG: false,
       transport: TransportKind.SIMPLE_PEER,
     },
     options: {
