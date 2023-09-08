@@ -11,14 +11,14 @@ import { ThemedClassName } from '../../util';
 import { Button } from '../Buttons';
 import { Input } from '../Input';
 
-export type SelectorValue = { id: string; text?: string };
+type ValueAdapter<T> = (value: T) => { id: string; text: string };
 
-type SelectorProps = ThemedClassName<{
+type SelectorProps<T> = ThemedClassName<{
   placeholder?: string;
-  value?: SelectorValue;
-  values?: SelectorValue[];
-  matcher?: (value: SelectorValue, text: string) => boolean;
-  onChange?: (value: any) => void;
+  values?: T[]; // TODO(burdon): Rename items.
+  value?: T;
+  adapter: ValueAdapter<T>;
+  onChange?: (value: T | undefined) => void;
   onInputChange?: (text?: string) => void;
 }>;
 
@@ -29,7 +29,15 @@ type SelectorProps = ThemedClassName<{
 // TODO(burdon): Rename Combobox?
 // TODO(burdon): Break into components (only way to override classes without slots)?
 //   Similarly, provide a simplified "no frills" wrapped form of <Select />, etc.
-const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
+const Selector = <T,>({
+  classNames,
+  placeholder,
+  values,
+  value,
+  adapter,
+  onChange,
+  onInputChange,
+}: SelectorProps<T>) => {
   const { tx } = useThemeContext();
 
   // https://www.downshift-js.com/use-combobox
@@ -42,13 +50,16 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
     getToggleButtonProps,
     getMenuProps,
     getItemProps,
-  } = useCombobox<SelectorValue>({
+  } = useCombobox<T>({
     items: values ?? [],
     selectedItem: value ?? null,
-    itemToString: (item) => (item ? item.text ?? item.id : ''),
+    itemToString: (selectedItem) => selectedItem ? adapter(selectedItem).text : '',
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
-    onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
+    onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem === null ? undefined : selectedItem),
   });
+
+  // TODO(burdon): Each cell is re-rendered.
+  // console.log(selectedItem);
 
   // TODO(burdon): Use portal to match width and height?
   // TODO(burdon): Show as DIV unless focused (performance and to see ellipsis values)?
@@ -84,20 +95,23 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
         {...getMenuProps()}
         className={tx('selector.content', 'selector__content', { isOpen: isOpen && values?.length }, classNames)}
       >
-        {values?.map((value, index) => (
-          <li
-            key={value.id}
-            data-selected={selectedItem === value ? 'true' : undefined}
-            data-highlighted={highlightedIndex === index ? 'true' : undefined}
-            {...getItemProps({
-              index,
-              item: value,
-              className: tx('selector.item', 'selector__item', {}, classNames),
-            })}
-          >
-            {value.text ?? value.id}
-          </li>
-        ))}
+        {values?.map((value, index) => {
+          const { id, text } = adapter(value);
+          return (
+            <li
+              key={id}
+              data-selected={selectedItem === value ? 'true' : undefined}
+              data-highlighted={highlightedIndex === index ? 'true' : undefined}
+              {...getItemProps({
+                index,
+                item: value,
+                className: tx('selector.item', 'selector__item', {}, classNames),
+              })}
+            >
+              {text}
+            </li>
+          );
+        })}
       </ul>
       {/* </Popover.Viewport> */}
       {/* </Popover.Content> */}
