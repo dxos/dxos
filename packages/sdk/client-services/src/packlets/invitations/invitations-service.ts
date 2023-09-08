@@ -64,6 +64,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._createInvitations.delete(invitation.get().invitationId);
+          this._removedCreated.emit(invitation.get());
         },
       );
     });
@@ -93,6 +94,7 @@ export class InvitationsServiceImpl implements InvitationsService {
         () => {
           close();
           this._acceptInvitations.delete(invitation.get().invitationId);
+          this._removedAccepted.emit(invitation.get());
         },
       );
     });
