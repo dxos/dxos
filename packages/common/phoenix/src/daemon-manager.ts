@@ -3,7 +3,7 @@
 //
 
 import { fork } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -13,14 +13,40 @@ import { log } from '@dxos/log';
 
 import { DAEMON_START_TIMEOUT } from './defs';
 import { waitForLockAcquisition, waitForLockRelease } from './utils';
-import { WatchDogParams } from './watchdog';
+import { ConfigFiles, ProcessInfo, WatchDogParams } from './watchdog';
 
 const WATCHDOG_PATH = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
 
+/**
+ * Params to start a daemon.
+ * User have no control over the lock file.
+ */
+export type StartParams = Omit<WatchDogParams, 'lockFile'>;
+
 export class DaemonManager {
-  async start(params: WatchDogParams) {
+  constructor(private readonly _rootPath: string) {
+    mkdirSync(join(_rootPath, 'profile'), { recursive: true });
+  }
+
+  private _getConfigFiles(uid: string): ConfigFiles {
+    const defaultConfigDir = join(this._rootPath, 'profile', uid);
+    mkdirSync(defaultConfigDir, { recursive: true });
+    return {
+      lockFile: join(defaultConfigDir, 'file.lock'),
+      logFile: join(defaultConfigDir, 'file.log'),
+      errFile: join(defaultConfigDir, 'err.log'),
+    };
+  }
+
+  async start(params: StartParams) {
     const watchdogId = PublicKey.random().toHex();
-    const watchDog = fork(WATCHDOG_PATH, [JSON.stringify({ watchdogId, ...params })], {
+    const watchDogParams: WatchDogParams & { watchdogId: string } = {
+      watchdogId,
+      ...this._getConfigFiles(params.uid),
+      ...params,
+    };
+
+    const watchDog = fork(WATCHDOG_PATH, [JSON.stringify(watchDogParams)], {
       stdio: 'pipe',
       detached: true,
       cwd: __dirname,
@@ -40,13 +66,14 @@ export class DaemonManager {
     });
 
     await asyncTimeout(started.wait(), DAEMON_START_TIMEOUT);
-    await waitForLockAcquisition(params.lockFile);
+    await waitForLockAcquisition(watchDogParams.lockFile);
 
     watchDog.disconnect();
     watchDog.unref();
   }
 
-  async stop(lockFile: string, force?: boolean) {
+  async stop(uid: string, force?: boolean) {
+    const lockFile = this._getConfigFiles(uid).lockFile;
     const processInfo = JSON.parse(readFileSync(lockFile, { encoding: 'utf-8' }));
     if (force) {
       process.kill(processInfo.pid, 'SIGKILL');
@@ -55,4 +82,6 @@ export class DaemonManager {
     }
     await waitForLockRelease(lockFile);
   }
+
+  async list(): Promise<ProcessInfo[]> {}
 }

@@ -23,17 +23,28 @@ export type DaemonInfo = {
   cwd: string;
   timestamp: number;
 };
+
 export type ProcessInfo = WatchDogParams & {
   pid: number;
   timestamp: number;
   restarts: number;
 };
 
+export type ConfigFiles = {
+  lockFile: string; // Path to lock file
+  //
+  // Log files and associated logging options for this instance
+  //
+  logFile: string; // Path to log output all logs
+  errFile: string; // Path to log output from child stderr
+};
+
 export type WatchDogParams = {
+  uid: string; // Unique identifier for this instance
+
   //
   // Basic configuration options
   //
-  uid?: string | undefined; // Custom uid for this daemon process.
   maxRestarts?: number | undefined; // Sets the maximum number of times a given script should run
   killTree?: boolean | undefined; // Kills the entire child process tree on `exit`
 
@@ -51,14 +62,7 @@ export type WatchDogParams = {
   env?: NodeJS.ProcessEnv | undefined;
   cwd?: string | undefined;
   shell?: boolean | undefined;
-
-  //
-  // Log files and associated logging options for this instance
-  //
-  logFile: string; // Path to log output all logs
-  errFile: string; // Path to log output from child stderr
-  lockFile: string; // Path to lock file
-};
+} & ConfigFiles;
 
 export class WatchDog {
   private _lock?: FileHandle;

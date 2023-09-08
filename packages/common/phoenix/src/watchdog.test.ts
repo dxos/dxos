@@ -29,6 +29,7 @@ describe('WatchDog', () => {
     }
 
     const watchDog = new WatchDog({
+      uid: 'test',
       command: 'node',
       args: ['-e', `(${neverEndingProcess.toString()})()`],
       lockFile,

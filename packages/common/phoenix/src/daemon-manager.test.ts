@@ -3,15 +3,12 @@
 //
 
 import { expect } from 'chai';
-import { spawn, exec } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 import waitForExpect from 'wait-for-expect';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
-import { LockFile } from '@dxos/lock-file';
-import { log } from '@dxos/log';
+import { Trigger } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { DaemonManager } from './daemon-manager';
@@ -19,43 +16,36 @@ import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
 describe('DaemonManager', () => {
   test('kill process by pid', async () => {
-    const process = spawn('node', ['-e', `(${neverEndingProcess.toString()})()`]);
+    const child = spawn('node', ['-e', `(${neverEndingProcess.toString()})()`]);
     const trigger = new Trigger();
-    process.on('exit', () => {
+    child.on('exit', () => {
       trigger.wake();
     });
 
-    log.info(process.pid!.toString());
+    process.kill(child.pid!, 'SIGKILL');
 
-    const { stdout, stderr } = await asyncTimeout(promisify(exec)(`kill -9 ${process.pid}`), 20_000);
-    if (stderr) {
-      throw new Error(stderr);
-    }
-
-    expect(stdout).to.equal('');
     await trigger.wait({ timeout: 1_000 });
   });
 
   describe('start/stop watchdog', () => {
     test('start/stop detached watchdog', async () => {
       const testId = Math.random();
-      const lockFile = join(TEST_DIR, `lock-${testId}.lock`);
       const logFile = join(TEST_DIR, `file-${testId}.log`);
       const errFile = join(TEST_DIR, `err-${testId}.log`);
-      afterTest(() => clearFiles(lockFile, logFile, errFile));
+      afterTest(() => clearFiles(logFile, errFile));
+
+      const uid = 'test';
 
       // Start
       {
-        const manager = new DaemonManager();
-        expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
+        const manager = new DaemonManager(TEST_DIR);
         await manager.start({
+          uid,
           command: 'node',
           args: ['-e', `(${neverEndingProcess.toString()})()`],
-          lockFile,
           logFile,
           errFile,
         });
-        expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.true;
 
         await waitForExpect(() => {
           expect(existsSync(logFile)).to.be.true;
@@ -66,11 +56,9 @@ describe('DaemonManager', () => {
 
       // Stop
       {
-        const manager = new DaemonManager();
-        expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.true;
-        await manager.stop(lockFile);
+        const manager = new DaemonManager(TEST_DIR);
+        await manager.stop(uid);
 
-        expect(await asyncTimeout(LockFile.isLocked(lockFile), 1000)).to.be.false;
         const logs = readFileSync(logFile, { encoding: 'utf-8' });
         expect(logs).to.contain('signal: SIGINT');
       }
