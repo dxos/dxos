@@ -5,7 +5,7 @@
 import React, { HTMLAttributes, RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { ComposerModel, ComposerOptions, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
@@ -17,13 +17,13 @@ export const EditorMain = ({
   model,
   properties,
   layout,
-  onChange,
+  options,
   editorRefCb,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
-  onChange?: MarkdownComposerProps['onChange'];
+  options?: ComposerOptions;
   editorRefCb: RefCallback<MarkdownComposerRef>;
 }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
@@ -34,7 +34,7 @@ export const EditorMain = ({
       <MarkdownComposer
         ref={editorRefCb}
         model={model}
-        onChange={onChange}
+        options={options}
         slots={{
           root: {
             role: 'none',
