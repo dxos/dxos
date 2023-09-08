@@ -54,10 +54,9 @@ export const TreeViewContainer = () => {
             <>
               <div
                 role='none'
-                className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
+                className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1 bs-10'
               >
-                <HaloButton identityKey={identity?.identityKey.toHex()} onClick={openIdentityPanel} />
-
+                <HaloButton size={6} identityKey={identity?.identityKey.toHex()} onClick={openIdentityPanel} />
                 <div className='grow'></div>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
@@ -103,7 +102,7 @@ export const TreeViewContainer = () => {
                   </Tooltip.Portal>
                 </Tooltip.Root>
               </div>
-              <Separator orientation='horizontal' />
+              {/* <Separator orientation='horizontal' /> */}
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>

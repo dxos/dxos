@@ -50,7 +50,6 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
           if (parent.id !== 'root') {
             return;
           }
-
           parent.addAction({
             id: 'close-sidebar',
             label: ['close sidebar label', { ns: 'os' }],
