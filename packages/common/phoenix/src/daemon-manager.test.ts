@@ -60,6 +60,7 @@ describe('DaemonManager', () => {
       expect(info.length).to.equal(1);
       expect(info[0].running).to.be.true;
       expect(info[0].uid).to.equal(uid);
+      expect(await manager.isRunning(uid)).to.be.true;
 
       await manager.stop(uid);
 

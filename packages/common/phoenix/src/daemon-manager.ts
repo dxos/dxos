@@ -99,4 +99,9 @@ export class DaemonManager {
       }),
     );
   }
+
+  async isRunning(uid: string): Promise<boolean> {
+    const lockFile = this._getConfigFiles(uid).lockFile;
+    return LockFile.isLocked(lockFile);
+  }
 }
