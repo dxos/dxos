@@ -8,11 +8,13 @@ import { FileHandle } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import psTree from 'ps-tree';
 
-import { synchronized, waitForCondition } from '@dxos/async';
+import { synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
+
+import { waitForLockAcquisition, waitForLockRelease } from './utils';
 
 export type DaemonInfo = {
   pid: number;
@@ -21,9 +23,11 @@ export type DaemonInfo = {
   cwd: string;
   timestamp: number;
 };
-
-const LOCK_TIMEOUT = 500;
-const LOCK_CHECK_INTERVAL = 50;
+export type ProcessInfo = WatchDogParams & {
+  pid: number;
+  timestamp: number;
+  restarts: number;
+};
 
 export type WatchDogParams = {
   //
@@ -76,8 +80,10 @@ export class WatchDog {
     // Setup stdout handler.
     {
       const stdoutHandler = (data: Uint8Array) => {
-        log.info('stdout:' + String(data));
-        writeFileSync(this._params.logFile, String(data), { flag: 'a' });
+        writeFileSync(this._params.logFile, String(data), {
+          flag: 'a',
+          encoding: 'utf-8',
+        });
       };
 
       this._child.stdout.on('data', stdoutHandler);
@@ -86,7 +92,10 @@ export class WatchDog {
     // Setup stderr handler.
     {
       const stderrHandler = (data: Uint8Array) => {
-        writeFileSync(this._params.errFile, String(data), { flag: 'a' });
+        writeFileSync(this._params.errFile, String(data), {
+          flag: 'a',
+          encoding: 'utf-8',
+        });
       };
 
       this._child.stderr.on('data', stderrHandler);
@@ -96,8 +105,10 @@ export class WatchDog {
     {
       const restartHandler = async (code: number, signal: number | NodeJS.Signals) => {
         if (code && code !== 0) {
-          console.log('Died unexpectedly with exit code %d (signal: %s).', code, signal);
-          writeFileSync(this._params.errFile, `Died unexpectedly with exit code ${code} (signal: ${signal}).`);
+          writeFileSync(this._params.errFile, `Died unexpectedly with exit code ${code} (signal: ${signal}).`, {
+            flag: 'a',
+            encoding: 'utf-8',
+          });
           await this.restart();
         }
       };
@@ -113,7 +124,10 @@ export class WatchDog {
     // Setup exit handler.
     {
       const exitHandler = async (code: number, signal: number | NodeJS.Signals) => {
-        writeFileSync(this._params.logFile, `Stopped with exit code ${code} (signal: ${signal}).`);
+        writeFileSync(this._params.logFile, `Stopped with exit code ${code} (signal: ${signal}).`, {
+          flag: 'a',
+          encoding: 'utf-8',
+        });
       };
 
       this._child.on('close', exitHandler);
@@ -121,16 +135,14 @@ export class WatchDog {
 
     invariant(this._child.pid, 'Child process has no pid.');
 
-    const childInfo = {
+    const childInfo: ProcessInfo = {
       pid: this._child.pid,
-      cwd,
-      shell,
       timestamp: Date.now(),
       restarts: this._restarts,
       ...this._params,
     };
 
-    writeFileSync(this._params.lockFile, JSON.stringify(childInfo), { flag: 'w' });
+    writeFileSync(this._params.lockFile, JSON.stringify(childInfo), { flag: 'w', encoding: 'utf-8' });
   }
 
   /**
@@ -164,9 +176,12 @@ export class WatchDog {
   async restart() {
     await this.kill();
     if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
-      writeFileSync(this._params.logFile, 'Max restarts number is reached', { flag: 'a' });
+      writeFileSync(this._params.logFile, 'Max restarts number is reached', {
+        flag: 'a',
+        encoding: 'utf-8',
+      });
     } else {
-      log.info('Restarting...');
+      log('Restarting...');
       this._restarts++;
       await this.start();
     }
@@ -197,28 +212,18 @@ export class WatchDog {
 
   private async _acquireLock() {
     if (await LockFile.isLocked(this._params.lockFile)) {
-      log.info('Lock file is already acquired.');
       throw new Error('Lock file is already locked.');
     }
     this._lock = await LockFile.acquire(this._params.lockFile);
-    await waitForCondition({
-      condition: async () => await LockFile.isLocked(this._params.lockFile),
-      timeout: LOCK_TIMEOUT,
-      interval: LOCK_CHECK_INTERVAL,
-      error: new Error('Lock file is not being acquired.'),
-    });
+    await waitForLockAcquisition(this._params.lockFile);
   }
 
   private async _releaseLock() {
     invariant(this._lock, 'Lock is not defined.');
 
     await LockFile.release(this._lock);
-    await waitForCondition({
-      condition: async () => !(await LockFile.isLocked(this._params.lockFile)),
-      timeout: LOCK_TIMEOUT,
-      interval: LOCK_CHECK_INTERVAL,
-      error: new Error('Lock file is not being released.'),
-    });
+    await waitForLockRelease(this._params.lockFile);
+
     this._lock = undefined;
   }
 }

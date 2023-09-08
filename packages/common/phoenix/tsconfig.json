@@ -21,6 +21,9 @@
       "path": "../invariant"
     },
     {
+      "path": "../keys"
+    },
+    {
       "path": "../lock-file"
     },
     {
