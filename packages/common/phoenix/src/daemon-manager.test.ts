@@ -27,41 +27,44 @@ describe('DaemonManager', () => {
     await trigger.wait({ timeout: 1_000 });
   });
 
-  describe('start/stop watchdog', () => {
-    test('start/stop detached watchdog', async () => {
-      const testId = Math.random();
-      const logFile = join(TEST_DIR, `file-${testId}.log`);
-      const errFile = join(TEST_DIR, `err-${testId}.log`);
-      afterTest(() => clearFiles(logFile, errFile));
+  test('start/stop detached watchdog', async () => {
+    const testId = Math.random();
+    const logFile = join(TEST_DIR, `file-${testId}.log`);
+    const errFile = join(TEST_DIR, `err-${testId}.log`);
+    afterTest(() => clearFiles(logFile, errFile));
 
-      const uid = 'test';
+    const uid = 'test';
 
-      // Start
-      {
-        const manager = new DaemonManager(TEST_DIR);
-        await manager.start({
-          uid,
-          command: 'node',
-          args: ['-e', `(${neverEndingProcess.toString()})()`],
-          logFile,
-          errFile,
-        });
+    // Start
+    {
+      const manager = new DaemonManager(TEST_DIR);
+      await manager.start({
+        uid,
+        command: 'node',
+        args: ['-e', `(${neverEndingProcess.toString()})()`],
+        logFile,
+        errFile,
+      });
 
-        await waitForExpect(() => {
-          expect(existsSync(logFile)).to.be.true;
-          const logs = readFileSync(logFile, { encoding: 'utf-8' });
-          expect(logs).to.contain('neverEndingProcess started');
-        }, 1000);
-      }
-
-      // Stop
-      {
-        const manager = new DaemonManager(TEST_DIR);
-        await manager.stop(uid);
-
+      await waitForExpect(() => {
+        expect(existsSync(logFile)).to.be.true;
         const logs = readFileSync(logFile, { encoding: 'utf-8' });
-        expect(logs).to.contain('signal: SIGINT');
-      }
-    });
+        expect(logs).to.contain('neverEndingProcess started');
+      }, 1000);
+    }
+
+    // Stop
+    {
+      const manager = new DaemonManager(TEST_DIR);
+      const info = await manager.list();
+      expect(info.length).to.equal(1);
+      expect(info[0].running).to.be.true;
+      expect(info[0].uid).to.equal(uid);
+
+      await manager.stop(uid);
+
+      const logs = readFileSync(logFile, { encoding: 'utf-8' });
+      expect(logs).to.contain('signal: SIGINT');
+    }
   });
 });

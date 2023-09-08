@@ -4,18 +4,20 @@
 
 import { fork } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
 
 import { DAEMON_START_TIMEOUT } from './defs';
 import { waitForLockAcquisition, waitForLockRelease } from './utils';
 import { ConfigFiles, ProcessInfo, WatchDogParams } from './watchdog';
 
-const WATCHDOG_PATH = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
+const LOCK_FILE_NAME = 'file.lock';
 
 /**
  * Params to start a daemon.
@@ -32,7 +34,7 @@ export class DaemonManager {
     const defaultConfigDir = join(this._rootPath, 'profile', uid);
     mkdirSync(defaultConfigDir, { recursive: true });
     return {
-      lockFile: join(defaultConfigDir, 'file.lock'),
+      lockFile: join(defaultConfigDir, LOCK_FILE_NAME),
       logFile: join(defaultConfigDir, 'file.log'),
       errFile: join(defaultConfigDir, 'err.log'),
     };
@@ -46,7 +48,9 @@ export class DaemonManager {
       ...params,
     };
 
-    const watchDog = fork(WATCHDOG_PATH, [JSON.stringify(watchDogParams)], {
+    const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
+
+    const watchDog = fork(watchdogPath, [JSON.stringify(watchDogParams)], {
       stdio: 'pipe',
       detached: true,
       cwd: __dirname,
@@ -83,7 +87,16 @@ export class DaemonManager {
     await waitForLockRelease(lockFile);
   }
 
-  async list(): Promise<ProcessInfo[]> {
-    return [];
+  async list(): Promise<(ProcessInfo & { running: boolean })[]> {
+    const uids = await readdir(join(this._rootPath, 'profile'));
+    return Promise.all(
+      uids.map(async (uid) => {
+        const lockFile = this._getConfigFiles(uid).lockFile;
+        return {
+          running: await LockFile.isLocked(lockFile),
+          ...JSON.parse(readFileSync(lockFile, { encoding: 'utf-8' })),
+        };
+      }),
+    );
   }
 }
