@@ -55,7 +55,9 @@ createRoot(document.getElementById('root')!).render(
         GraphPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),
-        SplitViewPlugin(),
+        SplitViewPlugin({
+          showComplementarySidebar: false
+        }),
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),

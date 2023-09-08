@@ -254,7 +254,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
-              palette: 'blue',
+              palette: 'pink',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
