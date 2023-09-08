@@ -11,13 +11,13 @@ import { ThemedClassName } from '../../util';
 import { Button } from '../Buttons';
 import { Input } from '../Input';
 
-export type SelectorValue = { id: string; text?: string };
+export type SelectorValue = { id: string; value: any; text?: string };
 
 type SelectorProps = ThemedClassName<{
   placeholder?: string;
-  value?: SelectorValue;
   values?: SelectorValue[];
-  matcher?: (value: SelectorValue, text: string) => boolean;
+  value?: SelectorValue;
+  inputValue?: string;
   onChange?: (value: any) => void;
   onInputChange?: (text?: string) => void;
 }>;
@@ -29,7 +29,7 @@ type SelectorProps = ThemedClassName<{
 // TODO(burdon): Rename Combobox?
 // TODO(burdon): Break into components (only way to override classes without slots)?
 //   Similarly, provide a simplified "no frills" wrapped form of <Select />, etc.
-const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
+const Selector = ({ classNames, placeholder, values, value, onChange, inputValue, onInputChange }: SelectorProps) => {
   const { tx } = useThemeContext();
 
   // https://www.downshift-js.com/use-combobox
@@ -43,12 +43,16 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
     getMenuProps,
     getItemProps,
   } = useCombobox<SelectorValue>({
+    defaultInputValue: inputValue,
     items: values ?? [],
-    selectedItem: value ?? null,
+    selectedItem: value,
     itemToString: (item) => (item ? item.text ?? item.id : ''),
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
     onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
   });
+
+  // TODO(burdon): Each cell is re-rendered.
+  // console.log(selectedItem);
 
   // TODO(burdon): Use portal to match width and height?
   // TODO(burdon): Show as DIV unless focused (performance and to see ellipsis values)?

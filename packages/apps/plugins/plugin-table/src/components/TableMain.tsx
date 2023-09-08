@@ -96,16 +96,18 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     }
 
     const columns = createColumns<TypedObject>(schemasDefs, schemaDef, {
-      getRefValues: async ({ ref, refProp }) => {
+      getRefValue: ({ refProp }, object) => (object ? (object as Expando)[refProp!] : undefined),
+      getRefValues: async ({ ref, refProp }, text: string) => {
         if (!ref || !refProp) {
           return [];
         }
 
+        // TODO(burdon): Filter by text.
         const { objects } = space!.db.query((object) => object.__meta?.schema?.id === ref);
         return objects
           .map((object) => {
-            const label = (object as any)[refProp];
-            if (!label) {
+            const label = (object as Expando)[refProp];
+            if (!label || !label.toLowerCase().includes(text.toLowerCase())) {
               return undefined;
             }
 

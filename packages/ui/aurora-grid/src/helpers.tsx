@@ -52,6 +52,7 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
 export type SelectValue = { id: string; value?: any; label?: string };
 
 export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
+  lookupValue?: (value: SelectValue) => string;
   lookupValues?: (text: string) => Promise<SelectValue[]>;
 };
 
@@ -97,8 +98,7 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Select value
    */
-  // TODO(burdon): Make values async.
-  select({ label, className, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
+  select({ label, className, lookupValue, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, any>
   > {
     return defaults(props, {
@@ -106,24 +106,34 @@ export class ColumnBuilder<TData extends RowData> {
       header: (column) => {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
-      // TODO(burdon): Forces re-render.
       cell: onUpdate
         ? (cell) => {
             const [values, setValues] = useState<SelectorValue[]>();
-            const handleUpdate = async (text?: string) => {
-              console.log('>>', text);
+            const handleChange = (value: SelectorValue) => {
+              onUpdate?.(cell.row.original, cell.column.id, value ? value.value : undefined);
+            };
+
+            // TODO(burdon): Each cell is re-rendered on any change.
+            console.log(1);
+            const handleInputChange = async (text?: string) => {
               if (text?.length) {
                 const objects = await lookupValues!(text);
-                setValues(objects.map((object) => ({ id: object.id })));
+                setValues(objects.map(({ id, value, label }, i) => ({ id, value, text: label ?? value ?? id })));
               } else {
                 setValues([]);
               }
             };
 
-            return <Selector values={values} onInputChange={handleUpdate} />;
+            return (
+              <Selector
+                values={values}
+                inputValue={lookupValue?.(cell.getValue())}
+                onChange={handleChange}
+                onInputChange={handleInputChange}
+              />
+            );
           }
         : (cell) => {
-            console.log('!!!');
             const value = cell.getValue();
             return <div className={mx('truncate', className)}>{value}</div>;
           },
