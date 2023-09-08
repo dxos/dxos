@@ -16,7 +16,12 @@ import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides, SplitViewState } 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
  */
-export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
+export type SplitViewPluginOptions = {
+  showComplementarySidebar?: boolean;
+};
+
+export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinition<SplitViewProvides> => {
+  const { showComplementarySidebar = true } = { ...options };
   const settings = new LocalStorageStore<SplitViewState>('braneframe.plugin-splitview', {
     sidebarOpen: true,
     dialogContent: 'never',
@@ -39,13 +44,12 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
       context: (props: PropsWithChildren) => (
         <SplitViewContext.Provider value={settings.values}>{props.children}</SplitViewContext.Provider>
       ),
-      components: { SplitView, SplitViewMainContentEmpty },
+      components: { SplitView: () => <SplitView {...{ showComplementarySidebar }} />, SplitViewMainContentEmpty },
       graph: {
         nodes: (parent) => {
           if (parent.id !== 'root') {
             return;
           }
-
           parent.addAction({
             id: 'close-sidebar',
             label: ['close sidebar label', { ns: 'os' }],
