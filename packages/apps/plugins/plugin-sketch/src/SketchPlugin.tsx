@@ -36,7 +36,14 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
           const space = parent.data;
 
-          parent.addAction({
+          const [presentationNode] = parent.add({
+            id: `${SKETCH_PLUGIN}:${space.key.toHex()}`,
+            label: ['plugin name', { ns: SKETCH_PLUGIN }],
+            icon: (props) => <Folder {...props} />,
+            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject', persistenceClass: 'appState' },
+          });
+
+          presentationNode.addAction({
             id: `${SKETCH_PLUGIN}/create`,
             label: ['create object label', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Plus {...props} />,

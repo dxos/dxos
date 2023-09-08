@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GearSix } from '@phosphor-icons/react';
+import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -13,7 +13,6 @@ import {
   Button,
   DensityProvider,
   ElevationProvider,
-  ScrollArea,
   Tooltip,
   useJdenticonHref,
   useSidebars,
@@ -89,25 +88,41 @@ export const TreeViewContainer = () => {
                       </Tooltip.Content>
                     </Tooltip.Portal>
                   </Tooltip.Root>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Button
+                        variant='ghost'
+                        classNames='lg:hidden pli-2 pointer-fine:pli-1'
+                        {...(!navigationSidebarOpen && { tabIndex: -1 })}
+                        onClick={() => {
+                          splitView.sidebarOpen = false;
+                        }}
+                      >
+                        <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
+                        <CaretDoubleLeft className={getSize(4)} />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content classNames='z-[70]'>
+                        {t('close sidebar label', { ns: 'os' })}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
                 </div>
               </Avatar.Root>
               <Separator orientation='horizontal' />
             </>
           )}
-          <ScrollArea.Root classNames='grow min-bs-0'>
-            <ScrollArea.Viewport>
-              <NavTree
-                level={0}
-                role='tree'
-                classNames='pbs-1 pbe-4 pli-1'
-                node={graph.root}
-                items={graph.root.children}
-              />
-              <ScrollArea.Scrollbar orientation='vertical' classNames='pointer-events-none'>
-                <ScrollArea.Thumb />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <div role='none' className='grow min-bs-0 overflow-y-auto'>
+            <NavTree
+              level={0}
+              role='tree'
+              classNames='pbs-1 pbe-4 pli-1'
+              node={graph.root}
+              items={graph.root.children}
+            />
+          </div>
           <VersionInfo config={config} />
         </div>
       </DensityProvider>

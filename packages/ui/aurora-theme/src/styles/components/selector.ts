@@ -9,28 +9,36 @@ import { chromeSurface } from '../fragments';
 
 export type SelectorStyleProps = Partial<{
   elevation: Elevation;
+  isOpen: boolean;
 }>;
 
+// TODO(burdon): Match parent width via variable?
 export const selectorRoot: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('flex flex-col w-full', ...etc);
+  return mx('w-60', ...etc);
 };
 
 export const selectorInput: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('__px-2', ...etc);
+  return mx('px-2', ...etc);
 };
 
 export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('p-0 pl-2', ...etc);
+  return mx('', ...etc);
 };
 
-// TODO(burdon): Popover/Portal?
-export const selectorContent: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('absolute flex flex-col overflow-y-scroll max-h-[288px]', chromeSurface, ...etc);
+// TODO(burdon): Match parent width via variable?
+export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ isOpen }, ...etc) => {
+  return mx(
+    'absolute z-[10] flex flex-col overflow-y-scroll bg-red-100 w-60 max-h-[288px]',
+    chromeSurface,
+    !isOpen && 'hidden',
+    ...etc,
+  );
 };
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
   return mx(
-    'flex items-center __px-2 py-2',
+    'flex shrink-0 items-center px-2 py-2',
+    // TODO(burdon): Truncate doesn't work.
     'text-base leading-none select-none cursor-pointer truncate',
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
     // TODO(burdon): Factor out highlight.

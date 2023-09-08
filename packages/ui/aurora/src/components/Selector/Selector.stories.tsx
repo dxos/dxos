@@ -50,19 +50,25 @@ export const TypeAhead = () => {
   const [selected, setSelected] = useState<SelectorValue>();
   const [matching, setMatching] = useState<SelectorValue[]>();
   useEffect(() => {
-    console.log('???');
+    console.log({ text });
     setMatching(
       text?.length ? values.filter((value) => value.text?.length && value.text?.toLowerCase().includes(text)) : [],
     );
   }, [text]);
 
   return (
-    <Selector
-      placeholder={'Select...'}
-      values={matching}
-      value={selected}
-      onChange={setSelected}
-      onInputChange={(text) => setText(text?.toLowerCase())}
-    />
+    <div className='flex flex-col w-full'>
+      <div className='ring'>
+        <Selector
+          placeholder={'Select...'}
+          values={matching}
+          value={selected}
+          onChange={setSelected}
+          onInputChange={(text) => setText(text?.toLowerCase())}
+        />
+      </div>
+
+      <div className='mt-16 p-2 font-mono text-xs truncate'>{selected?.id}</div>
+    </div>
   );
 };
