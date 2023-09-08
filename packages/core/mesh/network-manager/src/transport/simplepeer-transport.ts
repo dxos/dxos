@@ -66,7 +66,7 @@ export class SimplePeerTransport implements Transport {
 
     this._peer.on('error', async (err) => {
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCError
-      if (err instanceof RTCError) {
+      if (typeof RTCError !== 'undefined' && err instanceof RTCError) {
         // Sent when connection is unexpectedly severed
         if (err.errorDetail === 'sctp-failure') {
           this.errors.raise(new ConnectionResetError('sctp-failure from RTCError', err));

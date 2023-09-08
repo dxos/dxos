@@ -5,7 +5,13 @@
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { CancelledError, ProtocolError } from '@dxos/errors';
+import {
+  CancelledError,
+  ProtocolError,
+  ConnectionResetError,
+  ConnectivityError,
+  UnknownProtocolError,
+} from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -187,13 +193,13 @@ export class Connection {
       }
 
       // TODO(nf): fix ErrorStream so instanceof works here
-      if (err.message.includes('ConnectionResetError')) {
+      if (err instanceof ConnectionResetError) {
         log('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
-      } else if (err.message.includes('ConnectivityError')) {
+      } else if (err instanceof ConnectivityError) {
         log('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
-      } else if (err.message.includes('UnknownProtocolError')) {
+      } else if (err instanceof UnknownProtocolError) {
         log('unsure what to do for UnknownProtocolError', { err });
       }
 
