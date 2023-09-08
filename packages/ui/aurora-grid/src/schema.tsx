@@ -141,10 +141,10 @@ export const createActionColumn = <TData extends RowData>(
         header: {
           className: 'p-0',
         },
-        footer: {
-          className: 'p-0',
-        },
         cell: {
+          className: 'p-0 border-none',
+        },
+        footer: {
           className: 'p-0',
         },
       },
@@ -160,7 +160,12 @@ export const createActionColumn = <TData extends RowData>(
     cell: onRowDelete
       ? (cell) =>
           isDeletable?.(cell.row.original) ? (
-            <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)} title='Delete row'>
+            <Button
+              variant='ghost'
+              onClick={() => onRowDelete(cell.row.original)}
+              title='Delete row'
+              classNames='invisible group-hover:visible'
+            >
               <X className={getSize(4)} />
             </Button>
           ) : null

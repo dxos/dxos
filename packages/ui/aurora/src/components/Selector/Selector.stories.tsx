@@ -6,20 +6,20 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { ColumnPanel } from './ColumnMenu';
-import { GridSchemaProp } from './schema';
+import { Selector, SelectorValue } from './Selector';
+
+const values: SelectorValue[] = [{ id: 'apple' }, { id: 'pear' }, { id: 'orange' }, { id: 'grape' }, { id: 'banana' }];
+
+const StorybookSelector = () => {
+  return <Selector values={values} placeholder={'Select...'} />;
+};
 
 export default {
-  component: ColumnPanel,
+  component: StorybookSelector,
 };
 
 export const Default = {
-  args: {
-    column: {
-      id: 'test',
-      label: 'test',
-    } as GridSchemaProp,
-  },
+  args: {},
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>

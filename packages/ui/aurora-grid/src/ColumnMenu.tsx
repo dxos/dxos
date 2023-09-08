@@ -136,7 +136,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
           <Input.Root id={typeSelectId}>
             <Input.Label classNames='mbe-1 mbs-3'>Type</Input.Label>
             <Select.Root value={type} onValueChange={setType}>
-              <Select.TriggerButton placeholder='Type' classNames='is-full' id={typeSelectId} />
+              <Select.TriggerButton id={typeSelectId} placeholder='Type' classNames='is-full' />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
