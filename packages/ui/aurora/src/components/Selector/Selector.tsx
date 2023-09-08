@@ -3,69 +3,108 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
-import { useCombobox } from 'downshift';
-import React from 'react';
+import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createPopperScope } from '@radix-ui/react-popper';
+import * as PopperPrimitive from '@radix-ui/react-popper';
+import { useCombobox, UseComboboxReturnValue } from 'downshift';
+import React, { forwardRef, PropsWithChildren } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { Button } from '../Buttons';
 import { Input } from '../Input';
 
+const SELECTOR_NAME = 'Selector';
+
+type ScopedProps<P> = P & { __scopeSelector?: Scope };
+
 type ValueAdapter<T> = (value: T) => { id: string; text: string };
 
-type SelectorProps<T> = ThemedClassName<{
-  placeholder?: string;
-  values?: T[]; // TODO(burdon): Rename items.
-  value?: T;
+type SelectorContextValue<T> = {
+  items: T[];
   adapter: ValueAdapter<T>;
-  onChange?: (value: T | undefined) => void;
-  onInputChange?: (text?: string) => void;
-}>;
+} & UseComboboxReturnValue<T>;
+
+const usePopperScope = createPopperScope();
+const [createSelectorContext, createSelectorScope] = createContextScope(SELECTOR_NAME, [createPopperScope]);
+const [SelectorProvider, useSelectorContext] = createSelectorContext<SelectorContextValue<any>>(SELECTOR_NAME);
+
+type SelectorRootProps<T> = ThemedClassName<
+  ScopedProps<
+    PropsWithChildren<{
+      placeholder?: string;
+      items?: T[];
+      value?: T; // TODO(burdon): ???
+      adapter: ValueAdapter<T>;
+      onChange?: (value: T | undefined) => void;
+      onInputChange?: (text?: string) => void;
+    }>
+  >
+>;
 
 /**
  * Type-ahead selector.
  * https://www.downshift-js.com
  */
 // TODO(burdon): Rename Combobox?
-// TODO(burdon): Break into components (only way to override classes without slots)?
-//   Similarly, provide a simplified "no frills" wrapped form of <Select />, etc.
-const Selector = <T,>({
+const SelectorRoot = <T,>({
+  __scopeSelector,
+  children,
   classNames,
   placeholder,
-  values,
+  items,
   value,
   adapter,
   onChange,
   onInputChange,
-}: SelectorProps<T>) => {
+}: SelectorRootProps<T>) => {
   const { tx } = useThemeContext();
+  const popperScope = usePopperScope(__scopeSelector);
 
   // https://www.downshift-js.com/use-combobox
-  // prettier-ignore
-  const {
-    isOpen,
-    selectedItem,
-    highlightedIndex,
-    getInputProps,
-    getToggleButtonProps,
-    getMenuProps,
-    getItemProps,
-  } = useCombobox<T>({
-    items: values ?? [],
+  const comboProps = useCombobox<T>({
+    items: items ?? [],
     selectedItem: value ?? null,
-    itemToString: (selectedItem) => selectedItem ? adapter(selectedItem).text : '',
+    itemToString: (selectedItem) => (selectedItem ? adapter(selectedItem).text : ''),
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
     onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem === null ? undefined : selectedItem),
   });
 
-  // TODO(burdon): Each cell is re-rendered.
-  // console.log(selectedItem);
-
-  // TODO(burdon): Use portal to match width and height?
   // TODO(burdon): Show as DIV unless focused (performance and to see ellipsis values)?
   return (
-    <div className={tx('selector.root', 'selector__root', {}, classNames)}>
-      {/* TODO(burdon): Should all classes (even purely functional ones) move into theme? */}
+    <PopperPrimitive.Root {...popperScope}>
+      <SelectorProvider scope={__scopeSelector} adapter={adapter} items={items ?? []} {...comboProps}>
+        <div className={tx('selector.root', 'selector__root', {}, classNames)}>
+          <SelectorAnchor placeholder={placeholder} />
+          <SelectorContent />
+        </div>
+      </SelectorProvider>
+    </PopperPrimitive.Root>
+  );
+};
+
+//
+// Anchor
+//
+
+const ANCHOR_NAME = 'SelectorAnchor';
+
+type SelectorAnchorProps = ThemedClassName<
+  ScopedProps<
+    PropsWithChildren<{
+      placeholder?: string;
+    }>
+  >
+>;
+
+// TODO(burdon): forwardRef
+const SelectorAnchor = ({ __scopeSelector, classNames, placeholder }: SelectorAnchorProps) => {
+  const { tx } = useThemeContext();
+  const popperScope = usePopperScope(__scopeSelector);
+  const { getInputProps, getToggleButtonProps, isOpen } = useSelectorContext(ANCHOR_NAME, __scopeSelector);
+
+  return (
+    <PopperPrimitive.Anchor asChild {...popperScope}>
       <div className='flex items-center gap-1'>
         <Input.Root>
           <Input.TextInput
@@ -85,41 +124,74 @@ const Selector = <T,>({
           {(isOpen && <CaretUp />) || <CaretDown />}
         </Button>
       </div>
-
-      {/* TODO(burdon): Use Popover to manage viewport width, etc? */}
-      {/* <Popover.Root open={isOpen}> */}
-      {/*  <Popover.Content> */}
-      {/*    <Popover.Viewport> */}
-      {/* ERROR: @react-refresh:267 downshift: The ref prop "ref" from getMenuProps was not applied correctly on your element. */}
-      <ul
-        {...getMenuProps()}
-        className={tx('selector.content', 'selector__content', { isOpen: isOpen && values?.length }, classNames)}
-      >
-        {values?.map((value, index) => {
-          const { id, text } = adapter(value);
-          return (
-            <li
-              key={id}
-              data-selected={selectedItem === value ? 'true' : undefined}
-              data-highlighted={highlightedIndex === index ? 'true' : undefined}
-              {...getItemProps({
-                index,
-                item: value,
-                className: tx('selector.item', 'selector__item', {}, classNames),
-              })}
-            >
-              {text}
-            </li>
-          );
-        })}
-      </ul>
-      {/* </Popover.Viewport> */}
-      {/* </Popover.Content> */}
-      {/* </Popover.Root> */}
-    </div>
+    </PopperPrimitive.Anchor>
   );
 };
 
-export { Selector };
+//
+// Content
+//
 
-export type { SelectorProps };
+const CONTENT_NAME = 'SelectorContent';
+
+type SelectorContentProps = ThemedClassName<ScopedProps<PropsWithChildren<{}>>>;
+
+const SelectorContent = forwardRef<HTMLDivElement>(
+  ({ __scopeSelector, classNames }: SelectorContentProps, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const popperScope = usePopperScope(__scopeSelector);
+    const { adapter, items, getMenuProps, getItemProps, highlightedIndex, selectedItem, isOpen } = useSelectorContext(
+      CONTENT_NAME,
+      __scopeSelector,
+    );
+
+    return (
+      <PopperPrimitive.Content
+        data-state={isOpen}
+        role='dialog'
+        {...popperScope}
+        ref={forwardedRef}
+        style={{
+          // TODO(burdon): This doesn't work.
+          // re-namespace exposed content custom properties
+          ...{
+            '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
+            '--radix-selector-content-available-width': 'var(--radix-popper-available-width)',
+            '--radix-selector-content-available-height': 'var(--radix-popper-available-height)',
+            '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
+            '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
+          },
+        }}
+      >
+        <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
+          {isOpen &&
+            items.map((item, index) => (
+              <li
+                key={adapter(item).id}
+                data-selected={selectedItem === item ? 'true' : undefined}
+                data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                {...getItemProps({
+                  index,
+                  item,
+                  className: tx('selector.item', 'selector__item', {}, classNames),
+                })}
+              >
+                {adapter(item).text}
+              </li>
+            ))}
+        </ul>
+      </PopperPrimitive.Content>
+    );
+  },
+);
+
+export { createSelectorScope };
+
+// prettier-ignore
+export const Selector = {
+  Root: SelectorRoot,
+  Anchor: SelectorAnchor,
+  Content: SelectorContent,
+};
+
+export type { SelectorRootProps, SelectorAnchorProps, SelectorContentProps };

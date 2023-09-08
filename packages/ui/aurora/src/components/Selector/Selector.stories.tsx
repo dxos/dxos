@@ -20,7 +20,7 @@ const values: Value[] = faker.helpers
   }));
 
 export default {
-  component: Selector,
+  component: Selector as any, // TODO(burdon): ???
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
@@ -60,10 +60,10 @@ export const TypeAhead = () => {
 
   return (
     <div className='flex flex-col w-full'>
-      <div className='ring'>
-        <Selector<Value>
+      <div className=''>
+        <Selector.Root<Value>
           placeholder={'Select...'}
-          values={matching}
+          items={matching}
           value={selected}
           adapter={(value) => value}
           onChange={setSelected}

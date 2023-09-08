@@ -5,16 +5,14 @@
 import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { chromeSurface } from '../fragments';
+import { chromeSurface, surfaceElevation } from '../fragments';
 
 export type SelectorStyleProps = Partial<{
   elevation: Elevation;
-  isOpen: boolean;
 }>;
 
-// TODO(burdon): Match parent width via variable?
 export const selectorRoot: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('w-60', ...etc);
+  return mx('w-full', ...etc);
 };
 
 export const selectorInput: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
@@ -25,12 +23,13 @@ export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ..
   return mx('', ...etc);
 };
 
-// TODO(burdon): Match parent width via variable?
-export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ isOpen }, ...etc) => {
+export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'absolute z-[10] flex flex-col overflow-y-scroll bg-red-100 w-60 max-h-[288px]',
+    'z-[50]',
+    'w-[--radix-popper-anchor-width]',
+    'max-h-[--radix-selector-content-available-height] overflow-y-auto',
     chromeSurface,
-    !isOpen && 'hidden',
+    surfaceElevation({ elevation }),
     ...etc,
   );
 };
