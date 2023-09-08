@@ -3,7 +3,7 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
-import * as Portal from '@radix-ui/react-portal';
+// import * as Portal from '@radix-ui/react-portal';
 import { useCombobox } from 'downshift';
 import React from 'react';
 
@@ -37,7 +37,7 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
   // https://www.downshift-js.com/use-combobox
   const { isOpen, selectedItem, getInputProps, getToggleButtonProps, getMenuProps, highlightedIndex, getItemProps } =
     useCombobox<SelectorValue>({
-      selectedItem: value,
+      selectedItem: value ?? null,
       items: values ?? [],
       itemToString: (item) => (item ? item.text ?? item.id : ''),
       onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
@@ -52,9 +52,9 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
         <Input.Root>
           <Input.TextInput
             {...getInputProps()}
+            placeholder={placeholder}
             variant='subdued'
             classNames={tx('selector.input', 'selector__input', {}, classNames)}
-            placeholder={placeholder}
           />
         </Input.Root>
         <Button
@@ -62,32 +62,33 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
           variant='ghost'
           classNames={tx('selector.button', 'selector__button', {}, classNames)}
         >
-          {/* TODO(burdon): Style icon? */}
+          {/* TODO(burdon): SelectPrimitive.Icon? */}
           {(isOpen && <CaretUp />) || <CaretDown />}
         </Button>
       </div>
 
-      <Portal.Root>
-        xxx
-        <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
-          {isOpen
-            ? values?.map((value, index) => (
-                <li
-                  key={value.id}
-                  data-selected={selectedItem === value ? 'true' : undefined}
-                  data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                  {...getItemProps({
-                    index,
-                    item: value,
-                    className: tx('selector.item', 'selector__item', {}, classNames),
-                  })}
-                >
-                  {value.text ?? value.id}
-                </li>
-              ))
-            : null}
-        </ul>
-      </Portal.Root>
+      {/* TODO(burdon): Container? */}
+      {/* TODO(burdon): SelectItem? */}
+      {/* <Portal.Root> */}
+      <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
+        {isOpen
+          ? values?.map((value, index) => (
+              <li
+                key={value.id}
+                data-selected={selectedItem === value ? 'true' : undefined}
+                data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                {...getItemProps({
+                  index,
+                  item: value,
+                  className: tx('selector.item', 'selector__item', {}, classNames),
+                })}
+              >
+                {value.text ?? value.id}
+              </li>
+            ))
+          : null}
+      </ul>
+      {/* </Portal.Root> */}
     </div>
   );
 };

@@ -12,25 +12,25 @@ export type SelectorStyleProps = Partial<{
 }>;
 
 export const selectorRoot: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('flex flex-col w-full', ...etc);
+  return mx('flex flex-col w-full overflow-hidden', ...etc);
 };
 
 export const selectorInput: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('__px-2', ...etc);
+  return mx('px-2', ...etc);
 };
 
 export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('p-0 pl-2', ...etc);
+  return mx('', ...etc);
 };
 
-// TODO(burdon): Popover/Portal?
 export const selectorContent: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('absolute flex flex-col overflow-y-scroll max-h-[288px]', chromeSurface, ...etc);
+  return mx('__absolute flex flex-col overflow-y-scroll max-h-[288px]', chromeSurface, ...etc);
 };
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
   return mx(
-    'flex items-center __px-2 py-2',
+    'flex items-center px-2 py-2',
+    // TODO(burdon): Truncate doesn't work.
     'text-base leading-none select-none cursor-pointer truncate',
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
     // TODO(burdon): Factor out highlight.

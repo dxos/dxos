@@ -22,7 +22,7 @@ export default {
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
-        <div className='flex w-[250px] m-8 bg-white'>
+        <div className='flex flex-col w-[250px] m-8 bg-white'>
           <Story />
         </div>
       </div>
@@ -57,12 +57,16 @@ export const TypeAhead = () => {
   }, [text]);
 
   return (
-    <Selector
-      placeholder={'Select...'}
-      values={matching}
-      value={selected}
-      onChange={setSelected}
-      onInputChange={(text) => setText(text?.toLowerCase())}
-    />
+    <div className='flex flex-col w-full'>
+      <Selector
+        placeholder={'Select...'}
+        values={matching}
+        value={selected}
+        onChange={setSelected}
+        onInputChange={(text) => setText(text?.toLowerCase())}
+      />
+
+      <div className='mt-16 p-2 font-mono text-xs truncate'>{selected?.id}</div>
+    </div>
   );
 };
