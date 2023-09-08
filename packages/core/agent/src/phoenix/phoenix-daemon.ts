@@ -148,5 +148,5 @@ export class PhoenixDaemon implements Daemon {
 }
 
 const phoenixInfoToProcessInfo = (info: PhoenixProcess): ProcessInfo => {
-  return { profile: info.uid, ...info };
+  return { profile: info.uid, started: info.timestamp, ...info };
 };
