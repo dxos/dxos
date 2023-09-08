@@ -23,7 +23,7 @@ export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, Type
             defaultValue={object.title ?? ''}
             // TODO(burdon): Field should not be hard-code 'title' field.
             onChange={({ target: { value } }) => (object.title = value)}
-            onKeyDown={({ key }) => key === 'Enter' && console.log('close')}
+            // onKeyDown={({ key }) => key === 'Enter' && console.log('close')}
           />
         </Input.Root>
       </div>

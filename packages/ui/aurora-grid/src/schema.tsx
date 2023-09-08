@@ -96,9 +96,11 @@ export const createColumns = <TData extends RowData>(
     switch (type) {
       // TODO(burdon): Get all values.
       case 'ref':
-        return getRefValues
-          ? helper.accessor(id, builder.select({ ...options, lookupValues: () => getRefValues(column) }))
-          : null;
+        return getRefValues ? (
+          helper.accessor(id, builder.select({ ...options, lookupValues: () => getRefValues(column) }))
+        ) : (
+          <div>xx</div>
+        );
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':

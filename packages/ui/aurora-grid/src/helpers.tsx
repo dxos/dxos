@@ -108,21 +108,22 @@ export class ColumnBuilder<TData extends RowData> {
       },
       // TODO(burdon): Forces re-render.
       cell: onUpdate
-        ? (cell) => () => {
+        ? (cell) => {
             const [values, setValues] = useState<SelectorValue[]>();
             const handleUpdate = async (text?: string) => {
+              console.log('>>', text);
               if (text?.length) {
                 const objects = await lookupValues!(text);
-                // setValues(objects.map(object => ({ id: object.id, text: object[cell.] });
+                setValues(objects.map((object) => ({ id: object.id })));
               } else {
                 setValues([]);
               }
             };
 
-            // TODO(burdon): onUpdate.
             return <Selector values={values} onInputChange={handleUpdate} />;
           }
         : (cell) => {
+            console.log('!!!');
             const value = cell.getValue();
             return <div className={mx('truncate', className)}>{value}</div>;
           },

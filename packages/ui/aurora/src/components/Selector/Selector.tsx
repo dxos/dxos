@@ -26,7 +26,7 @@ type SelectorProps = ThemedClassName<{
  * Typeahead selector.
  * https://www.downshift-js.com
  */
-// TODO(burdon): Break into Portal, etc? Similarly, provide a simpler wrapped form of <Select />, etc.
+// TODO(burdon): Break into Portal, etc (only way to override classes without slots)? Similarly, provide a simpler wrapped form of <Select />, etc.
 const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
   const { tx } = useThemeContext();
 
@@ -41,14 +41,25 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
       onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
     });
 
+  // TODO(burdon): Show as DIV unless focused (performance and to see ellipsis values)?
   return (
-    // TODO(burdon): Should all classes move into theme?
     <div className={tx('selector.root', 'selector__root', {}, classNames)}>
+      {/* TODO(burdon): Should all classes (even purely functional ones) move into theme? */}
       <div className='flex items-center'>
         <Input.Root>
-          <Input.TextInput {...getInputProps()} variant='subdued' classNames='px-2' placeholder={placeholder} />
+          <Input.TextInput
+            {...getInputProps()}
+            variant='subdued'
+            classNames={tx('selector.input', 'selector__input', {}, classNames)}
+            placeholder={placeholder}
+          />
         </Input.Root>
-        <Button {...getToggleButtonProps()} variant='ghost'>
+        <Button
+          {...getToggleButtonProps()}
+          variant='ghost'
+          classNames={tx('selector.button', 'selector__button', {}, classNames)}
+        >
+          {/* TODO(burdon): Style icon? */}
           {(isOpen && <CaretUp />) || <CaretDown />}
         </Button>
       </div>
