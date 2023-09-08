@@ -18,7 +18,7 @@ import { DAEMON_START_TIMEOUT } from './defs';
 import { waitForLockAcquisition, waitForLockRelease } from './utils';
 import { ConfigFiles, ProcessInfo, WatchDogParams } from './watchdog';
 
-const LOCK_FILE_NAME = 'file.lock';
+const LOCK_FILE_NAME = 'lockfile';
 
 /**
  * Params to start a daemon.
@@ -84,10 +84,17 @@ export class DaemonManager {
   async stop(uid: string, force?: boolean) {
     const lockFile = this._getConfigFiles(uid).lockFile;
     const processInfo = JSON.parse(readFileSync(lockFile, { encoding: 'utf-8' }));
-    if (force) {
-      process.kill(processInfo.pid, 'SIGKILL');
-    } else {
-      process.kill(processInfo.pid, 'SIGINT');
+    try {
+      if (force) {
+        process.kill(processInfo.pid, 'SIGKILL');
+      } else {
+        process.kill(processInfo.pid, 'SIGINT');
+      }
+    } catch (err) {
+      invariant(err instanceof Error, 'Invalid error type.');
+      if (!err.name.includes('ESRCH')) {
+        throw err;
+      }
     }
     await waitForLockRelease(lockFile);
 

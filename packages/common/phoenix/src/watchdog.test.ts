@@ -20,7 +20,7 @@ describe('WatchDog', () => {
     const lockFile = join(TEST_DIR, `lock-${runId}.lock`);
     const logFile = join(TEST_DIR, `file-${runId}.log`);
     const errFile = join(TEST_DIR, `err-${runId}.log`);
-    afterTest(() => clearFiles(lockFile));
+    afterTest(() => clearFiles(lockFile, logFile, errFile));
 
     // Create lock file.
     {

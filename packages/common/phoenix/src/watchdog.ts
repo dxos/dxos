@@ -141,7 +141,7 @@ export class WatchDog {
     invariant(this._child.pid, 'Child process has no pid.');
 
     const childInfo: ProcessInfo = {
-      pid: this._child.pid,
+      pid: process.pid,
       timestamp: Date.now(),
       restarts: this._restarts,
       ...this._params,

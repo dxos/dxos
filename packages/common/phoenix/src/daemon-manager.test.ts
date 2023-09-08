@@ -9,10 +9,10 @@ import { join } from 'node:path';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { DaemonManager } from './daemon-manager';
-import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
+import { TEST_DIR, neverEndingProcess } from './testing-utils';
 
 describe('DaemonManager', () => {
   test('kill process by pid', async () => {
@@ -64,8 +64,10 @@ describe('DaemonManager', () => {
 
       await manager.stop(uid);
 
-      const logs = readFileSync(logFile, { encoding: 'utf-8' });
-      expect(logs).to.contain('signal: SIGINT');
+      await waitForExpect(() => {
+        const logs = readFileSync(logFile, { encoding: 'utf-8' });
+        expect(logs).to.contain('Stopped with exit code');
+      }, 1000);
     }
   });
 });
