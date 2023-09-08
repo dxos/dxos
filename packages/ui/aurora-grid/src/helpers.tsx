@@ -10,7 +10,7 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useRef, useState } from 'react';
 
-import { Input, Selector, SelectorValue, Tooltip } from '@dxos/aurora';
+import { Input, Selector, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -49,11 +49,9 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
   onUpdate?: ValueUpdater<TData, TValue | undefined>;
 };
 
-export type SelectValue = { id: string; value?: any; label?: string };
-
 export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
-  lookupValue?: (value: SelectValue) => string;
-  lookupValues?: (text: string) => Promise<SelectValue[]>;
+  lookupValue?: (value: TData) => string;
+  lookupValues?: (text: string) => Promise<TData[]>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -108,9 +106,9 @@ export class ColumnBuilder<TData extends RowData> {
       },
       cell: onUpdate
         ? (cell) => {
-            const [values, setValues] = useState<SelectorValue[]>();
-            const handleChange = (value: SelectorValue) => {
-              onUpdate?.(cell.row.original, cell.column.id, value ? value.value : undefined);
+            const [values, setValues] = useState<TData[]>();
+            const handleChange = (value: TData | undefined) => {
+              onUpdate?.(cell.row.original, cell.column.id, value || undefined);
             };
 
             // TODO(burdon): Each cell is re-rendered on any change.
@@ -118,16 +116,16 @@ export class ColumnBuilder<TData extends RowData> {
             const handleInputChange = async (text?: string) => {
               if (text?.length) {
                 const objects = await lookupValues!(text);
-                setValues(objects.map(({ id, value, label }, i) => ({ id, value, text: label ?? value ?? id })));
+                setValues(objects);
               } else {
                 setValues([]);
               }
             };
 
             return (
-              <Selector
+              <Selector<TData>
+                value={cell.getValue()}
                 values={values}
-                inputValue={lookupValue?.(cell.getValue())}
                 onChange={handleChange}
                 onInputChange={handleInputChange}
               />
