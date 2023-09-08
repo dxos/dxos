@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GearSix } from '@phosphor-icons/react';
+import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -84,6 +84,27 @@ export const TreeViewContainer = () => {
                     <Tooltip.Portal>
                       <Tooltip.Content classNames='z-[70]'>
                         {t('settings dialog title', { ns: 'os' })}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Button
+                        variant='ghost'
+                        classNames='lg:hidden pli-2 pointer-fine:pli-1'
+                        {...(!navigationSidebarOpen && { tabIndex: -1 })}
+                        onClick={() => {
+                          splitView.sidebarOpen = false;
+                        }}
+                      >
+                        <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
+                        <CaretDoubleLeft className={getSize(4)} />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content classNames='z-[70]'>
+                        {t('close sidebar label', { ns: 'os' })}
                         <Tooltip.Arrow />
                       </Tooltip.Content>
                     </Tooltip.Portal>
