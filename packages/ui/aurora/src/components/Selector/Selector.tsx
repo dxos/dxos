@@ -3,7 +3,6 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
-// import * as Portal from '@radix-ui/react-portal';
 import { useCombobox } from 'downshift';
 import React from 'react';
 
@@ -28,27 +27,35 @@ type SelectorProps = ThemedClassName<{
  * https://www.downshift-js.com
  */
 // TODO(burdon): Rename Combobox?
-// TODO(burdon): Break into Portal, etc (only way to override classes without slots)?
+// TODO(burdon): Break into components (only way to override classes without slots)?
 //   Similarly, provide a simplified "no frills" wrapped form of <Select />, etc.
 const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
   const { tx } = useThemeContext();
 
-  // TODO(burdon): Case sensitive by default.
   // https://www.downshift-js.com/use-combobox
-  const { isOpen, selectedItem, getInputProps, getToggleButtonProps, getMenuProps, highlightedIndex, getItemProps } =
-    useCombobox<SelectorValue>({
-      selectedItem: value ?? null,
-      items: values ?? [],
-      itemToString: (item) => (item ? item.text ?? item.id : ''),
-      onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
-      onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
-    });
+  // prettier-ignore
+  const {
+    isOpen,
+    selectedItem,
+    highlightedIndex,
+    getInputProps,
+    getToggleButtonProps,
+    getMenuProps,
+    getItemProps,
+  } = useCombobox<SelectorValue>({
+    items: values ?? [],
+    selectedItem: value ?? null,
+    itemToString: (item) => (item ? item.text ?? item.id : ''),
+    onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
+    onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem),
+  });
 
+  // TODO(burdon): Use portal to match width and height?
   // TODO(burdon): Show as DIV unless focused (performance and to see ellipsis values)?
   return (
     <div className={tx('selector.root', 'selector__root', {}, classNames)}>
       {/* TODO(burdon): Should all classes (even purely functional ones) move into theme? */}
-      <div className='flex items-center'>
+      <div className='flex items-center gap-1'>
         <Input.Root>
           <Input.TextInput
             {...getInputProps()}
@@ -59,6 +66,7 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
         </Input.Root>
         <Button
           {...getToggleButtonProps()}
+          aria-label='toggle menu'
           variant='ghost'
           classNames={tx('selector.button', 'selector__button', {}, classNames)}
         >
@@ -67,28 +75,33 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
         </Button>
       </div>
 
-      {/* TODO(burdon): Container? */}
-      {/* TODO(burdon): SelectItem? */}
-      {/* <Portal.Root> */}
-      <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
-        {isOpen
-          ? values?.map((value, index) => (
-              <li
-                key={value.id}
-                data-selected={selectedItem === value ? 'true' : undefined}
-                data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                {...getItemProps({
-                  index,
-                  item: value,
-                  className: tx('selector.item', 'selector__item', {}, classNames),
-                })}
-              >
-                {value.text ?? value.id}
-              </li>
-            ))
-          : null}
+      {/* TODO(burdon): Use Popover to manage viewport width, etc? */}
+      {/* <Popover.Root open={isOpen}> */}
+      {/*  <Popover.Content> */}
+      {/*    <Popover.Viewport> */}
+      {/* ERROR: @react-refresh:267 downshift: The ref prop "ref" from getMenuProps was not applied correctly on your element. */}
+      <ul
+        {...getMenuProps()}
+        className={tx('selector.content', 'selector__content', { isOpen: isOpen && values?.length }, classNames)}
+      >
+        {values?.map((value, index) => (
+          <li
+            key={value.id}
+            data-selected={selectedItem === value ? 'true' : undefined}
+            data-highlighted={highlightedIndex === index ? 'true' : undefined}
+            {...getItemProps({
+              index,
+              item: value,
+              className: tx('selector.item', 'selector__item', {}, classNames),
+            })}
+          >
+            {value.text ?? value.id}
+          </li>
+        ))}
       </ul>
-      {/* </Portal.Root> */}
+      {/* </Popover.Viewport> */}
+      {/* </Popover.Content> */}
+      {/* </Popover.Root> */}
     </div>
   );
 };

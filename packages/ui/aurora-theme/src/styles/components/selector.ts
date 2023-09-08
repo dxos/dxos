@@ -9,10 +9,12 @@ import { chromeSurface } from '../fragments';
 
 export type SelectorStyleProps = Partial<{
   elevation: Elevation;
+  isOpen: boolean;
 }>;
 
+// TODO(burdon): Match parent width via variable?
 export const selectorRoot: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('flex flex-col w-full overflow-hidden', ...etc);
+  return mx('w-60', ...etc);
 };
 
 export const selectorInput: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
@@ -23,8 +25,14 @@ export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ..
   return mx('', ...etc);
 };
 
-export const selectorContent: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
-  return mx('__absolute flex flex-col overflow-y-scroll max-h-[288px]', chromeSurface, ...etc);
+// TODO(burdon): Match parent width via variable?
+export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ isOpen }, ...etc) => {
+  return mx(
+    'absolute z-[10] flex flex-col overflow-y-scroll bg-red-100 w-60 max-h-[288px]',
+    chromeSurface,
+    !isOpen && 'hidden',
+    ...etc,
+  );
 };
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {

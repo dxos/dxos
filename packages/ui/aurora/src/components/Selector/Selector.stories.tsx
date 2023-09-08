@@ -50,7 +50,7 @@ export const TypeAhead = () => {
   const [selected, setSelected] = useState<SelectorValue>();
   const [matching, setMatching] = useState<SelectorValue[]>();
   useEffect(() => {
-    console.log('???');
+    console.log({ text });
     setMatching(
       text?.length ? values.filter((value) => value.text?.length && value.text?.toLowerCase().includes(text)) : [],
     );

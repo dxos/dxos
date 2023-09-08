@@ -47,7 +47,6 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(({ placeh
 
 type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
 
-// TODO(burdon): Make same width as trigger?
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
