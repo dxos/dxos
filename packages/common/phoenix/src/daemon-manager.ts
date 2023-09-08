@@ -3,12 +3,13 @@
 //
 
 import { fork } from 'node:child_process';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
@@ -41,6 +42,7 @@ export class DaemonManager {
   }
 
   async start(params: StartParams) {
+    invariant(params.command, 'command is required');
     const watchdogId = PublicKey.random().toHex();
     const watchDogParams: WatchDogParams & { watchdogId: string } = {
       watchdogId,
@@ -68,12 +70,15 @@ export class DaemonManager {
         started.wake();
       }
     });
+    await started.wait();
 
     await asyncTimeout(started.wait(), DAEMON_START_TIMEOUT);
     await waitForLockAcquisition(watchDogParams.lockFile);
 
     watchDog.disconnect();
     watchDog.unref();
+
+    return this.getInfo(params.uid);
   }
 
   async stop(uid: string, force?: boolean) {
@@ -85,19 +90,30 @@ export class DaemonManager {
       process.kill(processInfo.pid, 'SIGINT');
     }
     await waitForLockRelease(lockFile);
+
+    return this.getInfo(uid);
   }
 
   async list(): Promise<ProcessInfo[]> {
     const uids = await readdir(join(this._rootPath, 'profile'));
     return Promise.all(
       uids.map(async (uid) => {
-        const lockFile = this._getConfigFiles(uid).lockFile;
-        return {
-          running: await LockFile.isLocked(lockFile),
-          ...JSON.parse(readFileSync(lockFile, { encoding: 'utf-8' })),
-        };
+        return this.getInfo(uid);
       }),
     );
+  }
+
+  async getInfo(uid: string): Promise<ProcessInfo> {
+    const files = this._getConfigFiles(uid);
+
+    if (existsSync(files.lockFile)) {
+      return {
+        running: await LockFile.isLocked(files.lockFile),
+        ...JSON.parse(readFileSync(files.lockFile, { encoding: 'utf-8' })),
+      };
+    } else {
+      return { running: false, uid, ...files };
+    }
   }
 
   async isRunning(uid: string): Promise<boolean> {

@@ -25,9 +25,9 @@ export type DaemonInfo = {
 };
 
 export type ProcessInfo = WatchDogParams & {
-  pid: number;
-  timestamp: number;
-  restarts: number;
+  pid?: number;
+  timestamp?: number;
+  restarts?: number;
   running?: boolean;
 };
 
@@ -53,7 +53,7 @@ export type WatchDogParams = {
   // Command to spawn as well as options and other vars
   // (env, cwd, etc) to pass along
   //
-  command: string; // Binary to run (default: 'node')
+  command?: string; // Binary to run (default: 'node')
   args?: string[] | undefined; // Additional arguments to pass to the script,
 
   //
@@ -76,8 +76,8 @@ export class WatchDog {
   @synchronized
   async start() {
     await this._acquireLock();
-
     const { cwd, shell, env, command, args } = { cwd: process.cwd(), ...this._params };
+    invariant(command, 'Command is not defined.');
 
     this._child = spawn(command, args, { cwd, shell, env, stdio: 'pipe' });
     this._processCtx = new Context();
