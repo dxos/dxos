@@ -185,7 +185,7 @@ export default {
   },
   decorators: [
     (Story: any) => (
-      <div className='flex flex-col items-center h-screen w-full overflow-hidden bg-neutral-100'>
+      <div className='flex flex-col items-center h-screen w-full overflow-hidden bg-zinc-200'>
         <div className='flex w-[800px] h-full'>
           <DensityProvider density='fine'>
             <Story />

@@ -8,9 +8,9 @@ import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/re
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { Input, Selector, Tooltip } from '@dxos/aurora';
+import { Input, Select, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -49,9 +49,10 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
   onUpdate?: ValueUpdater<TData, TValue | undefined>;
 };
 
+export type SelectValue = { id: string; value?: any; label?: string };
+
 export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
-  lookupValue?: (value: TData) => string;
-  lookupValues?: (text: string) => Promise<TData[]>;
+  lookupValues?: () => Promise<SelectValue[]>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -96,7 +97,8 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Select value
    */
-  select({ label, className, lookupValue, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
+  // TODO(burdon): Make values async.
+  select({ label, className, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
     ColumnDef<TData, any>
   > {
     return defaults(props, {
@@ -106,29 +108,36 @@ export class ColumnBuilder<TData extends RowData> {
       },
       cell: onUpdate
         ? (cell) => {
-            const [values, setValues] = useState<TData[]>();
-            const handleChange = (value: TData | undefined) => {
-              onUpdate?.(cell.row.original, cell.column.id, value || undefined);
-            };
-
-            // TODO(burdon): Each cell is re-rendered on any change.
-            console.log(1);
-            const handleInputChange = async (text?: string) => {
-              if (text?.length) {
-                const objects = await lookupValues!(text);
-                setValues(objects);
-              } else {
-                setValues([]);
-              }
-            };
+            // TODO(burdon): Support type-ahead.
+            const [values, setValues] = useState<SelectValue[]>([]);
+            useEffect(() => {
+              setTimeout(async () => {
+                setValues((await lookupValues?.()) ?? []);
+              });
+            }, []);
 
             return (
-              <Selector<TData>
+              <Select.Root
                 value={cell.getValue()}
-                values={values}
-                onChange={handleChange}
-                onInputChange={handleInputChange}
-              />
+                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+              >
+                <Select.TriggerButton
+                  placeholder={cell.getValue()}
+                  variant='ghost'
+                  classNames='flex w-full justify-start p-0 [&>span:nth-child(1)]:grow [&>span:nth-child(1)]:text-left'
+                />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {values?.map(({ id, value, label }) => (
+                        <Select.Option key={id} value={value ?? id}>
+                          {label ?? String(value) ?? id}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
             );
           }
         : (cell) => {

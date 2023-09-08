@@ -56,9 +56,7 @@ export const createUniqueProp = (schema: GridSchema) => {
 // TODO(burdon): Create builder.
 
 type CreateColumnsOptions<TData extends RowData, TValue> = {
-  // TODO(burdon): Change to adapter.
-  getRefValue?: (column: GridSchemaProp, value: TValue) => string;
-  getRefValues?: (column: GridSchemaProp, text: string) => Promise<SelectValue[]>;
+  getRefValues?: (column: GridSchemaProp) => Promise<SelectValue[]>;
   onUpdate?: (row: TData, id: string, value: TValue) => void;
   onColumnUpdate?: (id: string, column: GridSchemaProp) => void;
   onColumnDelete?: (id: string) => void;
@@ -70,11 +68,12 @@ type CreateColumnsOptions<TData extends RowData, TValue> = {
 export const createColumns = <TData extends RowData>(
   schemas: GridSchema[],
   schema: GridSchema,
-  { getRefValue, getRefValues, onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
+  { getRefValues, onUpdate, onColumnUpdate, onColumnDelete }: CreateColumnsOptions<TData, any> = {},
 ): ColumnDef<TData>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return schema.props.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
+
     const options: BaseColumnOptions<TData, any> = stripUndefinedValues({
       ...props,
       meta: { resizable },
@@ -97,18 +96,9 @@ export const createColumns = <TData extends RowData>(
     switch (type) {
       // TODO(burdon): Get all values.
       case 'ref':
-        return getRefValue && getRefValues ? (
-          helper.accessor(
-            id,
-            builder.select({
-              ...options,
-              lookupValue: (value) => getRefValue(column, value),
-              lookupValues: (text: string) => getRefValues(column, text),
-            }),
-          )
-        ) : (
-          <div>xx</div>
-        );
+        return getRefValues
+          ? helper.accessor(id, builder.select({ ...options, lookupValues: () => getRefValues(column) }))
+          : null;
       case 'number':
         return helper.accessor(id, builder.number(options));
       case 'boolean':
@@ -151,10 +141,10 @@ export const createActionColumn = <TData extends RowData>(
         header: {
           className: 'p-0',
         },
-        cell: {
-          className: 'p-0 border-none',
-        },
         footer: {
+          className: 'p-0',
+        },
+        cell: {
           className: 'p-0',
         },
       },
@@ -170,12 +160,7 @@ export const createActionColumn = <TData extends RowData>(
     cell: onRowDelete
       ? (cell) =>
           isDeletable?.(cell.row.original) ? (
-            <Button
-              variant='ghost'
-              onClick={() => onRowDelete(cell.row.original)}
-              title='Delete row'
-              classNames='invisible group-hover:visible'
-            >
+            <Button variant='ghost' onClick={() => onRowDelete(cell.row.original)} title='Delete row'>
               <X className={getSize(4)} />
             </Button>
           ) : null

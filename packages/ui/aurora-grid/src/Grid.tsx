@@ -18,7 +18,6 @@ import {
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
-import { debounce } from '@dxos/async';
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
 import { defaultGridSlots, GridSlots } from './theme';
@@ -112,7 +111,7 @@ export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props
     debug,
   } = props;
 
-  // Selection.
+  // Update controlled selection.
   // https://tanstack.com/table/v8/docs/api/features/row-selection
   const [focus, setFocus] = useState<string>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -130,17 +129,13 @@ export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props
   }, [select, selected]);
 
   // Resizing.
-  // https://tanstack.com/table/v8/docs/api/features/column-sizing
-  const update = debounce(() => onColumnResize?.(table.getState().columnSizing), 200);
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
-      update();
+      onColumnResize?.(table.getState().columnSizing);
     }
   }, [columnSizingInfo]);
 
-  // Grouping.
-  // https://tanstack.com/table/v8/docs/api/features/grouping
   const [grouping, setGrouping] = useState<GroupingState>(props.grouping ?? []);
   useEffect(() => setGrouping(props.grouping ?? []), [props.grouping]);
 

@@ -24,7 +24,7 @@ export default {
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
-        <div className='flex w-80 m-8 bg-white'>
+        <div className='flex w-60 m-8 bg-white'>
           <Story />
         </div>
       </div>
@@ -60,10 +60,10 @@ export const TypeAhead = () => {
 
   return (
     <div className='flex flex-col w-full'>
-      <div className='ring'>
-        <Selector<Value>
+      <div className=''>
+        <Selector.Root<Value>
           placeholder={'Select...'}
-          values={matching}
+          items={matching}
           value={selected}
           adapter={(value) => value}
           onChange={setSelected}
