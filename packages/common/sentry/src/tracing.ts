@@ -19,7 +19,6 @@ const SENTRY_INITIALIZED = new Trigger();
 const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
 ctx.maxSafeDisposeCallbacks = 10_000;
 
-
 let tracingConfigured = false;
 
 export const configureTracing = () => {
@@ -58,7 +57,7 @@ export const finish = () => {
 };
 
 export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
-  if(!tracingConfigured) {
+  if (!tracingConfigured) {
     return;
   }
 
@@ -69,7 +68,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  // NOTE: Make sure `entry` is not captured in this closure to avoid a memory leak. 
+  // NOTE: Make sure `entry` is not captured in this closure to avoid a memory leak.
   scheduleMicroTask(ctx, async () => {
     await SENTRY_INITIALIZED.wait();
 
