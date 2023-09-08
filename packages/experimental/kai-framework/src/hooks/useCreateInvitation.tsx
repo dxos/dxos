@@ -53,7 +53,7 @@ export const useCreateInvitation = () => {
         },
       );
     } else {
-      void shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+      void shell.setLayout(ShellLayout.SPACE, { spaceKey: space.key });
     }
   };
 };

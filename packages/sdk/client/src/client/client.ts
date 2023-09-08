@@ -18,9 +18,10 @@ import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import { type SpaceList } from '../echo';
+import type { SpaceList } from '../echo';
 import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
+import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
 
@@ -52,6 +53,8 @@ export class Client {
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
+  // TODO(wittjosiah): Remove.
+  private _defaultKey!: string;
 
   private _initialized = false;
   private _statusStream?: Stream<QueryStatusResponse>;
@@ -148,6 +151,12 @@ export class Client {
     return this._runtime.mesh;
   }
 
+  get shell(): Shell {
+    invariant(this._runtime, 'Client not initialized.');
+    invariant(this._runtime.shell, 'Shell not available.');
+    return this._runtime.shell;
+  }
+
   /**
    * Get client diagnostics data.
    */
@@ -175,11 +184,14 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame } = await import('../services');
+    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
+      '../services'
+    );
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
+    await this._services.open(new Context());
 
     const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
@@ -192,6 +204,7 @@ export class Client {
       await defaultSpace.db.flush();
     };
 
+    this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -201,11 +214,20 @@ export class Client {
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
-    this._runtime = new ClientRuntime({ spaces, halo, mesh });
 
-    await this._services.open(new Context());
+    let shell: Shell | undefined;
+    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
+      invariant(this._services._shellManager, 'ShellManager is not available.');
+      shell = new Shell({
+        shellManager: this._services._shellManager,
+        identity: halo.identity,
+        devices: halo.devices,
+        spaces,
+      });
+    }
 
-    // TODO(burdon): Remove?
+    this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
+
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       const { mountDevtoolsHooks } = await import('../devtools');
