@@ -28,6 +28,7 @@ export type ProcessInfo = WatchDogParams & {
   pid: number;
   timestamp: number;
   restarts: number;
+  running?: boolean;
 };
 
 export type ConfigFiles = {

@@ -87,7 +87,7 @@ export class DaemonManager {
     await waitForLockRelease(lockFile);
   }
 
-  async list(): Promise<(ProcessInfo & { running: boolean })[]> {
+  async list(): Promise<ProcessInfo[]> {
     const uids = await readdir(join(this._rootPath, 'profile'));
     return Promise.all(
       uids.map(async (uid) => {
