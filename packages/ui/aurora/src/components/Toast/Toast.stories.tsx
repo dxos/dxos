@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React, { ReactNode, useState } from 'react';
+
+import '@dxosTheme';
 
 import { Button } from '../Buttons';
 import { Toast } from './Toast';
