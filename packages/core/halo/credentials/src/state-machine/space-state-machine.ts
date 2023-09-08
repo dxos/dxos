@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
+import { AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { CredentialProcessor } from '../processor/credential-processor';
@@ -36,7 +36,12 @@ export type ProcessOptions = {
 export type CredentialEntry = {
   credential: Credential;
   sourceFeed: PublicKey;
+  revoked: boolean;
 };
+
+const REVOKABLE_CREDENTIALS = [
+  'dxos.halo.credentials.SpaceMember',
+]
 
 /**
  * Validates and processes credentials for a single space.
@@ -47,6 +52,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: CredentialEntry[] = [];
+  private readonly _credentialsById = new ComplexMap<PublicKey, CredentialEntry>(PublicKey.hash);
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _genesisCredential: Credential | undefined;
@@ -142,6 +148,25 @@ export class SpaceStateMachine implements SpaceState {
 
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
+      case 'dxos.halo.credentials.Revocation': {
+        if (!this._canRevokeCredentials(credential.issuer)) {
+          log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
+          return false;
+        }
+        const toBeRevoked = this._credentialsById.get(credential.subject.id);
+        if(!toBeRevoked) {
+          log.warn(`Credential to revoke not found: ${credential.subject.id}`);
+          return false;
+        }
+        if(!this._credentialCanBeRevoked(toBeRevoked)) {
+          log.warn(`Credential cannot be revoked: ${credential.subject.id}`);
+        }
+
+        toBeRevoked.revoked = true;
+        await this._members.onRevoked(credential);
+
+        break;
+      }
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -194,8 +219,13 @@ export class SpaceStateMachine implements SpaceState {
       }
     }
 
-    // TODO(burdon): Await or void?
-    void this._credentials.push({ credential, sourceFeed });
+    const newEntry: CredentialEntry = { credential, sourceFeed, revoked: false };
+    this._credentials.push(newEntry);
+
+    // TODO(dmaretskyi): Invariant on every credential having an id?
+    if(credential.id) {
+      this._credentialsById.set(credential.id, newEntry);
+    }
 
     for (const processor of this._credentialProcessors) {
       if (processor._isReadyForLiveCredentials) {
@@ -214,6 +244,14 @@ export class SpaceStateMachine implements SpaceState {
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
     return role === SpaceMember.Role.MEMBER || role === SpaceMember.Role.ADMIN;
+  }
+
+  private _canRevokeCredentials(key: PublicKey): boolean {
+    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
+  }
+
+  private _credentialCanBeRevoked(entry: CredentialEntry) {
+    return REVOKABLE_CREDENTIALS.includes(entry.credential.subject.assertion);
   }
 }
 

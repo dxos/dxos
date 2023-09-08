@@ -14,6 +14,7 @@ export interface MemberInfo {
   key: PublicKey;
   credential: Credential;
   assertion: SpaceMember;
+  removed: boolean;
 }
 
 /**
@@ -61,6 +62,7 @@ export class MemberStateMachine {
       key: credential.subject.id,
       credential,
       assertion,
+      removed: false
     };
 
     // NOTE: Assumes the first member processed is the creator.
@@ -77,5 +79,15 @@ export class MemberStateMachine {
     });
 
     await this.onMemberAdmitted.callIfSet(info);
+  }
+
+  async onRevoked (credential: Credential) {
+    invariant(credential.id);
+    for(const member of this._members.values()) {
+      if(member.credential.id?.equals(credential.id)) {
+        member.removed = true;
+        break;
+      }
+    }
   }
 }
