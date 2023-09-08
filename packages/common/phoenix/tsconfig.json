@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/log-hook"
-    },
-    {
       "path": "../async"
     },
     {
