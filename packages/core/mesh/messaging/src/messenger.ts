@@ -5,6 +5,7 @@
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { TimeoutError as ProtocolTimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -26,6 +27,9 @@ export interface MessengerOptions {
 const ReliablePayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload');
 const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgement');
 
+const ERROR_LIMIT = 5;
+const NETWORK_REBOOT_DELAY = 3_000;
+
 /**
  * Reliable messenger that works trough signal network.
  */
@@ -46,6 +50,8 @@ export class Messenger {
   private _ctx!: Context;
   private _closed = true;
   private readonly _retryDelay: number;
+  private _errorCount = 0;
+  private _rebooting = false;
 
   constructor({ signalManager, retryDelay = 300 }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -114,10 +120,16 @@ export class Messenger {
 
     scheduleTask(
       messageContext,
-      () => {
+      async () => {
         log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
-        timeoutHit(new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'));
+        await this.errorLimitCheck();
+        timeoutHit(
+          new ProtocolTimeoutError(
+            'signaling message not delivered',
+            new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'),
+          ),
+        );
         void messageContext.dispose();
       },
       MESSAGE_TIMEOUT,
@@ -131,6 +143,33 @@ export class Messenger {
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
     return promise;
+  }
+
+  private async errorLimitCheck() {
+    log(`checking error limit ${this._errorCount}`);
+    if (this._errorCount++ > ERROR_LIMIT) {
+      await this.rebootNetwork();
+    }
+  }
+
+  private async rebootNetwork() {
+    if (this._rebooting) {
+      return;
+    }
+    this._rebooting = true;
+
+    log('rebooting Messenger/SignalManager');
+    await this.close();
+    await this._signalManager.close();
+    log('pausing');
+    await new Promise((resolve) => setTimeout(resolve, NETWORK_REBOOT_DELAY));
+    log('done pausing');
+    await this.open();
+    await this._signalManager.open();
+    log('done rebooting');
+
+    this._errorCount = 0;
+    this._rebooting = false;
   }
 
   /**

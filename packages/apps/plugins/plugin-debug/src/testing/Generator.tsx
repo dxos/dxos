@@ -58,7 +58,6 @@ export class Generator {
         const obj = new Expando({ name, website: this._faker!.internet.url() });
         console.log(obj);
         obj.meta.schema = org;
-        console.log('!!!', obj);
         return this._space.db.add(obj);
       },
     );
@@ -73,12 +72,12 @@ export class Generator {
           id: 'email',
           type: SchemaType.PropType.STRING,
         },
-        // {
-        //   id: 'org',
-        //   type: SchemaType.PropType.REF,
-        //   ref: org,
-        //   refProp: 'name',
-        // },
+        {
+          id: 'org',
+          type: SchemaType.PropType.REF,
+          ref: org,
+          refProp: 'name',
+        },
       ],
     });
 
@@ -93,7 +92,9 @@ export class Generator {
       const obj = new Expando({
         name,
         email: this._faker?.internet.email(),
-        org: this._faker!.helpers.arrayElement(organizations),
+        org: this._faker!.datatype.boolean({ probability: 0.3 })
+          ? this._faker!.helpers.arrayElement(organizations)
+          : undefined,
       });
       obj.meta.schema = person;
       return this._space.db.add(obj);

@@ -152,6 +152,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           'transition-opacity',
           (rearranging || isPreview) && 'opacity-0',
           migrating === 'into' && dropRing,
+          level === 0 ? 'mbs-4 first:mbs-0' : '',
         ]}
         {...draggableAttributes}
         {...draggableListeners}

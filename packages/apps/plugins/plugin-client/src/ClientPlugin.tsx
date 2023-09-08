@@ -18,9 +18,7 @@ import {
 } from '@dxos/react-client';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { ClientPluginProvides } from './types';
-
-const CLIENT_PLUGIN = 'dxos.org/plugin/client';
+import { CLIENT_PLUGIN, ClientPluginProvides } from './types';
 
 const handleInvalidatedInvitationCode = (code: string) => {
   const url = new URL(location.href);

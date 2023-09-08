@@ -5,7 +5,13 @@
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { CancelledError } from '@dxos/errors';
+import {
+  CancelledError,
+  ProtocolError,
+  ConnectionResetError,
+  ConnectivityError,
+  UnknownProtocolError,
+} from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -73,6 +79,9 @@ export enum ConnectionState {
    * Connection closed.
    */
   CLOSED = 'CLOSED',
+
+  ABORTING = 'ABORTING',
+  ABORTED = 'ABORTED',
 }
 
 /**
@@ -156,7 +165,7 @@ export class Connection {
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
-      this.close().catch((err) => this.errors.raise(err));
+      this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
     invariant(!this._transport);
@@ -179,13 +188,19 @@ export class Connection {
 
     this._transport.errors.handle((err) => {
       log('transport error:', { err });
-      // TODO(nf): collect a list of errors?
       if (!this.closeReason) {
         this.closeReason = err?.message;
       }
-      if (err?.message.includes('OperationError')) {
-        log('aborting due to transport OperationError');
+
+      // TODO(nf): fix ErrorStream so instanceof works here
+      if (err instanceof ConnectionResetError) {
+        log('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
+      } else if (err instanceof ConnectivityError) {
+        log('aborting due to transport ConnectivityError');
+        this.abort().catch((err) => this.errors.raise(err));
+      } else if (err instanceof UnknownProtocolError) {
+        log('unsure what to do for UnknownProtocolError', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -207,15 +222,15 @@ export class Connection {
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
   async abort(err?: Error) {
     log('aborting...', { err });
+    if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
+      log(`abort ignored: already ${this._state}`, this.closeReason);
+      return;
+    }
+
+    this._changeState(ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
     }
-    if (this._state === ConnectionState.CLOSED) {
-      log('abort ignored: already closed', this.closeReason);
-      return;
-    }
-    // TODO(nf): different state?
-    this._changeState(ConnectionState.CLOSING);
 
     await this._ctx.dispose();
 
@@ -234,8 +249,12 @@ export class Connection {
       log.catch(err);
     }
 
-    this._changeState(ConnectionState.CLOSED);
-    this._callbacks?.onClosed?.(err);
+    try {
+      this._callbacks?.onClosed?.(err);
+    } catch (err) {
+      log.catch(err);
+    }
+    this._changeState(ConnectionState.ABORTED);
   }
 
   @synchronized
@@ -243,27 +262,34 @@ export class Connection {
     if (!this.closeReason) {
       this.closeReason = err?.message;
     }
-    if (this._state === ConnectionState.CLOSED) {
+    if (
+      this._state === ConnectionState.CLOSED ||
+      this._state === ConnectionState.ABORTING ||
+      this._state === ConnectionState.ABORTED
+    ) {
       return;
     }
+    const lastState = this._state;
     this._changeState(ConnectionState.CLOSING);
 
     await this._ctx.dispose();
 
     log('closing...', { peerId: this.ownId });
 
-    try {
-      // Gracefully close the stream flushing any unsent data packets.
-      await this._protocol.close();
-    } catch (err: any) {
-      log.catch(err);
-    }
+    if (lastState === ConnectionState.CONNECTED) {
+      try {
+        // Gracefully close the stream flushing any unsent data packets.
+        await this._protocol.close();
+      } catch (err: any) {
+        log.catch(err);
+      }
 
-    try {
-      // After the transport is closed streams are disconnected.
-      await this._transport?.destroy();
-    } catch (err: any) {
-      log.catch(err);
+      try {
+        // After the transport is closed streams are disconnected.
+        await this._transport?.destroy();
+      } catch (err: any) {
+        log.catch(err);
+      }
     }
 
     log('closed', { peerId: this.ownId });
@@ -343,7 +369,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
-    log('stateChanged', { from: this._state, too: state, peerId: this.ownId });
+    log('stateChanged', { from: this._state, to: state, peerId: this.ownId });
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
