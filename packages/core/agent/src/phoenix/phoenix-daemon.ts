@@ -2,30 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import forever, { ForeverProcess } from 'forever';
-import fs, { mkdirSync } from 'node:fs';
-import path from 'node:path';
+import { DaemonManager, ProcessInfo as PhoenixProcess } from '@dxos/phoenix';
 
-import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
-import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-
-import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
-import { AgentWaitTimeoutError } from '../errors';
-import { lockFilePath, parseAddress, removeSocketFile } from '../util';
+import { Daemon, ProcessInfo } from '../daemon';
 
 /**
- * Manager of daemon processes started with Forever.
- * @deprecated because forever is unmaintained.
+ * Manager of daemon processes started with @dxos/phoenix.
  */
-export class ForeverDaemon implements Daemon {
-  constructor(private readonly _rootDir: string) {}
+export class PhoenixDaemon implements Daemon {
+  private readonly _phoenix: DaemonManager;
+  constructor(private readonly _rootDir: string) {
+    this._phoenix = new DaemonManager(this._rootDir);
+  }
 
   async connect(): Promise<void> {
-    forever.load({ root: path.join(this._rootDir, 'forever') });
+    // no-op.
   }
 
   async disconnect() {
@@ -33,24 +24,14 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    const { isLocked } = await import('@dxos/client-services');
-    return await isLocked(lockFilePath(profile));
+    return this._phoenix.isRunning(profile);
   }
 
   async list(): Promise<ProcessInfo[]> {
-    const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
-      forever.list(false, (err, processes) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        resolve(processes ?? []);
-      });
-    });
+    const result = await this._phoenix.list();
 
     return Promise.all(
-      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile }: ForeverProcess) => {
+      result.map(async ({ uid, pid, timestamd, running, restarts, logFile }: PhoenixProcess) => {
         return {
           profile: uid,
           pid: foreverPid,
