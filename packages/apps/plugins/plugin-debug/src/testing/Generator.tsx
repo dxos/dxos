@@ -27,7 +27,7 @@ export class Generator {
   }
 
   // TODO(burdon): Silent fail if try to set __foo property.
-  createTables(options = { organizations: 50, people: 200 }) {
+  createTables(options = { organizations: 50, projects: 20, people: 200 }) {
     // TODO(burdon): Get or create schema.
     const org = new SchemaType({
       props: [
@@ -55,9 +55,42 @@ export class Generator {
 
     const organizations = this._faker!.helpers.uniqueArray(faker.company.name, options.organizations).map(
       (name: string) => {
-        const obj = new Expando({ name, website: this._faker!.internet.url() });
-        console.log(obj);
+        const obj = new Expando({
+          name,
+          website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+        });
         obj.meta.schema = org;
+        return this._space.db.add(obj);
+      },
+    );
+
+    const project = new SchemaType({
+      props: [
+        {
+          id: 'name',
+          type: SchemaType.PropType.STRING,
+        },
+        {
+          id: 'repo',
+          type: SchemaType.PropType.STRING,
+        },
+      ],
+    });
+
+    this._space.db.add(
+      new TableType({
+        title: 'Projects',
+        schema: project,
+      }),
+    );
+
+    const projects = this._faker!.helpers.uniqueArray(faker.commerce.productName, options.projects).map(
+      (name: string) => {
+        const obj = new Expando({
+          name,
+          repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+        });
+        obj.meta.schema = project;
         return this._space.db.add(obj);
       },
     );
@@ -91,7 +124,7 @@ export class Generator {
     const people = this._faker!.helpers.uniqueArray(faker.person.fullName, options.people).map((name: string) => {
       const obj = new Expando({
         name,
-        email: this._faker?.internet.email(),
+        email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
         org: this._faker!.datatype.boolean({ probability: 0.3 })
           ? this._faker!.helpers.arrayElement(organizations)
           : undefined,
@@ -100,11 +133,11 @@ export class Generator {
       return this._space.db.add(obj);
     });
 
-    console.log('created', { organizations: organizations.length, people: people.length });
+    log('created objects', { organizations: organizations.length, projects: projects.length, people: people.length });
   }
 
   createObject({ type = DocumentType.type.name, createContent = false } = {}) {
-    log('update', { type });
+    log('creating object', { type });
     switch (type) {
       case DocumentType.type.name: {
         // TODO(burdon): Factor out generators.
