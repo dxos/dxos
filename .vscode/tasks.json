@@ -5,7 +5,7 @@
 			"label": "Watch & rebuild",
 			"group": "build",
 			"type": "shell",
-			"command": "pnpm -w",
+			"command": "pnpm -w watch",
 			"problemMatcher": []
 		}
 	]

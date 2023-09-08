@@ -3,6 +3,7 @@
 //
 
 import { inspect, InspectOptionsStylized } from 'node:util';
+import get from 'lodash.get';
 
 import { DocumentModel, MutationBuilder, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
@@ -113,7 +114,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   get meta(): ObjectMeta {
-    return this[base]._createProxy(this, undefined, true);
+    return this[base]._createProxy({}, undefined, true);
   }
 
   set meta(value: Partial<ObjectMeta>) {
@@ -283,6 +284,22 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     }
   }
 
+  private _properties(key?: string, meta?: boolean) {
+    const state = meta ? this._getState().meta : this._getState();
+
+    const value = key ? get(state, key) : state;
+
+    if (value instanceof OrderedArray) {
+      return []
+    } else if (value instanceof Reference) {
+      return []
+    } else if (typeof value === 'object' && value !== null) {
+      return Object.keys(value);
+    } else {
+      return [];
+    }
+  }
+
   /**
    * @internal
    */
@@ -354,8 +371,32 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
      */
     return new Proxy(object, {
-      ownKeys(target) {
-        return target._schemaType?.fields.map(({ name }: EchoSchemaField) => name) ?? [];
+      ownKeys: (target) => {
+        if (this._schemaType && !parent && !meta) {
+          return target._schemaType?.fields.map(({ name }: EchoSchemaField) => name) ?? [];
+        } else {
+          return this._properties(parent, meta)
+        }
+      },
+
+      has: (target, property) => {
+        if (!isValidKey(property)) {
+          if (!parent && !meta) {
+            return Reflect.has(this, property);
+          } else {
+            return Reflect.has(target, property);
+          }
+        }
+
+        if (typeof property === 'symbol') {
+          return false;
+        }
+
+        if (this._schemaType && !parent && !meta) {
+          return !!this._schemaType?.fields.find(({ name }: EchoSchemaField) => name == property);
+        } else {
+          return this._properties(parent, meta).includes(property)
+        }
       },
 
       /**
@@ -378,14 +419,18 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         }
 
         if (!isValidKey(property)) {
-          switch (property) {
-            case 'toJSON': {
-              return this.toJSON.bind(this);
-            }
+          if (!parent && !meta) {
+            switch (property) {
+              case 'toJSON': {
+                return this.toJSON.bind(this);
+              }
 
-            default: {
-              return Reflect.get(this, property, receiver);
+              default: {
+                return Reflect.get(this, property, receiver);
+              }
             }
+          } else {
+            return Reflect.get(target, property, receiver);
           }
         }
 
@@ -398,7 +443,11 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return false;
         }
         if (!isValidKey(property)) {
-          return Reflect.set(this, property, value, receiver);
+          if(!parent && !meta) {
+            return Reflect.set(this, property, value, receiver);
+          } else {
+            return Reflect.set(target, property, value, receiver);
+          }
         }
 
         this._set(getProperty(property as string), value, meta);
@@ -497,7 +546,7 @@ type ExpandoConstructor = {
    * Create a new document.
    * @param initialProps Initial properties.
    */
-  new (initialProps?: Record<string, any>): Expando;
+  new(initialProps?: Record<string, any>): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
