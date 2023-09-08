@@ -29,9 +29,9 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
         onChange={({ target: { value } }) => setGhUrlValue(value)}
         {...(ghUrlValue.length > 0 &&
           !ghId && {
-            validationValence: 'error',
-            validationMessage: t('error github markdown path message'),
-          })}
+          validationValence: 'error',
+          validationMessage: t('error github markdown path message'),
+        })}
       />
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>
@@ -39,10 +39,7 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                update(properties, 'meta', (meta) => ({
-                  ...meta,
-                  keys: [...(meta.keys ?? []), { source: 'com.github', id: ghId }],
-                }));
+                properties.meta.keys.push({ source: 'com.github', id: ghId });
               }
             }}
           >
