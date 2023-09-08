@@ -30,7 +30,7 @@ export const SpaceList = ({ current }: { current?: Space }) => {
   };
 
   const handleCreateList = useCallback(async () => {
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await space.db.add(new TodoList());
     navigate(`/${space.key.toHex()}`);
   }, [client, navigate]);

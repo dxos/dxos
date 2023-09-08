@@ -28,7 +28,7 @@ export const TaskList = () => {
     const code = searchParams.get('spaceInviteCode');
     if (code) {
       const receivedInvitation = InvitationEncoder.decode(code);
-      const subscription = client.acceptInvitation(receivedInvitation).subscribe((invitation) => {
+      const subscription = client.spaces.join(receivedInvitation).subscribe((invitation) => {
         if (invitation.state === Invitation.State.SUCCESS && invitation.spaceKey) {
           setSpaceKey(invitation.spaceKey);
           history.pushState(null, '', invitation.spaceKey.toHex());
@@ -75,7 +75,7 @@ export const TaskList = () => {
             return;
           }
 
-          const invitationObservable = space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+          const invitationObservable = space.share({ authMethod: Invitation.AuthMethod.NONE });
           const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
           // Get the current URL from the window
           const currentUrl = new URL(location.href);

@@ -26,7 +26,7 @@ const JoinIdentityPage = () => {
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
     [redirectUrl],
   );
-  const acceptInvitation = useCallback((invitation: Invitation) => client.halo.acceptInvitation(invitation), [client]);
+  const acceptInvitation = useCallback((invitation: Invitation) => client.halo.join(invitation), [client]);
 
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>

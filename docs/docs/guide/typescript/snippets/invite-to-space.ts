@@ -12,9 +12,9 @@ const client = new Client();
   // ensure an identity exists
   if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space
-  const space = await client.createSpace();
+  const space = await client.spaces.create();
   // create an invitation to join the space
-  const invitation = space.createInvitation();
+  const invitation = space.share();
   // share this code with a friend, it will be used to locate the peer and
   // establish a secure connection
   const code = InvitationEncoder.encode(invitation.get());

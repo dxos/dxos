@@ -14,7 +14,7 @@ test('generate test data', async () => {
 
   await client.initialize();
   await client.halo.createIdentity();
-  const space = await client.createSpace();
+  const space = await client.spaces.create();
 
   const generator = new Generator(space.db, {
     organizations: { min: 1, max: 1 },

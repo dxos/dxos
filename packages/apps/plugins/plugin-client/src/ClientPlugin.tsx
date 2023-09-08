@@ -99,7 +99,7 @@ export const ClientPlugin = (
         if (spaceInvitationCode) {
           setTimeout(() => {
             // TODO(burdon): Unsubscribe.
-            const observer = client.acceptInvitation(InvitationEncoder.decode(spaceInvitationCode));
+            const observer = client.spaces.join(InvitationEncoder.decode(spaceInvitationCode));
             observer.subscribe(({ state }) => {
               log.info('invitation', { state });
             });

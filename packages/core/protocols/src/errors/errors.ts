@@ -121,21 +121,21 @@ export class TimeoutError extends BaseError {
   }
 }
 
-// general protocol error
+// General protocol error
 export class ProtocolError extends BaseError {
   constructor(message?: string, context?: any) {
     super('PROTOCOL_ERROR', message, context);
   }
 }
 
-// general connectivity errors
+// General connectivity errors
 export class ConnectivityError extends BaseError {
   constructor(message?: string, context?: any) {
     super('CONNECTIVITY_ERROR', message, context);
   }
 }
 
-// TODO(nf): rename? the protocol isn't what's unknown...
+// TODO(nf): Rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError {
   constructor(message?: string, innerError?: Error) {
     super('UNKNOWN_PROTOCOL_ERROR', message, innerError);

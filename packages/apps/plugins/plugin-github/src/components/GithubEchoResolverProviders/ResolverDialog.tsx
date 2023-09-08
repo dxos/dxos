@@ -20,7 +20,7 @@ export const ResolverDialog = ({ clientPlugin }: { clientPlugin?: Plugin<ClientP
   };
 
   const handleCreateSpace = () => {
-    void clientPlugin?.provides.client.createSpace();
+    void clientPlugin?.provides.client.spaces.create();
   };
 
   return (

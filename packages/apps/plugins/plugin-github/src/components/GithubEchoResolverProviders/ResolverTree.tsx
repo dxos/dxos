@@ -74,7 +74,7 @@ export const ResolverTree = () => {
       <Button
         classNames='block is-full'
         onClick={async () => {
-          const space = await client.createSpace();
+          const space = await client.spaces.create();
           bindSpace(space, identityHex!, source!, id!);
           setSpace(space);
         }}

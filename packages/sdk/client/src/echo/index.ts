@@ -39,6 +39,6 @@ export { TextModel } from '@dxos/text-model';
 
 export { Properties, type PropertiesProps } from '../proto';
 
-export { EchoProxy, defaultKey } from './echo-proxy';
+export { SpaceList, defaultKey } from './space-list';
 export { SpaceProxy } from './space-proxy';
 export { createDefaultModelFactory } from './util';
