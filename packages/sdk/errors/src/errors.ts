@@ -67,3 +67,36 @@ export class InvalidInvitationExtensionRoleError extends SystemError {
     super('INVALID_INVITATION_EXTENSION_ROLE', message, context);
   }
 }
+
+export class ConnectionResetError extends BaseError {
+  constructor(message?: string, context?: any) {
+    super('ConnectionResetError', message, context);
+  }
+}
+
+export class TimeoutError extends BaseError {
+  constructor(message?: string, context?: any) {
+    super('TimeoutError', message, context);
+  }
+}
+
+// general protocol error
+export class ProtocolError extends BaseError {
+  constructor(message?: string, context?: any) {
+    super('ProtocolError: general protocol error', message, context);
+  }
+}
+
+// general connectivity errors
+export class ConnectivityError extends BaseError {
+  constructor(message?: string, context?: any) {
+    super('ConnectivityError', message, context);
+  }
+}
+
+// TODO(nf): rename? the protocol isn't what's unknown...
+export class UnknownProtocolError extends BaseError {
+  constructor(message?: string, innerError?: Error) {
+    super('UnknownProtocolError', message, innerError);
+  }
+}
