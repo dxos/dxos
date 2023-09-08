@@ -224,11 +224,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/fenix/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/hypercore/package.json",
           "jsonpath": "$.version"
         },
@@ -260,6 +255,11 @@
         {
           "type": "json",
           "path": "packages/common/node-std/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/phoenix/package.json",
           "jsonpath": "$.version"
         },
         {
