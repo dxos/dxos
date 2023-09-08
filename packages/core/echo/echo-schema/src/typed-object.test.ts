@@ -18,4 +18,10 @@ describe('TypedObject', () => {
     const obj = new Expando();
     expect(obj instanceof Expando).to.be.true;
   });
+
+  test('can assign meta', async () => {
+    const obj = new TypedObject();
+    obj.meta = { keys: [{ id: 'foo' }] }
+    expect(obj.meta).to.deep.equal({ keys: [{ id: 'foo' }] });
+  });
 });

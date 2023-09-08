@@ -116,6 +116,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]._createProxy(this, undefined, true);
   }
 
+  set meta(value: Partial<ObjectMeta>) {
+    this.setMeta(value);
+  }
+
   /**
    * Returns the schema type descriptor for the object.
    */
