@@ -15,6 +15,7 @@ export * from './message';
 export * from './popover';
 export * from './scroll-area';
 export * from './select';
+export * from './selector';
 export * from './separator';
 export * from './tag';
 export * from './toast';

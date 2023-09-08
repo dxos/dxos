@@ -3,6 +3,7 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
+import * as Portal from '@radix-ui/react-portal';
 import { useCombobox } from 'downshift';
 import React from 'react';
 
@@ -23,10 +24,12 @@ type SelectorProps = ThemedClassName<{
 }>;
 
 /**
- * Typeahead selector.
+ * Type-ahead selector.
  * https://www.downshift-js.com
  */
-// TODO(burdon): Break into Portal, etc (only way to override classes without slots)? Similarly, provide a simpler wrapped form of <Select />, etc.
+// TODO(burdon): Rename Combobox?
+// TODO(burdon): Break into Portal, etc (only way to override classes without slots)?
+//   Similarly, provide a simplified "no frills" wrapped form of <Select />, etc.
 const Selector = ({ classNames, placeholder, value, values, onChange, onInputChange }: SelectorProps) => {
   const { tx } = useThemeContext();
 
@@ -64,25 +67,27 @@ const Selector = ({ classNames, placeholder, value, values, onChange, onInputCha
         </Button>
       </div>
 
-      {/* TODO(burdon): radix portal? */}
-      <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
-        {isOpen
-          ? values?.map((value, index) => (
-              <li
-                key={value.id}
-                data-selected={selectedItem === value ? 'true' : undefined}
-                data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                {...getItemProps({
-                  index,
-                  item: value,
-                  className: tx('selector.item', 'selector__item', {}, classNames),
-                })}
-              >
-                {value.text ?? value.id}
-              </li>
-            ))
-          : null}
-      </ul>
+      <Portal.Root>
+        xxx
+        <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
+          {isOpen
+            ? values?.map((value, index) => (
+                <li
+                  key={value.id}
+                  data-selected={selectedItem === value ? 'true' : undefined}
+                  data-highlighted={highlightedIndex === index ? 'true' : undefined}
+                  {...getItemProps({
+                    index,
+                    item: value,
+                    className: tx('selector.item', 'selector__item', {}, classNames),
+                  })}
+                >
+                  {value.text ?? value.id}
+                </li>
+              ))
+            : null}
+        </ul>
+      </Portal.Root>
     </div>
   );
 };
