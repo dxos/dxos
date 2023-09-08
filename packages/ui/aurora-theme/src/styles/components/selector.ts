@@ -37,7 +37,7 @@ export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ isOpen 
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
   return mx(
-    'flex items-center px-2 py-2',
+    'flex shrink-0 items-center px-2 py-2',
     // TODO(burdon): Truncate doesn't work.
     'text-base leading-none select-none cursor-pointer truncate',
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',

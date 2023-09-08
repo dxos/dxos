@@ -58,13 +58,15 @@ export const TypeAhead = () => {
 
   return (
     <div className='flex flex-col w-full'>
-      <Selector
-        placeholder={'Select...'}
-        values={matching}
-        value={selected}
-        onChange={setSelected}
-        onInputChange={(text) => setText(text?.toLowerCase())}
-      />
+      <div className='ring'>
+        <Selector
+          placeholder={'Select...'}
+          values={matching}
+          value={selected}
+          onChange={setSelected}
+          onInputChange={(text) => setText(text?.toLowerCase())}
+        />
+      </div>
 
       <div className='mt-16 p-2 font-mono text-xs truncate'>{selected?.id}</div>
     </div>
