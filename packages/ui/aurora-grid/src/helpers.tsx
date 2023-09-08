@@ -10,7 +10,7 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useRef, useState } from 'react';
 
-import { Input, Selector, Tooltip } from '@dxos/aurora';
+import { Input, ComboBox, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -111,7 +111,7 @@ export class ColumnBuilder<TData extends RowData> {
         ? (cell) => {
             const [items, setItems] = useState<TData[]>([]);
             return (
-              <Selector.Root
+              <ComboBox.Root
                 adapter={(value) => ({
                   id: model.getId(value),
                   text: model.getText(value),
