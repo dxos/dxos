@@ -27,6 +27,7 @@ export default [
         'presence label': 'Members viewing this item',
         'object title placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
+        'shared spaces label': 'Shared Spaces',
       },
     },
   },
