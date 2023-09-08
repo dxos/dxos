@@ -24,7 +24,7 @@ export default {
   decorators: [
     (Story: any) => (
       <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
-        <div className='flex w-80 m-8 bg-white'>
+        <div className='flex w-40 m-8 bg-white'>
           <Story />
         </div>
       </div>

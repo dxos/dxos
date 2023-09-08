@@ -147,28 +147,32 @@ const SelectorContent = forwardRef<HTMLDivElement>(
       __scopeSelector,
     );
 
+    // if (!isOpen) {
+    //   return null;
+    // }
+
     return (
-      <PopperPrimitive.Content
-        data-state={isOpen}
-        role='dialog'
-        {...popperScope}
-        ref={forwardedRef}
-        style={
-          {
-            // re-namespace exposed content custom properties
-            ...{
-              '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
-              '--radix-selector-content-available-width': 'var(--radix-popper-available-width)',
-              '--radix-selector-content-available-height': 'var(--radix-popper-available-height)',
-              '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
-              '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
-            },
-          } as any // TODO(burdon): 'selector' values aren't accessible in theme but 'popper' are.
-        }
-      >
-        <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
-          {isOpen &&
-            items.map((item, index) => (
+      <div>
+        <PopperPrimitive.Content
+          data-state={isOpen}
+          role='dialog'
+          {...popperScope}
+          ref={forwardedRef}
+          style={
+            {
+              // re-namespace exposed content custom properties
+              ...{
+                '--radix-selector-content-transform-origin': 'var(--radix-popper-transform-origin)',
+                '--radix-selector-content-available-width': 'var(--radix-popper-available-width)',
+                '--radix-selector-content-available-height': 'var(--radix-popper-available-height)',
+                '--radix-selector-trigger-width': 'var(--radix-popper-anchor-width)',
+                '--radix-selector-trigger-height': 'var(--radix-popper-anchor-height)',
+              },
+            } as any // TODO(burdon): Why is this needed?
+          }
+        >
+          <ul {...getMenuProps()} className={tx('selector.content', 'selector__content', {}, classNames)}>
+            {items.map((item, index) => (
               <li
                 key={adapter(item).id}
                 data-selected={selectedItem === item ? 'true' : undefined}
@@ -182,8 +186,9 @@ const SelectorContent = forwardRef<HTMLDivElement>(
                 {adapter(item).text}
               </li>
             ))}
-        </ul>
-      </PopperPrimitive.Content>
+          </ul>
+        </PopperPrimitive.Content>
+      </div>
     );
   },
 );

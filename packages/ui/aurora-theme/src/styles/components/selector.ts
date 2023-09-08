@@ -25,11 +25,10 @@ export const selectorButton: ComponentFunction<SelectorStyleProps> = (_props, ..
 
 export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'z-[50]',
-    // TODO(burdon): Should be -selector-.
-    'w-[--radix-popper-anchor-width]',
-    // TODO(burdon): Height constraint isn't working.
-    'max-h-[--radix-popper-available-height] overflow-y-auto',
+    'z-[50] overview-hidden overflow-y-auto',
+    'w-[--radix-selector-trigger-width]',
+    // TODO(burdon): This is the display height (make shorter?)
+    'max-h-[--radix-selector-content-available-height]',
     chromeSurface,
     surfaceElevation({ elevation }),
     ...etc,
@@ -38,9 +37,8 @@ export const selectorContent: ComponentFunction<SelectorStyleProps> = ({ elevati
 
 export const selectorItem: ComponentFunction<SelectorStyleProps> = (_props, ...etc) => {
   return mx(
-    'flex shrink-0 items-center px-2 py-2',
-    // TODO(burdon): Truncate doesn't work.
-    'text-base leading-none select-none cursor-pointer truncate',
+    'inline p-2 truncate',
+    'text-base leading-none select-none cursor-pointer',
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
     // TODO(burdon): Factor out highlight.
     'data-[highlighted]:bg-neutral-75 dark:data-[highlighted]:bg-neutral-850',
