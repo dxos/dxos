@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
 
+import '@dxosTheme';
 import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { DensityProvider } from '../DensityProvider';
