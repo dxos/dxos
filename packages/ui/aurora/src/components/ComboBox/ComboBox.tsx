@@ -45,13 +45,12 @@ type ComboBoxRootProps = ThemedClassName<
 
 /**
  * Type-ahead combobox.
- * https://www.downshift-js.com
  */
 const ComboBoxRoot = ({
   __scopeComboBox,
   children,
   classNames,
-  items,
+  items = [],
   value,
   onChange,
   onInputChange,
@@ -62,7 +61,7 @@ const ComboBoxRoot = ({
   // TODO(burdon): Remove and implement natively?
   // https://www.downshift-js.com/use-combobox
   const comboProps = useCombobox<ComboBoxItem>({
-    items: items ?? [],
+    items,
     itemToString: (selectedItem) => selectedItem?.label ?? '',
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
     selectedItem: value,
@@ -70,11 +69,11 @@ const ComboBoxRoot = ({
   });
 
   return (
-    <PopperPrimitive.Root {...popperScope}>
-      <ComboBoxProvider scope={__scopeComboBox} items={items ?? []} {...comboProps}>
+    <ComboBoxProvider scope={__scopeComboBox} items={items} {...comboProps}>
+      <PopperPrimitive.Root {...popperScope}>
         <div className={tx('combobox.root', 'combobox__root', {}, classNames)}>{children}</div>
-      </ComboBoxProvider>
-    </PopperPrimitive.Root>
+      </PopperPrimitive.Root>
+    </ComboBoxProvider>
   );
 };
 
