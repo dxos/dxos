@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { batch } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -25,12 +27,20 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const state = deepSignal<TreeViewContextValue>({
     active: undefined,
+    previous: undefined,
     get activeNode() {
       if (!graphPlugin) {
         throw new Error('Graph plugin not found.');
       }
 
       return this.active && graphPlugin.provides.graph.find(this.active);
+    },
+    get previousNode() {
+      if (!graphPlugin) {
+        throw new Error('Graph plugin not found.');
+      }
+
+      return this.previous && graphPlugin.provides.graph.find(this.previous);
     },
     appState: undefined,
   }) as RevertDeepSignal<TreeViewContextValue>;
@@ -50,7 +60,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       const client = clientPlugin.provides.client;
 
       // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
-      const defaultSpace = client.getSpace() ?? client.spaces?.get()[0];
+      const defaultSpace =
+        client.getSpace() ?? client.spaces?.get().filter((space) => space.state.get() !== SpaceState.INACTIVE)[0];
       if (defaultSpace) {
         // Ensure defaultSpace has the app state persistor
         await defaultSpace.waitUntilReady();
@@ -131,7 +142,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           switch (intent.action) {
             case TreeViewAction.ACTIVATE: {
               if (intent.data && typeof intent.data.id === 'string') {
-                state.active = intent.data.id;
+                batch(() => {
+                  state.previous = state.active;
+                  state.active = intent.data.id;
+                });
                 return true;
               }
               break;

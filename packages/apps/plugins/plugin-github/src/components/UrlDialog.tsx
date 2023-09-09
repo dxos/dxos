@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import update from 'lodash.update';
 import React, { useState } from 'react';
 
 import { MarkdownProperties } from '@braneframe/plugin-markdown';
@@ -39,10 +38,7 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                update(properties, 'meta', (meta) => ({
-                  ...meta,
-                  keys: [...(meta.keys ?? []), { source: 'com.github', id: ghId }],
-                }));
+                properties.meta.keys.push({ source: 'com.github', id: ghId });
               }
             }}
           >

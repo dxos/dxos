@@ -21,7 +21,7 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: ThreadType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {

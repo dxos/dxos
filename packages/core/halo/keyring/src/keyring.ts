@@ -118,6 +118,7 @@ export class Keyring implements Signer {
     const file = this._storage.getOrCreateFile(publicKey.toHex());
     await file.write(0, arrayToBuffer(KeyRecord.encode(record)));
     await file.close();
+    await file.flush?.();
     this.keysUpdate.emit();
   }
 

@@ -45,7 +45,11 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
       });
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      next({ swarmEvent: swarmEvent.swarmEvent, receivedAt: new Date() });
+      next({
+        swarmEvent: swarmEvent.swarmEvent,
+        topic: swarmEvent.topic.asUint8Array(),
+        receivedAt: new Date(),
+      });
     });
     return () => {
       return ctx.dispose();

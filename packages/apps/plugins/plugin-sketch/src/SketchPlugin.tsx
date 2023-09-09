@@ -17,7 +17,7 @@ import { isSketch, SKETCH_PLUGIN, SketchPluginProvides, SketchAction } from './t
 import { objectToGraphNode } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const adapter = new GraphNodeAdapter(SketchType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: SketchType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {
@@ -40,7 +40,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             id: `${SKETCH_PLUGIN}:${space.key.toHex()}`,
             label: ['plugin name', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Folder {...props} />,
-            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
+            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject', persistenceClass: 'appState' },
           });
 
           presentationNode.addAction({

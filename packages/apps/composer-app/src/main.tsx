@@ -10,7 +10,6 @@ import { createRoot } from 'react-dom/client';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
@@ -27,6 +26,8 @@ import { TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginProvider } from '@dxos/react-surface';
 
+import { ProgressBar } from './components/ProgressBar/ProgressBar';
+
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
@@ -36,7 +37,11 @@ void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defa
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PluginProvider
-      fallback={<div className='flex justify-center mbs-16'>Initializing Plugins...</div>}
+      fallback={
+        <div className='flex h-screen justify-center items-center'>
+          <ProgressBar indeterminate />
+        </div>
+      }
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Composer' }),
@@ -49,12 +54,14 @@ createRoot(document.getElementById('root')!).render(
         GraphPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),
-        SplitViewPlugin(),
+        SplitViewPlugin({
+          showComplementarySidebar: false,
+        }),
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
-        FilesPlugin(),
+        // FilesPlugin(),
       ]}
     />
   </StrictMode>,

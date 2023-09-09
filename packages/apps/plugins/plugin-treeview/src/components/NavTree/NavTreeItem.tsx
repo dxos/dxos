@@ -111,6 +111,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const [open, setOpen] = useState(level < 1);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
+    const forceCollapse = isOverlay || isPreview || rearranging || disabled;
     const active = treeViewActive === node.id;
 
     useEffect(() => {
@@ -142,8 +143,8 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     return (
       <TreeItem.Root
         collapsible={isBranch}
-        open={!disabled && open}
-        onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
+        open={!forceCollapse && open}
+        onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
         classNames={[
           'rounded block',
           hoverableFocusedKeyboardControls,
@@ -151,6 +152,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           'transition-opacity',
           (rearranging || isPreview) && 'opacity-0',
           migrating === 'into' && dropRing,
+          level === 0 ? 'mbs-4 first:mbs-0' : '',
         ]}
         {...draggableAttributes}
         {...draggableListeners}
@@ -255,7 +257,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </Tooltip.Root>
           )}
         </HeadingWithActionsRoot>
-        {isBranch && (
+        {isBranch && !forceCollapse && (
           <TreeItem.Body>
             <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
           </TreeItem.Body>

@@ -5,7 +5,9 @@
 import { GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { Document } from '@braneframe/types';
 import { MarkdownComposerProps } from '@dxos/aurora-composer';
+import { ObjectMeta } from '@dxos/react-client/echo';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
@@ -18,13 +20,14 @@ export enum MarkdownAction {
 export type MarkdownProperties = {
   title: string;
   // TODO(burdon): Factor out (type system).
-  meta?: { keys?: { source?: string; id?: string }[] };
+  meta: ObjectMeta;
   readOnly?: boolean;
 };
 
 export type MarkdownProvides = {
   markdown: {
-    onChange: MarkdownComposerProps['onChange'];
+    onChange?: MarkdownComposerProps['onChange'];
+    filter?: (document: Document) => boolean;
   };
 };
 
