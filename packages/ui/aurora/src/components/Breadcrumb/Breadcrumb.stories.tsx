@@ -1,8 +1,10 @@
 //
 // Copyright 2023 DXOS.org
 //
-import '@dxosTheme';
+
 import React from 'react';
+
+import '@dxosTheme';
 
 import { Button } from '../Buttons';
 import { Breadcrumb } from './Breadcrumb';
