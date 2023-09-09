@@ -3,3 +3,5 @@
 //
 
 export * from './SearchPlugin';
+
+export * from './components';
