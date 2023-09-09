@@ -7,9 +7,16 @@ import React, { FC, useMemo, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Grid, createColumns, GridSchemaProp, createActionColumn, GridSchema, SelectValue } from '@dxos/aurora-grid';
+import {
+  Grid,
+  createColumns,
+  GridSchemaProp,
+  createActionColumn,
+  GridSchema,
+  SelectQueryModel,
+} from '@dxos/aurora-grid';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { Expando, TypedObject } from '@dxos/client/echo';
+import { Expando, EchoDatabase, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
@@ -47,6 +54,40 @@ const getSchemaType = (type?: GridSchemaProp['type']): SchemaType.PropType => {
   }
 };
 
+// TODO(burdon): Factor out.
+class QueryModel implements SelectQueryModel<TypedObject> {
+  constructor(private readonly _db: EchoDatabase, private readonly _schema: string, private readonly _prop: string) {}
+
+  getId(object: TypedObject) {
+    return object.id;
+  }
+
+  getText(object: TypedObject) {
+    return object[this._prop];
+  }
+
+  async query(text?: string) {
+    const { objects = [] } = this._db.query((object) => {
+      if (!text?.length) {
+        return null;
+      }
+
+      if (object.meta?.schema?.id !== this._schema) {
+        return false;
+      }
+
+      const label = this.getText(object);
+      if (!label || !label.toLowerCase().includes(text.toLowerCase())) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return objects;
+  }
+}
+
 const schemaPropMapper =
   (table: TableType) =>
   ({ id, type, label, digits, ref, refProp }: SchemaType.Prop): GridSchemaProp => ({
@@ -70,8 +111,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
-    // TODO(burdon): System meta property.
-    (object) => object.__meta?.schema?.id === table.schema.id,
+    (object) => object.meta?.schema?.id === table.schema.id,
     {}, // TODO(burdon): Toggle deleted.
     [table.schema],
   );
@@ -96,23 +136,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     }
 
     const columns = createColumns<TypedObject>(schemasDefs, schemaDef, {
-      getRefValues: async ({ ref, refProp }) => {
-        if (!ref || !refProp) {
-          return [];
-        }
-
-        const { objects } = space!.db.query((object) => object.__meta?.schema?.id === ref);
-        return objects
-          .map((object) => {
-            const label = (object as any)[refProp];
-            if (!label) {
-              return undefined;
-            }
-
-            return { id: object.id, value: object, label };
-          })
-          .filter(Boolean) as SelectValue[];
-      },
+      modelFactory: (type: string, prop: string) => new QueryModel(space!.db, type, prop),
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
@@ -136,10 +160,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         }
       },
       onUpdate: (object, prop, value) => {
+        console.log(object, prop, value);
         object[prop] = value;
         if (!object.id) {
-          // TODO(burdon): Silent invariant error if adding object directly (i.e., not Expando).
-          space!.db.add(new Expando(Object.assign(object, { __meta: { schema: table.schema } })));
+          // TODO(burdon): Add directly.
+          const obj = new Expando(object);
+          obj.meta.schema = table.schema;
+          // TODO(burdon): Silent exception if try to add plain object directly.
+          space!.db.add(obj);
         }
       },
     });
