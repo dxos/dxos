@@ -47,7 +47,6 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(({ placeh
 
 type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
 
-// TODO(burdon): Make same width as trigger?
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
@@ -105,6 +104,7 @@ type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
 
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  // TODO(burdon): Why 'option'?
   return <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef} />;
 });
 
