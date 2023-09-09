@@ -5,7 +5,7 @@
 import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { groupSurface, inputSurface, surfaceElevation } from '../fragments';
+import { inputSurface, surfaceElevation } from '../fragments';
 
 export type comboboxStyleProps = Partial<{
   elevation: Elevation;
@@ -29,7 +29,7 @@ export const comboboxContent: ComponentFunction<comboboxStyleProps> = ({ elevati
     'w-[--radix-combobox-trigger-width]',
     // TODO(burdon): This is the display height (make shorter?) Also scroll up if bottom of screen?
     'max-h-[--radix-combobox-content-available-height]',
-    groupSurface,
+    inputSurface,
     surfaceElevation({ elevation }),
     ...etc,
   );

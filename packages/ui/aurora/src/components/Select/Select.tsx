@@ -104,6 +104,7 @@ type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
 
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  // TODO(burdon): Why 'option'?
   return <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef} />;
 });
 

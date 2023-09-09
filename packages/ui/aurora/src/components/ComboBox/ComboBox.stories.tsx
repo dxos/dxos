@@ -6,12 +6,11 @@ import { faker } from '@faker-js/faker';
 import React, { useEffect, useState } from 'react';
 
 import '@dxosTheme';
-
-import { ComboBox } from './ComboBox';
+import { ComboBox, ComboBoxItem } from './ComboBox';
 
 type Item = { id: string; text: string };
 
-const items: Item[] = faker.helpers
+const data: Item[] = faker.helpers
   .uniqueArray(faker.definitions.animal.fish, 100)
   .sort()
   .map((text) => ({
@@ -41,8 +40,8 @@ export default {
 export const Default = {
   args: {
     placeholder: 'Select...',
+    items: data,
     onChange: (item: any) => console.log('onChange', item),
-    items,
   },
 };
 
@@ -50,29 +49,44 @@ export const Empty = {
   args: {},
 };
 
-export const TypeAhead = () => {
+// TODO(burdon): Test controlled and uncontrolled.
+
+export const ComboBoxStory = () => {
   const [text, setText] = useState<string>();
-  const [selected, setSelected] = useState<Item>();
-  const [matching, setMatching] = useState<Item[]>();
+  const [items, setItems] = useState<ComboBoxItem[]>([]);
+  const [selected, setSelected] = useState<ComboBoxItem>();
   useEffect(() => {
-    console.log({ text });
-    setMatching(
-      text?.length ? items.filter((item) => item.text?.length && item.text?.toLowerCase().includes(text)) : [],
-    );
+    setItems(() => {
+      if (!text?.length) {
+        return [];
+      }
+
+      const matching = data.filter((item) => item.text?.length && item.text?.toLowerCase().includes(text));
+      return matching.map((item) => ({ id: item.id, label: item.text, data: item }));
+    });
   }, [text]);
 
   return (
     <div className='flex flex-col w-full bg-neutral-100 dark:bg-neutral-800'>
-      <ComboBox.Root<Item>
-        placeholder={'Select...'}
-        items={matching}
-        value={selected}
-        adapter={(item) => ({ id: item.id, text: item.text })}
+      <ComboBox.Root
+        items={items}
+        // value={selected}
         onChange={setSelected}
         onInputChange={(text) => setText(text?.toLowerCase())}
-      />
+      >
+        <ComboBox.Input placeholder={'Select...'} />
+        <ComboBox.Content>
+          {items?.map((item) => (
+            <ComboBox.Item key={item.id} item={item}>
+              {item.label}
+            </ComboBox.Item>
+          ))}
+        </ComboBox.Content>
+      </ComboBox.Root>
 
-      <div className='mt-16 p-2 font-mono text-xs truncate'>{selected?.id ?? 'NULL'}</div>
+      <div className='mt-16 p-2 font-mono text-xs truncate'>
+        <div>{selected?.label}</div>
+      </div>
     </div>
   );
 };
