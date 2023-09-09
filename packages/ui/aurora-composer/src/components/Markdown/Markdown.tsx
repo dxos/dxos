@@ -54,15 +54,11 @@ import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];
 
-export type ComposerOptions = {
-  onChange?: (content: string | Text) => void;
-  editorMode?: EditorMode;
-};
-
 export type MarkdownComposerProps = {
   model?: ComposerModel;
   slots?: ComposerSlots;
-  options?: ComposerOptions;
+  editorMode?: EditorMode;
+  onChange?: (content: string | Text) => void;
 };
 
 export type MarkdownComposerRef = {
@@ -97,7 +93,7 @@ const shadeKeys = {
 };
 
 export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
-  ({ model, slots = {}, options: { onChange, editorMode } = {} }, forwardedRef) => {
+  ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });

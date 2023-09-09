@@ -13,7 +13,7 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
-import { ComposerModel, ComposerOptions, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
+import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -56,7 +56,7 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
-  const state = deepSignal<{ onChange: NonNullable<ComposerOptions['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
   const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
     current: { editor: null },
   };
@@ -71,7 +71,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
   }) => {
-    const onChange: NonNullable<ComposerOptions['onChange']> = useCallback(
+    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -81,7 +81,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         model={composer}
         properties={properties}
         layout='standalone'
-        options={{ onChange, editorMode: settings.values.editorMode }}
+        editorMode={settings.values.editorMode}
+        onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );
@@ -98,7 +99,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       text: data?.content,
     });
 
-    const onChange: NonNullable<ComposerOptions['onChange']> = useCallback(
+    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
     );
@@ -116,7 +117,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         model={textModel}
         properties={data}
         layout='standalone'
-        options={{ onChange, editorMode: settings.values.editorMode }}
+        editorMode={settings.values.editorMode}
+        onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );
