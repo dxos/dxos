@@ -4,14 +4,14 @@
 
 import React, { FC } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { levels, LogLevel } from '@dxos/log';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
 // Deliberately not using the common components export to aid in code-splitting.
 
 // TODO(dmaretskyi): Unify with Logging panel.
-const colors: { [index: number]: string } = {
+const colors: Record<number, string> = {
   [LogLevel.TRACE]: 'text-sky-500',
   [LogLevel.DEBUG]: 'text-green-500',
   [LogLevel.INFO]: 'text-blue-500',
@@ -23,7 +23,7 @@ const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 
 const logColumns = (() => {
   const { helper, builder } = createColumnBuilder<LogEntry>();
-  const columns: GridColumnDef<LogEntry, any>[] = [
+  const columns: TableColumnDef<LogEntry, any>[] = [
     helper.accessor('timestamp', builder.date()),
     helper.accessor(
       (entry) =>
@@ -43,5 +43,5 @@ const logColumns = (() => {
 })();
 
 export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Grid<LogEntry> columns={logColumns} data={logs} />;
+  return <Table<LogEntry> columns={logColumns} data={logs} />;
 };

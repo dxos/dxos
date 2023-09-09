@@ -10,9 +10,9 @@ import { Button, DensityProvider, Input, Popover, Select, useId } from '@dxos/au
 import { getSize, mx } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { GridSchema, GridSchemaProp } from './schema';
+import { TableSchema, TableSchemaProp } from './schema';
 
-const types = new Map<GridSchemaProp['type'], string>([
+const types = new Map<TableSchemaProp['type'], string>([
   ['string', 'Text'],
   ['boolean', 'Checkbox'],
   ['number', 'Number'],
@@ -22,10 +22,10 @@ const types = new Map<GridSchemaProp['type'], string>([
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
-  schemas: GridSchema[];
-  schema: GridSchema;
-  column: GridSchemaProp;
-  onUpdate?: (id: string, column: GridSchemaProp) => void;
+  schemas: TableSchema[];
+  schema: TableSchema;
+  column: TableSchemaProp;
+  onUpdate?: (id: string, column: TableSchemaProp) => void;
   onDelete?: (id: string) => void;
 };
 
@@ -80,7 +80,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
     onUpdate?.(column.id, {
       ...column,
       id: prop,
-      type: type as GridSchemaProp['type'],
+      type: type as TableSchemaProp['type'],
       label,
       digits: safeParseInt(digits),
       ref: refSchema,

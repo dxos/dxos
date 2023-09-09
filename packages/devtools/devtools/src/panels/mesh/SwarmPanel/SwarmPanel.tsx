@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import bytes from 'bytes';
 import React, { useMemo, useState } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -19,7 +19,7 @@ type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 
 // TODO(burdon): Add peers/connect/disconnect/error info.
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
-const columns: GridColumnDef<SwarmConnection, any>[] = [
+const columns: TableColumnDef<SwarmConnection, any>[] = [
   helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
   helper.accessor(
     'topic',
@@ -92,7 +92,7 @@ export const SwarmPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-hidden'>
-        <Grid<SwarmConnection>
+        <Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
