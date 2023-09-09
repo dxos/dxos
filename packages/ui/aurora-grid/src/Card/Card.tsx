@@ -53,8 +53,8 @@ export const Card: FC<CardProps> = ({ id, title, sections }) => {
       <div className='flex shrink-0 h-6 items-center'>
         <DotsSixVertical className={mx(getSize(5), 'cursor-pointer')} />
       </div>
-      <div className='flex flex-col grow gap-1'>
-        <div className='flex h-6 items-center'>{title}</div>
+      <div className='flex flex-col grow gap-1 overflow-hidden'>
+        <div className='flex h-6 items-center truncate'>{title}</div>
         {sections?.map((section, i) => (
           <div key={i} className='text-sm font-thin'>
             {section?.text}

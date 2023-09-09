@@ -3,12 +3,16 @@
 //
 
 import { DndContext, MouseSensor, useSensor } from '@dnd-kit/core';
+import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren } from 'react';
 
 import '@dxosTheme';
+
 import { DraggableCard } from './Card';
 import { Container } from './Container';
 import { createCard } from './testing';
+
+faker.seed(1);
 
 // TODO(burdon): Replace with plugin-dnd.
 const DnDContainer: FC<PropsWithChildren> = ({ children }) => {

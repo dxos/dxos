@@ -4,19 +4,10 @@
 
 import { faker } from '@faker-js/faker';
 
-import '@dxosTheme';
-
-faker.seed(1234);
-
 export const createCard = () => ({
   id: faker.string.uuid(),
   title: faker.lorem.sentence(),
-  sections: [
-    {
-      text: faker.lorem.sentences(),
-    },
-    {
-      text: faker.lorem.sentences(),
-    },
-  ],
+  sections: Array.from({ length: faker.number.int({ min: 0, max: 3 }) }).map(() => ({
+    text: faker.lorem.sentence(),
+  })),
 });
