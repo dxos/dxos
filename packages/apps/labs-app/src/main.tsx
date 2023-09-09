@@ -30,6 +30,15 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
+import {
+  auroraTheme,
+  bindTheme,
+  focusRing,
+  groupSurface,
+  mx,
+  popperMotion,
+  surfaceElevation,
+} from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { Config, Envs, Local } from '@dxos/config';
@@ -53,12 +62,32 @@ const main = async () => {
   // TODO(burdon): Normalize telemetry namespace.
   await initializeAppTelemetry({ namespace: 'labs.dxos.org', config: config! });
 
+  // TODO(burdon): Select (check)
+  // TODO(burdon): DND
+
+  // TODO(burdon): Custom theme (e.g., primary).
+  const labsTx = bindTheme({
+    ...auroraTheme,
+    popover: {
+      content: (_props, ...etc) =>
+        mx(
+          'z-[30] rounded-xl',
+          popperMotion,
+          // 'bg-orange-200',
+          groupSurface,
+          surfaceElevation({ elevation: 'group' }),
+          focusRing,
+          ...etc,
+        ),
+    },
+  });
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <PluginProvider
         plugins={[
           IntentPlugin(),
-          ThemePlugin({ appName: 'Labs' }),
+          ThemePlugin({ appName: 'Labs', tx: labsTx }),
           ClientPlugin({ config, services, debugIdentity: debug }),
           IntentPlugin(),
           DndPlugin(),

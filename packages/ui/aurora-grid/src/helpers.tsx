@@ -10,7 +10,7 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Input, Select, Tooltip } from '@dxos/aurora';
+import { ComboBox, ComboBoxItem, Input, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -41,7 +41,6 @@ export const createColumnBuilder = <TData extends RowData>() => ({
 /**
  * NOTE: Can use `meta` for custom properties.
  */
-// TODO(burdon): Add accessor options and spread.
 export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>> & {
   meta?: ColumnMeta<TData, TValue>;
   label?: string;
@@ -49,10 +48,15 @@ export type BaseColumnOptions<TData, TValue> = Partial<ColumnDef<TData, TValue>>
   onUpdate?: ValueUpdater<TData, TValue | undefined>;
 };
 
-export type SelectValue = { id: string; value?: any; label?: string };
+// TODO(burdon): Better abstraction?
+export type SelectQueryModel<TData extends RowData> = {
+  getId(object: TData): string;
+  getText(object: TData): string;
+  query(text?: string): Promise<TData[]>;
+};
 
 export type SelectColumnOptions<TData extends RowData> = BaseColumnOptions<TData, any> & {
-  lookupValues?: () => Promise<SelectValue[]>;
+  model: SelectQueryModel<TData>;
 };
 
 export type StringColumnOptions<TData extends RowData> = BaseColumnOptions<TData, string> & {};
@@ -90,6 +94,37 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
+const CellSelector = <TData extends RowData>({
+  model,
+  value: _value,
+  onUpdate,
+}: {
+  model: SelectQueryModel<TData>;
+  value: TData;
+  onUpdate: (value: TData) => void;
+}) => {
+  const [value, setValue] = useState<ComboBoxItem>();
+  useEffect(() => setValue(_value ? { id: model.getId(_value), label: model.getText(_value) } : undefined), [_value]);
+  const [items, setItems] = useState<ComboBoxItem[]>([]);
+  const handleUpdate = async (text?: string) => {
+    const items = await model.query(text);
+    setItems(items.map((item) => ({ id: model.getId(item), label: model.getText(item), data: item })));
+  };
+
+  return (
+    <ComboBox.Root items={items} value={value} onChange={(value) => onUpdate(value?.data)} onInputChange={handleUpdate}>
+      <ComboBox.Input />
+      <ComboBox.Content>
+        {items.map((item) => (
+          <ComboBox.Item key={item.id} item={item}>
+            {item.label}
+          </ComboBox.Item>
+        ))}
+      </ComboBox.Content>
+    </ComboBox.Root>
+  );
+};
+
 /**
  * Util to create column definitions.
  */
@@ -97,52 +132,23 @@ export class ColumnBuilder<TData extends RowData> {
   /**
    * Select value
    */
-  // TODO(burdon): Make values async.
-  select({ label, className, lookupValues, onUpdate, ...props }: SelectColumnOptions<TData> = {}): Partial<
-    ColumnDef<TData, any>
-  > {
+  select({ label, className, model, onUpdate, ...props }: SelectColumnOptions<TData>): Partial<ColumnDef<TData, any>> {
     return defaults(props, {
       minSize: 100,
       header: (column) => {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
       cell: onUpdate
-        ? (cell) => {
-            // TODO(burdon): Support type-ahead.
-            const [values, setValues] = useState<SelectValue[]>([]);
-            useEffect(() => {
-              setTimeout(async () => {
-                setValues((await lookupValues?.()) ?? []);
-              });
-            }, []);
-
-            return (
-              <Select.Root
-                value={cell.getValue()}
-                onValueChange={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
-              >
-                <Select.TriggerButton
-                  placeholder={cell.getValue()}
-                  variant='ghost'
-                  classNames='flex w-full justify-start p-0 [&>span:nth-child(1)]:grow [&>span:nth-child(1)]:text-left'
-                />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {values?.map(({ id, value, label }) => (
-                        <Select.Option key={id} value={value ?? id}>
-                          {label ?? String(value) ?? id}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            );
-          }
+        ? (cell) => (
+            <CellSelector<any>
+              model={model}
+              value={cell.getValue()}
+              onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+            />
+          )
         : (cell) => {
             const value = cell.getValue();
-            return <div className={mx('truncate', className)}>{value}</div>;
+            return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
           },
     });
   }
