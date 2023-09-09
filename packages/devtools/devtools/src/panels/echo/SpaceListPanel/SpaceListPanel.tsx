@@ -66,6 +66,8 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
+  console.log(spaces);
+
   return (
     <PanelContainer className='overflow-auto'>
       <Table<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
