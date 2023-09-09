@@ -93,7 +93,7 @@ export const DiagnosticsPanel = () => {
         )
       }
     >
-      {(false && <JsonView data={data} />) || <Tree data={data} />}
+      {(true && <JsonView data={data} />) || <Tree data={data} />}
     </PanelContainer>
   );
 };

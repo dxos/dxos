@@ -528,7 +528,7 @@ importers:
       '@braneframe/plugin-url-sync': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
-      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -576,7 +576,7 @@ importers:
       '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
-      '@dxos/aurora-grid': link:../../ui/aurora-grid
+      '@dxos/aurora-table': link:../../ui/aurora-table
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/protocols': link:../../core/protocols
@@ -1461,7 +1461,7 @@ importers:
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
-      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/keys': workspace:*
@@ -1482,7 +1482,7 @@ importers:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/types': link:../../types
-      '@dxos/aurora-grid': link:../../../ui/aurora-grid
+      '@dxos/aurora-table': link:../../../ui/aurora-table
       '@dxos/client': link:../../../sdk/client
       '@dxos/keys': link:../../../common/keys
       '@dxos/react-client': link:../../../sdk/react-client
@@ -3446,7 +3446,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
-      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -3505,7 +3505,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-grid': link:../../ui/aurora-grid
+      '@dxos/aurora-table': link:../../ui/aurora-table
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
@@ -5921,6 +5921,47 @@ importers:
       react-dom: 18.2.0_react@18.2.0
 
   packages/ui/aurora-grid:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/aurora-types': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chromatic: ^6.17.0
+      deepsignal: ^1.3.3
+      lodash.defaultsdeep: ^4.6.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    dependencies:
+      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/aurora-types': link:../aurora-types
+      '@dxos/invariant': link:../../common/invariant
+      '@dxos/keys': link:../../common/keys
+      '@dxos/util': link:../../common/util
+      lodash.defaultsdeep: 4.6.1
+    devDependencies:
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      chromatic: 6.17.0
+      deepsignal: 1.3.4_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
+
+  packages/ui/aurora-table:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*

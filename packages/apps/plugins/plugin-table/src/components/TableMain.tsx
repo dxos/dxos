@@ -8,13 +8,13 @@ import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
 import {
-  Grid,
   createColumns,
-  GridSchemaProp,
   createActionColumn,
-  GridSchema,
+  Table,
+  TableSchemaProp,
+  TableSchema,
   SelectQueryModel,
-} from '@dxos/aurora-grid';
+} from '@dxos/aurora-table';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, EchoDatabase, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -22,7 +22,7 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 const EMPTY_ROW_ID = '__new';
 
-const getPropType = (type?: SchemaType.PropType): GridSchemaProp['type'] => {
+const getPropType = (type?: SchemaType.PropType): TableSchemaProp['type'] => {
   switch (type) {
     case SchemaType.PropType.REF:
       return 'ref';
@@ -38,7 +38,7 @@ const getPropType = (type?: SchemaType.PropType): GridSchemaProp['type'] => {
   }
 };
 
-const getSchemaType = (type?: GridSchemaProp['type']): SchemaType.PropType => {
+const getSchemaType = (type?: TableSchemaProp['type']): SchemaType.PropType => {
   switch (type) {
     case 'ref':
       return SchemaType.PropType.REF;
@@ -90,7 +90,7 @@ class QueryModel implements SelectQueryModel<TypedObject> {
 
 const schemaPropMapper =
   (table: TableType) =>
-  ({ id, type, label, digits, ref, refProp }: SchemaType.Prop): GridSchemaProp => ({
+  ({ id, type, label, digits, ref, refProp }: SchemaType.Prop): TableSchemaProp => ({
     id: id!,
     type: getPropType(type),
     label,
@@ -124,7 +124,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     }
 
     // TODO(burdon): Map other tables.
-    const schemasDefs: GridSchema[] = tables.map((table) => ({
+    const schemasDefs: TableSchema[] = tables.map((table) => ({
       id: table.schema.id,
       name: table.schema.typename ?? table.title,
       props: table.schema.props.map(schemaPropMapper(table)),
@@ -202,7 +202,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <DensityProvider density='fine'>
         <div className='flex grow -ml-[1px] -mt-[1px] overflow-hidden'>
-          <Grid<TypedObject>
+          <Table<TypedObject>
             keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
             columns={columns}
             data={rows}
