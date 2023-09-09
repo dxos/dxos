@@ -43,7 +43,13 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} keyAccessor={row => row.id.toString()} />
+      <div className='flex grow overflow-hidden'>
+        <Grid<ConnectionInfo.StreamStats>
+          columns={columns}
+          data={connection.streams ?? []}
+          keyAccessor={(row) => row.id.toString()}
+        />
+      </div>
     </>
   );
 };
