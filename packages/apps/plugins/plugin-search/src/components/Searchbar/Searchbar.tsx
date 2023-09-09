@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 
 import { Button, Input, Toolbar, useTranslation } from '@dxos/aurora';
@@ -42,7 +42,7 @@ export const Searchbar: FC<SearchbarProps> = ({ onSearch }) => {
           }
         />
         <Button variant='ghost' onClick={handleClick}>
-          <MagnifyingGlass className={getSize(6)} />
+          <DotsThreeVertical className={getSize(5)} />
         </Button>
       </Input.Root>
     </Toolbar.Root>

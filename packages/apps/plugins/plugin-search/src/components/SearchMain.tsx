@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { File, List as ListIcon, GridFour as GridIcon } from '@phosphor-icons/react';
+import { File } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
-import { Button, ButtonGroup, DensityProvider, List, ListItem, ScrollArea, Toolbar } from '@dxos/aurora';
+import { List, ListItem, ScrollArea } from '@dxos/aurora';
 import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
 import { Card } from './Card';
@@ -30,34 +30,14 @@ export const SearchMain = <T extends {}>({ onSearch }: SearchMainProps<T>) => {
   };
 
   // TODO(burdon): Toolbar.
-  // TODO(burdon): Right sidebar: Search/Thread selector.
+  // TODO(burdon): Tabs: Right sidebar: Search/Thread selector.
   const list = false;
 
   return (
     <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
-      <div className='flex flex-col gap-1'>
-        <Selector />
-        <Searchbar onSearch={handleSearch} />
-      </div>
+      <Searchbar onSearch={handleSearch} />
       {(list && <ResultList results={results} />) || <ResultCards results={results} />}
     </div>
-  );
-};
-
-const Selector = () => {
-  return (
-    <DensityProvider density='fine'>
-      <Toolbar.Root>
-        <ButtonGroup>
-          <Button>
-            <ListIcon className={getSize(4)} />
-          </Button>
-          <Button>
-            <GridIcon className={getSize(4)} />
-          </Button>
-        </ButtonGroup>
-      </Toolbar.Root>
-    </DensityProvider>
   );
 };
 

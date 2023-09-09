@@ -7,6 +7,25 @@ import React, { FC } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 
+// TODO(burdon): Universal search.
+
+// Cards (grid/mosaic)
+// - Chat message
+// - Kanban/Note
+// - Search result
+
+// Layout
+// - Square/rectangular.
+// - Icon
+// - Title
+// - Body/sections
+// - Menu
+
+// Containers
+// - CardStack (column)
+// - CardGrid/Carousel
+// - Masonry
+
 // TODO(burdon): Compact table/form section.
 // TODO(burdon): Cards are used across search, kanban, threads, notes, etc.
 // TODO(burdon): Icon.
