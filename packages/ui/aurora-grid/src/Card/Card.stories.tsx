@@ -8,6 +8,7 @@ import React from 'react';
 import '@dxosTheme';
 
 import { Card } from './Card';
+import { createCard } from './testing';
 
 faker.seed(1234);
 
@@ -26,16 +27,5 @@ export default {
 };
 
 export const Default = {
-  args: {
-    id: '1',
-    title: 'Hello World',
-    sections: [
-      {
-        text: faker.lorem.sentences(),
-      },
-      {
-        text: faker.lorem.sentences(),
-      },
-    ],
-  },
+  args: createCard(),
 };

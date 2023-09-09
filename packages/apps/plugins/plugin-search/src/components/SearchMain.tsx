@@ -8,7 +8,6 @@ import React, { FC, useState } from 'react';
 import { List, ListItem, ScrollArea } from '@dxos/aurora';
 import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
-import { Card } from './Card';
 import { Searchbar } from './Searchbar';
 
 export type SearchResult<T = {}> = {
@@ -29,14 +28,10 @@ export const SearchMain = <T extends {}>({ onSearch }: SearchMainProps<T>) => {
     });
   };
 
-  // TODO(burdon): Toolbar.
-  // TODO(burdon): Tabs: Right sidebar: Search/Thread selector.
-  const list = false;
-
   return (
     <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
       <Searchbar onSearch={handleSearch} />
-      {(list && <ResultList results={results} />) || <ResultCards results={results} />}
+      <ResultList results={results} />
     </div>
   );
 };
@@ -54,24 +49,6 @@ const ResultList: FC<{ results: SearchResult[] }> = ({ results }) => {
               <ListItem.Heading classNames='truncate pbs-1.5 cursor-pointer'>{title}</ListItem.Heading>
               <ListItem.Endcap />
             </ListItem.Root>
-          ))}
-        </List>
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-    </ScrollArea.Root>
-  );
-};
-
-const ResultCards: FC<{ results: SearchResult[] }> = ({ results }) => {
-  return (
-    <ScrollArea.Root classNames='px-2'>
-      <ScrollArea.Viewport>
-        <List>
-          {results.map(({ id, title, document }) => (
-            // TODO(burdon): Map object types onto card sections.
-            <Card key={id} id={id} title={title} sections={[{ text: (document as any).content }]} />
           ))}
         </List>
       </ScrollArea.Viewport>

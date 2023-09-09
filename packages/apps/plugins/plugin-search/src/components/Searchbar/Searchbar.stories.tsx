@@ -10,7 +10,7 @@ import { groupSurface, mx } from '@dxos/aurora-theme';
 
 import { Searchbar } from './Searchbar';
 
-// TODO(burdon): Translation provider.
+// TODO(burdon): Translation provider for storybook.
 
 export default {
   component: Searchbar,

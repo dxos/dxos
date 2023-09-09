@@ -3,14 +3,12 @@
 //
 
 import {
-  defaultDropAnimationSideEffects,
   DndContext,
   DragCancelEvent,
   DragEndEvent,
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
-  DropAnimation,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -23,6 +21,7 @@ import React, { createContext, DependencyList, useContext, useEffect, useState }
 
 import { PluginDefinition, Surface } from '@dxos/react-surface';
 
+import { dropAnimations, OverlayDropAnimation } from './animation';
 import { DND_PLUGIN } from './types';
 
 export type DndPluginProvides = {
@@ -30,8 +29,6 @@ export type DndPluginProvides = {
 };
 
 const dragOverSubscriptions: ((event: DragOverEvent) => void)[] = [];
-
-type OverlayDropAnimation = 'around' | 'away' | 'into';
 
 export type DndPluginStoreValue = {
   overlayDropAnimation: OverlayDropAnimation;
@@ -42,19 +39,9 @@ const state = deepSignal<DndPluginStoreValue>({
   overlayDropAnimation: 'away',
 });
 
-const handleDragOver = (event: DragOverEvent) => {
-  dragOverSubscriptions.forEach((subscription) => subscription.call(this, event));
-};
-
-export const useDragOver = (callback: (event: DragOverEvent) => void, dependencies: DependencyList) => {
-  useEffect(() => {
-    dragOverSubscriptions.push(callback);
-    return () => {
-      const index = dragOverSubscriptions.indexOf(callback);
-      dragOverSubscriptions.splice(index, 1);
-    };
-  }, dependencies);
-};
+//
+// useDragStart
+//
 
 const dragStartSubscriptions: ((event: DragStartEvent) => void)[] = [];
 
@@ -71,6 +58,28 @@ export const useDragStart = (callback: (event: DragStartEvent) => void, dependen
     };
   }, dependencies);
 };
+
+//
+// useDragOver
+//
+
+const handleDragOver = (event: DragOverEvent) => {
+  dragOverSubscriptions.forEach((subscription) => subscription.call(this, event));
+};
+
+export const useDragOver = (callback: (event: DragOverEvent) => void, dependencies: DependencyList) => {
+  useEffect(() => {
+    dragOverSubscriptions.push(callback);
+    return () => {
+      const index = dragOverSubscriptions.indexOf(callback);
+      dragOverSubscriptions.splice(index, 1);
+    };
+  }, dependencies);
+};
+
+//
+// useDragEnd
+//
 
 const dragEndSubscriptions: ((event: DragEndEvent) => void)[] = [];
 
@@ -89,6 +98,10 @@ export const useDragEnd = (callback: (event: DragEndEvent) => void, dependencies
   }, dependencies);
 };
 
+//
+// useDragCancel
+//
+
 const dragCancelSubscriptions: ((event: DragCancelEvent) => void)[] = [];
 
 const handleDragCancel = (event: DragCancelEvent) => {
@@ -105,61 +118,9 @@ export const useDragCancel = (callback: (event: DragCancelEvent) => void, depend
   }, dependencies);
 };
 
-const dropAnimations: Record<OverlayDropAnimation, DropAnimation> = {
-  around: {
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: {
-        active: {
-          opacity: '0',
-        },
-      },
-    }),
-  },
-  away: {
-    duration: 180,
-    easing: 'ease-in',
-    keyframes: ({ transform: { initial } }) => [
-      {
-        opacity: 1,
-        transform: `translate(${initial.x}px, ${initial.y}px) scale(1, 1)`,
-      },
-      {
-        opacity: 0,
-        transform: `translate(${initial.x}px, ${initial.y}px) scale(1.33, 1.33)`,
-        transformOrigin: '',
-      },
-    ],
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: {
-        active: {
-          opacity: '1',
-        },
-      },
-    }),
-  },
-  into: {
-    duration: 180,
-    easing: 'ease-in',
-    keyframes: ({ transform: { initial } }) => [
-      {
-        opacity: 1,
-        transform: `translate(${initial.x}px, ${initial.y}px) scale(1, 1)`,
-      },
-      {
-        opacity: 0,
-        transform: `translate(${initial.x}px, ${initial.y}px) scale(0.66, 0.66)`,
-        transformOrigin: '',
-      },
-    ],
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: {
-        active: {
-          opacity: '1',
-        },
-      },
-    }),
-  },
-};
+//
+// useDnd
+//
 
 export const DndPluginContext = createContext<DndPluginStoreValue>({ overlayDropAnimation: 'away' });
 
@@ -188,13 +149,13 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
       context: ({ children }) => {
         const sensors = useSensors(
           useSensor(MouseSensor, {
-            // Require the mouse to move by 10 pixels before activating
+            // Require the mouse to move by 10 pixels before activating.
             activationConstraint: {
               distance: 10,
             },
           }),
           useSensor(TouchSensor, {
-            // Press delay of 200ms, with tolerance of 5px of movement
+            // Press delay of 200ms, with tolerance of 5px of movement.
             activationConstraint: {
               delay: 200,
               tolerance: 5,
@@ -207,11 +168,11 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
         return (
           <DndPluginContext.Provider value={state}>
             <DndContext
-              onDragOver={handleDragOver}
+              sensors={sensors}
               onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragCancel={handleDragCancel}
               onDragEnd={handleDragEnd}
-              sensors={sensors}
             >
               {children}
             </DndContext>

@@ -87,14 +87,6 @@ export const StackSectionsSortable: FC<{
     [sections, activeAddableObject],
   );
 
-  const handleRemove = useCallback(
-    (start: number) => {
-      sections.splice(start, 1);
-      setSectionModels(getSectionModels(sections));
-    },
-    [sections],
-  );
-
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
       const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
@@ -121,6 +113,14 @@ export const StackSectionsSortable: FC<{
       setOverIsMember(false);
     },
     [sections, overIsMember, activeAddableObject, sectionModels],
+  );
+
+  const handleRemove = useCallback(
+    (start: number) => {
+      sections.splice(start, 1);
+      setSectionModels(getSectionModels(sections));
+    },
+    [sections],
   );
 
   return (
