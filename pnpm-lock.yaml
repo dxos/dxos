@@ -528,7 +528,7 @@ importers:
       '@braneframe/plugin-url-sync': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
-      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -576,7 +576,7 @@ importers:
       '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
-      '@dxos/aurora-grid': link:../../ui/aurora-grid
+      '@dxos/aurora-table': link:../../ui/aurora-table
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/protocols': link:../../core/protocols
@@ -3446,7 +3446,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
-      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -3505,7 +3505,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-grid': link:../../ui/aurora-grid
+      '@dxos/aurora-table': link:../../ui/aurora-table
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
