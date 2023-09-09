@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';

@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';

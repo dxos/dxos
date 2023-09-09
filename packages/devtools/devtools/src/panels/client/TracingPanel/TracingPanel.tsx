@@ -5,7 +5,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { mx } from '@dxos/aurora-theme';
 import { Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';

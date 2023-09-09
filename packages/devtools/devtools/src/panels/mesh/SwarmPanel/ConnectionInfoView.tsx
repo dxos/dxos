@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
