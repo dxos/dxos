@@ -69,7 +69,7 @@ export const TaskList = () => {
   return (
     <div className='p-2'>
       <button
-        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
         onClick={async () => {
           if (!space) {
             return;
@@ -84,7 +84,7 @@ export const TaskList = () => {
           await navigator.clipboard.writeText(inviteUrl);
         }}
       >
-        Invite
+        Copy Invite URL
       </button>
       <div className='max-w-sm mx-auto'>
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
@@ -131,7 +131,7 @@ export const TaskList = () => {
                 </div>
                 {showDeleteTask === index && (
                   <button
-                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400'
+                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
                     onClick={(e) => {
                       e.stopPropagation();
                       space?.db.remove(task);
@@ -159,7 +159,7 @@ export const TaskList = () => {
             }}
           />
           <button
-            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
+            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
             onClick={handleNewTask}
           >
             Add Task
