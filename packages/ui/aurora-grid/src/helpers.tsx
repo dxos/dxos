@@ -138,19 +138,18 @@ export class ColumnBuilder<TData extends RowData> {
       header: (column) => {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
-      cell:
-        onUpdate && false
-          ? (cell) => (
-              <CellSelector<any>
-                model={model}
-                value={cell.getValue()}
-                onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
-              />
-            )
-          : (cell) => {
-              const value = cell.getValue();
-              return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
-            },
+      cell: onUpdate
+        ? (cell) => (
+            <CellSelector<any>
+              model={model}
+              value={cell.getValue()}
+              onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+            />
+          )
+        : (cell) => {
+            const value = cell.getValue();
+            return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
+          },
     });
   }
 
