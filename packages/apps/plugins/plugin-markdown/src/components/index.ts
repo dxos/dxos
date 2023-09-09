@@ -7,5 +7,7 @@ export * from './EditorMainEmbedded';
 export * from './EditorSection';
 export * from './MarkdownMain';
 export * from './MarkdownMainEmpty';
+export * from './MarkdownSettings';
 export * from './StandaloneLayout';
 export * from './SpaceMarkdownChooser';
+export * from './StandaloneMenu';
