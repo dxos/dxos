@@ -18,7 +18,7 @@
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora-grid": "workspace:*",
+    "@dxos/aurora-table": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",

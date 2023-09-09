@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/aurora-grid",
+  "name": "@dxos/aurora-table",
   "version": "0.1.57",
   "description": "Table component.",
   "homepage": "https://dxos.org",
@@ -25,6 +25,9 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "^9.12.0",
+    "@tanstack/react-table": "^8.9.3",
+    "date-fns": "^2.29.3",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

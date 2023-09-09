@@ -4,13 +4,13 @@
 
 import React, { useState } from 'react';
 
-import { Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { Table, TableColumnDef } from '@dxos/aurora-table';
 import { mx } from '@dxos/aurora-theme';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: GridColumnDef<T>[];
+  columns: TableColumnDef<T>[];
   data: T[];
   pinToBottom?: boolean;
   widths?: string[];
@@ -27,7 +27,7 @@ export const MasterDetailTable = <T extends {}>({
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className={mx('flex overflow-hidden', widths[0])}>
-        <Grid<T>
+        <Table<T>
           columns={columns}
           data={data}
           selected={selected}

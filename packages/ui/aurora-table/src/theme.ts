@@ -5,7 +5,7 @@
 import { chromeSurface } from '@dxos/aurora-theme';
 
 // TODO(burdon): Remove nested classNames? Add to theme?
-export type GridSlots = {
+export type TableSlots = {
   root?: {
     className?: string | string[];
   };
@@ -56,7 +56,7 @@ row: {
 // TODO(burdon): Integrate with aurora theme (direct dependency -- see aurora-composer, tailwind.ts).
 //  See Link.tsx const { tx } = useThemeContext();
 //  Reuse button fragments for hoverColors, selected, primary, etc.
-export const defaultGridSlots: GridSlots = {
+export const defaultTableSlots: TableSlots = {
   // TODO(burdon): head/body/table rows.
   header: { className: [chromeSurface, 'px-2 font-light select-none'] },
   footer: { className: [chromeSurface, 'px-2 font-light'] },

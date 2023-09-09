@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -28,7 +28,7 @@ type FeedInfo = {
 };
 
 const { helper, builder } = createColumnBuilder<FeedInfo>();
-const columns: GridColumnDef<FeedInfo, any>[] = [
+const columns: TableColumnDef<FeedInfo, any>[] = [
   helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('downloaded', {
     cell: (cell) => (
@@ -92,7 +92,7 @@ export const SpaceInfoPanel: FC = () => {
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
           <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <Grid<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
+          <Table<FeedInfo> columns={columns} data={updatedFeeds} onSelectedChange={handleSelect} />
         </div>
       )}
     </PanelContainer>
