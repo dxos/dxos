@@ -103,6 +103,7 @@ export const SplitView = (props: SplitViewProps) => {
         <Surface name='main' role='main' />
 
         {/* Global popovers. */}
+        {/* TODO(burdon): Doesn't allow client to control the popover. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'

@@ -35,6 +35,8 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
 
+const INITIAL_CONTENT = '# Welcome to Composer!\n\nComposer is a collaborative peer-to-peer application.';
+
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
 
@@ -141,9 +143,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const space = clientPlugin.provides.client.getSpace();
         // TODO(wittjosiah): Expand message & translate.
-        const document = space?.db.add(
-          new Document({ title: 'Getting Started', content: new Text('Welcome to Composer!') }),
-        );
+        const document = space?.db.add(new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }));
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.sendIntent({
             action: TreeViewAction.ACTIVATE,
