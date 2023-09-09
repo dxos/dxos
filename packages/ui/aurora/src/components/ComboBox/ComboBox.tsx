@@ -18,25 +18,26 @@ const COMBOBOX_NAME = 'ComboBox';
 
 type ScopedProps<P> = P & { __scopeComboBox?: Scope };
 
-type ValueAdapter<T> = (value: T) => { id: string; text: string };
+type ComboBoxItem = {
+  id: string;
+  label: string;
+  data?: any;
+};
 
-type ComboBoxContextValue<T> = {
-  items: T[];
-  adapter: ValueAdapter<T>;
-} & UseComboboxReturnValue<T>;
+type ComboBoxContextValue = {
+  items: ComboBoxItem[];
+} & UseComboboxReturnValue<ComboBoxItem>;
 
 const usePopperScope = createPopperScope();
 const [createComboBoxContext] = createContextScope(COMBOBOX_NAME, [createPopperScope]);
-const [ComboBoxProvider, useComboBoxContext] = createComboBoxContext<ComboBoxContextValue<any>>(COMBOBOX_NAME);
+const [ComboBoxProvider, useComboBoxContext] = createComboBoxContext<ComboBoxContextValue>(COMBOBOX_NAME);
 
-type ComboBoxRootProps<T> = ThemedClassName<
+type ComboBoxRootProps = ThemedClassName<
   ScopedProps<
     PropsWithChildren<{
-      placeholder?: string;
-      items?: T[];
-      value?: T;
-      adapter: ValueAdapter<T>;
-      onChange?: (value: T | undefined) => void;
+      items?: ComboBoxItem[];
+      value?: ComboBoxItem;
+      onChange?: (selected: ComboBoxItem | undefined) => void;
       onInputChange?: (text?: string) => void;
     }>
   >
@@ -44,50 +45,45 @@ type ComboBoxRootProps<T> = ThemedClassName<
 
 /**
  * Type-ahead combobox.
- * https://www.downshift-js.com
  */
-const ComboBoxRoot = <T,>({
+const ComboBoxRoot = ({
   __scopeComboBox,
   children,
   classNames,
-  placeholder,
-  items,
+  items = [],
   value,
-  adapter,
   onChange,
   onInputChange,
-}: ComboBoxRootProps<T>) => {
+}: ComboBoxRootProps) => {
   const { tx } = useThemeContext();
   const popperScope = usePopperScope(__scopeComboBox);
 
+  // TODO(burdon): Remove and implement natively?
   // https://www.downshift-js.com/use-combobox
-  const comboProps = useCombobox<T>({
-    items: items ?? [],
-    selectedItem: value ?? null,
-    itemToString: (selectedItem) => (selectedItem ? adapter(selectedItem).text : ''),
+  const comboProps = useCombobox<ComboBoxItem>({
+    items,
+    itemToString: (selectedItem) => selectedItem?.label ?? '',
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
+    selectedItem: value,
     onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem === null ? undefined : selectedItem),
   });
 
   return (
-    <PopperPrimitive.Root {...popperScope}>
-      <ComboBoxProvider scope={__scopeComboBox} adapter={adapter} items={items ?? []} {...comboProps}>
-        <div className={tx('combobox.root', 'combobox__root', {}, classNames)}>
-          <ComboBoxAnchor placeholder={placeholder} />
-          <ComboBoxContent />
-        </div>
-      </ComboBoxProvider>
-    </PopperPrimitive.Root>
+    <ComboBoxProvider scope={__scopeComboBox} items={items} {...comboProps}>
+      <PopperPrimitive.Root {...popperScope}>
+        <div className={tx('combobox.root', 'combobox__root', {}, classNames)}>{children}</div>
+      </PopperPrimitive.Root>
+    </ComboBoxProvider>
   );
 };
 
 //
-// Anchor
+// Input
 //
 
-const ANCHOR_NAME = 'ComboBoxAnchor';
+const INPUT_NAME = 'ComboBoxInput';
 
-type ComboBoxAnchorProps = ThemedClassName<
+type ComboBoxInputProps = ThemedClassName<
   ScopedProps<
     PropsWithChildren<{
       placeholder?: string;
@@ -95,15 +91,17 @@ type ComboBoxAnchorProps = ThemedClassName<
   >
 >;
 
-const ComboBoxAnchor = forwardRef<HTMLDivElement, ComboBoxAnchorProps>(
-  ({ __scopeComboBox, classNames, placeholder }: ComboBoxAnchorProps, forwardedRef) => {
+const ComboBoxInput = forwardRef<HTMLDivElement, ComboBoxInputProps>(
+  ({ __scopeComboBox, classNames, placeholder }: ComboBoxInputProps, forwardedRef) => {
     const { tx } = useThemeContext();
     const popperScope = usePopperScope(__scopeComboBox);
-    const { getInputProps, getToggleButtonProps, isOpen } = useComboBoxContext(ANCHOR_NAME, __scopeComboBox);
+    const { getInputProps, getToggleButtonProps, isOpen } = useComboBoxContext(INPUT_NAME, __scopeComboBox);
 
+    // TODO(burdon): Break out input and button.
     return (
       <PopperPrimitive.Anchor asChild {...popperScope} ref={forwardedRef}>
-        <div className='flex items-center gap-1'>
+        {/* TODO(burdon): Move class to theme. */}
+        <div role='none' className='flex items-center gap-1'>
           <Input.Root>
             <Input.TextInput
               {...getInputProps()}
@@ -118,7 +116,6 @@ const ComboBoxAnchor = forwardRef<HTMLDivElement, ComboBoxAnchorProps>(
             variant='ghost'
             classNames={tx('combobox.button', 'combobox__button', {}, classNames)}
           >
-            {/* TODO(burdon): SelectPrimitive.Icon? */}
             {(isOpen && <CaretUp />) || <CaretDown />}
           </Button>
         </div>
@@ -136,56 +133,69 @@ const CONTENT_NAME = 'ComboBoxContent';
 type ComboBoxContentProps = ThemedClassName<ScopedProps<PropsWithChildren<{}>>>;
 
 const ComboBoxContent = forwardRef<HTMLDivElement, ComboBoxContentProps>(
-  ({ __scopeComboBox, classNames }: ComboBoxContentProps, forwardedRef) => {
+  ({ __scopeComboBox, classNames, children }: ComboBoxContentProps, forwardedRef) => {
     const { tx } = useThemeContext();
     const popperScope = usePopperScope(__scopeComboBox);
-    const { adapter, items, getMenuProps, getItemProps, highlightedIndex, selectedItem, isOpen } = useComboBoxContext(
-      CONTENT_NAME,
-      __scopeComboBox,
-    );
-
-    if (!isOpen) {
-      return null;
-    }
+    const { getMenuProps, isOpen } = useComboBoxContext(CONTENT_NAME, __scopeComboBox);
 
     return (
-      <div>
-        <PopperPrimitive.Content
-          data-state={isOpen}
-          role='dialog'
-          {...popperScope}
-          ref={forwardedRef}
-          style={
-            {
-              // re-namespace exposed content custom properties
-              ...{
-                '--radix-combobox-content-transform-origin': 'var(--radix-popper-transform-origin)',
-                '--radix-combobox-content-available-width': 'var(--radix-popper-available-width)',
-                '--radix-combobox-content-available-height': 'var(--radix-popper-available-height)',
-                '--radix-combobox-trigger-width': 'var(--radix-popper-anchor-width)',
-                '--radix-combobox-trigger-height': 'var(--radix-popper-anchor-height)',
-              },
-            } as any // TODO(burdon): Why is this needed?
-          }
-        >
-          <ul {...getMenuProps()} className={tx('combobox.content', 'combobox__content', {}, classNames)}>
-            {items.map((item, index) => (
-              <li
-                key={adapter(item).id}
-                data-selected={selectedItem === item ? 'true' : undefined}
-                data-highlighted={highlightedIndex === index ? 'true' : undefined}
-                {...getItemProps({
-                  index,
-                  item,
-                  className: tx('combobox.item', 'combobox__item', {}, classNames),
-                })}
-              >
-                {adapter(item).text}
-              </li>
-            ))}
-          </ul>
-        </PopperPrimitive.Content>
-      </div>
+      <PopperPrimitive.Content
+        data-state={isOpen}
+        role='dialog'
+        {...popperScope}
+        ref={forwardedRef}
+        style={
+          {
+            // Re-namespace exposed content custom properties.
+            ...{
+              '--radix-combobox-content-transform-origin': 'var(--radix-popper-transform-origin)',
+              '--radix-combobox-content-available-width': 'var(--radix-popper-available-width)',
+              '--radix-combobox-content-available-height': 'var(--radix-popper-available-height)',
+              '--radix-combobox-trigger-width': 'var(--radix-popper-anchor-width)',
+              '--radix-combobox-trigger-height': 'var(--radix-popper-anchor-height)',
+            },
+          } as any // TODO(burdon): Why any?
+        }
+      >
+        <ul {...getMenuProps()} className={tx('combobox.content', 'combobox__content', {}, classNames)}>
+          {isOpen && children}
+        </ul>
+      </PopperPrimitive.Content>
+    );
+  },
+);
+
+//
+// Item
+//
+
+const ITEM_NAME = 'ComboBoxItem';
+
+type ComboBoxItemProps = ThemedClassName<
+  ScopedProps<
+    PropsWithChildren<{
+      item: ComboBoxItem;
+    }>
+  >
+>;
+
+const ComboBoxItem = forwardRef<HTMLLIElement, ComboBoxItemProps>(
+  ({ __scopeComboBox, classNames, children, item }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { getItemProps, items, selectedItem, highlightedIndex } = useComboBoxContext(ITEM_NAME, __scopeComboBox);
+
+    return (
+      <li
+        ref={forwardedRef}
+        data-selected={selectedItem?.id === item.id ? 'true' : undefined}
+        data-highlighted={
+          highlightedIndex !== undefined && items[highlightedIndex]?.id === item.id ? 'true' : undefined
+        }
+        className={tx('combobox.item', 'item', {}, classNames)}
+        {...getItemProps({ item })}
+      >
+        {children}
+      </li>
     );
   },
 );
@@ -193,8 +203,16 @@ const ComboBoxContent = forwardRef<HTMLDivElement, ComboBoxContentProps>(
 // prettier-ignore
 export const ComboBox = {
   Root: ComboBoxRoot,
-  Anchor: ComboBoxAnchor,
+  Input: ComboBoxInput,
   Content: ComboBoxContent,
+  Item: ComboBoxItem
 };
 
-export type { ComboBoxRootProps, ComboBoxAnchorProps, ComboBoxContentProps };
+// prettier-ignore
+export type {
+  ComboBoxItem,
+  ComboBoxRootProps,
+  ComboBoxInputProps,
+  ComboBoxContentProps,
+  ComboBoxItemProps
+};

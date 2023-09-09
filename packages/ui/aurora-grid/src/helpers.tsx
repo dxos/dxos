@@ -8,9 +8,9 @@ import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/re
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { Input, ComboBox, Tooltip } from '@dxos/aurora';
+import { ComboBox, ComboBoxItem, Input, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
@@ -94,6 +94,47 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
+const CellSelector = <TData extends RowData>({
+  model,
+  value: _value,
+  onUpdate,
+}: {
+  model: SelectQueryModel<TData>;
+  value: TData;
+  onUpdate: (value: TData) => void;
+}) => {
+  const [value, setValue] = useState<ComboBoxItem>();
+  useEffect(() => {
+    setValue({ id: model.getId(_value), label: model.getText(_value) });
+  }, [_value]);
+
+  const [items, setItems] = useState<ComboBoxItem[]>([]);
+  const handleUpdate = async (text?: string) => {
+    const items = await model.query(text);
+    setItems(items.map((item) => ({ id: model.getId(item), label: model.getText(item), data: item })));
+  };
+
+  return (
+    <ComboBox.Root
+      items={items}
+      value={value}
+      onChange={(value) => {
+        onUpdate(value?.data);
+      }}
+      onInputChange={handleUpdate}
+    >
+      <ComboBox.Input />
+      <ComboBox.Content>
+        {items.map((item) => (
+          <ComboBox.Item key={item.id} item={item}>
+            {item.label}
+          </ComboBox.Item>
+        ))}
+      </ComboBox.Content>
+    </ComboBox.Root>
+  );
+};
+
 /**
  * Util to create column definitions.
  */
@@ -108,25 +149,13 @@ export class ColumnBuilder<TData extends RowData> {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
       cell: onUpdate
-        ? (cell) => {
-            const [items, setItems] = useState<TData[]>([]);
-            return (
-              <ComboBox.Root
-                adapter={(value) => ({
-                  id: model.getId(value),
-                  text: model.getText(value),
-                })}
-                items={items}
-                value={cell.getValue()}
-                onChange={(value) => {
-                  onUpdate?.(cell.row.original, cell.column.id, value);
-                }}
-                onInputChange={async (text) => {
-                  setItems(await model.query(text));
-                }}
-              />
-            );
-          }
+        ? (cell) => (
+            <CellSelector<any>
+              model={model}
+              value={cell.getValue()}
+              onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+            />
+          )
         : (cell) => {
             const value = cell.getValue();
             return <div className={mx('truncate', className)}>{value}</div>;
