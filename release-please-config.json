@@ -109,6 +109,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-search/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },

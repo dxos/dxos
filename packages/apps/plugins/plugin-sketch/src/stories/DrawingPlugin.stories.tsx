@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
@@ -12,6 +11,7 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Sketch as SketchType } from '@braneframe/types';
 import { mx } from '@dxos/aurora-theme';
 import { PluginProvider, Surface } from '@dxos/react-surface';
+import '@dxosTheme';
 
 import { SketchPlugin } from '../SketchPlugin';
 
