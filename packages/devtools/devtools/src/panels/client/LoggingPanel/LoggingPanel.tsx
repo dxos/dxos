@@ -6,7 +6,7 @@ import { Trash } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
 import { levels, parseFilter } from '@dxos/log';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -30,7 +30,7 @@ const colors: { [index: number]: string } = {
 };
 
 const { helper, builder } = createColumnBuilder<LogEntry>();
-const columns: GridColumnDef<LogEntry, any>[] = [
+const columns: TableColumnDef<LogEntry, any>[] = [
   helper.accessor('timestamp', builder.date()),
   helper.accessor(
     (entry) =>

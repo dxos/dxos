@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { levels, LogLevel } from '@dxos/log';
 import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -23,7 +23,7 @@ const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 
 const logColumns = (() => {
   const { helper, builder } = createColumnBuilder<LogEntry>();
-  const columns: GridColumnDef<LogEntry, any>[] = [
+  const columns: TableColumnDef<LogEntry, any>[] = [
     helper.accessor('timestamp', builder.date()),
     helper.accessor(
       (entry) =>
@@ -43,5 +43,5 @@ const logColumns = (() => {
 })();
 
 export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Grid<LogEntry> columns={logColumns} data={logs} />;
+  return <Table<LogEntry> columns={logColumns} data={logs} />;
 };
