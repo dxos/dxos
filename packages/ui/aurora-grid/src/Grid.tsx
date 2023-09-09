@@ -442,8 +442,6 @@ const TableBody = <TData extends RowData>({
   return (
     <tbody>
       {rows.map((row) => {
-        console.log('ROW');
-
         return (
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}

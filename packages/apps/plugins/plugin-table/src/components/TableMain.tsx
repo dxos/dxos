@@ -67,7 +67,6 @@ class QueryModel implements SelectQueryModel<TypedObject> {
   }
 
   async query(text?: string) {
-    console.log('query', { text });
     const { objects = [] } = this._db.query((object) => {
       if (!text?.length) {
         return null;
