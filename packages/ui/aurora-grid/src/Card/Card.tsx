@@ -68,15 +68,23 @@ export const Card: FC<CardProps> = ({ id, title, sections }) => {
   );
 };
 
+// TODO(burdon): Wrapper node (e.g., https://docs.dndkit.com/api-documentation/draggable/drag-overlay#wrapper-nodes)
 export const DraggableCard: FC<CardProps> = ({ id, ...props }) => {
+  // https://docs.dndkit.com/api-documentation/draggable/usedraggable
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id });
   const style = {
     transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
   };
 
-  // TODO(burdon): Drag handle.
+  // TODO(burdon): Attach attributes to drag handle.
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={mx(isDragging && 'z-[100] ring')}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={mx(isDragging && 'z-20 relative ring ring-red-500')}
+    >
       <Card id={id} {...props} />
     </div>
   );

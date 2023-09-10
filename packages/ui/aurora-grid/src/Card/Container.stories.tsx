@@ -9,10 +9,10 @@ import React, { FC, PropsWithChildren } from 'react';
 import '@dxosTheme';
 
 import { DraggableCard } from './Card';
-import { Container } from './Container';
+import { Column } from './Container';
 import { createCard } from './testing';
 
-faker.seed(1);
+faker.seed(5);
 
 // TODO(burdon): Replace with plugin-dnd.
 const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
@@ -43,21 +43,28 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
+const Columns = () => {
+  return (
+    <div className='flex grow gap-4 m-8'>
+      <Column id={'a'}>
+        <DraggableCard {...createCard()} />
+        <DraggableCard {...createCard()} />
+        <DraggableCard {...createCard()} />
+      </Column>
+      <Column id={'b'}>
+        <DraggableCard {...createCard()} />
+      </Column>
+      <Column id={'c'}>
+        <DraggableCard {...createCard()} />
+      </Column>
+    </div>
+  );
+};
+
 const ContainerStory = () => {
   return (
     <DnDContainer>
-      <div className='flex grow grid grid-cols-2 grid-flow-col gap-8 m-8 ring'>
-        <Container id={'a'}>
-          <DraggableCard {...createCard()} />
-          <DraggableCard {...createCard()} />
-        </Container>
-        <Container id={'b'}>
-          <DraggableCard {...createCard()} />
-        </Container>
-        <Container id={'c'}>
-          <DraggableCard {...createCard()} />
-        </Container>
-      </div>
+      <Columns />
     </DnDContainer>
   );
 };

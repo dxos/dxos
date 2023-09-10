@@ -7,10 +7,13 @@ import React, { FC, PropsWithChildren } from 'react';
 
 import { groupSurface, mx } from '@dxos/aurora-theme';
 
-export const Container: FC<PropsWithChildren & { id: string }> = ({ id, children }) => {
-  const { setNodeRef } = useDroppable({ id });
+export const Column: FC<PropsWithChildren & { id: string }> = ({ id, children }) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div ref={setNodeRef} className={mx('flex flex-col shrink-0 overflow-hidden rounded gap-2', groupSurface)}>
+    <div
+      ref={setNodeRef}
+      className={mx(groupSurface, 'flex flex-col w-80 shrink-0 shadow rounded gap-2 z-10', isOver && 'ring')}
+    >
       {children}
     </div>
   );
