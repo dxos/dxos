@@ -18,16 +18,16 @@ faker.seed(1);
 const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   const sensors = useSensor(MouseSensor, {});
   const handleDragStart = (event: any) => {
-    console.log('start', event);
+    // console.log('start', event);
   };
   const handleDragOver = (event: any) => {
-    console.log('over', event);
+    // console.log('over', event);
   };
   const handleDragCancel = (event: any) => {
-    console.log('cancel', event);
+    // console.log('cancel', event);
   };
   const handleDragEnd = (event: any) => {
-    console.log('end', event);
+    // console.log('end', event);
   };
 
   return (
@@ -47,11 +47,14 @@ const ContainerStory = () => {
   return (
     <DnDContainer>
       <div className='flex grow grid grid-cols-2 grid-flow-col gap-8 m-8 ring'>
-        <Container>
+        <Container id={'a'}>
           <DraggableCard {...createCard()} />
           <DraggableCard {...createCard()} />
         </Container>
-        <Container>
+        <Container id={'b'}>
+          <DraggableCard {...createCard()} />
+        </Container>
+        <Container id={'c'}>
           <DraggableCard {...createCard()} />
         </Container>
       </div>

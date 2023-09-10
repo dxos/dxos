@@ -71,20 +71,12 @@ export const Card: FC<CardProps> = ({ id, title, sections }) => {
 export const DraggableCard: FC<CardProps> = ({ id, ...props }) => {
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id });
   const style = {
-    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
   };
-
-  console.log(style);
 
   // TODO(burdon): Drag handle.
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={mx(isDragging && 'z-[100] ring')} // TODO(burdon): Z?
-    >
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={mx(isDragging && 'z-[100] ring')}>
       <Card id={id} {...props} />
     </div>
   );
