@@ -8,9 +8,9 @@ import React, { FC, PropsWithChildren } from 'react';
 
 import '@dxosTheme';
 
-import { DraggableCard } from './Card';
+import { Card, DraggableCard } from './Card';
 import { Column } from './Container';
-import { createCard } from './testing';
+import { generators } from './testing';
 
 faker.seed(5);
 
@@ -45,17 +45,31 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
 
 const Columns = () => {
   return (
-    <div className='flex grow gap-4 m-8'>
+    <div className='flex grow gap-8 overflow-hidden'>
       <Column id={'a'}>
-        <DraggableCard {...createCard()} />
-        <DraggableCard {...createCard()} />
-        <DraggableCard {...createCard()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.image()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.image()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.document()} />
       </Column>
       <Column id={'b'}>
-        <DraggableCard {...createCard()} />
+        <DraggableCard {...generators.document()} />
+        <DraggableCard {...generators.image()} />
+        <DraggableCard {...generators.contact()} />
+        <DraggableCard {...generators.message()} />
       </Column>
       <Column id={'c'}>
-        <DraggableCard {...createCard()} />
+        <Card {...generators.document()} />
+        <Card {...generators.message()} />
+        <Card {...generators.message()} />
+        <Card {...generators.message()} />
+        <Card {...generators.message()} />
+        <Card {...generators.message()} />
       </Column>
     </div>
   );

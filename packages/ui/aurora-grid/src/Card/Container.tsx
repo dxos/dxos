@@ -5,16 +5,23 @@
 import { useDroppable } from '@dnd-kit/core';
 import React, { FC, PropsWithChildren } from 'react';
 
-import { groupSurface, mx } from '@dxos/aurora-theme';
+import { ScrollArea } from '@dxos/aurora';
+import { groupSurface } from '@dxos/aurora-theme';
 
+// TODO(burdon): Scroll-x
 export const Column: FC<PropsWithChildren & { id: string }> = ({ id, children }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div
-      ref={setNodeRef}
-      className={mx(groupSurface, 'flex flex-col w-80 shrink-0 shadow rounded gap-2 z-10', isOver && 'ring')}
-    >
-      {children}
-    </div>
+    <ScrollArea.Root>
+      <ScrollArea.Viewport
+        ref={setNodeRef}
+        classNames={[groupSurface, 'flex shrink-0 w-80', 'shadow rounded', isOver && 'ring']}
+      >
+        <div className='flex flex-col gap-2 p-2'>{children}</div>
+      </ScrollArea.Viewport>
+      <ScrollArea.Scrollbar orientation='vertical'>
+        <ScrollArea.Thumb />
+      </ScrollArea.Scrollbar>
+    </ScrollArea.Root>
   );
 };
