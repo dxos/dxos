@@ -163,7 +163,7 @@ export class SpaceStateMachine implements SpaceState {
         }
 
         toBeRevoked.revoked = true;
-        await this._members.onRevoked(credential);
+        await this._members.onRevoked(toBeRevoked.credential, credential);
 
         break;
       }
@@ -252,7 +252,7 @@ export class SpaceStateMachine implements SpaceState {
 
   private _credentialCanBeRevoked(entry: CredentialEntry) {
     // TODO(dmaretskyi): Prohibit from removing space's creator member credential.
-    return REVOKABLE_CREDENTIALS.includes(entry.credential.subject.assertion);
+    return REVOKABLE_CREDENTIALS.includes(entry.credential.subject.assertion['@type']);
   }
 }
 

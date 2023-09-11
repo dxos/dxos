@@ -81,10 +81,10 @@ export class MemberStateMachine {
     await this.onMemberAdmitted.callIfSet(info);
   }
 
-  async onRevoked (credential: Credential) {
-    invariant(credential.id);
+  async onRevoked (revoked: Credential, revocation: Credential) {
+    invariant(revoked.id);
     for(const member of this._members.values()) {
-      if(member.credential.id?.equals(credential.id)) {
+      if(member.credential.id?.equals(revoked.id)) {
         member.removed = true;
         break;
       }
