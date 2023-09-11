@@ -17,7 +17,7 @@ import { isObject, CHESS_PLUGIN, ChessAction, ChessPluginProvides } from './type
 import { objectToGraphNode } from './util';
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
-  const adapter = new GraphNodeAdapter(Game.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: Game.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {

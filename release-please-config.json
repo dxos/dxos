@@ -79,11 +79,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-grid/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-intent/package.json",
           "jsonpath": "$.version"
         },
@@ -95,6 +90,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-map/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -125,6 +125,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -630,6 +635,11 @@
         {
           "type": "json",
           "path": "packages/ui/aurora-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-table/package.json",
           "jsonpath": "$.version"
         },
         {

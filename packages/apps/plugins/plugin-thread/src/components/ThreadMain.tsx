@@ -2,18 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CaretDoubleRight } from '@phosphor-icons/react';
 import differenceInSeconds from 'date-fns/differenceInSeconds';
 import React, { FC, useEffect, useState } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
+import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
+import { THREAD_PLUGIN } from '../types';
 import { ThreadChannel } from './ThreadChannel';
 
 // TODO(burdon): Goals.
@@ -55,16 +58,19 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
 };
 
 export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
-  const identity = useIdentity()!; // TODO(burdon): Requires context for storybook? No profile in personal space?
+  // TODO(burdon): Requires context for storybook? No profile in personal space?
+  const identity = useIdentity();
   const members = useMembers(space.key);
-  const identityKey = identity!.identityKey;
+  if (!identity || !members) {
+    return null;
+  }
 
   const getBlockProperties = (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
       : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
     return {
-      displayName: author.profile?.displayName ?? author.identityKey.toHex(),
+      displayName: author.profile?.displayName ?? generateName(identityKey.toHex()),
       classes: colorHash(author.identityKey),
     };
   };
@@ -79,7 +85,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
     // Update current block if same user and time > 3m.
     const period = 3 * 60; // TODO(burdon): Config.
     const block = thread.blocks[thread.blocks.length - 1];
-    if (block?.identityKey && PublicKey.equals(block.identityKey, identityKey)) {
+    if (block?.identityKey && PublicKey.equals(block.identityKey, identity.identityKey)) {
       const previous = block.messages[block.messages.length - 1];
       if (
         previous.timestamp &&
@@ -92,7 +98,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
 
     thread.blocks.push(
       new ThreadType.Block({
-        identityKey: identityKey.toHex(),
+        identityKey: identity.identityKey.toHex(),
         messages: [message],
       }),
     );
@@ -103,7 +109,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
 
   return (
     <ThreadChannel
-      identityKey={identityKey}
+      identityKey={identity.identityKey}
       thread={thread}
       getBlockProperties={getBlockProperties}
       onAddMessage={handleAddMessage}
@@ -115,6 +121,8 @@ export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
   const [thread, setThread] = useState<ThreadType | null>(object);
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+  const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
+  const { t } = useTranslation('os');
   const space = spacePlugin?.provides.space.active;
   useEffect(() => {
     if (space) {
@@ -130,5 +138,28 @@ export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
     return null;
   }
 
-  return <ThreadContainer space={space} thread={thread} />;
+  return (
+    <div role='none' className='flex flex-col align-start is-full bs-full'>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <Button
+            variant='ghost'
+            classNames='shrink-0 is-10 lg:hidden pli-2 pointer-fine:pli-1'
+            {...(!complementarySidebarOpen && { tabIndex: -1 })}
+            onClick={closeComplementarySidebar}
+          >
+            <span className='sr-only'>{t('close sidebar label')}</span>
+            <CaretDoubleRight className={getSize(4)} />
+          </Button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content classNames='z-[70]'>
+            {t('close sidebar label', { ns: 'os' })}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+      <ThreadContainer space={space} thread={thread} />
+    </div>
+  );
 };

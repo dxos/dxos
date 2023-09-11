@@ -17,7 +17,7 @@ import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides } from './t
 import { objectToGraphNode } from './util';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: KanbanType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {

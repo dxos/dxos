@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
@@ -13,13 +13,13 @@ import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState, useCredentials } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<Credential>();
-const columns: GridColumnDef<Credential, any>[] = [
+const columns: TableColumnDef<Credential, any>[] = [
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  helper.accessor('id', builder.createKey({ tooltip: true })),
-  helper.accessor('issuer', builder.createKey({ tooltip: true })),
+  helper.accessor('id', builder.key({ tooltip: true })),
+  helper.accessor('issuer', builder.key({ tooltip: true })),
   helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type', size: 240 }),
-  helper.accessor('issuanceDate', builder.createDate({ header: 'issued' })),
+  helper.accessor('issuanceDate', builder.date({ header: 'issued' })),
 ];
 
 export const CredentialsPanel = () => {

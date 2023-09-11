@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Grid, GridColumnDef, createColumnBuilder } from '@dxos/aurora-grid';
+import { Table, TableColumnDef, createColumnBuilder } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 
@@ -33,12 +33,12 @@ export const SpaceListPanel: FC = () => {
 
   // TODO(burdon): Get builder from hook.
   const { helper, builder } = createColumnBuilder<Space>();
-  const columns: GridColumnDef<Space, any>[] = [
-    helper.accessor('key', builder.createKey({ tooltip: true })),
+  const columns: TableColumnDef<Space, any>[] = [
+    helper.accessor('key', builder.key({ tooltip: true })),
     helper.accessor((space) => space.properties.name, { id: 'name' }),
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
-      ...builder.createNumber(),
+      ...builder.number(),
     }),
     helper.accessor(
       (space) => {
@@ -47,10 +47,10 @@ export const SpaceListPanel: FC = () => {
       },
       {
         id: 'startup',
-        ...builder.createNumber({ size: 80 }),
+        ...builder.number({ size: 80 }),
       },
     ),
-    helper.accessor('isOpen', { header: 'open', ...builder.createIcon() }),
+    helper.accessor('isOpen', { header: 'open', ...builder.icon() }),
     helper.display({
       id: 'open',
       cell: (context) => (
@@ -66,9 +66,11 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
+  console.log(spaces);
+
   return (
     <PanelContainer className='overflow-auto'>
-      <Grid<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
+      <Table<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
     </PanelContainer>
   );
 };

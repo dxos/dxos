@@ -52,7 +52,7 @@ export const ThreadChannel: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 lg:m-auto',
+        'grow flex flex-col w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 md:m-auto',
         groupSurface,
       )}
     >

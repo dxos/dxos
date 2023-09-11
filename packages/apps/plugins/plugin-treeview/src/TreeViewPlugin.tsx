@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { batch } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
+import { AppState } from '@braneframe/types';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -23,6 +27,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const state = deepSignal<TreeViewContextValue>({
     active: undefined,
+    previous: undefined,
     get activeNode() {
       if (!graphPlugin) {
         throw new Error('Graph plugin not found.');
@@ -30,6 +35,14 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
       return this.active && graphPlugin.provides.graph.find(this.active);
     },
+    get previousNode() {
+      if (!graphPlugin) {
+        throw new Error('Graph plugin not found.');
+      }
+
+      return this.previous && graphPlugin.provides.graph.find(this.previous);
+    },
+    appState: undefined,
   }) as RevertDeepSignal<TreeViewContextValue>;
 
   return {
@@ -38,6 +51,29 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
     },
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+      if (!clientPlugin) {
+        return;
+      }
+
+      const client = clientPlugin.provides.client;
+
+      // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
+      const defaultSpace =
+        client.getSpace() ?? client.spaces?.get().filter((space) => space.state.get() !== SpaceState.INACTIVE)[0];
+      if (defaultSpace) {
+        // Ensure defaultSpace has the app state persistor
+        await defaultSpace.waitUntilReady();
+        const appStates = defaultSpace.db.query(AppState.filter()).objects;
+        if (appStates.length < 1) {
+          const appState = new AppState();
+          defaultSpace.db.add(appState);
+          state.appState = appState;
+        } else {
+          state.appState = (appStates as AppState[])[0];
+        }
+      }
     },
     provides: {
       treeView: state,
@@ -50,7 +86,6 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           const treeView = useTreeView();
           const [shortId, component] = treeView.active?.split(':') ?? [];
           const plugin = findPlugin(plugins, shortId);
-
           if (plugin && plugin.provides.components?.[component]) {
             return <Surface component={`${plugin.meta.id}/${component}`} />;
           } else if (treeView.activeNode) {
@@ -107,7 +142,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           switch (intent.action) {
             case TreeViewAction.ACTIVATE: {
               if (intent.data && typeof intent.data.id === 'string') {
-                state.active = intent.data.id;
+                batch(() => {
+                  state.previous = state.active;
+                  state.active = intent.data.id;
+                });
                 return true;
               }
               break;

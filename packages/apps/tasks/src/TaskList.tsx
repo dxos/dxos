@@ -2,26 +2,62 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { ShellLayout, useShell } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { Task } from './proto';
 
 export const TaskList = () => {
-  const space = useSpace(); // What should the pattern be for find-or-create a space?
-  const shell = useShell();
+  // ECHO
+  const client = useClient();
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
+  const space = useSpace(spaceKey);
   const tasks = useQuery<Task>(space, Task.filter());
+
+  // UI State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<number | null>(null);
   const [showDeleteTask, setShowDeleteTask] = useState<number | null>(null);
 
+  // Redeem invitation code from URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get('spaceInviteCode');
+    if (code) {
+      const receivedInvitation = InvitationEncoder.decode(code);
+      const subscription = client.acceptInvitation(receivedInvitation).subscribe((invitation) => {
+        if (invitation.state === Invitation.State.SUCCESS && invitation.spaceKey) {
+          setSpaceKey(invitation.spaceKey);
+          history.pushState(null, '', invitation.spaceKey.toHex());
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, []);
+
+  // Listen for browser history changes
+  useEffect(() => {
+    const handleNavigation = () => {
+      setSpaceKey(PublicKey.safeFrom(location.pathname.substring(1)));
+    };
+
+    if (!spaceKey && location.pathname.length > 1) {
+      handleNavigation();
+    }
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, []);
+
   const handleNewTask = () => {
     if (!space || newTaskTitle === '') {
-      return;
-    }
-    if (!space) {
       return;
     }
 
@@ -33,10 +69,22 @@ export const TaskList = () => {
   return (
     <div className='p-2'>
       <button
-        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
-        onClick={() => shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key })}
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+        onClick={async () => {
+          if (!space) {
+            return;
+          }
+
+          const invitationObservable = space.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+          const encodedInvitation = InvitationEncoder.encode(invitationObservable.get());
+          // Get the current URL from the window
+          const currentUrl = new URL(location.href);
+          const inviteUrl = `${currentUrl}?spaceInviteCode=${encodedInvitation}`;
+          // Copy the invite URL to the clipboard
+          await navigator.clipboard.writeText(inviteUrl);
+        }}
       >
-        Invite
+        Copy Invite URL
       </button>
       <div className='max-w-sm mx-auto'>
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
@@ -59,13 +107,7 @@ export const TaskList = () => {
                   checked={task.completed}
                   onChange={() => (task.completed = !task.completed)}
                 />
-                <div
-                  className='hover:pointer-cursor flex-grow'
-                  onClick={() => {
-                    console.log('editing task', index);
-                    setEditingTask(index);
-                  }}
-                >
+                <div className='hover:pointer-cursor flex-grow' onClick={() => setEditingTask(index)}>
                   {editingTask === index ? (
                     <span className='flex justify-between'>
                       <input
@@ -89,7 +131,7 @@ export const TaskList = () => {
                 </div>
                 {showDeleteTask === index && (
                   <button
-                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400'
+                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
                     onClick={(e) => {
                       e.stopPropagation();
                       space?.db.remove(task);
@@ -117,7 +159,7 @@ export const TaskList = () => {
             }}
           />
           <button
-            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
+            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
             onClick={handleNewTask}
           >
             Add Task

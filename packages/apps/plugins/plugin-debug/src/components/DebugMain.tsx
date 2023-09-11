@@ -12,9 +12,9 @@ import {
   Play,
   Plus,
   PlusMinus,
-  Skull,
   Timer,
   Toolbox,
+  Trash,
 } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
@@ -31,7 +31,7 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { arrayToBuffer } from '@dxos/util';
+import { arrayToBuffer, safeParseInt } from '@dxos/util';
 
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
@@ -97,15 +97,6 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     return generator;
   }, [space]);
 
-  // TODO(burdon): Factor out.
-  const safeParseInt = (value: string | undefined, defaultValue = 0): number => {
-    if (!value) {
-      return defaultValue;
-    }
-    const num = parseInt(value);
-    return num === null || isNaN(num) ? defaultValue : num;
-  };
-
   // TODO(burdon): Note: this is shared across all spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
@@ -118,16 +109,17 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           await generator.updateObject();
         },
         {
-          count: safeParseInt(mutationCount),
-          interval: safeParseInt(mutationInterval),
-          jitter: safeParseInt(mutationJitter),
+          count: safeParseInt(mutationCount) ?? 0,
+          interval: safeParseInt(mutationInterval) ?? 0,
+          jitter: safeParseInt(mutationJitter) ?? 0,
         },
       );
     }
   };
 
   const handleCreateObject = async (createContent: boolean) => {
-    generator.createObject({ createContent });
+    // generator.createObject({ createContent });
+    generator.createTables();
   };
 
   const handleCreateInvitation = () => {
@@ -218,17 +210,18 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleCreateInvitation} title='Space invitation'>
+          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
             <PaperPlaneRight className={getSize(5)} />
           </Button>
-          <Button onClick={handleOpenDevtools} title='DXOS Dectools'>
-            <Toolbox className={getSize(5)} />
+          <Button onClick={handleOpenDevtools} title='Open Dectools'>
+            <Toolbox weight='duotone' className={mx(getSize(5), 'text-red-700')} />
           </Button>
-          <Button onClick={handleCreateEpoch}>
+          <Button onClick={handleCreateEpoch} title='Create epoch'>
             <FlagPennant className={getSize(5)} />
           </Button>
+          {/* TODO(burdon): Alert or shift key. */}
           <Button onClick={handleResetClient} title='Reset client'>
-            <Skull className={getSize(5)} />
+            <Trash className={getSize(5)} />
           </Button>
         </DensityProvider>
       </div>

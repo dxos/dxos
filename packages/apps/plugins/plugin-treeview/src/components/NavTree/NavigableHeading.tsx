@@ -4,11 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
+import { useIntent } from '@braneframe/plugin-intent';
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
 import { auroraTx, descriptionText, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
 
-import { useTreeView } from '../../TreeViewContext';
-import { TREE_VIEW_PLUGIN } from '../../types';
+import { TREE_VIEW_PLUGIN, TreeViewAction } from '../../types';
 import { getTreeItemLabel } from '../../util';
 import {
   topLevelHeadingHoverColor,
@@ -24,7 +24,7 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
-    const treeView = useTreeView();
+    const { sendIntent } = useIntent();
 
     const disabled = !!node.properties?.disabled;
     const error = !!node.properties?.error;
@@ -37,26 +37,36 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
           {...(level > 1 && { 'data-testid': 'spacePlugin.documentTreeItemLink' })}
           data-itemid={node.id}
           {...(!navigationSidebarOpen && { tabIndex: -1 })}
-          onKeyDown={(event) => {
+          onKeyDown={async (event) => {
             if (event.key === ' ' || event.key === 'Enter') {
               event.stopPropagation();
-              // TODO(wittjosiah): Intent.
-              treeView.active = node.id;
+
+              await sendIntent({
+                plugin: TREE_VIEW_PLUGIN,
+                action: TreeViewAction.ACTIVATE,
+                data: {
+                  id: node.id,
+                },
+              });
               !isLg && closeNavigationSidebar();
             }
           }}
-          onClick={(event) => {
-            // TODO(wittjosiah): Intent.
-            treeView.active = node.id;
+          onClick={async (event) => {
+            await sendIntent({
+              plugin: TREE_VIEW_PLUGIN,
+              action: TreeViewAction.ACTIVATE,
+              data: {
+                id: node.id,
+              },
+            });
             !isLg && closeNavigationSidebar();
           }}
           className={auroraTx(
             'button.root',
             'tree-item__heading--link',
             { variant: 'ghost', density: 'fine', disabled },
-            'gap-1 justify-start',
+            'gap-1 justify-start pli-0',
             navTreeHeading,
-            level < 1 ? 'pli-1.5' : 'pli-0',
             level < 1 && topLevelHeadingColor(node.properties?.palette),
             level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
             error && valenceColorText('error'),

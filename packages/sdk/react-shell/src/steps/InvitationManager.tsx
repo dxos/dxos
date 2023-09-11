@@ -42,12 +42,12 @@ const InvitationManagerView = ({
           role='none'
           className='flex flex-col items-center aspect-square is-full bs-auto relative text-neutral-600 dark:text-neutral-500'
         >
+          {children}
           {emoji && (
             <Centered>
               <Emoji text={emoji} />
             </Centered>
           )}
-          {children}
         </div>
       </div>
     </Viewport.View>
@@ -83,6 +83,7 @@ export const InvitationManager = ({ invitationUrl, active, send, status, authCod
               className={mx('is-full bs-full p-2', showAuthCode && 'invisible')}
               aria-labelledby={qrLabel}
               errorCorrectionLevel='Q'
+              cutout={true}
             >
               {invitationUrl ?? 'never'}
             </QR>

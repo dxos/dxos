@@ -22,7 +22,7 @@ import { isStack, stackToGraphNode } from './util';
 (globalThis as any)[StackType.name] = StackType;
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const adapter = new GraphNodeAdapter(StackType.filter(), stackToGraphNode);
+  const adapter = new GraphNodeAdapter({ filter: StackType.filter(), adapter: stackToGraphNode });
 
   return {
     meta: {

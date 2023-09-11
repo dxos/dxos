@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -12,14 +12,14 @@ import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { MasterDetailTable } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<KeyRecord>();
-const columns: GridColumnDef<KeyRecord, any>[] = [
+const columns: TableColumnDef<KeyRecord, any>[] = [
   helper.accessor((record) => PublicKey.from(record.publicKey), {
     id: 'public',
-    ...builder.createKey({ header: 'public key', tooltip: true }),
+    ...builder.key({ header: 'public key', tooltip: true }),
   }),
   helper.accessor((record) => record.privateKey && PublicKey.from(record.privateKey), {
     id: 'private',
-    ...builder.createKey({ header: 'private key', tooltip: true }),
+    ...builder.key({ header: 'private key', tooltip: true }),
   }),
 ];
 

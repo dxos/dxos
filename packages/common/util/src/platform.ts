@@ -26,4 +26,5 @@ export const iosCheck = () => {
 };
 
 // From https://stackoverflow.com/a/23522755/2804332
-export const safariCheck = () => /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+export const safariCheck = () =>
+  typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);

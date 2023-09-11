@@ -5,6 +5,7 @@
 import { GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { PublicKey } from '@dxos/react-client';
 import { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
@@ -24,6 +25,13 @@ export enum SpaceAction {
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
 }
 
+export type ObjectViewer = {
+  identityKey: PublicKey;
+  spaceKey: PublicKey;
+  objectId: string;
+  lastSeen: number;
+};
+
 /**
  * The state of the space plugin.
  */
@@ -34,6 +42,11 @@ export type SpaceState = {
    * If no ancestor represents a space, then it is undefined.
    */
   active: Space | undefined;
+
+  /**
+   * Which objects peers are currently viewing.
+   */
+  viewers: ObjectViewer[];
 };
 
 export type SpacePluginProvides = GraphProvides &

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -18,7 +18,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-grid": "workspace:*",
+    "@dxos/aurora-table": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",

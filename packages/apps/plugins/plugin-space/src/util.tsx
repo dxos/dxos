@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, PaperPlane, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import { Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
+import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-treeview';
+import { AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
@@ -37,7 +39,12 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: string): Graph.Node<Space> => {
+export const spaceToGraphNode = (
+  space: Space,
+  parent: Graph.Node,
+  appState?: AppState,
+  defaultIndex?: string,
+): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
   const disabled = state !== SpaceState.READY;
@@ -57,14 +64,12 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: strin
       hidden: inactive,
       disabled,
       error,
-      index,
+      index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
       onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
         // TODO(burdon): Decouple from object's data structure.
-        child.data.meta = {
-          ...child.data?.meta,
-          index: nextIndex,
-        };
+        child.data.meta.index = nextIndex;
       },
+      persistenceClass: 'appState',
       acceptPersistenceClass: new Set(['spaceObject']),
       onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
         // create clone of child and add to migration destination
@@ -76,10 +81,7 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: strin
           ],
         });
         space.db.add(object);
-        object.meta = {
-          ...object.meta,
-          index: nextIndex,
-        };
+        object.meta.index = nextIndex;
       },
       onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
         // remove child being replicated from migration origin
@@ -102,7 +104,7 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index?: strin
       {
         id: 'share-space',
         label: ['share space', { ns: SPACE_PLUGIN }],
-        icon: (props) => <PaperPlane {...props} />,
+        icon: (props) => <Users {...props} />,
         intent: { ...baseIntent, action: SpaceAction.SHARE },
         properties: {
           disabled: disabled || error,

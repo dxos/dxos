@@ -5,7 +5,7 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React, { FC, MutableRefObject, RefCallback } from 'react';
+import React, { FC, MutableRefObject, RefCallback, useCallback } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph } from '@braneframe/plugin-graph';
@@ -14,14 +14,28 @@ import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { PluginDefinition, findPlugin, usePlugins } from '@dxos/react-surface';
+import { PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
 
-import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
-import { StandaloneMenu } from './components/StandaloneMenu';
+import {
+  EditorMain,
+  EditorMainEmbedded,
+  EditorSection,
+  MarkdownMainEmpty,
+  MarkdownSettings,
+  SpaceMarkdownChooser,
+  StandaloneMenu,
+} from './components';
 import translations from './translations';
-import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
+import {
+  MARKDOWN_PLUGIN,
+  MarkdownAction,
+  MarkdownPluginProvides,
+  MarkdownProperties,
+  MarkdownSettingsProps,
+} from './types';
 import {
   documentToGraphNode,
   isMarkdown,
@@ -35,10 +49,13 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
 
+const INITIAL_CONTENT = '# Welcome to Composer!\n\nComposer is a collaborative peer-to-peer application.';
+
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
+  const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
   const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
     current: { editor: null },
@@ -46,7 +63,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-  const adapter = new GraphNodeAdapter(Document.filter(), documentToGraphNode, ['content']);
+  let adapter: GraphNodeAdapter<Document> | undefined;
 
   const EditorMainStandalone = ({
     data: { composer, properties },
@@ -54,12 +71,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
   }) => {
+    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+      (content) => state.onChange.forEach((onChange) => onChange(content)),
+      [state.onChange],
+    );
+
     return (
       <EditorMain
         model={composer}
         properties={properties}
         layout='standalone'
-        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorMode={settings.values.editorMode}
+        onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );
@@ -67,8 +90,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const MarkdownMain: FC<{ data: Document }> = ({ data }) => {
     const identity = useIdentity();
-    const { plugins } = usePlugins();
-    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
@@ -76,6 +98,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       space,
       text: data?.content,
     });
+
+    const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
+      (content) => state.onChange.forEach((onChange) => onChange(content)),
+      [state.onChange],
+    );
 
     if (!textModel) {
       return null;
@@ -90,7 +117,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         model={textModel}
         properties={data}
         layout='standalone'
-        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorMode={settings.values.editorMode}
+        onChange={onChange}
         editorRefCb={pluginRefCallback}
       />
     );
@@ -98,8 +126,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
     const identity = useIdentity();
-    const { plugins } = usePlugins();
-    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.active;
 
     const textModel = useTextModel({
@@ -120,20 +147,29 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
+      settings.prop(settings.values.$editorMode!, 'editorMode', LocalStorageStore.string);
+
+      const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
           state.onChange.push(plugin.provides.markdown.onChange);
         }
+
+        if (plugin.provides.markdown.filter) {
+          filters.push(plugin.provides.markdown.filter);
+        }
       });
+
+      const filter = (document: Document) =>
+        document.__typename === Document.type.name && filters.every((filter) => filter(document));
+      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode, propertySubscriptions: ['content'] });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const space = clientPlugin.provides.client.getSpace();
         // TODO(wittjosiah): Expand message & translate.
-        const document = space?.db.add(
-          new Document({ title: 'Getting Started', content: new Text('Welcome to Composer!') }),
-        );
+        const document = space?.db.add(new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }));
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.sendIntent({
             action: TreeViewAction.ACTIVATE,
@@ -143,26 +179,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
+      settings: settings.values,
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
 
-          const [presentationNode] = parent.add({
-            id: `${MARKDOWN_PLUGIN}:${space.key.toHex()}`,
-            label: ['plugin name', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <ArticleMedium {...props} />,
-            properties: { palette: 'pink', childrenPersistenceClass: 'spaceObject' },
-          });
-
-          presentationNode.addAction({
+          parent.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
             icon: (props) => <Plus {...props} />,
@@ -185,7 +215,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             ],
           });
 
-          return adapter.createNodes(space, presentationNode);
+          return adapter?.createNodes(space, parent);
         },
       },
       stack: {
@@ -212,6 +242,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       component: (data, role) => {
+        if (role === 'dialog' && data === 'dxos.org/plugin/splitview/ProfileSettings') {
+          return MarkdownSettings;
+        }
+
         if (!data || typeof data !== 'object') {
           return null;
         }

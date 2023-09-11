@@ -5,17 +5,17 @@
 export const levelPadding = (level: number) => {
   switch (level) {
     case 0:
-      return 'pis-0';
+      return 'pis-3';
     case 1:
-      return 'pis-0';
+      return 'pis-3';
     case 2:
-      return 'pis-4';
+      return 'pis-6';
     case 3:
-      return 'pis-8';
+      return 'pis-9';
     case 4:
       return 'pis-12';
     default:
-      return 'pis-16';
+      return 'pis-14';
   }
 };
 
