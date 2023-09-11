@@ -81,7 +81,9 @@ const ContainerStory = () => {
             <DraggableCard {...generators.document()} />
             <DraggableCard {...generators.document()} />
             <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.document()} />
           </Column.ViewPort>
+          <Column.Footer classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Footer>
         </Column.Root>
         <Column.Root classNames={columnStyle}>
           <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>

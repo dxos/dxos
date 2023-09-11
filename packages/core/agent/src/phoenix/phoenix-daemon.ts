@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import forever, { ForeverProcess } from 'forever';
-import fs, { mkdirSync } from 'node:fs';
+import { unlinkSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
@@ -11,21 +10,24 @@ import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { DaemonManager, ProcessInfo as PhoenixProcess } from '@dxos/phoenix';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
-import { lockFilePath, parseAddress, removeSocketFile } from '../util';
+import { parseAddress, removeSocketFile } from '../util';
 
 /**
- * Manager of daemon processes started with Forever.
- * @deprecated because forever is unmaintained.
+ * Manager of daemon processes started with @dxos/phoenix.
  */
-export class ForeverDaemon implements Daemon {
-  constructor(private readonly _rootDir: string) {}
+export class PhoenixDaemon implements Daemon {
+  private readonly _phoenix: DaemonManager;
+  constructor(private readonly _rootDir: string) {
+    this._phoenix = new DaemonManager(this._rootDir);
+  }
 
   async connect(): Promise<void> {
-    forever.load({ root: path.join(this._rootDir, 'forever') });
+    // no-op.
   }
 
   async disconnect() {
@@ -33,62 +35,34 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    const { isLocked } = await import('@dxos/client-services');
-    return await isLocked(lockFilePath(profile));
+    return this._phoenix.isRunning(profile);
   }
 
   async list(): Promise<ProcessInfo[]> {
-    const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
-      forever.list(false, (err, processes) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        resolve(processes ?? []);
-      });
-    });
-
-    return Promise.all(
-      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile }: ForeverProcess) => {
-        return {
-          profile: uid,
-          pid: foreverPid,
-          started: ctime,
-          running,
-          restarts,
-          logFile,
-          locked: await this.isRunning(uid), // TODO(burdon): Different from "running"?
-        } satisfies ProcessInfo;
-      }),
-    );
+    return (await this._phoenix.list()).map(phoenixInfoToProcessInfo);
   }
 
   async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      // Check if there is stopped process.
-      if (!(await this._getProcess(profile)).running) {
-        // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
-        await this.stop(profile);
-      }
-
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
-      mkdirSync(logDir, { recursive: true });
+      if (!existsSync(logDir)) {
+        mkdirSync(logDir, { recursive: true });
+      }
       log('starting...', { profile, logDir });
 
       const logFile = path.join(logDir, 'daemon.log');
-      const outFile = path.join(logDir, 'out.log');
       const errFile = path.join(logDir, 'err.log');
 
       // Clear err file.
-      if (fs.existsSync(errFile)) {
-        fs.unlinkSync(errFile);
+      if (existsSync(errFile)) {
+        unlinkSync(errFile);
       }
 
       // Run the `dx agent run` CLI command.
       // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
-      forever.startDaemon(process.argv[1], {
+      await this._phoenix.start({
+        command: process.argv[1],
         args: [
           'agent',
           'start',
@@ -100,31 +74,19 @@ export class ForeverDaemon implements Daemon {
         // TODO(burdon): Make optional.
         env: {
           LOG_FILTER: process.env.LOG_FILTER,
+          ...process.env,
         },
         uid: profile,
-        max: 0,
-        logFile, // Forever daemon process.
-        outFile, // Child stdout.
-        errFile, // Child stderr.
-
-        // TODO(burdon): Configure to watch config file.
-        //  https://github.com/foreversd/forever-monitor/blob/master/lib/forever-monitor/plugins/watch.js
-        // watch: true,
-        // watchIgnorePatterns (ignore all profiles except the current one).
-        // watchDirectory
+        maxRestarts: 0,
+        logFile,
+        errFile,
       });
 
       try {
         // Wait for socket file to appear.
         {
           await waitForCondition({
-            condition: async () => await this.isRunning(profile),
-            timeout: DAEMON_START_TIMEOUT,
-            interval: CHECK_INTERVAL,
-            error: new AgentWaitTimeoutError(),
-          });
-          await waitForCondition({
-            condition: () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
+            condition: () => existsSync(parseAddress(getUnixSocket(profile)).path),
             timeout: DAEMON_START_TIMEOUT,
             interval: CHECK_INTERVAL,
             error: new AgentWaitTimeoutError(),
@@ -150,7 +112,7 @@ export class ForeverDaemon implements Daemon {
         return await this._getProcess(profile);
       } catch (err) {
         log.warn('Failed to start daemon.');
-        const errContent = fs.readFileSync(errFile, 'utf-8');
+        const errContent = readFileSync(errFile, 'utf-8');
         log.error(errContent);
         await this.stop(profile);
         throw err;
@@ -158,24 +120,14 @@ export class ForeverDaemon implements Daemon {
     }
 
     const proc = await this._getProcess(profile);
-    log('started', { profile: proc.profile, pid: proc.pid });
+    log('started', { proc });
     return proc;
   }
 
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    // NOTE: Kill all processes with the given profile.
-    // This is necessary when somehow few processes are started with the same profile.
-    (await this.list())
-      .filter((process) => process.profile === profile)
-      .forEach((process) => {
-        if (force && process.running) {
-          forever.stop(process.profile!);
-        } else {
-          forever.kill(proc.pid!, true, 'SIGINT');
-        }
-      });
+    await this._phoenix.stop(profile, force);
 
     await waitForCondition({
       condition: async () => !(await this.isRunning(profile)),
@@ -193,7 +145,11 @@ export class ForeverDaemon implements Daemon {
     return this.start(profile, options);
   }
 
-  async _getProcess(profile?: string): Promise<ProcessInfo> {
-    return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
+  async _getProcess(profile: string): Promise<ProcessInfo> {
+    return phoenixInfoToProcessInfo(await this._phoenix.getInfo(profile));
   }
 }
+
+const phoenixInfoToProcessInfo = (info: PhoenixProcess): ProcessInfo => {
+  return { profile: info.uid, started: info.timestamp, ...info };
+};

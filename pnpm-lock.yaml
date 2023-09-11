@@ -2055,6 +2055,7 @@ importers:
       '@faker-js/faker': ^8.0.2
       '@types/lodash.defaultsdeep': ^4.6.6
       lodash.defaultsdeep: ^4.6.1
+      race-as-promised: ^0.0.2
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
     dependencies:
@@ -2072,6 +2073,7 @@ importers:
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
       lodash.defaultsdeep: 4.6.1
+      race-as-promised: 0.0.2
       random-access-storage: 3.0.0
       streamx: 2.12.5
     optionalDependencies:
@@ -2252,6 +2254,39 @@ importers:
       path-browserify: 1.0.1
       readable-stream: 3.6.0
       util: 0.12.5
+
+  packages/common/phoenix:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/lock-file': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/util': workspace:*
+      '@types/fs-extra': ^9.0.4
+      '@types/node': ^18.11.9
+      '@types/ps-tree': ^1.1.2
+      fs-extra: ^8.1.0
+      pkg-up: ^3.1.0
+      ps-tree: ^1.2.0
+    dependencies:
+      '@dxos/async': link:../async
+      '@dxos/context': link:../context
+      '@dxos/invariant': link:../invariant
+      '@dxos/keys': link:../keys
+      '@dxos/lock-file': link:../lock-file
+      '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
+      '@dxos/util': link:../util
+      fs-extra: 8.1.0
+      pkg-up: 3.1.0
+      ps-tree: 1.2.0
+    devDependencies:
+      '@types/fs-extra': 9.0.13
+      '@types/node': 18.11.9
+      '@types/ps-tree': 1.1.2
 
   packages/common/plate:
     specifiers:
@@ -2539,6 +2574,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/phoenix': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
@@ -2565,6 +2601,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/network-manager': link:../mesh/network-manager
       '@dxos/node-std': link:../../common/node-std
+      '@dxos/phoenix': link:../../common/phoenix
       '@dxos/protocols': link:../protocols
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
@@ -16780,6 +16817,10 @@ packages:
     resolution: {integrity: sha512-CBpqIDa1+/F3Z5EL8Uz/t+1eygIinJiMS37KP8O9TN+n38OlckYQhU+t/vYpsF7XhSDuiZS0zAJyfRrAeDKDUw==}
     dependencies:
       '@types/node': 18.11.9
+    dev: true
+
+  /@types/ps-tree/1.1.2:
+    resolution: {integrity: sha512-ZREFYlpUmPQJ0esjxoG1fMvB2HNaD3z+mjqdSosZvd3RalncI9NEur73P8ZJz4YQdL64CmV1w0RuqoRUlhQRBw==}
     dev: true
 
   /@types/pump/1.1.1:
@@ -33527,6 +33568,10 @@ packages:
     hasBin: true
     dependencies:
       utf8: 2.1.2
+    dev: false
+
+  /race-as-promised/0.0.2:
+    resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
     dev: false
 
   /raf/3.4.1:

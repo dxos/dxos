@@ -16,6 +16,10 @@ export const ColumnHeader: FC<PropsWithChildren<{ classNames?: ClassNameValue }>
   return <div className={mx('shrink-0 px-4 py-2 truncate', classNames)}>{children}</div>;
 };
 
+export const ColumnFooter: FC<PropsWithChildren<{ classNames?: ClassNameValue }>> = ({ classNames, children }) => {
+  return <div className={mx('shrink-0 px-4 py-2 truncate', classNames)}>{children}</div>;
+};
+
 export const ColumnViewPort: FC<PropsWithChildren & { id: string; classNames?: ClassNameValue }> = ({
   id,
   classNames,
@@ -25,7 +29,7 @@ export const ColumnViewPort: FC<PropsWithChildren & { id: string; classNames?: C
   return (
     <div
       ref={setNodeRef}
-      className={mx('flex flex-col px-3 py-2 overflow-y-auto', isOver && 'ring ring-blue-500', classNames)}
+      className={mx('flex flex-col grow px-3 py-2 overflow-y-auto', isOver && 'ring ring-blue-500', classNames)}
     >
       <div className={mx('flex flex-col gap-2')}>{children}</div>
     </div>
@@ -47,6 +51,7 @@ export const ColumnViewPort: FC<PropsWithChildren & { id: string; classNames?: C
 export const Column = {
   Root: ColumnRoot,
   Header: ColumnHeader,
+  Footer: ColumnFooter,
   ViewPort: ColumnViewPort,
 };
 

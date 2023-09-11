@@ -31,6 +31,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/phoenix"
+    },
+    {
       "path": "../../common/util"
     },
     {
