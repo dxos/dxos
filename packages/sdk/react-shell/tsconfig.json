@@ -51,9 +51,6 @@
       "path": "../../ui/aurora-types"
     },
     {
-      "path": "../../ui/react-appkit"
-    },
-    {
       "path": "../config"
     },
     {

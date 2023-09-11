@@ -7,9 +7,17 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": "./dist/lib/browser/index.mjs",
+    "./headless": "./dist/lib/browser/telemetry/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "headless": [
+        "dist/types/src/telemetry/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"

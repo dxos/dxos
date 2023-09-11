@@ -18,7 +18,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
-  const { ThemeProvider } = await import('@dxos/react-appkit');
+  const { ThemeProvider } = await import('@dxos/aurora');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
 
@@ -33,7 +33,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       {},
       createElement(
         ThemeProvider,
-        { themeVariant: 'os', resourceExtensions: [osTranslations] },
+        { resourceExtensions: [osTranslations] },
         // NOTE: Using context provider directly to avoid duplicate banners being logged.
         createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin })),
       ),
