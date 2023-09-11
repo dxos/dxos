@@ -84,9 +84,13 @@ export class Messenger {
     );
 
     // Clear the map periodically.
-    scheduleTaskInterval(this._ctx, async () => {
-      this._performGc();
-    }, RECEIVED_MESSAGES_GC_INTERVAL);
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._performGc();
+      },
+      RECEIVED_MESSAGES_GC_INTERVAL,
+    );
 
     this._closed = false;
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));

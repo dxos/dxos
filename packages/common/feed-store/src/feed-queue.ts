@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { FeedBlock } from './types';
-import { Context } from '@dxos/context';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
@@ -122,7 +121,7 @@ export class FeedQueue<T extends {}> {
       this._feedConsumer?.off('error', onError);
 
       this._destroyConsumer();
-    }
+    };
 
     const onError = (err?: Error) => {
       if (!err) {
@@ -150,7 +149,6 @@ export class FeedQueue<T extends {}> {
       }
       this._destroyConsumer();
     });
-
 
     log('opened');
   }

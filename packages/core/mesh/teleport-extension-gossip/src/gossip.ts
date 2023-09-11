@@ -45,7 +45,7 @@ export class Gossip {
 
   public readonly connectionClosed = new Event<PublicKey>();
 
-  constructor(private readonly _params: GossipParams) { }
+  constructor(private readonly _params: GossipParams) {}
 
   get localPeerId() {
     return this._params.localPeerId;
@@ -53,11 +53,14 @@ export class Gossip {
 
   async open() {
     // Clear the map periodically.
-    scheduleTaskInterval(this._ctx, async () => {
-      this._performGc();
-    }, RECEIVED_MESSAGES_GC_INTERVAL);
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._performGc();
+      },
+      RECEIVED_MESSAGES_GC_INTERVAL,
+    );
   }
-
 
   async close() {
     await this._ctx.dispose();
