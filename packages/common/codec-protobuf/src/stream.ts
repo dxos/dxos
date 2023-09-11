@@ -108,7 +108,7 @@ export class Stream<T> {
           if (error) {
             reject(error);
           } else {
-            resolve(undefined)
+            resolve(undefined);
           }
         },
       );

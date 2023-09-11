@@ -39,9 +39,7 @@ export type CredentialEntry = {
   revoked: boolean;
 };
 
-const REVOKABLE_CREDENTIALS = [
-  'dxos.halo.credentials.SpaceMember',
-]
+const REVOKABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
 
 /**
  * Validates and processes credentials for a single space.
@@ -154,11 +152,11 @@ export class SpaceStateMachine implements SpaceState {
           return false;
         }
         const toBeRevoked = this._credentialsById.get(credential.subject.id);
-        if(!toBeRevoked) {
+        if (!toBeRevoked) {
           log.warn(`Credential to revoke not found: ${credential.subject.id}`);
           return false;
         }
-        if(!this._credentialCanBeRevoked(toBeRevoked)) {
+        if (!this._credentialCanBeRevoked(toBeRevoked)) {
           log.warn(`Credential cannot be revoked: ${credential.subject.id}`);
         }
 
@@ -223,7 +221,7 @@ export class SpaceStateMachine implements SpaceState {
     this._credentials.push(newEntry);
 
     // TODO(dmaretskyi): Invariant on every credential having an id?
-    if(credential.id) {
+    if (credential.id) {
       this._credentialsById.set(credential.id, newEntry);
     }
 

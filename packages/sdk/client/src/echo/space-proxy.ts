@@ -6,23 +6,23 @@ import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
+import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
+import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
-import { Invitation, Space as SpaceData, SpaceMember, SpaceState, Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
-import { PublicKey } from '@dxos/keys';
-import { Stream } from '@dxos/codec-protobuf';
-import { checkCredentialType } from '@dxos/credentials';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -391,36 +391,42 @@ export class SpaceProxy implements Space {
   }
 
   private async _removeMember(memberKey: PublicKey) {
-    if(!this._members.get().find(member => member.identity.identityKey.equals(memberKey))) {
+    if (!this._members.get().find((member) => member.identity.identityKey.equals(memberKey))) {
       throw new Error(`Member ${memberKey} not found`);
     }
 
-    const credentials = await Stream.consumeData(this._clientServices.services.SpacesService!.queryCredentials({spaceKey: this.key, noTail: true }));
-    const credential = credentials.find(credential => checkCredentialType(credential, 'dxos.halo.credentials.SpaceMember') && credential.subject.id.equals(memberKey));
-    if(!credential) {
+    const credentials = await Stream.consumeData(
+      this._clientServices.services.SpacesService!.queryCredentials({ spaceKey: this.key, noTail: true }),
+    );
+    const credential = credentials.find(
+      (credential) =>
+        checkCredentialType(credential, 'dxos.halo.credentials.SpaceMember') && credential.subject.id.equals(memberKey),
+    );
+    if (!credential) {
       throw new Error(`Credential for ${memberKey} not found`);
     }
-    if(!credential.id) {
+    if (!credential.id) {
       throw new Error(`Credential for ${memberKey} does not have an id`);
     }
 
     const identityQuery = await Stream.first(this._clientServices.services.IdentityService!.queryIdentity());
     const identityKey = identityQuery?.identity?.identityKey;
-    invariant(identityKey, 'Identity key not found')
-
+    invariant(identityKey, 'Identity key not found');
 
     await this._clientServices.services.SpacesService!.writeCredentials({
       spaceKey: this.key,
-      credentials: [{
-        issuer: identityKey,
-        issuanceDate: new Date(),
-        subject: {
-          id: credential.id,
-          assertion: {
-            '@type': 'dxos.halo.credentials.Revocation'
-          }
-        }
-      }]
+      credentials: [
+        {
+          issuer: identityKey,
+          issuanceDate: new Date(),
+          subject: {
+            id: credential.id,
+            assertion: {
+              '@type': 'dxos.halo.credentials.Revocation',
+            },
+          },
+        },
+      ],
     });
   }
 }

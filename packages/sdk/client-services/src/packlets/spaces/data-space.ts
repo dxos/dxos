@@ -101,7 +101,13 @@ export class DataSpace {
     this._callbacks = params.callbacks ?? {};
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
-      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.values()).filter(member => !member.removed).map(member => member.key)),
+      trustedKeysProvider: () =>
+        new ComplexSet(
+          PublicKey.hash,
+          Array.from(this._inner.spaceState.members.values())
+            .filter((member) => !member.removed)
+            .map((member) => member.key),
+        ),
       update: this._inner.stateUpdate,
       authTimeout: AUTH_TIMEOUT,
     });
