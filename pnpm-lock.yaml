@@ -357,7 +357,6 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
@@ -393,7 +392,6 @@ importers:
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
       isomorphic-fetch: 3.0.0
@@ -437,7 +435,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/vault': workspace:*
@@ -462,7 +459,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/vault': link:../../sdk/vault
@@ -514,7 +510,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
@@ -562,7 +557,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
       isomorphic-fetch: 3.0.0
@@ -682,6 +676,7 @@ importers:
       '@dxos/local-storage': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -712,6 +707,7 @@ importers:
       '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
@@ -773,19 +769,27 @@ importers:
 
   packages/apps/plugins/plugin-error:
     specifiers:
-      '@dxos/config': workspace:*
-      '@dxos/react-appkit': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
+      '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       react: ^18.2.0
+      react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/react-appkit': link:../../../ui/react-appkit
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/util': link:../../../common/util
     devDependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-files:
@@ -1810,6 +1814,7 @@ importers:
 
   packages/apps/todomvc:
     specifiers:
+      '@braneframe/plugin-telemetry': workspace:*
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -1817,7 +1822,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vault': workspace:*
@@ -1834,12 +1838,12 @@ importers:
       todomvc-common: ^1.0.5
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/util': link:../../common/util
       '@sentry/react': 7.42.0_react@18.2.0
@@ -3490,6 +3494,7 @@ importers:
 
   packages/devtools/devtools:
     specifiers:
+      '@braneframe/plugin-telemetry': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-table': workspace:*
@@ -3505,7 +3510,6 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
@@ -3549,6 +3553,7 @@ importers:
       workbox-window: ^6.5.4
       ws: ^7.4.4
     dependencies:
+      '@braneframe/plugin-telemetry': link:../../apps/plugins/plugin-telemetry
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-table': link:../../ui/aurora-table
@@ -3563,7 +3568,6 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -5516,7 +5520,6 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
@@ -5534,7 +5537,6 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
@@ -5610,7 +5612,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/display-name': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
@@ -5644,7 +5645,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/display-name': link:../../common/display-name
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
       '@dxos/util': link:../../common/util
       '@fluentui/react-tabster': 9.12.0_5uumaiclxbdbzaqafclbf6maf4
@@ -5686,6 +5686,7 @@ importers:
 
   packages/sdk/vault:
     specifiers:
+      '@braneframe/plugin-telemetry': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -5697,7 +5698,6 @@ importers:
       '@dxos/echo-signals': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/rpc-tunnel': workspace:*
@@ -5722,6 +5722,7 @@ importers:
       vite: ^4.3.9
       yargs: ~16.2.0
     dependencies:
+      '@braneframe/plugin-telemetry': link:../../apps/plugins/plugin-telemetry
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/client': link:../client
@@ -5732,7 +5733,6 @@ importers:
       '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
       '@dxos/react-shell': link:../react-shell
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
@@ -6241,6 +6241,7 @@ importers:
 
   packages/ui/react-icons:
     specifiers:
+      '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@storybook/addons': ^7.0.6
@@ -6251,6 +6252,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
     devDependencies:
+      '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@storybook/addons': 7.0.7_biqbaboplfbrettd7655fr4n2y
