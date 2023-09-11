@@ -27,8 +27,7 @@ export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, Type
           <Input.Label srOnly>{t('object name label')}</Input.Label>
           <Input.TextInput
             placeholder={t('object title placeholder')}
-            // TODO(thure): Why does the input value need to be uncontrolled to work?
-            defaultValue={object.title ?? ''}
+            value={object.title ?? ''}
             onChange={({ target: { value } }) => setName(value)}
             onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
           />
