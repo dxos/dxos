@@ -2525,6 +2525,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/phoenix': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
@@ -2551,6 +2552,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/network-manager': link:../mesh/network-manager
       '@dxos/node-std': link:../../common/node-std
+      '@dxos/phoenix': link:../../common/phoenix
       '@dxos/protocols': link:../protocols
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
@@ -17445,7 +17447,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.21.3
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
