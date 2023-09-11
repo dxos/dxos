@@ -33,11 +33,11 @@ export class ShellRuntimeImpl implements ShellRuntime {
     return this._spaceKey;
   }
 
-  setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
+  setLayout({ layout, invitationCode, spaceKey }: LayoutRequest) {
     this._layout = layout;
-    this._invitationCode = options.invitationCode;
-    this._spaceKey = options.spaceKey;
-    this.layoutUpdate.emit({ layout, ...options });
+    this._invitationCode = invitationCode;
+    this._spaceKey = spaceKey;
+    this.layoutUpdate.emit({ layout, invitationCode, spaceKey });
   }
 
   async setAppContext(context: AppContextRequest) {
