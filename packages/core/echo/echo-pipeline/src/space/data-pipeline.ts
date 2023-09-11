@@ -6,13 +6,12 @@ import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/asyn
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
-import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, omit } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataPipelineProcessed } from '@dxos/protocols';
+import { CancelledError, DataPipelineProcessed } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';

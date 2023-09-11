@@ -4,7 +4,7 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { clientServiceBundle, ClientServices, ClientServicesProvider } from '@dxos/client-protocol';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
+import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 /**

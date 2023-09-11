@@ -11,8 +11,8 @@ import {
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';

@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { STORAGE_VERSION, trace } from '@dxos/protocols';
+import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -184,7 +184,7 @@ export class ServiceContext {
   private async _checkStorageVersion() {
     await this.metadataStore.load();
     if (this.metadataStore.version !== STORAGE_VERSION) {
-      throw new Error(`Invalid storage version: current=${this.metadataStore.version}, expected=${STORAGE_VERSION}`);
+      throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
       // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
     }
   }

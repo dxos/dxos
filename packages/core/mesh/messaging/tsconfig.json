@@ -32,9 +32,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/errors"
-    },
-    {
       "path": "../../protocols"
     },
     {

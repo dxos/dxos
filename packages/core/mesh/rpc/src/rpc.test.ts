@@ -7,7 +7,7 @@ import { expect } from 'earljs';
 import { Trigger, sleep } from '@dxos/async';
 import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { SerializedError, TYPES } from '@dxos/protocols';
+import { SystemError, TYPES } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 
 import { RpcPeer } from './rpc';
@@ -266,7 +266,7 @@ describe('RpcPeer', () => {
         error = err;
       }
 
-      expect(error).toBeA(SerializedError);
+      expect(error).toBeA(SystemError);
       expect(error.message).toEqual('My error');
       expect(error.stack?.includes('handlerFn')).toEqual(true);
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);

@@ -11,12 +11,11 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 

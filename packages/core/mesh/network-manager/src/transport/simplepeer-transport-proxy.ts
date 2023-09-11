@@ -8,16 +8,16 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   ConnectionResetError,
   TimeoutError,
   ProtocolError,
   ConnectivityError,
   UnknownProtocolError,
-} from '@dxos/errors';
-import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+} from '@dxos/protocols';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
