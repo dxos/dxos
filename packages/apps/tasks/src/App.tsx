@@ -3,7 +3,14 @@
 //
 
 import React from 'react';
-import { Navigate, RouterProvider, createBrowserRouter, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Navigate,
+  RouterProvider,
+  createBrowserRouter,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 
 import { ClientProvider, Config, Dynamics, Local, Defaults } from '@dxos/react-client';
 import { useSpace, useQuery } from '@dxos/react-client/echo';
@@ -60,9 +67,9 @@ export const SpaceTaskList = () => {
         // copy the invite URL to the clipboard
         await navigator.clipboard.writeText(inviteUrl);
       }}
-      onTaskCreate={(text) => {
+      onTaskCreate={(newTaskTitle) => {
         const task = new Task({ title: newTaskTitle, completed: false });
-        space.db.add(task);
+        space?.db.add(task);
       }}
     />
   );
