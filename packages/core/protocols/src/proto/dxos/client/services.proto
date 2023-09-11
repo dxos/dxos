@@ -163,6 +163,7 @@ message SpaceMember {
   enum PresenceState {
     OFFLINE = 0;
     ONLINE = 1;
+    REMOVED = 2;
   }
 
   Identity identity = 1;
