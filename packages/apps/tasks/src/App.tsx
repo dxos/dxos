@@ -77,12 +77,12 @@ export const SpaceTaskList = () => {
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Home />,
-  },
-  {
     path: '/space/:spaceKey',
     element: <SpaceTaskList />,
+  },
+  {
+    path: '/',
+    element: <Home />,
   },
 ]);
 
