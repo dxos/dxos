@@ -22,7 +22,9 @@ faker.seed(5);
 //  - Columns: Able to drag cards between columns; Able to drag columns to re-order.
 //  - Grid: (e.g., kai notes).
 //  - List: Simplified table (no custom columns).
+// TODO(burdon): Unify IPFS drag-and-drop.
 // TODO(burdon): Plugins:
+//  - Stack
 //  - Kanban
 //  - Thread
 //  - Search

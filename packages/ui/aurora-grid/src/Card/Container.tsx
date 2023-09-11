@@ -16,7 +16,7 @@ export const Column: FC<PropsWithChildren & { id: string; classNames?: ClassName
   return (
     <ScrollArea.Root classNames={['shrink-0', classNames, isOver && 'ring']}>
       <ScrollArea.Viewport ref={setNodeRef}>
-        <div className='flex flex-col gap-2 p-2'>{children}</div>
+        <div className='flex flex-col gap-2 p-4'>{children}</div>
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
