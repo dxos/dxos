@@ -85,6 +85,9 @@
       "path": "../plugins/plugin-stack"
     },
     {
+      "path": "../plugins/plugin-telemetry"
+    },
+    {
       "path": "../plugins/plugin-theme"
     },
     {

@@ -112,6 +112,9 @@
       "path": "../plugins/plugin-table"
     },
     {
+      "path": "../plugins/plugin-telemetry"
+    },
+    {
       "path": "../plugins/plugin-template"
     },
     {

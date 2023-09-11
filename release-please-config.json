@@ -134,6 +134,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-telemetry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-template/package.json",
           "jsonpath": "$.version"
         },
