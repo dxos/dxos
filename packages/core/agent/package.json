@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,6 +32,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/phoenix": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",

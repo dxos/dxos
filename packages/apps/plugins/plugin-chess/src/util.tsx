@@ -24,6 +24,7 @@ export const objectToGraphNode = (
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
+      persistenceClass: 'spaceObject',
     },
   });
 

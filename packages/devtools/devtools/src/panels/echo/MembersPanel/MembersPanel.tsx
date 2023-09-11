@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
@@ -13,7 +13,7 @@ import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SpaceMember>();
-const columns: GridColumnDef<SpaceMember, any>[] = [
+const columns: TableColumnDef<SpaceMember, any>[] = [
   helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.key({ tooltip: true }) }),
   helper.accessor((member) => member.identity.profile?.displayName, { id: 'name' }),
   helper.accessor(

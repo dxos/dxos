@@ -4,7 +4,7 @@
 
 import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CancelledError, SystemError } from '@dxos/errors';
+import { CancelledError, SystemError, TimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -194,6 +194,9 @@ export class Peer {
       this._callbacks.onAccepted();
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      if (err instanceof TimeoutError) {
+        await connection.abort(err);
+      }
       // Calls `onStateChange` with CLOSED state.
       await this.closeConnection(err);
       throw err;

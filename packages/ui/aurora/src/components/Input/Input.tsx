@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { Check, IconWeight, Minus } from '@phosphor-icons/react';
 import {
   Root as CheckboxPrimitive,

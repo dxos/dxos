@@ -22,6 +22,7 @@ export {
   subscribe,
   EchoDatabase,
   EchoObject,
+  type ObjectMeta,
   EchoSchema,
   Expando,
   Query,

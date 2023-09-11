@@ -259,6 +259,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/phoenix/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -630,6 +635,11 @@
         {
           "type": "json",
           "path": "packages/ui/aurora-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-table/package.json",
           "jsonpath": "$.version"
         },
         {

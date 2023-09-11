@@ -7,6 +7,7 @@ import { Duplex } from 'node:stream';
 import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { TimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,7 +46,11 @@ export class Teleport {
     heartbeatInterval: 10_000,
     heartbeatTimeout: 10_000,
     onTimeout: () => {
-      this.destroy(new Error('Connection timed out')).catch((err) => log.catch(err));
+      if (this._destroying || this._aborting) {
+        return;
+      }
+      log('abort teleport due to onTimeout in ControlExtension');
+      this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
   });
 
@@ -53,6 +58,8 @@ export class Teleport {
   private readonly _remoteExtensions = new Set<string>();
 
   private _open = false;
+  private _destroying = false;
+  private _aborting = false;
 
   constructor({ initiator, localPeerId, remotePeerId }: TeleportParams) {
     invariant(typeof initiator === 'boolean');
@@ -79,6 +86,10 @@ export class Teleport {
     {
       // Destroy Teleport when the stream is closed.
       this._muxer.stream.on('close', async () => {
+        if (this._destroying || this._aborting) {
+          log('destroy teleport due to muxer stream close, skipping due to already destroying/aborting');
+          return;
+        }
         await this.destroy();
       });
 
@@ -129,6 +140,10 @@ export class Teleport {
     if (this._ctx.disposed) {
       return;
     }
+    if (this._aborting || this._destroying) {
+      return;
+    }
+    this._aborting = true;
     await this._ctx.dispose();
 
     for (const extension of this._extensions.values()) {
@@ -143,7 +158,12 @@ export class Teleport {
   }
 
   @synchronized
+  // TODO(nf): analyze callers and consider abort instead
   async destroy(err?: Error) {
+    if (this._destroying || this._aborting) {
+      return;
+    }
+    this._destroying = true;
     if (this._ctx.disposed) {
       return;
     }
