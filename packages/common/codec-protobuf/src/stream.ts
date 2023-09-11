@@ -102,7 +102,7 @@ export class Stream<T> {
       stream.subscribe(
         (data) => {
           resolve(data);
-          stream.close();
+          void stream.close();
         },
         (error) => {
           if (error) {
