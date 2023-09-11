@@ -162,7 +162,6 @@ export const JoinPanel = ({
   onExit,
   doneActionParent,
   onDone: propsOnDone,
-  onInvalidateInvitationCode,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -177,7 +176,6 @@ export const JoinPanel = ({
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
       }),
     },
-    onInvalidateInvitationCode,
   });
 
   useEffect(() => {

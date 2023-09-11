@@ -5,16 +5,19 @@
 import type { SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
+import type { Shell } from '../services';
 
 export class ClientRuntime {
-  public readonly spaces;
-  public readonly halo;
-  public readonly mesh;
+  readonly spaces: SpaceList;
+  readonly halo: HaloProxy;
+  readonly mesh: MeshProxy;
+  readonly shell?: Shell;
 
-  constructor({ spaces, halo, mesh }: { spaces: SpaceList; halo: HaloProxy; mesh: MeshProxy }) {
+  constructor({ spaces, halo, mesh, shell }: { spaces: SpaceList; halo: HaloProxy; mesh: MeshProxy; shell?: Shell }) {
     this.spaces = spaces;
     this.halo = halo;
     this.mesh = mesh;
+    this.shell = shell;
   }
 
   async open() {

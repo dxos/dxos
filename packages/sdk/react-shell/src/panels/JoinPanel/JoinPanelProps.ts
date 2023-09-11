@@ -27,7 +27,6 @@ export interface JoinPanelProps {
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onExit?: () => void;
   onDone?: (result: InvitationResult | null) => void;
-  onInvalidateInvitationCode?: (code: string) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
 }
 

@@ -11,6 +11,6 @@ export interface ShellRuntime {
   layout: ShellLayout;
   invitationCode?: string;
   spaceKey?: PublicKey;
-  setLayout: (layout: ShellLayout, options?: Omit<LayoutRequest, 'layout'>) => void;
+  setLayout: (request: LayoutRequest) => void;
   setAppContext: (context: AppContextRequest) => Promise<void>;
 }

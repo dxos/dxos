@@ -14,7 +14,8 @@ import {
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { getSpaceDisplayName } from '@braneframe/plugin-space';
+import { IntentPluginProvides } from '@braneframe/plugin-intent';
+import { SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
   Button,
@@ -30,9 +31,8 @@ import {
 } from '@dxos/aurora';
 import { useTextModel } from '@dxos/aurora-composer';
 import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
-import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, findPlugin, usePlugins } from '@dxos/react-surface';
+import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { useDocGhId } from '../../hooks';
 import { EditorViewState, GITHUB_PLUGIN } from '../../props';
@@ -53,8 +53,8 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
-  const { plugins } = usePlugins();
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+  const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
+  const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -64,8 +64,22 @@ const EmbeddedLayoutImpl = () => {
     document && window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
   }, [document]);
 
+  const handleCreateSpace = useCallback(() => {
+    void intentPlugin?.provides.intent.sendIntent({
+      action: SpaceAction.CREATE,
+    });
+  }, [intentPlugin]);
+
+  const handleJoinSpace = useCallback(() => {
+    void intentPlugin?.provides.intent.sendIntent({
+      action: SpaceAction.JOIN,
+    });
+  }, [intentPlugin]);
+
   const handleInvite = useCallback(() => {
-    void clientPlugin?.provides.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key });
+    if (clientPlugin && space) {
+      void clientPlugin.provides.client.shell.shareSpace({ spaceKey: space.key });
+    }
   }, [clientPlugin, space]);
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
@@ -258,7 +272,7 @@ const EmbeddedLayoutImpl = () => {
                   'p-2 bs-72 flex flex-col shadow-none bg-transparent',
                 )}
               >
-                <ResolverDialog clientPlugin={clientPlugin} />
+                <ResolverDialog handleCreateSpace={handleCreateSpace} handleJoinSpace={handleJoinSpace} />
               </div>
             </div>
           </Dialog.Root>
@@ -275,7 +289,7 @@ const EmbeddedLayoutImpl = () => {
         <Dialog.Root open={resolverDialogOpen} onOpenChange={setResolverDialogOpen}>
           <Dialog.Overlay classNames='backdrop-blur'>
             <Dialog.Content>
-              <ResolverDialog clientPlugin={clientPlugin} />
+              <ResolverDialog handleCreateSpace={handleCreateSpace} handleJoinSpace={handleJoinSpace} />
             </Dialog.Content>
           </Dialog.Overlay>
         </Dialog.Root>
