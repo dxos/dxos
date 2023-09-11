@@ -10,7 +10,8 @@ import { chromeSurface, groupSurface, mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 
-import { Column, Columns } from './Container';
+import { Column } from './Column';
+import { Columns } from './Columns';
 import { TypeCard } from './Custom';
 import { DraggableCard } from './DraggableCard';
 import { generators } from './testing';
