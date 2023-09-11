@@ -79,6 +79,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       signalArguments: ['globalsubserver'],
       showPNG: false,
       transport: TransportKind.SIMPLE_PEER,
+      withReconnects: false,
     },
     options: {
       staggerAgents: 5,

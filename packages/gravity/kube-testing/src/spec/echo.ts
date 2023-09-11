@@ -37,6 +37,7 @@ export type EchoTestSpec = {
   signalArguments: string[];
   transport: TransportKind;
   showPNG: boolean;
+  withReconnects: boolean;
 };
 
 export type EchoAgentConfig = {
@@ -172,7 +173,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           } satisfies StatsLog);
 
           // Disconnect some of the agents for one iteration.
-          const skipIterration = iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
+          const skipIterration = spec.withReconnects && iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
           if (skipIterration) {
             await this.client.destroy();
           } else {
