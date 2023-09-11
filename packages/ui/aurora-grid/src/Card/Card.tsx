@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, PropsWithChildren, ReactNode } from 'react';
 
+import { DensityProvider, Input, List, ListItem } from '@dxos/aurora';
 import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Universal search.
@@ -45,10 +46,18 @@ const cardDefaultStyle = [...cardContainerStyle, 'px-4 py-2 gap-2'];
 
 const handleIcon = 'flex shrink-0 h-6 items-center';
 
-// TODO(burdon): Type for handle/menu.
-const DefaultLayout: FC<
-  PropsWithChildren<{ handle?: ReactNode; menu?: ReactNode; title?: string; className?: string }>
-> = ({ handle, menu, title, className, children }) => {
+type LayoutProps = {
+  handle?: ReactNode;
+  menu?: ReactNode;
+};
+
+const DefaultLayout: FC<PropsWithChildren<LayoutProps & { title?: string; className?: string }>> = ({
+  handle,
+  menu,
+  title,
+  className,
+  children,
+}) => {
   return (
     <div className={mx(cardDefaultStyle)}>
       {handle && <div className={handleIcon}>{handle}</div>}
@@ -61,33 +70,33 @@ const DefaultLayout: FC<
   );
 };
 
-// TODO(burdon): Typed properties.
-const FormLayout: FC<{
-  handle?: ReactNode;
-  menu?: ReactNode;
-  title?: string;
-  sections: { label: string; value: string }[];
-}> = ({ handle, menu, title, sections }) => {
+// TODO(burdon): Editable typed properties.
+const FormLayout: FC<
+  PropsWithChildren<
+    LayoutProps & {
+      title?: string;
+      sections?: { label?: string; value: string }[];
+    }
+  >
+> = ({ handle, menu, title, children, sections }) => {
   return (
     <DefaultLayout handle={handle} menu={menu} title={title}>
       <div className='flex flex-col gap-2'>
-        {sections.map(({ label, value }, i) => (
-          <div key={i}>
-            <div className='font-thin text-xs'>{label}</div>
-            <div className='text-sm'>{value}</div>
-          </div>
-        ))}
+        {sections?.length &&
+          sections.map(({ label, value }, i) => (
+            <div key={i}>
+              {label && <div className='font-thin text-xs'>{label}</div>}
+              <div className='text-sm'>{value}</div>
+            </div>
+          ))}
+        {children}
       </div>
     </DefaultLayout>
   );
 };
 
-const TextLayout: FC<{ handle?: ReactNode; menu?: ReactNode; title?: string; body?: string }> = ({
-  handle,
-  menu,
-  title,
-  body,
-}) => {
+// TODO(burdon): Editable.
+const TextLayout: FC<LayoutProps & { title?: string; body?: string }> = ({ handle, menu, title, body }) => {
   return (
     <DefaultLayout handle={handle} menu={menu} title={title}>
       <div className='font-thin line-clamp-[6]'>{body}</div>
@@ -95,12 +104,7 @@ const TextLayout: FC<{ handle?: ReactNode; menu?: ReactNode; title?: string; bod
   );
 };
 
-const MessageLayout: FC<{ handle?: ReactNode; menu?: ReactNode; from: string; message: string }> = ({
-  handle,
-  menu,
-  from,
-  message,
-}) => {
+const MessageLayout: FC<LayoutProps & { from: string; message: string }> = ({ handle, menu, from, message }) => {
   return (
     <DefaultLayout handle={handle} menu={menu} title={from} className='text-sm font-thin'>
       <div>{message}</div>
@@ -109,11 +113,8 @@ const MessageLayout: FC<{ handle?: ReactNode; menu?: ReactNode; from: string; me
 };
 
 // TODO(burdon): Option to cover/contain.
-const ImageLayout: FC<{ handle?: ReactNode; menu?: ReactNode; src: string; body?: string }> = ({
-  handle,
-  menu,
-  src,
-}) => {
+// TODO(burdon): Caption: https://www.radix-ui.com/themes/playground
+const ImageLayout: FC<LayoutProps & { src: string; body?: string }> = ({ handle, menu, src }) => {
   return (
     <div className={mx(cardContainerStyle, 'relative')}>
       {handle && <div className='absolute bg-white opacity-50 mx-4 my-2'>{handle}</div>}
@@ -123,13 +124,7 @@ const ImageLayout: FC<{ handle?: ReactNode; menu?: ReactNode; src: string; body?
   );
 };
 
-export const Card: FC<CardProps & { handle?: ReactNode; menu?: ReactNode }> = ({
-  id,
-  type,
-  handle,
-  menu,
-  ...props
-}) => {
+export const Card: FC<LayoutProps & CardProps> = ({ id, type, handle, menu, ...props }) => {
   // TODO(burdon): Create factory with binders.
   const data: any = props;
 
@@ -145,6 +140,34 @@ export const Card: FC<CardProps & { handle?: ReactNode; menu?: ReactNode }> = ({
             { label: 'Email', value: data.email },
           ]}
         />
+      );
+    }
+    case 'project': {
+      return (
+        <FormLayout
+          handle={handle}
+          menu={menu}
+          title={data.name}
+          sections={[
+            {
+              value: data.body,
+            },
+          ]}
+        >
+          <DensityProvider density='fine'>
+            <List>
+              {data.tasks.map((task: any) => (
+                // TODO(burdon): Center align by default.
+                <ListItem.Root key={task.id} classNames='flex items-center gap-2'>
+                  <Input.Root>
+                    <Input.Checkbox checked={task.done} />
+                  </Input.Root>
+                  <ListItem.Heading classNames='truncate'>{task.title}</ListItem.Heading>
+                </ListItem.Root>
+              ))}
+            </List>
+          </DensityProvider>
+        </FormLayout>
       );
     }
     case 'document': {

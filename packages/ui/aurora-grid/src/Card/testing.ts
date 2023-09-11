@@ -10,11 +10,12 @@ const images = [
   'https://images.unsplash.com/photo-1616394158624-a2ba9cfe2994',
   'https://images.unsplash.com/photo-1507941097613-9f2157b69235',
   'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
+  'https://images.unsplash.com/photo-1499123785106-343e69e68db1',
 ];
 
-type Object = { id: string; type: string };
+type Data = { id: string; type: string };
 
-export const generators: Record<CardType, () => Object> = {
+export const generators: Record<CardType, () => Data & Record<string, any>> = {
   document: () => ({
     type: 'document',
     id: faker.string.uuid(),
@@ -40,26 +41,36 @@ export const generators: Record<CardType, () => Object> = {
     type: 'image',
     id: faker.string.uuid(),
     src: faker.helpers.arrayElement(images),
-    boyd: faker.lorem.sentence(),
   }),
-  event: (): Object => ({
+  event: () => ({
     type: 'event',
     id: faker.string.uuid(),
+    name: faker.commerce.productName(),
+    date: faker.date.recent(),
   }),
-  result: (): Object => ({
+  project: () => ({
+    type: 'project',
+    id: faker.string.uuid(),
+    name: faker.commerce.productName(),
+    body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+    tasks: Array.from({ length: faker.number.int(5) }).map(() => generators.task()),
+  }),
+  task: () => ({
+    type: 'task',
+    id: faker.string.uuid(),
+    done: faker.datatype.boolean(),
+    title: faker.lorem.sentence(),
+  }),
+
+  // TODO(burdon): Search result.
+  result: () => ({
     type: 'result',
     id: faker.string.uuid(),
   }),
-  project: (): Object => ({
-    type: 'project',
-    id: faker.string.uuid(),
-  }),
-  table: (): Object => ({
+
+  // TODO(burdon): Generic data.
+  table: () => ({
     type: 'table',
-    id: faker.string.uuid(),
-  }),
-  task: (): Object => ({
-    type: 'task',
     id: faker.string.uuid(),
   }),
 };

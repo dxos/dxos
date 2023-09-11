@@ -6,15 +6,28 @@ import { DndContext, MouseSensor, useSensor } from '@dnd-kit/core';
 import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren } from 'react';
 
+import { chromeSurface, groupSurface, mx } from '@dxos/aurora-theme';
+
 import '@dxosTheme';
 
 import { Card, DraggableCard } from './Card';
-import { Column } from './Container';
+import { Column, Columns } from './Container';
 import { generators } from './testing';
 
 faker.seed(5);
 
-// TODO(burdon): Replace with plugin-dnd.
+// TODO(burdon): Extract dnd from plugin-dnd to aurora-dnd.
+// TODO(burdon): Containers (optional dragging):
+//  - Column: Currently doesn't scroll inside Columns.
+//  - Columns: Able to drag cards between columns; Able to drag columns to re-order.
+//  - Grid: (e.g., kai notes).
+//  - List: Simplified table (no custom columns).
+// TODO(burdon): Plugins:
+//  - Kanban
+//  - Thread
+//  - Search
+//  - Grid
+
 const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   const sensors = useSensor(MouseSensor, {});
   const handleDragStart = (event: any) => {
@@ -43,42 +56,37 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
-const Columns = () => {
-  return (
-    <div className='flex grow gap-8 overflow-hidden'>
-      <Column id={'a'}>
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.image()} />
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.image()} />
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.document()} />
-      </Column>
-      <Column id={'b'}>
-        <DraggableCard {...generators.document()} />
-        <DraggableCard {...generators.image()} />
-        <DraggableCard {...generators.contact()} />
-        <DraggableCard {...generators.message()} />
-      </Column>
-      <Column id={'c'}>
-        <Card {...generators.document()} />
-        <Card {...generators.message()} />
-        <Card {...generators.message()} />
-        <Card {...generators.message()} />
-        <Card {...generators.message()} />
-        <Card {...generators.message()} />
-      </Column>
-    </div>
-  );
-};
-
 const ContainerStory = () => {
   return (
     <DnDContainer>
-      <Columns />
+      <Columns id={'main'} classNames={'p-4'}>
+        <Column id={'a'} classNames={[groupSurface, 'shadow rounded']}>
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.image()} />
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.image()} />
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.document()} />
+        </Column>
+        <Column id={'b'} classNames={[groupSurface, 'shadow rounded']}>
+          <DraggableCard {...generators.document()} />
+          <DraggableCard {...generators.image()} />
+          <DraggableCard {...generators.contact()} />
+          <DraggableCard {...generators.message()} />
+          <DraggableCard {...generators.project()} />
+        </Column>
+        <Column id={'c'} classNames={[groupSurface, 'shadow rounded']}>
+          <Card {...generators.document()} />
+          <Card {...generators.message()} />
+          <Card {...generators.message()} />
+          <Card {...generators.message()} />
+          <Card {...generators.message()} />
+          <Card {...generators.message()} />
+        </Column>
+      </Columns>
     </DnDContainer>
   );
 };
@@ -88,7 +96,7 @@ export default {
   args: {},
   decorators: [
     (Story: any) => (
-      <div className='flex flex-col items-center h-screen w-full overflow-hidden'>
+      <div className={mx('flex h-screen w-full overflow-hidden', chromeSurface)}>
         <Story />
       </div>
     ),
