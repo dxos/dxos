@@ -5,6 +5,7 @@ on:
     types:
       - opened
       - synchronize
+      - auto_merge_enabled
 
 jobs:
   merge_base_branch:
