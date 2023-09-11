@@ -118,7 +118,8 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   };
 
   const handleCreateObject = async (createContent: boolean) => {
-    generator.createObject({ createContent });
+    // generator.createObject({ createContent });
+    generator.createTables();
   };
 
   const handleCreateInvitation = () => {
@@ -209,15 +210,16 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleCreateInvitation} title='Space invitation'>
+          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
             <PaperPlaneRight className={getSize(5)} />
           </Button>
-          <Button onClick={handleOpenDevtools} title='DXOS Dectools'>
-            <Toolbox className={getSize(5)} />
+          <Button onClick={handleOpenDevtools} title='Open Dectools'>
+            <Toolbox weight='duotone' className={mx(getSize(5), 'text-red-700')} />
           </Button>
-          <Button onClick={handleCreateEpoch}>
+          <Button onClick={handleCreateEpoch} title='Create epoch'>
             <FlagPennant className={getSize(5)} />
           </Button>
+          {/* TODO(burdon): Alert or shift key. */}
           <Button onClick={handleResetClient} title='Reset client'>
             <Trash className={getSize(5)} />
           </Button>

@@ -14,14 +14,14 @@ export type PopoverStyleProps = Partial<{
 
 export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainInline, constrainBlock }, ...etc) =>
   mx(
-    'p-1 rounded-xl z-[100]',
+    'p-1 rounded-xl',
     constrainInline && 'max-is-[--radix-popover-content-available-width] overflow-x-auto',
     constrainBlock && 'max-bs-[--radix-popover-content-available-height] overflow-y-auto',
     ...etc,
   );
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
-  mx('rounded-xl', popperMotion, groupSurface, surfaceElevation({ elevation: 'group' }), focusRing, ...etc);
+  mx('z-[30] rounded-xl', popperMotion, groupSurface, surfaceElevation({ elevation: 'group' }), focusRing, ...etc);
 
 export const popoverArrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) => mx(groupArrow, ...etc);
 

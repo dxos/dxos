@@ -17,12 +17,14 @@ export const EditorMain = ({
   model,
   properties,
   layout,
+  editorMode,
   onChange,
   editorRefCb,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
+  editorMode?: MarkdownComposerProps['editorMode'];
   onChange?: MarkdownComposerProps['onChange'];
   editorRefCb: RefCallback<MarkdownComposerRef>;
 }) => {
@@ -34,6 +36,7 @@ export const EditorMain = ({
       <MarkdownComposer
         ref={editorRefCb}
         model={model}
+        editorMode={editorMode}
         onChange={onChange}
         slots={{
           root: {

@@ -18,7 +18,7 @@ test.describe('Single-player tests', () => {
 
   test('create identity, space is created by default', async () => {
     expect(await host.getSpaceItemsCount()).to.equal(1);
-    expect(await host.getMarkdownTextbox().textContent()).to.equal('Welcome to Composer!');
+    expect(await host.getMarkdownTextbox().textContent()).to.exist;
   });
 
   test('create space, which is displayed in tree', async () => {

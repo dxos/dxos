@@ -4,13 +4,13 @@
 
 import React, { FC } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
 const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
-const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
+const columns: TableColumnDef<ConnectionInfo.StreamStats, any>[] = [
   helper.accessor('bytesSent', builder.number({ header: 'sent' })),
   helper.accessor('bytesReceived', builder.number({ header: 'received' })),
   helper.accessor('bytesSentRate', builder.number({ header: 'sent b/s' })),
@@ -43,7 +43,13 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} keyAccessor={row => row.id.toString()} />
+      <div className='flex grow overflow-hidden'>
+        <Table<ConnectionInfo.StreamStats>
+          columns={columns}
+          data={connection.streams ?? []}
+          keyAccessor={(row) => row.id.toString()}
+        />
+      </div>
     </>
   );
 };
