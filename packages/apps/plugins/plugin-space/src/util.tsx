@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, PaperPlane, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import { Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -104,7 +104,7 @@ export const spaceToGraphNode = (
       {
         id: 'share-space',
         label: ['share space', { ns: SPACE_PLUGIN }],
-        icon: (props) => <PaperPlane {...props} />,
+        icon: (props) => <Users {...props} />,
         intent: { ...baseIntent, action: SpaceAction.SHARE },
         properties: {
           disabled: disabled || error,

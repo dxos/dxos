@@ -16,7 +16,7 @@ export interface SwarmListProps {
   onClick?: (id: PublicKey) => void;
 }
 
-// TODO(burdon): Convert to Grid.
+// TODO(burdon): Convert to Table.
 export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
   <div className='flex flex-col grow h-screen w-full'>
     <div className='inline-flex w-full border-b border-slate-400 border-solid'>

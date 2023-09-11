@@ -20,14 +20,14 @@ import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
-import { defaultGridSlots, GridSlots } from './theme';
-import { GridColumnDef, KeyValue } from './types';
+import { defaultTableSlots, TableSlots } from './theme';
+import { TableColumnDef, KeyValue } from './types';
 
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Drag-and-drop.
 // TODO(burdon): Virtual (e.g., log panel).
 
-export type GridSelection<TData extends RowData> = {
+export type TableSelection<TData extends RowData> = {
   // Controlled if undefined (by default).
   select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;
   selected?: TData[];
@@ -40,7 +40,7 @@ export type GridSelection<TData extends RowData> = {
 export const updateSelection = (
   selectionState: RowSelectionState,
   id: string,
-  selection: GridSelection<any>['select'],
+  selection: TableSelection<any>['select'],
 ): RowSelectionState => {
   switch (selection) {
     case 'single': {
@@ -78,10 +78,10 @@ export const updateSelection = (
   return selectionState;
 };
 
-export type GridProps<TData extends RowData> = {
+export type TableProps<TData extends RowData> = {
   keyAccessor?: KeyValue<TData>;
   data?: TData[];
-  columns?: GridColumnDef<TData>[];
+  columns?: TableColumnDef<TData>[];
   columnVisibility?: VisibilityState;
   onColumnResize?: (state: Record<string, number>) => void;
   grouping?: string[];
@@ -90,12 +90,12 @@ export type GridProps<TData extends RowData> = {
   border?: boolean;
   fullWidth?: boolean;
   pinToBottom?: boolean;
-  slots?: GridSlots;
+  slots?: TableSlots;
   debug?: boolean;
-} & GridSelection<TData>;
+} & TableSelection<TData>;
 
 // TODO(burdon): Rename Table.
-export const Grid = <TData extends RowData>({ slots = defaultGridSlots, ...props }: GridProps<TData>) => {
+export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...props }: TableProps<TData>) => {
   const {
     data = [],
     columns = [],
@@ -329,7 +329,7 @@ const usePinToBottom = <TData extends RowData>(data: TData[], pinToBottom?: bool
 // Head.
 //
 
-type TableHeadProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableHeadProps<TData extends RowData> = Partial<TableProps<TData>> & {
   state: TableState;
   headers: HeaderGroup<TData>[];
   expand?: boolean;
@@ -418,7 +418,7 @@ const TableHead = <TData extends RowData>({
 // Body.
 //
 
-type TableBodyProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableBodyProps<TData extends RowData> = Partial<TableProps<TData>> & {
   rows: Row<TData>[];
   rowSelection: RowSelectionState;
   expand?: boolean;
@@ -509,7 +509,7 @@ const TableBody = <TData extends RowData>({
 // Footer
 //
 
-type TableFootProps<TData extends RowData> = Partial<GridProps<TData>> & {
+type TableFootProps<TData extends RowData> = Partial<TableProps<TData>> & {
   footers: HeaderGroup<TData>[];
   expand?: boolean;
 };

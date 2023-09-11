@@ -52,7 +52,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/aurora-grid/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-table/dist/**/*.mjs'),
       ],
       extensions: []
     }),
