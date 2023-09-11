@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Grid, GridColumnDef, createColumnBuilder } from '@dxos/aurora-grid';
+import { Table, TableColumnDef, createColumnBuilder } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 
@@ -33,7 +33,7 @@ export const SpaceListPanel: FC = () => {
 
   // TODO(burdon): Get builder from hook.
   const { helper, builder } = createColumnBuilder<Space>();
-  const columns: GridColumnDef<Space, any>[] = [
+  const columns: TableColumnDef<Space, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
     helper.accessor((space) => space.properties.name, { id: 'name' }),
     helper.accessor((space) => space.db.objects.length, {
@@ -66,9 +66,11 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
+  console.log(spaces);
+
   return (
     <PanelContainer className='overflow-auto'>
-      <Grid<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
+      <Table<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
     </PanelContainer>
   );
 };

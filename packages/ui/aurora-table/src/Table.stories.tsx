@@ -13,10 +13,10 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Grid } from './Grid';
+import { Table } from './Table';
 import { createColumnBuilder, ValueUpdater } from './helpers';
-import { createActionColumn, createColumns, GridSchema } from './schema';
-import { GridColumnDef } from './types';
+import { createActionColumn, createColumns, TableSchema } from './schema';
+import { TableColumnDef } from './types';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.
@@ -48,7 +48,7 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
 };
 
 // TODO(burdon): Move to separate test.
-const schamas: GridSchema[] = [
+const schamas: TableSchema[] = [
   {
     id: 'a',
     props: [
@@ -100,7 +100,7 @@ const schamas: GridSchema[] = [
 ];
 
 const { helper, builder } = createColumnBuilder<Item>();
-const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[] => [
+const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
   helper.accessor(
     'complete',
     builder.checkbox({
@@ -140,7 +140,7 @@ const columns = (onUpdate?: ValueUpdater<Item, any>): GridColumnDef<Item, any>[]
 //
 
 export default {
-  component: Grid,
+  component: Table,
   args: {
     header: true,
     keyAccessor: (item: Item) => item.publicKey.toHex(),
@@ -246,7 +246,7 @@ export const Dynamic = {
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
-        <Grid<Item>
+        <Table<Item>
           keyAccessor={row => row.publicKey.toHex()}
           columns={columns()}
           data={items}
@@ -269,7 +269,7 @@ export const Editable = {
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
-        <Grid<Item>
+        <Table<Item>
           keyAccessor={row => row.publicKey.toHex()}
           columns={columns(onUpdate)}
           data={items}
@@ -313,7 +313,7 @@ export const Schema = {
     return (
       <div className='flex grow overflow-hidden'>
         {/* prettier-ignore */}
-        <Grid<Item>
+        <Table<Item>
           keyAccessor={row => row.publicKey.toHex()}
           columns={[...columns, actionColumn]}
           data={items}

@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import { DndContext, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useState } from 'react';
 
+import '@dxosTheme';
 import { getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { List, ListItem, ListProps, ListScopedProps } from './List';

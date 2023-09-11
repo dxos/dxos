@@ -12,8 +12,13 @@ import { Surface } from '@dxos/react-surface';
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
 
-export const SplitView = () => {
+export type SplitViewProps = {
+  showComplementarySidebar?: boolean;
+};
+
+export const SplitView = (props: SplitViewProps) => {
   const context = useSplitView();
+  const { showComplementarySidebar = true } = props;
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
@@ -46,7 +51,7 @@ export const SplitView = () => {
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && (
+        {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
             {/* TODO(burdon): name vs. role? */}
             <Surface name='complementary' role='complementary' />
@@ -68,7 +73,7 @@ export const SplitView = () => {
               <div role='none' className='grow' />
               {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface name='presence' role='presence' limit={1} />
-              {complementarySidebarOpen !== null && (
+              {complementarySidebarOpen !== null && showComplementarySidebar && (
                 <Button
                   onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                   variant='ghost'
@@ -98,6 +103,7 @@ export const SplitView = () => {
         <Surface name='main' role='main' />
 
         {/* Global popovers. */}
+        {/* TODO(burdon): Doesn't allow client to control the popover. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'

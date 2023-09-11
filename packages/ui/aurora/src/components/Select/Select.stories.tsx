@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren, useState } from 'react';
 
+import '@dxosTheme';
 import { Density } from '@dxos/aurora-types';
 
-import '@dxosTheme';
 import { DensityProvider } from '../DensityProvider';
 import { Select } from './Select';
 

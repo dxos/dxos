@@ -8,6 +8,13 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import {
+  ConnectionResetError,
+  TimeoutError,
+  ProtocolError,
+  ConnectivityError,
+  UnknownProtocolError,
+} from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -78,7 +85,7 @@ export class SimplePeerTransportProxy implements Transport {
 
   private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
-      this.errors.raise(new Error(connectionEvent.error));
+      this.errors.raise(decodeError(connectionEvent.error));
     }
 
     switch (connectionEvent.state) {
@@ -108,7 +115,7 @@ export class SimplePeerTransportProxy implements Transport {
         proxyId: this._proxyId,
         signal,
       })
-      .catch((err) => this.errors.raise(err));
+      .catch((err) => this.errors.raise(decodeError(err)));
   }
 
   // TODO(burdon): Move open from constructor.
@@ -173,3 +180,22 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
     return transport;
   }
 }
+
+// TODO(nf): fix so Errors crossing RPC boundary preserve class
+const decodeError = (err: Error | string) => {
+  const message = typeof err === 'string' ? err : err.message;
+
+  if (message.includes('ConnectionResetError')) {
+    return new ConnectionResetError(message);
+  } else if (message.includes('TimeoutError')) {
+    return new TimeoutError(message);
+  } else if (message.includes('ProtocolError')) {
+    return new ProtocolError(message);
+  } else if (message.includes('ConnectivityError')) {
+    return new ConnectivityError(message);
+  } else if (message.includes('UnknownProtocolError')) {
+    return new UnknownProtocolError(message);
+  } else {
+    return typeof err === 'string' ? new Error(err) : err;
+  }
+};

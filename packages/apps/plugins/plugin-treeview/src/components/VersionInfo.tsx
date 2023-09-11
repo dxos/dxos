@@ -18,7 +18,7 @@ export const VersionInfo: FC<{ config: Config }> = ({ config }) => {
   };
 
   return (
-    <div className='flex items-center p-2 gap-2 font-thin text-xs text-neutral-500'>
+    <div className='flex items-center pli-4 p-2 gap-2 font-thin text-xs text-neutral-500'>
       <div className='flex w-full gap-2'>
         <span
           title={timestamp && formatDistance(new Date(timestamp), new Date(), { addSuffix: true })}

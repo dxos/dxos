@@ -18,7 +18,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-grid": "workspace:*",
+    "@dxos/aurora-table": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",

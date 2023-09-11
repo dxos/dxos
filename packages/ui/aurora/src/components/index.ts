@@ -5,6 +5,7 @@
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
+export * from './ComboBox';
 export * from './Dialogs';
 export * from './DropdownMenu';
 export * from './Input';

@@ -252,9 +252,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
-            label: ['plugin name', { ns: SPACE_PLUGIN }],
+            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
-              palette: 'blue',
+              palette: 'pink', // TODO(burdon): Change palette.
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
@@ -398,8 +398,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.ADD_OBJECT: {
               if (space && intent.data.object) {
-                const object = space.db.add(intent.data.object);
-                return object;
+                return space.db.add(intent.data.object);
               }
               break;
             }

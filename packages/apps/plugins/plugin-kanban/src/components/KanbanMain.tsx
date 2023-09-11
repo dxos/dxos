@@ -42,7 +42,7 @@ export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div>
         <Input.Root>
-          <Input.Label srOnly>{t('kanban title label')}</Input.Label>
+          <Input.Label srOnly>{t('kanban object label')}</Input.Label>
           {/* TODO(burdon): Is classNames boilerplate required everywhere? Make consistent across plugins? Same for separator, etc. */}
           <Input.TextInput
             variant='subdued'

@@ -4,12 +4,12 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { mx, groupSurface, getSize } from '@dxos/aurora-theme';
+import { mx, getSize } from '@dxos/aurora-theme';
 
 export const Emoji = ({ text, className }: { text?: string; className?: string }) => {
   const size = 14;
   return (
-    <div role='none' className={mx(getSize(size), 'rounded relative pointer-events-none', groupSurface, className)}>
+    <div role='none' className={mx(getSize(size), 'rounded relative pointer-events-none', className)}>
       <svg viewBox={`0 0 ${size * 4} ${size * 4}`} width={size * 4} height={size * 4}>
         <text
           x='50%'
