@@ -63,44 +63,62 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
-const columnStyle = [groupSurface, 'w-[360px] shadow rounded-md p-3'];
+const columnStyle = [groupSurface, 'w-[360px] shadow rounded-md'];
 
 const ContainerStory = () => {
   return (
     <DnDContainer>
       <Columns id={'main'} classNames={'p-3'}>
-        <Column id={'c-1'} classNames={columnStyle}>
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.image()} />
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.image()} />
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.document()} />
-        </Column>
-        <Column id={'c-2'} classNames={columnStyle}>
-          <DraggableCard {...generators.document()} />
-          <DraggableCard {...generators.image()} />
-          <DraggableCard {...generators.contact()} />
-          <DraggableCard {...generators.message()} />
-          <DraggableCard {...generators.project()} />
-          <DraggableCard {...generators.project()} />
-        </Column>
-        <Column id={'c-3'} classNames={columnStyle}>
-          <TypeCard {...generators.message()} />
-          <TypeCard {...generators.image()} {...{ body: undefined }} sqaure />
-          <TypeCard {...generators.message()} />
-          <TypeCard {...generators.message()} />
-          <TypeCard {...generators.message()} />
-          <TypeCard {...generators.message()} />
-          <TypeCard {...generators.message()} />
-        </Column>
-        <Column id={'c-4'} classNames={columnStyle} />
-        <Column id={'c-5'} classNames={columnStyle}>
-          <DraggableCard {...generators.document()} />
-        </Column>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-1'}>
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.image()} />
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.image()} />
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.document()} />
+          </Column.ViewPort>
+        </Column.Root>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-2'}>
+            <DraggableCard {...generators.document()} />
+            <DraggableCard {...generators.image()} />
+            <DraggableCard {...generators.contact()} />
+            <DraggableCard {...generators.message()} />
+            <DraggableCard {...generators.message()} />
+            <DraggableCard {...generators.project()} />
+            <DraggableCard {...generators.project()} />
+          </Column.ViewPort>
+        </Column.Root>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-3'}>
+            <TypeCard {...generators.image()} {...{ body: undefined }} sqaure />
+            <TypeCard {...generators.message()} />
+            <TypeCard {...generators.message()} />
+            <TypeCard {...generators.message()} />
+            <TypeCard {...generators.message()} />
+          </Column.ViewPort>
+        </Column.Root>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-4'}>
+            <DraggableCard {...generators.document()} />
+          </Column.ViewPort>
+        </Column.Root>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-5'} />
+        </Column.Root>
+        <Column.Root classNames={columnStyle}>
+          <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
+          <Column.ViewPort id={'c-6'} />
+        </Column.Root>
       </Columns>
     </DnDContainer>
   );
