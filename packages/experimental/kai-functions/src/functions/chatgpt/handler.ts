@@ -24,7 +24,7 @@ const identityKey = PublicKey.random().toHex(); // TODO(burdon): ???
 export default async (event: HandlerProps, context: FunctionContext) => {
   const { space: spaceKey, objects: blockIds } = event; // TODO(burdon): Rename objects.
   const config = context.client.config;
-  const space = context.client.getSpace(PublicKey.from(spaceKey))!;
+  const space = context.client.spaces.get(PublicKey.from(spaceKey))!;
 
   // TODO(burdon): Logging (filename missing).
   log.info('chatgpt', { space: space.key });

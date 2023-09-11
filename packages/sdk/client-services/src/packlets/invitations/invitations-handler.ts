@@ -4,9 +4,9 @@
 
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable,
+  AuthenticatingInvitation,
   AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitationObservable,
+  CancellableInvitation,
   INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -60,7 +60,7 @@ export class InvitationsHandler {
    */
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
+  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitation {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -193,7 +193,7 @@ export class InvitationsHandler {
     });
 
     // TODO(burdon): Stop anything pending.
-    const observable = new CancellableInvitationObservable({
+    const observable = new CancellableInvitation({
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {
@@ -205,7 +205,7 @@ export class InvitationsHandler {
     return observable;
   }
 
-  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitation {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     invariant(protocol);
 
@@ -369,7 +369,7 @@ export class InvitationsHandler {
       setState({ state: Invitation.State.CONNECTING });
     });
 
-    const observable = new AuthenticatingInvitationObservable({
+    const observable = new AuthenticatingInvitation({
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {

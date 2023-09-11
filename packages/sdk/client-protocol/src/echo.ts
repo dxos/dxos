@@ -3,11 +3,11 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { DatabaseRouter } from '@dxos/echo-schema';
+import type { EchoSchema } from '@dxos/echo-schema';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import type { AuthenticatingInvitationObservable } from './invitations';
+import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
 
 /**
@@ -16,15 +16,39 @@ import type { Space } from './space';
 // TODO(wittjosiah): Rename?
 //   https://ts.dev/style/#naming-style
 //   ClientApi? ClientProtocol?
-export interface Echo {
-  get spaces(): MulticastObservable<Space[]>;
+export interface Echo extends MulticastObservable<Space[]> {
+  /**
+   * Returns the list of spaces.
+   */
+  get(): Space[];
 
-  createSpace(): Promise<Space>;
-  // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
-  getSpace(spaceKey: PublicKey): Space | undefined;
+  /**
+   * Returns the space with the given key.
+   */
+  get(spaceKey: PublicKey): Space | undefined;
 
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  /**
+   * Returns the default space.
+   */
+  get default(): Space;
 
-  // TODO(burdon): Rename.
-  dbRouter: DatabaseRouter;
+  /**
+   * Creates a new space.
+   */
+  create(): Promise<Space>;
+
+  /**
+   * Creates a space from the given snapshot.
+   */
+  // clone(snapshot: SpaceSnapshot): Promise<Space>;
+
+  /**
+   * Joins an existing space using the given invitation.
+   */
+  join(invitation: Invitation | string): AuthenticatingInvitation;
+
+  /**
+   * Adds a schema to ECHO.
+   */
+  addSchema(schema: EchoSchema): void;
 }

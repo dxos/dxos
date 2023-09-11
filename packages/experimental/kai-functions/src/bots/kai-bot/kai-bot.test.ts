@@ -22,7 +22,7 @@ describe.skip('KaiBot', () => {
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     await client.halo.createIdentity();
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
 
     const bot = new KaiBot('dxos.module.bot.kai');
     await bot.init(client.config, space);

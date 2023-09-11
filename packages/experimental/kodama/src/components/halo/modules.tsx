@@ -92,7 +92,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Share
                           onCreate={() => {
-                            return client.halo.createInvitation();
+                            return client.halo.share();
                           }}
                         />
                       </Panel>

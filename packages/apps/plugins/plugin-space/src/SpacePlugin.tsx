@@ -105,8 +105,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               client.services instanceof IFrameClientServicesHost)
           ) {
             client.services.setSpaceProvider(() => {
-              const defaultSpace = client.getSpace();
-              if (defaultSpace && space.key.equals(defaultSpace.key)) {
+              if (space.key.equals(client.spaces.default.key)) {
                 return undefined;
               } else {
                 return space.key;
@@ -244,11 +243,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const client = clientPlugin.provides.client;
-          const defaultSpace = client.getSpace();
-          if (defaultSpace) {
-            // Ensure default space is always first.
-            spaceToGraphNode(defaultSpace, parent);
-          }
+          // Ensure default space is always first.
+          spaceToGraphNode(client.spaces.default, parent);
 
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
@@ -272,7 +268,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
               const update = () => {
-                const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
+                const isDefaultSpace = client.spaces.default.key.equals(space.key);
                 isDefaultSpace
                   ? spaceToGraphNode(space, parent, treeViewPlugin?.provides.treeView?.appState)
                   : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
@@ -291,7 +287,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               icon: (props) => <Planet {...props} />,
               properties: {
                 disposition: 'toolbar',
-                testId: 'spacePlugin.createSpace',
+                testId: 'spacePlugin.spaces.create',
               },
               intent: {
                 plugin: SPACE_PLUGIN,
@@ -324,7 +320,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
           switch (intent.action) {
             case SpaceAction.CREATE: {
-              return clientPlugin?.provides.client.createSpace(intent.data);
+              return clientPlugin?.provides.client.spaces.create(intent.data);
             }
 
             case SpaceAction.JOIN: {
@@ -342,7 +338,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const space = clientPlugin?.provides.client.getSpace(spaceKey);
+          const space = clientPlugin?.provides.client.spaces.get(spaceKey);
           switch (intent.action) {
             case SpaceAction.SHARE: {
               if (clientPlugin) {

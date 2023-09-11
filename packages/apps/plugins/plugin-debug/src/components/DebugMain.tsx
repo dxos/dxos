@@ -123,7 +123,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   };
 
   const handleCreateInvitation = () => {
-    const invitation = space.createInvitation({
+    const invitation = space.share({
       type: Invitation.Type.MULTIUSE,
       authMethod: Invitation.AuthMethod.NONE,
     });

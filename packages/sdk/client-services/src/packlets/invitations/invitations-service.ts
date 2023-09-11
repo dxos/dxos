@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
+import { AuthenticatingInvitation, CancellableInvitation } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -21,8 +21,8 @@ import { InvitationsHandler } from './invitations-handler';
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService {
-  private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
-  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
+  private readonly _createInvitations = new Map<string, CancellableInvitation>();
+  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
   private readonly _invitationCreated = new Event<Invitation>();
   private readonly _invitationAccepted = new Event<Invitation>();
   private readonly _removedCreated = new Event<Invitation>();
@@ -41,7 +41,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   createInvitation(options: Invitation): Stream<Invitation> {
-    let invitation: CancellableInvitationObservable;
+    let invitation: CancellableInvitation;
 
     const existingInvitation = this._createInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -73,7 +73,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   acceptInvitation(options: Invitation): Stream<Invitation> {
-    let invitation: AuthenticatingInvitationObservable;
+    let invitation: AuthenticatingInvitation;
 
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {

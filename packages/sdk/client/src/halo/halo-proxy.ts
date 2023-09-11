@@ -238,26 +238,26 @@ export class HaloProxy implements Halo {
   /**
    * Initiates device invitation.
    */
-  createInvitation(options?: Partial<Invitation>) {
+  share(options?: Partial<Invitation>) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('create invitation', options);
-    const invitation = this._invitationProxy!.createInvitation(options);
+    const invitation = this._invitationProxy!.share(options);
     return invitation;
   }
 
   /**
    * Initiates accepting invitation.
    */
-  acceptInvitation(invitation: Invitation) {
+  join(invitation: Invitation | string) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy!.acceptInvitation(invitation);
+    return this._invitationProxy!.join(invitation);
   }
 
   /**
