@@ -10,16 +10,15 @@ import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Factor out styles.
 
-export const CardRoot: FC<PropsWithChildren<{ classNames?: ClassNameValue; noPadding?: boolean }>> = ({
-  classNames,
-  children,
-  noPadding,
-}) => {
+export const CardRoot: FC<
+  PropsWithChildren<{ classNames?: ClassNameValue; square?: boolean; noPadding?: boolean }>
+> = ({ classNames, children, square, noPadding }) => {
   return (
     <DensityProvider density='fine'>
       <div
         className={mx(
-          'flex flex-col group min-w-[280px] max-w-[360px] max-h-[300px] overflow-hidden',
+          'flex flex-col group w-full min-w-[280px] max-w-[360px] max-h-[360px] overflow-hidden',
+          square && 'aspect-square',
           'shadow-sm rounded',
           !noPadding && 'py-2 gap-1',
           inputSurface,
@@ -33,7 +32,7 @@ export const CardRoot: FC<PropsWithChildren<{ classNames?: ClassNameValue; noPad
 };
 
 export const CardHeader: FC<PropsWithChildren<{ classNames?: ClassNameValue }>> = ({ classNames, children }) => (
-  <div className={mx('flex grow px-2 overflow-hidden', classNames)}>{children}</div>
+  <div className={mx('flex w-full px-2 overflow-hidden', classNames)}>{children}</div>
 );
 
 export const CardBody: FC<PropsWithChildren<{ classNames?: ClassNameValue; indent?: boolean }>> = ({
@@ -83,15 +82,9 @@ export type LayoutProps = {
   menu?: ReactNode;
 };
 
-// TODO(burdon): Option to cover/contain.
-export const ImageCard: FC<LayoutProps & { src: string; body?: string; bottom?: boolean }> = ({
-  classNames,
-  handle,
-  menu,
-  src,
-  body,
-  bottom,
-}) => {
+export const ImageCard: FC<
+  LayoutProps & { src: string; body?: string; contain?: boolean; square?: boolean; bottom?: boolean }
+> = ({ classNames, handle, menu, src, body, contain, square, bottom }) => {
   return (
     <Card.Root classNames={classNames} noPadding>
       {(handle || menu) && (
@@ -105,10 +98,17 @@ export const ImageCard: FC<LayoutProps & { src: string; body?: string; bottom?: 
           <span className='line-clamp-[3]'>{body}</span>
         </div>
       )}
-      <img
-        className={mx('object-cover', (!body || bottom) && 'rounded-t', (!body || !bottom) && 'rounded-b')}
-        src={src}
-      />
+      <div>
+        <img
+          className={mx(
+            square && 'aspect-square',
+            contain ? 'object-contain' : 'object-cover',
+            (!body || bottom) && 'rounded-t',
+            (!body || !bottom) && 'rounded-b',
+          )}
+          src={src}
+        />
+      </div>
       {body && bottom && (
         <div className='p-2 text-sm'>
           <span className='line-clamp-[3]'>{body}</span>

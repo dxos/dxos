@@ -12,16 +12,17 @@ export type TypeCardProps = PropsWithChildren<{
   id: string;
   type?: string;
   classNames?: ClassNameValue;
+  sqaure?: boolean;
 }>;
 
 // TODO(burdon): Create factory of layouts with property binders.
-export const TypeCard: FC<LayoutProps & TypeCardProps> = ({ id, type, classNames, handle, menu, ...props }) => {
+export const TypeCard: FC<LayoutProps & TypeCardProps> = ({ id, type, classNames, handle, sqaure, menu, ...props }) => {
   const data: any = props;
 
   switch (type) {
     case 'document': {
       return (
-        <Card.Root classNames={classNames}>
+        <Card.Root classNames={classNames} square={sqaure}>
           <Card.Header>
             {handle}
             <Card.Title title={data.title} />
@@ -35,7 +36,17 @@ export const TypeCard: FC<LayoutProps & TypeCardProps> = ({ id, type, classNames
     }
 
     case 'image': {
-      return <ImageCard classNames={classNames} handle={handle} menu={menu} src={data.src} body={data.body} bottom />;
+      return (
+        <ImageCard
+          classNames={classNames}
+          handle={handle}
+          menu={menu}
+          src={data.src}
+          body={data.body}
+          square={sqaure}
+          bottom
+        />
+      );
     }
 
     case 'message': {

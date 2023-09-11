@@ -16,7 +16,7 @@ export const Column: FC<PropsWithChildren & { id: string; classNames?: ClassName
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div ref={setNodeRef} className={mx('flex flex-col shrink-0 overflow-y-auto', classNames)}>
-      {children}
+      <div className={mx('flex flex-col gap-2')}>{children}</div>
     </div>
   );
 
