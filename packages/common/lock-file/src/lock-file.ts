@@ -3,16 +3,16 @@
 //
 
 import { flock } from 'fs-ext';
-import { constants } from 'node:fs';
-import { open, FileHandle } from 'node:fs/promises';
+import { open, FileHandle, constants } from 'node:fs/promises';
 
 export class LockFile {
   static async acquire(filename: string): Promise<FileHandle> {
     const handle = await open(filename, constants.O_CREAT);
     await new Promise<void>((resolve, reject) => {
-      flock(handle.fd, 'exnb', (err) => {
+      flock(handle.fd, 'exnb', async (err) => {
         if (err) {
           reject(err);
+          await handle.close();
           return;
         }
         resolve();

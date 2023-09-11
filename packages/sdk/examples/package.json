@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "chromatic": "chromatic --only-changed --project-token=\"chpt_7b7f447ccad9f73\" --storybook-build-dir out --exit-zero-on-changes",
-    "prebuild": "dxtype src/proto/TaskList.proto src/proto/gen/TaskList.ts"
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "devDependencies": {
     "@dxos/aurora": "workspace:*",
