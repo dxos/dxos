@@ -348,6 +348,7 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-telemetry': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/plugin-url-sync': workspace:*
@@ -384,6 +385,7 @@ importers:
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
+      '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
       '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
@@ -425,29 +427,20 @@ importers:
 
   packages/apps/halo-app:
     specifiers:
-      '@dxos/async': workspace:*
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-error': workspace:*
+      '@braneframe/plugin-pwa': workspace:*
+      '@braneframe/plugin-telemetry': workspace:*
+      '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/metagraph': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-metagraph': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/telemetry': workspace:*
-      '@dxos/util': workspace:*
+      '@dxos/react-surface': workspace:*
       '@dxos/vault': workspace:*
-      '@headlessui/react': ^1.7.3
-      '@phosphor-icons/react': ^2.0.5
-      '@radix-ui/react-alert-dialog': ^1.0.3
-      '@react-hook/async': ^3.1.1
-      '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.7.2
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
@@ -455,39 +448,26 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
       typescript: ^5.2.2
-      url-join: ^5.0.0
       vite: ^4.3.9
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
-      '@dxos/async': link:../../common/async
+      '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-error': link:../plugins/plugin-error
+      '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
+      '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
+      '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
-      '@dxos/metagraph': link:../../experimental/metagraph
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-metagraph': link:../../experimental/react-metagraph
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-      '@dxos/sentry': link:../../common/sentry
-      '@dxos/telemetry': link:../../common/telemetry
-      '@dxos/util': link:../../common/util
+      '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/vault': link:../../sdk/vault
-      '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-alert-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@react-hook/async': 3.1.1_react@18.2.0
-      '@sentry/react': 7.42.0_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      url-join: 5.0.0
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@sentry/vite-plugin': 0.7.2
@@ -521,6 +501,7 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
       '@braneframe/plugin-table': workspace:*
+      '@braneframe/plugin-telemetry': workspace:*
       '@braneframe/plugin-template': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-thread': workspace:*
@@ -569,6 +550,7 @@ importers:
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
       '@braneframe/plugin-table': link:../plugins/plugin-table
+      '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-template': link:../plugins/plugin-template
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-thread': link:../plugins/plugin-thread
@@ -1512,6 +1494,35 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-telemetry:
+    specifiers:
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
+      '@dxos/util': workspace:*
+      '@types/react': ^18.0.21
+      localforage: ^1.10.0
+      react: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/log': link:../../../common/log
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/sentry': link:../../../common/sentry
+      '@dxos/telemetry': link:../../../common/telemetry
+      '@dxos/util': link:../../../common/util
+      localforage: 1.10.0
+    devDependencies:
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-template:
@@ -9517,17 +9528,6 @@ packages:
       '@griffel/core': 1.12.0
       react: 18.2.0
       tslib: 2.6.0
-    dev: false
-
-  /@headlessui/react/1.7.3_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-LGp06SrGv7BMaIQlTs8s2G06moqkI0cb0b8stgq7KZ3xcHdH3qMP+cRyV7qe5x4XEW/IGY48BW4fLesD6NQLng==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: ^16 || ^17 || ^18
-      react-dom: ^16 || ^17 || ^18
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@humanwhocodes/config-array/0.11.8:

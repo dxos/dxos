@@ -28,6 +28,7 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/plugin-table": "workspace:*",
+    "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-template": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
