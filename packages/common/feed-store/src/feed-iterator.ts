@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import safeRace from 'race-as-promised';
+
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import safeRace from 'race-as-promised';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
