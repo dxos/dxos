@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.58](https://github.com/dxos/dxos/compare/v0.1.57...v0.1.58) (2023-09-11)
+
+
+### Features
+
+* Add tcp transport ([#4175](https://github.com/dxos/dxos/issues/4175)) ([03af36b](https://github.com/dxos/dxos/commit/03af36bbec90dd40917f697777c22d6e7b307b46))
+* **agent:** Integrate Phoenix daemon ([#4176](https://github.com/dxos/dxos/issues/4176)) ([5e5d64f](https://github.com/dxos/dxos/commit/5e5d64f1b19ab76a41ceec93831df193bc8c6e44))
+* Aurora ComboBox ([#4167](https://github.com/dxos/dxos/issues/4167)) ([c10e16a](https://github.com/dxos/dxos/commit/c10e16a1d65b6fa3f44afa0d88940398631f071e))
+* composer and shell tweaks ([#4168](https://github.com/dxos/dxos/issues/4168)) ([576e3eb](https://github.com/dxos/dxos/commit/576e3ebfd4da898325d41e5061012c2dae7606f1))
+* **labs-app,composer-app:** Adjust mobile root font-size ([#4185](https://github.com/dxos/dxos/issues/4185)) ([f117c08](https://github.com/dxos/dxos/commit/f117c0891f86f8a97146bb57acd7a381beedb3db))
+* **phoenix:** Add @dxos/phoenix ([#4114](https://github.com/dxos/dxos/issues/4114)) ([60c63b5](https://github.com/dxos/dxos/commit/60c63b506a3e7a90ec9eabdf80effe97967f6a95))
+* **plugin-markdown:** vim mode ([#4180](https://github.com/dxos/dxos/issues/4180)) ([31dfb10](https://github.com/dxos/dxos/commit/31dfb103b9bd46a1c461996e74e8a7c3a489114e))
+* **plugin-space:** track objects viewed ([#4133](https://github.com/dxos/dxos/issues/4133)) ([73a8891](https://github.com/dxos/dxos/commit/73a889152c4d091b69f6e76eaf3f0ad9a191ae48))
+* Rename aurora-grid =&gt; aurora-table ([#4186](https://github.com/dxos/dxos/issues/4186)) ([47053bc](https://github.com/dxos/dxos/commit/47053bc5b43cb10d7e36405600b401a1df6687cf))
+* Table with combobox ([#4160](https://github.com/dxos/dxos/issues/4160)) ([6f6722d](https://github.com/dxos/dxos/commit/6f6722ddb5276f0d4b3a7153664e9e98e300c0cc))
+
+
+### Bug Fixes
+
+* **client-services:** emit removal event when invitation completes ([#4177](https://github.com/dxos/dxos/issues/4177)) ([353d0d1](https://github.com/dxos/dxos/commit/353d0d1edb8f6b23eb22b77c47101bccf7eb82b7))
+* connectivity and error handling ([#4139](https://github.com/dxos/dxos/issues/4139)) ([b605d47](https://github.com/dxos/dxos/commit/b605d47ace1972bf3df808717ef1d48d4a6b33f3))
+* **examples:** change schema import to work in stackblitz ([#4192](https://github.com/dxos/dxos/issues/4192)) ([c92d924](https://github.com/dxos/dxos/commit/c92d9247f89402a391d9773d8ef47baf4667f4f2))
+* Fix sentry processor leak ([#4182](https://github.com/dxos/dxos/issues/4182)) ([c4d3e15](https://github.com/dxos/dxos/commit/c4d3e15b7ae7ab9d49a325e0d2278963bbe89bef))
+* Flush keyring file after saving the key ([#4169](https://github.com/dxos/dxos/issues/4169)) ([b53b126](https://github.com/dxos/dxos/commit/b53b126f4b600164c768a3c7790b3a49698e1c1a))
+* Labs DnD ([#4162](https://github.com/dxos/dxos/issues/4162)) ([0fabfcd](https://github.com/dxos/dxos/commit/0fabfcd962e6190ad5be446853ebc97ea37a2d59))
+* Memory leaks ([#4188](https://github.com/dxos/dxos/issues/4188)) ([6c0bd88](https://github.com/dxos/dxos/commit/6c0bd889ed66c5c41f657b78ccfc8ad85215db6d))
+* Meta assignment bug ([#4170](https://github.com/dxos/dxos/issues/4170)) ([46f22ad](https://github.com/dxos/dxos/commit/46f22ad2c7fdbd77cb79bbfd03aadd09d5fd8f0b))
+* multiuse invitations ([#4183](https://github.com/dxos/dxos/issues/4183)) ([afe71a8](https://github.com/dxos/dxos/commit/afe71a8017dc27b05ca884213e7057a3b8879209))
+* **plugin-files:** move open actions to group node ([#4179](https://github.com/dxos/dxos/issues/4179)) ([4ca8c61](https://github.com/dxos/dxos/commit/4ca8c61c2c3ba6e16cecf44ba359c0aba01989d7))
+* **plugin-treeview,plugin-thread:** Close sidebar buttons up to `lg` ([#4166](https://github.com/dxos/dxos/issues/4166)) ([ffbb8a1](https://github.com/dxos/dxos/commit/ffbb8a18e92d926747b3289d50ccd9df99206bb4))
+* **plugin-treeview:** Revert use of `ScrollArea` with draggable content (for now) ([#4165](https://github.com/dxos/dxos/issues/4165)) ([75cbd70](https://github.com/dxos/dxos/commit/75cbd7037a894eb97e286bc17738efe4d7322593))
+
 ## [0.1.57](https://github.com/dxos/dxos/compare/v0.1.56...v0.1.57) (2023-09-07)
 
 
