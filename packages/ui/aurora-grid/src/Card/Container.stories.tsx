@@ -63,11 +63,13 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
+const columnStyle = [groupSurface, 'w-[360px] shadow rounded-md p-3'];
+
 const ContainerStory = () => {
   return (
     <DnDContainer>
       <Columns id={'main'} classNames={'p-3'}>
-        <Column id={'a'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3']}>
+        <Column id={'c-1'} classNames={columnStyle}>
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.image()} />
@@ -78,7 +80,7 @@ const ContainerStory = () => {
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.document()} />
         </Column>
-        <Column id={'b'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3']}>
+        <Column id={'c-2'} classNames={columnStyle}>
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.image()} />
           <DraggableCard {...generators.contact()} />
@@ -86,7 +88,7 @@ const ContainerStory = () => {
           <DraggableCard {...generators.project()} />
           <DraggableCard {...generators.project()} />
         </Column>
-        <Column id={'c'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3']}>
+        <Column id={'c-3'} classNames={columnStyle}>
           <TypeCard {...generators.message()} />
           <TypeCard {...generators.image()} {...{ body: undefined }} sqaure />
           <TypeCard {...generators.message()} />
@@ -94,6 +96,10 @@ const ContainerStory = () => {
           <TypeCard {...generators.message()} />
           <TypeCard {...generators.message()} />
           <TypeCard {...generators.message()} />
+        </Column>
+        <Column id={'c-4'} classNames={columnStyle} />
+        <Column id={'c-5'} classNames={columnStyle}>
+          <DraggableCard {...generators.document()} />
         </Column>
       </Columns>
     </DnDContainer>
