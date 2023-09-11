@@ -9,7 +9,6 @@ import React, { useMemo, useState } from 'react';
 
 import { Button, ButtonGroup, List } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Group } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -93,7 +92,8 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
       );
 
       return (
-        <Group label={{ children: header }}>
+        <div>
+          <h1>{header}</h1>
           {spaces.length > 0 ? (
             <List>
               {spaces.map((space) => (
@@ -103,7 +103,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           ) : (
             <div className='text-center'>No spaces</div>
           )}
-        </Group>
+        </div>
       );
     }
   }
@@ -192,7 +192,8 @@ const Invitations = ({ id }: { id: number }) => {
 
   return (
     <div className='flex flex-col p-4 flex-1 min-w-0' data-testid={`peer-${id}`}>
-      <Group label={{ children: header }} className='mbe-2'>
+      <div className='mbe-2'>
+        <h1>{header}</h1>
         {identity ? (
           <List>
             <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
@@ -200,7 +201,7 @@ const Invitations = ({ id }: { id: number }) => {
         ) : (
           <div className='text-center'>No identity</div>
         )}
-      </Group>
+      </div>
       {identity || panel ? <Panel id={id} panel={panel} setPanel={setPanel} /> : null}
     </div>
   );

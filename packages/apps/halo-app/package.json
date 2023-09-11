@@ -18,7 +18,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@dxos/vault": "workspace:*",

@@ -21,13 +21,19 @@
   ],
   "references": [
     {
-      "path": "../../../sdk/config"
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../../../ui/react-appkit"
+      "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../../../ui/aurora-theme"
     }
   ]
 }

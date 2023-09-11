@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-telemetry/src/index.ts"
+          "packages/apps/plugins/plugin-telemetry/src/index.ts",
+          "packages/apps/plugins/plugin-telemetry/src/telemetry/index.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-telemetry/dist/lib",
         "platforms": [
