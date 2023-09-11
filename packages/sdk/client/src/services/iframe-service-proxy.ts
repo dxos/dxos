@@ -12,10 +12,9 @@ import {
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log, LogFilter, parseFilter } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { RemoteServiceConnectionTimeout, trace } from '@dxos/protocols';
 import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort, ServiceBundle } from '@dxos/rpc';

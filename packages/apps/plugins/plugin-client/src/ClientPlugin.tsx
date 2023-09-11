@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { AlertDialog, useTranslation } from '@dxos/aurora';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -14,11 +15,13 @@ import {
   ClientOptions,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
+  InvalidStorageVersionError,
   SystemStatus,
 } from '@dxos/react-client';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { CLIENT_PLUGIN, ClientPluginProvides } from './types';
+import translations from './translations';
+import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
 const handleInvalidatedInvitationCode = (code: string) => {
   const url = new URL(location.href);
@@ -68,15 +71,21 @@ export const ClientPlugin = (
     },
     initialize: async () => {
       let firstRun = false;
+      let error: unknown = null;
+
+      try {
+        await client.initialize();
+
+        const searchParams = new URLSearchParams(location.search);
+        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+          firstRun = true;
+          await client.halo.createIdentity();
+        }
+      } catch (err) {
+        error = err;
+      }
 
       document.addEventListener('keydown', onKeypress);
-
-      await client.initialize();
-      const searchParams = new URLSearchParams(location.search);
-      if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
-        firstRun = true;
-        await client.halo.createIdentity();
-      }
 
       // Debugging (e.g., for monolithic mode).
       if (options.debugIdentity) {
@@ -101,6 +110,7 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
+        translations,
         setLayout: async (layout, options) => {
           if (
             client.services instanceof IFrameClientServicesProxy ||
@@ -138,6 +148,32 @@ export const ClientPlugin = (
           }, [client, setStatus]);
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
+        },
+        components: {
+          default: () => {
+            if (error instanceof InvalidStorageVersionError) {
+              const { t } = useTranslation(CLIENT_PLUGIN);
+
+              return (
+                <AlertDialog.Root open>
+                  <AlertDialog.Overlay>
+                    <AlertDialog.Content>
+                      <AlertDialog.Title>{t('invalid storage version title')}</AlertDialog.Title>
+                      <AlertDialog.Description>
+                        {t('invalid storage version message', error.context)}
+                      </AlertDialog.Description>
+                    </AlertDialog.Content>
+                  </AlertDialog.Overlay>
+                </AlertDialog.Root>
+              );
+            }
+
+            if (error) {
+              throw error;
+            }
+
+            return null;
+          },
         },
       };
     },
