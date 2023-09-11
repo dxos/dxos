@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Event } from '@dxos/async';
+import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,6 +15,8 @@ import { GossipExtension } from './gossip-extension';
 export type GossipParams = {
   localPeerId: PublicKey;
 };
+
+const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 
 /**
  * Gossip extensions manager.
@@ -31,17 +33,44 @@ export class Gossip {
 
   private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak. Never cleared.
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
   public readonly connectionClosed = new Event<PublicKey>();
 
-  constructor(private readonly _params: GossipParams) {}
+  constructor(private readonly _params: GossipParams) { }
 
   get localPeerId() {
     return this._params.localPeerId;
+  }
+
+  async open() {
+    // Clear the map periodically.
+    scheduleTaskInterval(this._ctx, async () => {
+      const start = performance.now();
+
+      for (const key of this._toClear.keys()) {
+        this._receivedMessages.delete(key);
+      }
+      this._toClear.clear();
+      for (const key of this._receivedMessages.keys()) {
+        this._toClear.add(key);
+      }
+
+      const elapsed = performance.now() - start;
+      if(elapsed > 100) {
+        log.warn('GC took too long', { elapsed });
+      }
+    }, RECEIVED_MESSAGES_GC_INTERVAL);
+  }
+
+
+  async close() {
+    await this._ctx.dispose();
   }
 
   getConnections() {
@@ -75,10 +104,6 @@ export class Gossip {
     return extension;
   }
 
-  async destroy() {
-    await this._ctx.dispose();
-  }
-
   postMessage(channel: string, payload: any) {
     for (const extension of this._connections.values()) {
       void extension
@@ -95,7 +120,7 @@ export class Gossip {
           // TODO(nf): always destroy on RpcClosedError?
 
           if (err instanceof RpcClosedError) {
-            await this.destroy();
+            await this.close();
             throw err;
           }
         });

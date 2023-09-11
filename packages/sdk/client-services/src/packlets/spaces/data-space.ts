@@ -151,6 +151,7 @@ export class DataSpace {
   }
 
   private async _open() {
+    await this._gossip.open();
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open(new Context());
@@ -180,6 +181,7 @@ export class DataSpace {
     await this._notarizationPlugin.close();
 
     await this._presence.destroy();
+    await this._gossip.close();
   }
 
   async postMessage(channel: string, message: any) {
