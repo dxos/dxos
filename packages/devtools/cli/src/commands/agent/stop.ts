@@ -35,7 +35,13 @@ export default class Stop extends BaseCommand<typeof Stop> {
 
       if (this.flags.all) {
         const processes = await daemon.list();
-        await Promise.all(processes.map((process) => stop(process.profile!)));
+        await Promise.all(
+          processes.map(async (process) => {
+            if (await daemon.isRunning(process.profile!)) {
+              await stop(process.profile!);
+            }
+          }),
+        );
       } else {
         await stop(this.flags.profile);
       }
