@@ -18,7 +18,6 @@ import {
 } from '@braneframe/plugin-treeview';
 import { AppState, Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { useTelemetry } from '@dxos/react-appkit';
 import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
@@ -133,12 +132,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
         }
       },
       components: {
-        default: () => {
-          // TODO(wittjosiah): Factor out to a telemetry plugin.
-          useTelemetry({ namespace: 'composer-app', router: false });
-
-          return null;
-        },
         embedded: EmbeddedMain,
       },
     },

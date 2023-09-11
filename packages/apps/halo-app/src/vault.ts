@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { startIFrameRuntime } from '@dxos/vault';
 
-import { namespace } from './util';
+import { namespace } from './namespace';
 
 // https://vite-plugin-pwa.netlify.app/frameworks/
 // https://github.com/vite-pwa/vite-plugin-pwa/blob/main/types/index.d.ts

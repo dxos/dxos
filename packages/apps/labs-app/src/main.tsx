@@ -26,6 +26,7 @@ import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TablePlugin } from '@braneframe/plugin-table';
+import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -43,7 +44,6 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { Defaults } from '@dxos/react-client';
 import { PluginProvider } from '@dxos/react-surface';
 
@@ -58,9 +58,6 @@ const main = async () => {
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
-
-  // TODO(burdon): Normalize telemetry namespace.
-  await initializeAppTelemetry({ namespace: 'labs.dxos.org', config: config! });
 
   // TODO(burdon): Select (check)
   // TODO(burdon): DND
@@ -86,6 +83,8 @@ const main = async () => {
     <StrictMode>
       <PluginProvider
         plugins={[
+          // TODO(burdon): Normalize telemetry namespace.
+          TelemetryPlugin({ namespace: 'labs.dxos.org', config }),
           IntentPlugin(),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
           ClientPlugin({ config, services, debugIdentity: debug }),
