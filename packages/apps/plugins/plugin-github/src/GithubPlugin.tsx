@@ -2,20 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GithubLogo, PencilSimpleLine, Trash } from '@phosphor-icons/react';
+import { GithubLogo } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
 import { Graph, GraphProvides } from '@braneframe/plugin-graph';
 import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
-import {
-  TreeViewPluginProvides,
-  getAppStateIndex,
-  getPersistenceParent,
-  setAppStateIndex,
-} from '@braneframe/plugin-treeview';
+import { TreeViewPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-treeview';
 import { AppState, Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -147,26 +142,6 @@ const objectToGraphNode = (parent: Graph.Node<Space>, document: Document, index:
     properties: {
       index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
-    },
-  });
-
-  child.addAction({
-    id: 'delete',
-    label: ['delete document label', { ns: GITHUB_PLUGIN }],
-    icon: (props) => <Trash {...props} />,
-    intent: {
-      action: SpaceAction.REMOVE_OBJECT,
-      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
-    },
-  });
-
-  child.addAction({
-    id: 'rename',
-    label: ['rename document label', { ns: GITHUB_PLUGIN }],
-    icon: (props) => <PencilSimpleLine {...props} />,
-    intent: {
-      action: SpaceAction.RENAME_OBJECT,
-      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
     },
   });
 
