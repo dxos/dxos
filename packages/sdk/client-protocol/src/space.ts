@@ -31,6 +31,8 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
+
+  removeMember(memberKey: PublicKey): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).

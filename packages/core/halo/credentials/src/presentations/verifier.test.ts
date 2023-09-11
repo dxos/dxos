@@ -101,7 +101,7 @@ describe('presentation verifier', () => {
         signerKey: device,
         chain: {
           ...chain,
-          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } },
+          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } as any },
         },
 
         nonce: randomBytes(32),

@@ -64,7 +64,7 @@ export class TrustedKeySetAuthVerifier {
         return false;
       }
 
-      if (!credential.proof.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
+      if (!credential.proof!.nonce || !Buffer.from(nonce).equals(credential.proof!.nonce)) {
         log('Invalid nonce', { nonce, credential });
         return false;
       }
