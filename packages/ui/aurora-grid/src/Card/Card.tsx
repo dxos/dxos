@@ -17,7 +17,7 @@ export const CardRoot: FC<
     <DensityProvider density='fine'>
       <div
         className={mx(
-          'flex flex-col group w-full min-w-[280px] max-w-[360px] max-h-[360px] overflow-hidden',
+          'flex flex-col group w-full min-w-[280px] max-w-[400px] max-h-[400px] overflow-hidden',
           square && 'aspect-square',
           'shadow-sm rounded',
           !noPadding && 'py-2 gap-1',
