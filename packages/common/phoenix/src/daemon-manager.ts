@@ -8,13 +8,10 @@ import { readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
 
-import { DAEMON_START_TIMEOUT } from './defs';
 import { waitForLockAcquisition, waitForLockFileBeingFilledWithInfo, waitForLockRelease } from './utils';
 import { ChildParams, Logs, Lock, ProcessInfo, WatchDogParams } from './watchdog';
 
@@ -47,9 +44,7 @@ export class DaemonManager {
 
   async start(params: StartParams) {
     invariant(params.command, 'command is required');
-    const watchdogId = PublicKey.random().toHex();
-    const watchDogParams: WatchDogParams & { watchdogId: string } = {
-      watchdogId,
+    const watchDogParams: WatchDogParams = {
       ...this._getConfigFiles(params.uid),
       ...params,
     };
@@ -71,7 +66,6 @@ export class DaemonManager {
     const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
 
     const watchDog = fork(watchdogPath, [JSON.stringify(watchDogParams)], {
-      stdio: 'pipe',
       detached: true,
       cwd: __dirname,
     });
@@ -82,14 +76,6 @@ export class DaemonManager {
       }
     });
 
-    const started = new Trigger();
-    watchDog.stdout!.on('data', (data) => {
-      if (String(data).includes(watchdogId)) {
-        started.wake();
-      }
-    });
-
-    await asyncTimeout(started.wait(), DAEMON_START_TIMEOUT);
     await waitForLockAcquisition(watchDogParams.lockFile);
     await waitForLockFileBeingFilledWithInfo(watchDogParams.lockFile);
 
@@ -120,7 +106,8 @@ export class DaemonManager {
   }
 
   async list(): Promise<ProcessInfo[]> {
-    const uids = await readdir(join(this._rootPath, 'profile'));
+    const uids = (await readdir(join(this._rootPath, 'profile'))).filter((uid) => !uid.startsWith('.'));
+
     return Promise.all(
       uids.map(async (uid) => {
         return this.getInfo(uid);
