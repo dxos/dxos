@@ -100,10 +100,12 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       },
     });
 
-    this.builder.storage = createStorage({
-      type: StorageType.NODE,
-      root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.agentId}`,
-    });
+    this.builder.storage = !spec.withReconnects
+      ? createStorage({ type: StorageType.RAM })
+      : createStorage({
+          type: StorageType.NODE,
+          root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.agentId}`,
+        });
     await this._init(env);
 
     const getMaximalTimeframe = async () => {
@@ -173,7 +175,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           } satisfies StatsLog);
 
           // Disconnect some of the agents for one iteration.
-          const skipIterration = spec.withReconnects && iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
+          const skipIterration =
+            spec.withReconnects && iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
           if (skipIterration) {
             await this.client.destroy();
           } else {
