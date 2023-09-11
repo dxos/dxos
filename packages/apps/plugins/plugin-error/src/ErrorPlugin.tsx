@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Config, Defaults, Envs, Local } from '@dxos/config';
-import { ResetDialog } from '@dxos/react-appkit';
+import { Config, Defaults, Envs, Local } from '@dxos/react-client';
 import { ErrorBoundary, PluginDefinition } from '@dxos/react-surface';
+
+import { ResetDialog } from './components';
 
 // TODO(wittjosiah): This is probably too naive and probably needs to be better integrated with the framework.
 //   For example, if client fails to initialize during plugin initialization and then the client plugin is missing,

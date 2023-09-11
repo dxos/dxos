@@ -16,8 +16,6 @@ export type UseTelemetryOptions = {
 
 /**
  * Hooks up navigation and click events to telemetry.
- *
- * Must be called inside a react router context.
  */
 export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
   const treeViewPlugin = usePlugin<TreeViewPluginProvides>('dxos.org/plugin/treeview');

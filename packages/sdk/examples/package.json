@@ -17,7 +17,6 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
