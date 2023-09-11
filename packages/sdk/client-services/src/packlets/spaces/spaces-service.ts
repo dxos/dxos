@@ -30,6 +30,7 @@ import { Provider } from '@dxos/util';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
+import { invariant } from '@dxos/invariant';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -157,7 +158,19 @@ export class SpacesServiceImpl implements SpacesService {
   async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest) {
     const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     for (const credential of credentials ?? []) {
-      await space.controlPipeline.writer.write({ credential: { credential } });
+      if(credential.proof) {
+        await space.controlPipeline.writer.write({ credential: { credential } });
+      } else {
+        invariant(!credential.id, 'Id on unsigned credentials is not allowed');
+        invariant(this._identityManager.identity, 'Identity is not available');
+        const signer = this._identityManager.identity.getIdentityCredentialSigner();
+        invariant(credential.issuer.equals(signer.getIssuer()));
+        const signedCredential = await signer.createCredential({
+          subject: credential.subject.id,
+          assertion: credential.subject.assertion,
+        })
+        await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
+      }
     }
   }
 
