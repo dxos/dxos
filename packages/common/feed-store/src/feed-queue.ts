@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { FeedBlock } from './types';
+import { Context } from '@dxos/context';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
@@ -40,7 +41,7 @@ export class FeedQueue<T extends {}> {
   constructor(
     private readonly _feed: FeedWrapper<T>,
     private readonly _options: FeedQueueOptions = {}
-  ) {}
+  ) { }
 
   [inspect.custom]() {
     return inspectObject(this);
@@ -116,47 +117,40 @@ export class FeedQueue<T extends {}> {
     });
 
     const onClose = () => {
-      if (this._feedConsumer) {
-        log('queue closed', { feedKey: this._feed.key });
-        this._feedConsumer = undefined;
-        this._next = undefined;
-        this._currentBlock = undefined;
-        this._index = -1;
+      this.feed.core.off('close', onClose);
+      this._feedConsumer?.off('close', onClose);
+      this._feedConsumer?.off('error', onError);
+
+      this._destroyConsumer();
+    }
+
+    const onError = (err?: Error) => {
+      if (!err) {
+        return;
       }
-    };
 
-    // Called if feed is closed externally.
-    this._feed.core.once('close', () => {
-      log('feed closed', { feedKey: this._feed.key });
-      onClose();
-    });
-
-    this._feedConsumer.on('error', (err: Error) => {
-      if (err) {
-        onError(err);
-      }
-    });
-
-    // Called when queue is closed. Throws exception if waiting for `pop`.
-    this._feedConsumer.once('close', () => {
-      onClose();
-    });
-
-    // Pipe readable stream into writable consumer.
-    feedStream.pipe(this._feedConsumer, (err) => {
-      if (err) {
-        onError(err);
-      }
-      onClose();
-    });
-
-    const onError = (err: Error) => {
       if (err.message === 'Writable stream closed prematurely' || err.message === 'Feed is closed') {
         return;
       }
 
       log.catch(err, { feedKey: this._feed.key });
     };
+
+    // Called if feed is closed externally.
+    this._feed.core.once('close', onClose);
+    this._feedConsumer.on('error', onError);
+
+    // Called when queue is closed. Throws exception if waiting for `pop`.
+    this._feedConsumer.once('close', onClose);
+
+    // Pipe readable stream into writable consumer.
+    feedStream.pipe(this._feedConsumer, (err) => {
+      if (err) {
+        onError(err);
+      }
+      this._destroyConsumer();
+    });
+
 
     log('opened');
   }
@@ -204,5 +198,15 @@ export class FeedQueue<T extends {}> {
     }
 
     return block;
+  }
+
+  private _destroyConsumer() {
+    if (this._feedConsumer) {
+      log('queue closed', { feedKey: this._feed.key });
+      this._feedConsumer = undefined;
+      this._next = undefined;
+      this._currentBlock = undefined;
+      this._index = -1;
+    }
   }
 }
