@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -135,12 +135,23 @@ export const spaceToGraphNode = (
   );
 
   if (parent.id !== 'root') {
-    node.addAction({
-      id: 'close-space',
-      label: ['close space label', { ns: SPACE_PLUGIN }],
-      icon: (props) => <X {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.CLOSE },
-    });
+    // TODO(burdon): Check if closed.
+    const open = true;
+    if (open) {
+      node.addAction({
+        id: 'close-space',
+        label: ['close space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <X {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.CLOSE },
+      });
+    } else {
+      node.addAction({
+        id: 'open-space',
+        label: ['open space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <ClockCounterClockwise {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.OPEN },
+      });
+    }
   }
 
   return node;

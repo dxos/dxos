@@ -18,6 +18,7 @@ export default [
         'active space label': 'Active space:',
         'space name label': 'Space name',
         'close space label': 'Close space',
+        'open space label': 'Open space',
         'download all docs in space label': 'Download backup',
         'upload all docs in space label': 'Upload backup',
         'share space': 'Share space',
