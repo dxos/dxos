@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './gen/TaskList';
+export * from './gen/schema';
