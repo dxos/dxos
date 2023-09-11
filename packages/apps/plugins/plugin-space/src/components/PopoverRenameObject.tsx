@@ -27,7 +27,7 @@ export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, Type
           <Input.Label srOnly>{t('object name label')}</Input.Label>
           <Input.TextInput
             placeholder={t('object title placeholder')}
-            value={object.title ?? ''}
+            value={name}
             onChange={({ target: { value } }) => setName(value)}
             onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
           />
