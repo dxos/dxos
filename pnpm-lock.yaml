@@ -2006,6 +2006,7 @@ importers:
       '@faker-js/faker': ^8.0.2
       '@types/lodash.defaultsdeep': ^4.6.6
       lodash.defaultsdeep: ^4.6.1
+      race-as-promised: ^0.0.2
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
     dependencies:
@@ -2023,6 +2024,7 @@ importers:
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
       lodash.defaultsdeep: 4.6.1
+      race-as-promised: 0.0.2
       random-access-storage: 3.0.0
       streamx: 2.12.5
     optionalDependencies:
@@ -33518,6 +33520,10 @@ packages:
     hasBin: true
     dependencies:
       utf8: 2.1.2
+    dev: false
+
+  /race-as-promised/0.0.2:
+    resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
     dev: false
 
   /raf/3.4.1:

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
+import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { TimeoutError as ProtocolTimeoutError } from '@dxos/errors';
@@ -30,6 +30,8 @@ const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgem
 const ERROR_LIMIT = 5;
 const NETWORK_REBOOT_DELAY = 3_000;
 
+const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
+
 /**
  * Reliable messenger that works trough signal network.
  */
@@ -45,7 +47,12 @@ export class Messenger {
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  /**
+   * Keys scheduled to be cleared from _receivedMessages on the next iteration.
+   */
+  private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _ctx!: Context;
   private _closed = true;
@@ -75,6 +82,16 @@ export class Messenger {
         await this._handleMessage(message);
       }),
     );
+
+    // Clear the map periodically.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._performGc();
+      },
+      RECEIVED_MESSAGES_GC_INTERVAL,
+    );
+
     this._closed = false;
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
@@ -316,6 +333,23 @@ export class Messenger {
           await listener(message);
         }
       }
+    }
+  }
+
+  private _performGc() {
+    const start = performance.now();
+
+    for (const key of this._toClear.keys()) {
+      this._receivedMessages.delete(key);
+    }
+    this._toClear.clear();
+    for (const key of this._receivedMessages.keys()) {
+      this._toClear.add(key);
+    }
+
+    const elapsed = performance.now() - start;
+    if (elapsed > 100) {
+      log.warn('GC took too long', { elapsed });
     }
   }
 }
