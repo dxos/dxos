@@ -1,0 +1,39 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "declarationDir": "dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../lock-file"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}

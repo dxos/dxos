@@ -19,6 +19,7 @@ import { lockFilePath, parseAddress, removeSocketFile } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
+ * @deprecated because forever is unmaintained.
  */
 export class ForeverDaemon implements Daemon {
   constructor(private readonly _rootDir: string) {}
@@ -161,7 +162,7 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = false }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
+  async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
     // NOTE: Kill all processes with the given profile.
