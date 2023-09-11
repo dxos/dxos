@@ -18,12 +18,12 @@ export const waitForSpace = async (
   spaceKey: PublicKey,
   { timeout = 500, ready }: Options = {},
 ): Promise<Space> => {
-  let space = client.getSpace(spaceKey);
+  let space = client.spaces.get(spaceKey);
 
   if (!space) {
     const spaceTrigger = new Trigger<Space>();
     const sub = client.spaces.subscribe(() => {
-      const space = client.getSpace(spaceKey);
+      const space = client.spaces.get(spaceKey);
       if (space) {
         sub.unsubscribe();
         spaceTrigger.wake(space);

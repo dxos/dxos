@@ -50,7 +50,7 @@ export class EchoProxyServer extends AbstractPlugin {
       };
 
       if (spaceKey) {
-        const space = this._client!.getSpace(PublicKey.from(spaceKey));
+        const space = this._client!.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const { objects } = space.db.query();
           Object.assign(result, {
@@ -71,7 +71,7 @@ export class EchoProxyServer extends AbstractPlugin {
       };
 
       if (spaceKey) {
-        const space = this._client!.getSpace(PublicKey.from(spaceKey));
+        const space = this._client!.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const objects = req.body;
           Object.assign(result, {

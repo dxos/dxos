@@ -68,7 +68,7 @@ describe('Client', () => {
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
-    await expect(client.createSpace()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
+    await expect(client.spaces.create()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
   }).timeout(1_000);
 
   test('creates identity then resets', async () => {

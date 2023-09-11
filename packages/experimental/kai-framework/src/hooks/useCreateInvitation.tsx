@@ -34,7 +34,7 @@ export const useCreateInvitation = () => {
   return (space: Space, direct?: boolean) => {
     if (direct) {
       const swarmKey = PublicKey.random(); // TODO(burdon): Factor out.
-      const observable = space.createInvitation({
+      const observable = space.share({
         swarmKey,
         type: Invitation.Type.MULTIUSE,
         authMethod: Invitation.AuthMethod.NONE,

@@ -21,7 +21,7 @@ const DevicesPage = () => {
   const invitations = useHaloInvitations();
 
   const handleCreateInvitation = useCallback(() => {
-    client.halo.createInvitation();
+    client.halo.share();
   }, []);
 
   return (
