@@ -35,6 +35,9 @@ export class Gossip {
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
 
+  /**
+   * Keys scheduled to be cleared from _receivedMessages on the next iteration.
+   */
   private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
@@ -51,20 +54,7 @@ export class Gossip {
   async open() {
     // Clear the map periodically.
     scheduleTaskInterval(this._ctx, async () => {
-      const start = performance.now();
-
-      for (const key of this._toClear.keys()) {
-        this._receivedMessages.delete(key);
-      }
-      this._toClear.clear();
-      for (const key of this._receivedMessages.keys()) {
-        this._toClear.add(key);
-      }
-
-      const elapsed = performance.now() - start;
-      if(elapsed > 100) {
-        log.warn('GC took too long', { elapsed });
-      }
+      this._performGc();
     }, RECEIVED_MESSAGES_GC_INTERVAL);
   }
 
@@ -157,5 +147,22 @@ export class Gossip {
         return extension.sendAnnounce(message).catch((err) => log(err));
       }),
     );
+  }
+
+  private _performGc() {
+    const start = performance.now();
+
+    for (const key of this._toClear.keys()) {
+      this._receivedMessages.delete(key);
+    }
+    this._toClear.clear();
+    for (const key of this._receivedMessages.keys()) {
+      this._toClear.add(key);
+    }
+
+    const elapsed = performance.now() - start;
+    if (elapsed > 100) {
+      log.warn('GC took too long', { elapsed });
+    }
   }
 }
