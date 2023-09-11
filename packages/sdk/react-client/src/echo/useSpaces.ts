@@ -3,26 +3,32 @@
 //
 
 import { PublicKeyLike } from '@dxos/client';
-import { type Space, SpaceState, defaultKey } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 import { useIdentity } from '../halo';
 
 /**
- * Get a specific Space using its key. Returns undefined when no spaceKey is
- * available. Requires a ClientProvider somewhere in the parent tree.
- * @returns a Space
- * @param [spaceKey] the key of the space to look for
+ * Get a specific Space using its key.
+ * The space is not guaranteed to be in the ready state.
+ * Returns the default space if no key is provided.
+ * Requires a ClientProvider somewhere in the parent tree.
+ *
+ * @param spaceKey the key of the space to look for
  */
-export const useSpace = (spaceKey?: PublicKeyLike) => {
-  // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
-  const spaces = useSpaces();
+export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
+  const client = useClient();
   const identity = useIdentity();
+  const spaces = useMulticastObservable<Space[]>(client.spaces);
 
-  return spaceKey
-    ? spaces.find((space) => space.key.equals(spaceKey))
-    : spaces.find((space) => space.properties[defaultKey] === identity?.identityKey.toHex());
+  if (spaceKey) {
+    return spaces.find((space) => space.key.equals(spaceKey));
+  }
+
+  if (identity) {
+    return client.spaces.default;
+  }
 };
 
 export type UseSpacesParams = {
@@ -40,7 +46,7 @@ export type UseSpacesParams = {
  */
 export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
-  const spaces = useMulticastObservable(client.spaces);
+  const spaces = useMulticastObservable<Space[]>(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
   return spaces.filter((space) => all || space.state.get() === SpaceState.READY);

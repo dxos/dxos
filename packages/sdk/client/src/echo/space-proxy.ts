@@ -354,9 +354,9 @@ export class SpaceProxy implements Space {
   /**
    * Creates an interactive invitation.
    */
-  createInvitation(options?: Partial<Invitation>) {
+  share(options?: Partial<Invitation>) {
     log('create invitation', options);
-    return this._invitationsProxy.createInvitation(options);
+    return this._invitationsProxy.share(options);
   }
 
   /**

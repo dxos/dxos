@@ -48,7 +48,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       invitations={invitations}
       onCreateInvitationClick={(e) => {
         const testing = e.altKey && e.shiftKey;
-        const invitation = space.createInvitation?.(
+        const invitation = space.share?.(
           testing ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE } : undefined,
         );
         // TODO(wittjosiah): Don't depend on NODE_ENV.

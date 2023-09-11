@@ -44,9 +44,7 @@ export const ManageSpacePage = ({
   const invitations = useSpaceInvitations(space?.key);
 
   const handleCreateInvitation = useCallback(() => {
-    if (space) {
-      space.createInvitation();
-    }
+    space?.share();
   }, [space]);
 
   return (

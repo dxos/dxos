@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
+import { Event, scheduleTask, Trigger, MulticastObservable, PushStream } from '@dxos/async';
 import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
@@ -24,26 +24,28 @@ import { SpaceProxy } from './space-proxy';
 // TODO(wittjosiah): Remove. Default space should be indicated by internal metadata.
 export const defaultKey = '__DEFAULT__';
 
-export class EchoProxy implements Echo {
+export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
-  private readonly _spacesChanged = new Event<Space[]>();
-  private readonly _spaceCreated = new Event<PublicKey>();
-  private readonly _spaces = MulticastObservable.from(this._spacesChanged, []);
-
-  // TODO(burdon): Rethink API (just db?)
-  public readonly dbRouter = new DatabaseRouter();
-
   private _invitationProxy?: InvitationsProxy;
+  private readonly _spacesStream: PushStream<Space[]>;
+  private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
+  // TODO(burdon): Rethink API (just db?)
+  private readonly dbRouter = new DatabaseRouter();
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
+    private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
      */
-    public readonly _traceParent?: string,
-  ) {}
+    readonly _traceParent?: string,
+  ) {
+    const spacesStream = new PushStream<Space[]>();
+    super(spacesStream.observable, []);
+    this._spacesStream = spacesStream;
+  }
 
   [inspect.custom]() {
     return inspectObject(this);
@@ -51,7 +53,7 @@ export class EchoProxy implements Echo {
 
   toJSON() {
     return {
-      spaces: this._spaces.get().length,
+      spaces: this._value?.length,
     };
   }
 
@@ -59,11 +61,10 @@ export class EchoProxy implements Echo {
     return this._modelFactory;
   }
 
-  get spaces() {
-    return this._spaces;
-  }
-
-  async open() {
+  /**
+   * @internal
+   */
+  async _open() {
     log.trace('dxos.sdk.echo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (error) => {
@@ -84,7 +85,7 @@ export class EchoProxy implements Echo {
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
       let emitUpdate = false;
-      const newSpaces = this._spaces.get() as SpaceProxy[];
+      const newSpaces = this.get() as SpaceProxy[];
 
       for (const space of data.spaces ?? []) {
         if (this._ctx.disposed) {
@@ -96,7 +97,7 @@ export class EchoProxy implements Echo {
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // Propagate space state updates to the space list observable.
-          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesChanged.emit([...this._spaces.get()]));
+          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesStream.next([...this.get()]));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -112,7 +113,7 @@ export class EchoProxy implements Echo {
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._spacesChanged.emit([...newSpaces]);
+        this._spacesStream.next([...newSpaces]);
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
@@ -121,37 +122,46 @@ export class EchoProxy implements Echo {
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
   }
 
-  async close() {
+  /**
+   * @internal
+   */
+  async _close() {
     await this._ctx.dispose();
-    await Promise.all(this._spaces.get().map((space) => (space as SpaceProxy)._destroy()));
-    this._spacesChanged.emit([]);
+    await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
+    this._spacesStream.next([]);
 
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
   }
 
-  addSchema(schema: EchoSchema) {
-    this.dbRouter.addSchema(schema);
+  override get(): Space[];
+  override get(spaceKey: PublicKey): Space | undefined;
+  override get(spaceKey?: PublicKey) {
+    if (!spaceKey) {
+      return this._value;
+    }
+
+    return this._value?.find(({ key }) => key.equals(spaceKey));
   }
 
-  //
-  // Spaces.
-  //
+  get default(): Space {
+    const identityKey = this._getIdentityKey();
+    invariant(identityKey, 'Identity not found.');
+    const space = this.get().find((space) => space.properties[defaultKey] === identityKey.toHex());
+    invariant(space, 'Default space not found.');
+    return space;
+  }
 
-  /**
-   * Creates a new space.
-   */
-  async createSpace(meta?: PropertiesProps): Promise<Space> {
+  async create(meta?: PropertiesProps): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
-      return this._spaces.get().some(({ key }) => key.equals(space.spaceKey));
+      return this.get().some(({ key }) => key.equals(space.spaceKey));
     });
-    const spaceProxy =
-      (this._spaces.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     spaceProxy.db.add(new Properties(meta));
@@ -163,10 +173,9 @@ export class EchoProxy implements Echo {
   }
 
   /**
-   * Clones the space from a snapshot.
    * @internal
    */
-  async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
+  async clone(snapshot: SpaceSnapshot): Promise<Space> {
     return todo();
     // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     // const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
@@ -184,22 +193,16 @@ export class EchoProxy implements Echo {
     // return spaceProxy;
   }
 
-  /**
-   * Returns an individual space by its key.
-   */
-  getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._spaces.get().find(({ key }) => key.equals(spaceKey));
-  }
-
-  /**
-   * Initiates an interactive accept invitation flow.
-   */
-  acceptInvitation(invitation: Invitation) {
+  join(invitation: Invitation | string) {
     if (!this._invitationProxy) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy.acceptInvitation(invitation);
+    return this._invitationProxy.join(invitation);
+  }
+
+  addSchema(schema: EchoSchema) {
+    this.dbRouter.addSchema(schema);
   }
 }

@@ -67,7 +67,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                     <SpacePanel space={space}>
                       <Share
                         onCreate={() => {
-                          return space.createInvitation();
+                          return space.share();
                         }}
                       />
                     </SpacePanel>

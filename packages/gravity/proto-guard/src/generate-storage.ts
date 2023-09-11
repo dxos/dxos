@@ -31,7 +31,7 @@ const main = async () => {
   {
     // Init storage.
     await client.halo.createIdentity();
-    const space = await client.createSpace(expectedProperties);
+    const space = await client.spaces.create(expectedProperties);
     await space.waitUntilReady();
     space.db.add(new Expando(expectedExpando));
     await space.internal.createEpoch();

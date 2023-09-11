@@ -30,7 +30,7 @@ export default class Share extends BaseCommand<typeof Share> {
         return {};
       }
 
-      const observable = client.halo.createInvitation({
+      const observable = client.halo.share({
         authMethod: this.flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
       });
       const invitationSuccess = hostInvitation({

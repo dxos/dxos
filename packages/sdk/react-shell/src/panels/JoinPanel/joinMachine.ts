@@ -408,7 +408,7 @@ const useJoinMachine = (
     ({ halo }: JoinMachineContext) => {
       if (halo.unredeemedCode) {
         try {
-          const invitationObservable = client.halo.acceptInvitation(
+          const invitationObservable = client.halo.join(
             InvitationEncoder.decode(defaultCodeFromUrl('halo', halo.unredeemedCode)),
           );
           return {
@@ -431,7 +431,7 @@ const useJoinMachine = (
     ({ space }: JoinMachineContext) => {
       if (space.unredeemedCode) {
         try {
-          const invitationObservable = client.acceptInvitation(
+          const invitationObservable = client.spaces.join(
             InvitationEncoder.decode(defaultCodeFromUrl('space', space.unredeemedCode)),
           );
           return {

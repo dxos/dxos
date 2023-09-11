@@ -35,7 +35,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   useMemo(() => {
     if (panel instanceof SpaceProxy) {
       (window as any)[`peer${id}CreateSpaceInvitation`] = (options?: Partial<Invitation>) => {
-        const invitation = panel.createInvitation(options);
+        const invitation = panel.share(options);
 
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
@@ -70,7 +70,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
-            onClick={() => client.createSpace({ name: faker.animal.bird() })}
+            onClick={() => client.spaces.create({ name: faker.animal.bird() })}
             data-testid='invitations.create-space'
           >
             <PlusCircle className={getSize(6)} />
@@ -117,7 +117,7 @@ const Invitations = ({ id }: { id: number }) => {
 
   useMemo(() => {
     (window as any)[`peer${id}CreateHaloInvitation`] = (options?: Partial<Invitation>) => {
-      const invitation = client.halo.createInvitation(options);
+      const invitation = client.halo.share(options);
 
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
