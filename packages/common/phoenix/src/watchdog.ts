@@ -31,8 +31,11 @@ export type ProcessInfo = WatchDogParams & {
   running?: boolean;
 };
 
-export type ConfigFiles = {
+export type Lock = {
   lockFile: string; // Path to lock file
+};
+
+export type Logs = {
   //
   // Log files and associated logging options for this instance
   //
@@ -40,7 +43,7 @@ export type ConfigFiles = {
   errFile: string; // Path to log output from child stderr
 };
 
-export type WatchDogParams = {
+export type ChildParams = {
   uid: string; // Unique identifier for this instance
 
   //
@@ -63,7 +66,9 @@ export type WatchDogParams = {
   env?: NodeJS.ProcessEnv | undefined;
   cwd?: string | undefined;
   shell?: boolean | undefined;
-} & ConfigFiles;
+};
+
+export type WatchDogParams = ChildParams & Lock & Logs;
 
 export class WatchDog {
   private _lock?: FileHandle;
@@ -83,6 +88,15 @@ export class WatchDog {
     this._log(`Spawning process ${command} ${args?.join(' ')}`);
     this._child = spawn(command, args, { cwd, shell, env, stdio: 'pipe' });
     this._processCtx = new Context();
+
+    const childInfo: ProcessInfo = {
+      pid: process.pid,
+      timestamp: Date.now(),
+      restarts: this._restarts,
+      ...this._params,
+    };
+
+    writeFileSync(this._params.lockFile, JSON.stringify(childInfo, undefined, 2), { encoding: 'utf-8' });
 
     this._child.stdout.on('data', (data: Uint8Array) => {
       this._log(String(data));
@@ -113,15 +127,6 @@ export class WatchDog {
     });
 
     invariant(this._child.pid, 'Child process has no pid.');
-
-    const childInfo: ProcessInfo = {
-      pid: process.pid,
-      timestamp: Date.now(),
-      restarts: this._restarts,
-      ...this._params,
-    };
-
-    writeFileSync(this._params.lockFile, JSON.stringify(childInfo, undefined, 2), { flag: 'w', encoding: 'utf-8' });
     this._log(`Started with pid ${this._child.pid}.`);
   }
 

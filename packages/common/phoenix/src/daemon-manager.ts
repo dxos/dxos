@@ -3,7 +3,7 @@
 //
 
 import { fork } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -15,8 +15,8 @@ import { LockFile } from '@dxos/lock-file';
 import { log } from '@dxos/log';
 
 import { DAEMON_START_TIMEOUT } from './defs';
-import { waitForLockAcquisition, waitForLockRelease } from './utils';
-import { ConfigFiles, ProcessInfo, WatchDogParams } from './watchdog';
+import { waitForLockAcquisition, waitForLockFileBeingFilledWithInfo, waitForLockRelease } from './utils';
+import { ChildParams, Logs, Lock, ProcessInfo, WatchDogParams } from './watchdog';
 
 const LOCK_FILE_NAME = 'lockfile';
 
@@ -24,7 +24,7 @@ const LOCK_FILE_NAME = 'lockfile';
  * Params to start a daemon.
  * User have no control over the lock file.
  */
-export type StartParams = Omit<WatchDogParams, 'lockFile'>;
+export type StartParams = ChildParams & Partial<Logs>;
 
 export class DaemonManager {
   constructor(private readonly _rootPath: string) {
@@ -33,7 +33,7 @@ export class DaemonManager {
     }
   }
 
-  private _getConfigFiles(uid: string): ConfigFiles {
+  private _getConfigFiles(uid: string): Logs & Lock {
     const defaultConfigDir = join(this._rootPath, 'profile', uid);
     if (!existsSync(defaultConfigDir)) {
       mkdirSync(defaultConfigDir, { recursive: true });
@@ -53,6 +53,20 @@ export class DaemonManager {
       ...this._getConfigFiles(params.uid),
       ...params,
     };
+
+    {
+      // Create log folders.
+      mkdirSync(dirname(watchDogParams.logFile), { recursive: true });
+      mkdirSync(dirname(watchDogParams.errFile), { recursive: true });
+    }
+
+    {
+      // Clear stale lock file if process is not running.
+      if (await LockFile.isLocked(watchDogParams.lockFile)) {
+        throw new Error('Lock file is already locked.');
+      }
+      unlinkSync(watchDogParams.lockFile);
+    }
 
     const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
 
@@ -77,6 +91,7 @@ export class DaemonManager {
 
     await asyncTimeout(started.wait(), DAEMON_START_TIMEOUT);
     await waitForLockAcquisition(watchDogParams.lockFile);
+    await waitForLockFileBeingFilledWithInfo(watchDogParams.lockFile);
 
     watchDog.disconnect();
     watchDog.unref();
@@ -116,14 +131,17 @@ export class DaemonManager {
   async getInfo(uid: string): Promise<ProcessInfo> {
     const files = this._getConfigFiles(uid);
 
+    let info: ProcessInfo = { running: await LockFile.isLocked(files.lockFile), uid, ...files };
     if (existsSync(files.lockFile)) {
-      return {
-        running: await LockFile.isLocked(files.lockFile),
-        ...JSON.parse(readFileSync(files.lockFile, { encoding: 'utf-8' }).trim()),
-      };
-    } else {
-      return { running: false, uid, ...files };
+      try {
+        info = {
+          ...info,
+          ...JSON.parse(readFileSync(files.lockFile, { encoding: 'utf-8' })),
+        };
+      } catch (err) {}
     }
+
+    return info;
   }
 
   async isRunning(uid: string): Promise<boolean> {
