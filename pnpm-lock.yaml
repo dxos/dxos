@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 patchedDependencies:
   '@nx/js@16.5.4':
-    hash: kco6wocfncyehzbvd6faof7n2y
+    hash: st3ukm3rnd3xadn2fxesh4boby
     path: patches/@nx__js@16.5.4.patch
   '@nx/vite@16.5.4':
     hash: xxzhsuqrsbs6wyvhvm37cpe46m
@@ -152,7 +152,7 @@ importers:
       '@nx/devkit': 16.5.4_nx@16.5.4
       '@nx/eslint-plugin': 16.5.4_2b57dwhe6e7ogoa22cr2cay3k4
       '@nx/jest': 16.5.4_ebxsb5ytaojlvyq6j3l6ecuzii
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@nx/linter': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/storybook': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/vite': 16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_qgit66yh2vyynsv7uxdneek4qa
@@ -10824,7 +10824,7 @@ packages:
   /@nrwl/js/16.5.4_eoiemzzyseqzjynwznlrcdpipu:
     resolution: {integrity: sha512-j4CjEvukVykevw9Pj85Fo+uMarkLT7kytPVKN28Mpv8hk2ePSyLBa3S48jWjaUT25Z42USUIdMhAau2JuL7ZNg==}
     dependencies:
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -10939,7 +10939,7 @@ packages:
     dependencies:
       '@nrwl/cypress': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@nx/linter': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
       detect-port: 1.5.1
@@ -10982,7 +10982,7 @@ packages:
     dependencies:
       '@nrwl/eslint-plugin-nx': 16.5.4_2b57dwhe6e7ogoa22cr2cay3k4
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@typescript-eslint/parser': 6.5.0_walxjw3fmezupdd3r2qqbe42z4
       '@typescript-eslint/type-utils': 5.62.0_walxjw3fmezupdd3r2qqbe42z4
       '@typescript-eslint/utils': 5.62.0_walxjw3fmezupdd3r2qqbe42z4
@@ -11009,7 +11009,7 @@ packages:
       '@jest/test-result': 29.5.0
       '@nrwl/jest': 16.5.4_ebxsb5ytaojlvyq6j3l6ecuzii
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
       chalk: 4.1.2
       dotenv: 10.0.0
@@ -11033,7 +11033,7 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/js/16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu:
+  /@nx/js/16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu:
     resolution: {integrity: sha512-7SOge4g+o8xr6yV5a0HCCm5EmhXwpupOZoXH9C+iE22WY5Mv8c55Q/F7RbyfHvjvtG812SNN8XwatXLE6RJ7GQ==}
     peerDependencies:
       verdaccio: ^5.0.4
@@ -11086,7 +11086,7 @@ packages:
     dependencies:
       '@nrwl/linter': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
       eslint: 8.41.0
       tmp: 0.2.1
@@ -11198,7 +11198,7 @@ packages:
       '@nrwl/storybook': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/cypress': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@nx/linter': 16.5.4_77fo5nn477ty7cywkqdedkrxey
       '@nx/workspace': 16.5.4_fadq7qjtdssl5ciytqq3qdvfum
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
@@ -11224,7 +11224,7 @@ packages:
     dependencies:
       '@nrwl/vite': 16.5.4_qgit66yh2vyynsv7uxdneek4qa
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
       '@swc/helpers': 0.5.1
       dotenv: 10.0.0
@@ -11247,7 +11247,7 @@ packages:
     dependencies:
       '@nrwl/web': 16.5.4_eoiemzzyseqzjynwznlrcdpipu
       '@nx/devkit': 16.5.4_nx@16.5.4
-      '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
+      '@nx/js': 16.5.4_st3ukm3rnd3xadn2fxesh4boby_eoiemzzyseqzjynwznlrcdpipu
       chalk: 4.1.2
       chokidar: 3.5.3
       detect-port: 1.5.1
