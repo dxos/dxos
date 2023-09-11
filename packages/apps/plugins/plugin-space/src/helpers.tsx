@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { PencilSimpleLine, Trash } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
+import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
+import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
 import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
 import { defaultMap } from '@dxos/util';
+
+import { SPACE_PLUGIN, SpaceAction } from './types';
 
 export { getIndices } from '@tldraw/indices';
 
@@ -31,9 +36,34 @@ export class GraphNodeAdapter<T extends TypedObject> {
 
   constructor({ filter, adapter, propertySubscriptions, createGroup }: GraphNodeAdapterOptions<T>) {
     this._filter = filter;
-    this._adapter = adapter;
     this._propertySubscriptions = propertySubscriptions;
     this._createGroup = createGroup;
+
+    this._adapter = (parent, object, index) => {
+      const child = adapter(parent, object, index);
+
+      child.addAction({
+        id: 'delete',
+        label: ['delete object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Trash {...props} />,
+        intent: {
+          action: SpaceAction.REMOVE_OBJECT,
+          data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: object.id },
+        },
+      });
+
+      child.addAction({
+        id: 'rename',
+        label: ['rename object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PencilSimpleLine {...props} />,
+        intent: {
+          action: SpaceAction.RENAME_OBJECT,
+          data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: object.id },
+        },
+      });
+
+      return child;
+    };
   }
 
   clear() {

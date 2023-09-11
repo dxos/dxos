@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, PencilSimpleLine, Trash } from '@phosphor-icons/react';
+import { Article, ArticleMedium } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
-import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
 import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
@@ -93,26 +91,6 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
       index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
       ...fallbackProps,
-    },
-  });
-
-  child.addAction({
-    id: 'delete',
-    label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
-    icon: (props) => <Trash {...props} />,
-    intent: {
-      action: SpaceAction.REMOVE_OBJECT,
-      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
-    },
-  });
-
-  child.addAction({
-    id: 'rename',
-    label: ['rename document label', { ns: MARKDOWN_PLUGIN }],
-    icon: (props) => <PencilSimpleLine {...props} />,
-    intent: {
-      action: SpaceAction.RENAME_OBJECT,
-      data: { spaceKey: getPersistenceParent(child, 'spaceObject')?.data?.key.toHex(), objectId: document.id },
     },
   });
 
