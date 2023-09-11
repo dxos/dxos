@@ -6,7 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { createIFrame } from '@dxos/rpc-tunnel';
 import { MaybePromise } from '@dxos/util';
 
-export class IFrameController {
+export class IFrameManager {
   private _iframe?: HTMLIFrameElement;
   private readonly _source: URL;
   private readonly _onOpen: () => MaybePromise<void>;

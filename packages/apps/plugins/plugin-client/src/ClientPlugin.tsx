@@ -9,29 +9,11 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import {
-  Client,
-  ClientContext,
-  ClientOptions,
-  IFrameClientServicesHost,
-  IFrameClientServicesProxy,
-  InvalidStorageVersionError,
-  SystemStatus,
-} from '@dxos/react-client';
+import { Client, ClientContext, ClientOptions, InvalidStorageVersionError, SystemStatus } from '@dxos/react-client';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import translations from './translations';
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
-
-const handleInvalidatedInvitationCode = (code: string) => {
-  const url = new URL(location.href);
-  const params = Array.from(url.searchParams.entries());
-  const [name] = params.find(([name, value]) => value === code) ?? [null, null];
-  if (name) {
-    url.searchParams.delete(name);
-    history.replaceState({}, document.title, url.href);
-  }
-};
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
 
@@ -77,9 +59,12 @@ export const ClientPlugin = (
         await client.initialize();
 
         const searchParams = new URLSearchParams(location.search);
-        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        if (!client.halo.identity.get() && !deviceInvitationCode) {
           firstRun = true;
           await client.halo.createIdentity();
+        } else if (deviceInvitationCode) {
+          void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
       } catch (err) {
         error = err;
@@ -111,14 +96,6 @@ export const ClientPlugin = (
         client,
         firstRun,
         translations,
-        setLayout: async (layout, options) => {
-          if (
-            client.services instanceof IFrameClientServicesProxy ||
-            client.services instanceof IFrameClientServicesHost
-          ) {
-            await client.services.setLayout(layout, options);
-          }
-        },
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
 
@@ -129,22 +106,7 @@ export const ClientPlugin = (
 
             const subscription = client.status.subscribe((status) => setStatus(status));
 
-            if (
-              client.services instanceof IFrameClientServicesProxy ||
-              client.services instanceof IFrameClientServicesHost
-            ) {
-              client.services.invalidatedInvitationCode.on(handleInvalidatedInvitationCode);
-            }
-
-            return () => {
-              subscription.unsubscribe();
-              if (
-                client.services instanceof IFrameClientServicesProxy ||
-                client.services instanceof IFrameClientServicesHost
-              ) {
-                client.services.invalidatedInvitationCode.off(handleInvalidatedInvitationCode);
-              }
-            };
+            return () => subscription.unsubscribe();
           }, [client, setStatus]);
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
