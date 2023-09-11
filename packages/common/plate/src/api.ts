@@ -24,10 +24,16 @@ import {
   renderSlots,
   getOutputNameFromTemplateName,
   RenderedSlots,
+  ResultOf,
+  Slot,
 } from './util/template';
 import { InquirableZodType } from './util/zodInquire';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
+
+export type SlotsWithContext<I, TSlots extends Slots<I, TSlots, TContext>, TContext extends Context<I, TSlots>> = {
+  [slotKey in keyof TSlots]: Slot<ResultOf<TSlots[slotKey]>, I, TSlots, TContext>;
+};
 
 export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
   constructor(private parentSlots?: TSlots) {}
@@ -37,22 +43,33 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
     slots: FileSlots<I, TSlots, TContext>,
     extraContext?: (rendered: Partial<RenderedSlots<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
   ) {
-    const template = async (options: Options<I, TSlots>) => {
+    const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
       const { outputDirectory, relativeTo } = {
         outputDirectory: process.cwd(),
         ...options,
       };
-      const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? '');
+      const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? path.dirname(templateFile));
       const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
         absoluteTemplateRelativeTo.length + 1,
       );
       const {
         content,
-        path: p,
+        path: _p,
         copyOf,
-      } = await renderSlots(slots, (rendered) => ({
+      } = await renderSlots(slots, async (rendered) => ({
         input: {} as I,
-        slots: this.parentSlots ?? ({} as TSlots),
+        slots: this.parentSlots
+          ? await renderSlots(this.parentSlots, () => ({
+              input: {} as I,
+              overwrite: false,
+              ...options,
+              outputFile: relativeOutputPath,
+              outputDirectory,
+              inherited: undefined,
+              relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+              slots: {} as any,
+            }))
+          : ({} as any),
         overwrite: false,
         ...options,
         outputDirectory,
@@ -66,7 +83,7 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
         hasContent
           ? [
               new FileEffect({
-                path: path.resolve(outputDirectory, relativeOutputPath),
+                path: relativeOutputPath, // path.resolve(outputDirectory, relativeOutputPath),
                 content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
                 copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
               }),
@@ -78,14 +95,14 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
     return template;
   }
 
-  text(slots: FileSlots<I, TSlots>): Template<I, TSlots> & { slots: TSlots } {
+  text(slots: FileSlots<I, TSlots>) {
     const stack = callsite();
     const templateFile = stack[1].getFileName();
     const template = this.template(templateFile, slots);
     return template;
   }
 
-  script(slots: FileSlots<I, TSlots, Context<I, TSlots> & { imports: Imports }>): Template<I, TSlots> {
+  script(slots: FileSlots<I, TSlots, Context<I, TSlots> & { imports: Imports }>) {
     const stack = callsite();
     const templateFile = stack[1].getFileName();
     const template = this.template(templateFile, slots, ({ path }) => ({
@@ -102,7 +119,7 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
     return new TemplateFactory<TNewInput, TSlots>();
   }
 
-  group(grouping: Group<I>): Template<I> {
+  group(grouping: Group<I>) {
     return async (options: Options<I>) => {
       const groupingResults = await Promise.all(grouping(options)?.map((template) => template(options)));
       return results(groupingResults.map((r) => r.files).flat());

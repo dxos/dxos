@@ -25,37 +25,37 @@ export default template.define
       const swToast = () => plate`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
 
       const coreContent = plate`
-    <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
-      <${ClientProvider} config={config} ${dxosUi ? `fallback={${GenericFallback}}` : ''}>
-        ${slots.content}
-        ${dxosUi && pwa && swToast}
-      </${ClientProvider}>
-    </ErrorBoundary>`;
+      <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
+        <${ClientProvider} config={config} ${dxosUi ? `fallback={${GenericFallback}}` : ''}>
+          ${slots.content}
+          ${dxosUi && pwa && swToast}
+        </${ClientProvider}>
+      </ErrorBoundary>`;
 
       const themeProvider = (content: string) => plate`
-    <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
-      ${content}
-    </${ThemeProvider}>
-    `;
+      <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
+        ${content}
+      </${ThemeProvider}>
+      `;
 
       return (
         react &&
         plate`
-      import React from 'react';
-      ${imports}
-      import { ErrorBoundary } from './ErrorBoundary';
-      
-      ${slots.extraImports}
-      
-      // Dynamics allows configuration to be supplied by the hosting KUBE.
-      const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
+        import React from 'react';
+        ${imports}
+        import { ErrorBoundary } from './ErrorBoundary';
+        
+        ${slots.extraImports}
+        
+        // Dynamics allows configuration to be supplied by the hosting KUBE.
+        const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
 
-      export const App = () => {
-        ${pwa && `const serviceWorker = ${useRegisterSW}();`}
-        return (
-          ${dxosUi ? themeProvider(coreContent) : coreContent}
-        )
-      }`
+        export const App = () => {
+          ${pwa && `const serviceWorker = ${useRegisterSW}();`}
+          return (
+            ${dxosUi ? themeProvider(coreContent) : coreContent}
+          )
+        }`
       );
     },
   });

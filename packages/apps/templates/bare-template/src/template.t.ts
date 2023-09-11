@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { z, directory, plate, executeDirectoryTemplate } from '@dxos/plate';
+import { z, directory, plate } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
 export * from './utils.t/getDxosRepoInfo';

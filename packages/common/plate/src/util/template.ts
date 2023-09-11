@@ -4,7 +4,7 @@
 
 import { Effect } from './effect';
 import { Path, FileSlots, FileEffect } from './file';
-import { MaybePromise } from './promise';
+import { MaybePromise, promise } from './promise';
 
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
 /** Do not process files that are compilation noise like .map and .t.d.ts */
@@ -25,33 +25,37 @@ export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>, C extends C
   | R
   | Transform<C, R>;
 
-export type ExtractResult<S extends Slot> = S extends Slot<infer U> ? U : never;
+export type ResultOf<S extends Slot> = S extends Slot<infer U> ? U : never;
+export type SlotsOf<S extends Slot> = S extends Slot<any, any, infer U> ? U : never;
 
 export type Slots<I = any, TSlots extends Slots = {}, C extends Context<I, TSlots> = Context<I, TSlots>> = Record<
   string,
   Slot<any, I, TSlots, C>
 >;
 
-export type Slotify<T extends Slots> = {
-  [key in keyof T]: T[key] extends Transform<infer _C, infer O> ? Slot<O> : Slot<T[key]>;
+export type Slotify<I, T extends Slots<I>> = {
+  [key in keyof T]: T[key] extends Transform<infer _C, infer O> ? Slot<O, I> : Slot<T[key], I>;
 };
 
 export type Options<I, S extends Slots<I> = Slots<I>> = {
   input?: I;
-  slots?: Slotify<S>;
+  slots?: Slotify<I, S>;
   outputDirectory?: Path;
   relativeTo?: Path;
   overwrite?: boolean;
 };
 
-export type Context<I = any, S extends Slots<I> = Slots<I>> = Required<Options<I, S>> & {
+export type Context<I = any, S extends Slots<I> = Slots<I>> = Required<Omit<Options<I, S>, 'slots'>> & {
   outputFile: Path;
+  slots: RenderedSlots<S>;
   inherited: FileResults<I> | undefined;
 };
 
-export type Template<I = any, TSlots extends Slots<I> = Slots<I>> = Transform<Options<I, TSlots>, FileResults>;
+export type Template<I = any, TSlots extends Slots<I> = Slots<I>> = Transform<Options<I, TSlots>, FileResults> & {
+  slots?: TSlots;
+};
 
-export type RenderedSlots<TSlots extends Slots> = { [key in keyof TSlots]: ExtractResult<TSlots[key]> };
+export type RenderedSlots<TSlots extends Slots> = { [key in keyof TSlots]: ResultOf<TSlots[key]> };
 
 export const renderSlots = async <
   I = any,
@@ -59,11 +63,11 @@ export const renderSlots = async <
   TContext extends Context<I, TSlots> = Context<I, TSlots>,
 >(
   slots: TSlots,
-  context: (rendered: Partial<RenderedSlots<TSlots>>) => TContext,
+  context: (rendered: Partial<RenderedSlots<TSlots>>) => MaybePromise<TContext>,
 ): Promise<RenderedSlots<TSlots>> => {
   const result: RenderedSlots<TSlots> = {} as any;
   for (const key in slots) {
-    result[key] = typeof slots[key] === 'function' ? await slots[key](context?.(result)) : slots[key];
+    result[key] = typeof slots[key] === 'function' ? await slots[key](await promise(context?.(result))) : slots[key];
   }
   return result;
 };

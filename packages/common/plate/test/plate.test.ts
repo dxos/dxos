@@ -35,8 +35,9 @@ describe('plate 2 templates', () => {
     const name = 'alice';
     const result = await simpleDir.apply({
       input: {
-        name
-      }
+        name,
+      },
+      parallel: false,
     });
 
     expect(result).to.exist;
@@ -45,24 +46,29 @@ describe('plate 2 templates', () => {
     expect(files).to.exist;
     expect(files).to.be.an('array').of.length(3, 'has three result files');
 
-    const [first, second, third] = files;
-    expect(first.path).to.exist.and.match(/atextfile\.md$/);
-    expect(first.content).to.eq('');
-    expect(first.copyOf).to.match(/atextfile\.md$/);
+    const first = files.find(({ path }) => path.match(/atextfile\.md$/));
+    expect(first).to.exist;
+    expect(first!.content).to.eq('');
+    expect(first!.copyOf).to.match(/atextfile\.md$/);
 
-    expect(second.path).to.exist.and.match(/one\.md$/);
-    expect(second.content).to.eq(`name: ${name}\n`);
+    const second = files.find(({ path }) => path.match(/one\.md$/));
+    expect(second).to.exist;
+    expect(second!.path).to.exist.and.match(/one\.md$/);
+    expect(second!.content).to.eq(`name: ${name}\n`);
 
-    expect(third.path).to.exist.and.match(/two\.md$/);
-    expect(third.content).to.eq(`name: ${name}, slots.prop = default prop\n`);
+    const third = files.find(({ path }) => path.match(/two\.js$/));
+    expect(third).to.exist;
+    expect(third!.path).to.exist.and.match(/two\.js$/);
+    expect(third!.content).to.eq(`const name = "${name}";\nconst slot = "simple";\n`);
   });
 
   it('inherited template', async () => {
     const name = 'bob';
     const result = await extended.apply({
       input: {
-        name
-      }
+        name,
+      },
+      parallel: false,
     });
 
     expect(result).to.exist;
@@ -80,7 +86,7 @@ describe('plate 2 templates', () => {
     expect(one.path).to.exist.and.match(/one\.md$/);
     expect(one.content).to.eq(`name: prefixed ${name}\n`);
 
-    expect(two.path).to.exist.and.match(/two\.md$/);
+    expect(two.path).to.exist.and.match(/two\.js$/);
     expect(two.content).to.eq(`name: prefixed ${name}, slots.prop = prefixed default prop\n`);
   });
 });
