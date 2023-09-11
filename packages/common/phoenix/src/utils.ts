@@ -20,5 +20,5 @@ export const waitForLockRelease = async (lockFile: string) =>
     condition: async () => !(await LockFile.isLocked(lockFile)),
     timeout: LOCK_TIMEOUT,
     interval: LOCK_CHECK_INTERVAL,
-    error: new Error('Lock file is not being acquired.'),
+    error: new Error('Lock file is not being released.'),
   });
