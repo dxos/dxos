@@ -141,8 +141,8 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  queryCredentials({ spaceKey }: QueryCredentialsRequest): Stream<Credential> {
-    return new Stream(({ ctx, next }) => {
+  queryCredentials({ spaceKey, noTail }: QueryCredentialsRequest): Stream<Credential> {
+    return new Stream(({ ctx, next, close }) => {
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
       const processor: CredentialProcessor = {
@@ -151,14 +151,19 @@ export class SpacesServiceImpl implements SpacesService {
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
-      scheduleTask(ctx, () => space.spaceState.addCredentialProcessor(processor));
+      scheduleTask(ctx, async () => {
+        await space.spaceState.addCredentialProcessor(processor)
+        if (noTail) {
+          close();
+        }
+      });
     });
   }
 
   async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest) {
     const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
     for (const credential of credentials ?? []) {
-      if(credential.proof) {
+      if (credential.proof) {
         await space.controlPipeline.writer.write({ credential: { credential } });
       } else {
         invariant(!credential.id, 'Id on unsigned credentials is not allowed');

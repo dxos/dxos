@@ -302,6 +302,7 @@ message WriteCredentialsRequest {
 
 message QueryCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
+  optional bool no_tail = 2;
 }
 
 message CreateEpochRequest {
