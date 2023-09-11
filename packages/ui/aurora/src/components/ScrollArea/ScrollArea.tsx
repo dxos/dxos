@@ -26,6 +26,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(({ classN
   return (
     <ScrollAreaPrimitiveRoot
       {...props}
+      // TODO(burdon): Should be 'scrollarea.root' 'scrollarea__root'?
       className={tx('scrollArea.root', 'scroll-area', {}, classNames)}
       ref={forwardedRef}
     />

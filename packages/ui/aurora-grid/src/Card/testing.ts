@@ -41,6 +41,7 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
     type: 'image',
     id: faker.string.uuid(),
     src: faker.helpers.arrayElement(images),
+    body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
   }),
   event: () => ({
     type: 'event',

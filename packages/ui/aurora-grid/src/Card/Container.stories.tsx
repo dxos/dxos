@@ -10,19 +10,24 @@ import { chromeSurface, groupSurface, mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 
-import { Card, DraggableCard } from './Card';
 import { Column, Columns } from './Container';
+import { TypeCard } from './Custom';
+import { DraggableCard } from './DraggableCard';
 import { generators } from './testing';
 
-faker.seed(5);
+faker.seed(1);
 
 // TODO(burdon): Extract dnd from plugin-dnd to aurora-dnd.
+//  - DragOverlay
+//  - Unify file drag-and-drop (e.g., for IPFS).
+// TODO(burdon): ScrollArea bugs.
 // TODO(burdon): Containers (optional dragging):
 //  - Column: Currently doesn't scroll inside Columns.
 //  - Columns: Able to drag cards between columns; Able to drag columns to re-order.
 //  - Grid: (e.g., kai notes).
 //  - List: Simplified table (no custom columns).
-// TODO(burdon): Unify IPFS drag-and-drop.
+//  - Panel layers.
+// TODO(burdon): Editable cards.
 // TODO(burdon): Plugins:
 //  - Stack
 //  - Kanban
@@ -61,8 +66,8 @@ const DnDContainer: FC<PropsWithChildren> = ({ children }) => {
 const ContainerStory = () => {
   return (
     <DnDContainer>
-      <Columns id={'main'} classNames={'p-4'}>
-        <Column id={'a'} classNames={[groupSurface, 'shadow rounded']}>
+      <Columns id={'main'} classNames={'p-3'}>
+        <Column id={'a'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3 gap-2']}>
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.image()} />
@@ -73,20 +78,20 @@ const ContainerStory = () => {
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.document()} />
         </Column>
-        <Column id={'b'} classNames={[groupSurface, 'shadow rounded']}>
+        <Column id={'b'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3 gap-2']}>
           <DraggableCard {...generators.document()} />
           <DraggableCard {...generators.image()} />
           <DraggableCard {...generators.contact()} />
           <DraggableCard {...generators.message()} />
           <DraggableCard {...generators.project()} />
         </Column>
-        <Column id={'c'} classNames={[groupSurface, 'shadow rounded']}>
-          <Card {...generators.document()} />
-          <Card {...generators.message()} />
-          <Card {...generators.message()} />
-          <Card {...generators.message()} />
-          <Card {...generators.message()} />
-          <Card {...generators.message()} />
+        <Column id={'c'} classNames={[groupSurface, 'w-[360px] shadow rounded-md p-3 gap-2']}>
+          <TypeCard {...generators.document()} />
+          <TypeCard {...generators.message()} />
+          <TypeCard {...generators.message()} />
+          <TypeCard {...generators.message()} />
+          <TypeCard {...generators.message()} />
+          <TypeCard {...generators.message()} />
         </Column>
       </Columns>
     </DnDContainer>
