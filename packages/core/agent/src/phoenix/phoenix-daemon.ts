@@ -74,6 +74,7 @@ export class PhoenixDaemon implements Daemon {
         // TODO(burdon): Make optional.
         env: {
           LOG_FILTER: process.env.LOG_FILTER,
+          ...process.env,
         },
         uid: profile,
         maxRestarts: 0,
