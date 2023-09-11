@@ -6,11 +6,15 @@ import { faker } from '@faker-js/faker';
 
 type CardType = 'document' | 'message' | 'contact' | 'image' | 'event' | 'project' | 'task' | 'result' | 'table';
 
+// https://unsplash.com
+// TODO(burdon): Use https://picsum.photos/
 const images = [
   'https://images.unsplash.com/photo-1616394158624-a2ba9cfe2994',
   'https://images.unsplash.com/photo-1507941097613-9f2157b69235',
+  'https://images.unsplash.com/photo-1431274172761-fca41d930114',
   'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
-  'https://images.unsplash.com/photo-1499123785106-343e69e68db1',
+  'https://images.unsplash.com/photo-1564221710304-0b37c8b9d729',
+  'https://images.unsplash.com/photo-1605425183435-25b7e99104a4',
 ];
 
 type Data = { id: string; type: string };

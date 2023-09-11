@@ -76,7 +76,6 @@ const ContainerStory = () => {
             <DraggableCard {...generators.document()} />
             <DraggableCard {...generators.image()} />
             <DraggableCard {...generators.document()} />
-            <DraggableCard {...generators.document()} />
             <DraggableCard {...generators.image()} />
             <DraggableCard {...generators.document()} />
             <DraggableCard {...generators.document()} />
@@ -89,8 +88,8 @@ const ContainerStory = () => {
           <Column.Header classNames={'bg-neutral-200'}>{faker.lorem.sentence()}</Column.Header>
           <Column.ViewPort id={'c-2'}>
             <DraggableCard {...generators.document()} />
-            <DraggableCard {...generators.image()} />
             <DraggableCard {...generators.contact()} />
+            <DraggableCard {...generators.image()} />
             <DraggableCard {...generators.message()} />
             <DraggableCard {...generators.message()} />
             <DraggableCard {...generators.project()} />
