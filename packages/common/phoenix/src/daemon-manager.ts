@@ -74,7 +74,6 @@ export class DaemonManager {
         started.wake();
       }
     });
-    await started.wait();
 
     await asyncTimeout(started.wait(), DAEMON_START_TIMEOUT);
     await waitForLockAcquisition(watchDogParams.lockFile);
