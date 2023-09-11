@@ -104,9 +104,6 @@
     },
     {
       "path": "../config"
-    },
-    {
-      "path": "../errors"
     }
   ]
 }

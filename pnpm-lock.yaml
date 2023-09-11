@@ -650,6 +650,8 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
+      '@braneframe/plugin-theme': workspace:*
+      '@dxos/aurora': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
@@ -668,6 +670,8 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@dxos/aurora': link:../../../ui/aurora
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -1901,11 +1905,9 @@ importers:
 
   packages/common/context:
     specifiers:
-      '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/util': workspace:*
     dependencies:
-      '@dxos/errors': link:../../sdk/errors
       '@dxos/log': link:../log
       '@dxos/util': link:../util
 
@@ -2612,7 +2614,6 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
@@ -2630,7 +2631,6 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
-      '@dxos/errors': link:../../../sdk/errors
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -2654,7 +2654,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/invariant': workspace:*
@@ -2691,7 +2690,6 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
       '@dxos/echo-db': link:../echo-db
-      '@dxos/errors': link:../../../sdk/errors
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/hypercore': link:../../../common/hypercore
       '@dxos/invariant': link:../../../common/invariant
@@ -3019,7 +3017,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -3038,7 +3035,6 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/context': link:../../../common/context
-      '@dxos/errors': link:../../../sdk/errors
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -3063,7 +3059,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -3098,7 +3093,6 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
-      '@dxos/errors': link:../../../sdk/errors
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -3192,7 +3186,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -3210,7 +3203,6 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
-      '@dxos/errors': link:../../../sdk/errors
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -3361,11 +3353,13 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/timeframe': workspace:*
       glob: ~7.1.6
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/timeframe': link:../../common/timeframe
     devDependencies:
@@ -4415,7 +4409,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/functions': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/kai-types': workspace:*
@@ -4459,7 +4452,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/errors': link:../../sdk/errors
       '@dxos/functions': link:../../core/functions
       '@dxos/invariant': link:../../common/invariant
       '@dxos/kai-types': link:../kai-types
@@ -4850,7 +4842,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       cross-fetch: ^3.1.5
@@ -4858,7 +4849,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
-      '@dxos/errors': link:../../sdk/errors
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       cross-fetch: 3.1.5
@@ -5306,7 +5296,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -5343,7 +5332,6 @@ importers:
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/errors': link:../errors
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -5416,7 +5404,6 @@ importers:
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-pipeline': workspace:*
-      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keyring': workspace:*
@@ -5452,7 +5439,6 @@ importers:
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
-      '@dxos/errors': link:../errors
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keyring': link:../../core/halo/keyring
@@ -5480,7 +5466,6 @@ importers:
 
   packages/sdk/config:
     specifiers:
-      '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
@@ -5496,7 +5481,6 @@ importers:
       pkg-up: ^3.1.0
       webpack: ^5.88.2
     dependencies:
-      '@dxos/errors': link:../errors
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
@@ -5512,9 +5496,6 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       webpack: 5.88.2
-
-  packages/sdk/errors:
-    specifiers: {}
 
   packages/sdk/examples:
     specifiers:
@@ -10782,6 +10763,7 @@ packages:
     dependencies:
       '@nx/cypress': 16.5.4_77fo5nn477ty7cywkqdedkrxey
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -10809,6 +10791,7 @@ packages:
       '@nx/eslint-plugin': 16.5.4_2b57dwhe6e7ogoa22cr2cay3k4
       '@typescript-eslint/parser': 6.5.0_walxjw3fmezupdd3r2qqbe42z4
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -10825,6 +10808,7 @@ packages:
     dependencies:
       '@nx/jest': 16.5.4_ebxsb5ytaojlvyq6j3l6ecuzii
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - '@types/node'
@@ -10842,6 +10826,7 @@ packages:
     dependencies:
       '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_eoiemzzyseqzjynwznlrcdpipu
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -10856,6 +10841,7 @@ packages:
     dependencies:
       '@nx/linter': 16.5.4_77fo5nn477ty7cywkqdedkrxey
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -10879,6 +10865,7 @@ packages:
     dependencies:
       '@nx/storybook': 16.5.4_77fo5nn477ty7cywkqdedkrxey
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -10906,6 +10893,7 @@ packages:
     dependencies:
       '@nx/vite': 16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_qgit66yh2vyynsv7uxdneek4qa
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -10921,6 +10909,7 @@ packages:
     dependencies:
       '@nx/web': 16.5.4_eoiemzzyseqzjynwznlrcdpipu
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -10957,6 +10946,7 @@ packages:
       dotenv: 10.0.0
       semver: 7.5.3
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11001,6 +10991,7 @@ packages:
       jsonc-eslint-parser: 2.3.0
       semver: 7.5.3
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11029,6 +11020,7 @@ packages:
       resolve.exports: 1.1.0
       tslib: 2.6.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - '@types/node'
@@ -11062,7 +11054,7 @@ packages:
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.2.2
       babel-plugin-const-enum: 1.2.0_@babel+core@7.21.3
       babel-plugin-macros: 2.8.0
-      babel-plugin-transform-typescript-metadata: 0.3.2
+      babel-plugin-transform-typescript-metadata: 0.3.2_@babel+core@7.21.3
       chalk: 4.1.2
       detect-port: 1.5.1
       fast-glob: 3.2.7
@@ -11074,6 +11066,7 @@ packages:
       source-map-support: 0.5.19
       tslib: 2.6.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11099,6 +11092,7 @@ packages:
       tmp: 0.2.1
       tslib: 2.6.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11211,6 +11205,7 @@ packages:
       dotenv: 10.0.0
       semver: 7.5.3
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -11236,6 +11231,7 @@ packages:
       enquirer: 2.3.6
       vite: 4.3.9_@types+node@18.11.9
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11259,6 +11255,7 @@ packages:
       ignore: 5.2.4
       tslib: 2.6.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -19080,7 +19077,7 @@ packages:
   /axios/1.3.4_debug@4.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -19249,9 +19246,16 @@ packages:
   /babel-plugin-syntax-jsx/6.18.0:
     resolution: {integrity: sha512-qrPaCSo9c8RHNRHIotaufGbuOBN8rtdC4QrrFFc43vyWCCz7Kl7GL1PGaXtMGQZUXrkCjNEgxDfmAuAabr/rlw==}
 
-  /babel-plugin-transform-typescript-metadata/0.3.2:
+  /babel-plugin-transform-typescript-metadata/0.3.2_@babel+core@7.21.3:
     resolution: {integrity: sha512-mWEvCQTgXQf48yDqgN7CH50waTyYBeP2Lpqx4nNWab9sxEpdXVeKgfj1qYI2/TgUPQtNFZ85i3PemRtnXVYYJg==}
+    peerDependencies:
+      '@babel/core': ^7
+      '@babel/traverse': ^7
+    peerDependenciesMeta:
+      '@babel/traverse':
+        optional: true
     dependencies:
+      '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
@@ -24612,6 +24616,18 @@ packages:
     peerDependenciesMeta:
       debug:
         optional: true
+
+  /follow-redirects/1.15.2_debug@4.3.4:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dependencies:
+      debug: 4.3.4
+    dev: true
 
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}

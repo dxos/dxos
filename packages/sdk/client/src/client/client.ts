@@ -16,12 +16,11 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { trace } from '@dxos/protocols';
+import { ApiError, trace } from '@dxos/protocols';
 import {
   GetDiagnosticsRequest,
   Invitation,

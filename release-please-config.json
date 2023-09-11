@@ -594,11 +594,6 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/errors/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/sdk/examples/package.json",
           "jsonpath": "$.version"
         },
