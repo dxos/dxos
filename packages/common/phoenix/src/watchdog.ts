@@ -76,44 +76,26 @@ export class WatchDog {
   @synchronized
   async start() {
     await this._acquireLock();
+    this._log('Lock acquired.');
     const { cwd, shell, env, command, args } = { cwd: process.cwd(), ...this._params };
     invariant(command, 'Command is not defined.');
 
+    this._log(`Spawning process ${command} ${args?.join(' ')}`);
     this._child = spawn(command, args, { cwd, shell, env, stdio: 'pipe' });
     this._processCtx = new Context();
 
-    // Setup stdout handler.
-    {
-      const stdoutHandler = (data: Uint8Array) => {
-        writeFileSync(this._params.logFile, String(data), {
-          flag: 'a',
-          encoding: 'utf-8',
-        });
-      };
-
-      this._child.stdout.on('data', stdoutHandler);
-    }
-
-    // Setup stderr handler.
-    {
-      const stderrHandler = (data: Uint8Array) => {
-        writeFileSync(this._params.errFile, String(data), {
-          flag: 'a',
-          encoding: 'utf-8',
-        });
-      };
-
-      this._child.stderr.on('data', stderrHandler);
-    }
+    this._child.stdout.on('data', (data: Uint8Array) => {
+      this._log(String(data));
+    });
+    this._child.stderr.on('data', (data: Uint8Array) => {
+      this._err(data);
+    });
 
     // Setup restart handler.
     {
       const restartHandler = async (code: number, signal: number | NodeJS.Signals) => {
         if (code && code !== 0) {
-          writeFileSync(this._params.errFile, `Died unexpectedly with exit code ${code} (signal: ${signal}).`, {
-            flag: 'a',
-            encoding: 'utf-8',
-          });
+          this._err(`Died unexpectedly with exit code ${code} (signal: ${signal}).`);
           await this.restart();
         }
       };
@@ -126,17 +108,9 @@ export class WatchDog {
       });
     }
 
-    // Setup exit handler.
-    {
-      const exitHandler = async (code: number, signal: number | NodeJS.Signals) => {
-        writeFileSync(this._params.logFile, `Stopped with exit code ${code} (signal: ${signal}).`, {
-          flag: 'a',
-          encoding: 'utf-8',
-        });
-      };
-
-      this._child.on('close', exitHandler);
-    }
+    this._child.on('close', (code: number, signal: number | NodeJS.Signals) => {
+      this._log(`Stopped with exit code ${code} (signal: ${signal}).`);
+    });
 
     invariant(this._child.pid, 'Child process has no pid.');
 
@@ -147,7 +121,8 @@ export class WatchDog {
       ...this._params,
     };
 
-    writeFileSync(this._params.lockFile, JSON.stringify(childInfo), { flag: 'w', encoding: 'utf-8' });
+    writeFileSync(this._params.lockFile, JSON.stringify(childInfo, undefined, 2), { flag: 'w', encoding: 'utf-8' });
+    this._log(`Started with pid ${this._child.pid}.`);
   }
 
   /**
@@ -180,11 +155,8 @@ export class WatchDog {
 
   async restart() {
     await this.kill();
-    if (this._params.maxRestarts && this._restarts >= this._params.maxRestarts) {
-      writeFileSync(this._params.logFile, 'Max restarts number is reached', {
-        flag: 'a',
-        encoding: 'utf-8',
-      });
+    if (this._params.maxRestarts !== undefined && this._restarts >= this._params.maxRestarts) {
+      this._err('Max restarts number is reached');
     } else {
       log('Restarting...');
       this._restarts++;
@@ -230,5 +202,20 @@ export class WatchDog {
     await waitForLockRelease(this._params.lockFile);
 
     this._lock = undefined;
+  }
+
+  private _log(message: string | Uint8Array) {
+    writeFileSync(this._params.logFile, message + '\n', {
+      flag: 'a+',
+      encoding: 'utf-8',
+    });
+  }
+
+  private _err(message: string | Uint8Array) {
+    this._log(message);
+    writeFileSync(this._params.errFile, message + '\n', {
+      flag: 'a+',
+      encoding: 'utf-8',
+    });
   }
 }
