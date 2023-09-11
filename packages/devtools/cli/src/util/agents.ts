@@ -32,8 +32,10 @@ export const printAgents = (daemons: ProcessInfo[], flags = {}) => {
           if (!row.running) {
             return 'stopped';
           }
-
-          return formatDistance(new Date(), new Date(row.started!));
+          if (!row.started) {
+            return 'Null';
+          }
+          return formatDistance(new Date(), new Date(row.started));
         },
       },
       logFile: {

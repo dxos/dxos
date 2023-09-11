@@ -7,7 +7,7 @@ const params = JSON.parse(process.argv[2]);
 
 const watchdog = new WatchDog(params);
 watchdog.start().then(() => {
-  log.info(`Watchdog started ${params.watchdogId}`);
+  log(`Watchdog started`);
 
 }).catch((err) => {
   log.catch(err);
