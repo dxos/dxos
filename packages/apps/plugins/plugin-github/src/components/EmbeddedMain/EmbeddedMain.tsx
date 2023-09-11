@@ -15,7 +15,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
   Button,
@@ -187,12 +187,12 @@ const EmbeddedLayoutImpl = () => {
                       }
                     >
                       <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
-                      <span className='grow'>{t('open in composer label', { ns: 'composer' })}</span>
+                      <span className='grow'>{t('open in composer label', { ns: GITHUB_PLUGIN })}</span>
                     </a>
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator />
                   <DropdownMenu.GroupLabel>
-                    {t('active space label', { ns: 'composer' })}
+                    {t('active space label', { ns: SPACE_PLUGIN })}
                     <Avatar.Root size={5} variant='circle'>
                       <div role='none' className='flex gap-1 mlb-1 items-center'>
                         <Avatar.Frame>
@@ -205,7 +205,7 @@ const EmbeddedLayoutImpl = () => {
                     </Avatar.Root>
                   </DropdownMenu.GroupLabel>
                   <DropdownMenu.Item onClick={() => setRenameDialogOpen(true)}>
-                    <span className='grow'>{t('rename space label', { ns: 'composer' })}</span>
+                    <span className='grow'>{t('rename space label', { ns: SPACE_PLUGIN })}</span>
                     <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
                   </DropdownMenu.Item>
                   <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
