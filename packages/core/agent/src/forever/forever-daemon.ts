@@ -3,19 +3,16 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
-import fs, { mkdirSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
-import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
+import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
-import { lockFilePath, parseAddress, removeSocketFile } from '../util';
+import { lockFilePath, removeSocketFile, waitForAgentToStart } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -73,7 +70,7 @@ export class ForeverDaemon implements Daemon {
       }
 
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
-      mkdirSync(logDir, { recursive: true });
+      fs.mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
       const logFile = path.join(logDir, 'daemon.log');
@@ -115,39 +112,7 @@ export class ForeverDaemon implements Daemon {
       });
 
       try {
-        // Wait for socket file to appear.
-        {
-          await waitForCondition({
-            condition: async () => await this.isRunning(profile),
-            timeout: DAEMON_START_TIMEOUT,
-            interval: CHECK_INTERVAL,
-            error: new AgentWaitTimeoutError(),
-          });
-          await waitForCondition({
-            condition: () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
-            timeout: DAEMON_START_TIMEOUT,
-            interval: CHECK_INTERVAL,
-            error: new AgentWaitTimeoutError(),
-          });
-        }
-
-        // Check if agent is initialized.
-        {
-          const services = fromAgent({ profile });
-          await services.open(new Context());
-
-          const trigger = new Trigger();
-          const stream = services.services.SystemService!.queryStatus({});
-          stream.subscribe(({ status }) => {
-            invariant(status === SystemStatus.ACTIVE);
-            trigger.wake();
-          });
-          await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
-
-          await stream.close();
-          await services.close(new Context());
-        }
-        return await this._getProcess(profile);
+        await waitForAgentToStart(profile);
       } catch (err) {
         log.warn('Failed to start daemon.');
         const errContent = fs.readFileSync(errFile, 'utf-8');
@@ -157,9 +122,7 @@ export class ForeverDaemon implements Daemon {
       }
     }
 
-    const proc = await this._getProcess(profile);
-    log('started', { profile: proc.profile, pid: proc.pid });
-    return proc;
+    return await this._getProcess(profile);
   }
 
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
