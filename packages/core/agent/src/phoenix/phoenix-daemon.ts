@@ -12,7 +12,7 @@ import { Phoenix } from '@dxos/phoenix';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
-import { AgentWaitTimeoutError } from '../errors';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';
 
 /**
@@ -106,6 +106,14 @@ export class PhoenixDaemon implements Daemon {
 
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
+
+    if (
+      (await this.isRunning(profile)) &&
+      existsSync(lockFilePath(profile)) &&
+      !readFileSync(lockFilePath(profile), 'utf-8').includes('pid')
+    ) {
+      throw new AgentIsNotStartedByCLIError();
+    }
 
     if (existsSync(lockFilePath(profile)) && readFileSync(lockFilePath(profile), 'utf-8').includes('pid')) {
       await Phoenix.stop(lockFilePath(profile), force);
