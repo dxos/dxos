@@ -44,7 +44,7 @@ describe('Tests against old storage', () => {
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    log.info('Running test', { storage: client.config.values.runtime?.client?.storage?.path });
+    log.info('Running test', { storage: client.config.values.runtime?.client?.storage?.dataRoot });
     afterTest(() => client.destroy());
     await client.initialize();
     const space = client.spaces.get()[0];

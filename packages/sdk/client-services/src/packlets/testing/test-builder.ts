@@ -94,7 +94,7 @@ export class TestBuilder {
 }
 
 export type TestPeerOpts = {
-  storageType?: StorageType;
+  dataStore?: StorageType;
 };
 
 export type TestPeerProps = {
@@ -115,7 +115,7 @@ export class TestPeer {
 
   constructor(
     private readonly signalContext: MemorySignalManagerContext,
-    private readonly opts: TestPeerOpts = { storageType: StorageType.RAM },
+    private readonly opts: TestPeerOpts = { dataStore: StorageType.RAM },
   ) {}
 
   get props() {
@@ -123,7 +123,7 @@ export class TestPeer {
   }
 
   get storage() {
-    return (this._props.storage ??= createStorage({ type: this.opts.storageType }));
+    return (this._props.storage ??= createStorage({ type: this.opts.dataStore }));
   }
 
   get keyring() {

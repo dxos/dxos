@@ -4,6 +4,6 @@
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
- * Should be incremented every time there's a breaking change to the stored data.
+ * update when making breaking changes to the protocols or other stored data.
  */
 export const STORAGE_VERSION = 2;

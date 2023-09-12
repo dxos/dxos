@@ -28,10 +28,10 @@ export const getLatestStorage = () => {
   return Math.max(...versions, 0);
 };
 
-export const getConfig = (path: string) =>
+export const getConfig = (dataRoot: string) =>
   new Config({
     version: 1,
-    runtime: { client: { storage: { persistent: true, path } } },
+    runtime: { client: { storage: { persistent: true, dataRoot } } },
   });
 
 export const contains = (container: Record<string, any>, contained: Record<string, any>): boolean => {

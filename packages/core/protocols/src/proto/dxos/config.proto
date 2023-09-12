@@ -55,8 +55,8 @@ message Module {
     optional google.protobuf.Struct env = 10;
   }
 
-  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
   optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
+  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
   optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos.org/type/frame' vs. 'dxos.type.frame')
 
   // TODO(burdon): Developer info message.
@@ -90,15 +90,15 @@ message Runtime {
         NODE = 4;
         WEBFS = 5;
 
-        // Key storage only
+        // Key storage only.
         LEVELJS = 11;
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1;               // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3;     // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2;    // TODO(burdon): Rename data_store.
-      optional string path = 4;                   // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;
+      optional StorageDriver key_store = 2;
+      optional StorageDriver data_store = 3;
+      optional string data_root = 4;
     }
 
     message Log {

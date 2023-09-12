@@ -23,8 +23,8 @@ describe('Halo', () => {
       runtime: {
         client: {
           storage: {
-            persistent: true, // TODO(burdon): Note required if path set.
-            path: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
+            persistent: true,
+            dataRoot: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
           },
         },
       },

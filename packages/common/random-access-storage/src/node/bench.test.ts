@@ -23,7 +23,7 @@ describe.skip('storage benchmark', () => {
 
   afterAll(() => del(ROOT_DIRECTORY));
 
-  for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
-    storageBenchmark(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+  for (const dataStore of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
+    storageBenchmark(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));
   }
 });

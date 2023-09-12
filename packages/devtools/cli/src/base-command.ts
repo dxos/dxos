@@ -260,8 +260,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         yamlConfig.runtime ??= {};
         yamlConfig.runtime.client ??= {};
         yamlConfig.runtime.client.storage ??= {};
-        yamlConfig.runtime.client.storage.path = getProfilePath(
-          yamlConfig.runtime.client.storage.path ?? DX_DATA,
+        yamlConfig.runtime.client.storage.dataRoot = getProfilePath(
+          yamlConfig.runtime.client.storage.dataRoot ?? DX_DATA,
           this.flags.profile,
         );
       }

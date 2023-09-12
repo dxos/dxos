@@ -16,7 +16,7 @@ class FeedStore {
   private readonly _feeds = new Map<string, Feed>();
 
   @trace.info()
-  get storageType() {
+  get dataStore() {
     return this._storage.type;
   }
 
