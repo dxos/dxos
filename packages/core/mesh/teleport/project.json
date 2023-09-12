@@ -32,7 +32,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/mesh/teleport/**/*.{ts,js}"
+          "packages/core/mesh/teleport/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

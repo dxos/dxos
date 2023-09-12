@@ -7,7 +7,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/eslint-plugin/**/*.{ts,js}"
+          "tools/eslint-plugin/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

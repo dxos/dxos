@@ -113,7 +113,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/sdk/vault/**/*.{ts,js}"
+          "packages/sdk/vault/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

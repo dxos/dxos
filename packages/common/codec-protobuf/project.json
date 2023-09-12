@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/codec-protobuf/**/*.{ts,js}"
+          "packages/common/codec-protobuf/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

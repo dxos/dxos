@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/cli/**/*.{ts,js}"
+          "packages/devtools/cli/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/util/**/*.{ts,js}"
+          "packages/common/util/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

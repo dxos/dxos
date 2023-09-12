@@ -34,7 +34,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/mesh/teleport-extension-gossip/**/*.{ts,js}"
+          "packages/core/mesh/teleport-extension-gossip/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

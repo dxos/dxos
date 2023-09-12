@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/log/**/*.{ts,js}"
+          "packages/common/log/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },

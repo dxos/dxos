@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/kai-bots/**/*.{ts,js}"
+          "packages/experimental/kai-bots/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },
