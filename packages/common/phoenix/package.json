@@ -21,12 +21,9 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "fs-extra": "^8.1.0",
-    "pkg-up": "^3.1.0",
-    "ps-tree": "^1.2.0"
+    "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.4",
     "@types/node": "^18.11.9",
     "@types/ps-tree": "^1.1.2"
   },
