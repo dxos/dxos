@@ -45,6 +45,9 @@ message Repo {
   optional string version = 3;
 }
 
+//
+// Unit of deployment.
+//
 message Module {
   message Build {
     optional string command = 1;
@@ -61,16 +64,17 @@ message Module {
 
   // TODO(burdon): Developer info message.
 
+  // TODO(burdon): Start at 10.
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
-  optional bytes bundle = 6;
+  optional bytes bundle = 6; // TODO(burdon): ???
 
   // TODO(burdon): Remove.
   optional bool tunnel = 7;
 
+  // TODO(burdon): Start at 100.
   repeated Module deps = 10;  // TODO(burdon): E.g., types.
-
   optional Build build = 100;
   repeated Repo repos = 101;
 
