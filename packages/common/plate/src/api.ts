@@ -23,7 +23,7 @@ import {
   results,
   renderSlots,
   getOutputNameFromTemplateName,
-  RenderedSlots,
+  SlotValues,
   ResultOf,
   Slot,
 } from './util/template';
@@ -35,13 +35,13 @@ export type SlotsWithContext<I, TSlots extends Slots<I, TSlots, TContext>, TCont
   [slotKey in keyof TSlots]: Slot<ResultOf<TSlots[slotKey]>, I, TSlots, TContext>;
 };
 
-export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
+export class Plate<I = null, TSlots extends Slots<I> = {}> {
   constructor(private parentSlots?: TSlots) {}
 
   protected template<TContext extends Context<I, TSlots> = Context<I, TSlots>>(
     templateFile: string,
     slots: FileSlots<I, TSlots, TContext>,
-    extraContext?: (rendered: Partial<RenderedSlots<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
+    extraContext?: (rendered: Partial<SlotValues<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
   ) {
     const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
       const { outputDirectory, relativeTo } = {
@@ -52,22 +52,19 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
       const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
         absoluteTemplateRelativeTo.length + 1,
       );
-      const {
-        content,
-        path: _p,
-        copyOf,
-      } = await renderSlots(slots, async (rendered) => ({
+      // TODO ignoring path from rendered slots?
+      const { content, copyOf } = await renderSlots(slots, async (rendered) => ({
         input: {} as I,
         slots: this.parentSlots
           ? await renderSlots(this.parentSlots, () => ({
               input: {} as I,
               overwrite: false,
+              slots: {} as any,
               ...options,
               outputFile: relativeOutputPath,
               outputDirectory,
               inherited: undefined,
               relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-              slots: {} as any,
             }))
           : ({} as any),
         overwrite: false,
@@ -112,11 +109,11 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
   }
 
   slots<TNewSlots extends Slots<I>>(slots: TNewSlots) {
-    return new TemplateFactory<I, TNewSlots>(slots);
+    return new Plate<I, TNewSlots>(slots);
   }
 
   input<TNewInput>() {
-    return new TemplateFactory<TNewInput, TSlots>();
+    return new Plate<TNewInput, TSlots>();
   }
 
   group(grouping: Group<I>) {
@@ -129,7 +126,7 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
 
 export type TemplateOptions<I extends InquirableZodType> = Optional<InteractiveDirectoryTemplateOptions<I>, 'src'>;
 
-export const template = <TInput = null>() => new TemplateFactory<TInput>();
+export const template = <TInput = null>() => new Plate<TInput>();
 
 export const directory = <I extends InquirableZodType>(options: TemplateOptions<I>) => {
   const stack = callsite();

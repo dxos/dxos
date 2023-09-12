@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { Effect } from './effect';
 import { fileExists } from './fileExists';
-import { Slot, Slots, Context, RenderedSlots, FileApplyResult } from './template';
+import { Slot, Slots, Context, SlotValues, FileApplyResult } from './template';
 
 export type Path = string;
 
@@ -38,7 +38,7 @@ export class FileEffect implements Effect<{ overwrite?: boolean }, FileApplyResu
     return o?.path && o?.content;
   };
 
-  constructor(private readonly slots: RenderedSlots<FileSlots>) {
+  constructor(private readonly slots: SlotValues<FileSlots>) {
     Object.assign(this, slots);
   }
 

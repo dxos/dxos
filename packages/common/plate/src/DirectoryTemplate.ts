@@ -7,7 +7,7 @@ import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef, ZodType } from 'zod';
 
 import { executeFileTemplate } from './FileTemplate';
-import { TemplateFactory } from './api';
+import { Plate } from './api';
 import { Effect } from './util/effect';
 import { FileEffect, Path } from './util/file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
@@ -97,7 +97,7 @@ export type ExecuteDirectoryTemplateOptions<I> = Options<I> &
 export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResults> {
   constructor(public options: DirectoryTemplateOptions<I>) {}
 
-  public define = new TemplateFactory<I>();
+  public define = new Plate<I>();
 
   async apply(options?: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults<I>> {
     const mergedOptions = mergeOptions<ExecuteDirectoryTemplateOptions<I>>(
