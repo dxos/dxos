@@ -21,8 +21,6 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
 
   const space = useSpace(spaceKey);
 
-  console.log('Shell', { layout, invitationCode, spaceKey, space });
-
   useEffect(() => {
     return runtime.layoutUpdate.on((request) => setLayout(request));
   }, [runtime]);
