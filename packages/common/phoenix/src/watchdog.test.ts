@@ -20,7 +20,6 @@ describe('WatchDog', () => {
     afterTest(() => clearFiles(pidFile, logFile, errFile));
 
     const watchDog = new WatchDog({
-      uid: 'test',
       command: 'node',
       args: ['-e', `(${neverEndingProcess.toString()})()`],
       pidFile,

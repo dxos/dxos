@@ -14,14 +14,13 @@ import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
 
 export type ProcessInfo = WatchDogParams & {
   pid?: number;
-  timestamp?: number;
+  started?: number;
   restarts?: number;
   running?: boolean;
 };
 
 export type WatchDogParams = {
-  uid: string; // Unique identifier for this instance
-
+  profile?: string; // Human readable process identifier
   pidFile: string; // Path to PID file
 
   //
@@ -85,7 +84,7 @@ export class WatchDog {
 
     const childInfo: ProcessInfo = {
       pid: this._child.pid,
-      timestamp: Date.now(),
+      started: Date.now(),
       restarts: this._restarts,
       ...this._params,
     };

@@ -38,7 +38,7 @@ describe('DaemonManager', () => {
     // Start
     {
       const params = await Phoenix.start({
-        uid: runId,
+        profile: runId,
         command: 'node',
         args: ['-e', `(${neverEndingProcess.toString()})()`],
         maxRestarts: 0,
@@ -57,7 +57,7 @@ describe('DaemonManager', () => {
     // Stop
     {
       const info = Phoenix.info(pidFile);
-      expect(info.uid).to.equal(runId);
+      expect(info.profile).to.equal(runId);
 
       await Phoenix.stop(pidFile);
 
