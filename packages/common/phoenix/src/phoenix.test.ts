@@ -3,18 +3,16 @@
 //
 
 import { expect } from 'chai';
-import fse from 'fs-extra';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { DaemonManager } from './daemon-manager';
-import { TEST_DIR, neverEndingProcess } from './testing-utils';
+import { Phoenix } from './phoenix';
+import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
 describe('DaemonManager', () => {
   test('kill process by pid', async () => {
@@ -30,21 +28,23 @@ describe('DaemonManager', () => {
   });
 
   // Fails on CI
-  test.skip('start/stop detached watchdog', async () => {
-    const uid = `test-${PublicKey.random().toHex()}`;
-    const root = join(TEST_DIR, uid);
-    afterTest(() => {
-      fse.removeSync(root);
-    });
+  test('start/stop detached watchdog', async () => {
+    const runId = Math.random().toString();
+    const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
+    const logFile = join(TEST_DIR, `file-${runId}.log`);
+    const errFile = join(TEST_DIR, `err-${runId}.log`);
+    afterTest(() => clearFiles(pidFile, logFile, errFile));
 
     // Start
     {
-      const manager = new DaemonManager(root);
-      const params = await manager.start({
-        uid,
+      const params = await Phoenix.start({
+        profile: runId,
         command: 'node',
         args: ['-e', `(${neverEndingProcess.toString()})()`],
         maxRestarts: 0,
+        pidFile,
+        logFile,
+        errFile,
       });
 
       await waitForExpect(() => {
@@ -56,17 +56,13 @@ describe('DaemonManager', () => {
 
     // Stop
     {
-      const manager = new DaemonManager(root);
-      const info = await manager.list();
-      expect(info.length).to.equal(1);
-      expect(info[0].running).to.be.true;
-      expect(info[0].uid).to.equal(uid);
-      expect(await manager.isRunning(uid)).to.be.true;
+      const info = Phoenix.info(pidFile);
+      expect(info.profile).to.equal(runId);
 
-      const params = await manager.stop(uid);
+      await Phoenix.stop(pidFile);
 
       await waitForExpect(() => {
-        const logs = readFileSync(params.logFile, { encoding: 'utf-8' });
+        const logs = readFileSync(logFile, { encoding: 'utf-8' });
         expect(logs).to.contain('Stopped with exit code');
       }, 1000);
     }
