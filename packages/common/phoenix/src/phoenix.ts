@@ -3,10 +3,11 @@
 //
 
 import { fork } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
@@ -21,18 +22,19 @@ export class Phoenix {
    */
   static async start(params: WatchDogParams) {
     {
-      // Create log folders.
-      [params.logFile, params.errFile, params.pidFile].forEach((filename) =>
-        mkdirSync(dirname(filename), { recursive: true }),
-      );
-    }
-
-    {
       // Clear stale pid file.
       if (existsSync(params.pidFile)) {
         await Phoenix.stop(params.pidFile);
       }
+
       await waitForPidDeletion(params.pidFile);
+    }
+
+    {
+      // Create log folders.
+      [params.logFile, params.errFile, params.pidFile].forEach((filename) =>
+        mkdirSync(dirname(filename), { recursive: true }),
+      );
     }
 
     const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
@@ -70,7 +72,17 @@ export class Phoenix {
 
     const { pid } = JSON.parse(fileContent);
     const signal: NodeJS.Signals = force ? 'SIGKILL' : 'SIGINT';
-    process.kill(pid, signal);
+    try {
+      process.kill(pid, signal);
+    } catch (err) {
+      invariant(err instanceof Error, 'Invalid error type');
+      if (err.message.includes('ESRCH') || err.name.includes('ESRCH')) {
+        // Process is already dead.
+        unlinkSync(pidFile);
+      } else {
+        throw err;
+      }
+    }
   }
 
   static info(pidFile: string): ProcessInfo {

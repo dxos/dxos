@@ -103,7 +103,7 @@ export class PhoenixDaemon implements Daemon {
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    await Phoenix.stop(profile, force);
+    await Phoenix.stop(lockFilePath(profile), force);
 
     await waitForCondition({
       condition: async () => !(await this.isRunning(profile)),
