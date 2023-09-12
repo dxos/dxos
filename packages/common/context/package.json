@@ -16,7 +16,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*"
   },

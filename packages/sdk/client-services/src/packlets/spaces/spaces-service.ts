@@ -6,11 +6,10 @@ import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { CredentialProcessor } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
-import { ApiError } from '@dxos/errors';
+import { DataServiceSubscriptions, SpaceManager } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError } from '@dxos/protocols';
+import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
   CreateEpochRequest,
   PostMessageRequest,
@@ -100,7 +99,7 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
+            subscriptions.add(space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             if (space.dataPipeline.pipelineState) {
               subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             }

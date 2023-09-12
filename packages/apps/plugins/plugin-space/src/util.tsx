@@ -75,10 +75,7 @@ export const spaceToGraphNode = (
         // create clone of child and add to migration destination
         const object = clone(child.data, {
           retainId: true,
-          additional: [
-            ...(child.data.content ? [child.data.content] : []),
-            ...(child.data.meta ? [child.data.meta] : []),
-          ],
+          additional: [child.data.content],
         });
         space.db.add(object);
         object.meta.index = nextIndex;

@@ -8,10 +8,9 @@ import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
-import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -102,7 +101,7 @@ export class SimplePeerTransport implements Transport {
 
       // Try to gather additional information about the connection.
       try {
-        if (typeof (this._peer as any)?._pc.getStats === 'function') {
+        if (typeof (this._peer as any)?._pc?.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.warn('report after webrtc error', {
               config: this.params.webrtcConfig,

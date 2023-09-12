@@ -27,7 +27,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/invariant": "workspace:*",

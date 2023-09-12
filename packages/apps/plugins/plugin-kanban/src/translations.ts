@@ -17,8 +17,6 @@ export default [
         'item title placeholder': 'New item',
         'add column label': 'Add column',
         'add item label': 'Add item',
-        'rename kanban label': 'Rename',
-        'delete kanban label': 'Delete',
         'delete column label': 'Delete column',
         'delete item label': 'Delete item',
         'create kanban label': 'Create kanban',

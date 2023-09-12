@@ -1,7 +1,6 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './AlertDialog';
-export * from './AppList';
-export * from './NavMenu';
+export * from './OpenVault';
+export * from './ProgressBar';

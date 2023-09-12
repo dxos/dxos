@@ -11,7 +11,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import {
   getProfilePath,
@@ -320,6 +320,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     } else if (err instanceof AgentWaitTimeoutError) {
       // TODO(burdon): Need better diagnostics -- might fail for other reasons.
       this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
+    } else if (err instanceof AgentIsNotStartedByCLIError) {
+      this.logToStderr(
+        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually.`,
+      );
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);

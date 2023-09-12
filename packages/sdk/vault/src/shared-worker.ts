@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
 import { WorkerRuntime } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';

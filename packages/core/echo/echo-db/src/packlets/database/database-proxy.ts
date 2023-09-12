@@ -5,11 +5,11 @@
 import { asyncTimeout, Event, scheduleTask, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Model, ModelFactory } from '@dxos/model-factory';
+import { ApiError } from '@dxos/protocols';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 

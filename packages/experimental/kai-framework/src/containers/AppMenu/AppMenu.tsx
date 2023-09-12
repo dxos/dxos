@@ -54,7 +54,7 @@ export const AppMenu = () => {
               <Chat className={getSize(6)} />
             )}
           </Button>
-          <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
+          <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.SHARE_IDENTITY)}>
             <User className={getSize(6)} />
           </Button>
           <DropdownMenu.Root>

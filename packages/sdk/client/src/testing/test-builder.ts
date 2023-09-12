@@ -187,7 +187,7 @@ export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
  * @deprecated use `@dxos/client-services/testing` `performInvitation` instead.
  */
 export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
-  const rootSpace = spaceKey ? initialPeer.getSpace(spaceKey) : await initialPeer.createSpace();
+  const rootSpace = spaceKey ? initialPeer.spaces.get(spaceKey) : await initialPeer.spaces.create();
   invariant(rootSpace, 'Space not found.');
 
   await Promise.all(
@@ -195,13 +195,13 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservable = rootSpace.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
+      const hostObservable = rootSpace.share({ authMethod: Invitation.AuthMethod.NONE });
       log('invitation created');
       hostObservable.subscribe(
         (hostInvitation) => {
           switch (hostInvitation.state) {
             case Invitation.State.CONNECTING: {
-              const guestObservable = peer.acceptInvitation(hostInvitation);
+              const guestObservable = peer.spaces.join(hostInvitation);
               log('invitation accepted');
 
               guestObservable.subscribe(
