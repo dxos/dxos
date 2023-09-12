@@ -31,7 +31,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
     throw new Error("Updating id's is not supported when cloning with nested objects.");
   }
 
-  if(!obj[base]) {
+  if (!obj[base]) {
     throw new TypeError('Object is not an EchoObject.');
   }
 
@@ -42,7 +42,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
     if (!obj) {
       continue;
     }
-    if(!obj[base]) {
+    if (!obj[base]) {
       throw new TypeError('Object is not an EchoObject.');
     }
     clones.push(cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()));

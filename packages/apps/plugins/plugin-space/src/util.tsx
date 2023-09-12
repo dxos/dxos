@@ -35,8 +35,8 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : disabled
-      ? ['loading space title', { ns: SPACE_PLUGIN }]
-      : ['untitled space title', { ns: SPACE_PLUGIN }];
+    ? ['loading space title', { ns: SPACE_PLUGIN }]
+    : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
 export const spaceToGraphNode = (
