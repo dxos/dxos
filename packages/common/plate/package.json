@@ -25,7 +25,7 @@
     "lodash.zip": "^4.2.0",
     "minimatch": "^5.1.0",
     "mkdirp": "^1.0.4",
-    "prettier": "^3.0.3",
+    "prettier": "^2.8.8",
     "recursive-readdir": "^2.2.3",
     "ts-node": "10.9.1",
     "yaml": "^2.1.3",
