@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "packages/ui/aurora-theme/tsconfig.json"
+  }
+}
