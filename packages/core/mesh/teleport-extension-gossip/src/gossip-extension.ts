@@ -33,10 +33,6 @@ export class GossipExtension implements TeleportExtension {
 
   constructor(private readonly _callbacks: GossipCallbacks = {}) {}
 
-  get closed() {
-    return this._closed;
-  }
-
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
 
@@ -72,9 +68,10 @@ export class GossipExtension implements TeleportExtension {
     log('abort', { err });
     try {
       await this._rpc?.abort();
-      await this._callbacks.onClose?.(err);
     } catch (err) {
       log.catch(err);
+    } finally {
+      await this._callbacks.onClose?.(err);
     }
     this._closed = true;
   }

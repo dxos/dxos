@@ -109,13 +109,6 @@ export class Gossip {
 
         .catch(async (err) => {
           log.catch(err);
-
-          if (extension.closed) {
-            if (this._connections.has(remotePeerId)) {
-              this._connections.delete(remotePeerId);
-            }
-            this.connectionClosed.emit(remotePeerId);
-          }
         });
     }
   }
