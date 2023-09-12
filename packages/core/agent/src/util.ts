@@ -24,6 +24,11 @@ export const removeSocketFile = (profile: string) => {
   fs.rmSync(path, { force: true });
 };
 
+export const removeLockFile = (profile: string) => {
+  const lockFile = lockFilePath(profile);
+  fs.rmSync(lockFile, { force: true });
+};
+
 export const lockFilePath = (profile: string): string => {
   const lockFile = getProfilePath(DX_RUNTIME, profile, 'lockfile');
   fs.mkdirSync(path.dirname(lockFile), { recursive: true });
