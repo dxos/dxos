@@ -35,6 +35,11 @@ const stackMosaic = deepSignal<MosaicType>({
   },
 });
 
+stackMosaic.$items?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
+stackMosaic.items?.[Object.keys(items)[1]]?.$index?.subscribe((nextIndex) =>
+  console.log('[mosaic.stories]', 'first item index update', nextIndex),
+);
+
 export const Stack: { args: { mosaic: DeepSignal<MosaicType>; root: string } } = {
   args: {
     mosaic: stackMosaic,

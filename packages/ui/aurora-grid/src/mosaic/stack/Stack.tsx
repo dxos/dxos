@@ -2,49 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
-import React from 'react';
+import { sortByIndex } from '@tldraw/indices';
+import React, { useEffect } from 'react';
 
-import { useDnd, useDragEnd } from '../dnd';
+import { useDragEnd } from '../dnd';
+import { useHandleRearrange } from '../dnd/handlers';
 import { useMosaic } from '../mosaic';
 import { Tile } from '../tile';
 import { TileProps } from '../types';
 
 const Stack = ({ tile: { id, sortable } }: TileProps) => {
-  const dnd = useDnd();
   const { items, relations } = useMosaic();
-  const subtiles = Array.from(relations[id]?.child ?? [])
+  const subtileIds = relations[id]?.child ?? new Set();
+  const subtiles = Array.from(subtileIds)
     .map((id) => items[id])
     .sort(sortByIndex);
 
-  console.log(
-    '[subtiles]',
-    subtiles.map(({ index }) => index),
-  );
+  const handleRearrange = useHandleRearrange(subtileIds, subtiles);
+
+  useEffect(() => {
+    console.log('[stack]', 'mosaic.items update');
+  }, [items]);
+
+  useEffect(() => {
+    console.log('[stack]', 'mosaic.relations update');
+  }, [relations]);
+
+  useEffect(() => {
+    console.log('[stack]', 'computed subtiles update');
+  }, [subtiles]);
 
   useDragEnd(
-    ({ active, over }) => {
-      if (
-        active &&
-        over &&
-        active.id !== over.id &&
-        over.data.current &&
-        active.data.current &&
-        relations[id]?.child?.has(active.id.toString()) &&
-        relations[id]?.child?.has(over.id.toString())
-      ) {
-        dnd.overlayDropAnimation = 'around';
-        const overOrderIndex = subtiles.findIndex(({ id }) => id === over.id);
-        const activeOrderIndex = subtiles.findIndex(({ id }) => id === active.id);
-        items[active.id].index =
-          overOrderIndex < 1
-            ? getIndexBelow(subtiles[overOrderIndex].index)
-            : activeOrderIndex < overOrderIndex
-            ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1].index)
-            : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
-      }
+    (event) => {
+      handleRearrange(event);
     },
-    [items, relations, subtiles, id],
+    [handleRearrange],
   );
 
   return (
