@@ -7,7 +7,7 @@ import { cloneElement } from 'react';
 import type { Identity } from '@dxos/react-client/halo';
 import type {
   Invitation,
-  type AuthenticatingInvitationObservable,
+  AuthenticatingInvitationObservable,
   InvitationResult,
 } from '@dxos/react-client/invitations';
 

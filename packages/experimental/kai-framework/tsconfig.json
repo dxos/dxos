@@ -12,8 +12,8 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
     "playwright",
+    "src",
     "stories"
   ],
   "references": [
