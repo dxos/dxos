@@ -6,7 +6,6 @@ import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -98,7 +97,7 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
-    for (const extension of this._connections.values()) {
+    for (const [remotePeerId, extension] of this._connections.entries()) {
       void extension
         .sendAnnounce({
           peerId: this._params.localPeerId,
@@ -109,12 +108,13 @@ export class Gossip {
         })
 
         .catch(async (err) => {
-          log(err);
-          // TODO(nf): always destroy on RpcClosedError?
+          log.catch(err);
 
-          if (err instanceof RpcClosedError) {
-            await this.close();
-            throw err;
+          if (extension.closed) {
+            if (this._connections.has(remotePeerId)) {
+              this._connections.delete(remotePeerId);
+            }
+            this.connectionClosed.emit(remotePeerId);
           }
         });
     }
