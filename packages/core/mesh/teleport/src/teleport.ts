@@ -48,6 +48,7 @@ export class Teleport {
       if (this._destroying || this._aborting) {
         return;
       }
+      // TODO(egorgripasov): Evaluate use of abort instead of destroy.
       log('destroy teleport due to onTimeout in ControlExtension');
       this.destroy(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
