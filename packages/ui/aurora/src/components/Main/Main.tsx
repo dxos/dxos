@@ -19,10 +19,10 @@ import React, {
 
 import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 
+import { useSwipeToDismiss } from './useSwipeToDismiss';
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
-import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';

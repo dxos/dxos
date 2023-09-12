@@ -60,10 +60,9 @@ export type InvocationData = {
  * Wrapper for the OpenFaaS HTTP API.
  */
 export class FaasClient {
-  // prettier-ignore
   constructor(
     private readonly _config: Runtime.Services.Faasd,
-    private readonly _context: InvocationContext = {}
+    private readonly _context: InvocationContext = {},
   ) {
     invariant(this._config.gateway, 'Invalid gateway URL.');
   }

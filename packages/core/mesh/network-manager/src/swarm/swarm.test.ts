@@ -10,12 +10,12 @@ import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManag
 import { afterTest, describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
-import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { FullyConnectedTopology } from '../topology';
-import { createSimplePeerTransportFactory } from '../transport';
 import { ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
+import { TestWireProtocol } from '../testing/test-wire-protocol';
+import { FullyConnectedTopology } from '../topology';
+import { createSimplePeerTransportFactory } from '../transport';
 
 type TestPeer = {
   swarm: Swarm;

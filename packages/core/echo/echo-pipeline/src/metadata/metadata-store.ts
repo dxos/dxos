@@ -48,10 +48,7 @@ export class MetadataStore {
 
   public readonly update = new Event<EchoMetadata>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _directory: Directory
-  ) { }
+  constructor(private readonly _directory: Directory) {}
 
   get metadata(): EchoMetadata {
     return this._metadata;

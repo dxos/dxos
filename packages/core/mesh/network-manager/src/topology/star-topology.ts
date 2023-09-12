@@ -11,10 +11,7 @@ import { SwarmController, Topology } from './topology';
 export class StarTopology implements Topology {
   private _controller?: SwarmController;
 
-  // prettier-ignore
-  constructor(
-    private readonly _centralPeer: PublicKey
-  ) {}
+  constructor(private readonly _centralPeer: PublicKey) {}
 
   toString() {
     return `StarTopology(${this._centralPeer.truncate()})`;

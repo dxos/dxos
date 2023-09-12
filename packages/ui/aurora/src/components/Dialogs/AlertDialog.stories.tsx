@@ -6,9 +6,9 @@ import React from 'react';
 
 import '@dxosTheme';
 
+import { AlertDialog } from './AlertDialog';
 import { Button } from '../Buttons';
 import { Toolbar } from '../Toolbar';
-import { AlertDialog } from './AlertDialog';
 
 type StorybookAlertDialogProps = Partial<{
   title: string;

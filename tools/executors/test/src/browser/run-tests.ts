@@ -13,9 +13,9 @@ import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { TestResult } from './reporter';
 import { BrowserType } from '../types';
 import { Lock, trigger } from '../util';
-import { TestResult } from './reporter';
 
 export type RunTestsOptions = {
   debug: boolean;

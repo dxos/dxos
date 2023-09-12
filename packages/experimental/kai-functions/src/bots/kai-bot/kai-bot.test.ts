@@ -11,8 +11,8 @@ import { fromHost } from '@dxos/client/services';
 import { Contact, DocumentStack, Organization } from '@dxos/kai-types';
 import { describe, test } from '@dxos/test';
 
-import { loadJson } from '../util';
 import { KaiBot } from './kai-bot';
+import { loadJson } from '../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('KaiBot', () => {

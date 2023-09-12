@@ -68,12 +68,11 @@ export class DatabaseProxy {
 
   private _subscriptionOpen = false;
 
-  // prettier-ignore
   constructor(
     private readonly _service: DataService,
     public readonly _itemManager: ItemManager,
-    private readonly _spaceKey: PublicKey
-  ) { }
+    private readonly _spaceKey: PublicKey,
+  ) {}
 
   get isReadOnly(): boolean {
     return false;

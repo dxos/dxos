@@ -12,9 +12,11 @@
     ]
   },
   "include": [
+    "package.json",
     "src",
     "src/.storybook/*",
-    "src/.vscode/*"
+    "src/.vscode/*",
+    "test"
   ],
   "references": [
     {

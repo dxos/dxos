@@ -12,8 +12,8 @@ import { SystemStatus, fromHost } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { useIdentity } from '../halo';
 import { ClientProvider, useClient } from './ClientContext';
+import { useIdentity } from '../halo';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 

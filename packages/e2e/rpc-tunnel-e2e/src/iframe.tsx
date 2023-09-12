@@ -28,13 +28,13 @@ const App = () => {
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
         },
         exposed: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
         },
         handlers: client.handlers,
-        port
+        port,
       });
       await server.open();
 
@@ -43,15 +43,15 @@ const App = () => {
       const port = await createIFramePort({
         iframe: iframeRef.current!,
         origin: 'http://127.0.0.1:5173',
-        channel: Channels.ONE
+        channel: Channels.ONE,
       });
       const client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
         },
         exposed: {},
         handlers: {},
-        port
+        port,
       });
       await client.open();
 
@@ -65,7 +65,7 @@ const App = () => {
             setError(error.message);
           }
           setClosed(true);
-        }
+        },
       );
     }
 
@@ -79,7 +79,7 @@ const App = () => {
           data={{
             closed,
             error,
-            value
+            value,
           }}
         />
       </div>
@@ -91,7 +91,7 @@ const App = () => {
           //   https://stackoverflow.com/a/5268240/2804332
           src='http://127.0.0.1:5173/iframe.html'
           style={{
-            flexGrow: 1
+            flexGrow: 1,
           }}
         />
       )}
@@ -102,5 +102,5 @@ const App = () => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );
