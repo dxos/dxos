@@ -99,7 +99,7 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
+            subscriptions.add(space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             if (space.dataPipeline.pipelineState) {
               subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             }

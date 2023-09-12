@@ -131,4 +131,27 @@ describe('database', () => {
     expect(task2.description.model!.textContent).to.eq('test');
     expect(task2 !== task1).to.be.true;
   });
+
+  test('clone', async () => {
+    const { db: db1 } = await createDatabase();
+    const { db: db2 } = await createDatabase();
+
+    const task1 = new Task({
+      title: 'Main task',
+    });
+    db1.add(task1);
+    await db1.flush();
+
+    const task2 = clone(task1);
+    expect(task2 !== task1).to.be.true;
+    expect(task2.id).to.equal(task1.id);
+    expect(task2.title).to.equal(task1.title);
+    expect(task2).to.be.instanceOf(Task);
+
+    db2.add(task2);
+    await db2.flush();
+    expect(task2.id).to.equal(task1.id);
+
+    expect(() => db1.add(task1)).to.throw;
+  });
 });
