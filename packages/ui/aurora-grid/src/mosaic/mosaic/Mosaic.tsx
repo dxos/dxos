@@ -4,6 +4,7 @@
 
 import React, { createContext, useContext } from 'react';
 
+import { DndProvider } from '../dnd';
 import { Tile } from '../tile';
 import type { Mosaic } from '../types';
 
@@ -22,11 +23,12 @@ const MosaicContext = createContext<MosaicProps>(defaultMosaicContextValue);
 const useMosaic = () => useContext(MosaicContext).mosaic;
 
 const Mosaic = (props: MosaicProps) => {
-  console.log('[mosaic]', props);
   return (
-    <MosaicContext.Provider value={props}>
-      <Tile tile={props.mosaic.items[props.root]} />
-    </MosaicContext.Provider>
+    <DndProvider>
+      <MosaicContext.Provider value={props}>
+        <Tile tile={props.mosaic.items[props.root]} />
+      </MosaicContext.Provider>
+    </DndProvider>
   );
 };
 

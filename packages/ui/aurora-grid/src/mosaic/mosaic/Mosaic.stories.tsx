@@ -1,9 +1,10 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import { faker } from '@faker-js/faker';
 import { deepSignal, DeepSignal } from 'deepsignal';
+
+import '@dxosTheme';
 
 import type { Mosaic as MosaicType } from '../types';
 import { Mosaic } from './Mosaic';
@@ -11,22 +12,19 @@ import { Mosaic } from './Mosaic';
 faker.seed(1234);
 const fake = faker.helpers.fake;
 
-let rootId = 'never';
-
 const items = [...Array(10)].reduce((acc: Mosaic['items'], _, index) => {
   const id = faker.string.uuid();
-  if (index === 0) {
-    rootId = id;
-  }
   acc[id] = {
     id,
-    label: fake('{{commerce.productMaterial}} {{animal.cetacean}}'),
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
     index: `a${index}`,
-    ...(index === 0 ? { variant: 'stack' } : { variant: 'card' }),
+    ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card' }),
   };
   return acc;
 }, {});
+
+const rootId = Object.keys(items)[0];
 
 const stackMosaic = deepSignal<MosaicType>({
   items,

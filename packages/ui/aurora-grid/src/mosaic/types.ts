@@ -19,6 +19,8 @@ export type Tile = {
 
 export type TileProps = {
   tile: Tile;
+  // Computed props
+  draggable?: boolean;
 };
 
 export type Mosaic = {

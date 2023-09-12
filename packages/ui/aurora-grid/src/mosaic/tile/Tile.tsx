@@ -7,13 +7,12 @@ import { Card } from '../card';
 import { Stack } from '../stack';
 import { TileProps } from '../types';
 
-const Tile = ({ tile }: TileProps) => {
-  console.log('[tile]', tile);
-  switch (tile?.variant) {
+const Tile = (props: TileProps) => {
+  switch (props.tile.variant) {
     case 'stack':
-      return <Stack tile={tile} />;
+      return <Stack {...props} />;
     case 'card':
-      return <Card tile={tile} />;
+      return <Card {...props} />;
     default:
       return null;
   }

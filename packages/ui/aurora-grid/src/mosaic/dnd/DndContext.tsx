@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDeepSignal } from 'deepsignal/react';
-import React, { createContext, PropsWithChildren, useCallback } from 'react';
+import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
 
 import { OverlayDropAnimation, Handler } from './types';
 
@@ -37,6 +37,8 @@ const defaultContextValue: DndContextValue = {
 };
 
 const DndContext = createContext<DndContextValue>(defaultContextValue);
+
+const useDnd = () => useContext(DndContext);
 
 const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   const contextValue = useDeepSignal<DndContextValue>(defaultContextValue);
@@ -69,6 +71,7 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
+      contextValue.overlayDropAnimation = 'away';
       contextValue.dragStartSubscriptions.forEach((subscription) => subscription.call(this, event));
     },
     [contextValue.dragStartSubscriptions],
@@ -103,4 +106,4 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export { DndProvider, DndContext };
+export { DndProvider, DndContext, useDnd };
