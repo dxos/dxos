@@ -3,8 +3,6 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Tooltip } from '@dxos/aurora';
-import { dialogMotion, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
@@ -20,8 +18,8 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
-  const { ThemeProvider } = await import('@dxos/aurora');
-  const { bindTheme, auroraTheme } = await import('@dxos/aurora-theme');
+  const { ThemeProvider, Tooltip } = await import('@dxos/aurora');
+  const { bindTheme, auroraTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/aurora-theme');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
 
