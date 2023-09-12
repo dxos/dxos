@@ -97,7 +97,7 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
-    for (const [remotePeerId, extension] of this._connections.entries()) {
+    for (const extension of this._connections.values()) {
       void extension
         .sendAnnounce({
           peerId: this._params.localPeerId,
