@@ -72,12 +72,9 @@ export class SimplePeerTransport implements Transport {
         } else {
           this.errors.raise(new UnknownProtocolError('unknown RTCError', err));
         }
-
-        // Safari specific? are all errors of code: "DATA_CHANNEL_ERROR" connection aborts?
-      } else if (err.name === 'InvalidStateError') {
-        this.errors.raise(new ConnectionResetError('safari WebRTC error', err));
         // catch more generic simple-peer errors: https://github.com/feross/simple-peer/blob/master/README.md#error-codes
       } else if ('code' in err) {
+        log.info('simple-peer error', err);
         switch (err.code) {
           case 'ERR_WEBRTC_SUPPORT':
             this.errors.raise(new ProtocolError('WebRTC not supported', err));
@@ -96,6 +93,7 @@ export class SimplePeerTransport implements Transport {
             this.errors.raise(new Error('unknown simple-peer error'));
         }
       } else {
+        log.info('unknown peer connection error', err);
         this.errors.raise(err);
       }
 
