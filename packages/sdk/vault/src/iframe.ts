@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { Tooltip } from '@dxos/aurora';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
@@ -19,6 +20,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
   const { ThemeProvider } = await import('@dxos/aurora');
+  const { auroraTx } = await import('@dxos/aurora-theme');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
 
@@ -33,9 +35,17 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       {},
       createElement(
         ThemeProvider,
-        { resourceExtensions: [osTranslations] },
-        // NOTE: Using context provider directly to avoid duplicate banners being logged.
-        createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin })),
+        { tx: auroraTx, resourceExtensions: [osTranslations] },
+        createElement(Tooltip.Provider, {
+          delayDuration: 100,
+          skipDelayDuration: 400,
+          children: createElement(
+            // NOTE: Using context provider directly to avoid duplicate banners being logged.
+            ClientContext.Provider,
+            { value: { client } },
+            createElement(Shell, { runtime, origin }),
+          ),
+        }),
       ),
     ),
   );

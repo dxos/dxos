@@ -19,7 +19,6 @@
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
