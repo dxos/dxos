@@ -13,7 +13,7 @@ import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
 
@@ -39,12 +39,19 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (
-  space: Space,
-  parent: Graph.Node,
-  appState?: AppState,
-  defaultIndex?: string,
-): Graph.Node<Space> => {
+export const spaceToGraphNode = ({
+  space,
+  parent,
+  settings,
+  appState,
+  defaultIndex,
+}: {
+  space: Space;
+  parent: Graph.Node;
+  settings: SpaceSettingsProps;
+  appState?: AppState;
+  defaultIndex?: string;
+}): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
   const disabled = state !== SpaceState.READY;
@@ -61,7 +68,7 @@ export const spaceToGraphNode = (
     properties: {
       palette: parent.id === 'root' ? 'teal' : undefined,
       role: 'branch',
-      hidden: inactive,
+      hidden: settings.showHidden ? false : inactive,
       disabled,
       error,
       index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
@@ -135,9 +142,7 @@ export const spaceToGraphNode = (
   );
 
   if (parent.id !== 'root') {
-    // TODO(burdon): Check if closed.
-    const open = true;
-    if (open) {
+    if (space.state.get() === SpaceState.READY) {
       node.addAction({
         id: 'close-space',
         label: ['close space label', { ns: SPACE_PLUGIN }],

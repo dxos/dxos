@@ -265,7 +265,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const defaultSpace = client.getSpace();
           if (defaultSpace) {
             // Ensure default space is always first.
-            spaceToGraphNode(defaultSpace, parent);
+            spaceToGraphNode({ space: defaultSpace, parent, settings: settings.values });
           }
 
           const [groupNode] = parent.add({
@@ -285,22 +285,35 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           });
 
+          const updateSpace = (space: Space, indices: string[], index: number) => {
+            const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
+            const appState = treeViewPlugin?.provides.treeView?.appState;
+            isDefaultSpace
+              ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
+              : spaceToGraphNode({
+                  space,
+                  parent: groupNode,
+                  settings: settings.values,
+                  appState,
+                  defaultIndex: indices[index],
+                });
+          };
+
           // TODO(burdon): Use option to subscribe to open/closed spaces.
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             graphSubscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              const update = () => {
-                const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
-                isDefaultSpace
-                  ? spaceToGraphNode(space, parent, treeViewPlugin?.provides.treeView?.appState)
-                  : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
-              };
-
-              const unsubscribe = space.properties[subscribe](() => update());
+              const unsubscribe = space.properties[subscribe](() => updateSpace(space, indices, index));
               graphSubscriptions.add(unsubscribe);
-              update();
+              updateSpace(space, indices, index);
             });
+          });
+
+          settings.values.$showHidden!.subscribe(() => {
+            const spaces = client.spaces.get();
+            const indices = getIndices(spaces.length);
+            spaces.forEach((space, index) => updateSpace(space, indices, index));
           });
 
           groupNode.addAction(
