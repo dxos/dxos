@@ -14,8 +14,8 @@
     "/node_modules/"
   ],
   "include": [
-    "src",
-    "package.json"
+    "package.json",
+    "src"
   ],
   "references": [
     {
