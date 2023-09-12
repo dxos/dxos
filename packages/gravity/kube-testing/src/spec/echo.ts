@@ -236,14 +236,14 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     if (!this.spaceKey) {
       await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
       if (env.params.config.creator) {
-        this.space = await this.client.createSpace({ name: 'test space' });
-        this.space.createInvitation({
+        this.space = await this.client.spaces.create({ name: 'test space' });
+        this.space.share({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
           type: Invitation.Type.MULTIUSE,
         });
       } else {
-        const invitation = this.client.acceptInvitation({
+        const invitation = this.client.spaces.join({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
           type: Invitation.Type.MULTIUSE,
@@ -267,7 +267,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       }
       this.spaceKey = this.space.key;
     } else {
-      this.space = await this.client.getSpace(this.spaceKey)!;
+      this.space = await this.client.spaces.get(this.spaceKey)!;
     }
 
     invariant(
