@@ -11,7 +11,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { getInfo, startWatchdog, stopWatchDog } from './detached-process';
+import { Phoenix } from './phoenix';
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
 describe('DaemonManager', () => {
@@ -37,7 +37,7 @@ describe('DaemonManager', () => {
 
     // Start
     {
-      const params = await startWatchdog({
+      const params = await Phoenix.start({
         uid: runId,
         command: 'node',
         args: ['-e', `(${neverEndingProcess.toString()})()`],
@@ -56,10 +56,10 @@ describe('DaemonManager', () => {
 
     // Stop
     {
-      const info = getInfo(pidFile);
+      const info = Phoenix.info(pidFile);
       expect(info.uid).to.equal(runId);
 
-      await stopWatchDog(pidFile);
+      await Phoenix.stop(pidFile);
 
       await waitForExpect(() => {
         const logs = readFileSync(logFile, { encoding: 'utf-8' });

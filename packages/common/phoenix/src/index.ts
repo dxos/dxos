@@ -6,5 +6,5 @@
 // Copyright (C) 2010 Charlie Robbins & the Contributors
 //
 
-export * from './detached-process';
+export * from './phoenix';
 export * from './watchdog';
