@@ -38,7 +38,7 @@ class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutat
 
 export class TestModel extends Model<Map<any, any>, TestItemMutation> {
   static meta: ModelMeta = {
-    type: 'dxos:model/test',
+    type: 'dxos.org/model/test',
     stateMachine: () => new TestModelStateMachine(),
     mutationCodec: schema.getCodecForType('example.testing.data.TestItemMutation'),
     snapshotCodec: schema.getCodecForType('example.testing.data.TestItemSnapshot'),

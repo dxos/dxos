@@ -10,5 +10,5 @@ import { schema } from './gen/schema';
 export const typeModules: Module[] = schema.types.map((type) => ({
   id: type.name,
   name: type.name,
-  type: 'dxos:type/schema',
+  type: 'dxos.org/type/schema',
 }));

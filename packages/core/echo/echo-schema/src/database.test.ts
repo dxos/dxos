@@ -147,7 +147,7 @@ describe('Database', () => {
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
       title: 'Test title',
       description: 'Test description',
       meta: { keys: [] },
@@ -239,7 +239,7 @@ describe('Database', () => {
     expect(task.toJSON()).toEqual({
       '@id': task.id,
       '@type': undefined,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
@@ -264,7 +264,7 @@ describe('Database', () => {
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
       meta: {
         keys: [{ id: 'test-key', source: 'test' }],
       },

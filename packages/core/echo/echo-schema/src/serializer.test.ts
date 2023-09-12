@@ -30,7 +30,7 @@ describe('Serializer', () => {
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
-        '@model': 'dxos:model/document',
+        '@model': 'dxos.org/model/document',
         title: 'Test',
         meta: { keys: [] },
       });
@@ -108,7 +108,7 @@ describe('Serializer', () => {
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
         '@id': text.id,
-        '@model': 'dxos:model/text',
+        '@model': 'dxos.org/model/text',
         text: content,
       });
     }
