@@ -304,13 +304,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             graphSubscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              const unsubscribe = space.properties[subscribe](() => updateSpace(space, indices, index));
-              graphSubscriptions.add(unsubscribe);
+              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space, indices, index)));
               updateSpace(space, indices, index);
             });
           });
 
-          settings.values.$showHidden!.subscribe(() => {
+          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
             const spaces = client.spaces.get();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => updateSpace(space, indices, index));
@@ -347,6 +346,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           return () => {
             unsubscribe();
+            unsubscribeHidden();
             graphSubscriptions.clear();
           };
         },
