@@ -9,8 +9,8 @@ import React, { useContext, useState } from 'react';
 import { PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '../DndPlugin';
 import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaultStoryPlugin';
+import { useDnd, useDragEnd, useDragOver, useDragStart } from '../DndPlugin';
 
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);

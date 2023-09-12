@@ -23,7 +23,10 @@ export class Schema<T, S extends {} = {}> {
 
   private readonly _codecCache = new Map<string, ProtoCodec>();
 
-  constructor(private _typesRoot: protobufjs.Root, substitutions: Substitutions) {
+  constructor(
+    private _typesRoot: protobufjs.Root,
+    substitutions: Substitutions,
+  ) {
     this._mapping = createMappingDescriptors(substitutions);
   }
 

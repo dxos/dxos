@@ -87,8 +87,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/hypercore/**/*.{ts,js}"
-        ]
+          "packages/common/hypercore/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

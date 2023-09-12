@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "packages/sdk/react-client/tsconfig.json"
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
+}

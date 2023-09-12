@@ -34,7 +34,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/kodama/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

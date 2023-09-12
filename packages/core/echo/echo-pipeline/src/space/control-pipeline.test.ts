@@ -15,9 +15,9 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
+import { ControlPipeline } from './control-pipeline';
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
-import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {

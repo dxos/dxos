@@ -55,7 +55,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/composer-app/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

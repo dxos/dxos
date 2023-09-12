@@ -35,7 +35,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/plugins/plugin-telemetry/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

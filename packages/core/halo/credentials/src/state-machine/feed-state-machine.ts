@@ -30,10 +30,7 @@ export class FeedStateMachine {
 
   readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _spaceKey: PublicKey
-  ) {}
+  constructor(private readonly _spaceKey: PublicKey) {}
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
     return this._feeds;

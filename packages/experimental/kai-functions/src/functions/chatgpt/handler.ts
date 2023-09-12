@@ -7,9 +7,9 @@ import { FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { parseMessage } from './parser';
 import { ChatModel } from '../../bots';
 import { getKey } from '../../bots/util';
-import { parseMessage } from './parser';
 
 type HandlerProps = {
   space: string;

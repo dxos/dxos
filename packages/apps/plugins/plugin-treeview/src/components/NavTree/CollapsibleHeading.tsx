@@ -8,8 +8,6 @@ import React, { forwardRef } from 'react';
 import { TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
-import { TREE_VIEW_PLUGIN } from '../../types';
-import { getTreeItemLabel } from '../../util';
 import {
   collapsibleSpacing,
   navTreeHeading,
@@ -19,6 +17,8 @@ import {
   treeItemText,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
+import { TREE_VIEW_PLUGIN } from '../../types';
+import { getTreeItemLabel } from '../../util';
 
 export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadingProps>(
   ({ open, node, level, active }, forwardedRef) => {

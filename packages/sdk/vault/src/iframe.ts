@@ -4,9 +4,9 @@
 
 import { Trigger } from '@dxos/async';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
+import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
-import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';

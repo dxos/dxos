@@ -15,11 +15,11 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
+import { PipelineTable } from './PipelineTable';
+import { SpaceProperties } from './SpaceProperties';
 import { Bitbar, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../../hooks';
-import { PipelineTable } from './PipelineTable';
-import { SpaceProperties } from './SpaceProperties';
 
 type FeedInfo = {
   feedKey: PublicKey;

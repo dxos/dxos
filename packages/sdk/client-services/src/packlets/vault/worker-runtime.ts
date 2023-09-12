@@ -11,8 +11,8 @@ import { SimplePeerTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
+import { ClientServicesHost } from '../services';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {
@@ -34,11 +34,14 @@ export class WorkerRuntime {
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
 
-  // prettier-ignore
-  constructor(
-    private readonly _configProvider: () => MaybePromise<Config>
-  ) {
-    this._clientServices = new ClientServicesHost({ callbacks: { onReset: async () => { self.close(); } } });
+  constructor(private readonly _configProvider: () => MaybePromise<Config>) {
+    this._clientServices = new ClientServicesHost({
+      callbacks: {
+        onReset: async () => {
+          self.close();
+        },
+      },
+    });
   }
 
   get host() {

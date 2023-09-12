@@ -9,9 +9,9 @@ import { Input, useTranslation } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 
-import { THREAD_PLUGIN } from '../types';
 import { BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
+import { THREAD_PLUGIN } from '../types';
 
 // type DailyBlock = {
 //   date?: Date;

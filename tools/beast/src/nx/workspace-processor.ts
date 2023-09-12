@@ -23,10 +23,9 @@ export class WorkspaceProcessor {
   private readonly _projectsByName = new Map<string, Project>();
   private readonly _projectsByPackage = new Map<string, Project>();
 
-  // prettier-ignore
   constructor(
     private readonly _baseDir: string,
-    private readonly _options: WorkspaceProcessorOptions = {}
+    private readonly _options: WorkspaceProcessorOptions = {},
   ) {}
 
   get baseDir() {

@@ -14,6 +14,9 @@ import { useClient } from '@dxos/react-client';
 import { TypedObject, useSpaces } from '@dxos/react-client/echo';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 
+import { FrameList } from './FrameList';
+import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
+import { Separator, SpaceListPanel } from './SpaceListPanel';
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
@@ -29,9 +32,6 @@ import {
 import { Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
-import { FrameList } from './FrameList';
-import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
-import { Separator, SpaceListPanel } from './SpaceListPanel';
 
 const SIDEBAR_NAME = 'KaiFrameworkSidebar';
 

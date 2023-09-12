@@ -9,11 +9,11 @@ import React from 'react';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
 
-import { StorybookDialog } from '../../components/StorybookDialog';
-import { InvitationManager, InvitationManagerProps } from '../../steps';
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
+import { StorybookDialog } from '../../components/StorybookDialog';
+import { InvitationManager, InvitationManagerProps } from '../../steps';
 
 faker.seed(1234);
 

@@ -41,12 +41,12 @@ import {
   GetBlobsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
+import { ServiceContext } from '../services';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();

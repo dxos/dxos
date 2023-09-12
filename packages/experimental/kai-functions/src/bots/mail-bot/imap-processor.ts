@@ -24,7 +24,10 @@ const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/]
 export class ImapProcessor {
   private _connection?: ImapSimple;
 
-  constructor(private readonly _id: string, private readonly _config: ImapConfig) {
+  constructor(
+    private readonly _id: string,
+    private readonly _config: ImapConfig,
+  ) {
     invariant(this._id);
     invariant(this._config);
   }
