@@ -60,10 +60,7 @@ class TraceInjector extends Visitor {
 
   private _sourceMap?: SourceMapConsumer;
 
-  constructor(
-    private readonly filename: string,
-    private readonly code: string,
-  ) {
+  constructor(private readonly filename: string, private readonly code: string) {
     super();
 
     this._linePositions.push(0);

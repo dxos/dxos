@@ -24,11 +24,11 @@ const App = ({ id, port }: { id: string; port: RpcPort }) => {
   useAsyncEffect(async () => {
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
       },
       exposed: {},
       handlers: {},
-      port
+      port,
     });
     await client.open();
 
@@ -42,7 +42,7 @@ const App = ({ id, port }: { id: string; port: RpcPort }) => {
           setError(error.message);
         }
         setClosed(true);
-      }
+      },
     );
 
     setClosed(false);
@@ -52,14 +52,14 @@ const App = ({ id, port }: { id: string; port: RpcPort }) => {
     <div
       data-testid={id}
       style={{
-        flexGrow: 1
+        flexGrow: 1,
       }}
     >
       <JSONTree
         data={{
           closed,
           error,
-          value
+          value,
         }}
       />
     </div>
@@ -77,13 +77,13 @@ if (typeof SharedWorker !== 'undefined') {
       <StrictMode>
         <div
           style={{
-            display: 'flex'
+            display: 'flex',
           }}
         >
           <App id={Channels.ONE} port={portOne} />
           <App id={Channels.TWO} port={portTwo} />
         </div>
-      </StrictMode>
+      </StrictMode>,
     );
   })();
 } else {

@@ -62,7 +62,9 @@ const sidebarItem: {
         )
       ).filter((s) => s),
       ...(await Promise.all(
-        (await fs.readdir(path.resolve(apiPath, pkg)))
+        (
+          await fs.readdir(path.resolve(apiPath, pkg))
+        )
           .filter((file) => {
             if ([...API_SECTIONS, ...API_PACKAGE_IGNORE].indexOf(file) >= 0) {
               return false;

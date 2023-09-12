@@ -23,10 +23,7 @@ export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
   readonly snapshot = new Event<EchoSnapshot>();
 
-  constructor(
-    private readonly _itemManager: ItemManager,
-    private readonly _modelFactory: ModelFactory,
-  ) {}
+  constructor(private readonly _itemManager: ItemManager, private readonly _modelFactory: ModelFactory) {}
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {

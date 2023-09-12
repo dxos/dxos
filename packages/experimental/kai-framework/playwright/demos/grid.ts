@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-
 import { chromium } from '@playwright/test';
 // @ts-ignore
-import robot from 'robotjs'; 
+import robot from 'robotjs';
 
 import { sleep } from '@dxos/async';
 
