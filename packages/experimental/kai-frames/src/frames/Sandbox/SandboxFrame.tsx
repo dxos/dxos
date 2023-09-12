@@ -11,8 +11,8 @@ import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';
 import { useQuery, Text } from '@dxos/react-client/echo';
 
-import { useFrameContext } from '../../hooks';
 import { sampleCode } from './sample';
+import { useFrameContext } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 

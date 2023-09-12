@@ -14,9 +14,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
+import { createMappedFeedWriter } from '../common';
 
 export type WaitUntilReachedTargetParams = {
   /**

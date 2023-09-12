@@ -7,9 +7,9 @@ import type { ValueEncoding } from 'hypercore';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
+import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;

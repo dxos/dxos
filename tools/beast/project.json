@@ -22,7 +22,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "tools/beast/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

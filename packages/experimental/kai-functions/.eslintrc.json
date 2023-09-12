@@ -4,5 +4,9 @@
   ],
   "parserOptions": {
     "project": "packages/experimental/kai-functions/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts",
+    "functions/**"
+  ]
 }

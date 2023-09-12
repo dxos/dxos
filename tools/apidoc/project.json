@@ -30,7 +30,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "tools/apidoc/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -33,7 +33,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/echo-pipeline/src/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

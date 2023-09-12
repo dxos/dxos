@@ -6,8 +6,8 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { DropdownMenu } from './DropdownMenu';
+import { Button } from '../Buttons';
 
 const StorybookDropdownMenu = () => {
   return (

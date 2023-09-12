@@ -3,8 +3,8 @@
 //
 
 import { ESLint } from 'eslint';
-import markdownItContainer from 'markdown-it-container';
 import type Token from 'markdown-it/lib/token';
+import markdownItContainer from 'markdown-it-container';
 import { readdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';

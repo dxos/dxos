@@ -7,8 +7,8 @@ import { HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import get from 'lodash.get';
 
-import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 import { markdownTags } from './markdownTags';
+import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 
 export const chalky = '#e5c07b';
 export const coral = '#e06c75';

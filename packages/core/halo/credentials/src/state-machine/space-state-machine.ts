@@ -10,10 +10,10 @@ import { TypedMessage } from '@dxos/protocols';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { CredentialProcessor } from '../processor/credential-processor';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { getCredentialAssertion, verifyCredential } from '../credentials';
+import { CredentialProcessor } from '../processor/credential-processor';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;

@@ -32,7 +32,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/mesh/messaging/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

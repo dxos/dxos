@@ -35,7 +35,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/mesh/teleport-extension-gossip/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

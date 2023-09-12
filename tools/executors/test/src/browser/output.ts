@@ -7,9 +7,9 @@ import { Stats } from 'mocha';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { BrowserType } from '../types';
 import { TestResult, TestStatus } from './reporter';
 import { RunTestsResults, Suites, TestError } from './run-tests';
+import { BrowserType } from '../types';
 
 export type OutputResultsOptions = {
   name: string;

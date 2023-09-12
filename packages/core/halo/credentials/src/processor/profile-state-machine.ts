@@ -6,8 +6,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getCredentialAssertion } from '../credentials';
 import { CredentialProcessor } from './credential-processor';
+import { getCredentialAssertion } from '../credentials';
 
 export type ProfileStateMachineParams = {
   identityKey: PublicKey;

@@ -21,7 +21,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "tools/executors/serve-with-vault/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

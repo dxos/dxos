@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { AbstractPlugin } from '../plugin';
 import { FaasClient, InvocationContext, Trigger } from './faas-client';
+import { AbstractPlugin } from '../plugin';
 
 type MountedTrigger = {
   trigger: Trigger;

@@ -5,8 +5,8 @@
 import { verifySignature } from '@dxos/crypto';
 import { Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { SIGNATURE_TYPE_ED25519, VerificationResult, verifyChain, verifyCredential } from '../credentials';
 import { getPresentationProofPayload } from './signing';
+import { SIGNATURE_TYPE_ED25519, VerificationResult, verifyChain, verifyCredential } from '../credentials';
 
 export const verifyPresentation = async (presentation: Presentation): Promise<VerificationResult> => {
   const errors: string[] = [];

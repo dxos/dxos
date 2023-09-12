@@ -45,9 +45,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "docs/src/**/*.{ts,tsx,js,jsx}",
-          "docs/docs/!(api)/**/*.{ts,tsx,js,jsx}"
-        ]
+          "docs/src/**/*.{ts,tsx,js,jsx}"
+        ],
+        "quiet": true
       }
     },
     "prerelease": {

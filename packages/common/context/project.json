@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/context/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

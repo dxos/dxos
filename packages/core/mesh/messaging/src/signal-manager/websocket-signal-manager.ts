@@ -12,8 +12,8 @@ import { trace } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
+import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 
 /**
  * Manages connection to multiple Signal Servers over WebSocket

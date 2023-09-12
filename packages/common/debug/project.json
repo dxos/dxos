@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/debug/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

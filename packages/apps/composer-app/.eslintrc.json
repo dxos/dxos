@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/apps/composer-app/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "tailwind.ts"
+  ]
 }

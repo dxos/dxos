@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/sentry/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

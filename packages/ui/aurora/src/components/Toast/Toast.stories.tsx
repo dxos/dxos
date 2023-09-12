@@ -6,8 +6,8 @@ import React, { ReactNode, useState } from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { Toast } from './Toast';
+import { Button } from '../Buttons';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 

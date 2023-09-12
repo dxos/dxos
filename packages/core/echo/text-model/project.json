@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/text-model/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

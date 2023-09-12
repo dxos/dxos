@@ -7,8 +7,8 @@ import type { FlameChartNodes } from 'flame-chart-js';
 import React, { FC, useMemo, useState } from 'react';
 
 // Deliberately not using the common components export to aid in code-splitting.
-import { FlameChart } from '../../../components/FlameChart';
 import { State } from './types';
+import { FlameChart } from '../../../components/FlameChart';
 
 export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, resourceId }) => {
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);

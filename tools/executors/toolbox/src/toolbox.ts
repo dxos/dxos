@@ -207,6 +207,7 @@ class Toolbox {
       if (projectJson?.targets) {
         if (projectJson.targets.lint) {
           projectJson.targets.lint.options.format = 'unix';
+          projectJson.targets.lint.options.quiet = true;
         }
 
         const updated = sortJson(projectJson, {
@@ -283,16 +284,20 @@ class Toolbox {
 
   async updateEslintConfig() {
     for (const project of this.projects) {
-      if(['.eslintrc.json', '.eslintrc.js'].some((file) => fs.existsSync(join(project.path, file)))) {
+      if (['.eslintrc.json', '.eslintrc.js'].some((file) => fs.existsSync(join(project.path, file)))) {
         continue;
       }
 
-      await saveJson(join(project.path, '.eslintrc.json'), {
-        extends: [relative(project.path, join(this.rootDir, '.eslintrc.js'))],
-        parserOptions: {
-          project: relative(this.rootDir, join(project.path, 'tsconfig.json')),
-        }
-      }, this.options.verbose);
+      await saveJson(
+        join(project.path, '.eslintrc.json'),
+        {
+          extends: [relative(project.path, join(this.rootDir, '.eslintrc.js'))],
+          parserOptions: {
+            project: relative(this.rootDir, join(project.path, 'tsconfig.json')),
+          },
+        },
+        this.options.verbose,
+      );
     }
   }
 

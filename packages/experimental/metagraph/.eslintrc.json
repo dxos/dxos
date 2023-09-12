@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/experimental/metagraph/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }

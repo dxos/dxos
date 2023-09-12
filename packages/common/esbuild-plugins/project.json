@@ -22,7 +22,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/esbuild-plugins/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/core/mesh/network-manager/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }

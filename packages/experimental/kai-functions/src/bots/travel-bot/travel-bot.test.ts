@@ -14,8 +14,8 @@ import { TravelProfile, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { loadJson } from '../util';
 import { TravelBot } from './travel-bot';
+import { loadJson } from '../util';
 
 // TODO(burdon): Configure logging.
 

@@ -33,7 +33,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/echo-db/src/packlets/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/common/feed-store/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }

@@ -8,7 +8,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "tools/eslint-rules/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -14,7 +14,8 @@
   "include": [
     "src",
     "src/.storybook/*",
-    "src/.vscode/*"
+    "src/.vscode/*",
+    "test"
   ],
   "references": [
     {

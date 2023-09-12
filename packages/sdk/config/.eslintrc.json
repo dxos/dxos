@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/sdk/config/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }

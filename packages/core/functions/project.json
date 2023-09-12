@@ -32,7 +32,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/functions/src/**/*.{ts,js}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

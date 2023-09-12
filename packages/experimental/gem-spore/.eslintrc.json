@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/experimental/gem-spore/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }

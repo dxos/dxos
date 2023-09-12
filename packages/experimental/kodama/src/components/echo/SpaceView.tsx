@@ -7,10 +7,10 @@ import React, { useState } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
 
-import { useAppState } from '../../hooks';
 import { ItemList } from './ItemList';
 import { ItemTypeList } from './ItemTypeList';
 import { SpaceList } from './SpaceList';
+import { useAppState } from '../../hooks';
 
 export const SpaceView = () => {
   const { focus } = useFocus({ isActive: false });

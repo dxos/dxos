@@ -18,7 +18,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/examples/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       }
     },
     "prebuild": {

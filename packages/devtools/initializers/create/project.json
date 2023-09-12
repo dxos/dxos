@@ -8,7 +8,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/devtools/initializers/create/src/**/*.{ts,js,tsx,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -4,5 +4,8 @@
   ],
   "parserOptions": {
     "project": "packages/core/mesh/teleport/tsconfig.json"
-  }
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
 }
