@@ -12,8 +12,8 @@ import { Phoenix } from '@dxos/phoenix';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
-import { AgentWaitTimeoutError } from '../errors';
-import { lockFilePath, removeSocketFile, waitForAgentToStart } from '../util';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError } from '../errors';
+import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';
 
 /**
  * Manager of daemon processes started with @dxos/phoenix.
@@ -61,8 +61,9 @@ export class PhoenixDaemon implements Daemon {
         unlinkSync(errFile);
       }
 
-      // Clear staled socket file.
+      // Clear staled files.
       removeSocketFile(profile);
+      removeLockFile(profile);
 
       // Run the `dx agent run` CLI command.
       // https://github.com/foreversd/forever-monitor
@@ -106,7 +107,15 @@ export class PhoenixDaemon implements Daemon {
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    if (existsSync(lockFilePath(profile))) {
+    if (
+      (await this.isRunning(profile)) &&
+      existsSync(lockFilePath(profile)) &&
+      !readFileSync(lockFilePath(profile), 'utf-8').includes('pid')
+    ) {
+      throw new AgentIsNotStartedByCLIError();
+    }
+
+    if (existsSync(lockFilePath(profile)) && readFileSync(lockFilePath(profile), 'utf-8').includes('pid')) {
       await Phoenix.stop(lockFilePath(profile), force);
     }
 
