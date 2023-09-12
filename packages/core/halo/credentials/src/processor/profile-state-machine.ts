@@ -21,10 +21,7 @@ export class ProfileStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
   public profile?: ProfileDocument;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: ProfileStateMachineParams
-  ) {}
+  constructor(private readonly _params: ProfileStateMachineParams) {}
 
   async processCredential(credential: Credential) {
     const assertion = getCredentialAssertion(credential);

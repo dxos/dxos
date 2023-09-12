@@ -59,10 +59,7 @@ export class MemorySignalManager implements SignalManager {
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
 
-  // prettier-ignore
-  constructor(
-    private readonly _context: MemorySignalManagerContext
-  ) {
+  constructor(private readonly _context: MemorySignalManagerContext) {
     this._ctx = new Context();
 
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));

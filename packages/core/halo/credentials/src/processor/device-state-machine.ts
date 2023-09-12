@@ -27,10 +27,7 @@ export class DeviceStateMachine implements CredentialProcessor {
 
   public deviceCredentialChain?: Chain;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: DeviceStateMachineParams
-  ) {}
+  constructor(private readonly _params: DeviceStateMachineParams) {}
 
   async processCredential(credential: Credential) {
     log('processing credential...', {

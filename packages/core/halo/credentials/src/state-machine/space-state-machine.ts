@@ -60,10 +60,7 @@ export class SpaceStateMachine implements SpaceState {
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
 
-  // prettier-ignore
-  constructor(
-    private readonly _spaceKey: PublicKey
-  ) { }
+  constructor(private readonly _spaceKey: PublicKey) {}
 
   get creator(): MemberInfo | undefined {
     return this._members.creator;

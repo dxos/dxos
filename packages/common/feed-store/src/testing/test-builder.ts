@@ -32,10 +32,7 @@ const evaluate = <T extends {}, P>(builder: TestBuilder<T>, arg: P | PropertyPro
 export class TestBuilder<T extends {}> {
   static readonly ROOT_DIR = 'feeds';
 
-  // prettier-ignore
-  constructor(
-    public readonly _properties: TestBuilderOptions<T> = {}
-  ) {}
+  constructor(public readonly _properties: TestBuilderOptions<T> = {}) {}
 
   /**
    * Creates a new builder with the current builder's properties.

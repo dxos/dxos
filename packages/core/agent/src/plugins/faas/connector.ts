@@ -34,11 +34,7 @@ export class FaasConnector extends AbstractPlugin {
 
   private readonly _faasClient: FaasClient;
 
-  // prettier-ignore
-  constructor(
-    faasConfig: Runtime.Services.Faasd,
-    context: InvocationContext,
-  ) {
+  constructor(faasConfig: Runtime.Services.Faasd, context: InvocationContext) {
     super();
     this._faasClient = new FaasClient(faasConfig, context);
   }

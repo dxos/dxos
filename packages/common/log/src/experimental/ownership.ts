@@ -15,7 +15,10 @@ const kDebugInfoProperties = Symbol('kDebugInfoProperties');
 export class OwnershipScope {
   public instance: any;
 
-  constructor(public constr: any, public parent?: OwnershipScope) {}
+  constructor(
+    public constr: any,
+    public parent?: OwnershipScope,
+  ) {}
 
   getInfo() {
     if (!this.instance) {

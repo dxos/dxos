@@ -34,11 +34,14 @@ export class WorkerRuntime {
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
 
-  // prettier-ignore
-  constructor(
-    private readonly _configProvider: () => MaybePromise<Config>
-  ) {
-    this._clientServices = new ClientServicesHost({ callbacks: { onReset: async () => { self.close(); } } });
+  constructor(private readonly _configProvider: () => MaybePromise<Config>) {
+    this._clientServices = new ClientServicesHost({
+      callbacks: {
+        onReset: async () => {
+          self.close();
+        },
+      },
+    });
   }
 
   get host() {
