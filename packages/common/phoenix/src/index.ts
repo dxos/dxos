@@ -6,5 +6,5 @@
 // Copyright (C) 2010 Charlie Robbins & the Contributors
 //
 
-export * from './daemon-manager';
+export * from './detached-process';
 export * from './watchdog';
