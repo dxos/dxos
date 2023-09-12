@@ -32,8 +32,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/feed-store/**/*.{ts,js}"
-        ]
+          "packages/common/feed-store/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

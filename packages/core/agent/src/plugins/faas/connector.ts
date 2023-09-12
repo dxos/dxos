@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { AbstractPlugin } from '../plugin';
 import { FaasClient, InvocationContext, Trigger } from './faas-client';
+import { AbstractPlugin } from '../plugin';
 
 type MountedTrigger = {
   trigger: Trigger;
@@ -34,11 +34,7 @@ export class FaasConnector extends AbstractPlugin {
 
   private readonly _faasClient: FaasClient;
 
-  // prettier-ignore
-  constructor(
-    faasConfig: Runtime.Services.Faasd,
-    context: InvocationContext,
-  ) {
+  constructor(faasConfig: Runtime.Services.Faasd, context: InvocationContext) {
     super();
     this._faasClient = new FaasClient(faasConfig, context);
   }

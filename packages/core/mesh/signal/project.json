@@ -33,8 +33,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/mesh/signal/**/*.{ts,js}"
-        ]
+          "packages/core/mesh/signal/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -6,8 +6,8 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { Main, useSidebars } from './Main';
+import { Button } from '../Buttons';
 
 type StoryMainArgs = {};
 

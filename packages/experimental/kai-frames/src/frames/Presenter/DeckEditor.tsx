@@ -8,8 +8,8 @@ import { DocumentStack, Presentation } from '@dxos/kai-types';
 import { Stack } from '@dxos/mosaic';
 import { useConfig } from '@dxos/react-client';
 
-import { CustomActionMenu } from '../Stack';
 import { sectionActions, StackSection } from './sections';
+import { CustomActionMenu } from '../Stack';
 
 export const DeckEditor: FC<{ presentation: Presentation }> = ({ presentation }) => {
   const config = useConfig();

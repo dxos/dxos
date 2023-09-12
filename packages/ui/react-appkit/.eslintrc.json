@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "packages/ui/react-appkit/tsconfig.json"
+  }
+}

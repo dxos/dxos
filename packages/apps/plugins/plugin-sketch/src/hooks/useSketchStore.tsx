@@ -28,7 +28,10 @@ export class EchoStore {
   private readonly _subscriptions: Unsubscribe[] = [];
   private readonly _store: TLStore;
 
-  constructor(private readonly _data: Text, private readonly _options = { timeout: 250 }) {
+  constructor(
+    private readonly _data: Text,
+    private readonly _options = { timeout: 250 },
+  ) {
     this._store = createTLStore({ shapes: defaultShapes });
   }
 

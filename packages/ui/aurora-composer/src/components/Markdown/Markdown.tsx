@@ -47,9 +47,9 @@ import { configColors } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { YText } from '@dxos/text-model';
 
-import { ComposerModel, ComposerSlots } from '../../model';
 import { markdownTagsExtension } from './markdownTags';
 import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
+import { ComposerModel, ComposerSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];

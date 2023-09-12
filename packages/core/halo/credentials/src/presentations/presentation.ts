@@ -6,8 +6,8 @@ import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Chain, Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { SIGNATURE_TYPE_ED25519 } from '../credentials';
 import { getPresentationProofPayload } from './signing';
+import { SIGNATURE_TYPE_ED25519 } from '../credentials';
 
 export const signPresentation = async ({
   presentation,

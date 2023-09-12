@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "packages/common/feed-store/tsconfig.json"
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ]
+}

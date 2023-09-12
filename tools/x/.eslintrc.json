@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "tools/x/tsconfig.json"
+  }
+}

@@ -33,14 +33,14 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
-import { useTreeView } from '../../TreeViewContext';
-import { TREE_VIEW_PLUGIN } from '../../types';
-import { sortActions } from '../../util';
 import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
 import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
+import { useTreeView } from '../../TreeViewContext';
+import { TREE_VIEW_PLUGIN } from '../../types';
+import { sortActions } from '../../util';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps &
   Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;

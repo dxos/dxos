@@ -14,7 +14,10 @@ export class AppManager {
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
-  constructor(private readonly _browser: Browser, inIframe?: boolean) {
+  constructor(
+    private readonly _browser: Browser,
+    inIframe?: boolean,
+  ) {
     this._inIframe = inIframe;
   }
 

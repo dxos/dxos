@@ -52,7 +52,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/templates/bare-template/{src,test}/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

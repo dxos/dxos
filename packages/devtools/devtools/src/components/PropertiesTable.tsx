@@ -93,12 +93,12 @@ export const PropertiesTable: FC<{
 }> = ({ schema, object, slots = defaultSlots }) => {
   const format = (key: string, value: any) => {
     try {
-      return schema?.[key]?.format(value) ?? String(value)
+      return schema?.[key]?.format(value) ?? String(value);
     } catch (err) {
       console.error(err);
-      return '<error>'
+      return '<error>';
     }
-  }
+  };
 
   return (
     <table className='table-fixed border-collapse'>

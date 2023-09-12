@@ -7,8 +7,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/initializers/create-bare/src/**/*.{ts,js,tsx,jsx}"
-        ]
+          "packages/devtools/initializers/create-bare/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

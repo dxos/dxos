@@ -3,6 +3,7 @@
 //
 
 import { chromium } from '@playwright/test';
+// @ts-ignore
 import robot from 'robotjs';
 
 import { sleep } from '@dxos/async';
@@ -31,6 +32,7 @@ const config = {
 const createLaunchers = () => {
   const { width, height } = robot.getScreenSize();
   const grid = new Grid(width, height, config.spacing, config.margin);
+  // @ts-ignore
   const [rows, columns] = config.dimensions ?? grid.createDimensions(...config.minSize);
   return grid.createGrid(rows, columns).map(
     (bounds) =>

@@ -9,9 +9,9 @@ import 'source-map-support/register';
 
 import { describe, test } from '@dxos/test';
 
+import { createStorage } from './storage';
 import { StorageType } from '../common';
 import { storageTests } from '../testing';
-import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = 'testing';
 

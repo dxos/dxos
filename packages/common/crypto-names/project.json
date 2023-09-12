@@ -31,8 +31,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/crypto-names/**/*.{ts,js}"
-        ]
+          "packages/common/crypto-names/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

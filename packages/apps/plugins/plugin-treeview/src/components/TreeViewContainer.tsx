@@ -14,10 +14,10 @@ import { useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { usePlugin } from '@dxos/react-surface';
 
-import { TREE_VIEW_PLUGIN } from '../types';
 import { HaloButton } from './HaloButton';
 import { NavTree } from './NavTree';
 import { VersionInfo } from './VersionInfo';
+import { TREE_VIEW_PLUGIN } from '../types';
 
 export const TreeViewContainer = () => {
   const config = useConfig();

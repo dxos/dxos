@@ -8,8 +8,8 @@ import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/aurora';
 import { ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
-import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
+import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
 
 export const ExportDialog = ({
   data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],

@@ -6,8 +6,8 @@ import React, { FC, useMemo } from 'react';
 
 import { Surface } from '@dxos/react-surface';
 
-import { LocalFile } from '../types';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
+import { LocalFile } from '../types';
 
 export const LocalFileMain: FC<{ data: LocalFile }> = ({ data }) => {
   const transformedData = useMemo(

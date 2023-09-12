@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { useFrameRegistry } from '@dxos/kai-frames';
 import { Dialog } from '@dxos/react-appkit';
 
-import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { FrameRegistry } from './FrameRegistry';
+import { createPath, useAppReducer, useAppRouter, useAppState } from '../../hooks';
 
 export type FrameRegistryDialogProps = {
   open?: boolean;
