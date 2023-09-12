@@ -129,6 +129,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }),
       );
 
+      // TODO(burdon): Comment.
       subscriptions.add(
         effect(() => {
           const send = () => {
@@ -149,6 +150,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }),
       );
 
+      // TODO(burdon): Comment.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
@@ -382,6 +384,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               break;
             }
 
+            case SpaceAction.OPEN: {
+              void space?.internal.open();
+              break;
+            }
+
             case SpaceAction.CLOSE: {
               void space?.internal.close();
               break;
@@ -393,6 +400,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 const backupBlob = await backupSpace(space, 'untitled document');
                 const spaceName = space.properties.name || 'untitled space';
                 const url = URL.createObjectURL(backupBlob);
+                // TODO(burdon): See DebugMain useFileDownload
                 const element = document.createElement('a');
                 element.setAttribute('href', url);
                 element.setAttribute('download', `${spaceName} backup.zip`);
