@@ -3,7 +3,7 @@
 //
 
 import { fork } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -32,9 +32,12 @@ export class Phoenix {
 
     {
       // Create log folders.
-      [params.logFile, params.errFile, params.pidFile].forEach((filename) =>
-        mkdirSync(dirname(filename), { recursive: true }),
-      );
+      [params.logFile, params.errFile, params.pidFile].forEach((filename) => {
+        if (!existsSync(filename)) {
+          mkdirSync(dirname(filename), { recursive: true });
+          writeFileSync(filename, '', { encoding: 'utf-8' });
+        }
+      });
     }
 
     const watchdogPath = join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin', 'watchdog');
