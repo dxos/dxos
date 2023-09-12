@@ -52,7 +52,7 @@ export class AppManager {
   }
 
   async createDocument() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel2').last().click();
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel1').last().click();
     return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 

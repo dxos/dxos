@@ -27,7 +27,13 @@ export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
   }
 
   if (identity) {
-    return client.spaces.default;
+    try {
+      return client.spaces.default;
+    } catch {
+      // TODO(wittjosiah): Shouldn't be necessary. If identity exists, the default space should exist.
+      //   Seems to throw in Shell during the identity creation process.
+      return undefined;
+    }
   }
 };
 

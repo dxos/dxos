@@ -130,7 +130,7 @@ const handleStackblitz = async () => {
     files: {
       ...template,
       'src/components/Demo.tsx': examples[`../../node_modules/@dxos/examples/src/examples/${props.example}.tsx`],
-      'src/proto/schema.proto': proto[`../../node_modules/@dxos/examples/src/proto/${props.example}.proto`],
+      'src/proto/schema.proto': proto[`../../node_modules/@dxos/examples/src/proto/schema.proto`],
     }
   });
 };
