@@ -8,3 +8,4 @@
  * Should be incremented every time there's a breaking change to the stored data.
  */
 export const STORAGE_VERSION = 1;
+// TODO(mykola): Delete this comment. Added it to break cache.

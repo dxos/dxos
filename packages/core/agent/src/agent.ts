@@ -22,7 +22,7 @@ import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { Plugin } from './plugins';
-import { parseAddress } from './util';
+import { lockFilePath, parseAddress } from './util';
 
 interface Service {
   open(): Promise<void>;
@@ -76,6 +76,7 @@ export class Agent {
     }
 
     this._clientServices = await fromHost(this._options.config, {
+      lockKey: lockFilePath(this._options.profile),
       transportFactory,
     });
     await this._clientServices.open(new Context());
