@@ -86,14 +86,15 @@ const main = async () => {
     <StrictMode>
       <PluginProvider
         plugins={[
-          IntentPlugin(),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
           ClientPlugin({ config, services, debugIdentity: debug }),
           IntentPlugin(),
-          DndPlugin(),
+
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
+
           // Inside theme provider so that errors are styled.
+          DndPlugin(),
           ErrorPlugin(),
           GraphPlugin(),
           TreeViewPlugin(),
@@ -118,7 +119,6 @@ const main = async () => {
           ThreadPlugin(),
         ]}
       />
-      ,
     </StrictMode>,
   );
 };

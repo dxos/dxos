@@ -50,8 +50,11 @@ export type SpaceState = {
   viewers: ObjectViewer[];
 };
 
+export type SpaceSettingsProps = { showHidden?: boolean };
+
 export type SpacePluginProvides = GraphProvides &
   IntentProvides &
   TranslationsProvides & {
+    settings: SpaceSettingsProps;
     space: SpaceState;
   };

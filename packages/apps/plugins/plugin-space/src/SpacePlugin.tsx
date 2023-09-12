@@ -21,6 +21,7 @@ import {
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
 import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -36,8 +37,16 @@ import {
   SpacePresence,
   PopoverRenameObject,
 } from './components';
+import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
+import {
+  SPACE_PLUGIN,
+  SPACE_PLUGIN_SHORT_ID,
+  SpaceAction,
+  SpaceSettingsProps,
+  SpacePluginProvides,
+  SpaceState,
+} from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -46,6 +55,7 @@ import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[PublicKey.name] = PublicKey;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
+  const settings = new LocalStorageStore<SpaceSettingsProps>('braneframe.plugin-space');
   const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -57,6 +67,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
+      settings.prop(settings.values.$showHidden!, 'showHidden', LocalStorageStore.bool);
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
@@ -171,14 +182,20 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       );
     },
     unload: async () => {
+      settings.close();
       graphSubscriptions.clear();
       spaceSubscriptions.clear();
       subscriptions.clear();
     },
     provides: {
       space: state as RevertDeepSignal<SpaceState>,
+      settings: settings.values,
       translations,
       component: (data, role) => {
+        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+          return SpaceSettings;
+        }
+
         switch (role) {
           case 'main':
             switch (true) {
@@ -187,8 +204,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               default:
                 return null;
             }
-          // (burdon): Why double-hyphen?
-          // (thure): This is BEM syntax, which we use for a few other features.
+          // TODO(burdon): Add role name syntax to minimal plugin docs.
           case 'tree--empty':
             switch (true) {
               case data === SPACE_PLUGIN:
@@ -267,6 +283,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           });
 
+          // TODO(burdon): Use option to subscribe to open/closed spaces.
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             graphSubscriptions.clear();
             const indices = getIndices(spaces.length);
