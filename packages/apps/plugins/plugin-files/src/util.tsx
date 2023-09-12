@@ -11,7 +11,7 @@ import { Graph } from '@braneframe/plugin-graph';
 import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID, LocalDirectory, LocalEntity, LocalFile, LocalFilesAction } from './types';
 
 export const isLocalFile = (data: unknown): data is LocalFile =>
-  data && typeof data === 'object' ? 'title' in data : false;
+  data && typeof data === 'object' ? 'title' in data && 'handle' in data : false;
 
 export const handleToLocalDirectory = async (
   handle: any /* FileSystemDirectoryHandle */,
@@ -42,7 +42,7 @@ export const handleToLocalFile = async (handle: any /* FileSystemFileHandle */, 
   };
 };
 
-export const legacyFileToLocalFile = async (file: File) => {
+export const legacyFileToLocalFile = async (file: File): Promise<LocalFile> => {
   const text = await new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.addEventListener('loadend', (event) => {
@@ -55,6 +55,8 @@ export const legacyFileToLocalFile = async (file: File) => {
   return {
     id: `${FILES_PLUGIN_SHORT_ID}:${file.name.replaceAll(/\.| /g, '-')}`,
     title: file.name,
+    handle: false,
+    permission: 'granted',
     text,
   };
 };

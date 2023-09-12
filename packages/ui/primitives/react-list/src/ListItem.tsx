@@ -95,6 +95,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
       defaultOpen,
       onOpenChange,
       collapsible,
+      labelId,
       ...listItemProps
     } = props;
     const { selectable } = useListContext(LIST_NAME, __listScope);
@@ -111,7 +112,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
       onChange: onOpenChange,
     });
 
-    const headingId = useId('listItem__heading', props.labelId);
+    const headingId = useId('listItem__heading', labelId);
 
     const listItem = (
       <Primitive.li
