@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { expectedEpoch, expectedExpando, expectedProperties, expectedText } from './expected-objects';
-import { getConfig, getStorageDir } from './util';
+import { data } from './testing';
+import { contains, getConfig, getStorageDir } from './util';
 
 describe('Tests against old storage', () => {
   const testStoragePath = path.join('/tmp/dxos/proto-guard/storage/', STORAGE_VERSION.toString());
@@ -55,7 +55,7 @@ describe('Tests against old storage', () => {
       const spaceBackend = services.host!.context.spaceManager.spaces.get(space.key) ?? failUndefined();
       await spaceBackend.controlPipeline.state.waitUntilTimeframe(spaceBackend.controlPipeline.state.endTimeframe);
       const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
-      expect(epoch).to.equal(expectedEpoch);
+      expect(epoch).to.equal(data.epochs);
     }
 
     {
@@ -73,46 +73,17 @@ describe('Tests against old storage', () => {
     }
 
     {
-      // Check expando.
-      expect(space.properties.toJSON()).to.contain(expectedProperties);
+      // Space properties.
+      expect(space.properties.toJSON()).to.contain(data.space.properties);
 
+      // Expando.
       const expando = space.db.query({ type: 'expando' }).objects[0];
-      expect(contains(expando.toJSON(), expectedExpando)).to.be.true;
-    }
+      expect(contains(expando.toJSON(), data.space.expando)).to.be.true;
 
-    {
-      // Check text.
-      // TODO(maykola): add ability to query `Text`-s.
-      const text = space.db.query({ text: expectedText }).objects[0];
-      expect((text as unknown as Text).text).to.equal(expectedText);
+      // Text.
+      // TODO(mykola): add ability to query.
+      const text = space.db.query({ text: data.space.text.content }).objects[0];
+      expect((text as unknown as Text).text).to.equal(data.space.text.content);
     }
   });
 });
-const contains = (container: Record<string, any>, contained: Record<string, any>): boolean => {
-  for (const [key, value] of Object.entries(contained)) {
-    if (!valuesEqual(value, container[key])) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-const valuesEqual = (a: any, b: any): boolean => {
-  try {
-    if (Array.isArray(a)) {
-      return (b as any[]).every((item1) => a.some((item2) => valuesEqual(item1, item2)));
-    }
-    if (typeof a === 'object' && a !== null && !Array.isArray(a)) {
-      return contains(a, b) && contains(b, a);
-    }
-    if (a !== b) {
-      return false;
-    }
-  } catch (err) {
-    log.warn('Error', err);
-    return false;
-  }
-
-  return true;
-};
