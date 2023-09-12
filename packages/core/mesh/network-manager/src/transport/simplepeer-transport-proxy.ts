@@ -185,15 +185,15 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;
 
-  if (message.includes('ConnectionResetError')) {
+  if (message.includes('CONNECTION_RESET')) {
     return new ConnectionResetError(message);
-  } else if (message.includes('TimeoutError')) {
+  } else if (message.includes('TIMEOUT')) {
     return new TimeoutError(message);
-  } else if (message.includes('ProtocolError')) {
+  } else if (message.includes('PROTOCOL_ERROR')) {
     return new ProtocolError(message);
-  } else if (message.includes('ConnectivityError')) {
+  } else if (message.includes('CONNECTIVITY_ERROR')) {
     return new ConnectivityError(message);
-  } else if (message.includes('UnknownProtocolError')) {
+  } else if (message.includes('UNKNOWN_PROTOCOL_ERROR')) {
     return new UnknownProtocolError(message);
   } else {
     return typeof err === 'string' ? new Error(err) : err;
