@@ -48,8 +48,9 @@ export class Teleport {
       if (this._destroying || this._aborting) {
         return;
       }
-      log('abort teleport due to onTimeout in ControlExtension');
-      this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
+      // TODO(egorgripasov): Evaluate use of abort instead of destroy.
+      log('destroy teleport due to onTimeout in ControlExtension');
+      this.destroy(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
   });
 
@@ -135,14 +136,17 @@ export class Teleport {
     await this.destroy(err);
   }
 
+  @synchronized
   async abort(err?: Error) {
-    if (this._ctx.disposed) {
-      return;
-    }
     if (this._aborting || this._destroying) {
       return;
     }
     this._aborting = true;
+
+    if (this._ctx.disposed) {
+      return;
+    }
+
     await this._ctx.dispose();
 
     for (const extension of this._extensions.values()) {
