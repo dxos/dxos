@@ -38,7 +38,6 @@
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^2.29.3",
     "express": "4.17.1",
-    "forever": "^4.0.3",
     "isomorphic-ws": "^4.0.1",
     "ws": "^7.4.4"
   },
