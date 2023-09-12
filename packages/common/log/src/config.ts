@@ -37,6 +37,7 @@ export enum LogProcessorType {
   CONSOLE = 'console',
   BROWSER = 'browser',
   DEBUG = 'debug',
+  TIMESTAMPED = 'timestamped',
 }
 
 /**
@@ -57,6 +58,8 @@ export type LogOptions = {
   processor?: string | LogProcessorType;
   formatter?: {
     column: number;
+    timestamp: boolean;
+    timestampFirst: boolean;
   };
   prefix?: string;
 };

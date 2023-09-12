@@ -36,12 +36,12 @@ const getRelativeFilename = (filename: string) => {
   return filename;
 };
 
-// TODO(burdon): Optional timestamp.
 // TODO(burdon): Optional package name.
 // TODO(burdon): Show exceptions on one line.
 export type FormatParts = {
   path?: string;
   line?: number;
+  timestamp?: string;
   level: LogLevel;
   message: string;
   context?: any;
@@ -51,7 +51,10 @@ export type FormatParts = {
 
 export type Formatter = (config: LogConfig, parts: FormatParts) => (string | undefined)[];
 
-export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context, error, scope }) => {
+export const DEFAULT_FORMATTER: Formatter = (
+  config,
+  { path, line, timestamp, level, message, context, error, scope },
+) => {
   const column = config.options?.formatter?.column;
 
   const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
@@ -63,17 +66,29 @@ export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, messag
     instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
   }
 
-  return [
-    // NOTE: File path must come fist for console hyperlinks.
-    // Must not truncate for terminal output.
-    filepath,
-    column && filepath ? ''.padStart(column - filepath.length) : undefined,
-    chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
-    instance,
-    message,
-    context,
-    error,
-  ];
+  return config.options?.formatter?.timestampFirst
+    ? [
+        config.options?.formatter?.timestamp ? new Date().toISOString() : undefined,
+        filepath,
+        column && filepath ? ''.padStart(column - filepath.length) : undefined,
+        chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
+        instance,
+        message,
+        context,
+        error,
+      ]
+    : [
+        // NOTE: File path must come fist for console hyperlinks.
+        // Must not truncate for terminal output.
+        filepath,
+        column && filepath ? ''.padStart(column - filepath.length) : undefined,
+        config.options?.formatter?.timestamp ? new Date().toISOString() : undefined,
+        chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
+        instance,
+        message,
+        context,
+        error,
+      ];
 };
 
 export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
