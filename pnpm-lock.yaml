@@ -108,7 +108,7 @@ importers:
       nx-cloud: ^16.1.1
       nyc: ^15.1.0
       pkg-up: ^3.1.0
-      prettier: ^3.0.3
+      prettier: ^2.8.8
       raf: ^3.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -215,7 +215,7 @@ importers:
       nx-cloud: 16.1.1
       nyc: 15.1.0
       pkg-up: 3.1.0
-      prettier: 3.0.3
+      prettier: 2.8.8
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -13456,7 +13456,7 @@ packages:
   /@radix-ui/number/1.0.0:
     resolution: {integrity: sha512-Ofwh/1HX69ZfJRiRBMTy7rgjAzHmwe4kW9C9Y99HTRUcYLUuVT0KESFj15rPjRgKJs20GPq8Bm5aEDJ8DuA3vA==}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
     dev: false
 
   /@radix-ui/number/1.0.1:
@@ -13468,7 +13468,7 @@ packages:
   /@radix-ui/primitive/1.0.0:
     resolution: {integrity: sha512-3e7rn8FDMin4CgeL7Z/49smCA3rFYY3Ha2rUQ7HRWFadS5iCRw08ZgVT1LaNTCNqgvrUiyczLflrVrF0SRQtNA==}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
 
   /@radix-ui/primitive/1.0.1:
     resolution: {integrity: sha512-yQ8oGX2GVsEYMWGxcovu1uGWPCxV5BFfeeYxqPmuAzUyLT9qmaMXSAhXpb0WrspIeqYzdJpkh2vHModJPgRIaw==}
@@ -13644,7 +13644,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       react: 18.2.0
 
   /@radix-ui/react-compose-refs/1.0.1_iapumuv4e6jcjznwuxpf4tt22e:
@@ -13692,7 +13692,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       react: 18.2.0
 
   /@radix-ui/react-context/1.0.1_iapumuv4e6jcjznwuxpf4tt22e:
@@ -13741,7 +13741,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       react: 18.2.0
     dev: false
 
@@ -14153,7 +14153,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
       '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
       react: 18.2.0
@@ -14187,7 +14187,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@radix-ui/react-slot': 1.0.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -14556,7 +14556,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       react: 18.2.0
 
   /@radix-ui/react-use-callback-ref/1.0.1_iapumuv4e6jcjznwuxpf4tt22e:
@@ -14627,7 +14627,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       react: 18.2.0
 
   /@radix-ui/react-use-layout-effect/1.0.1_iapumuv4e6jcjznwuxpf4tt22e:
@@ -23941,7 +23941,7 @@ packages:
   /dom-helpers/5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       csstype: 3.1.2
     dev: false
 
@@ -34490,6 +34490,12 @@ packages:
     dependencies:
       fast-diff: 1.2.0
 
+  /prettier/2.8.8:
+    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    dev: true
+
   /prettier/3.0.3:
     resolution: {integrity: sha512-L/4pUDMxcNa8R/EthV08Zt42WBO4h1rarVtK0K+QJG0X187OLo7l699jWw0GKuwzkPQ//jMFA/8Xm6Fh3J/DAg==}
     engines: {node: '>=14'}
@@ -35240,7 +35246,7 @@ packages:
       react: '>=16'
       react-dom: '>=16'
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@types/d3-array': 3.0.3
       '@types/d3-scale': 4.0.2
       '@types/d3-shape': 3.1.0
@@ -35445,7 +35451,7 @@ packages:
     peerDependencies:
       react: ^18.0.0
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       is-dom: 1.1.0
       prop-types: 15.8.1
       react: 18.2.0
@@ -35554,7 +35560,7 @@ packages:
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@popperjs/core': 2.11.6
       '@restart/hooks': 0.4.7_react@18.2.0
       '@types/warning': 3.0.0
@@ -39271,7 +39277,7 @@ packages:
     peerDependencies:
       react: '>=15.0.0'
     dependencies:
-      '@babel/runtime': 7.21.0
+      '@babel/runtime': 7.22.15
       '@types/react': 18.0.21
       invariant: 2.2.4
       react: 18.2.0
