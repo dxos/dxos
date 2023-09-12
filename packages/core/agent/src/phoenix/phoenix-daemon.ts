@@ -3,28 +3,23 @@
 //
 
 import { unlinkSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
+import { readdir } from 'node:fs/promises';
+import path, { join } from 'node:path';
 
-import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
-import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
+import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
-import { DaemonManager, ProcessInfo as PhoenixProcess } from '@dxos/phoenix';
+import { Phoenix } from '@dxos/phoenix';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
-import { parseAddress, removeSocketFile } from '../util';
+import { lockFilePath, removeSocketFile, waitForAgentToStart } from '../util';
 
 /**
  * Manager of daemon processes started with @dxos/phoenix.
  */
 export class PhoenixDaemon implements Daemon {
-  private readonly _phoenix: DaemonManager;
-  constructor(private readonly _rootDir: string) {
-    this._phoenix = new DaemonManager(this._rootDir);
-  }
+  constructor(private readonly _rootDir: string) {}
 
   async connect(): Promise<void> {
     // no-op.
@@ -35,11 +30,18 @@ export class PhoenixDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return this._phoenix.isRunning(profile);
+    const { isLocked } = await import('@dxos/client-services');
+    return await isLocked(lockFilePath(profile));
   }
 
   async list(): Promise<ProcessInfo[]> {
-    return (await this._phoenix.list()).map(phoenixInfoToProcessInfo);
+    const profiles = (await readdir(join(this._rootDir, 'profile'))).filter((uid) => !uid.startsWith('.'));
+
+    return Promise.all(
+      profiles.map(async (profile) => {
+        return this._getProcess(profile);
+      }),
+    );
   }
 
   async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
@@ -52,6 +54,7 @@ export class PhoenixDaemon implements Daemon {
 
       const logFile = path.join(logDir, 'daemon.log');
       const errFile = path.join(logDir, 'err.log');
+      const lockFile = lockFilePath(profile);
 
       // Clear err file.
       if (existsSync(errFile)) {
@@ -61,7 +64,7 @@ export class PhoenixDaemon implements Daemon {
       // Run the `dx agent run` CLI command.
       // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
-      await this._phoenix.start({
+      await Phoenix.start({
         command: process.argv[1],
         args: [
           'agent',
@@ -76,40 +79,15 @@ export class PhoenixDaemon implements Daemon {
           LOG_FILTER: process.env.LOG_FILTER,
           ...process.env,
         },
-        uid: profile,
+        profile,
         maxRestarts: 0,
+        pidFile: lockFile,
         logFile,
         errFile,
       });
 
       try {
-        // Wait for socket file to appear.
-        {
-          await waitForCondition({
-            condition: () => existsSync(parseAddress(getUnixSocket(profile)).path),
-            timeout: DAEMON_START_TIMEOUT,
-            interval: CHECK_INTERVAL,
-            error: new AgentWaitTimeoutError(),
-          });
-        }
-
-        // Check if agent is initialized.
-        {
-          const services = fromAgent({ profile });
-          await services.open(new Context());
-
-          const trigger = new Trigger();
-          const stream = services.services.SystemService!.queryStatus({});
-          stream.subscribe(({ status }) => {
-            invariant(status === SystemStatus.ACTIVE);
-            trigger.wake();
-          });
-          await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
-
-          await stream.close();
-          await services.close(new Context());
-        }
-        return await this._getProcess(profile);
+        await waitForAgentToStart(profile);
       } catch (err) {
         log.warn('Failed to start daemon.');
         const errContent = readFileSync(errFile, 'utf-8');
@@ -119,15 +97,13 @@ export class PhoenixDaemon implements Daemon {
       }
     }
 
-    const proc = await this._getProcess(profile);
-    log('started', { proc });
-    return proc;
+    return await this._getProcess(profile);
   }
 
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    await this._phoenix.stop(profile, force);
+    await Phoenix.stop(profile, force);
 
     await waitForCondition({
       condition: async () => !(await this.isRunning(profile)),
@@ -146,10 +122,12 @@ export class PhoenixDaemon implements Daemon {
   }
 
   async _getProcess(profile: string): Promise<ProcessInfo> {
-    return phoenixInfoToProcessInfo(await this._phoenix.getInfo(profile));
+    let info = { profile, running: await this.isRunning(profile) };
+    try {
+      info = { ...info, ...Phoenix.info(lockFilePath(profile)) };
+    } catch (err) {
+      log.warn('Could not get process info', { err });
+    }
+    return info;
   }
 }
-
-const phoenixInfoToProcessInfo = (info: PhoenixProcess): ProcessInfo => {
-  return { profile: info.uid, started: info.timestamp, ...info };
-};
