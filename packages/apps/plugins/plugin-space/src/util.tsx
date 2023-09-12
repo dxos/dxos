@@ -60,6 +60,7 @@ export const spaceToGraphNode = (
     data: space,
     properties: {
       palette: parent.id === 'root' ? 'teal' : undefined,
+      'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       role: 'branch',
       hidden: inactive,
       disabled,

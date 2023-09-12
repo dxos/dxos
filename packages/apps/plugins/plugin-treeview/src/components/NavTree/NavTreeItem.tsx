@@ -113,6 +113,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = isOverlay || isPreview || rearranging || disabled;
     const active = treeViewActive === node.id;
+    const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
       if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
@@ -168,6 +169,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
             'flex items-start rounded',
           )}
+          data-testid={testId}
         >
           {isBranch ? (
             <CollapsibleHeading {...{ open, node, level, active }} />
