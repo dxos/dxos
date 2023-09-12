@@ -107,7 +107,7 @@ export class PhoenixDaemon implements Daemon {
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    if (existsSync(lockFilePath(profile))) {
+    if (existsSync(lockFilePath(profile)) && readFileSync(lockFilePath(profile), 'utf-8').includes('pid')) {
       await Phoenix.stop(lockFilePath(profile), force);
     }
 
