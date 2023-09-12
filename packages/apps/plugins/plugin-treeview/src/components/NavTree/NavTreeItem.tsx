@@ -36,7 +36,6 @@ import {
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
-import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
 import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
@@ -171,11 +170,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
           )}
           data-testid={testId}
         >
-          {isBranch ? (
-            <CollapsibleHeading {...{ open, node, level, active }} />
-          ) : (
-            <NavigableHeading {...{ node, level, active }} />
-          )}
+          <NavigableHeading {...{ open, node, level, active }} />
           {actionGroups.length > 0 && (
             <Tooltip.Root
               open={optionsTooltipOpen}

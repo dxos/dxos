@@ -20,6 +20,7 @@ import {
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
 
+// TODO(wittjosiah): Remove.
 export const CollapsibleHeading = forwardRef<HTMLDivElement, SharedTreeItemHeadingProps>(
   ({ open, node, level, active }, forwardedRef) => {
     const { navigationSidebarOpen } = useSidebars();
