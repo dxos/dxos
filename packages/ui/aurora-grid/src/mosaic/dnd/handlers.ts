@@ -11,7 +11,9 @@ import { Tile } from '../types';
 import { useDnd } from './DndContext';
 
 export const useHandleRearrange = (subtileIds: Set<string>, subtiles: Tile[]) => {
-  const { items, relations } = useMosaic();
+  const {
+    mosaic: { tiles, relations },
+  } = useMosaic();
   const dnd = useDnd();
   return useCallback(
     ({ active, over }: DragEndEvent) => {
@@ -33,12 +35,12 @@ export const useHandleRearrange = (subtileIds: Set<string>, subtiles: Tile[]) =>
             : activeOrderIndex < overOrderIndex
             ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1]?.index)
             : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
-        items[active.id].index = nextIndex;
+        tiles[active.id].index = nextIndex;
         return nextIndex;
       } else {
         return null;
       }
     },
-    [items, relations, dnd, subtileIds, subtiles],
+    [tiles, relations, dnd, subtileIds, subtiles],
   );
 };

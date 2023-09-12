@@ -2,19 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useSortable } from '@dnd-kit/sortable';
+import { DeepSignal } from 'deepsignal';
+import { FC } from 'react';
+
 export type TileVariant = 'stack' | 'card';
 
 export type Tile = {
   // Primary props
   id: string;
-  label: string;
   index: string;
   variant: TileVariant;
   // Secondary props
-  class?: string;
-  description?: string;
+  migrationClass?: string;
+  acceptMigrationClass?: Set<string>;
   sortable?: boolean;
-  accept?: Set<string>;
 };
 
 export type TileProps = {
@@ -24,11 +26,23 @@ export type TileProps = {
 };
 
 export type Mosaic = {
-  items: Record<string, Tile>;
+  tiles: Record<string, Tile>;
   relations: Record<string, Record<string, Set<string>>>;
 };
 
-export type MosaicProps = {
-  mosaic: Mosaic;
-  root: string;
+export type DelegatorProps = {
+  data: any;
+  tileVariant: TileVariant;
+  dragHandleAttributes: ReturnType<typeof useSortable>['attributes'];
+  dragHandleListeners: ReturnType<typeof useSortable>['listeners'];
 };
+
+export type MosaicContextValue = {
+  mosaic: DeepSignal<Mosaic>;
+  data: Record<string, any>;
+  Delegator: FC<DelegatorProps>;
+};
+
+export type MosaicProps = {
+  root: string;
+} & MosaicContextValue;

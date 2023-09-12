@@ -12,17 +12,19 @@ import { Tile } from '../tile';
 import { TileProps } from '../types';
 
 const Stack = ({ tile: { id, sortable } }: TileProps) => {
-  const { items, relations } = useMosaic();
+  const {
+    mosaic: { tiles, relations },
+  } = useMosaic();
   const subtileIds = relations[id]?.child ?? new Set();
   const subtiles = Array.from(subtileIds)
-    .map((id) => items[id])
+    .map((id) => tiles[id])
     .sort(sortByIndex);
 
   const handleRearrange = useHandleRearrange(subtileIds, subtiles);
 
   useEffect(() => {
-    console.log('[stack]', 'mosaic.items update');
-  }, [items]);
+    console.log('[stack]', 'mosaic.tiles update');
+  }, [tiles]);
 
   useEffect(() => {
     console.log('[stack]', 'mosaic.relations update');

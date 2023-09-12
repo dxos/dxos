@@ -6,27 +6,23 @@ import React, { createContext, useContext } from 'react';
 
 import { DndProvider } from '../dnd';
 import { Tile } from '../tile';
-import type { Mosaic } from '../types';
+import type { MosaicContextValue, MosaicProps } from '../types';
 
-type MosaicProps = {
-  mosaic: Mosaic;
-  root: string;
+const defaultMosaicContextValue: MosaicContextValue = {
+  mosaic: { tiles: {}, relations: {} },
+  data: {},
+  Delegator: () => null,
 };
 
-const defaultMosaicContextValue: MosaicProps = {
-  mosaic: { items: {}, relations: {} },
-  root: '',
-};
+const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
-const MosaicContext = createContext<MosaicProps>(defaultMosaicContextValue);
+const useMosaic = () => useContext(MosaicContext);
 
-const useMosaic = () => useContext(MosaicContext).mosaic;
-
-const Mosaic = (props: MosaicProps) => {
+const Mosaic = ({ mosaic, root, data, Delegator }: MosaicProps) => {
   return (
     <DndProvider>
-      <MosaicContext.Provider value={props}>
-        <Tile tile={props.mosaic.items[props.root]} />
+      <MosaicContext.Provider value={{ mosaic, data, Delegator }}>
+        <Tile tile={mosaic.tiles[root]} />
       </MosaicContext.Provider>
     </DndProvider>
   );

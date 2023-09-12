@@ -3,16 +3,17 @@
 //
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DotsSixVertical } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
 import { groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
+import { useMosaic } from '../mosaic';
 import { TileProps } from '../types';
 
-const Card = ({ tile, draggable }: TileProps) => {
-  const { id, label } = tile;
+const Card = ({ tile }: TileProps) => {
+  const { id } = tile;
+  const { data, Delegator } = useMosaic();
+  const content = data[tile.id];
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     data: tile,
@@ -20,19 +21,14 @@ const Card = ({ tile, draggable }: TileProps) => {
   return (
     <div
       role='group'
-      className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded m-2')}
+      className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded m-2 relative')}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
       }}
       ref={setNodeRef}
     >
-      {draggable && (
-        <Button variant='ghost' {...attributes} {...listeners}>
-          <DotsSixVertical />
-        </Button>
-      )}
-      <p>{label}</p>
+      <Delegator data={content} tileVariant='card' dragHandleAttributes={attributes} dragHandleListeners={listeners} />
     </div>
   );
 };

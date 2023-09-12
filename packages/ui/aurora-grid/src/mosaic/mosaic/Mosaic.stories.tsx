@@ -1,49 +1,83 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { faker } from '@faker-js/faker';
-import { deepSignal, DeepSignal } from 'deepsignal';
-
 import '@dxosTheme';
+import { faker } from '@faker-js/faker';
+import { DotsSixVertical } from '@phosphor-icons/react';
+import { deepSignal, DeepSignal } from 'deepsignal';
+import React, { FC } from 'react';
 
-import type { Mosaic as MosaicType } from '../types';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
+
+import type { DelegatorProps, Mosaic as MosaicType, MosaicProps } from '../types';
 import { Mosaic } from './Mosaic';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;
 
-const items = [...Array(10)].reduce((acc: Mosaic['items'], _, index) => {
+const tiles = [...Array(10)].reduce((acc: MosaicType['tiles'], _, index) => {
   const id = faker.string.uuid();
   acc[id] = {
     id,
-    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-    description: fake('{{commerce.productDescription}}'),
     index: `a${index}`,
     ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card' }),
   };
   return acc;
 }, {});
 
-const rootId = Object.keys(items)[0];
+const ids = Object.keys(tiles);
+
+const data = ids.reduce((acc: MosaicProps['data'], id) => {
+  acc[id] = {
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+    description: fake('{{commerce.productDescription}}'),
+  };
+  return acc;
+}, {});
+
+const StorybookDelegator = ({ data, tileVariant, dragHandleAttributes, dragHandleListeners }: DelegatorProps) => {
+  const { label, description } = data as { label: string; description: string };
+  return (
+    <>
+      <Button
+        variant='ghost'
+        classNames='is-full justify-start pli-2 gap-1'
+        {...dragHandleAttributes}
+        {...dragHandleListeners}
+      >
+        <DotsSixVertical className={getSize(4)} />
+        <h2 className='text-lg font-system-medium'>{label}</h2>
+      </Button>
+      <p className='pis-7 pie-4 pbe-2'>{description}</p>
+    </>
+  );
+};
+
+const rootId = ids[0];
 
 const stackMosaic = deepSignal<MosaicType>({
-  items,
+  tiles,
   relations: {
     [rootId]: {
-      child: new Set(Object.keys(items).filter((id) => id !== rootId)),
+      child: new Set(Object.keys(tiles).filter((id) => id !== rootId)),
     },
   },
 });
 
-stackMosaic.$items?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
-stackMosaic.items?.[Object.keys(items)[1]]?.$index?.subscribe((nextIndex) =>
+stackMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
+stackMosaic.tiles?.[Object.keys(tiles)[1]]?.$index?.subscribe((nextIndex) =>
   console.log('[mosaic.stories]', 'first item index update', nextIndex),
 );
 
-export const Stack: { args: { mosaic: DeepSignal<MosaicType>; root: string } } = {
+export const Stack: {
+  args: { mosaic: DeepSignal<MosaicType>; root: string; data: Record<string, any>; Delegator: FC<DelegatorProps> };
+} = {
   args: {
     mosaic: stackMosaic,
     root: rootId,
+    data,
+    Delegator: StorybookDelegator,
   },
 };
 
