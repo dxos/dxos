@@ -128,7 +128,6 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
     data: directory,
     properties: {
       index,
-      disabled: directory.permission !== 'granted',
     },
   });
 
@@ -143,7 +142,7 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
         data: { id: directory.id },
       },
       properties: {
-        disposition: 'toolbar',
+        disposition: 'default',
       },
     });
   }
@@ -173,7 +172,6 @@ const localFileToGraphNode = (file: LocalFile, index: string, parent: Graph.Node
     data: file,
     properties: {
       index,
-      disabled: file.permission !== 'granted',
       modified: file.modified,
     },
   });
@@ -200,7 +198,7 @@ const localFileToGraphNode = (file: LocalFile, index: string, parent: Graph.Node
         data: { id: file.id },
       },
       properties: {
-        disposition: 'toolbar',
+        disposition: 'default',
       },
     });
   }

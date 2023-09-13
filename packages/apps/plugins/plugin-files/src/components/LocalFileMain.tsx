@@ -26,5 +26,10 @@ export const LocalFileMain: FC<{ data: LocalFile }> = ({ data }) => {
     [data.id, Boolean(data.text)],
   );
 
+  // TODO(wittjosiah): Render file list.
+  if ('children' in data) {
+    return null;
+  }
+
   return <Surface role='main' data={transformedData} />;
 };
