@@ -17,7 +17,11 @@ npm install -g @dxos/cli@main
 ---
 # Running an Agent
 Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
-## Starting agent
+
+## Start agent with LaunchD (macOS users)
+1) ????????????????????????????????
+
+## Start agent with CLI (not very reliable)
 Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.
 ```terminal
 dx agent start
@@ -29,10 +33,10 @@ see: [dx agent start](#dx-agent-start)
 ![Composer add device](./public/composer-sidebar.png)
 ![Composer invitation](./public/composer-add-device.png)
 
-1. Run halo join command in your terminal.
+2. Run halo join command in your terminal.
 ![CLI halo join flow](./public/cli-halo-join.png)
 
-1. Proceed with invitation
+3. Proceed with invitation
 
 ## Troubleshooting
 1. Make sure you are running the latest version of the shared worker in the browser. Go to the shared workers tab chrome://inspect/#workers, kill `dxos-vault` worker, then reload the Composer tab.
