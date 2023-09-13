@@ -26,7 +26,6 @@ import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TablePlugin } from '@braneframe/plugin-table';
-import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -84,7 +83,6 @@ const main = async () => {
     <StrictMode>
       <PluginProvider
         plugins={[
-          TelemetryPlugin({ namespace: 'labs.dxos.org', config }),
           ClientPlugin({ config, services, debugIdentity: debug }),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
           IntentPlugin(),
