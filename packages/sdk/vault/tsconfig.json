@@ -23,6 +23,9 @@
       "path": "../../apps/plugins/plugin-telemetry"
     },
     {
+      "path": "../../apps/plugins/plugin-treeview"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -69,6 +72,9 @@
     },
     {
       "path": "../react-shell"
+    },
+    {
+      "path": "../react-surface"
     }
   ]
 }
