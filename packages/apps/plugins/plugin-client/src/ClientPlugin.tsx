@@ -23,11 +23,12 @@ export const ClientPlugin = (
   registerSignalFactory();
   const client = new Client(options);
 
-  // Open devtools on keypress
-  const onKeypress = async (e: KeyboardEvent) => {
-    // Cmd + Shift + X
-    if (e.metaKey && e.shiftKey && e.key === 'x') {
-      e.preventDefault();
+  // Open devtools on keypress.
+  // TODO(burdon): Move to DebugPlugin and add key binding to action.
+  const onKeypress = async (event: KeyboardEvent) => {
+    // Cmd + Shift + X.
+    if (event.metaKey && event.shiftKey && event.key === 'x') {
+      event.preventDefault();
 
       const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
 
