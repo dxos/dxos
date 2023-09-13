@@ -16,10 +16,10 @@ import { Teleport } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotManager, SnapshotStore } from '../db-host';
-import { MetadataStore } from '../metadata';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { SnapshotManager, SnapshotStore } from '../db-host';
+import { MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;

@@ -12,8 +12,8 @@ import { Graph } from '@braneframe/plugin-graph';
 import { Tree, TreeRootProps } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
-import { getPersistenceParent, sortByIndex } from '../../util';
 import { DroppableTreeViewItem, SortableTreeViewItem } from './NavTreeItem';
+import { getPersistenceParent, sortByIndex } from '../../util';
 
 export type TreeViewProps = {
   level: number;

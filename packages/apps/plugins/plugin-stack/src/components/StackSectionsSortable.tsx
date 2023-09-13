@@ -13,11 +13,11 @@ import { List, useTranslation } from '@dxos/aurora';
 import { textBlockWidth } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
 
+import { FileUpload } from './FileUpload';
+import { StackSection } from './StackSection';
 import { defaultFileTypes } from '../hooks';
 import { stackState } from '../stores';
 import { GenericStackObject, getSectionModels, STACK_PLUGIN, StackSectionModel, StackSections } from '../types';
-import { FileUpload } from './FileUpload';
-import { StackSection } from './StackSection';
 
 export const StackSectionsSortable: FC<{
   sections: StackSections;

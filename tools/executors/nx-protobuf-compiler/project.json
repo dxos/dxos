@@ -21,8 +21,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/executors/nx-protobuf-compiler/**/*.{ts,js}"
-        ]
+          "tools/executors/nx-protobuf-compiler/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

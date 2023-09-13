@@ -62,7 +62,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/composer-extension/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

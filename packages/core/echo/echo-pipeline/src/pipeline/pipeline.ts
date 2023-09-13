@@ -14,9 +14,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
+import { createMappedFeedWriter } from '../common';
 
 export type WaitUntilReachedTargetParams = {
   /**
@@ -65,11 +65,10 @@ export class PipelineState {
    */
   _reachedTarget: boolean = false;
 
-  // prettier-ignore
   constructor(
     private _feeds: ComplexMap<PublicKey, FeedWrapper<FeedMessage>>,
-    private _timeframeClock: TimeframeClock
-  ) { }
+    private _timeframeClock: TimeframeClock,
+  ) {}
 
   /**
    * Latest theoretical timeframe based on the last mutation in each feed.

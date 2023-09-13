@@ -63,11 +63,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
   // TODO(burdon): Remove undefined keys.
-  // prettier-ignore
   constructor(
     initialProps?: T,
     private readonly _schemaType?: EchoSchemaType,
-    private readonly _opts?: TypedObjectOpts
+    private readonly _opts?: TypedObjectOpts,
   ) {
     super(DocumentModel);
 

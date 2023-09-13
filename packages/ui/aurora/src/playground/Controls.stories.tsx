@@ -6,8 +6,8 @@ import '@dxosTheme';
 import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Input, Select, Toggle, Toolbar } from '../components';
 import { createScenarios } from './helpers';
+import { Input, Select, Toggle, Toolbar } from '../components';
 
 const Story = () => {
   const [checked, setChecked] = useState<boolean>(false);

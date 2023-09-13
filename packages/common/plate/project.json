@@ -43,8 +43,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/plate/**/*.{ts,js}"
-        ]
+          "packages/common/plate/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

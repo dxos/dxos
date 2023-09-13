@@ -30,8 +30,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/async/**/*.{ts,js}"
-        ]
+          "packages/common/async/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

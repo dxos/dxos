@@ -11,7 +11,11 @@ import type { ItemID } from '../types';
  * Errors can optionally include a JSON context object.
  */
 class BaseError extends Error {
-  constructor(readonly code: string, message?: string, readonly context?: Record<string, any>) {
+  constructor(
+    readonly code: string,
+    message?: string,
+    readonly context?: Record<string, any>,
+  ) {
     super(message ?? code);
     this.name = code;
     // NOTE: Restores prototype chain (https://stackoverflow.com/a/48342359).

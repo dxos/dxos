@@ -73,12 +73,12 @@ const loadProtobufBuiltins = () => {
   });
 };
 
-const main = (source: string, out: string) => {
+const main = async (source: string, out: string) => {
   console.log(`Reading: ${source}`);
   const root = new pb.Root();
   root.loadSync(source);
 
-  const code = ts`
+  const code = await ts`
   /**
    * @generated @dxos/echo-typegen ${source}
    **/
@@ -97,4 +97,4 @@ const [, , source, out] = argv;
 registerResolver();
 loadProtobufBuiltins();
 
-main(source, out);
+void main(source, out);

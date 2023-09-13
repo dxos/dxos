@@ -73,12 +73,11 @@ export class ServiceContext {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly modelFactory: ModelFactory
+    public readonly modelFactory: ModelFactory,
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
@@ -94,7 +93,7 @@ export class ServiceContext {
           valueEncoding,
           stats: true,
         },
-      })
+      }),
     });
 
     this.spaceManager = new SpaceManager({
@@ -106,12 +105,7 @@ export class ServiceContext {
       snapshotStore: this.snapshotStore,
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.spaceManager
-    );
+    this.identityManager = new IdentityManager(this.metadataStore, this.keyring, this.feedStore, this.spaceManager);
 
     this.invitations = new InvitationsHandler(this.networkManager);
 
@@ -123,8 +117,8 @@ export class ServiceContext {
         new DeviceInvitationProtocol(
           this.keyring,
           () => this.identityManager.identity ?? failUndefined(),
-          this._acceptIdentity.bind(this)
-        )
+          this._acceptIdentity.bind(this),
+        ),
     );
   }
 

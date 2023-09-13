@@ -9,9 +9,9 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
+import { Grid } from './Grid';
 import { GridLayout, Item, Location } from '../../layout';
 import { createItem, SeedDecorator, TestData, TestTileContent } from '../../testing';
-import { Grid } from './Grid';
 
 // TODO(burdon): Layout for columns (as sorted list) vs positional grid.
 
