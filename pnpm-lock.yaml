@@ -5264,9 +5264,11 @@ importers:
 
   packages/gravity/proto-guard:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@types/fs-extra': ^9.0.4
@@ -5275,9 +5277,11 @@ importers:
       ts-node: 10.9.1
       typescript: ^5.2.2
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       fs-extra: 8.1.0
@@ -40060,7 +40064,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.23.0
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
