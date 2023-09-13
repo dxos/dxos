@@ -18,7 +18,8 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDeepSignal } from 'deepsignal/react';
 import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
 
-import { OverlayDropAnimation, Handler } from './types';
+import { OverlayDropAnimation } from './types';
+import { Handler } from '../types';
 
 type DndContextValue = {
   overlayDropAnimation: OverlayDropAnimation;

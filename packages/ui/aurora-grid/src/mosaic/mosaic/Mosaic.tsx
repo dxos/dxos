@@ -12,16 +12,17 @@ const defaultMosaicContextValue: MosaicContextValue = {
   mosaic: { tiles: {}, relations: {} },
   data: {},
   Delegator: () => null,
+  onMosaicChange: () => {},
 };
 
 const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
 const useMosaic = () => useContext(MosaicContext);
 
-const Mosaic = ({ mosaic, root, data, Delegator }: MosaicProps) => {
+const Mosaic = ({ mosaic, root, data, Delegator, onMosaicChange }: MosaicProps) => {
   return (
     <DndProvider>
-      <MosaicContext.Provider value={{ mosaic, data, Delegator }}>
+      <MosaicContext.Provider value={{ mosaic, data, Delegator, onMosaicChange }}>
         <Tile tile={mosaic.tiles[root]} />
       </MosaicContext.Provider>
     </DndProvider>

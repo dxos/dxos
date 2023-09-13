@@ -37,10 +37,20 @@ export type DelegatorProps = {
   dragHandleListeners: ReturnType<typeof useSortable>['listeners'];
 };
 
+export type Handler<E> = (event: E) => void;
+
+export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: string };
+export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; relation: string };
+
+export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent;
+
+export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
+
 export type MosaicContextValue = {
   mosaic: DeepSignal<Mosaic>;
   data: Record<string, any>;
   Delegator: FC<DelegatorProps>;
+  onMosaicChange: MosaicChangeHandler;
 };
 
 export type MosaicProps = {

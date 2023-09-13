@@ -6,7 +6,7 @@ import { DragCancelEvent, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DependencyList, useContext, useEffect } from 'react';
 
 import { DndContext } from './DndContext';
-import { Handler } from './types';
+import { Handler } from '../types';
 
 export const useDragOver = (callback: Handler<DragStartEvent>, dependencies: DependencyList) => {
   const { dragOverSubscriptions } = useContext(DndContext);

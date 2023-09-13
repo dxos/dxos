@@ -10,8 +10,8 @@ import React, { FC } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 
-import type { DelegatorProps, Mosaic as MosaicType, MosaicProps } from '../types';
 import { Mosaic } from './Mosaic';
+import type { DelegatorProps, Mosaic as MosaicType, MosaicChangeHandler, MosaicProps } from '../types';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;
@@ -66,12 +66,17 @@ const stackMosaic = deepSignal<MosaicType>({
 });
 
 stackMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
-stackMosaic.tiles?.[Object.keys(tiles)[1]]?.$index?.subscribe((nextIndex) =>
-  console.log('[mosaic.stories]', 'first item index update', nextIndex),
-);
+
+// const onMosaicChange = (event: MosaicChangeEvent) => console.log('[on mosaic change]', event);
 
 export const Stack: {
-  args: { mosaic: DeepSignal<MosaicType>; root: string; data: Record<string, any>; Delegator: FC<DelegatorProps> };
+  args: {
+    mosaic: DeepSignal<MosaicType>;
+    root: string;
+    data: Record<string, any>;
+    Delegator: FC<DelegatorProps>;
+    onMosaicChange?: MosaicChangeHandler;
+  };
 } = {
   args: {
     mosaic: stackMosaic,
@@ -83,4 +88,5 @@ export const Stack: {
 
 export default {
   component: Mosaic,
+  argTypes: { onMosaicChange: { action: 'mosaic changed' } },
 };

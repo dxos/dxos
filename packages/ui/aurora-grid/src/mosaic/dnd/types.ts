@@ -3,4 +3,3 @@
 //
 
 export type OverlayDropAnimation = 'around' | 'away' | 'into';
-export type Handler<E> = (event: E) => void;

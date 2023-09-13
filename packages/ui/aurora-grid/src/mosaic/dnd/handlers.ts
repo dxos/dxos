@@ -6,13 +6,14 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { getIndexBelow, getIndexBetween } from '@tldraw/indices';
 import { useCallback } from 'react';
 
+import { useDnd } from './DndContext';
 import { useMosaic } from '../mosaic';
 import { Tile } from '../types';
-import { useDnd } from './DndContext';
 
 export const useHandleRearrange = (subtileIds: Set<string>, subtiles: Tile[]) => {
   const {
     mosaic: { tiles, relations },
+    onMosaicChange,
   } = useMosaic();
   const dnd = useDnd();
   return useCallback(
@@ -36,11 +37,12 @@ export const useHandleRearrange = (subtileIds: Set<string>, subtiles: Tile[]) =>
             ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1]?.index)
             : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
         tiles[active.id].index = nextIndex;
+        onMosaicChange({ type: 'rearrange', id: active.id.toString(), index: nextIndex });
         return nextIndex;
       } else {
         return null;
       }
     },
-    [tiles, relations, dnd, subtileIds, subtiles],
+    [tiles, relations, onMosaicChange, dnd, subtileIds, subtiles],
   );
 };
