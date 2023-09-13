@@ -285,7 +285,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
-              // TODO(burdon): Factor out color constants.
+              // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),

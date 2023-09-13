@@ -67,7 +67,7 @@ export const spaceToGraphNode = ({
     icon: (props) => <Planet {...props} />,
     data: space,
     properties: {
-      // TODO(burdon): Factor out color constants.
+      // TODO(burdon): Factor out palette constants.
       palette: parent.id === 'root' ? 'teal' : undefined,
       'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       role: 'branch',
