@@ -1,8 +1,0 @@
-{
-  "extends": [
-    "../../../.eslintrc.js"
-  ],
-  "parserOptions": {
-    "project": "packages/experimental/kai-bots/tsconfig.json"
-  }
-}
