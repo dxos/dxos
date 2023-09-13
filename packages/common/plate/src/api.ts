@@ -42,7 +42,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
     templateFile: string,
     slots: FileSlots<I, TSlots, TContext>,
     extraContext?: (rendered: Partial<SlotValues<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
-  ) {
+  ): Template<I, TSlots> {
     const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
       const { outputDirectory, relativeTo, input } = {
         outputDirectory: process.cwd(),

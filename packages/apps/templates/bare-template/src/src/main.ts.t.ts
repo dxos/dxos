@@ -6,7 +6,7 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
-  content: ({ input: { react, dxosUi } }) => {
+  content: ({ input: { react, dxosUi, tailwind } }) => {
     return (
       !react &&
       plate`
@@ -24,7 +24,7 @@ export default template.define.text({
       !dxosUi &&
       plate`
     // Include any css files directly.
-    import './index.css';`
+    ${!tailwind && '// '}import './index.css';`
     }
     
     void (async () => {
