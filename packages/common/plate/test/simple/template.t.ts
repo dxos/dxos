@@ -1,7 +1,7 @@
 import { z } from '..';
-import { directory } from '..';
+import { interactiveDirectory } from '..';
 
-export default directory({
+export default interactiveDirectory({
   include: ['*'],
   exclude: ['exclude', /exclude/],
   inputShape: z.object({

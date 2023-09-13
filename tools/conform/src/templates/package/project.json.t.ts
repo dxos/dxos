@@ -1,4 +1,3 @@
-import { defineTemplate, text } from '@dxos/plate';
 import path from 'path';
 import template from './template.t';
 

@@ -1,7 +1,7 @@
 import inherited from '../simple/template.t';
-import { directory } from '..';
+import { interactiveDirectory } from '..';
 
-export default directory({
+export default interactiveDirectory({
   inputShape: inherited.inputShape,
   inherits: async (context) => {
     const { input } = context;

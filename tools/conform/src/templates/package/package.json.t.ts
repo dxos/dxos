@@ -1,4 +1,3 @@
-import { defineTemplate } from '@dxos/plate';
 import { PackageJson } from 'types-package-json';
 import template from './template.t';
 

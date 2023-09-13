@@ -4,7 +4,12 @@
 import callsite from 'callsite';
 import path from 'node:path';
 
-import { BASENAME, DirectoryTemplateLoadOptions } from './DirectoryTemplate';
+import {
+  BASENAME,
+  DirectoryTemplate,
+  DirectoryTemplateLoadOptions,
+  DirectoryTemplateOptions,
+} from './DirectoryTemplate';
 import {
   InteractiveDirectoryTemplate,
   InteractiveDirectoryTemplateOptions,
@@ -129,12 +134,27 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
     };
   }
 }
-
-export type TemplateOptions<I extends InquirableZodType> = Optional<InteractiveDirectoryTemplateOptions<I>, 'src'>;
-
 export const template = <TInput = null>() => new Plate<TInput>();
 
-export const directory = <I extends InquirableZodType>(options: TemplateOptions<I>) => {
+export type TemplateOptions<I> = Optional<DirectoryTemplateOptions<I>, 'src'>;
+
+export const directory = <I>(options: TemplateOptions<I>) => {
+  const stack = callsite();
+  const templateFile = stack[1].getFileName();
+  const dir = path.dirname(templateFile);
+  const { src, ...rest } = { src: dir, ...options };
+  return new DirectoryTemplate({
+    src: path.isAbsolute(src) ? src : path.resolve(dir, src),
+    ...rest,
+  });
+};
+
+export type InteractiveTemplateOptions<I extends InquirableZodType> = Optional<
+  InteractiveDirectoryTemplateOptions<I>,
+  'src'
+>;
+
+export const interactiveDirectory = <I extends InquirableZodType>(options: InteractiveTemplateOptions<I>) => {
   const stack = callsite();
   const templateFile = stack[1].getFileName();
   const dir = path.dirname(templateFile);

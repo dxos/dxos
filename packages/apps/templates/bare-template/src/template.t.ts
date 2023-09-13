@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { z, directory, plate } from '@dxos/plate';
+import { z, interactiveDirectory, plate } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
 export * from './utils.t/getDxosRepoInfo';
@@ -9,7 +9,7 @@ export * from './utils.t/nodePackage';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 
-export default directory({
+export default interactiveDirectory({
   src: __filename.endsWith('.ts') ? __dirname : path.resolve(__dirname, '../../src'),
   exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
   inputShape: z

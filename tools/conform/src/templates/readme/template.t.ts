@@ -1,7 +1,10 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { defineConfig } from '@dxos/plate';
+
+import path from "node:path";
+
+import { directory } from "@dxos/plate";
 
 export type Input = {
   banner: string;
@@ -33,5 +36,7 @@ export type Input = {
   stackOverflowTag: string;
 };
 
-export default defineConfig({});
+export default directory<Input>({
+  src: __filename.endsWith('.ts') ? __dirname : path.resolve(__dirname, '../../../../src/templates/readme'),
+});
 

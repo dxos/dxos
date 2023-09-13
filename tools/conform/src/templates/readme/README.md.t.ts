@@ -2,51 +2,50 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from 'path';
-import { TemplateFunction, text, defineTemplate } from '@dxos/plate';
-import { Input } from './config.t';
+import { plate } from '@dxos/plate';
+import template from './template.t';
 
-// const template: TemplateFunction<Input> = async ({ input }) => {
-export default defineTemplate<Input>(({ input }) => {
-  // const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
-  // const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
-  const {
-    name,
-    description,
-    banner,
-    usage,
-    install = `pnpm i ${input?.name}`,
-    quickStartUrl,
-    guideUrl,
-    apiReferenceUrl,
-    dependencyDiagramUrl,
-    codeCoverageUrl,
-    twitter, // = `dxos_org`,
-    issuesUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues',
-    conductUrl = 'https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md',
-    contributionGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md',
-    prGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs',
-    features,
-    diagram,
-    badges,
-    storybooks,
-    background,
-    blogUrl,
-    roadmapUrl,
-    eventsUrl,
-    discordUrl = 'https://discord.gg/eXVfryv3sW',
-    demo,
-    stackOverflowTag,
-    repoGuideUrl
-  } = input;
+export default template.define.text({
+  content: ({ input }) => {
+    // const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
+    // const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
+    const {
+      name,
+      description,
+      banner,
+      usage,
+      install = `pnpm i ${input?.name}`,
+      quickStartUrl,
+      guideUrl,
+      apiReferenceUrl,
+      dependencyDiagramUrl,
+      codeCoverageUrl,
+      twitter, // = `dxos_org`,
+      issuesUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues',
+      conductUrl = 'https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md',
+      contributionGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md',
+      prGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs',
+      features,
+      diagram,
+      badges,
+      storybooks,
+      background,
+      blogUrl,
+      roadmapUrl,
+      eventsUrl,
+      discordUrl = 'https://discord.gg/eXVfryv3sW',
+      demo,
+      stackOverflowTag,
+      repoGuideUrl,
+    } = input;
 
-  const section = (header: string, content: string, emitFlag?: any) => {
-    return (typeof emitFlag != 'undefined' ? !!emitFlag : !!content?.trim?.()) ? `## ${header}\n${content}\n\n` : '';
-  };
+    const section = (header: string, content: string, emitFlag?: any) => {
+      return (typeof emitFlag != 'undefined' ? !!emitFlag : !!content?.trim?.()) ? `## ${header}\n${content}\n\n` : '';
+    };
 
-  const code = (code: string, lang?: string) => `\`\`\`${lang ?? ''}\n${code}\n\`\`\``;
+    const code = (code: string, lang?: string) => `\`\`\`${lang ?? ''}\n${code}\n\`\`\``;
 
-  return text`
+    return plate`
   ${banner}
   # ${name}
   ${badges?.length ? badges.join('\n') + '\n' : ''}
@@ -68,11 +67,11 @@ export default defineTemplate<Input>(({ input }) => {
         })`,
       dependencyDiagramUrl && `- [🧩 Dependency Diagram](${dependencyDiagramUrl})`,
       codeCoverageUrl && `- [👖 Code coverage report](${codeCoverageUrl})`,
-      repoGuideUrl && `- [🔧 Repository Guide](${repoGuideUrl})`
+      repoGuideUrl && `- [🔧 Repository Guide](${repoGuideUrl})`,
     ]
       .filter(Boolean)
       .join('\n'),
-    quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl || guideUrl
+    quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl || guideUrl,
   )}
   ${section('Storybooks', storybooks?.join('\n\n') + '\n', !!storybooks?.length)}
   ## DXOS Resources
@@ -85,18 +84,19 @@ export default defineTemplate<Input>(({ input }) => {
     discordUrl && `- Talk to us on [Discord](${discordUrl})`,
     stackOverflowTag &&
       `- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/${stackOverflowTag}) with \`#${stackOverflowTag}\``,
-    twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`
+    twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`,
   ]
     .filter(Boolean)
     .join('\n')}
   
   ## Contributions
   Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](${conductUrl}), the [issue guide](${issuesUrl}), and the [PR contribution guide](${prGuideUrl}).${
-    repoGuideUrl
-      ? ` To learn about how to set up for development and contribution to DXOS, see the [Repository Guide](${repoGuideUrl})`
-      : ''
-  }
+      repoGuideUrl
+        ? ` To learn about how to set up for development and contribution to DXOS, see the [Repository Guide](${repoGuideUrl})`
+        : ''
+    }
 
   License: [MIT](./LICENSE) Copyright 2022 © DXOS
   `;
+  },
 });

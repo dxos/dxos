@@ -4,7 +4,7 @@
 
 import * as pb from 'protobufjs';
 
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
 const importPackage = '@dxos/echo-schema';
@@ -124,7 +124,7 @@ export const generate = (root: pb.NamespaceBase): string => {
 
   const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
-  return text`
+  return plate`
   import * as ${importNamespace} from '${importPackage}';
 
   ${createSchema(root)}
@@ -153,7 +153,7 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
   }
 
   if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
-    yield text`
+    yield plate`
       export namespace ${ns.name} {
         ${ns.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)))}
       }
@@ -180,7 +180,7 @@ export const createObjectClass = (type: pb.Type) => {
   const fields = type.fieldsArray.map((field) => `declare ${field.name}: ${createType(field)};`);
 
   // prettier-ignore
-  return text`
+  return plate`
     export type ${name}Props = {\n${initializer}\n};
 
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
@@ -212,7 +212,7 @@ export const createPlainInterface = (type: pb.Type) => {
   const fields = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)};`);
 
   // prettier-ignore
-  return text`
+  return plate`
   export interface ${name} {
     ${fields}
   }
@@ -231,7 +231,7 @@ export const createEnum = (type: pb.Enum) => {
   const values = Object.entries(type.values).map(([key, value]) => `${key} = ${value},`);
 
   // prettier-ignore
-  return text`
+  return plate`
     export enum ${name} {
       ${values}
     }
