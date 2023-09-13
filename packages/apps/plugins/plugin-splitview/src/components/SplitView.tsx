@@ -6,7 +6,7 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
+import { coarseBlockSize, fixedSurface, getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -61,7 +61,12 @@ export const SplitView = (props: SplitViewProps) => {
         {/* Top (header) bar. */}
         <Main.Content
           asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, fixedSurface]}
+          classNames={[
+            'fixed inset-inline-0 block-start-0 z-[1] flex gap-1',
+            coarseBlockSize,
+            fixedSurface,
+            inputSurface, // TODO(burdon): Allow override.
+          ]}
         >
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>

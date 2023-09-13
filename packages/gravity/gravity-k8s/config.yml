@@ -2,7 +2,7 @@ runtime:
   client:
     storage:
       persistent: false
-      # path: '/tmp/dx/gravity'
+      # data: '/tmp/dx/gravity'
   kube:
     autoupdate:
       enabled: true
