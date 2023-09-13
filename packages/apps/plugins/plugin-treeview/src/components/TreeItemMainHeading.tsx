@@ -14,7 +14,7 @@ export const TreeItemMainHeading = ({ data: node }: { data: Graph.Node }) => {
   return (
     <Breadcrumb.Root aria-label={t('breadcrumb label')} classNames='shrink min-is-0'>
       <Breadcrumb.List>
-        {node.parent && (
+        {node.parent && node.parent.id !== 'root' && (
           <>
             <Breadcrumb.ListItem>
               <Breadcrumb.Link asChild>
