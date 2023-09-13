@@ -118,7 +118,8 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
-      if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      // Excludes selected node from being opened by selection.
+      if (treeViewActive && graph.getPath(treeViewActive)?.slice(0, -2).includes(node.id)) {
         setOpen(true);
       }
     }, [graph, treeViewActive]);
