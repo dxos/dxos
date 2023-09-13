@@ -37,8 +37,8 @@ import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
 import { NavTree } from './NavTree';
-import { NavigableHeading } from './NavigableHeading';
-import { levelPadding } from './navtree-fragments';
+import { NavTreeItemHeading } from './NavTreeItemHeading';
+import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps &
@@ -85,6 +85,9 @@ export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
 };
 
 type TreeViewItemProps = SharedTreeItemProps & SortableProps;
+
+const hoverableDescriptionIcons =
+  '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
@@ -165,12 +168,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             levelPadding(level),
             hoverableControls,
             hoverableFocusedWithinControls,
+            hoverableDescriptionIcons,
+            level < 1 && topLevelCollapsibleSpacing,
             !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
             'flex items-start rounded',
           )}
           data-testid={testId}
         >
-          <NavigableHeading {...{ open, node, level, active }} />
+          <NavTreeItemHeading {...{ open, node, level, active }} />
           {actionGroups.length > 0 && (
             <Tooltip.Root
               open={optionsTooltipOpen}

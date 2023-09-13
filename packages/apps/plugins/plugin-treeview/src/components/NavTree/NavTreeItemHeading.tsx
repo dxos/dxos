@@ -6,30 +6,21 @@ import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
-import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
-import {
-  auroraTx,
-  descriptionText,
-  getSize,
-  ghostButtonColors,
-  mx,
-  staticDisabled,
-  valenceColorText,
-} from '@dxos/aurora-theme';
+import { Button, TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
+import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN, TreeViewAction } from '../../types';
 import { getTreeItemLabel } from '../../util';
 import {
-  topLevelHeadingHoverColor,
   navTreeHeading,
   topLevelHeadingColor,
+  topLevelHeadingHoverColor,
   topLevelText,
   treeItemText,
-  topLevelCollapsibleSpacing,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
 
-export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
+export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
   ({ open, node, level, active }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
@@ -43,25 +34,34 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
     return (
-      <>
+      <div
+        role='none'
+        className={mx(
+          'grow flex items-center gap-1 pli-0',
+          level < 1 && topLevelText,
+          level < 1 && topLevelHeadingColor(node.properties?.palette),
+          level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
+          error && valenceColorText('error'),
+        )}
+      >
         {isBranch && (
           <TreeItem.OpenTrigger
             {...(disabled && { disabled, 'aria-disabled': true })}
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
-            classNames={[
-              'flex items-center gap-1 pie-1 -mis-3',
-              navTreeHeading,
-              ghostButtonColors,
-              disabled && staticDisabled,
-            ]}
+            classNames={['-translate-x-2', ghostButtonColors, disabled && staticDisabled]}
             // TODO(wittjosiah): Why space plugin? This is treeview.
             data-testid={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
+            onKeyDown={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.stopPropagation();
+              }
+            }}
           >
-            <OpenTriggerIcon weight='fill' className={mx('shrink-0', descriptionText, getSize(2))} />
+            <OpenTriggerIcon weight='fill' className={mx('shrink-0 text-[--icons-color]', getSize(2))} />
           </TreeItem.OpenTrigger>
         )}
-        <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild={!isBranch}>
-          <button
+        <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild>
+          <Button
             role='link'
             {...(level > 1 && { 'data-testid': 'spacePlugin.documentTreeItemLink' })}
             data-itemid={node.id}
@@ -90,29 +90,20 @@ export const NavigableHeading = forwardRef<HTMLButtonElement, SharedTreeItemHead
               });
               !isLg && closeNavigationSidebar();
             }}
-            className={auroraTx(
-              'button.root',
-              'tree-item__heading--link',
-              { variant: 'ghost', density: 'fine', disabled },
-              'gap-1 justify-start pli-0',
-              navTreeHeading,
-              level < 1 && topLevelCollapsibleSpacing,
-              level < 1 && topLevelText,
-              level < 1 && topLevelHeadingColor(node.properties?.palette),
-              level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
-              error && valenceColorText('error'),
-            )}
-            {...(disabled && { disabled, 'aria-disabled': true })}
+            density='fine'
+            variant='ghost'
+            classNames={['grow gap-1', isBranch && '-mis-6']}
+            disabled={disabled}
             {...(active && { 'aria-current': 'page' })}
             ref={forwardedRef}
           >
-            {node.icon && <node.icon className={mx(descriptionText, 'shrink-0', getSize(4))} />}
+            {node.icon && <node.icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
             <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
               {getTreeItemLabel(node, t)}
             </span>
-          </button>
+          </Button>
         </TreeItem.Heading>
-      </>
+      </div>
     );
   },
 );
