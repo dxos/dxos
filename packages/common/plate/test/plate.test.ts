@@ -82,7 +82,7 @@ describe('plate 2 templates', () => {
     expect(third!.content).to.eq(`const name = "${name}";\nconst slot = "simple";\n`);
   });
 
-  it.only('inherited template', async () => {
+  it('inherited template', async () => {
     const name = 'bob';
     const result = await extended.apply({
       input: {

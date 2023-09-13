@@ -31,7 +31,7 @@ import { InquirableZodType } from './util/zodInquire';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 
-export type SlotsWithContext<I, TSlots extends Slots<I, TSlots, TContext>, TContext extends Context<I, TSlots>> = {
+export type SlotsWithContext<I, TSlots extends Slots<I, any, TContext>, TContext extends Context<I, TSlots>> = {
   [slotKey in keyof TSlots]: Slot<ResultOf<TSlots[slotKey]>, I, TSlots, TContext>;
 };
 
@@ -42,7 +42,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
     templateFile: string,
     slots: FileSlots<I, TSlots, TContext>,
     extraContext?: (rendered: Partial<SlotValues<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
-  ): Template<I, TSlots> {
+  ) {
     const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
       const { outputDirectory, relativeTo, input } = {
         outputDirectory: process.cwd(),
@@ -105,7 +105,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
   script(slots: FileSlots<I, TSlots, Context<I, TSlots> & { imports: Imports }>) {
     const stack = callsite();
     const templateFile = stack[1].getFileName();
-    const template = this.template(templateFile, slots, ({ path }) => ({
+    const template = this.template<Context<I, TSlots> & { imports: Imports }>(templateFile, slots, ({ path }) => ({
       imports: path ? imports(path) : imports(),
     }));
     return template;

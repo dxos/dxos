@@ -56,9 +56,9 @@ export type SlotProducers<TSlots extends Slots> = {
   [key in keyof TSlots]: SlotProducer<ResultOf<TSlots[key]>, InputOf<TSlots[key]>>;
 };
 
-// export type Slotify<I, T extends Slots<I>> = {
-//   [key in keyof T]: T[key] extends Transform<infer _C, infer O> ? Slot<O, I> : Slot<T[key], I>;
-// };
+export type Slotify<I, T extends Slots<I>> = {
+  [key in keyof T]: T[key] extends Function ? T[key] : Slot<T[key], I>;
+};
 
 export type Options<I, S extends Slots<I> = Slots<I>> = {
   input?: I;
