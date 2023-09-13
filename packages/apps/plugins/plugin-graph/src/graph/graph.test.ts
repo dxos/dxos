@@ -7,9 +7,9 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { GraphStore } from './graph';
-import { Graph } from './types';
+import { createTestNodeBuilder } from './test-node-builder';
 
-describe.only('SessionGraph', () => {
+describe('SessionGraph', () => {
   test('returns root node', () => {
     const graph = new GraphStore();
     expect(graph.root).to.not.be.undefined;
@@ -216,94 +216,3 @@ describe.only('SessionGraph', () => {
     expect(nodes).to.deep.equal(['root-test2-test1', 'root-test2', 'root']);
   });
 });
-
-const checkDepth = (node: Graph.Node, depth = 0): number => {
-  if (!node.parent) {
-    return depth;
-  }
-
-  return checkDepth(node.parent, depth + 1);
-};
-
-const createTestNodeBuilder = (id: string, depth = 1) => {
-  const nodes = new Map<string, Graph.Node>();
-  const builder: Graph.NodeBuilder = (parent) => {
-    if (checkDepth(parent) >= depth) {
-      return;
-    }
-
-    const [child] = parent.add({
-      id: `${parent.id}-${id}`,
-      label: `${parent.id}-${id}`,
-      data: null,
-      parent,
-    });
-
-    parent.addAction({
-      id: `${parent.id}-${id}`,
-      label: `${parent.id}-${id}`,
-      intent: { action: 'test' },
-    });
-
-    nodes.set(parent.id, parent);
-    nodes.set(child.id, child);
-  };
-
-  const addNode = (parentId: string, node: Pick<Graph.Node, 'id' | 'label'> & Partial<Graph.Node>) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    const [child] = parent.add(node);
-    nodes.set(child.id, child);
-    return child;
-  };
-
-  const removeNode = (parentId: string, id: string) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    return parent.remove(id);
-  };
-
-  const addAction = (parentId: string, action: Pick<Graph.Action, 'id' | 'label'> & Partial<Graph.Action>) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    return parent.addAction(action);
-  };
-
-  const removeAction = (parentId: string, id: string) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    return parent.removeAction(id);
-  };
-
-  const addProperty = (parentId: string, key: string, value: any) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    return parent.addProperty(key, value);
-  };
-
-  const removeProperty = (parentId: string, key: string) => {
-    const parent = nodes.get(parentId);
-    if (!parent) {
-      return;
-    }
-
-    return parent.removeProperty(key);
-  };
-
-  return { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty };
-};

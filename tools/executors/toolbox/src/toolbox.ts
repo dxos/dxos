@@ -282,25 +282,6 @@ class Toolbox {
     }
   }
 
-  async updateEslintConfig() {
-    for (const project of this.projects) {
-      if (['.eslintrc.json', '.eslintrc.js'].some((file) => fs.existsSync(join(project.path, file)))) {
-        continue;
-      }
-
-      await saveJson(
-        join(project.path, '.eslintrc.json'),
-        {
-          extends: [relative(project.path, join(this.rootDir, '.eslintrc.js'))],
-          parserOptions: {
-            project: relative(this.rootDir, join(project.path, 'tsconfig.json')),
-          },
-        },
-        this.options.verbose,
-      );
-    }
-  }
-
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
@@ -318,7 +299,6 @@ const run = async () => {
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
-  await toolbox.updateEslintConfig();
 };
 
 void run();
