@@ -26,7 +26,7 @@ export default template.define
 
       const coreContent = plate`
       <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
-        <${ClientProvider} config={config} ${dxosUi ? `fallback={${GenericFallback}}` : ''}>
+        <${ClientProvider} config={config} ${dxosUi ? plate`fallback={${GenericFallback}}` : ''}>
           ${slots.content}
           ${dxosUi && pwa && swToast}
         </${ClientProvider}>
@@ -51,7 +51,7 @@ export default template.define
         const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
 
         export const App = () => {
-          ${pwa && `const serviceWorker = ${useRegisterSW}();`}
+          ${pwa && plate`const serviceWorker = ${useRegisterSW}();`}
           return (
             ${dxosUi ? themeProvider(coreContent) : coreContent}
           )
