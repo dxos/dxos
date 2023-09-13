@@ -118,11 +118,12 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       throw new Error('an output directory is required');
     }
     const debug = logger(!!verbose);
-    debug(`executing template ${src}`);
+    debug(`---\nexecuting template ${src}`);
     debug(pretty(mergedOptions));
     debug('inputs:', input);
     const { inherits, src: _src, ...restOptions } = mergedOptions;
     const inherited = inherits ? await inherits({ ...restOptions, input }) : undefined;
+    debug(`${inherited?.files?.length ?? 'no'} inherited results`);
     const allFiles = await readDir(
       src,
       filter(exclude, input).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(src, '')) : x)),
@@ -164,8 +165,10 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
     const templateOutputs = await (parallel
       ? runner.inParallel(templatingPromises)
       : runner.inSequence(templatingPromises));
-    const isWithinTemplateOutput = (f: string): boolean => {
-      return templateOutputs.some((files) => files.files.some((file) => !!file && file.path === f));
+    debug(`${templateOutputs.length} templating results`);
+    debug(`${templateOutputs.map(o => o.files).flat()?.length} templating results total files`);
+    const isWithinTemplateOutput = (filePath: string): boolean => {
+      return templateOutputs.some((out) => out.files.some((file) => !!file && file.path === filePath));
     };
     const flatOutput = [
       ...regularFiles
@@ -179,8 +182,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
         ),
       ...templateOutputs.map((f) => f.files).flat(),
     ].filter(Boolean);
-    debug(`${inherited?.files?.length} inherited results`);
-    debug(`${flatOutput.length} templating results`);
+    debug(`${flatOutput.length} non inherited results`);
     const inheritedOutputMinusFlatOutput = inherited
       ? inherited.files.filter((inheritedOut) => {
           return !flatOutput.find((existing) => existing.path === inheritedOut.path);
@@ -190,6 +192,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
     debug(`${combined.length} combined results`);
     debug(combined.join('\n'));
     const result = results(combined);
+    debug(`done executing template ${src}\n---`);
     mergedOptions?.after?.(mergedOptions, result);
     return result;
   }

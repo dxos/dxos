@@ -44,7 +44,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
     extraContext?: (rendered: Partial<SlotValues<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
   ) {
     const template = async (options: Options<I, SlotsWithContext<I, TSlots, TContext>>) => {
-      const { outputDirectory, relativeTo } = {
+      const { outputDirectory, relativeTo, input } = {
         outputDirectory: process.cwd(),
         ...options,
       };
@@ -52,23 +52,26 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
       const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
         absoluteTemplateRelativeTo.length + 1,
       );
+      const { slots: _slots, ...restOpts } = options;
       // TODO ignoring path from rendered slots?
       const { content, copyOf } = await renderSlots(slots, async (rendered) => ({
-        input: {} as I,
-        slots: this.parentSlots
-          ? await renderSlots(this.parentSlots, () => ({
-              input: {} as I,
-              overwrite: false,
-              slots: {} as any,
-              ...options,
-              outputFile: relativeOutputPath,
-              outputDirectory,
-              inherited: undefined,
-              relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-            }))
-          : ({} as any),
+        input,
+        slots: await renderSlots({ ...this.parentSlots, ...options.slots }, (rendered) => ({
+          input,
+          overwrite: false,
+          slots: {
+            ...this.parentSlots,
+            ...options.slots,
+          },
+          ...restOpts,
+          outputFile: relativeOutputPath,
+          outputDirectory,
+          inherited: undefined,
+          relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+          ...extraContext?.(rendered),
+        })),
         overwrite: false,
-        ...options,
+        ...restOpts,
         outputDirectory,
         outputFile: relativeOutputPath,
         inherited: undefined,
@@ -80,7 +83,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         hasContent
           ? [
               new FileEffect({
-                path: relativeOutputPath, // path.resolve(outputDirectory, relativeOutputPath),
+                path: path.resolve(outputDirectory, relativeOutputPath),
                 content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
                 copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
               }),

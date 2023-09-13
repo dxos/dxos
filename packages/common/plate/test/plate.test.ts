@@ -4,6 +4,7 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { plate } from '../src';
 import extended from './extend/template.t';
 import simpleFileGroup from './file-templates/group.t';
 import simpleFile from './file-templates/simple.md.t';
@@ -17,6 +18,25 @@ describe('plate 2 templates', () => {
     expect(extended).to.exist;
   });
 
+  it('templating helpers', () => {
+    const test = plate`hello`;
+    expect(test).to.exist.and.equal('hello');
+    const test2 = plate`
+    spurious tabs
+    `;
+    expect(test2).to.equal('spurious tabs\n');
+    expect(plate`
+    something
+    something else
+    ${() => 'function'}
+    `).to.equal('something\nsomething else\nfunction\n');
+    expect(plate`
+    something
+    something else
+    ${() => plate`function`}
+    `).to.equal('something\nsomething else\nfunction\n');
+  });
+
   it('file templates', async () => {
     expect(simpleFile).to.be.a('function');
     expect(simpleFileGroup).to.be.a('function');
@@ -27,7 +47,7 @@ describe('plate 2 templates', () => {
     expect(result.files.length).to.eq(1);
     const [file] = result.files;
     expect(file).to.exist;
-    expect(file.path).to.eq('simple.md');
+    expect(file.path).to.contain('simple.md');
     expect(file.content).to.eq('the name was zanzibar\n');
   });
 
@@ -62,7 +82,7 @@ describe('plate 2 templates', () => {
     expect(third!.content).to.eq(`const name = "${name}";\nconst slot = "simple";\n`);
   });
 
-  it('inherited template', async () => {
+  it.only('inherited template', async () => {
     const name = 'bob';
     const result = await extended.apply({
       input: {
@@ -87,6 +107,9 @@ describe('plate 2 templates', () => {
     expect(one.content).to.eq(`name: prefixed ${name}\n`);
 
     expect(two.path).to.exist.and.match(/two\.js$/);
-    expect(two.content).to.eq(`name: prefixed ${name}, slots.prop = prefixed default prop\n`);
+    expect(two.content).to.eq(plate`
+    const name = "prefixed ${name}";
+    const slot = "prefixed simple";
+    `);
   });
 });

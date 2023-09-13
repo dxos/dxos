@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import chalk from 'chalk';
 import mkdirp from 'mkdirp';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -65,11 +66,13 @@ export class FileEffect implements Effect<{ overwrite?: boolean }, FileApplyResu
   }
 
   toString() {
-    return [
-      this.copyOf ? 'copy:' : 'file:',
-      this.content ? kib(this.content.length) : '',
-      this.copyOf ? ellipsis(relative(this.copyOf)) : '',
-      this.path ? ellipsis(relative(this.path)) : '',
-    ].join('\t');
+    return (
+      [
+        this.copyOf ? 'copy:' : 'file:',
+        this.path ? ellipsis(relative(this.path)) : '',
+        this.copyOf ? 'from ' + ellipsis(relative(this.copyOf)) : '',
+        this.content ? kib(this.content.length) : '',
+      ].join('\t') + (this.content ? '\n' + chalk.gray(this.content) : '')
+    );
   }
 }

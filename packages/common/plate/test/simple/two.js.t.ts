@@ -10,6 +10,7 @@ export default template.define
       return plate`
       ${imports}
       const name = '${input.name}';
-      const slot = '${slots.prop}';`;
+      const slot = '${slots.prop}';
+      `;
     }
   });
