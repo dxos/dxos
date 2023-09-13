@@ -1,0 +1,31 @@
+{
+  "sourceRoot": "tools/anfang/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "dependsOn": [],
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "tools/anfang/src/index.ts",
+        "outputPath": "tools/anfang/dist",
+        "tsConfig": "tools/anfang/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/anfang/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

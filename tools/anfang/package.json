@@ -1,0 +1,24 @@
+{
+  "name": "@dxos/anfang",
+  "version": "0.1.57",
+  "description": "Tool daemonizer.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "0.1.56",
+    "@dxos/invariant": "0.1.56",
+    "@dxos/lock-file": "0.1.56",
+    "@dxos/log": "0.1.56"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

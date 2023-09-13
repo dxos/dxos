@@ -3,15 +3,8 @@
 //
 
 import type { ExecutorContext } from '@nx/devkit';
-import { build, Format, Platform } from 'esbuild';
-import RawPlugin from 'esbuild-plugin-raw';
-import { yamlPlugin } from 'esbuild-plugin-yaml';
-import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { bundleDepsPlugin } from './bundle-deps-plugin';
-import { fixRequirePlugin } from './fix-require-plugin';
-import { LogTransformer } from './log-transform-plugin';
+import type { Format, Platform, Plugin } from 'esbuild'
+import { forkDaemon } from '@dxos/anfang';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -28,7 +21,26 @@ export interface EsbuildExecutorOptions {
   watch: boolean;
 }
 
-export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+const daemon = forkDaemon({
+  script: __filename,
+})
+
+type BuildContext = {
+  projectRoot: string;
+  isVerbose: boolean;
+}
+
+const runBuild = daemon.function(async (options: EsbuildExecutorOptions, context: BuildContext): Promise<{ success: boolean }> => {
+  const { build } = await import('esbuild');
+  const { default: RawPlugin } = await import('esbuild-plugin-raw');
+  const { yamlPlugin } = await import('esbuild-plugin-yaml');
+  const { readFile, writeFile, readdir, rm } = await import('node:fs/promises');
+  const { dirname, join } = await import('node:path');
+
+  const { bundleDepsPlugin } = await import('./bundle-deps-plugin');
+  const { fixRequirePlugin } = await import('./fix-require-plugin');
+  const { LogTransformer } = await import('./log-transform-plugin');
+
   console.info('Executing esbuild...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
@@ -37,10 +49,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   try {
     await readdir(options.outputPath);
     await rm(options.outputPath, { recursive: true });
-  } catch {}
+  } catch { }
 
   // TODO(wittjosiah): Workspace from context is deprecated.
-  const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
+  const packagePath = join(context.projectRoot, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
@@ -97,7 +109,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 return { external: true, path: `@dxos/node-std/${module}` };
               });
             },
-          },
+          } satisfies Plugin,
           fixRequirePlugin(),
           bundleDepsPlugin({
             packages: options.bundlePackages,
@@ -122,7 +134,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 return { contents: 'export default ""' };
               });
             },
-          },
+          } satisfies Plugin,
           yamlPlugin({}),
         ],
       });
@@ -138,8 +150,14 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   );
 
   if (options.watch) {
-    await new Promise(() => {}); // Wait indefinitely.
+    await new Promise(() => { }); // Wait indefinitely.
   }
 
   return { success: errors.flat().length === 0 };
+});
+
+
+export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+  const projectRoot = context.workspace!.projects[context.projectName!].root;
+  return runBuild(options, { projectRoot, isVerbose: context.isVerbose });
 };
