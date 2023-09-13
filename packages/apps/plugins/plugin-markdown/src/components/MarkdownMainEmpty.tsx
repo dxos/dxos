@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { MarkdownProperties } from '../types';
 import { StandaloneLayout } from './StandaloneLayout';
+import { MarkdownProperties } from '../types';
 
 export const MarkdownMainEmpty = ({
   data: { composer, properties },

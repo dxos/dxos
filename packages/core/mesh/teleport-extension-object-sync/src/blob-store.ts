@@ -24,10 +24,7 @@ export const DEFAULT_CHUNK_SIZE = 4096;
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
 export class BlobStore {
-  // prettier-ignore
-  constructor(
-    private readonly _directory: Directory
-  ) { }
+  constructor(private readonly _directory: Directory) {}
 
   @synchronized
   async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {

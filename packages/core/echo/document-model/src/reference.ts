@@ -10,10 +10,7 @@ export class Reference {
     return new Reference(value.itemId);
   }
 
-  // prettier-ignore
-  constructor(
-    public readonly itemId: ItemID
-  ) {}
+  constructor(public readonly itemId: ItemID) {}
 
   encode(): ReferenceValue {
     return { itemId: this.itemId };

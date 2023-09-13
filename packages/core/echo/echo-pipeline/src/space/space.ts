@@ -16,12 +16,12 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { SnapshotManager } from '../db-host';
-import { MetadataStore } from '../metadata';
-import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
+import { SnapshotManager } from '../db-host';
+import { MetadataStore } from '../metadata';
+import { PipelineAccessor } from '../pipeline';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;

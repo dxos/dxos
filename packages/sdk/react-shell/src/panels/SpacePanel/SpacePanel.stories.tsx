@@ -9,14 +9,14 @@ import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
+import { SpacePanelImpl } from './SpacePanel';
+import { SpacePanelImplProps } from './SpacePanelProps';
+import { SpaceManagerImpl } from './steps';
 import { InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
 import { InvitationList } from '../../components/InvitationList/InvitationList';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, InvitationManagerProps } from '../../steps';
 import { inviteWithState } from '../../testing/fixtures/invitations';
-import { SpacePanelImpl } from './SpacePanel';
-import { SpacePanelImplProps } from './SpacePanelProps';
-import { SpaceManagerImpl } from './steps';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',

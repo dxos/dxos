@@ -8,10 +8,10 @@ import React from 'react';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
+import { humanize } from '@dxos/util';
 
 import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
-import { humanize } from '@dxos/util';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces({ all: true });

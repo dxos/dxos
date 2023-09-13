@@ -23,10 +23,7 @@ export interface QueryObservable<T> extends ObservableValue<QueryEvents<T>> {
 export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T>> implements QueryObservable<T> {
   private _results: T[] = [];
 
-  // prettier-ignore
-  constructor(
-    private readonly _callback: () => Promise<void>
-  ) {
+  constructor(private readonly _callback: () => Promise<void>) {
     super();
   }
 

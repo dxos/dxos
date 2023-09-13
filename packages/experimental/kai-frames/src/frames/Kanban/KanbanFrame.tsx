@@ -10,9 +10,9 @@ import { Toolbar } from '@dxos/mosaic';
 import { Select } from '@dxos/react-appkit';
 import { TypedObject, TypeFilter, useQuery } from '@dxos/react-client/echo';
 
+import { Kanban, KanbanColumnDef } from './Kanban';
 import { ProjectCard, ContactCard } from '../../cards';
 import { useFrameContext } from '../../hooks';
-import { Kanban, KanbanColumnDef } from './Kanban';
 
 type Type = {
   name: string;

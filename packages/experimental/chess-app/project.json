@@ -32,7 +32,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/chess-app/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

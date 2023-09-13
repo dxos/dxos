@@ -26,7 +26,7 @@
     "lodash.memoize": "^4.1.2",
     "markdown-it": "^13.0.1",
     "minimatch": "^5.1.0",
-    "prettier": "^2.8.8",
+    "prettier": "^3.0.3",
     "recursive-readdir": "^2.2.3",
     "remark-code-import": "^1.1.1",
     "remark-directive": "^2.0.1",

@@ -7,8 +7,8 @@ import React from 'react';
 
 import { TypedObject } from '@dxos/react-client/echo';
 
-import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
+import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
 
 export default {
   component: BaseTile,

@@ -34,7 +34,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/gravity/gravity-agent/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

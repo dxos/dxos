@@ -7,8 +7,8 @@ import React from 'react';
 
 import { AlertDialog } from '@dxos/aurora';
 
-import { Action } from '../Panel';
 import { useViewportContext, Viewport, ViewportScopedProps } from './Viewport';
+import { Action } from '../Panel';
 
 type StorybookViewportProps = {};
 

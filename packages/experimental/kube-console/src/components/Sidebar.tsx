@@ -9,9 +9,9 @@ import { List, ListItem } from '@dxos/aurora';
 import { useConfig } from '@dxos/react-client';
 import { DXOS } from '@dxos/react-icons';
 
-import { Module } from '../hooks';
 import { Toolbar } from './Toolbar';
 import { ListItemButton, ListItemText } from './util';
+import { Module } from '../hooks';
 
 export type SidebarProps = {
   modules: Module[];

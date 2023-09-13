@@ -27,8 +27,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { Identity } from './identity';
+import { createDefaultModelFactory } from '../services';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
