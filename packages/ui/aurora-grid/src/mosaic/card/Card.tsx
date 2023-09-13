@@ -7,12 +7,13 @@ import React from 'react';
 
 import { groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
-import { useMosaic } from '../mosaic';
+import { useMosaic, useMosaicData } from '../mosaic';
 import { TileProps } from '../types';
 
 const Card = ({ tile }: TileProps) => {
   const { id } = tile;
-  const { data, Delegator } = useMosaic();
+  const data = useMosaicData();
+  const { Delegator } = useMosaic();
   const content = data[tile.id];
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,

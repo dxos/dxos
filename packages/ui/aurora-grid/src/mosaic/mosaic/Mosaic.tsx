@@ -2,33 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, PropsWithChildren, useContext } from 'react';
 
-import { DndProvider } from '../dnd';
+import { DndProvider, useDnd as useMosaicDnd } from '../dnd';
 import { Tile } from '../tile';
-import type { MosaicContextValue, MosaicProps } from '../types';
+import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 
 const defaultMosaicContextValue: MosaicContextValue = {
-  mosaic: { tiles: {}, relations: {} },
   data: {},
-  Delegator: () => null,
-  onMosaicChange: () => {},
 };
 
 const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
-const useMosaic = () => useContext(MosaicContext);
+const useMosaicData = () => useContext(MosaicContext).data;
 
-const Mosaic = ({ mosaic, root, data, Delegator, onMosaicChange }: MosaicProps) => {
+const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
   return (
-    <DndProvider>
-      <MosaicContext.Provider value={{ mosaic, data, Delegator, onMosaicChange }}>
-        <Tile tile={mosaic.tiles[root]} />
-      </MosaicContext.Provider>
-    </DndProvider>
+    <MosaicContext.Provider value={contextValue}>
+      <DndProvider>{children}</DndProvider>
+    </MosaicContext.Provider>
   );
 };
 
-export { Mosaic, useMosaic };
+const defaultMosaicRootContextValue: MosaicRootContextValue = {
+  mosaic: { tiles: {}, relations: {} },
+  Delegator: () => null,
+  onMosaicChange: () => {},
+};
 
-export type { MosaicProps };
+const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRootContextValue);
+
+const useMosaic = () => useContext(MosaicRootContext);
+
+const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootContextValue>) => {
+  return <MosaicRootContext.Provider value={value}>{children}</MosaicRootContext.Provider>;
+};
+
+export const Mosaic = {
+  Provider: MosaicProvider,
+  Root: MosaicRoot,
+  Tile,
+};
+
+export { useMosaic, useMosaicData, useMosaicDnd };

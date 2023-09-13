@@ -3,7 +3,7 @@
 //
 
 import {
-  DndContext as DndKitContext,
+  DndContext,
   DragCancelEvent,
   DragEndEvent,
   DragOverEvent,
@@ -21,7 +21,7 @@ import React, { createContext, PropsWithChildren, useCallback, useContext } from
 import { OverlayDropAnimation } from './types';
 import { Handler } from '../types';
 
-type DndContextValue = {
+export type DndContextValue = {
   overlayDropAnimation: OverlayDropAnimation;
   dragOverSubscriptions: Handler<DragOverEvent>[];
   dragStartSubscriptions: Handler<DragStartEvent>[];
@@ -37,9 +37,9 @@ const defaultContextValue: DndContextValue = {
   dragCancelSubscriptions: [],
 };
 
-const DndContext = createContext<DndContextValue>(defaultContextValue);
+const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);
 
-const useDnd = () => useContext(DndContext);
+const useDnd = () => useContext(MosaicDndContext);
 
 const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   const contextValue = useDeepSignal<DndContextValue>(defaultContextValue);
@@ -93,8 +93,8 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 
   return (
-    <DndContext.Provider value={contextValue}>
-      <DndKitContext
+    <MosaicDndContext.Provider value={contextValue}>
+      <DndContext
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
@@ -102,9 +102,9 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
         sensors={sensors}
       >
         {children}
-      </DndKitContext>
-    </DndContext.Provider>
+      </DndContext>
+    </MosaicDndContext.Provider>
   );
 };
 
-export { DndProvider, DndContext, useDnd };
+export { DndProvider, MosaicDndContext, useDnd };

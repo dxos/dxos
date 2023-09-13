@@ -37,7 +37,7 @@ export const useHandleRearrange = (subtileIds: Set<string>, subtiles: Tile[]) =>
             ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1]?.index)
             : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
         tiles[active.id].index = nextIndex;
-        onMosaicChange({ type: 'rearrange', id: active.id.toString(), index: nextIndex });
+        onMosaicChange?.({ type: 'rearrange', id: active.id.toString(), index: nextIndex });
         return nextIndex;
       } else {
         return null;

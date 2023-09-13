@@ -5,11 +5,11 @@
 import { DragCancelEvent, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { DependencyList, useContext, useEffect } from 'react';
 
-import { DndContext } from './DndContext';
+import { MosaicDndContext } from './DndContext';
 import { Handler } from '../types';
 
 export const useDragOver = (callback: Handler<DragStartEvent>, dependencies: DependencyList) => {
-  const { dragOverSubscriptions } = useContext(DndContext);
+  const { dragOverSubscriptions } = useContext(MosaicDndContext);
   useEffect(() => {
     dragOverSubscriptions.push(callback);
     return () => {
@@ -20,7 +20,7 @@ export const useDragOver = (callback: Handler<DragStartEvent>, dependencies: Dep
 };
 
 export const useDragStart = (callback: Handler<DragStartEvent>, dependencies: DependencyList) => {
-  const { dragStartSubscriptions } = useContext(DndContext);
+  const { dragStartSubscriptions } = useContext(MosaicDndContext);
   useEffect(() => {
     dragStartSubscriptions.push(callback);
     return () => {
@@ -31,7 +31,7 @@ export const useDragStart = (callback: Handler<DragStartEvent>, dependencies: De
 };
 
 export const useDragEnd = (callback: Handler<DragEndEvent>, dependencies: DependencyList) => {
-  const { dragEndSubscriptions } = useContext(DndContext);
+  const { dragEndSubscriptions } = useContext(MosaicDndContext);
   useEffect(() => {
     console.log('[use drag end]', 'sub');
     dragEndSubscriptions.push(callback);
@@ -44,7 +44,7 @@ export const useDragEnd = (callback: Handler<DragEndEvent>, dependencies: Depend
 };
 
 export const useDragCancel = (callback: Handler<DragCancelEvent>, dependencies: DependencyList) => {
-  const { dragCancelSubscriptions } = useContext(DndContext);
+  const { dragCancelSubscriptions } = useContext(MosaicDndContext);
   useEffect(() => {
     dragCancelSubscriptions.push(callback);
     return () => {

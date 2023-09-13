@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
 import { FC } from 'react';
 
-export type TileVariant = 'stack' | 'card';
+export type TileVariant = 'stack' | 'card' | 'treeitem';
 
 export type Tile = {
   // Primary props
@@ -23,9 +23,10 @@ export type TileProps = {
   tile: Tile;
   // Computed props
   draggable?: boolean;
+  level?: number;
 };
 
-export type Mosaic = {
+export type MosaicState = {
   tiles: Record<string, Tile>;
   relations: Record<string, Record<string, Set<string>>>;
 };
@@ -47,12 +48,13 @@ export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent;
 export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 
 export type MosaicContextValue = {
-  mosaic: DeepSignal<Mosaic>;
   data: Record<string, any>;
-  Delegator: FC<DelegatorProps>;
-  onMosaicChange: MosaicChangeHandler;
 };
 
-export type MosaicProps = {
-  root: string;
-} & MosaicContextValue;
+export type MosaicRootContextValue = {
+  mosaic: DeepSignal<MosaicState>;
+  Delegator: FC<DelegatorProps>;
+  onMosaicChange?: MosaicChangeHandler;
+};
+
+export type MosaicRootProps = MosaicRootContextValue;
