@@ -276,6 +276,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const client = clientPlugin.provides.client;
+          if (!client.halo.identity.get()) {
+            return;
+          }
 
           // Ensure default space is always first.
           spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });

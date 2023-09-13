@@ -39,7 +39,7 @@ export class HaloProxy implements Halo {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _onIdentityCreated: (identity: Identity) => Promise<void>,
+    private readonly _identityReady: (identity: Identity) => Promise<void>,
     /**
      * @internal
      */
@@ -104,13 +104,18 @@ export class HaloProxy implements Halo {
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
-    identityStream.subscribe((data) => {
+    identityStream.subscribe(async (data) => {
+      if (!data.identity) {
+        this._identityChanged.emit(null);
+        return;
+      }
+
       // Set tracing identity. For early stage debugging.
-      data.identity &&
-        log.trace('dxos.halo.identity', {
-          identityKey: data.identity.identityKey,
-          displayName: data.identity.profile?.displayName,
-        });
+      log.trace('dxos.halo.identity', {
+        identityKey: data.identity.identityKey,
+        displayName: data.identity.profile?.displayName,
+      });
+      await this._identityReady(data.identity);
       this._identityChanged.emit(data.identity ?? null);
     });
 
@@ -165,7 +170,7 @@ export class HaloProxy implements Halo {
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
-    await this._onIdentityCreated(identity);
+    await this._identityReady(identity);
     this._identityChanged.emit(identity);
     return identity;
   }

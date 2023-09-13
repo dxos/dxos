@@ -3,11 +3,12 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
+import { clientServiceBundle, ClientServices, defaultKey, Properties } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
+import { TypedObject, base } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -243,7 +244,36 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        (params) => this._serviceContext.createIdentity(params),
+        async (params) => {
+          const identity = await this._serviceContext.createIdentity(params);
+
+          // Setup default space.
+          await this._serviceContext.initialized.wait();
+          const space = await this._serviceContext.dataSpaceManager!.createSpace();
+          const obj: TypedObject = new Properties();
+          obj[defaultKey] = identity.identityKey.toHex();
+          const snapshot = obj[base]._createSnapshot();
+          console.log({ obj, snapshot });
+          await this._serviceRegistry.services.DataService!.write({
+            spaceKey: space.key,
+            batch: {
+              objects: [
+                {
+                  objectId: obj[base]._id,
+                  genesis: {
+                    modelType: obj[base]._modelConstructor.meta.type,
+                  },
+                  snapshot: {
+                    model: snapshot,
+                  },
+                },
+              ],
+            },
+          });
+          await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+
+          return identity;
+        },
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
       ),

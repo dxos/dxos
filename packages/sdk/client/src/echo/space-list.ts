@@ -5,7 +5,15 @@
 import { inspect } from 'node:util';
 
 import { Event, scheduleTask, Trigger, MulticastObservable, PushStream } from '@dxos/async';
-import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
+import {
+  CREATE_SPACE_TIMEOUT,
+  ClientServicesProvider,
+  defaultKey,
+  Echo,
+  Space,
+  Properties,
+  PropertiesProps,
+} from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
@@ -19,10 +27,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
-import { Properties, PropertiesProps } from '../proto';
-
-// TODO(wittjosiah): Remove. Default space should be indicated by internal metadata.
-export const defaultKey = '__DEFAULT__';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;

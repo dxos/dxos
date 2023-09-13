@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
+import { ClientServicesProvider, Properties, Space, SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
@@ -22,7 +22,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
-import { Properties } from '../proto';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();

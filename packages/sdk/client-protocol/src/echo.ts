@@ -10,6 +10,10 @@ import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
 
+// Space properties key for default metadata.
+// TODO(wittjosiah): Remove. Default space should be indicated by data in HALO space.
+export const defaultKey = '__DEFAULT__';
+
 /**
  * TODO(burdon): Public API (move comments here).
  */
