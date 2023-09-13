@@ -13,14 +13,14 @@ import { scenarios } from './scenarios';
 
 chai.use(chaiAsPromised);
 
-describe('bare template', () => {
+describe('hello template', () => {
   it('exists', () => {
     expect(true).to.be.true;
   });
 
   it('execute with permuted inputs', async () => {
     console.log('executing', scenarios.length, 'configurations');
-    const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'bare-template' });
+    const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'hello-template' });
     console.log(`temp folder: ${tempFolder.path}`);
 
     const promises = scenarios.map(async (scenario) => {
@@ -28,9 +28,7 @@ describe('bare template', () => {
 
       const results = await template.apply({
         input: { ...scenario, monorepo: false, name: `${packageJson.name}-${scenario.name}` },
-        outputDirectory,
-        interactive: false,
-        verbose: true,
+        outputDirectory
       });
 
       return await results.apply();

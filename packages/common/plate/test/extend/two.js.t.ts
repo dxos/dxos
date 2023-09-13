@@ -4,15 +4,14 @@ import { plate } from '../../src';
 
 export default template.define.slots(inherited.slots!).script({
   content: async (context) => {
-    const { input, slots, imports } = context;
-    imports.use('prefixed', '.')();
+    const { input, slots } = context;
     const inheritedContent = await inherited({
       ...context,
       input: {
         name: `prefixed ${input.name}`,
       },
       slots: {
-        prop: () => {
+        prop: ({ imports }) => {
           const r = plate`${imports.use('prefixed', '.')} ${slots.prop}`;
           return r;
         },

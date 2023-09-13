@@ -7,8 +7,10 @@ export default template.define
   })
   .script({
     content: ({ input, slots, imports }) => {
+      const foo = imports.use('foo', '.');
       return plate`
       ${imports}
+      const bar = ${foo};
       const name = '${input.name}';
       const slot = '${slots.prop}';
       `;

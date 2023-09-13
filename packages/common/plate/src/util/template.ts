@@ -87,8 +87,9 @@ export const renderSlots = async <
   context: (rendered: Partial<SlotValues<TSlots>>) => MaybePromise<TContext>,
 ): Promise<SlotValues<TSlots>> => {
   const result: SlotValues<TSlots> = {} as any;
+  const ctx = await promise(context(result));
   for (const key in slots) {
-    result[key] = typeof slots[key] === 'function' ? await slots[key](await promise(context?.(result))) : slots[key];
+    result[key] = typeof slots[key] === 'function' ? await slots[key](ctx) : slots[key];
   }
   return result;
 };

@@ -19,9 +19,11 @@ type ImportOptions = {
 
 type PathLike = string | string[];
 
-export const imports = (defaultRelativeTo?: PathLike) => {
+type LazyPathLike = () => PathLike;
+
+export const imports = (defaultRelativeTo?: LazyPathLike) => {
   const imports: { [k: string]: Import } = {};
-  const render = (relativeTo: PathLike = defaultRelativeTo ?? '') => {
+  const render = (relativeTo: PathLike = defaultRelativeTo?.() ?? '') => {
     relativeTo = Array.isArray(relativeTo) ? path.join(...relativeTo) : relativeTo;
     const relative = (p: string, relativeTo: string) => {
       const dir = path.dirname(relativeTo);
@@ -90,8 +92,9 @@ export const imports = (defaultRelativeTo?: PathLike) => {
       ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)]))
       : () => use(name, from, o);
   }
-  render.use = lazy;
-  return render;
+  const result = () => render;
+  result.use = lazy;
+  return result;
 }
 
 export type Imports = ReturnType<typeof imports>;

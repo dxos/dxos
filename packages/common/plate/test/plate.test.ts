@@ -79,7 +79,12 @@ describe('plate 2 templates', () => {
     const third = files.find(({ path }) => path.match(/two\.js$/));
     expect(third).to.exist;
     expect(third!.path).to.exist.and.match(/two\.js$/);
-    expect(third!.content).to.eq(`const name = "${name}";\nconst slot = "simple";\n`);
+    expect(third!.content).to.eq(plate`
+    import { foo } from ".";
+    const bar = foo;
+    const name = "${name}";
+    const slot = "simple";
+    `);
   });
 
   it('inherited template', async () => {
@@ -108,6 +113,8 @@ describe('plate 2 templates', () => {
 
     expect(two.path).to.exist.and.match(/two\.js$/);
     expect(two.content).to.eq(plate`
+    import { prefixed, foo } from ".";
+    const bar = foo;
     const name = "prefixed ${name}";
     const slot = "prefixed simple";
     `);

@@ -10,8 +10,8 @@ import prettier from 'prettier';
 const force = (a: Function | any) => (typeof a === 'function' ? a() : a);
 const join = (a: any[] | any) => (Array.isArray(a) ? a.filter(Boolean).join(os.EOL) : a);
 const squelch = (a: any) => (!a ? '' : a);
-const trim = (a: string) => a.trim();
-const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
+// const trim = (a: string) => a.trim();
+// const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
 const leadingTrim = (a: string) => (a.startsWith(os.EOL) ? a.slice(1) : a);
 
 const removeLeadingTabs = (literal: string, n?: number) => {
@@ -35,7 +35,7 @@ export const plate = (literals: TemplateStringsArray, ...args: any[]) => {
     flatten(
       zip(
         literals.map((l) => removeLeadingTabs(l, tabs)),
-        cleanArgs,
+        cleanArgs.map(force),
       ).filter(Boolean),
     ).join(''),
   );

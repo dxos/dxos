@@ -54,30 +54,33 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
       );
       const { slots: _slots, ...restOpts } = options;
       // TODO ignoring path from rendered slots?
-      const { content, copyOf } = await renderSlots(slots, async (rendered) => ({
-        input,
-        slots: await renderSlots({ ...this.parentSlots, ...options.slots }, (rendered) => ({
+      const { content, copyOf } = await renderSlots(slots, async (rendered) => {
+        const ctx = extraContext?.(rendered);
+        return {
           input,
+          slots: await renderSlots({ ...this.parentSlots, ...options.slots }, (rendered) => ({
+            input,
+            overwrite: false,
+            slots: {
+              ...this.parentSlots,
+              ...options.slots,
+            },
+            ...restOpts,
+            outputFile: relativeOutputPath,
+            outputDirectory,
+            inherited: undefined,
+            relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+            ...ctx,
+          })),
           overwrite: false,
-          slots: {
-            ...this.parentSlots,
-            ...options.slots,
-          },
           ...restOpts,
-          outputFile: relativeOutputPath,
           outputDirectory,
+          outputFile: relativeOutputPath,
           inherited: undefined,
           relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-          ...extraContext?.(rendered),
-        })),
-        overwrite: false,
-        ...restOpts,
-        outputDirectory,
-        outputFile: relativeOutputPath,
-        inherited: undefined,
-        relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-        ...extraContext?.(rendered),
-      }));
+          ...ctx,
+        };
+      });
       const hasContent = (typeof content === 'string' && content.length > 0) || copyOf;
       return results(
         hasContent
@@ -105,8 +108,8 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
   script(slots: FileSlots<I, TSlots, Context<I, TSlots> & { imports: Imports }>) {
     const stack = callsite();
     const templateFile = stack[1].getFileName();
-    const template = this.template<Context<I, TSlots> & { imports: Imports }>(templateFile, slots, ({ path }) => ({
-      imports: path ? imports(path) : imports(),
+    const template = this.template<Context<I, TSlots> & { imports: Imports }>(templateFile, slots, (slots) => ({
+      imports: path ? imports(() => slots.path!) : imports(),
     }));
     return template;
   }
