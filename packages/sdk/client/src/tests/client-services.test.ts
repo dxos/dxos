@@ -142,14 +142,16 @@ describe('Client services', () => {
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
 
     // Check devices.
-    // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
+      // Guest identity is not available until the default space is replicated.
+      expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
+
+      // TODO(burdon): Incorrect number of devices.
       expect(client1.halo.devices.get()).to.have.lengthOf(2);
       expect(client2.halo.devices.get()).to.have.lengthOf(2);
     });

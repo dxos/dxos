@@ -260,7 +260,7 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        this._createIdentity,
+        (params) => this._createIdentity(params),
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
       ),
