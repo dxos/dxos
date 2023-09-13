@@ -43,8 +43,8 @@ import {
   SPACE_PLUGIN,
   SPACE_PLUGIN_SHORT_ID,
   SpaceAction,
-  SpaceSettingsProps,
   SpacePluginProvides,
+  SpaceSettingsProps,
   SpaceState,
 } from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
@@ -80,6 +80,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const client = clientPlugin.provides.client;
       const treeView = treeViewPlugin.provides.treeView;
 
+      // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
       const spaceInvitationCode = searchParams.get('spaceInvitationCode');
       if (spaceInvitationCode) {
@@ -267,8 +268,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
           const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
           if (!clientPlugin) {
             return;
           }
@@ -276,7 +277,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const client = clientPlugin.provides.client;
 
           // Ensure default space is always first.
-          spaceToGraphNode(client.spaces.default, parent);
+          spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
@@ -297,9 +298,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {
-            const isDefaultSpace = defaultSpace && defaultSpace.key.equals(space.key);
             const appState = treeViewPlugin?.provides.treeView?.appState;
-            isDefaultSpace
+            client.spaces.default.key.equals(space.key)
               ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
               : spaceToGraphNode({
                   space,
@@ -310,17 +310,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 });
           };
 
-          // TODO(burdon): Use option to subscribe to open/closed spaces.
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             graphSubscriptions.clear();
             const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              const update = () => {
-                const isDefaultSpace = client.spaces.default.key.equals(space.key);
-                isDefaultSpace
-                  ? spaceToGraphNode(space, parent, treeViewPlugin?.provides.treeView?.appState)
-                  : spaceToGraphNode(space, groupNode, treeViewPlugin?.provides.treeView?.appState, indices[index]);
-              };
+              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space, indices, index)));
+              updateSpace(space, indices, index);
+            });
+          });
 
           const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
             const spaces = client.spaces.get();
