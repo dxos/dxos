@@ -46,6 +46,7 @@ const main = async () => {
 
     // TODO(burdon): Add properties (mutations).
     space.db.add(new Expando(data.space.expando));
+    await space.db.flush();
 
     // Generate epoch.
     // TODO(burdon): Generate multiple epochs.
@@ -53,6 +54,7 @@ const main = async () => {
 
     // TODO(burdon): Add mutations.
     space.db.add(new Text(data.space.text.content));
+    await space.db.flush();
   }
 
   {
