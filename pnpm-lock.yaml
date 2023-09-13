@@ -5679,6 +5679,7 @@ importers:
   packages/sdk/vault:
     specifiers:
       '@braneframe/plugin-telemetry': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -5692,6 +5693,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
+      '@dxos/react-surface': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@fastify/cors': ^8.2.1
@@ -5714,6 +5716,8 @@ importers:
       vite: ^4.3.9
       yargs: ~16.2.0
     dependencies:
+      '@braneframe/plugin-telemetry': link:../../apps/plugins/plugin-telemetry
+      '@braneframe/plugin-treeview': link:../../apps/plugins/plugin-treeview
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
@@ -5727,6 +5731,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-client': link:../react-client
       '@dxos/react-shell': link:../react-shell
+      '@dxos/react-surface': link:../react-surface
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
       '@fastify/cors': 8.2.1
@@ -5740,7 +5745,6 @@ importers:
       url-join: 5.0.0
       yargs: 16.2.0
     devDependencies:
-      '@braneframe/plugin-telemetry': link:../../apps/plugins/plugin-telemetry
       '@sentry/vite-plugin': 0.7.2
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9

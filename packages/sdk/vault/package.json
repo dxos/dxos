@@ -36,6 +36,8 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-telemetry": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
@@ -49,6 +51,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-shell": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fastify/cors": "^8.2.1",
@@ -63,7 +66,6 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-telemetry": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/lodash.defaultsdeep": "^4.6.6",
