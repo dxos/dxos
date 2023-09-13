@@ -15,12 +15,12 @@ import { Config, useConfig } from '@dxos/react-client';
 import { TypedObject, Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { ActionDialog, CustomStackAction } from './CustomActionMenu';
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
 import { FilePlugin, imageTypes } from '../File';
 import { getColumnType } from '../Table';
-import { ActionDialog, CustomStackAction } from './CustomActionMenu';
 
 // TODO(burdon): Generalize with Presenter.
 export const sectionActions = (config: Config, section?: DocumentStack.Section) => {

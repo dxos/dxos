@@ -13,10 +13,7 @@ const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot')
  * @deprecated
  */
 export class SnapshotStore {
-  // prettier-ignore
-  constructor(
-    private readonly _directory: Directory
-  ) { }
+  constructor(private readonly _directory: Directory) {}
 
   async saveSnapshot(snapshot: SpaceSnapshot): Promise<string> {
     const encoded = SpaceSnapshot.encode(snapshot);

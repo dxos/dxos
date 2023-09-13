@@ -23,10 +23,9 @@ const MAX_SERIALIZATION_LENGTH = 10;
 export class ComplexSet<T> implements Set<T> {
   private readonly _values = new Map<Primitive, T>();
 
-  // prettier-ignore
   constructor(
     private readonly _projection: PrimitiveProjection<T>,
-    values?: Iterable<T> | null
+    values?: Iterable<T> | null,
   ) {
     if (values) {
       for (const value of values) {
@@ -124,10 +123,9 @@ export class ComplexMap<K, V> implements Map<K, V> {
   private readonly _keys = new Map<Primitive, K>();
   private readonly _values = new Map<Primitive, V>();
 
-  // prettier-ignore
   constructor(
     private readonly _keyProjection: PrimitiveProjection<K>,
-    entries?: readonly (readonly [K, V])[] | null
+    entries?: readonly (readonly [K, V])[] | null,
   ) {
     if (entries) {
       for (const [key, value] of entries) {

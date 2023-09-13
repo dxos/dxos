@@ -28,7 +28,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   }, []);
   const createInvitation = () => {
     invitations.forEach((invitation) => invitation.cancel());
-    const invitation = client.halo.createInvitation();
+    const invitation = client.halo.share();
     // TODO(wittjosiah): Don't depend on NODE_ENV.
     if (process.env.NODE_ENV !== 'production') {
       invitation.subscribe(onInvitationEvent);

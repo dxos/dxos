@@ -5,7 +5,7 @@
 //
 
 import { DX_DATA } from '@dxos/client-protocol';
-import { InvalidConfigError } from '@dxos/errors';
+import { InvalidConfigError } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';

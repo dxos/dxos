@@ -2,33 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import { waitForCondition } from '@dxos/async';
-import { LockFile } from '@dxos/lock-file';
 
-import { LOCK_CHECK_INTERVAL, LOCK_TIMEOUT } from './defs';
+import { WATCHDOG_CHECK_INTERVAL, WATCHDOG_START_TIMEOUT, WATCHDOG_STOP_TIMEOUT } from './defs';
 
-export const waitForLockAcquisition = async (lockFile: string) =>
+export const waitForPidCreation = async (pidFile: string) =>
   waitForCondition({
-    condition: async () => await LockFile.isLocked(lockFile),
-    timeout: LOCK_TIMEOUT,
-    interval: LOCK_CHECK_INTERVAL,
-    error: new Error('Lock file is not being acquired.'),
+    condition: () => existsSync(pidFile),
+    timeout: WATCHDOG_START_TIMEOUT,
+    interval: WATCHDOG_CHECK_INTERVAL,
   });
 
-export const waitForLockFileBeingFilledWithInfo = async (lockFile: string) =>
+export const waitForPidDeletion = async (pidFile: string) =>
   waitForCondition({
-    condition: () => readFileSync(lockFile, { encoding: 'utf-8' }).includes('pid'),
-    timeout: LOCK_TIMEOUT,
-    interval: LOCK_CHECK_INTERVAL,
+    condition: () => !existsSync(pidFile),
+    timeout: WATCHDOG_STOP_TIMEOUT,
+    interval: WATCHDOG_CHECK_INTERVAL,
+  });
+
+export const waitForPidFileBeingFilledWithInfo = async (pidFile: string) =>
+  waitForCondition({
+    condition: () => readFileSync(pidFile, { encoding: 'utf-8' }).includes('pid'),
+    timeout: WATCHDOG_START_TIMEOUT,
+    interval: WATCHDOG_CHECK_INTERVAL,
     error: new Error('Lock file is not being propagated with info.'),
-  });
-
-export const waitForLockRelease = async (lockFile: string) =>
-  waitForCondition({
-    condition: async () => !(await LockFile.isLocked(lockFile)),
-    timeout: LOCK_TIMEOUT,
-    interval: LOCK_CHECK_INTERVAL,
-    error: new Error('Lock file is not being released.'),
   });

@@ -25,7 +25,7 @@ export const InvitationQRCode: FC<{ space?: Space }> = ({ space }) => {
     if (space) {
       // TODO(burdon): Disconnect on exit?
       connect(
-        space.createInvitation({
+        space.share({
           type: Invitation.Type.MULTIUSE,
           authMethod: Invitation.AuthMethod.NONE,
         }),

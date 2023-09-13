@@ -16,8 +16,10 @@
           "for-each",
           "function-bind",
           "get-intrinsic",
+          "gopd",
           "has",
           "has-property-descriptors",
+          "has-proto",
           "has-symbols",
           "has-tostringtag",
           "inherits",
@@ -58,8 +60,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/node-std/**/*.{ts,js}"
-        ]
+          "packages/common/node-std/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

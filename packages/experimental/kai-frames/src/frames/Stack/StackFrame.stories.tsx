@@ -7,9 +7,9 @@ import React from 'react';
 import { DocumentStack } from '@dxos/kai-types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { TestFrameContainer } from '../../testing';
 import { StackFrame } from './StackFrame';
 import { StackFrameRuntime } from './defs';
+import { TestFrameContainer } from '../../testing';
 
 import '@dxosTheme';
 

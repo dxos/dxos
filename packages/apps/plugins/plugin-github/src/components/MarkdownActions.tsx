@@ -11,9 +11,9 @@ import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 
+import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN, GhIssueIdentifier } from '../props';
-import { useOctokitContext } from './GithubApiProviders';
 
 export const MarkdownActions = ({
   data: [model, properties, editorRef],

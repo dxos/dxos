@@ -24,7 +24,7 @@ export const Presentation: FC<PresentationProps> = ({ title, slides }) => {
       const client = new Client({ services: fromHost() });
       await client.initialize();
       await client.halo.createIdentity();
-      const space = await client.echo.createSpace();
+      const space = await client.echo.spaces.create();
       await space.properties.set('title', 'Demo');
       setClient(client);
     });

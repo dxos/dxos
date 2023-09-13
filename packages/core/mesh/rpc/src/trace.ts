@@ -12,15 +12,12 @@ export class PortTracer {
 
   private readonly _port: RpcPort;
 
-  // prettier-ignore
-  constructor(
-    private readonly _wrappedPort: RpcPort
-  ) {
+  constructor(private readonly _wrappedPort: RpcPort) {
     this._port = {
       send: (msg: Uint8Array) => {
         this.message.emit({
           direction: MessageTrace.Direction.OUTGOING,
-          data: msg
+          data: msg,
         });
 
         return this._wrappedPort.send(msg);
@@ -29,11 +26,11 @@ export class PortTracer {
         return this._wrappedPort.subscribe((msg) => {
           this.message.emit({
             direction: MessageTrace.Direction.INCOMING,
-            data: msg
+            data: msg,
           });
           cb(msg);
         });
-      }
+      },
     };
   }
 

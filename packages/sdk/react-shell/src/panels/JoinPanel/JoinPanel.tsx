@@ -8,8 +8,6 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Viewport } from '../../components';
-import { stepStyles } from '../../styles';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
@@ -22,6 +20,8 @@ import {
   InvitationInput,
   InvitationAccepted,
 } from './steps';
+import { Viewport } from '../../components';
+import { stepStyles } from '../../styles';
 
 export const JoinPanelImpl = (props: JoinPanelImplProps) => {
   const {
@@ -162,7 +162,6 @@ export const JoinPanel = ({
   onExit,
   doneActionParent,
   onDone: propsOnDone,
-  onInvalidateInvitationCode,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -177,7 +176,6 @@ export const JoinPanel = ({
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
       }),
     },
-    onInvalidateInvitationCode,
   });
 
   useEffect(() => {

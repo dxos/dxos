@@ -4,9 +4,9 @@
 
 import React, { cloneElement } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { Avatar } from '@dxos/react-appkit';
+import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
 
 import { Action, Actions, StepHeading } from '../../../components';
@@ -21,6 +21,12 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const { mode, addedIdentity, active, send, onDone, doneActionParent } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
+
+  const fallbackValue = addedIdentity?.identityKey.toHex();
+  const labelId = useId('identityListItem__label');
+  const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
+  const displayName =
+    addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentity?.identityKey.toHex()));
 
   const doneAction = (
     <Action
@@ -37,17 +43,14 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <StepHeading>{t('identity added label')}</StepHeading>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar
-          size={20}
-          fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
-          label={
-            <p className={mx('text-lg', !addedIdentity?.profile?.displayName && 'font-mono')}>
-              {addedIdentity?.profile?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
-            </p>
-          }
-          variant='circle'
-          status='active'
-        />
+        <Avatar.Root status='active' labelId={labelId}>
+          <Avatar.Frame>
+            <Avatar.Fallback href={jdenticon} />
+          </Avatar.Frame>
+          <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
+            {displayName}
+          </Avatar.Label>
+        </Avatar.Root>
       </div>
       <Actions>
         {mode === 'halo-only' ? (

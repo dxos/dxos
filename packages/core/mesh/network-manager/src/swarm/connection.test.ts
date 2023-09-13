@@ -7,9 +7,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
+import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createSimplePeerTransportFactory } from '../transport';
-import { Connection } from './connection';
 
 describe('Connection', () => {
   test('initiator opens after responder', async () => {

@@ -33,14 +33,14 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
-import { useTreeView } from '../../TreeViewContext';
-import { TREE_VIEW_PLUGIN } from '../../types';
-import { sortActions } from '../../util';
 import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
 import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
+import { useTreeView } from '../../TreeViewContext';
+import { TREE_VIEW_PLUGIN } from '../../types';
+import { sortActions } from '../../util';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps &
   Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
@@ -113,6 +113,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = isOverlay || isPreview || rearranging || disabled;
     const active = treeViewActive === node.id;
+    const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
       if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
@@ -168,6 +169,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
             'flex items-start rounded',
           )}
+          data-testid={testId}
         >
           {isBranch ? (
             <CollapsibleHeading {...{ open, node, level, active }} />

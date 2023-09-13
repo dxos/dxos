@@ -17,6 +17,7 @@ export default [
         'rename space label': 'Rename space',
         'active space label': 'Active space:',
         'space name label': 'Space name',
+        'object name label': 'Space name',
         'close space label': 'Close space',
         'open space label': 'Open space',
         'download all docs in space label': 'Download backup',

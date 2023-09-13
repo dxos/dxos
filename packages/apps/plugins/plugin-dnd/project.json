@@ -33,8 +33,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-dnd/src/**/*.{ts,js,tsx,jsx}"
-        ]
+          "packages/apps/plugins/plugin-dnd/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

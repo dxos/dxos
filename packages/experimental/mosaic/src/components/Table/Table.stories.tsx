@@ -8,9 +8,9 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
+import { Table, TableColumn } from './Table';
 import { Item } from '../../layout';
 import { createItem, SeedDecorator, TestData } from '../../testing';
-import { Table, TableColumn } from './Table';
 
 const num = 8;
 

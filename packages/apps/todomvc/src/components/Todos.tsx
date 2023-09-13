@@ -7,11 +7,11 @@ import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
 import { Space, useQuery } from '@dxos/react-client/echo';
 
-import { FILTER } from '../constants';
-import { Todo, TodoList } from '../proto';
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
+import { FILTER } from '../constants';
+import { Todo, TodoList } from '../proto';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);

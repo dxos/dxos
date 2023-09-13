@@ -13,8 +13,8 @@ import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import '@dxosTheme';
 
-import { KanbanPlugin } from '../KanbanPlugin';
 import { createKanban } from './testing';
+import { KanbanPlugin } from '../KanbanPlugin';
 
 faker.seed(7);
 

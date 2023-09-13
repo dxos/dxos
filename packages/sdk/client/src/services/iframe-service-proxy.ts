@@ -12,20 +12,17 @@ import {
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log, LogFilter, parseFilter } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { RemoteServiceConnectionTimeout, trace } from '@dxos/protocols';
 import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort, ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { Provider } from '@dxos/util';
 
-import { Client } from '../client';
-import { IFrameController } from './iframe-controller';
+import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
-import { ShellController } from './shell-controller';
+import { ShellManager } from './shell-manager';
+import { Client } from '../client';
 
 export type IFrameClientServicesProxyOptions = {
   source?: string;
@@ -40,15 +37,17 @@ export type IFrameClientServicesProxyOptions = {
  * Proxy to host client service via iframe.
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  public readonly joinedSpace = new Event<PublicKey>();
-  public readonly invalidatedInvitationCode = new Event<string>();
+  readonly joinedSpace = new Event<PublicKey>();
 
+  /**
+   * @internal
+   */
+  _shellManager?: ShellManager;
   private _iframe?: HTMLIFrameElement;
   private _appPort!: RpcPort;
-  private _iframeController: IFrameController;
+  private _iframeManager: IFrameManager;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
-  private _shellController?: ShellController;
   private readonly _source: string;
   private readonly _shell: string | boolean;
   private readonly _vault: string;
@@ -75,7 +74,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     const loaded = new Trigger();
     const ready = new Trigger<MessagePort>();
-    this._iframeController = new IFrameController({
+    this._iframeManager = new IFrameManager({
       // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
       //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
       source: new URL(
@@ -85,12 +84,12 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       onOpen: async () => {
         await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
 
-        this._iframeController.iframe?.contentWindow?.postMessage(
+        this._iframeManager.iframe?.contentWindow?.postMessage(
           {
             channel: this._vault,
             payload: 'init',
           },
-          this._iframeController.source.origin,
+          this._iframeManager.source.origin,
         );
 
         const port = await asyncTimeout(
@@ -128,22 +127,6 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     return this._clientServicesProxy!.services;
   }
 
-  get display() {
-    return this._shellController?.display;
-  }
-
-  get contextUpdate() {
-    return this._shellController?.contextUpdate;
-  }
-
-  setSpaceProvider(provider: Provider<PublicKey | undefined>) {
-    this._shellController?.setSpaceProvider(provider);
-  }
-
-  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
-    await this._shellController?.setLayout(layout, options);
-  }
-
   async open() {
     if (this._clientServicesProxy) {
       return;
@@ -151,7 +134,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
 
-    await this._iframeController.open();
+    await this._iframeManager.open();
     this._clientServicesProxy = new ClientServicesProxy(this._appPort);
     await this._clientServicesProxy.open();
 
@@ -179,34 +162,15 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    this._shellController = new ShellController(
-      this._iframeController,
-      this.joinedSpace,
-      this.invalidatedInvitationCode,
-    );
-    await this._shellController.open();
-
-    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
-    const searchParams = new URLSearchParams(window.location.search);
-    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-    if (spaceInvitationCode) {
-      await this._shellController.setLayout(ShellLayout.JOIN_SPACE, { invitationCode: spaceInvitationCode });
-      return;
-    }
-
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
-    if (deviceInvitationCode) {
-      await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
-        invitationCode: deviceInvitationCode ?? undefined,
-      });
-    }
+    this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
+    await this._shellManager.open();
   }
 
   async close() {
-    await this._shellController?.close();
+    await this._shellManager?.close();
     await this._loggingStream?.close();
     await this._clientServicesProxy?.close();
-    this._shellController = undefined;
+    this._shellManager = undefined;
     this._clientServicesProxy = undefined;
     if (this._iframe) {
       this._iframe.remove();

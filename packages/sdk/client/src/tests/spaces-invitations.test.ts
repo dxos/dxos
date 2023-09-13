@@ -29,12 +29,12 @@ describe('Spaces/invitations', () => {
     afterTest(() => Promise.all([client1.destroy()]));
     afterTest(() => Promise.all([client2.destroy()]));
 
-    const space1 = await client1.createSpace();
-    log('createSpace', { key: space1.key });
+    const space1 = await client1.spaces.create();
+    log('spaces.create', { key: space1.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: space1 as SpaceProxy,
-        guest: client2,
+        guest: client2.spaces,
       }),
     );
     expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);

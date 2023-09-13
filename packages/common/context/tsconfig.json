@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../sdk/errors"
-    },
-    {
       "path": "../log"
     },
     {

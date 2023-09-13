@@ -30,8 +30,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/invariant/**/*.{ts,js}"
-        ]
+          "packages/common/invariant/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

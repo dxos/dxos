@@ -15,11 +15,10 @@ import {
 } from '@dxos/async';
 import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { ApiError, trace } from '@dxos/protocols';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -239,26 +238,26 @@ export class HaloProxy implements Halo {
   /**
    * Initiates device invitation.
    */
-  createInvitation(options?: Partial<Invitation>) {
+  share(options?: Partial<Invitation>) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('create invitation', options);
-    const invitation = this._invitationProxy!.createInvitation(options);
+    const invitation = this._invitationProxy!.share(options);
     return invitation;
   }
 
   /**
    * Initiates accepting invitation.
    */
-  acceptInvitation(invitation: Invitation) {
+  join(invitation: Invitation | string) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy!.acceptInvitation(invitation);
+    return this._invitationProxy!.join(invitation);
   }
 
   /**

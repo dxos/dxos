@@ -3,6 +3,7 @@
 //
 
 import { flock } from 'fs-ext';
+import { existsSync } from 'node:fs';
 import { open, FileHandle, constants } from 'node:fs/promises';
 
 export class LockFile {
@@ -35,6 +36,9 @@ export class LockFile {
   }
 
   static async isLocked(filename: string): Promise<boolean> {
+    if (!existsSync(filename)) {
+      return false;
+    }
     try {
       const handle = await LockFile.acquire(filename);
       await LockFile.release(handle);

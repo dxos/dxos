@@ -7,11 +7,11 @@ import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
-import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { CancelledError, SystemError } from '@dxos/protocols';
 import { SpaceState, Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -22,9 +22,9 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**

@@ -11,7 +11,7 @@ export const App = () => {
   return (
     <button
       onClick={async () => {
-        const space = await client.createSpace();
+        const space = await client.spaces.create();
       }}
     ></button>
   );

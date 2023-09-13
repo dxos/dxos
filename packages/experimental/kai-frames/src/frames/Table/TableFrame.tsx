@@ -8,8 +8,8 @@ import { Table, Toolbar } from '@dxos/mosaic';
 import { Searchbar, Select } from '@dxos/react-appkit';
 import { TypedObject, useQuery } from '@dxos/react-client/echo';
 
-import { useFrameContext } from '../../hooks';
 import { ColumnType, getColumnType, schemaTypes } from './util';
+import { useFrameContext } from '../../hooks';
 
 export const TableFrame = () => {
   const { space } = useFrameContext();

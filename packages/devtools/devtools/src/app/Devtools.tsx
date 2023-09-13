@@ -3,13 +3,18 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
-import React, { FC } from 'react';
-import { HashRouter } from 'react-router-dom';
+import React, { FC, useEffect } from 'react';
+import { HashRouter, useLocation } from 'react-router-dom';
 
+import {
+  BASE_TELEMETRY_PROPERTIES,
+  getTelemetryIdentifier,
+  setupTelemetryListeners,
+  withTelemetry,
+} from '@braneframe/plugin-telemetry/headless';
 import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
 import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
-import { useTelemetry } from '@dxos/react-appkit';
-import { Client, ClientContext, ClientServices } from '@dxos/react-client';
+import { Client, ClientContext, ClientServices, useClient } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -18,8 +23,36 @@ const Routes = () => {
   return useRoutes();
 };
 
+// TODO(wittjosiah): Migrate devtools to use surface plugins.
 const Telemetry = ({ namespace }: { namespace: string }) => {
-  useTelemetry({ namespace });
+  const location = useLocation();
+  const client = useClient();
+
+  useEffect(() => {
+    void withTelemetry((Telemetry) => {
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.page.load`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+        },
+      });
+    });
+
+    return setupTelemetryListeners(namespace, client);
+  }, []);
+
+  useEffect(() => {
+    void withTelemetry((Telemetry) => {
+      Telemetry.page({
+        identityId: getTelemetryIdentifier(client),
+        properties: BASE_TELEMETRY_PROPERTIES,
+      });
+    });
+  }, [location]);
+
   return null;
 };
 
