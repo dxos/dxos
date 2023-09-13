@@ -1,8 +1,0 @@
-{
-  "extends": [
-    "../../../../.eslintrc.js"
-  ],
-  "parserOptions": {
-    "project": "packages/core/echo/echo-db/tsconfig.json"
-  }
-}
