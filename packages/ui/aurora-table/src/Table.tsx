@@ -211,11 +211,11 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
-    <div ref={containerRef} className={mx('grow overflow-auto', inputSurface, slots?.root?.className)}>
+    <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
       <table
         // Styles:
         // table-fixed: Prevents fixed sized columns from shrinking.
-        className={mx(!fullWidth && 'table-fixed ', 'border-collapse', slots?.table?.className)}
+        className={mx(!fullWidth && 'table-fixed', 'border-collapse', inputSurface, slots?.table?.className)}
         style={{
           width: fullWidth ? '100%' : table.getTotalSize(),
         }}
