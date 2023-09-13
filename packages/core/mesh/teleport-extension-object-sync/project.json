@@ -31,8 +31,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/mesh/teleport-extension-object-sync/**/*.{ts,js}"
-        ]
+          "packages/core/mesh/teleport-extension-object-sync/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

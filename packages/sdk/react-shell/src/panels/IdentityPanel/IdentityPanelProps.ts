@@ -8,8 +8,8 @@ import { Event, SingleOrArray } from 'xstate';
 import type { Identity } from '@dxos/react-client/halo';
 import { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { InvitationManagerProps } from '../../steps';
 import { IdentityEvent } from './identityMachine';
+import { InvitationManagerProps } from '../../steps';
 
 export type IdentityPanelImplProps = {
   titleId: string;

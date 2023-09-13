@@ -56,10 +56,11 @@ export const spaceToGraphNode = (
     id,
     label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,
-    icon: (props) => <Planet {...props} />,
+    ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
     data: space,
     properties: {
       palette: parent.id === 'root' ? 'teal' : undefined,
+      'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       role: 'branch',
       hidden: inactive,
       disabled,

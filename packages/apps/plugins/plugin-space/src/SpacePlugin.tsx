@@ -166,6 +166,20 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           });
         }).unsubscribe,
       );
+
+      handleKeyDown = (event) => {
+        const modifier = event.ctrlKey || event.metaKey;
+        if (event.key === '>' && event.shiftKey && modifier) {
+          void client.shell.open();
+        } else if (event.key === '.' && modifier) {
+          const spaceKey = state.active?.key as PublicKey;
+          console.log({ spaceKey: spaceKey?.truncate() });
+          if (spaceKey) {
+            void client.shell.shareSpace({ spaceKey });
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
     },
     unload: async () => {
       graphSubscriptions.clear();
@@ -250,6 +264,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
               palette: 'pink', // TODO(burdon): Change palette.
+              'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
@@ -286,7 +301,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               icon: (props) => <Planet {...props} />,
               properties: {
                 disposition: 'toolbar',
-                testId: 'spacePlugin.spaces.create',
+                testId: 'spacePlugin.createSpace',
               },
               intent: {
                 plugin: SPACE_PLUGIN,
@@ -421,7 +436,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               const object =
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              // console.log('[space rename object]', object, splitViewPlugin?.provides.splitView);
               if (object && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.popoverOpen = true;
                 splitViewPlugin.provides.splitView.popoverContent = [

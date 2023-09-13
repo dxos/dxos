@@ -10,9 +10,9 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 import { Space } from '@dxos/react-client/echo';
 
+import { SpaceListAction } from './SpaceList';
 import { getIcon } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
-import { SpaceListAction } from './SpaceList';
 
 export type SpaceItemProps = {
   space: Space;

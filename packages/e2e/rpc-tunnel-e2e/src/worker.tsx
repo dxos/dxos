@@ -25,11 +25,11 @@ const App = ({ port }: { port: MessagePort }) => {
     const rpcPort = await createWorkerPort({ port, channel: Channels.ONE });
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
       },
       exposed: {},
       handlers: {},
-      port: rpcPort
+      port: rpcPort,
     });
     await client.open();
 
@@ -43,7 +43,7 @@ const App = ({ port }: { port: MessagePort }) => {
           setError(error.message);
         }
         setClosed(true);
-      }
+      },
     );
 
     setClosed(false);
@@ -54,7 +54,7 @@ const App = ({ port }: { port: MessagePort }) => {
       data={{
         closed,
         error,
-        value
+        value,
       }}
     />
   );
@@ -67,7 +67,7 @@ if (typeof SharedWorker !== 'undefined') {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <App port={worker.port} />
-      </StrictMode>
+      </StrictMode>,
     );
   })();
 } else {

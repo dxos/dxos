@@ -9,8 +9,8 @@ import { add, formatISO9075 } from 'date-fns';
 import { Config } from '@dxos/config';
 import { beforeAll, describe, test } from '@dxos/test';
 
-import { getKey, loadJson } from '../../util';
 import { Amadeus } from './amadeus';
+import { getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('amadeus', () => {

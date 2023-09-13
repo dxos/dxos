@@ -12,8 +12,8 @@ import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { Text, useQuery, useSubscription } from '@dxos/react-client/echo';
 
-import { useFrameContext } from '../../hooks';
 import { NoteTile } from './NoteTile';
+import { useFrameContext } from '../../hooks';
 
 const getItemLocation = (board: NoteBoard, id: string): NoteBoard.Location | undefined =>
   board.locations.find((location) => location.objectId === id);

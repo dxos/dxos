@@ -11,10 +11,10 @@ import { Client, Config } from '@dxos/client';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { name, version } from '../package.json';
 import { start } from './start';
 import { clear, versionCheck } from './util';
 import { showVersion } from './version';
+import { name, version } from '../package.json';
 
 // NOTE: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050

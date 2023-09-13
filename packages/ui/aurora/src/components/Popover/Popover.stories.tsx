@@ -7,8 +7,8 @@ import React, { PropsWithChildren, ReactNode } from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { Popover } from './Popover';
+import { Button } from '../Buttons';
 
 faker.seed(1234);
 

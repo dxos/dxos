@@ -82,12 +82,11 @@ export class TextModel extends Model<TextModelState, TextMutation> {
 
   private _unsubscribe: (() => void) | undefined;
 
-  // prettier-ignore
   constructor(
     meta: ModelMeta,
     itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
-    writeStream?: MutationWriter<TextMutation>
+    writeStream?: MutationWriter<TextMutation>,
   ) {
     super(meta, itemId, getState, writeStream);
     this.initialize();

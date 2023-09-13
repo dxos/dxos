@@ -19,10 +19,10 @@ import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { RpcPort, ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { Client } from '../client';
 import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
 import { ShellManager } from './shell-manager';
+import { Client } from '../client';
 
 export type IFrameClientServicesProxyOptions = {
   source?: string;

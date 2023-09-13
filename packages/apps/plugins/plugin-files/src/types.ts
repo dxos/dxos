@@ -26,8 +26,8 @@ export type LocalEntity = LocalDirectory | LocalFile;
 export type LocalFile = {
   id: string;
   title: string;
-  handle?: FileSystemFileHandle;
-  permission?: PermissionStatus;
+  handle: FileSystemFileHandle | false;
+  permission: PermissionStatus;
   text?: string;
   // TODO(wittjosiah): Store original text?
   modified?: boolean;

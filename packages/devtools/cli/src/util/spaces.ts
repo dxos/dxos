@@ -9,9 +9,9 @@ import { asyncTimeout } from '@dxos/async';
 import { Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
+import { maybeTruncateKey } from './types';
 import { SpaceWaitTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
-import { maybeTruncateKey } from './types';
 
 export const selectSpace = async (spaces: Space[]) => {
   // eslint-disable-next-line no-eval

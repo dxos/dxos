@@ -14,8 +14,8 @@ import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
+import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 

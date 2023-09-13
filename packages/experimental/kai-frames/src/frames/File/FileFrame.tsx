@@ -8,9 +8,9 @@ import urlJoin from 'url-join';
 import { File } from '@dxos/kai-types';
 import { useConfig } from '@dxos/react-client';
 
+import { imageTypes } from './defs';
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
-import { imageTypes } from './defs';
 
 export const FileFrame = () => {
   const config = useConfig();

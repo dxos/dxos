@@ -13,10 +13,10 @@ import {
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 
+import { SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
 import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';
-import { SharedInvitationListProps } from './InvitationListProps';
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;

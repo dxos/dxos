@@ -31,10 +31,7 @@ export class MemberStateMachine {
 
   readonly onMemberAdmitted = new Callback<AsyncCallback<MemberInfo>>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _spaceKey: PublicKey
-  ) {}
+  constructor(private readonly _spaceKey: PublicKey) {}
 
   get creator(): MemberInfo | undefined {
     return this._creator;

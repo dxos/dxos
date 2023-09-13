@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
+import { defaultGraphStyles, defaultStyles } from './styles';
 import {
   GraphForceProjector,
   GraphLayoutNode,
@@ -18,7 +19,6 @@ import {
   linkerRenderer,
 } from '../graph';
 import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
-import { defaultGraphStyles, defaultStyles } from './styles';
 
 export default {
   title: 'gem-spore/hooks',
