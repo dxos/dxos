@@ -27,7 +27,7 @@ export const topLevelText = 'text-sm font-system-medium';
 
 export const treeItemText = 'text-sm font-normal';
 
-// TODO(burdon): Make semantic and able to override by theme.
+// TODO(burdon): Move to theme.
 export const topLevelHeadingColor = (palette?: string) => {
   switch (palette) {
     case 'red':

@@ -42,7 +42,7 @@ export const KanbanItemComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow', isDragging && 'border border-neutral-300 dark:border-neutral-800 border-dashed')}
+      className={mx('flex grow', isDragging && 'border border-neutral-400 dark:border-neutral-800')}
     >
       <div className={mx('flex items-start grow p-1', inputSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}

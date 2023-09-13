@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -43,7 +43,7 @@ export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div
         className={mx(
           'h-full',

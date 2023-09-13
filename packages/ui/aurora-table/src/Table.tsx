@@ -147,7 +147,7 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
     data,
     columns,
     defaultColumn: {
-      size: 200, // Required in order remove default width.
+      size: 400, // Required in order remove default width.
       maxSize: 800,
     },
     getCoreRowModel: getCoreRowModel(),

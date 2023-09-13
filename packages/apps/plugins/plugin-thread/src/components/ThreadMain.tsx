@@ -9,7 +9,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';
@@ -51,7 +51,7 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
   }
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <ThreadContainer space={space} thread={object} />
     </Main.Content>
   );

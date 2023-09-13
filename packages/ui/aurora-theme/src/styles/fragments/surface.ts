@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-// ⚠️ NOTE: Please don’t make changes to these fragments without testing *all* the places where they’re used.
+// NOTE: Please don’t make changes to these fragments without testing *all* the places where they’re used.
 
 // If your scope of concern is narrower than exactly *the entire design system*, please define and apply your own
 // fragment, either to the specific component or in an override to `ThemeProvider`’s `tx` value.
 
+// TODO(burdon): Make able to override in theme.
+
 // Main background.
-export const baseSurface = 'bg-neutral-50 dark:bg-neutral-900';
+export const baseSurface = 'bg-white dark:bg-neutral-900';
 
 // Sidebars, main heading (“topbar”), and nothing else.
 export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur';

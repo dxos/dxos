@@ -38,7 +38,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   );
 
   return (
-    <Main.Content bounce classNames={coarseBlockPaddingStart}>
+    <Main.Content bounce classNames={[coarseBlockPaddingStart]}>
       <StackSectionsSortable
         sections={stack.sections}
         id={stack.id}
