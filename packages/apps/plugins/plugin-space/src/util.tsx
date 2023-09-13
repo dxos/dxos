@@ -54,6 +54,7 @@ export const spaceToGraphNode = ({
 }): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
+  // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
@@ -66,6 +67,7 @@ export const spaceToGraphNode = ({
     icon: (props) => <Planet {...props} />,
     data: space,
     properties: {
+      // TODO(burdon): Factor out color constants.
       palette: parent.id === 'root' ? 'teal' : undefined,
       'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       role: 'branch',

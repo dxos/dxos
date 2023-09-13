@@ -89,11 +89,11 @@ const main = async () => {
 
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
+          ErrorPlugin(),
 
           // Inside theme provider so that errors are styled.
-          ErrorPlugin(),
-          DndPlugin(),
           GraphPlugin(),
+          DndPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
           SplitViewPlugin(),

@@ -28,7 +28,6 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import {
-  PopoverRenameSpace,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
@@ -36,6 +35,7 @@ import {
   SpaceMainEmpty,
   SpacePresence,
   PopoverRenameObject,
+  PopoverRenameSpace,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
@@ -181,6 +181,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }).unsubscribe,
       );
 
+      // TODO(burdon): Comment.
       handleKeyDown = (event) => {
         const modifier = event.ctrlKey || event.metaKey;
         if (event.key === '>' && event.shiftKey && modifier) {
@@ -279,11 +280,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           // Ensure default space is always first.
           spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
+          // Shared spaces section.
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
-              palette: 'pink', // TODO(burdon): Change palette.
+              // TODO(burdon): Factor out color constants.
+              palette: 'pink',
               'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
