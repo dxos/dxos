@@ -1,28 +1,34 @@
-import { LockFile } from "@dxos/lock-file";
-import { log } from "@dxos/log";
-import { stat, mkdir, rm, FileHandle } from "node:fs/promises";
-import { createServer, Socket } from "node:net";
-import { basename, join } from "node:path";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { fork } from 'node:child_process';
 import { subtle } from 'node:crypto';
-import { Trigger } from "@dxos/async";
+import { existsSync } from 'node:fs';
+import { stat, mkdir, rm, FileHandle } from 'node:fs/promises';
+import { createServer, Socket } from 'node:net';
+import { basename, join } from 'node:path';
+
+import { Trigger } from '@dxos/async';
+import { LockFile } from '@dxos/lock-file';
+import { log } from '@dxos/log';
+
 import { Framer } from './framer';
-import { fork } from "node:child_process";
-import { existsSync } from "node:fs";
 
 export type ForkParams = {
-  script: string
-}
+  script: string;
+};
 
 export const forkDaemon = (params: ForkParams) => {
   const daemon = new Daemon(params);
   return daemon;
-}
+};
 
 type Request = {
   id: number;
   function: string;
   args: any[];
-}
+};
 
 type Response = {
   id: number;
@@ -30,14 +36,14 @@ type Response = {
   error?: {
     message: string;
     stack?: string;
-  }
-  time: number
-}
+  };
+  time: number;
+};
 
 type OutgoingRequest = {
   id: number;
   trigger: Trigger<Response>;
-}
+};
 
 const MAX_CONNECT_RETRIES = 10;
 
@@ -52,7 +58,7 @@ export class Daemon {
   private _nextId = 0;
   private _framer?: Framer = undefined;
   private _outgoingRequests = new Map<number, OutgoingRequest>();
-  private _lockFd: FileHandle | undefined = undefined
+  private _lockFd: FileHandle | undefined = undefined;
   private _connectRetries = 0;
   private _connectTimeout = 10;
   private _socket?: Socket = undefined;
@@ -63,20 +69,20 @@ export class Daemon {
   constructor(private readonly _params: ForkParams) {
     this._disabled = !!process.env.ANFANG_DISABLE;
     this._startTs = performance.now();
-    if(!this._disabled) {
+    if (!this._disabled) {
       this._initialized = this._open();
     }
   }
 
   get isWorker() {
-    if(this._disabled) {
+    if (this._disabled) {
       return false;
     }
     return this._mode === 'server';
   }
 
   function<T extends any[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
-    if(this._disabled) {
+    if (this._disabled) {
       return fn;
     }
 
@@ -102,7 +108,7 @@ export class Daemon {
           trigger: new Trigger(),
         });
         const message = Buffer.from(JSON.stringify(request));
-        this._framer!.port.send(message);
+        await this._framer!.port.send(message);
         this._socket!.ref();
         const response: Response = await this._outgoingRequests.get(request.id)!.trigger.wait();
 
@@ -110,10 +116,10 @@ export class Daemon {
         log.info('request finished', {
           totalTime: time,
           executionTime: response.time,
-          overhead: `${((time - response.time) / response.time * 100).toFixed(0)}%`,
+          overhead: `${(((time - response.time) / response.time) * 100).toFixed(0)}%`,
           requestLength: message.length,
-          error: !!response.error
-        })
+          error: !!response.error,
+        });
 
         if (response.error) {
           const error = new Error(response.error.message);
@@ -123,7 +129,7 @@ export class Daemon {
           return response.result;
         }
       }
-    }
+    };
   }
 
   /**
@@ -131,10 +137,7 @@ export class Daemon {
    */
   async _open() {
     const scriptStat = await stat(this._params.script);
-    const hashComponents: string[] = [
-      this._params.script,
-      scriptStat.mtimeMs.toString(),
-    ];
+    const hashComponents: string[] = [this._params.script, scriptStat.mtimeMs.toString()];
     const digest = await subtle.digest('SHA-256', new TextEncoder().encode(hashComponents.join(':')));
     this._key = basename(this._params.script) + '-' + Buffer.from(digest).toString('hex').slice(0, 8);
     this._lockFile = join('/tmp/anfang', this._key + '.lock');
@@ -145,21 +148,20 @@ export class Daemon {
       key: this._key,
       lockFile: this._lockFile,
       rpcFile: this._rpcFile,
-    })
+    });
 
     try {
       await mkdir('/tmp/anfang');
-    } catch { }
+    } catch {}
 
-    if (!!process.env.ANFANG_WORKER) {
+    if (process.env.ANFANG_WORKER) {
       try {
         this._lockFd = await LockFile.acquire(this._lockFile);
         await this._runServer();
       } catch (err) {
-        log.warn('locking error', { err })
-        log.warn('worker exiting')
+        log.warn('locking error', { err });
+        log.warn('worker exiting');
       }
-      return;
     } else {
       if (!existsSync(this._rpcFile)) {
         this._startWorker();
@@ -173,41 +175,41 @@ export class Daemon {
       env: {
         ...process.env,
         ANFANG_WORKER: '1',
-      }
-    })
-    log.info('forked worker process', { pid: child.pid })
+      },
+    });
+    log.info('forked worker process', { pid: child.pid });
   }
 
   private async _runServer() {
-    log.info('running as server')
+    log.info('running as server');
     this._mode = 'server';
     try {
       await rm(this._rpcFile);
-    } catch { }
-    const server = createServer(socket => {
+    } catch {}
+    const server = createServer((socket) => {
       const framer = new Framer();
       framer.stream.pipe(socket).pipe(framer.stream);
-      framer.port.subscribe(async message => {
+      framer.port.subscribe(async (message) => {
         const request: Request = JSON.parse(message.toString());
         // log('got request', { request })
-        this._execRequest(request).then(response => {
+        void this._execRequest(request).then((response) => {
           // log('sending response', { response })
-          framer.port.send(Buffer.from(JSON.stringify(response)));
-        })
+          void framer.port.send(Buffer.from(JSON.stringify(response)));
+        });
       });
-      log('got connection')
+      log('got connection');
     });
     server.listen(this._rpcFile);
   }
 
   private async _runClient() {
-    log('running as client')
+    log('running as client');
     this._mode = 'client';
-    this._socket = new Socket()
+    this._socket = new Socket();
     this._socket.connect(this._rpcFile);
     this._framer = new Framer();
     this._framer.stream.pipe(this._socket).pipe(this._framer.stream);
-    this._framer.port.subscribe(async message => {
+    this._framer.port.subscribe(async (message) => {
       const response: Response = JSON.parse(message.toString());
       // log('got response', { response })
       const request = this._outgoingRequests.get(response.id);
@@ -221,7 +223,7 @@ export class Daemon {
     });
 
     this._socket.on('connect', () => {
-      log.info('connected to server', { time: performance.now() - this._startTs })
+      log.info('connected to server', { time: performance.now() - this._startTs });
       this._connected.wake();
     });
     this._socket.on('error', () => {
@@ -232,10 +234,10 @@ export class Daemon {
         this._startWorker();
       }
       setTimeout(() => {
-        this._runClient();
-      }, this._connectTimeout)
+        void this._runClient();
+      }, this._connectTimeout);
       this._connectTimeout *= 2;
-    })
+    });
     if (this._outgoingRequests.size === 0) {
       this._socket.unref();
     }
@@ -255,7 +257,7 @@ export class Daemon {
         id: request.id,
         result: res,
         time: performance.now() - start,
-      }
+      };
     } catch (err: any) {
       return {
         id: request.id,
@@ -264,7 +266,7 @@ export class Daemon {
           stack: err.stack,
         },
         time: performance.now() - this._startTs,
-      }
+      };
     }
   }
 }

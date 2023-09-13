@@ -9,13 +9,12 @@ const invariant = (condition: any, message: string) => {
   if (!condition) {
     throw new Error(message);
   }
-}
+};
 
 export interface RpcPort {
   send: (msg: Uint8Array) => Promise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
-
 
 const FRAME_LENGTH_SIZE = 4;
 
