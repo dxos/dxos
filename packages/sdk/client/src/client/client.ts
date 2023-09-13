@@ -20,7 +20,7 @@ import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/uti
 
 import { ClientRuntime } from './client-runtime';
 import { type SpaceList } from '../echo';
-import type { HaloProxy } from '../halo';
+import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -197,10 +197,11 @@ export class Client {
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    const handleIdentityReady = ({ identityKey }) =>
-      waitForCondition({
+    const handleIdentityReady = async ({ identityKey }: Identity) => {
+      await waitForCondition({
         condition: () => this.spaces.get().find((space) => space.properties[defaultKey] === identityKey.toHex()),
       });
+    };
 
     this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();

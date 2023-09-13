@@ -17,6 +17,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createSimplePeerTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
@@ -27,7 +28,7 @@ import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { IdentityServiceImpl } from '../identity';
+import { CreateIdentityOptions, IdentityServiceImpl } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
@@ -39,6 +40,21 @@ import { SystemServiceImpl } from '../system';
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
+};
+
+// TODO(wittjosiah): Factor out.
+const createGenesisMutationFromTypedObject = (obj: TypedObject): EchoObject => {
+  const snapshot = obj[base]._createSnapshot();
+
+  return {
+    objectId: obj[base]._id,
+    genesis: {
+      modelType: obj[base]._modelConstructor.meta.type,
+    },
+    snapshot: {
+      model: snapshot,
+    },
+  };
 };
 
 export type ClientServicesHostParams = {
@@ -244,36 +260,7 @@ export class ClientServicesHost {
       SystemService: this._systemService,
 
       IdentityService: new IdentityServiceImpl(
-        async (params) => {
-          const identity = await this._serviceContext.createIdentity(params);
-
-          // Setup default space.
-          await this._serviceContext.initialized.wait();
-          const space = await this._serviceContext.dataSpaceManager!.createSpace();
-          const obj: TypedObject = new Properties();
-          obj[defaultKey] = identity.identityKey.toHex();
-          const snapshot = obj[base]._createSnapshot();
-          console.log({ obj, snapshot });
-          await this._serviceRegistry.services.DataService!.write({
-            spaceKey: space.key,
-            batch: {
-              objects: [
-                {
-                  objectId: obj[base]._id,
-                  genesis: {
-                    modelType: obj[base]._modelConstructor.meta.type,
-                  },
-                  snapshot: {
-                    model: snapshot,
-                  },
-                },
-              ],
-            },
-          });
-          await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
-
-          return identity;
-        },
+        this._createIdentity,
         this._serviceContext.identityManager,
         this._serviceContext.keyring,
       ),
@@ -358,5 +345,24 @@ export class ClientServicesHost {
     log('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
+  }
+
+  private async _createIdentity(params?: CreateIdentityOptions) {
+    const identity = await this._serviceContext.createIdentity(params);
+
+    // Setup default space.
+    await this._serviceContext.initialized.wait();
+    const space = await this._serviceContext.dataSpaceManager!.createSpace();
+    const obj: TypedObject = new Properties();
+    obj[defaultKey] = identity.identityKey.toHex();
+    await this._serviceRegistry.services.DataService!.write({
+      spaceKey: space.key,
+      batch: {
+        objects: [createGenesisMutationFromTypedObject(obj)],
+      },
+    });
+    await this._serviceRegistry.services.DataService!.flush({ spaceKey: space.key });
+
+    return identity;
   }
 }
