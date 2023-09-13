@@ -44,14 +44,16 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
       return modeQuery?.removeEventListener('change', setTheme);
     },
     provides: {
-      context: ({ children }) => (
-        <ThemeProvider {...{ tx: propsTx ?? auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
-          <Toast.Provider>
-            <Tooltip.Provider>{children}</Tooltip.Provider>
-            <Toast.Viewport />
-          </Toast.Provider>
-        </ThemeProvider>
-      ),
+      context: ({ children }) => {
+        return (
+          <ThemeProvider {...{ tx: propsTx ?? auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+            <Toast.Provider>
+              <Tooltip.Provider>{children}</Tooltip.Provider>
+              <Toast.Viewport />
+            </Toast.Provider>
+          </ThemeProvider>
+        );
+      },
     },
   };
 };
