@@ -67,6 +67,25 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   space!: Space;
   spaceKey?: PublicKey;
 
+  defaultSpec(): EchoTestSpec {
+    return {
+      agents: 5,
+      duration: 600_000,
+      iterationDelay: 2000,
+      epochPeriod: 8,
+      // measureNewAgentSyncTime: true,
+      measureNewAgentSyncTime: false,
+      insertionSize: 128,
+      operationCount: 20,
+      signalArguments: ['globalsubserver'],
+      showPNG: false,
+      // transport: TransportKind.TCP,
+      transport: TransportKind.SIMPLE_PEER,
+      // withReconnects: false,
+      withReconnects: true,
+    };
+  }
+
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 
