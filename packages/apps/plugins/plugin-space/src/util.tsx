@@ -64,7 +64,7 @@ export const spaceToGraphNode = ({
     id,
     label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,
-    icon: (props) => <Planet {...props} />,
+    ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
     data: space,
     properties: {
       // TODO(burdon): Factor out palette constants.
