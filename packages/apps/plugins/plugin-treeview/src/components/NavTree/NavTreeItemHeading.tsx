@@ -9,8 +9,6 @@ import { useIntent } from '@braneframe/plugin-intent';
 import { Button, TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
-import { TREE_VIEW_PLUGIN, TreeViewAction } from '../../types';
-import { getTreeItemLabel } from '../../util';
 import {
   navTreeHeading,
   topLevelHeadingColor,
@@ -19,6 +17,8 @@ import {
   treeItemText,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
+import { TREE_VIEW_PLUGIN, TreeViewAction } from '../../types';
+import { getTreeItemLabel } from '../../util';
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
   ({ open, node, level, active }, forwardedRef) => {
