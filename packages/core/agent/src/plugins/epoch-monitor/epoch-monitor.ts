@@ -88,6 +88,7 @@ class SpaceMonitor {
   private _epochCreationTask?: NodeJS.Timeout = undefined;
   private _maxTimeoutTask?: NodeJS.Timeout = undefined;
   private _creatingEpoch = false;
+  private _previousEpochNumber = -1;
 
   constructor(
     private readonly _client: Client,
@@ -106,8 +107,16 @@ class SpaceMonitor {
 
     log.info('will create epochs for space', { key: this._space.key, options: this._options });
 
-
     const sub = this._space.pipeline.subscribe(async (pipeline) => {
+      // Cancel creation if base epoch has changed.
+      if(this._maxTimeoutTask !== undefined && pipeline.currentEpoch && this._previousEpochNumber !== pipeline.currentEpoch.subject.assertion.number) {
+        log.info('epoch changed, cancelling epoch creation', { key: this._space.key, previousEpochNumber: this._previousEpochNumber, currentEpochNumber: pipeline.currentEpoch.subject.assertion.number });
+        clearTimeout(this._maxTimeoutTask!);
+        this._maxTimeoutTask = undefined;
+        clearTimeout(this._epochCreationTask!);
+        this._epochCreationTask = undefined;
+      }
+
       if (this._creatingEpoch) {
         return;
       }
@@ -125,6 +134,7 @@ class SpaceMonitor {
       if (newMessages > this._options.minMessagesBetweenEpochs && timeSinceLastEpoch > this._options.minTimeBetweenEpochs) {
         if (!this._maxTimeoutTask) {
           log.info('wanting to create epoch', { key: this._space.key, options: this._options });
+          this._previousEpochNumber = pipeline.currentEpoch.subject.assertion.number;
           this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxInactivityDelay);
         }
         if (this._epochCreationTask) {
