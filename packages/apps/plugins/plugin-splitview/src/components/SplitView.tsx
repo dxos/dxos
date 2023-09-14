@@ -6,7 +6,7 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -61,7 +61,7 @@ export const SplitView = (props: SplitViewProps) => {
         {/* Top (header) bar. */}
         <Main.Content
           asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, fixedSurface]}
+          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, baseSurface]}
         >
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>
@@ -127,7 +127,8 @@ export const SplitView = (props: SplitViewProps) => {
               {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
                 <Dialog.Content>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                  <div className='flex flex-col my-2 space-y-2'>
+                  {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
+                  <div className='flex flex-col my-2 gap-4'>
                     <Surface role='dialog' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>

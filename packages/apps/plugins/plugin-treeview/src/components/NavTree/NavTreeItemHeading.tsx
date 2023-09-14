@@ -52,6 +52,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
         className={mx(
           'grow flex items-center gap-1 pli-0',
           level < 1 && topLevelText,
+          // TODO(burdon): Theme.
           level < 1 && topLevelHeadingColor(node.properties?.palette),
           level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
           error && valenceColorText('error'),
