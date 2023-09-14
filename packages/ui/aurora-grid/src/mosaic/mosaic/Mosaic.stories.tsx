@@ -44,7 +44,7 @@ const StackDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataPr
     return tile.variant === 'card' ? (
       <div
         role='group'
-        className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded m-2 relative')}
+        className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded relative')}
         style={style}
         ref={forwardedRef}
       >
@@ -60,7 +60,9 @@ const StackDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataPr
         <p className='pis-7 pie-4 pbe-2'>{description}</p>
       </div>
     ) : (
-      <>{children}</>
+      <div role='group' className='p-2 space-b-2'>
+        {children}
+      </div>
     );
   },
 );

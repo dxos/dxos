@@ -6,9 +6,9 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
 import { useCallback } from 'react';
 
-import { useDnd } from './DndContext';
-import { useDragEnd } from './hooks';
-import { useMosaic } from '../mosaic';
+import { useDragEnd } from './useDrag';
+import { useMosaic } from '../../mosaic';
+import { useDnd } from '../DndContext';
 
 export const useHandleRearrange = () => {
   const {
