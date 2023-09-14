@@ -74,14 +74,20 @@ graph.traverse({
       expanded: false,
       level: getLevel(node, -1),
     };
-    if (node.children && node.children.length) {
-      mosaicAcc.relations[node.id] = { child: new Set() };
-      node.children.forEach((child) => {
-        mosaicAcc.relations[node.id].child.add(child.id);
-      });
-    }
+    mosaicAcc.relations[node.id] = { child: new Set(), parent: new Set() };
     mosaicData[node.id] = node;
     defaultIndicesCursor += 1;
+  },
+});
+
+graph.traverse({
+  onVisitNode: (node) => {
+    if (node.children && node.children.length) {
+      node.children.forEach((child) => {
+        mosaicAcc.relations[node.id].child.add(child.id);
+        mosaicAcc.relations[child.id].parent.add(node.id);
+      });
+    }
   },
 });
 

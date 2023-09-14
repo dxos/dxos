@@ -6,8 +6,6 @@ import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef } from 'react';
 
 import { Tile } from './';
-import { useDragEnd } from '../dnd';
-import { useHandleRearrange } from '../dnd/handlers';
 import { useMosaic, useMosaicData } from '../mosaic';
 import { StackTile } from '../types';
 
@@ -21,15 +19,6 @@ const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const subtiles = Array.from(subtileIds)
     .map((id) => tiles[id])
     .sort(sortByIndex);
-
-  const handleRearrange = useHandleRearrange(subtileIds, subtiles);
-
-  useDragEnd(
-    (event) => {
-      handleRearrange(event);
-    },
-    [handleRearrange],
-  );
 
   return (
     <Delegator data={stackData} tile={tile} ref={forwardedRef}>

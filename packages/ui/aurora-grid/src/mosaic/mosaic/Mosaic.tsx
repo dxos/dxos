@@ -7,7 +7,7 @@ import React, { createContext, PropsWithChildren, useContext } from 'react';
 
 import { List } from '@dxos/aurora';
 
-import { DndProvider, useDnd as useMosaicDnd } from '../dnd';
+import { DndProvider, useDnd as useMosaicDnd, useHandleRearrange } from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 
@@ -59,11 +59,20 @@ const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRoo
 
 const useMosaic = () => useContext(MosaicRootContext);
 
+const MosaicRootImpl = ({ children }: PropsWithChildren) => {
+  useHandleRearrange();
+  return (
+    <>
+      {children}
+      <MosaicOverlay />
+    </>
+  );
+};
+
 const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootContextValue>) => {
   return (
     <MosaicRootContext.Provider value={value}>
-      {children}
-      <MosaicOverlay />
+      <MosaicRootImpl>{children}</MosaicRootImpl>
     </MosaicRootContext.Provider>
   );
 };
