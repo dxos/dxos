@@ -3,35 +3,33 @@
 //
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React from 'react';
-
-import { groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import React, { forwardRef } from 'react';
 
 import { useMosaic, useMosaicData } from '../mosaic';
 import { TileProps } from '../types';
 
-const Card = ({ tile }: TileProps) => {
-  const { id } = tile;
-  const data = useMosaicData();
+const Card = forwardRef<HTMLDivElement, TileProps>((tile, forwardedRef) => {
   const { Delegator } = useMosaic();
-  const content = data[tile.id];
+  const { [tile.id]: cardData } = useMosaicData();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id,
+    id: tile.id,
     data: tile,
   });
+  const ref = useComposedRefs(setNodeRef, forwardedRef);
   return (
-    <div
-      role='group'
-      className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded m-2 relative')}
+    <Delegator
+      data={cardData}
+      tile={tile}
+      dragHandleAttributes={attributes}
+      dragHandleListeners={listeners}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      ref={setNodeRef}
-    >
-      <Delegator data={content} tileVariant='card' dragHandleAttributes={attributes} dragHandleListeners={listeners} />
-    </div>
+      ref={ref}
+    />
   );
-};
+});
 
 export { Card };

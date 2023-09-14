@@ -3,19 +3,21 @@
 //
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { sortByIndex } from '@tldraw/indices';
-import React, { useEffect } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 
 import { useDragEnd } from '../dnd';
 import { useHandleRearrange } from '../dnd/handlers';
-import { useMosaic } from '../mosaic';
+import { useMosaic, useMosaicData } from '../mosaic';
 import { Tile } from '../tile';
 import { TileProps } from '../types';
 
-const Stack = ({ tile: { id, sortable } }: TileProps) => {
+const Stack = forwardRef<HTMLDivElement, TileProps>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
+    Delegator,
   } = useMosaic();
-  const subtileIds = relations[id]?.child ?? new Set();
+  const { [tile.id]: stackData } = useMosaicData();
+  const subtileIds = relations[tile.id]?.child ?? new Set();
   const subtiles = Array.from(subtileIds)
     .map((id) => tiles[id])
     .sort(sortByIndex);
@@ -42,12 +44,14 @@ const Stack = ({ tile: { id, sortable } }: TileProps) => {
   );
 
   return (
-    <SortableContext items={subtiles} strategy={verticalListSortingStrategy}>
-      {subtiles.map((tile) => (
-        <Tile tile={tile} key={tile.id} draggable={sortable} />
-      ))}
-    </SortableContext>
+    <Delegator data={stackData} tile={tile} ref={forwardedRef}>
+      <SortableContext items={subtiles} strategy={verticalListSortingStrategy}>
+        {subtiles.map((tile) => (
+          <Tile key={tile.id} {...tile} />
+        ))}
+      </SortableContext>
+    </Delegator>
   );
-};
+});
 
 export { Stack };

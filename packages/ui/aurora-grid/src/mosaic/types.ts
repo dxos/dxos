@@ -4,11 +4,11 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
-import { FC } from 'react';
+import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
 export type TileVariant = 'stack' | 'card' | 'treeitem';
 
-export type Tile = {
+type TileSharedProps = {
   // Primary props
   id: string;
   index: string;
@@ -19,24 +19,45 @@ export type Tile = {
   sortable?: boolean;
 };
 
-export type TileProps = {
-  tile: Tile;
-  // Computed props
-  draggable?: boolean;
-  level?: number;
+export type TreeItemTile = TileSharedProps & {
+  // Overrides
+  variant: 'treeitem';
+  sortable: true;
+  // Special flags
+  level: number;
+  expanded?: boolean;
 };
+
+export type StackTile = TileSharedProps & {
+  // Overrides
+  variant: 'stack';
+  sortable: true;
+};
+
+export type CardTile = TileSharedProps & {
+  // Overrides
+  variant: 'card';
+  sortable?: false;
+};
+
+export type Tile = TreeItemTile | StackTile | CardTile;
+
+export type TileProps = Tile;
 
 export type MosaicState = {
   tiles: Record<string, Tile>;
   relations: Record<string, Record<string, Set<string>>>;
 };
 
-export type DelegatorProps = {
-  data: any;
-  tileVariant: TileVariant;
-  dragHandleAttributes: ReturnType<typeof useSortable>['attributes'];
-  dragHandleListeners: ReturnType<typeof useSortable>['listeners'];
-};
+export type DelegatorProps<D = any> = PropsWithChildren<{
+  data: D;
+  tile: Tile;
+  dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
+  dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
+  style?: ComponentPropsWithoutRef<'div'>['style'];
+}>;
+
+export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
 
 export type Handler<E> = (event: E) => void;
 
@@ -53,7 +74,7 @@ export type MosaicContextValue = {
 
 export type MosaicRootContextValue = {
   mosaic: DeepSignal<MosaicState>;
-  Delegator: FC<DelegatorProps>;
+  Delegator: Delegator;
   onMosaicChange?: MosaicChangeHandler;
 };
 

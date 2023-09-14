@@ -5,13 +5,13 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { DeepSignal, deepSignal } from 'deepsignal';
-import React, { FC } from 'react';
+import React, { FC, forwardRef, Fragment } from 'react';
 
 import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { Mosaic } from './Mosaic';
-import type { DelegatorProps, MosaicChangeHandler, MosaicState, MosaicState as MosaicType } from '../types';
+import type { DelegatorProps, MosaicChangeHandler, MosaicState, MosaicState as MosaicType, StackTile } from '../types';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;
@@ -28,7 +28,9 @@ const tiles = [...Array(10)].reduce((acc: MosaicType['tiles'], _, index) => {
 
 const ids = Object.keys(tiles);
 
-const data = ids.reduce((acc: Record<string, { label: string; description: string }>, id) => {
+type StorybookDataProps = { label: string; description: string };
+
+const data = ids.reduce((acc: Record<string, StorybookDataProps>, id) => {
   acc[id] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
@@ -36,23 +38,32 @@ const data = ids.reduce((acc: Record<string, { label: string; description: strin
   return acc;
 }, {});
 
-const StorybookDelegator = ({ data, tileVariant, dragHandleAttributes, dragHandleListeners }: DelegatorProps) => {
-  const { label, description } = data as { label: string; description: string };
-  return (
-    <>
-      <Button
-        variant='ghost'
-        classNames='is-full justify-start pli-2 gap-1'
-        {...dragHandleAttributes}
-        {...dragHandleListeners}
+const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
+  ({ data, tile, dragHandleAttributes, dragHandleListeners, style, children }, forwardedRef) => {
+    const { label, description } = data;
+    return tile.variant === 'card' ? (
+      <div
+        role='group'
+        className={mx(groupSurface, surfaceElevation({ elevation: 'group' }), 'rounded m-2 relative')}
+        style={style}
+        ref={forwardedRef}
       >
-        <DotsSixVertical className={getSize(4)} />
-        <h2 className='text-lg font-system-medium'>{label}</h2>
-      </Button>
-      <p className='pis-7 pie-4 pbe-2'>{description}</p>
-    </>
-  );
-};
+        <Button
+          variant='ghost'
+          classNames='is-full justify-start pli-2 gap-1'
+          {...dragHandleAttributes}
+          {...dragHandleListeners}
+        >
+          <DotsSixVertical className={getSize(4)} />
+          <h2 className='text-lg font-system-medium'>{label}</h2>
+        </Button>
+        <p className='pis-7 pie-4 pbe-2'>{description}</p>
+      </div>
+    ) : (
+      <>{children}</>
+    );
+  },
+);
 
 const rootId = ids[0];
 
@@ -86,7 +97,7 @@ export const Stack = {
   render: ({ root: rootTileId, ...rootProps }: MosaicStoryArgs) => {
     return (
       <Mosaic.Root {...rootProps}>
-        <Mosaic.Tile tile={rootProps.mosaic.tiles[rootTileId]} level={0} />
+        <Mosaic.Tile {...(rootProps.mosaic.tiles[rootTileId] as StackTile)} />
       </Mosaic.Root>
     );
   },
