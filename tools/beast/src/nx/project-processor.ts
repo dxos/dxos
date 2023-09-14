@@ -13,10 +13,9 @@ import { WorkspaceProcessor } from '../nx';
 export class ProjectProcessor {
   private readonly _project: Project;
 
-  // prettier-ignore
   constructor(
     private readonly _workspace: WorkspaceProcessor,
-    packageName: string
+    packageName: string,
   ) {
     const subDir = this._workspace.getProjectByPackage(packageName)?.subDir;
     const projectDir = path.join(this._workspace.baseDir, subDir!);
@@ -24,7 +23,7 @@ export class ProjectProcessor {
     // https://ts-morph.com/details/index
     this._project = new Project({
       // skipAddingFilesFromTsConfig: false,
-      tsConfigFilePath: path.join(projectDir, 'tsconfig.json')
+      tsConfigFilePath: path.join(projectDir, 'tsconfig.json'),
     });
   }
 

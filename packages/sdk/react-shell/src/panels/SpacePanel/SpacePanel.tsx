@@ -9,12 +9,12 @@ import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { Heading, CloseButton, Viewport } from '../../components';
-import { InvitationManager } from '../../steps';
-import { stepStyles } from '../../styles';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
+import { Heading, CloseButton, Viewport } from '../../components';
+import { InvitationManager } from '../../steps';
+import { stepStyles } from '../../styles';
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');

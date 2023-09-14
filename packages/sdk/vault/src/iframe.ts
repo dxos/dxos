@@ -3,11 +3,10 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Tooltip } from '@dxos/aurora';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
+import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
-import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
@@ -19,10 +18,27 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
   const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
   const { registerSignalFactory } = await import('@dxos/echo-signals/react');
-  const { ThemeProvider } = await import('@dxos/aurora');
-  const { auroraTx } = await import('@dxos/aurora-theme');
+  const { ThemeProvider, Tooltip } = await import('@dxos/aurora');
+  const { bindTheme, auroraTheme, dialogMotion, mx, surfaceElevation } = await import('@dxos/aurora-theme');
   const { ClientContext } = await import('@dxos/react-client');
   const { osTranslations, Shell } = await import('@dxos/react-shell');
+
+  const shellTx = bindTheme({
+    ...auroraTheme,
+    dialog: {
+      ...auroraTheme.dialog,
+      content: ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
+        mx(
+          'flex flex-col',
+          !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
+          'is-[95vw] md:is-full max-is-[20rem] rounded-xl p-4',
+          dialogMotion,
+          surfaceElevation({ elevation }),
+          'bg-neutral-75/95 dark:bg-neutral-850/95 backdrop-blur',
+          ...etc,
+        ),
+    },
+  });
 
   registerSignalFactory();
   const root = createRoot(document.getElementById('root')!);
@@ -35,7 +51,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       {},
       createElement(
         ThemeProvider,
-        { tx: auroraTx, resourceExtensions: [osTranslations] },
+        { tx: shellTx, resourceExtensions: [osTranslations] },
         createElement(Tooltip.Provider, {
           delayDuration: 100,
           skipDelayDuration: 400,

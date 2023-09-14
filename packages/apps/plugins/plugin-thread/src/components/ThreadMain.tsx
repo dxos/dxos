@@ -16,8 +16,8 @@ import { Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
-import { THREAD_PLUGIN } from '../types';
 import { ThreadChannel } from './ThreadChannel';
+import { THREAD_PLUGIN } from '../types';
 
 // TODO(burdon): Goals.
 // - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).

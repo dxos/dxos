@@ -74,6 +74,7 @@ export const PluginProvider = ({
           return plugin;
         }),
       ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
+
       log('plugins initialized', { plugins });
       setPluginsLoading(definitions);
       await Promise.all(
@@ -82,6 +83,7 @@ export const PluginProvider = ({
           setPluginsLoading((pluginsLoading) => pluginsLoading.filter((plugin) => plugin !== pluginDefinition));
         }),
       );
+
       log('plugins ready', { plugins });
       setPlugins(plugins);
     });
@@ -116,7 +118,6 @@ export const initializePlugin = async <T, U>(pluginDefinition: PluginDefinition<
   const provides = await pluginDefinition.initialize?.();
   return {
     ...pluginDefinition,
-
     provides: {
       ...pluginDefinition.provides,
       ...provides,

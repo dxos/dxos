@@ -10,9 +10,9 @@ import { useTelemetry } from '@dxos/react-appkit';
 import { SpaceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { SpacePanel } from './SpacePanel';
 import { Surface, Sidebar } from '../containers';
 import { createPath, defaultFrameId, useAppRouter, useAppState } from '../hooks';
-import { SpacePanel } from './SpacePanel';
 
 /**
  * Home page with current space.

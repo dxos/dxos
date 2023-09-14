@@ -4,8 +4,8 @@
 
 import { Bag, Buildings, Calendar, Check, Envelope, FileText, UserCircle } from '@phosphor-icons/react';
 
-import { SearchMeta } from '../registry';
 import { frameDefs } from './frames';
+import { SearchMeta } from '../registry';
 
 // TODO(burdon): Inject into provider.
 // TODO(burdon): Reconcile with type and frame system.

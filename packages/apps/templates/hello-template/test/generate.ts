@@ -6,8 +6,8 @@ import path from 'path';
 
 import { executeDirectoryTemplate } from '@dxos/plate';
 
-import packageJson from '../package.json';
 import { configs } from './configs';
+import packageJson from '../package.json';
 
 const OUTPUT_FOLDER = 'out';
 

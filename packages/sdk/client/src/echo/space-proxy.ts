@@ -72,18 +72,17 @@ export class SpaceProxy implements Space {
   private _cachedProperties: Properties;
   private _properties?: TypedObject = undefined;
 
-  // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter
+    databaseRouter: DatabaseRouter,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
-      spaceKey: this.key
+      spaceKey: this.key,
     }));
 
     invariant(this._clientServices.services.DataService, 'DataService not available');

@@ -5,12 +5,11 @@
 import { cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
-import type { Invitation } from '@dxos/react-client/invitations';
-import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
+import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { StepProps } from '../../steps';
 import { JoinSend } from './joinMachine';
 import { IdentityInputProps } from './steps';
+import { StepProps } from '../../steps';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 

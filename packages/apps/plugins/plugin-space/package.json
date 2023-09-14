@@ -21,6 +21,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",

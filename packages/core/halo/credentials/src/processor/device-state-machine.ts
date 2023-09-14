@@ -8,8 +8,8 @@ import { log } from '@dxos/log';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
 import { CredentialProcessor } from './credential-processor';
+import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
 
 export type DeviceStateMachineParams = {
   identityKey: PublicKey;
@@ -27,10 +27,7 @@ export class DeviceStateMachine implements CredentialProcessor {
 
   public deviceCredentialChain?: Chain;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: DeviceStateMachineParams
-  ) {}
+  constructor(private readonly _params: DeviceStateMachineParams) {}
 
   async processCredential(credential: Credential) {
     log('processing credential...', {

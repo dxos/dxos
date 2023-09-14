@@ -7,9 +7,9 @@ import { PublicKey } from '@dxos/keys';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { ComplexSet } from '@dxos/util';
 
+import type { ShellManager } from './shell-manager';
 import type { Space, SpaceMember } from '../echo';
 import type { Device, Identity } from '../halo';
-import type { ShellManager } from './shell-manager';
 
 type ShellResult = {
   cancelled: boolean;

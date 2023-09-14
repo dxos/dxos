@@ -13,6 +13,8 @@ import pkgUp from 'pkg-up';
 
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
+import { fromAgent } from '@dxos/client/services';
 import {
   getProfilePath,
   DX_CONFIG,
@@ -22,8 +24,6 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
-import { Space } from '@dxos/client/echo';
-import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

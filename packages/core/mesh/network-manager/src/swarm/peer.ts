@@ -10,11 +10,11 @@ import { log } from '@dxos/log';
 import { CancelledError, SystemError, TimeoutError } from '@dxos/protocols';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
+import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
 import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
 import { WireProtocolProvider } from '../wire-protocol';
-import { Connection, ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {

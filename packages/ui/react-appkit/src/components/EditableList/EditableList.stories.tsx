@@ -6,10 +6,10 @@ import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentProp
 
 import { useId, randomString } from '@dxos/aurora';
 
+import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 import { appkitTranslations } from '../../translations';
 import { arrayMove } from '../../util';
 import { ThemeProvider } from '../ThemeProvider';
-import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 
 export default {
   component: EditableList,

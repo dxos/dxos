@@ -6,7 +6,6 @@ import { Module } from '@dxos/protocols/proto/dxos/config';
 
 // TODO(burdon): Implement packlets for frames.
 
-import { FrameDef, FrameRuntime } from '../registry';
 import { CalendarFrameRuntime } from './Calendar';
 import { ChatFrameRuntime } from './Chat';
 import { ChessFrameRuntime } from './Chess';
@@ -24,6 +23,7 @@ import { SketchFrameRuntime } from './Sketch';
 import { StackFrameRuntime } from './Stack';
 import { TableFrameRuntime } from './Table';
 import { TaskFrameRuntime } from './Task';
+import { FrameDef, FrameRuntime } from '../registry';
 
 export const frameModules: Module[] = [
   {

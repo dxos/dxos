@@ -55,8 +55,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/devtools/**/*.{ts,js}"
-        ]
+          "packages/devtools/devtools/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -69,7 +69,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/ui/aurora-theme/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

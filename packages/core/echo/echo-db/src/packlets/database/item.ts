@@ -80,7 +80,10 @@ export class Item<M extends Model = Model> {
    * @param objectId        Addressable ID.
    * @param parent        Parent Item (if not a root Item).
    */
-  constructor(protected readonly _itemManager: ItemManager, private readonly _id: ItemID) {
+  constructor(
+    protected readonly _itemManager: ItemManager,
+    private readonly _id: ItemID,
+  ) {
     this._initialState = {
       objectId: _id,
     };

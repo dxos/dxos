@@ -25,10 +25,9 @@ export class TestBuilder<M extends Model<any>> {
 
   private _replicating = true;
 
-  // prettier-ignore
   constructor(
     private readonly _modelFactory: ModelFactory,
-    private readonly _modelConstructor: ModelConstructor<M>
+    private readonly _modelConstructor: ModelConstructor<M>,
   ) {
     this._replicationFinished.wake();
   }
@@ -128,10 +127,9 @@ export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
   public mutations: ModelMessage<Any>[] = [];
 
-  // prettier-ignore
   constructor(
-    public readonly stateManager: any/* StateManager<M> */,
-    public readonly key: PublicKey
+    public readonly stateManager: any /* StateManager<M> */,
+    public readonly key: PublicKey,
   ) {}
 
   get model(): M {

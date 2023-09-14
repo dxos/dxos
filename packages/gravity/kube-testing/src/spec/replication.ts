@@ -16,10 +16,10 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
+import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { SerializedLogEntry, getReader } from '../analysys';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 

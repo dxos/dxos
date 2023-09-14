@@ -59,9 +59,6 @@ const main = async () => {
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 
-  // TODO(burdon): Select (check)
-  // TODO(burdon): DND
-
   // TODO(burdon): Custom theme (e.g., primary).
   const labsTx = bindTheme({
     ...auroraTheme,
@@ -83,18 +80,20 @@ const main = async () => {
     <StrictMode>
       <PluginProvider
         plugins={[
-          // TODO(burdon): Normalize telemetry namespace.
-          TelemetryPlugin({ namespace: 'labs.dxos.org', config }),
-          IntentPlugin(),
-          ThemePlugin({ appName: 'Labs', tx: labsTx }),
+          // TODO(burdon): Document ordering requirements and normalize with composer-app.
+          // TODO(burdon): Normalize namespace across apps.
+          TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
           ClientPlugin({ config, services, debugIdentity: debug }),
           IntentPlugin(),
-          DndPlugin(),
+          ThemePlugin({ appName: 'Labs', tx: labsTx }),
+
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
-          // Inside theme provider so that errors are styled.
           ErrorPlugin(),
+
+          // Inside theme provider so that errors are styled.
           GraphPlugin(),
+          DndPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
           SplitViewPlugin(),
@@ -117,7 +116,6 @@ const main = async () => {
           ThreadPlugin(),
         ]}
       />
-      ,
     </StrictMode>,
   );
 };

@@ -9,8 +9,8 @@ import { Document } from '@braneframe/types';
 import { DocumentStack, Presentation } from '@dxos/kai-types';
 import { Space, Text } from '@dxos/react-client/echo';
 
-import { FrameRuntime } from '../../registry';
 import { slides } from './slides';
+import { FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 

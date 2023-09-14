@@ -4,8 +4,8 @@
 
 import { describe, test } from '@dxos/test';
 
-import { log } from '../log';
 import { debugInfo, ownershipClass } from './ownership';
+import { log } from '../log';
 
 describe('classes', function () {
   test('field instance', function () {

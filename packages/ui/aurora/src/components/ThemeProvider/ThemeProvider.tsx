@@ -7,10 +7,10 @@ import React, { createContext, PropsWithChildren, useEffect } from 'react';
 
 import { Density, Elevation, ThemeFunction } from '@dxos/aurora-types';
 
+import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
-import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeMode = 'light' | 'dark';
 

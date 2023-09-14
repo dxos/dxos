@@ -34,7 +34,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/plugins/plugin-splitview/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

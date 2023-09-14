@@ -16,6 +16,7 @@ import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
+import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
@@ -28,7 +29,6 @@ import {
   TransportKind,
 } from '../transport';
 import { TcpTransportFactory } from '../transport/tcp-transport';
-import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;

@@ -21,6 +21,9 @@ import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { createDiagnostics } from './diagnostics';
+import { ServiceContext } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
@@ -31,9 +34,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { createDiagnostics } from './diagnostics';
-import { ServiceContext } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {

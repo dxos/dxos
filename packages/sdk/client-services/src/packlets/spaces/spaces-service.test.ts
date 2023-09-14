@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { Space, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
+import { SpacesServiceImpl } from './spaces-service';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-import { SpacesServiceImpl } from './spaces-service';
 
 chai.use(chaiAsPromised);
 

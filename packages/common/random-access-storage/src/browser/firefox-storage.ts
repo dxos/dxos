@@ -7,8 +7,8 @@
 // @ts-ignore
 import raw from 'random-access-web/mutable-file-wrapper.js';
 
-import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
+import { StorageType } from '../common';
 
 /**
  * Storage interface implementation for Firefox browser.

@@ -17,9 +17,9 @@ import { ApiError, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
-import { SpaceProxy } from './space-proxy';
 
 // TODO(wittjosiah): Remove. Default space should be indicated by internal metadata.
 export const defaultKey = '__DEFAULT__';

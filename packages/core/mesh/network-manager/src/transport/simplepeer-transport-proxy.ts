@@ -43,13 +43,10 @@ export class SimplePeerTransportProxy implements Transport {
   private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: SimplePeerTransportProxyParams
-  ) {
+  constructor(private readonly _params: SimplePeerTransportProxyParams) {
     this._serviceStream = this._params.bridgeService.open({
       proxyId: this._proxyId,
-      initiator: this._params.initiator
+      initiator: this._params.initiator,
     });
 
     this._serviceStream.waitUntilReady().then(
@@ -65,21 +62,25 @@ export class SimplePeerTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.pipe(new Writable({
-          write: (chunk, _, callback) => {
-            this._params.bridgeService.sendData({
-              proxyId: this._proxyId,
-              payload: chunk
-            }).then(
-              () => callback(),
-              (err: any) => {
-                log.catch(err);
-              }
-            );
-          },
-        }));
+        this._params.stream.pipe(
+          new Writable({
+            write: (chunk, _, callback) => {
+              this._params.bridgeService
+                .sendData({
+                  proxyId: this._proxyId,
+                  payload: chunk,
+                })
+                .then(
+                  () => callback(),
+                  (err: any) => {
+                    log.catch(err);
+                  },
+                );
+            },
+          }),
+        );
       },
-      (error) => log.catch(error)
+      (error) => log.catch(error),
     );
   }
 

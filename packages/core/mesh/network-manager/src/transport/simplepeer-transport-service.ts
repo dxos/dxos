@@ -30,10 +30,7 @@ type TransportState = {
 export class SimplePeerTransportService implements BridgeService {
   private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
-  // prettier-ignore
-  constructor(
-    private readonly _webrtcConfig?: any
-  ) { }
+  constructor(private readonly _webrtcConfig?: any) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {

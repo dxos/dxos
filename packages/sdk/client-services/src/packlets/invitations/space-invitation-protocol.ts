@@ -13,8 +13,8 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { DataSpaceManager, SigningContext } from '../spaces';
 import { InvitationProtocol } from './invitation-protocol';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(

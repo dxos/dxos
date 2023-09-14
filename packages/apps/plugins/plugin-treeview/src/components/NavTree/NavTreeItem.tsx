@@ -33,14 +33,13 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
+import { NavTree } from './NavTree';
+import { NavTreeItemHeading } from './NavTreeItemHeading';
+import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
+import { SharedTreeItemProps } from './props';
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
-import { CollapsibleHeading } from './CollapsibleHeading';
-import { NavTree } from './NavTree';
-import { NavigableHeading } from './NavigableHeading';
-import { levelPadding } from './navtree-fragments';
-import { SharedTreeItemProps } from './props';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps &
   Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
@@ -87,6 +86,9 @@ export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
 
 type TreeViewItemProps = SharedTreeItemProps & SortableProps;
 
+const hoverableDescriptionIcons =
+  '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
+
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   TreeViewItemProps
@@ -100,7 +102,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const actions = sortActions(node.actions);
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
     const { navigationSidebarOpen } = useSidebars();
+    // TODO(wittjosiah): Pass in as prop.
     const { active: treeViewActive } = useTreeView();
+    // TODO(wittjosiah): Pass in as prop.
     const { popoverAnchorId } = useSplitView();
     const { graph } = useGraph();
 
@@ -116,7 +120,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
-      if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      // TODO(wittjosiah): Factor out as callback so that this doesn't depend on graph context.
+      // Excludes selected node from being opened by selection.
+      if (treeViewActive && graph.getPath(treeViewActive)?.slice(0, -2).includes(node.id)) {
         setOpen(true);
       }
     }, [graph, treeViewActive]);
@@ -166,16 +172,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             levelPadding(level),
             hoverableControls,
             hoverableFocusedWithinControls,
+            hoverableDescriptionIcons,
+            level < 1 && topLevelCollapsibleSpacing,
             !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
             'flex items-start rounded',
           )}
           data-testid={testId}
         >
-          {isBranch ? (
-            <CollapsibleHeading {...{ open, node, level, active }} />
-          ) : (
-            <NavigableHeading {...{ node, level, active }} />
-          )}
+          <NavTreeItemHeading {...{ open, node, level, active }} />
           {actionGroups.length > 0 && (
             <Tooltip.Root
               open={optionsTooltipOpen}

@@ -21,8 +21,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/ridoculous/**/*.{ts,js}"
-        ]
+          "tools/ridoculous/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

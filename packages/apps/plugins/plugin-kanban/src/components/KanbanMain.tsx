@@ -10,8 +10,8 @@ import { Input, Main, useTranslation } from '@dxos/aurora';
 import { blockSeparator, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
-import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 import { KanbanBoard } from './KanbanBoard';
+import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 
 export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);

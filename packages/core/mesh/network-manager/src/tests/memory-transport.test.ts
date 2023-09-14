@@ -8,10 +8,10 @@ import { PublicKey } from '@dxos/keys';
 import { test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from '../testing';
-import { FullyConnectedTopology } from '../topology';
 import { basicTestSuite } from './basic-test-suite';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { TestBuilder } from '../testing';
+import { FullyConnectedTopology } from '../topology';
 
 describe('Memory transport', () => {
   const testBuilder = new TestBuilder();

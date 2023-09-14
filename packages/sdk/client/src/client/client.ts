@@ -18,12 +18,12 @@ import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
+import { ClientRuntime } from './client-runtime';
 import type { SpaceList } from '../echo';
 import type { HaloProxy, Identity } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.

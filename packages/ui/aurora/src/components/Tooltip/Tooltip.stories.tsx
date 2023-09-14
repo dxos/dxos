@@ -6,8 +6,8 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { Tooltip } from './Tooltip';
+import { Button } from '../Buttons';
 
 type StoryTooltipProps = {
   content: string;

@@ -22,7 +22,10 @@ export class MulticastObservable<T> extends Observable<T> {
   private readonly _observers = new Set<Observer<T>>();
   private readonly _observable: Observable<T>;
 
-  constructor(subscriber: Observable<T> | Subscriber<T>, protected _value?: T) {
+  constructor(
+    subscriber: Observable<T> | Subscriber<T>,
+    protected _value?: T,
+  ) {
     super((observer) => this._subscribe(observer));
 
     this._observable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;

@@ -18,16 +18,15 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
 
   private readonly _options: OPTIONS;
 
-  // prettier-ignore
   constructor(
     private readonly _context: SVGContext,
-    options?: Partial<OPTIONS>
+    options?: Partial<OPTIONS>,
   ) {
     this._options = Object.assign(
       {
-        idAccessor: defaultIdAccessor
+        idAccessor: defaultIdAccessor,
       },
-      options
+      options,
     ) as OPTIONS;
   }
 

@@ -14,8 +14,8 @@ import { mx } from '@dxos/aurora-theme';
 import { Config } from '@dxos/client';
 import { PluginProvider, Surface } from '@dxos/react-surface';
 
-import { ThreadPlugin } from '../ThreadPlugin';
 import { createThread } from './testing';
+import { ThreadPlugin } from '../ThreadPlugin';
 
 faker.seed(7);
 

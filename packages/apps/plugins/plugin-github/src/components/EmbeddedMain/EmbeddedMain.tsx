@@ -34,6 +34,7 @@ import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface, usePlugin } from '@dxos/react-surface';
 
+import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
 import { EditorViewState, GITHUB_PLUGIN } from '../../props';
 import {
@@ -43,7 +44,6 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
-import { GfmPreview } from './GfmPreview';
 import './embedded.css';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
