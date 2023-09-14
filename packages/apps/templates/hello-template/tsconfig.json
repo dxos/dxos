@@ -13,9 +13,9 @@
     ]
   },
   "include": [
+    "package.json",
     "src",
-    "test",
-    "package.json"
+    "test"
   ],
   "references": [
     {

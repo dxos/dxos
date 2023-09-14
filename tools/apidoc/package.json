@@ -12,8 +12,8 @@
     "apidoc": "bin/apidoc.js"
   },
   "scripts": {
-    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "main": "vite-node ./src/main.ts",
+    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "typedoc": "typedoc"
   },
   "dependencies": {
