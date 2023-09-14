@@ -10,7 +10,7 @@ DXOS command line interface.
 * [Usage](#usage)
 <!-- tocstop -->
 
-# Instalation
+# Installation
 ```terminal
 npm install -g @dxos/cli@main
 ```
@@ -19,7 +19,15 @@ npm install -g @dxos/cli@main
 Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
 
 ## Start agent with LaunchD (macOS users)
-1) ????????????????????????????????
+1. Install DXOS CLI with steps in [Installation](#Instalation)  section.
+2. Replace `??NODE_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `dirname $(which node)`
+3. Replace `??DX_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `which dx`
+4. Copy `./init-templates/org.dxos.agent.plist` -> `~/Library/LaunchAgents/org.dxos.agent.plist`
+5. Run `launchctl load -w ~/Library/LaunchAgents/org.dxos.agent.plist`
+
+### Stop agent started by LaunchD
+1. Run `launchctl unload -w ~/Library/LaunchAgents/org.dxos.agent.plist`
+2. Remove `~/Library/LaunchAgents/org.dxos.agent.plist`
 
 ## Start agent with CLI (not very reliable)
 Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.

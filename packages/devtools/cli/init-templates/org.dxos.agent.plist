@@ -3,16 +3,14 @@
 <plist version="1.0">
   	<dict>
 		<key>Label</key>
-		<string>dxos.org/agent</string>
-		<key>User</key>
-		<string>mykola</string>
+		<string>org.dxos.agent</string>
 		<key>KeepAlive</key>
 		<true/>
 		<key>ProgramArguments</key>
 		<array>
-			<string>dx</string>
-			<string>start</string>
+			<string>??DX_PATH??</string>
 			<string>agent</string>
+			<string>start</string>
 			<string>--foreground</string>
 		</array>
 		<key>RunAtLoad</key>
@@ -25,7 +23,7 @@
 		<key>EnvironmentVariables</key>
 		<dict>
 			<key>PATH</key>
-			<string>/Users/mykola/.nvm/versions/node/v18.12.1/bin/node</string>
+			<string>??NODE_PATH??</string>
 		</dict>
 		<key>StandardErrorPath</key>
 		<string>/tmp/dx/run/launchd-logs/err.log</string>
