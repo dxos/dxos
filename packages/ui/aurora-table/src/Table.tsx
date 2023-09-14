@@ -3,18 +3,19 @@
 //
 
 import {
+  flexRender,
+  getCoreRowModel,
+  getGroupedRowModel,
+  useReactTable,
+  ColumnSizingInfoState,
+  ColumnSizingState,
+  GroupingState,
+  HeaderGroup,
   Row,
   RowData,
   RowSelectionState,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  VisibilityState,
-  ColumnSizingInfoState,
-  HeaderGroup,
   TableState,
-  GroupingState,
-  getGroupedRowModel,
+  VisibilityState,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
@@ -131,7 +132,7 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
 
   // Resizing.
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
-  const onColumnResizeDebounced = debounce((info) => onColumnResize?.(info), 500);
+  const onColumnResizeDebounced = debounce<ColumnSizingState>((info) => onColumnResize?.(info), 500);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
       onColumnResizeDebounced(table.getState().columnSizing);
