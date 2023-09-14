@@ -2,11 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DragOverlay } from '@dnd-kit/core';
 import React, { createContext, PropsWithChildren, useContext } from 'react';
+
+import { List } from '@dxos/aurora';
 
 import { DndProvider, useDnd as useMosaicDnd } from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
+
+const MosaicOverlayTile = ({ id }: { id: string }) => {
+  const {
+    mosaic: {
+      tiles: { [id]: activeTile },
+    },
+    Delegator,
+  } = useMosaic();
+  const { [id]: data } = useMosaicData();
+  const Root = activeTile.variant === 'treeitem' ? List : 'div';
+  return (
+    <Root role='none'>
+      <Delegator data={data} tile={{ ...activeTile, isOverlay: true }} />
+    </Root>
+  );
+};
+
+const MosaicOverlay = () => {
+  const { activeId } = useMosaicDnd();
+  console.log('[activeId]', activeId);
+  return <DragOverlay>{activeId ? <MosaicOverlayTile id={activeId} /> : null}</DragOverlay>;
+};
 
 const defaultMosaicContextValue: MosaicContextValue = {
   data: {},
@@ -35,7 +60,12 @@ const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRoo
 const useMosaic = () => useContext(MosaicRootContext);
 
 const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootContextValue>) => {
-  return <MosaicRootContext.Provider value={value}>{children}</MosaicRootContext.Provider>;
+  return (
+    <MosaicRootContext.Provider value={value}>
+      {children}
+      <MosaicOverlay />
+    </MosaicRootContext.Provider>
+  );
 };
 
 export const Mosaic = {

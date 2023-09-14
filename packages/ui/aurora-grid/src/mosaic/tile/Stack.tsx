@@ -3,7 +3,7 @@
 //
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { sortByIndex } from '@tldraw/indices';
-import React, { forwardRef, useEffect } from 'react';
+import React, { forwardRef } from 'react';
 
 import { Tile } from './';
 import { useDragEnd } from '../dnd';
@@ -23,18 +23,6 @@ const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
     .sort(sortByIndex);
 
   const handleRearrange = useHandleRearrange(subtileIds, subtiles);
-
-  useEffect(() => {
-    console.log('[stack]', 'mosaic.tiles update');
-  }, [tiles]);
-
-  useEffect(() => {
-    console.log('[stack]', 'mosaic.relations update');
-  }, [relations]);
-
-  useEffect(() => {
-    console.log('[stack]', 'computed subtiles update');
-  }, [subtiles]);
 
   useDragEnd(
     (event) => {

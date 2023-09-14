@@ -17,6 +17,8 @@ type TileSharedProps = {
   migrationClass?: string;
   acceptMigrationClass?: Set<string>;
   sortable?: boolean;
+  isOverlay?: boolean;
+  isPreview?: boolean;
 };
 
 export type TreeItemTile = TileSharedProps & {

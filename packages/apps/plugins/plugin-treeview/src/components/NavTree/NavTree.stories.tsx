@@ -9,7 +9,7 @@ import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { GraphStore, GraphContext } from '@braneframe/plugin-graph';
+import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { Tooltip } from '@dxos/aurora';
@@ -27,30 +27,21 @@ export default {
   component: NavTreeRoot,
 };
 
-const content = [
-  {
+const content = [...Array(4)].map(() => ({
+  id: faker.string.uuid(),
+  label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+  description: fake('{{commerce.productDescription}}'),
+  children: [...Array(4)].map(() => ({
     id: faker.string.uuid(),
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
-    children: [
-      {
-        id: faker.string.uuid(),
-        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-        description: fake('{{commerce.productDescription}}'),
-      },
-      {
-        id: faker.string.uuid(),
-        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-        description: fake('{{commerce.productDescription}}'),
-      },
-    ],
-  },
-  {
-    id: faker.string.uuid(),
-    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-    description: fake('{{commerce.productDescription}}'),
-  },
-];
+    children: [...Array(4)].map(() => ({
+      id: faker.string.uuid(),
+      label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+      description: fake('{{commerce.productDescription}}'),
+    })),
+  })),
+}));
 
 const graph = new GraphStore();
 buildGraph(graph, content);
@@ -65,6 +56,14 @@ const mosaicAcc: MosaicState = {
 
 const mosaicData: Record<string, any> = {};
 
+const getLevel = (node: Graph.Node, level = 0): number => {
+  if (!node.parent) {
+    return level;
+  } else {
+    return getLevel(node.parent, level + 1);
+  }
+};
+
 graph.traverse({
   onVisitNode: (node) => {
     mosaicAcc.tiles[node.id] = {
@@ -73,7 +72,7 @@ graph.traverse({
       variant: 'treeitem',
       sortable: true,
       expanded: false,
-      level: 0,
+      level: getLevel(node, -1),
     };
     if (node.children && node.children.length) {
       mosaicAcc.relations[node.id] = { child: new Set() };

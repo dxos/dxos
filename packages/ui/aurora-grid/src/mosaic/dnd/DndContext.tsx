@@ -23,6 +23,7 @@ import { Handler } from '../types';
 
 export type DndContextValue = {
   overlayDropAnimation: OverlayDropAnimation;
+  activeId: string | null;
   dragOverSubscriptions: Handler<DragOverEvent>[];
   dragStartSubscriptions: Handler<DragStartEvent>[];
   dragEndSubscriptions: Handler<DragEndEvent>[];
@@ -31,6 +32,7 @@ export type DndContextValue = {
 
 const defaultContextValue: DndContextValue = {
   overlayDropAnimation: 'around',
+  activeId: null,
   dragOverSubscriptions: [],
   dragStartSubscriptions: [],
   dragEndSubscriptions: [],
@@ -73,6 +75,7 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       contextValue.overlayDropAnimation = 'away';
+      contextValue.activeId = event.active.id.toString();
       contextValue.dragStartSubscriptions.forEach((subscription) => subscription.call(this, event));
     },
     [contextValue.dragStartSubscriptions],
@@ -80,6 +83,7 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      contextValue.activeId = null;
       contextValue.dragEndSubscriptions.forEach((subscription) => subscription.call(this, event));
     },
     [contextValue.dragEndSubscriptions],
@@ -87,6 +91,7 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const handleDragCancel = useCallback(
     (event: DragCancelEvent) => {
+      contextValue.activeId = null;
       contextValue.dragCancelSubscriptions.forEach((subscription) => subscription.call(this, event));
     },
     [contextValue.dragCancelSubscriptions],
