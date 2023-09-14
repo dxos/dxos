@@ -65,16 +65,23 @@ const StackDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataPr
   },
 );
 
-const rootId = ids[0];
-
-const stackMosaic = deepSignal<MosaicType>({
+const stackRootId = ids[0];
+const stackSectionIds = Object.keys(tiles).filter((id) => id !== stackRootId);
+const stackMosaicState = {
   tiles,
   relations: {
-    [rootId]: {
-      child: new Set(Object.keys(tiles).filter((id) => id !== rootId)),
+    [stackRootId]: {
+      child: new Set(stackSectionIds),
     },
+    ...stackSectionIds.reduce((acc: MosaicType['relations'], id) => {
+      acc[id] = { parent: new Set([stackRootId]) };
+      return acc;
+    }, {}),
   },
-});
+};
+console.log('[stack mosaic state]', stackMosaicState);
+
+const stackMosaic = deepSignal<MosaicType>(stackMosaicState);
 
 stackMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
 
@@ -91,7 +98,7 @@ type MosaicStoryArgs = {
 export const Stack = {
   args: {
     mosaic: stackMosaic,
-    root: rootId,
+    root: stackRootId,
     Delegator: StackDelegator,
   },
   render: ({ root: rootTileId, ...rootProps }: MosaicStoryArgs) => {
