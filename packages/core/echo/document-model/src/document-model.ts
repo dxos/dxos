@@ -16,6 +16,7 @@ import { validateKey } from './util';
 const DEFAULT_META_SNAPSHOT = ValueUtil.createMessage({
   keys: OrderedArray.fromValues([]),
 });
+
 /**
  * Processes object mutations.
  */
@@ -139,10 +140,9 @@ export interface ObjectProperties {
 /**
  * Object mutation model.
  */
-// TODO(burdon): Make generic (separate model?) With read/write validation.
 export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
-    type: 'dxos:model/document',
+    type: 'dxos.org/model/document',
     stateMachine: () => new DocumentModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
     snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot'),
