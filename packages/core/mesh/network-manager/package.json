@@ -8,7 +8,7 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./src/transport/tcp-transport.ts": false,
+    "./src/transport/tcp-transport.ts": "./src/transport/tcp-transport.browser.ts",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs",
     "./src/transport/datachannel/index.ts": "./src/transport/datachannel/index.browser.ts"
