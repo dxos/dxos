@@ -108,7 +108,7 @@ export class Peer {
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
-    if (this.connection && this.connection.state !== ConnectionState.INITIAL) {
+    if (this.connection && ![ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.connection.state)) {
       log.info(`received offer when connection already in ${this.connection.state} state`);
       return { accept: false };
     }
