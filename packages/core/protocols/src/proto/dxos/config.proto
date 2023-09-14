@@ -154,6 +154,8 @@ message Runtime {
 
       /// Automatic epoch creation.
       message EpochMontior {
+        optional bool enabled = 5;
+
         /// Number of mutations required since last epoch to trigger a new epoch.
         optional int32 minMessagesBetweenEpochs = 1;
 

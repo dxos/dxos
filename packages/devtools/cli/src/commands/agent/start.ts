@@ -33,9 +33,6 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Expose ECHO REST API.',
       helpValue: 'port',
     }),
-    monitor: Flags.boolean({
-      description: 'Run epoch monitoring.',
-    }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
     }),
@@ -79,8 +76,7 @@ export default class Start extends BaseCommand<typeof Start> {
       },
       plugins: [
         // Epoch monitoring.
-        // TODO(burdon): Config.
-        this.flags.monitor && new EpochMonitor(),
+        new EpochMonitor(),
 
         // ECHO API.
         // TODO(burdon): Config.
