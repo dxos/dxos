@@ -66,24 +66,19 @@ export const DEFAULT_FORMATTER: Formatter = (
     instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
   }
 
+  const formattedTimestamp = config.options?.formatter?.timestamp ? new Date().toISOString() : undefined;
+  const formattedLevel = chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]);
+  const padding = column && filepath ? ''.padStart(column - filepath.length) : undefined;
+
   return config.options?.formatter?.timestampFirst
-    ? [
-        config.options?.formatter?.timestamp ? new Date().toISOString() : undefined,
-        filepath,
-        column && filepath ? ''.padStart(column - filepath.length) : undefined,
-        chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
-        instance,
-        message,
-        context,
-        error,
-      ]
+    ? [formattedTimestamp, filepath, padding, formattedLevel, instance, message, context, error]
     : [
         // NOTE: File path must come fist for console hyperlinks.
         // Must not truncate for terminal output.
         filepath,
-        column && filepath ? ''.padStart(column - filepath.length) : undefined,
-        config.options?.formatter?.timestamp ? new Date().toISOString() : undefined,
-        chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
+        padding,
+        formattedTimestamp,
+        formattedLevel,
         instance,
         message,
         context,

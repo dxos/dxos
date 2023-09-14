@@ -37,7 +37,6 @@ export enum LogProcessorType {
   CONSOLE = 'console',
   BROWSER = 'browser',
   DEBUG = 'debug',
-  TIMESTAMPED = 'timestamped',
 }
 
 /**
