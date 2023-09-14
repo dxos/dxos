@@ -392,4 +392,4 @@ type SyncTimeLog = {
 type ReconnectLog = {
   agentIdx: number;
   iter: number;
-}
+};
