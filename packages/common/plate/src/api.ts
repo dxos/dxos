@@ -58,12 +58,15 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         absoluteTemplateRelativeTo.length + 1,
       );
       const { slots: _slots, ...restOpts } = options;
-      // TODO ignoring path from rendered slots?
-      const { content, copyOf } = await renderSlots(slots, async (rendered) => {
+      const {
+        content,
+        path: renderedPath,
+        copyOf,
+      } = await renderSlots(slots, async (rendered) => {
         const ctx = extraContext?.(rendered);
         return {
           input,
-          slots: await renderSlots({ ...this.parentSlots, ...options.slots }, (rendered) => ({
+          slots: await renderSlots({ ...this.parentSlots, ...options.slots }, () => ({
             input,
             overwrite: false,
             slots: {
@@ -91,7 +94,9 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         hasContent
           ? [
               new FileEffect({
-                path: path.resolve(outputDirectory, relativeOutputPath),
+                path: renderedPath
+                  ? path.resolve(outputDirectory, renderedPath)
+                  : path.resolve(outputDirectory, relativeOutputPath),
                 content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
                 copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
               }),
@@ -128,7 +133,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
   }
 
   group(grouping: Group<I>) {
-    return async (options: Options<I>) => {
+    return async (options: Options<I, TSlots>) => {
       const groupingResults = await Promise.all(grouping(options)?.map((template) => template(options)));
       return results(groupingResults.map((r) => r.files).flat());
     };

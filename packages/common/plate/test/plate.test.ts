@@ -1,8 +1,10 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import path from 'node:path';
 
 import { plate } from '../src';
 import extended from './extend/template.t';
@@ -37,9 +39,8 @@ describe('plate 2 templates', () => {
     `).to.equal('something\nsomething else\nfunction\n');
   });
 
-  it('file templates', async () => {
+  it('file template', async () => {
     expect(simpleFile).to.be.a('function');
-    expect(simpleFileGroup).to.be.a('function');
 
     const result = await simpleFile({ input: { name: 'zanzibar' } });
     expect(result).to.exist;
@@ -49,6 +50,21 @@ describe('plate 2 templates', () => {
     expect(file).to.exist;
     expect(file.path).to.contain('simple.md');
     expect(file.content).to.eq('the name was zanzibar\n');
+  });
+
+  it('file group template', async () => {
+    expect(simpleFileGroup).to.be.a('function');
+    const result = await simpleFileGroup({});
+    expect(result).to.exist;
+    expect(result.files).to.be.an('array');
+    expect(result.files.length).to.eq(2);
+    const [file1, file2] = result.files;
+    expect(file1).to.exist;
+    expect(file1.content).to.eq('some content');
+    expect(file1.path).to.eq(path.resolve(process.cwd(), 'content-1.md'));
+    expect(file2).to.exist;
+    expect(file2.content).to.eq('content was slots foo');
+    expect(file2.path).to.eq(path.resolve(process.cwd(), 'content-2.md'));
   });
 
   it('simple template', async () => {

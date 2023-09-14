@@ -2,9 +2,13 @@ import { template } from '..';
 
 export default template().group((context) => [
   template().text({
-    content: 'some content'
+    path: 'content-1.md',
+    content: 'some content',
   }),
-  template().slots({ name: 'foo' }).text({
-    content: ({ slots }) => `content was slots ${slots?.name}`
-  })
+  template()
+    .slots({ name: 'foo' })
+    .text({
+      path: 'content-2.md',
+      content: ({ slots }) => `content was slots ${slots?.name}`,
+    }),
 ]);

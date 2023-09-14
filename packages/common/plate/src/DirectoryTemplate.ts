@@ -11,7 +11,7 @@ import { Plate } from './api';
 import { Effect } from './util/effect';
 import { FileEffect, Path } from './util/file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
-import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
+import { LoadModuleOptions } from './util/loadModule';
 import { logger } from './util/logger';
 import { MaybePromise } from './util/promise';
 import { runPromises } from './util/runPromises';
@@ -89,7 +89,8 @@ export const defaultOptions: Partial<ExecuteDirectoryTemplateOptions<any>> = {
 };
 
 export type ExecuteDirectoryTemplateOptions<I> = Options<I> &
-  DirectoryTemplateOptions<I> & {
+  DirectoryTemplateOptions<I> &
+  LoadModuleOptions & {
     verbose?: boolean;
     parallel?: boolean;
   };
@@ -166,7 +167,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       ? runner.inParallel(templatingPromises)
       : runner.inSequence(templatingPromises));
     debug(`${templateOutputs.length} templating results`);
-    debug(`${templateOutputs.map(o => o.files).flat()?.length} templating results total files`);
+    debug(`${templateOutputs.map((o) => o.files).flat()?.length} templating results total files`);
     const isWithinTemplateOutput = (filePath: string): boolean => {
       return templateOutputs.some((out) => out.files.some((file) => !!file && file.path === filePath));
     };

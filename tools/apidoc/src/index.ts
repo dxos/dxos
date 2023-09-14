@@ -3,4 +3,4 @@
 //
 
 export * from './apiDocDirective.js';
-export * from './templates/api/config.t.js';
+export * from './templates/api/template.t.js';
