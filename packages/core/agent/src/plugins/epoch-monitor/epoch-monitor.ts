@@ -4,30 +4,25 @@
 
 import { Client, PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client-protocol';
-import { checkCredentialType, SpecificCredential } from '@dxos/credentials';
+import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
-import { Context } from '@dxos/context';
 import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { AbstractPlugin } from '../plugin';
 
-// TODO(dmaretskyi): Make those more reasonable.
-const DEFAULT_OPTIONS: EpochMonitorOptions = {
-  minMessageInterval: 1_000,
-  minTimeInterval: 20_000,
-  inactivity: 5_000,
-  maxDelay: 30_000
+type Options = Required<Runtime.Agent.Plugins.EpochMontior>;
+
+// TODO(dmaretskyi): Review defaults.
+const DEFAULT_OPTIONS: Options = {
+  minMessagesBetweenEpochs: 10_000,
+  minTimeBetweenEpochs: 120_000,
+  minInactivityBeforeEpoch: 30_000,
+  maxInactivityDelay: 60_000
 }
-
-export type EpochMonitorOptions = {
-  minMessageInterval: number;
-  minTimeInterval: number;
-  inactivity: number;
-  maxDelay: number;
-};
 
 /**
  * Pipeline monitor:
@@ -39,23 +34,27 @@ export class EpochMonitor extends AbstractPlugin {
   private _ctx = new Context()
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
-  private readonly _options: EpochMonitorOptions;
-
-  constructor(options: Partial<EpochMonitorOptions> = {}) {
-    super();
-    this._options = { ...DEFAULT_OPTIONS, ...options };
-  }
+  private _options?: Options = undefined;
   
   /**
    * Monitor spaces for which the agent is the leader.
   */
  async open() {
-    log.info('epoch monitor open')
     invariant(this._client);
+
+    const config = this._client.config.values.runtime?.agent?.plugins?.epochMonitor;
+    if(!config) {
+      log.info('epoch monitor disabled from config')
+      return;
+    }
+
+    this._options = { ...DEFAULT_OPTIONS, ...config };
+    log.info('epoch monitor open', { options: this._options })
 
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
+          invariant(this._options);
           const monitor = new SpaceMonitor(this._client!, space, this._options);
           this._monitors.set(space.key, monitor);
 
@@ -93,7 +92,7 @@ class SpaceMonitor {
   constructor(
     private readonly _client: Client,
     private readonly _space: Space,
-    private readonly _options: EpochMonitorOptions,
+    private readonly _options: Options,
   ) { }
 
   async open() {
@@ -123,15 +122,15 @@ class SpaceMonitor {
       const newMessages = pipeline.currentDataTimeframe!.newMessages(pipeline.currentEpoch.subject.assertion.timeframe)
       const timeSinceLastEpoch = Date.now() - pipeline.currentEpoch.issuanceDate.getTime();
 
-      if (newMessages > this._options.minMessageInterval && timeSinceLastEpoch > this._options.minTimeInterval) {
+      if (newMessages > this._options.minMessagesBetweenEpochs && timeSinceLastEpoch > this._options.minTimeBetweenEpochs) {
         if (!this._maxTimeoutTask) {
           log.info('wanting to create epoch', { key: this._space.key, options: this._options });
-          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxDelay);
+          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxInactivityDelay);
         }
         if (this._epochCreationTask) {
           clearTimeout(this._epochCreationTask);
         }
-        this._epochCreationTask = setTimeout(this._createEpoch.bind(this), this._options.inactivity);
+        this._epochCreationTask = setTimeout(this._createEpoch.bind(this), this._options.minInactivityBeforeEpoch);
 
       }
     });
