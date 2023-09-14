@@ -5,13 +5,13 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef, useEffect } from 'react';
 
+import { Tile } from './';
 import { useDragEnd } from '../dnd';
 import { useHandleRearrange } from '../dnd/handlers';
 import { useMosaic, useMosaicData } from '../mosaic';
-import { Tile } from '../tile';
-import { TileProps } from '../types';
+import { StackTile } from '../types';
 
-const Stack = forwardRef<HTMLDivElement, TileProps>((tile, forwardedRef) => {
+const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
     Delegator,

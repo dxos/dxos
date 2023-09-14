@@ -4,48 +4,89 @@
 
 import '@dxosTheme';
 
+import { faker } from '@faker-js/faker';
+import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { DndPluginContext, DndPluginStoreValue } from '@braneframe/plugin-dnd';
-import { GraphContext, GraphStore } from '@braneframe/plugin-graph';
+import { GraphStore, GraphContext } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
-import { Tooltip, Tree } from '@dxos/aurora';
+import { Tooltip } from '@dxos/aurora';
+import { Mosaic, MosaicState } from '@dxos/aurora-grid';
 
-import { TreeViewSortableImpl } from './NavTree';
+import { NavTreeRoot } from './NavTree';
+import { NavTreeItemDelegator } from './NavTreeItem';
 import { TreeViewContext } from '../../TreeViewContext';
 import { TreeViewContextValue } from '../../types';
 
+faker.seed(1234);
+const fake = faker.helpers.fake;
+
 export default {
-  component: TreeViewSortableImpl,
+  component: NavTreeRoot,
 };
 
-const graph = new GraphStore();
-buildGraph(graph, [
+const content = [
   {
-    id: 'test1',
-    label: 'test1',
+    id: faker.string.uuid(),
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+    description: fake('{{commerce.productDescription}}'),
     children: [
       {
-        id: 'test1.1',
-        label: 'test1.1',
+        id: faker.string.uuid(),
+        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+        description: fake('{{commerce.productDescription}}'),
       },
       {
-        id: 'test1.2',
-        label: 'test1.2',
+        id: faker.string.uuid(),
+        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+        description: fake('{{commerce.productDescription}}'),
       },
     ],
   },
   {
-    id: 'test2',
-    label: 'test2',
+    id: faker.string.uuid(),
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+    description: fake('{{commerce.productDescription}}'),
   },
-]);
+];
 
-const dndState = deepSignal<DndPluginStoreValue>({
-  overlayDropAnimation: 'away',
+const graph = new GraphStore();
+buildGraph(graph, content);
+
+const defaultIndices = getIndices(99);
+let defaultIndicesCursor = 0;
+
+const mosaicAcc: MosaicState = {
+  tiles: {},
+  relations: {},
+};
+
+const mosaicData: Record<string, any> = {};
+
+graph.traverse({
+  onVisitNode: (node) => {
+    mosaicAcc.tiles[node.id] = {
+      id: node.id,
+      index: defaultIndices[defaultIndicesCursor],
+      variant: 'treeitem',
+      sortable: true,
+      expanded: false,
+      level: 0,
+    };
+    if (node.children && node.children.length) {
+      mosaicAcc.relations[node.id] = { child: new Set() };
+      node.children.forEach((child) => {
+        mosaicAcc.relations[node.id].child.add(child.id);
+      });
+    }
+    mosaicData[node.id] = node;
+    defaultIndicesCursor += 1;
+  },
 });
+
+const mosaicState = deepSignal<MosaicState>(mosaicAcc);
 
 const splitViewState = deepSignal<SplitViewState>({
   sidebarOpen: true,
@@ -68,22 +109,26 @@ const treeViewState = deepSignal<TreeViewContextValue>({
 
 export const Default = {
   render: () => (
-    <Tree.Root>
-      <TreeViewSortableImpl {...{ node: graph.root, items: graph.root.children, level: 0 }} />
-    </Tree.Root>
+    <Mosaic.Root
+      mosaic={mosaicState}
+      Delegator={NavTreeItemDelegator}
+      onMosaicChange={(event) => console.log('[nav tree story]', 'mosaic change', event)}
+    >
+      <NavTreeRoot />
+    </Mosaic.Root>
   ),
   decorators: [
     (Story: any) => (
       <Tooltip.Provider>
-        <DndPluginContext.Provider value={dndState}>
-          <GraphContext.Provider value={{ graph }}>
-            <SplitViewContext.Provider value={splitViewState}>
-              <TreeViewContext.Provider value={treeViewState}>
+        <GraphContext.Provider value={{ graph }}>
+          <SplitViewContext.Provider value={splitViewState}>
+            <TreeViewContext.Provider value={treeViewState}>
+              <Mosaic.Provider data={mosaicData}>
                 <Story />
-              </TreeViewContext.Provider>
-            </SplitViewContext.Provider>
-          </GraphContext.Provider>
-        </DndPluginContext.Provider>
+              </Mosaic.Provider>
+            </TreeViewContext.Provider>
+          </SplitViewContext.Provider>
+        </GraphContext.Provider>
       </Tooltip.Provider>
     ),
   ],

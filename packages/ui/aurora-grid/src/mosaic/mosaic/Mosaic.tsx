@@ -5,7 +5,7 @@
 import React, { createContext, PropsWithChildren, useContext } from 'react';
 
 import { DndProvider, useDnd as useMosaicDnd } from '../dnd';
-import { Tile } from '../tile';
+import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 
 const defaultMosaicContextValue: MosaicContextValue = {
@@ -42,6 +42,9 @@ export const Mosaic = {
   Provider: MosaicProvider,
   Root: MosaicRoot,
   Tile,
+  Stack,
+  Card,
+  TreeItem,
 };
 
 export { useMosaic, useMosaicData, useMosaicDnd };

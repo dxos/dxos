@@ -11,6 +11,7 @@ import React, {
   forwardRef,
   ForwardRefExoticComponent,
   Fragment,
+  PropsWithChildren,
   RefAttributes,
   useEffect,
   useRef,
@@ -20,7 +21,8 @@ import React, {
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
-import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, Popover, Tooltip, Tree, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { DelegatorProps } from '@dxos/aurora-grid';
 import {
   dropRing,
   focusRing,
@@ -33,7 +35,6 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
-import { NavTree } from './NavTree';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
@@ -84,7 +85,30 @@ export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
   return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
 };
 
-type TreeViewItemProps = SharedTreeItemProps & SortableProps;
+type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
+
+export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Graph.Node>> = forwardRef<
+  HTMLOListElement,
+  DelegatorProps<Graph.Node>
+>(({ tile, data, dragHandleListeners, dragHandleAttributes, style, children }, forwardedRef) => {
+  switch (tile.variant) {
+    case 'stack':
+      return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
+    case 'treeitem':
+      return (
+        <NavTreeItem
+          node={data}
+          level={tile.level}
+          draggableAttributes={dragHandleAttributes}
+          draggableListeners={dragHandleListeners}
+          style={style}
+          ref={forwardedRef}
+        ></NavTreeItem>
+      );
+    default:
+      return null;
+  }
+});
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -94,7 +118,18 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   TreeViewItemProps
 >(
   (
-    { node, level, draggableListeners, draggableAttributes, style, rearranging, migrating, isPreview, isOverlay },
+    {
+      node,
+      level,
+      children,
+      draggableListeners,
+      draggableAttributes,
+      style,
+      rearranging,
+      migrating,
+      isPreview,
+      isOverlay,
+    },
     forwardedRef,
   ) => {
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
@@ -263,11 +298,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </Tooltip.Root>
           )}
         </HeadingWithActionsRoot>
-        {isBranch && !forceCollapse && (
-          <TreeItem.Body>
-            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
-          </TreeItem.Body>
-        )}
+        {children}
       </TreeItem.Root>
     );
   },
