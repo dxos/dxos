@@ -100,7 +100,7 @@ describe('schema', () => {
         name: 'tasks',
         type: {
           kind: 'array',
-          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos:model/document' },
+          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos.org/model/document' },
         },
       },
       { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } },
