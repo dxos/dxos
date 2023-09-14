@@ -35,7 +35,7 @@ export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
     });
 
     return () => clearTimeout(timeout);
-  }, [client]);
+  }, [client, spaceKey]);
 
   if (spaceKey) {
     return spaces.find((space) => space.key.equals(spaceKey));

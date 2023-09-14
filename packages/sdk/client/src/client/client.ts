@@ -19,7 +19,7 @@ import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { type SpaceList } from '../echo';
+import type { SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';

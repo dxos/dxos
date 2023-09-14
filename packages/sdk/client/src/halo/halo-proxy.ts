@@ -103,7 +103,7 @@ export class HaloProxy implements Halo {
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
-    identityStream.subscribe(async (data) => {
+    identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
       data.identity &&
         log.trace('dxos.halo.identity', {
