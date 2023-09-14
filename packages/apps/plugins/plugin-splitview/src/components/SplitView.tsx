@@ -127,7 +127,8 @@ export const SplitView = (props: SplitViewProps) => {
               {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
                 <Dialog.Content>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                  <div className='flex flex-col my-2 space-y-2'>
+                  {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
+                  <div className='flex flex-col my-2 gap-4'>
                     <Surface role='dialog' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>

@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { KanbanBoard } from './KanbanBoard';
@@ -32,7 +32,7 @@ export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
   };
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <KanbanBoard model={model} />
     </Main.Content>
   );
