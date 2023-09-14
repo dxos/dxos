@@ -57,6 +57,8 @@ export type LogOptions = {
   processor?: string | LogProcessorType;
   formatter?: {
     column: number;
+    timestamp: boolean;
+    timestampFirst: boolean;
   };
   prefix?: string;
 };
