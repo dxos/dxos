@@ -87,9 +87,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -123,8 +120,6 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
