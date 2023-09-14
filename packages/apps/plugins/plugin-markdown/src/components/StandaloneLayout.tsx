@@ -6,7 +6,14 @@ import React, { MutableRefObject, PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { coarseBlockPaddingStart, inputSurface, mx, surfaceElevation, textBlockWidth } from '@dxos/aurora-theme';
+import {
+  baseSurface,
+  coarseBlockPaddingStart,
+  inputSurface,
+  mx,
+  surfaceElevation,
+  textBlockWidth,
+} from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
@@ -19,7 +26,7 @@ export const StandaloneLayout = ({
   editorRef?: MutableRefObject<MarkdownComposerRef>;
 }>) => {
   return (
-    <Main.Content bounce classNames={coarseBlockPaddingStart}>
+    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div
           role='none'

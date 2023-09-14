@@ -25,10 +25,11 @@ const chessPieces = {
   [ChessPieces.RIOHACHA]: riohachaPieces,
 };
 
+// TODO(burdon): Replace with classes.
 const props = {
-  customDarkSquareStyle: { backgroundColor: '#dcdcdc' },
-  customLightSquareStyle: { backgroundColor: '#ffffff' },
-  customDropSquareStyle: { boxShadow: 'inset 0 0 1px 4px rgba(80, 80, 80, 0.75)' },
+  customDarkSquareStyle: { backgroundColor: '#CCD3DB' },
+  customLightSquareStyle: { backgroundColor: '#6C95B9' },
+  customDropSquareStyle: { boxShadow: 'inset 0 0 1px 2px black' },
 };
 
 export type ChessModel = {
@@ -125,7 +126,7 @@ export const ChessPanel: FC<{
   };
 
   return (
-    <div className='flex flex-col bg-gray-50'>
+    <div className='flex flex-col'>
       <div className='flex items-center justify-between pl-2 pr-2 border-b' style={{ height: 32 }}>
         <Player color={orientation === 'w' ? 'b' : 'w'} />
         {onFlip && (
