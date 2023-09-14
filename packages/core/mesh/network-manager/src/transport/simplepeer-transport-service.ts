@@ -115,7 +115,7 @@ export class SimplePeerTransportService implements BridgeService {
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
     if (this.transports.get(proxyId)?.state !== 'OPEN') {
-      log.warn('transport is closed');
+      log.debug('transport is closed');
     }
     invariant(this.transports.has(proxyId));
     const state = this.transports.get(proxyId)!;
