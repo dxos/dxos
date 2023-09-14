@@ -45,27 +45,32 @@ export class EpochMonitor extends AbstractPlugin {
     super();
     this._options = { ...DEFAULT_OPTIONS, ...options };
   }
-
+  
   /**
    * Monitor spaces for which the agent is the leader.
-   */
-  async open() {
+  */
+ async open() {
+    log.info('epoch monitor open')
     invariant(this._client);
-    const sub = this._client.spaces.subscribe((spaces) => {
+
+    const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
           const monitor = new SpaceMonitor(this._client!, space, this._options);
           this._monitors.set(space.key, monitor);
 
+          log.info('init', { space: space.key, isOpen: space.isOpen })
+
           // Process asynchronously.
-          if (space.isOpen) {
-            scheduleTask(this._ctx, async () => {
-              await monitor.open();
-            });
-          }
+          scheduleTask(this._ctx, async () => {
+            await monitor.open();
+          });
         }
       });
-    });
+    }
+
+    const sub = this._client.spaces.subscribe(process);
+    process(this._client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
   }
 
@@ -95,9 +100,13 @@ class SpaceMonitor {
     await this._space.waitUntilReady();
 
     // Monitor spaces owned by this agent.
-    if (this._client!.halo.identity.get()!.identityKey.equals(this._space.internal.data.creator!)) {
+    if (!this._client!.halo.identity.get()!.identityKey.equals(this._space.internal.data.creator!)) {
+      log.info('space is not owned by this agent', { key: this._space.key, creator: this._space.internal.data.creator, identityKey: this._client!.halo.identity.get()!.identityKey })
       return;
     }
+
+    log.info('will create epochs for space', { key: this._space.key, options: this._options });
+
 
     const sub = this._space.pipeline.subscribe(async (pipeline) => {
       if (this._creatingEpoch) {
