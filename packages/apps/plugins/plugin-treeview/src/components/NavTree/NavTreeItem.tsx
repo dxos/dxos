@@ -103,7 +103,9 @@ export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Grap
           draggableListeners={dragHandleListeners}
           style={style}
           ref={forwardedRef}
-        ></NavTreeItem>
+        >
+          {children}
+        </NavTreeItem>
       );
     default:
       return null;

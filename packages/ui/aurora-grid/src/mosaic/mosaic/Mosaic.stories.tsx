@@ -5,7 +5,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { DeepSignal, deepSignal } from 'deepsignal';
-import React, { FC, forwardRef, Fragment } from 'react';
+import React, { FC, forwardRef } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
@@ -38,7 +38,7 @@ const data = ids.reduce((acc: Record<string, StorybookDataProps>, id) => {
   return acc;
 }, {});
 
-const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
+const StackDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
   ({ data, tile, dragHandleAttributes, dragHandleListeners, style, children }, forwardedRef) => {
     const { label, description } = data;
     return tile.variant === 'card' ? (
@@ -92,7 +92,7 @@ export const Stack = {
   args: {
     mosaic: stackMosaic,
     root: rootId,
-    Delegator: StorybookDelegator,
+    Delegator: StackDelegator,
   },
   render: ({ root: rootTileId, ...rootProps }: MosaicStoryArgs) => {
     return (
