@@ -109,7 +109,6 @@ export class Gossip {
         })
 
         .catch(async (err) => {
-          // TODO(nf): handle here or in the Extension?
           if (err instanceof RpcClosedError) {
             log('sendAnnounce failed because of RpcClosedError', { err });
           } else {
