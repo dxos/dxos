@@ -2,12 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragOverlay } from '@dnd-kit/core';
-import React, { createContext, PropsWithChildren, useContext } from 'react';
+import { DragEndEvent, DragOverlay } from '@dnd-kit/core';
+import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
 
 import { List } from '@dxos/aurora';
 
-import { DndProvider, useDnd as useMosaicDnd, useHandleRearrange } from '../dnd';
+import {
+  DndProvider,
+  useDnd as useMosaicDnd,
+  useDragEnd,
+  useDragOver,
+  useDragStart,
+  useHandleRearrangeDragEnd,
+} from '../dnd';
+import {
+  useHandleMigrateDragEnd,
+  useHandleMigrateDragOver,
+  useHandleMigrateDragStart,
+} from '../dnd/hooks/useHandleMigrate';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 
@@ -29,7 +41,6 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
 
 const MosaicOverlay = () => {
   const { activeId } = useMosaicDnd();
-  console.log('[activeId]', activeId);
   return <DragOverlay>{activeId ? <MosaicOverlayTile id={activeId} /> : null}</DragOverlay>;
 };
 
@@ -60,7 +71,19 @@ const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRoo
 const useMosaic = () => useContext(MosaicRootContext);
 
 const MosaicRootImpl = ({ children }: PropsWithChildren) => {
-  useHandleRearrange();
+  const handleDragStart = useHandleMigrateDragStart();
+  const handleRearrangeDragEnd = useHandleRearrangeDragEnd();
+  const handleMigrateDragEnd = useHandleMigrateDragEnd();
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      handleRearrangeDragEnd(event) || handleMigrateDragEnd(event);
+    },
+    [handleRearrangeDragEnd, handleMigrateDragEnd],
+  );
+  const handleDragOver = useHandleMigrateDragOver();
+  useDragStart(handleDragStart, [handleDragStart]);
+  useDragEnd(handleDragEnd, [handleDragEnd]);
+  useDragOver(handleDragOver, [handleDragOver]);
   return (
     <>
       {children}

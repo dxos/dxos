@@ -24,6 +24,8 @@ import { Handler } from '../types';
 export type DndContextValue = {
   overlayDropAnimation: OverlayDropAnimation;
   activeId: string | null;
+  activeMigrationClass: string | null;
+  migrationDestinationId: string | null;
   dragOverSubscriptions: Handler<DragOverEvent>[];
   dragStartSubscriptions: Handler<DragStartEvent>[];
   dragEndSubscriptions: Handler<DragEndEvent>[];
@@ -33,6 +35,8 @@ export type DndContextValue = {
 const defaultContextValue: DndContextValue = {
   overlayDropAnimation: 'around',
   activeId: null,
+  activeMigrationClass: null,
+  migrationDestinationId: null,
   dragOverSubscriptions: [],
   dragStartSubscriptions: [],
   dragEndSubscriptions: [],

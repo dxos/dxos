@@ -12,7 +12,7 @@ import React from 'react';
 import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
-import { Tooltip } from '@dxos/aurora';
+import { DensityProvider, Tooltip } from '@dxos/aurora';
 import { Mosaic, MosaicState } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
@@ -66,13 +66,16 @@ const getLevel = (node: Graph.Node, level = 0): number => {
 
 graph.traverse({
   onVisitNode: (node) => {
+    const level = getLevel(node, -1);
     mosaicAcc.tiles[node.id] = {
       id: node.id,
       index: defaultIndices[defaultIndicesCursor],
       variant: 'treeitem',
       sortable: true,
       expanded: false,
-      level: getLevel(node, -1),
+      level,
+      acceptMigrationClass: new Set([`level-${level + 1}`]),
+      migrationClass: `level-${level}`,
     };
     mosaicAcc.relations[node.id] = { child: new Set(), parent: new Set() };
     mosaicData[node.id] = node;
@@ -129,7 +132,11 @@ export const Default = {
           <SplitViewContext.Provider value={splitViewState}>
             <TreeViewContext.Provider value={treeViewState}>
               <Mosaic.Provider data={mosaicData}>
-                <Story />
+                <DensityProvider density='fine'>
+                  <div role='none' className='p-2'>
+                    <Story />
+                  </div>
+                </DensityProvider>
               </Mosaic.Provider>
             </TreeViewContext.Provider>
           </SplitViewContext.Provider>

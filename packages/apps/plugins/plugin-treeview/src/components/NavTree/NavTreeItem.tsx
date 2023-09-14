@@ -90,27 +90,34 @@ type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
 export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Graph.Node>> = forwardRef<
   HTMLOListElement,
   DelegatorProps<Graph.Node>
->(({ tile, data, dragHandleListeners, dragHandleAttributes, style, children }, forwardedRef) => {
-  switch (tile.variant) {
-    case 'stack':
-      return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
-    case 'treeitem':
-      return (
-        <NavTreeItem
-          node={data}
-          level={tile.level}
-          draggableAttributes={dragHandleAttributes}
-          draggableListeners={dragHandleListeners}
-          style={style}
-          ref={forwardedRef}
-        >
-          {children}
-        </NavTreeItem>
-      );
-    default:
-      return null;
-  }
-});
+>(
+  (
+    { tile, data, dragHandleListeners, dragHandleAttributes, style, children, isActive, isMigrationDestination },
+    forwardedRef,
+  ) => {
+    switch (tile.variant) {
+      case 'stack':
+        return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
+      case 'treeitem':
+        return (
+          <NavTreeItem
+            node={data}
+            level={tile.level}
+            draggableAttributes={dragHandleAttributes}
+            draggableListeners={dragHandleListeners}
+            style={style}
+            ref={forwardedRef}
+            rearranging={isActive}
+            {...(isMigrationDestination && { migrating: 'into' })}
+          >
+            {children}
+          </NavTreeItem>
+        );
+      default:
+        return null;
+    }
+  },
+);
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -192,9 +199,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
         classNames={[
           'rounded block',
           hoverableFocusedKeyboardControls,
-          focusRing,
           'transition-opacity',
           (rearranging || isPreview) && 'opacity-0',
+          focusRing,
           migrating === 'into' && dropRing,
           level === 0 ? 'mbs-4 first:mbs-0' : '',
         ]}

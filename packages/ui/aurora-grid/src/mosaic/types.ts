@@ -57,6 +57,8 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
   style?: ComponentPropsWithoutRef<'div'>['style'];
+  isActive?: boolean;
+  isMigrationDestination?: boolean;
 }>;
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
