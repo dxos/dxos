@@ -37,7 +37,7 @@ export const comboboxContent: ComponentFunction<comboboxStyleProps> = ({ elevati
 
 export const comboboxItem: ComponentFunction<comboboxStyleProps> = (_props, ...etc) => {
   return mx(
-    'block p-2 truncate',
+    'block px-2 py-2 truncate',
     'text-base leading-none select-none cursor-pointer',
     // TODO(burdon): Factor out select and highlight.
     'data-[selected]:bg-primary-500 dark:data-[selected]:bg-primary-500 data-[selected]:text-primary-100',
