@@ -9,14 +9,18 @@ import { Expando, Text } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
-import { expectedExpando, expectedProperties, expectedText } from './expected-objects';
+import { data } from './testing';
 import { getLatestStorage, getConfig, getStorageDir } from './util';
 
+/**
+ * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
+ */
+// TODO(burdon): Create space with different object model types.
 const main = async () => {
   {
     // Check if storage for current version does not already exist.
     if (!(STORAGE_VERSION > getLatestStorage())) {
-      throw new Error(`Storage for current version ${STORAGE_VERSION} already exists`);
+      throw new Error(`Snapshot already exists for current version: ${STORAGE_VERSION}`);
     }
   }
 
@@ -24,6 +28,7 @@ const main = async () => {
   {
     // Init client.
     const newStoragePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
+    console.log(`creating snapshot: ${newStoragePath}`);
     client = new Client({ config: getConfig(newStoragePath) });
     await client.initialize();
   }
@@ -31,13 +36,24 @@ const main = async () => {
   {
     // Init storage.
     await client.halo.createIdentity();
+  }
 
-    const space = await client.spaces.create(expectedProperties);
+  // TODO(burdon): Leverage other generators to create multiple spaces with more data.
+  {
+    // Create Space and data.
+    const space = await client.spaces.create(data.space.properties);
     await space.waitUntilReady();
-    space.db.add(new Expando(expectedExpando));
+
+    // TODO(burdon): Add properties (mutations).
+    space.db.add(new Expando(data.space.expando));
     await space.db.flush();
+
+    // Generate epoch.
+    // TODO(burdon): Generate multiple epochs.
     await space.internal.createEpoch();
-    space.db.add(new Text(expectedText));
+
+    // TODO(burdon): Add mutations.
+    space.db.add(new Text(data.space.text.content));
     await space.db.flush();
   }
 
