@@ -10,6 +10,10 @@ import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
 
+// Space properties key for default metadata.
+// TODO(wittjosiah): Remove. Default space should be indicated by data in HALO space.
+export const defaultKey = '__DEFAULT__';
+
 /**
  * TODO(burdon): Public API (move comments here).
  */
@@ -17,6 +21,12 @@ import type { Space } from './space';
 //   https://ts.dev/style/#naming-style
 //   ClientApi? ClientProtocol?
 export interface Echo extends MulticastObservable<Space[]> {
+  /**
+   * Resolves when the default space is available.
+   */
+  // TODO(wittjosiah): Remove. Ensure default space is always available.
+  get isReady(): MulticastObservable<boolean>;
+
   /**
    * Returns the list of spaces.
    */

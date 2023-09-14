@@ -194,13 +194,13 @@ export class Connection {
 
       // TODO(nf): fix ErrorStream so instanceof works here
       if (err instanceof ConnectionResetError) {
-        log('aborting due to transport ConnectionResetError');
+        log.warn('aborting due to transport ConnectionResetError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof ConnectivityError) {
-        log('aborting due to transport ConnectivityError');
+        log.warn('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof UnknownProtocolError) {
-        log('unsure what to do for UnknownProtocolError', { err });
+        log.warn('unsure what to do with UnknownProtocolError, will keep on truckin', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -220,6 +220,7 @@ export class Connection {
 
   @synchronized
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
+  // TODO(nf): make abort cancel an existing close in progress.
   async abort(err?: Error) {
     log('aborting...', { err });
     if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
