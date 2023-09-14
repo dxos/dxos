@@ -8,7 +8,7 @@ import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import type { Graph } from '@braneframe/plugin-graph';
 import { Tree, TreeRootProps } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 

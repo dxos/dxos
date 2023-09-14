@@ -28,7 +28,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
       default: 0,
     }),
     jitter: Flags.integer({
-      description: 'Inverval variance (ms).',
+      description: 'Interval variance (ms).',
       default: 0,
     }),
     objects: Flags.integer({
