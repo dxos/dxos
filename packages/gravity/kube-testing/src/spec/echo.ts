@@ -139,6 +139,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
         // Reconnect previously disconnected agent.
         if (!config.ephemeral && !this.client.initialized) {
+          log.trace('dxos.test.echo.reconnect', { agentIdx, iter } satisfies ReconnectLog);
           await this._init(env);
         }
 
@@ -287,6 +288,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     const statsLogs: SerializedLogEntry<StatsLog>[] = [];
     const syncLogs: SerializedLogEntry<SyncTimeLog>[] = [];
+    const reconnectLogs: SerializedLogEntry<ReconnectLog>[] = [];
 
     const reader = getReader(results);
     for await (const entry of reader) {
@@ -297,7 +299,20 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         case 'dxos.test.echo.sync':
           syncLogs.push(entry);
           break;
+        case 'dxos.test.echo.reconnect':
+          reconnectLogs.push(entry);
+          break;
       }
+    }
+
+    if (reconnectLogs.length) {
+      const reconnectsCountByAgent = Object.fromEntries(
+        range(params.spec.agents).map((agentIdx) => [
+          agentIdx,
+          reconnectLogs.filter((entry) => entry.context.agentIdx === agentIdx).length,
+        ]),
+      );
+      log.info('reconnects by agent', reconnectsCountByAgent);
     }
 
     if (params.spec.showPNG) {
@@ -370,6 +385,11 @@ type StatsLog = {
 
 type SyncTimeLog = {
   time: number;
+  agentIdx: number;
+  iter: number;
+};
+
+type ReconnectLog = {
   agentIdx: number;
   iter: number;
 };
