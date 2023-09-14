@@ -3,6 +3,7 @@
 //
 
 export * from './arrow';
+export * from './border';
 export * from './density';
 export * from './dimensions';
 export * from './disabled';
