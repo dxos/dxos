@@ -61,12 +61,7 @@ export const SplitView = (props: SplitViewProps) => {
         {/* Top (header) bar. */}
         <Main.Content
           asChild
-          classNames={[
-            'fixed inset-inline-0 block-start-0 z-[1] flex gap-1',
-            coarseBlockSize,
-            baseSurface,
-            // fixedSurface,
-          ]}
+          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, baseSurface]}
         >
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>
