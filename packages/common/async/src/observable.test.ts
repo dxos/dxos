@@ -60,6 +60,16 @@ describe('multicast observable', () => {
     expect(result1).to.equal(result2);
   });
 
+  test('wait', async () => {
+    const stream = new PushStream<number>();
+    const observable = new MulticastObservable(stream.observable);
+    stream.next(1);
+    stream.next(2);
+    stream.complete();
+    const result = await observable.wait();
+    expect(result).to.deep.equal(2);
+  });
+
   test('forEach', async () => {
     const observable = MulticastObservable.from([1, 2, 3]);
     const result: number[] = [];
