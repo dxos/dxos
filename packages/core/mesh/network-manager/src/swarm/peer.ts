@@ -199,6 +199,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
       if (err instanceof TimeoutError) {
+        log.warn('aborting connection due to signalling failure');
         await connection.abort(err);
       }
       // Calls `onStateChange` with CLOSED state.
