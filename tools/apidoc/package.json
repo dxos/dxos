@@ -13,8 +13,11 @@
   },
   "scripts": {
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
-    "remark": "node dist/src/scripts/apidoc.js",
+    "main": "vite-node ./src/main.ts",
     "typedoc": "typedoc"
+  },
+  "dependencies": {
+    "vite-node": "^0.34.4"
   },
   "devDependencies": {
     "@dxos/plate": "workspace:*",

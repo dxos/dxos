@@ -17,21 +17,21 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
   if (!isCodeModule(p)) {
     throw new Error(`only ts or js files can be loaded. attempted: ${p}`);
   }
-  if (/\.tsx?$/.test(p) && !tsnodeRegistered) {
-    tsnode.register({
-      transpileOnly: true,
-      swc: true,
-      skipIgnore: true,
-      compilerOptions: {
-        strict: false,
-        target: 'es5',
-        module: 'commonjs',
-        ...options?.compilerOptions,
-      },
-    });
-    tsnodeRegistered = true;
-  }
-  const loader = options?.moduleLoaderFunction ?? ((m: string) => require(m));
+  // if (/\.tsx?$/.test(p) && !tsnodeRegistered) {
+  //   tsnode.register({
+  //     transpileOnly: true,
+  //     swc: true,
+  //     skipIgnore: true,
+  //     compilerOptions: {
+  //       strict: false,
+  //       target: 'es5',
+  //       module: 'commonjs',
+  //       ...options?.compilerOptions,
+  //     },
+  //   });
+  //   tsnodeRegistered = true;
+  // }
+  const loader = (m: string) => import(m); // options?.moduleLoaderFunction ?? ((m: string) => require(m));
   return loader(p);
 };
 

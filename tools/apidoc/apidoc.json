@@ -1,0 +1,5 @@
+{
+  "include":["../../docs/docs/guide/**/*.md", "../../docs/docs/guide/*.md", "../../docs/docs/test.md"],
+  "typedocJsonPath": "../../docs/docs/api.json",
+  "apiDocsPath": "../../docs/docs/api"
+}
