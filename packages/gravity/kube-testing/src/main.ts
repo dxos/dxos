@@ -68,7 +68,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
   echo: () => ({
     plan: new EchoTestPlan(),
     spec: {
-      agents: 4,
+      agents: 8,
       duration: 1_800_000,
       iterationDelay: 2000,
       epochPeriod: 8,
@@ -78,7 +78,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       operationCount: 20,
       signalArguments: ['globalsubserver'],
       showPNG: false,
-      transport: TransportKind.SIMPLE_PEER,
+      transport: TransportKind.TCP,
       withReconnects: true,
     },
     options: {
