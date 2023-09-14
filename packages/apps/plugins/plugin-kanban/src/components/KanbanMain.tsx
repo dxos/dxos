@@ -6,20 +6,19 @@ import React, { FC } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { Main, useTranslation } from '@dxos/aurora';
+import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { KanbanBoard } from './KanbanBoard';
-import { KANBAN_PLUGIN, type KanbanModel } from '../types';
+import { type KanbanModel } from '../types';
 
 export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
-  const { t } = useTranslation(KANBAN_PLUGIN);
+  // const { t } = useTranslation(KANBAN_PLUGIN);
 
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-
   if (!space) {
     return null;
   }
@@ -29,13 +28,7 @@ export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
     root: object, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
-    createItem: (column) =>
-      space.db.add(
-        new KanbanType.Item({
-          // TODO(burdon): Make automatic? Creates additional Text object!
-          // title: new Text(),
-        }),
-      ),
+    createItem: (column) => space.db.add(new KanbanType.Item()),
   };
 
   return (
