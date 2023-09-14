@@ -13,7 +13,7 @@ import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import { Mosaic, MosaicState } from '@dxos/aurora-grid';
+import { Mosaic, MosaicRootProps, MosaicState } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
@@ -25,6 +25,7 @@ const fake = faker.helpers.fake;
 
 export default {
   component: NavTreeRoot,
+  argTypes: { onMosaicChange: { action: 'mosaic changed' } },
 };
 
 const content = [...Array(4)].map(() => ({
@@ -116,12 +117,8 @@ const treeViewState = deepSignal<TreeViewContextValue>({
 }) as RevertDeepSignal<TreeViewContextValue>;
 
 export const Default = {
-  render: () => (
-    <Mosaic.Root
-      mosaic={mosaicState}
-      Delegator={NavTreeItemDelegator}
-      onMosaicChange={(event) => console.log('[nav tree story]', 'mosaic change', event)}
-    >
+  render: (args: MosaicRootProps) => (
+    <Mosaic.Root {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator}>
       <NavTreeRoot />
     </Mosaic.Root>
   ),
