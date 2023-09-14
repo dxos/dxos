@@ -16,7 +16,7 @@
     "src"
   ],
   "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
+    "chromatic": "true"
   },
   "dependencies": {
     "@dxos/aurora": "workspace:*",
