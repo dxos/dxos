@@ -77,6 +77,8 @@ export class PhoenixDaemon implements Daemon {
           `--profile=${profile}`,
           options?.metrics ? '--metrics' : undefined,
           options?.config ? `--config=${options.config}` : undefined,
+          options?.monitor ? '--monitor' : undefined,
+          options?.ws ? `--ws=${options.ws}` : undefined,
         ].filter(Boolean) as string[],
         // TODO(burdon): Make optional.
         env: {

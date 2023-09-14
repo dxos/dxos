@@ -116,6 +116,8 @@ export default class Start extends BaseCommand<typeof Start> {
         const process = await daemon.start(this.flags.profile, {
           config: this.flags.config,
           metrics: this.flags.metrics,
+          monitor: this.flags.monitor,
+          ws: this.flags.ws,
         });
         if (process) {
           this.log('Agent started.');
