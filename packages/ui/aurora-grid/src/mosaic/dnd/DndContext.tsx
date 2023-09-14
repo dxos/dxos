@@ -87,8 +87,8 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      contextValue.activeId = null;
       contextValue.dragEndSubscriptions.forEach((subscription) => subscription.call(this, event));
+      contextValue.activeId = null;
     },
     [contextValue.dragEndSubscriptions],
   );

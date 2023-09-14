@@ -24,9 +24,34 @@ export const useHandleMigrateDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback((event: DragEndEvent) => {
+  return useCallback(({ active }: DragEndEvent, rearrangeResult?: string | null) => {
+    let result = null;
+    const activeId = active.id.toString();
+    console.log('[migrate drag end]', rearrangeResult, activeId, dnd.migrationDestinationId);
+    if (!rearrangeResult && activeId && dnd.migrationDestinationId) {
+      // remove active tile id from parent’s child relations
+      const parentIds = Array.from(relations[activeId]?.parent ?? []);
+      parentIds.forEach((id) => relations[id].child?.delete(activeId!));
+      // update active tile’s parent relation
+      relations[activeId].parent = new Set([dnd.migrationDestinationId]);
+      // add active tile to new parent’s child relations
+      relations[dnd.migrationDestinationId].child.add(activeId);
+      // fire onMosaicChange
+      onMosaicChange?.({
+        type: 'migrate',
+        id: activeId,
+        fromId: parentIds[0],
+        toId: dnd.migrationDestinationId,
+        relation: 'child',
+      });
+      // update animation
+      dnd.overlayDropAnimation = 'into';
+      // return result
+      result = dnd.migrationDestinationId;
+    }
     dnd.migrationDestinationId = null;
-    return null;
+    dnd.activeMigrationClass = null;
+    return result;
   }, deps);
 };
 
@@ -57,9 +82,7 @@ export const useHandleMigrateDragOver = () => {
   return useCallback(({ over }: DragOverEvent) => {
     if (dnd.activeMigrationClass && over?.data?.current) {
       const overTile = over?.data?.current as Tile | undefined;
-      const nextId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
-      console.log('[migrate drag over]', nextId);
-      dnd.migrationDestinationId = nextId;
+      dnd.migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
     } else {
       dnd.migrationDestinationId = null;
     }

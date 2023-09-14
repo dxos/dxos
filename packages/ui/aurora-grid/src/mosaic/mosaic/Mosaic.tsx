@@ -76,7 +76,7 @@ const MosaicRootImpl = ({ children }: PropsWithChildren) => {
   const handleMigrateDragEnd = useHandleMigrateDragEnd();
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      handleRearrangeDragEnd(event) || handleMigrateDragEnd(event);
+      handleMigrateDragEnd(event, handleRearrangeDragEnd(event));
     },
     [handleRearrangeDragEnd, handleMigrateDragEnd],
   );
