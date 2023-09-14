@@ -3,21 +3,23 @@
 //
 
 import {
+  flexRender,
+  getCoreRowModel,
+  getGroupedRowModel,
+  useReactTable,
+  ColumnSizingInfoState,
+  ColumnSizingState,
+  GroupingState,
+  HeaderGroup,
   Row,
   RowData,
   RowSelectionState,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  VisibilityState,
-  ColumnSizingInfoState,
-  HeaderGroup,
   TableState,
-  GroupingState,
-  getGroupedRowModel,
+  VisibilityState,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
+import { debounce } from '@dxos/async';
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
 import { defaultTableSlots, TableSlots } from './theme';
@@ -130,9 +132,10 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
 
   // Resizing.
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+  const onColumnResizeDebounced = debounce<ColumnSizingState>((info) => onColumnResize?.(info), 500);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
-      onColumnResize?.(table.getState().columnSizing);
+      onColumnResizeDebounced(table.getState().columnSizing);
     }
   }, [columnSizingInfo]);
 
