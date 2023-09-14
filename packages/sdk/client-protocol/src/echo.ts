@@ -22,6 +22,12 @@ export const defaultKey = '__DEFAULT__';
 //   ClientApi? ClientProtocol?
 export interface Echo extends MulticastObservable<Space[]> {
   /**
+   * Resolves when the default space is available.
+   */
+  // TODO(wittjosiah): Remove. Ensure default space is always available.
+  get isReady(): MulticastObservable<boolean>;
+
+  /**
    * Returns the list of spaces.
    */
   get(): Space[];

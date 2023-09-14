@@ -22,7 +22,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
@@ -31,6 +31,8 @@ import { InvitationsProxy } from '../invitations';
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
+  private readonly _defaultSpaceAvailable = new PushStream<boolean>();
+  private readonly _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
@@ -101,7 +103,16 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // Propagate space state updates to the space list observable.
-          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesStream.next([...this.get()]));
+          spaceProxy._stateUpdate.on(this._ctx, () => {
+            this._spacesStream.next([...this.get()]);
+            if (
+              spaceProxy?.state.get() === SpaceState.READY &&
+              spaceProxy?.properties[defaultKey] === this._getIdentityKey()?.toHex()
+            ) {
+              this._defaultSpaceAvailable.next(true);
+              this._defaultSpaceAvailable.complete();
+            }
+          });
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -136,6 +147,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
+  }
+
+  get isReady() {
+    return this._isReady;
   }
 
   override get(): Space[];

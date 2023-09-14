@@ -129,7 +129,7 @@ export class SpaceProxy implements Space {
     return this._data.state === SpaceState.READY && this._initialized;
   }
 
-  get properties() {
+  get properties(): TypedObject {
     if (this._properties) {
       return this._properties;
     } else {
