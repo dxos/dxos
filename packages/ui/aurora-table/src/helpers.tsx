@@ -103,6 +103,7 @@ const CellSelector = <TData extends RowData>({
   value: TData;
   onUpdate: (value: TData) => void;
 }) => {
+  const [edit, setEdit] = useState(false);
   const [value, setValue] = useState<ComboBoxItem>();
   useEffect(() => setValue(_value ? { id: model.getId(_value), label: model.getText(_value) } : undefined), [_value]);
   const [items, setItems] = useState<ComboBoxItem[]>([]);
@@ -111,8 +112,24 @@ const CellSelector = <TData extends RowData>({
     setItems(items.map((item) => ({ id: model.getId(item), label: model.getText(item), data: item })));
   };
 
+  if (!edit) {
+    const text = _value ? model.getText(_value) : undefined;
+    return (
+      // TODO(burdon): Hack to prevent div from collapsing.
+      <div className={mx('w-full', !text && 'opacity-0')} onClick={() => setEdit(true)}>
+        {text ?? '-'}
+      </div>
+    );
+  }
+
   return (
-    <ComboBox.Root items={items} value={value} onChange={(value) => onUpdate(value?.data)} onInputChange={handleUpdate}>
+    <ComboBox.Root
+      classNames='-mx-2'
+      items={items}
+      value={value}
+      onChange={(value) => onUpdate(value?.data)}
+      onInputChange={handleUpdate}
+    >
       <ComboBox.Input />
       <ComboBox.Content>
         {items.map((item) => (
@@ -138,18 +155,19 @@ export class ColumnBuilder<TData extends RowData> {
       header: (column) => {
         return <div className={'truncate'}>{label ?? column.header.id}</div>;
       },
-      cell: onUpdate
-        ? (cell) => (
-            <CellSelector<any>
-              model={model}
-              value={cell.getValue()}
-              onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
-            />
-          )
-        : (cell) => {
-            const value = cell.getValue();
-            return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
-          },
+      cell:
+        model && onUpdate
+          ? (cell) => (
+              <CellSelector<any>
+                model={model}
+                value={cell.getValue()}
+                onUpdate={(value) => onUpdate?.(cell.row.original, cell.column.id, value)}
+              />
+            )
+          : (cell) => {
+              const value = cell.getValue();
+              return <div className={mx('truncate', className)}>{value ? model.getText(value) : ''}</div>;
+            },
     });
   }
 
