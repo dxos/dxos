@@ -200,8 +200,7 @@ export class Connection {
         log('aborting due to transport ConnectivityError');
         this.abort().catch((err) => this.errors.raise(err));
       } else if (err instanceof UnknownProtocolError) {
-        log('aborting due to transport UnknownProtocolError');
-        this.abort().catch((err) => this.errors.raise(err));
+        log('unsure what to do for UnknownProtocolError', { err });
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
