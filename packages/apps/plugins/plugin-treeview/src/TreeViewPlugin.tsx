@@ -52,15 +52,13 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-      if (!clientPlugin) {
+      const client = clientPlugin?.provides.client;
+      if (!client?.spaces.isReady.get()) {
         return;
       }
 
-      const client = clientPlugin.provides.client;
-      const defaultSpace = client.spaces.default;
-      await defaultSpace.waitUntilReady();
-
       // Ensure defaultSpace has the app state persistor
+      const defaultSpace = client.spaces.default;
       const appStates = defaultSpace.db.query(AppState.filter()).objects;
       if (appStates.length < 1) {
         const appState = new AppState();
