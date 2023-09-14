@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export type { Echo, Space } from '@dxos/client-protocol';
+export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
 export {
@@ -37,8 +37,6 @@ export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/servi
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
-export { Properties, type PropertiesProps } from '../proto';
-
-export { SpaceList, defaultKey } from './space-list';
+export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy';
 export { createDefaultModelFactory } from './util';

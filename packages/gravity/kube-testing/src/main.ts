@@ -78,6 +78,7 @@ const plans: { [key: string]: () => RunPlanParams<any, any> } = {
       operationCount: 20,
       signalArguments: ['globalsubserver'],
       showPNG: false,
+      // transport: TransportKind.TCP,
       transport: TransportKind.SIMPLE_PEER,
       withReconnects: true,
     },

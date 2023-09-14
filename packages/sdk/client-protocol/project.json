@@ -37,6 +37,15 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/sdk/client-protocol/src/proto/gen"
+      ]
     }
   },
   "implicitDependencies": [
