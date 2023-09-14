@@ -108,6 +108,10 @@ export class Peer {
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
+    if (this.connection && ![ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.connection.state)) {
+      log.info(`received offer when connection already in ${this.connection.state} state`);
+      return { accept: false };
+    }
     // Check if we are already trying to connect to that peer.
     if (this.connection || this.initiating) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
