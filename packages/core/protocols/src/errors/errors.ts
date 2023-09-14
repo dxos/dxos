@@ -125,14 +125,14 @@ export class TimeoutError extends BaseError {
   }
 }
 
-// General protocol error
+// General protocol error.
 export class ProtocolError extends BaseError {
   constructor(message?: string, context?: any) {
     super('PROTOCOL_ERROR', message, context);
   }
 }
 
-// General connectivity errors
+// General connectivity errors.
 export class ConnectivityError extends BaseError {
   constructor(message?: string, context?: any) {
     super('CONNECTIVITY_ERROR', message, context);

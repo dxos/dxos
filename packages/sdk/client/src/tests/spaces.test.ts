@@ -96,6 +96,7 @@ describe('Spaces', () => {
 
     let itemId: string;
     {
+      await client.spaces.isReady.wait();
       const space = client.spaces.default;
       const {
         objectsUpdated: [item],

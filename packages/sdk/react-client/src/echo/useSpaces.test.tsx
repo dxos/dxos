@@ -18,6 +18,7 @@ describe('useSpaces', () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
@@ -30,6 +31,7 @@ describe('useSpaces', () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
@@ -56,6 +58,7 @@ describe('useSpace', () => {
     expect(result.current).to.be.undefined;
     await act(async () => {
       await client.halo.createIdentity();
+      await client.spaces.isReady.wait();
     });
     rerender();
     expect(result.current).to.not.be.undefined;

@@ -57,19 +57,17 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       }
 
       const client = clientPlugin.provides.client;
-
       const defaultSpace = client.spaces.default;
-      if (defaultSpace) {
-        // Ensure defaultSpace has the app state persistor
-        await defaultSpace.waitUntilReady();
-        const appStates = defaultSpace.db.query(AppState.filter()).objects;
-        if (appStates.length < 1) {
-          const appState = new AppState();
-          defaultSpace.db.add(appState);
-          state.appState = appState;
-        } else {
-          state.appState = (appStates as AppState[])[0];
-        }
+      await defaultSpace.waitUntilReady();
+
+      // Ensure defaultSpace has the app state persistor
+      const appStates = defaultSpace.db.query(AppState.filter()).objects;
+      if (appStates.length < 1) {
+        const appState = new AppState();
+        defaultSpace.db.add(appState);
+        state.appState = appState;
+      } else {
+        state.appState = (appStates as AppState[])[0];
       }
     },
     provides: {
