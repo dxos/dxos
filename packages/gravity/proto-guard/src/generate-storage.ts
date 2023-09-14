@@ -31,11 +31,14 @@ const main = async () => {
   {
     // Init storage.
     await client.halo.createIdentity();
+
     const space = await client.spaces.create(expectedProperties);
     await space.waitUntilReady();
     space.db.add(new Expando(expectedExpando));
+    await space.db.flush();
     await space.internal.createEpoch();
     space.db.add(new Text(expectedText));
+    await space.db.flush();
   }
 
   {

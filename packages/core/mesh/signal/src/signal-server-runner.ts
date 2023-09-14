@@ -47,7 +47,7 @@ export class SignalServerRunner {
     signalArguments,
     cwd,
     port,
-    timeout = 5_000,
+    timeout = 60_000,
     env = {},
     shell = false,
     killExisting = false,
@@ -115,7 +115,7 @@ export class SignalServerRunner {
     });
 
     server.stderr.on('data', (data) => {
-      log(`TestServer stderr: ${data}`);
+      log.info(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
@@ -123,6 +123,9 @@ export class SignalServerRunner {
     });
 
     server.on('close', (code) => {
+      if ((code! -= 0)) {
+        throw new Error(`TestServer exited with code ${code}`);
+      }
       log.info(`TestServer exited with code ${code}`);
     });
 
@@ -149,7 +152,7 @@ export class SignalServerRunner {
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
-        throw new Error('Test Signal server was not started');
+        throw new Error(`Test Signal server was not started in ${this._retriesLimit} retries`);
       }
 
       return await this.waitUntilStarted();
