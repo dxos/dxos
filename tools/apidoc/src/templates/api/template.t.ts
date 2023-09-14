@@ -5,6 +5,10 @@ import path from 'node:path';
 import { JSONOutput } from 'typedoc';
 import { directory } from '@dxos/plate';
 
+import * as url from 'url';
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
 export type Input = JSONOutput.ProjectReflection;
 
 export default directory<Input>({
