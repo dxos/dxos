@@ -48,9 +48,9 @@ describe('Tests against old storage', () => {
 
     log.info('Running test', { storage: client.config.values.runtime?.client?.storage?.dataRoot });
     const spaces = client.spaces.get();
-    await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1000);
+    await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1_000);
 
-    const space = spaces.find((space) => space.properties.name === expectedProperties.name);
+    const space = spaces.find((space) => space.properties.name === data.space.properties.name);
     invariant(space, 'Space not found');
 
     {

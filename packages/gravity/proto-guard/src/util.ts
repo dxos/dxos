@@ -15,7 +15,7 @@ export const getPackageDir = () =>
 
 export const getStorageDir = () => {
   const packageDirname = getPackageDir();
-  const storageDir = path.join(packageDirname, 'storage');
+  const storageDir = path.join(packageDirname, 'data');
   fs.mkdirSync(storageDir, { recursive: true });
   return storageDir;
 };
