@@ -8,8 +8,8 @@ import '@dxosTheme';
 
 import { Invitation } from '@dxos/react-client/invitations';
 
-import { inviteWithState } from '../../testing/fixtures/invitations';
 import { InvitationList } from './InvitationList';
+import { inviteWithState } from '../../testing/fixtures/invitations';
 
 export default {
   component: InvitationList,

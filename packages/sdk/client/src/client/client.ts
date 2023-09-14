@@ -18,12 +18,12 @@ import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
+import { ClientRuntime } from './client-runtime';
 import type { SpaceList } from '../echo';
-import type { HaloProxy, Identity } from '../halo';
+import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.
@@ -197,17 +197,10 @@ export class Client {
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    const handleIdentityCreated = async ({ identityKey }: Identity) => {
-      const defaultSpace = await this.spaces.create();
-      defaultSpace.properties[defaultKey] = identityKey.toHex();
-      // Ensure space properties are cached.
-      await defaultSpace.db.flush();
-    };
-
     this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
-    const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
+    const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
       this._services,
       modelFactory,

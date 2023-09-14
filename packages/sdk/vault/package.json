@@ -37,8 +37,10 @@
   ],
   "dependencies": {
     "@braneframe/plugin-telemetry": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -49,6 +51,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-shell": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fastify/cors": "^8.2.1",

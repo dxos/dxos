@@ -15,7 +15,7 @@ import {
   TableSchema,
   SelectQueryModel,
 } from '@dxos/aurora-table';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, EchoDatabase, TypedObject } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
@@ -56,7 +56,11 @@ const getSchemaType = (type?: TableSchemaProp['type']): SchemaType.PropType => {
 
 // TODO(burdon): Factor out.
 class QueryModel implements SelectQueryModel<TypedObject> {
-  constructor(private readonly _db: EchoDatabase, private readonly _schema: string, private readonly _prop: string) {}
+  constructor(
+    private readonly _db: EchoDatabase,
+    private readonly _schema: string,
+    private readonly _prop: string,
+  ) {}
 
   getId(object: TypedObject) {
     return object.id;
@@ -199,9 +203,9 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   };
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <DensityProvider density='fine'>
-        <div className='flex grow -ml-[1px] -mt-[1px] overflow-hidden'>
+        <div className='flex grow m-4 overflow-hidden'>
           <Table<TypedObject>
             keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
             columns={columns}

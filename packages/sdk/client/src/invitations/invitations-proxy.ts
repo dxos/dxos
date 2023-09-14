@@ -45,10 +45,9 @@ export class InvitationsProxy implements Invitations {
 
   private _opened = false;
 
-  // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService,
-    private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>
+    private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
   get created(): MulticastObservable<CancellableInvitation[]> {

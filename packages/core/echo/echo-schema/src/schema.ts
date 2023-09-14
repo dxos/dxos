@@ -51,10 +51,7 @@ export type EchoSchemaField = {
 export class EchoSchemaType {
   public readonly fields: EchoSchemaField[] = [];
 
-  // prettier-ignore
-  constructor(
-    private readonly _type: pb.Type
-  ) {
+  constructor(private readonly _type: pb.Type) {
     this.fields = getFields(_type);
   }
 
@@ -89,10 +86,7 @@ export class EchoSchema {
     return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
   }
 
-  // prettier-ignore
-  constructor(
-    private readonly _root: pb.Root
-  ) { }
+  constructor(private readonly _root: pb.Root) {}
 
   get types() {
     return Array.from(this._prototypes.keys()).map((name) => this.getType(name));

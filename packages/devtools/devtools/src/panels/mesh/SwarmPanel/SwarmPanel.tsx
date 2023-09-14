@@ -12,8 +12,8 @@ import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/s
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { ComplexMap } from '@dxos/util';
 
-import { PanelContainer } from '../../../components';
 import { ConnectionInfoView } from './ConnectionInfoView';
+import { PanelContainer } from '../../../components';
 
 type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 

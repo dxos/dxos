@@ -11,8 +11,8 @@ import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-f
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { getConfig } from '../config';
 import { DX_BOT_CONTAINER_RPC_PORT } from './defs';
+import { getConfig } from '../config';
 
 const rpcPort = process.env.DX_BOT_CONTAINER_RPC_PORT
   ? parseInt(process.env.DX_BOT_CONTAINER_RPC_PORT)

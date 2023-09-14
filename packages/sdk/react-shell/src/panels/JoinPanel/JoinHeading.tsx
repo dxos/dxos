@@ -7,8 +7,8 @@ import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 
-import { Heading } from '../../components';
 import { JoinPanelMode } from './JoinPanelProps';
+import { Heading } from '../../components';
 
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;

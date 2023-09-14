@@ -16,8 +16,8 @@ import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
+import { TestFeedBuilder } from '../testing';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;
@@ -80,7 +80,11 @@ class Agent {
   public messages: FeedMessageBlock[] = [];
   public writePromise: Promise<any> = Promise.resolve();
 
-  constructor(private readonly builder: TestFeedBuilder, public feedStore: FeedStore<FeedMessage>, public id: string) {}
+  constructor(
+    private readonly builder: TestFeedBuilder,
+    public feedStore: FeedStore<FeedMessage>,
+    public id: string,
+  ) {}
 
   async open() {
     const key = await this.builder.keyring.createKey();
@@ -131,7 +135,10 @@ type Real = {
 };
 
 class WriteCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(public agent: string, public count: number) {}
+  constructor(
+    public agent: string,
+    public count: number,
+  ) {}
 
   check = () => true;
 

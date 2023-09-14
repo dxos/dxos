@@ -31,8 +31,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/local-storage/**/*.{ts,js}"
-        ]
+          "packages/common/local-storage/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

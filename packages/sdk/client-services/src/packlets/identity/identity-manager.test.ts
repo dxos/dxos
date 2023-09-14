@@ -15,8 +15,8 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
+import { createDefaultModelFactory } from '../services';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({

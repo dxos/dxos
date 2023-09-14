@@ -6,10 +6,12 @@ import { expect } from 'chai';
 import fse from 'fs-extra';
 import path from 'node:path';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Text } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
@@ -40,20 +42,24 @@ describe('Tests against old storage', () => {
     builder.config = getConfig(testStoragePath);
     const services = builder.createLocal();
     const client = new Client({ services });
-    await client.initialize();
+    await asyncTimeout(client.initialize(), 1000);
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
     log.info('Running test', { storage: client.config.values.runtime?.client?.storage?.dataRoot });
-    afterTest(() => client.destroy());
-    await client.initialize();
-    const space = client.spaces.get()[0];
-    await space.waitUntilReady();
+    const spaces = client.spaces.get();
+    await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1000);
+
+    const space = spaces.find((space) => space.properties.name === expectedProperties.name);
+    invariant(space, 'Space not found');
 
     {
       // Check epoch.
       const spaceBackend = services.host!.context.spaceManager.spaces.get(space.key) ?? failUndefined();
-      await spaceBackend.controlPipeline.state.waitUntilTimeframe(spaceBackend.controlPipeline.state.endTimeframe);
+      await asyncTimeout(
+        spaceBackend.controlPipeline.state.waitUntilTimeframe(spaceBackend.controlPipeline.state.endTimeframe),
+        1000,
+      );
       const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
       expect(epoch).to.equal(data.epochs);
     }
@@ -62,13 +68,14 @@ describe('Tests against old storage', () => {
       // TODO(dmaretskyi): Only needed because waitUntilReady seems to not guarantee that all objects will be present.
       const expectedObjects = 3;
       if (space.db.query().objects.length < expectedObjects) {
-        await new Promise<void>((resolve) => {
+        const queryPromise = new Promise<void>((resolve) => {
           space.db.query().subscribe((query) => {
             if (query.objects.length >= expectedObjects) {
               resolve();
             }
           });
         });
+        await asyncTimeout(queryPromise, 1000);
       }
     }
 

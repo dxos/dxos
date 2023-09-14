@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { Space } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { StepEvent } from '../../steps';
 import { ErsatzSpace } from './SpacePanelProps';
+import { StepEvent } from '../../steps';
 
 type SpaceMachineContext = {
   invitation?: CancellableInvitationObservable;

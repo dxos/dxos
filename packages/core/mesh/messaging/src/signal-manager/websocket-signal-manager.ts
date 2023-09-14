@@ -12,8 +12,8 @@ import { trace } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
+import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 
 /**
  * Manages connection to multiple Signal Servers over WebSocket
@@ -39,10 +39,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  // prettier-ignore
-  constructor(
-    private readonly _hosts: Runtime.Services.Signal[]
-  ) {
+  constructor(private readonly _hosts: Runtime.Services.Signal[]) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       if (this._servers.has(host.server)) {
@@ -51,7 +48,7 @@ export class WebsocketSignalManager implements SignalManager {
       const server = new SignalClient(
         host.server,
         async (message) => this.onMessage.emit(message),
-        async (data) => this.swarmEvent.emit(data)
+        async (data) => this.swarmEvent.emit(data),
       );
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 

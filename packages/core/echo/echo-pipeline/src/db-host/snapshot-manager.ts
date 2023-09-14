@@ -19,13 +19,11 @@ const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot')
  */
 @trackLeaks('open', 'close')
 export class SnapshotManager {
-  // prettier-ignore
   constructor(
     private readonly _snapshotStore: SnapshotStore,
     private readonly _blobStore: BlobStore,
     private readonly _blobSync: BlobSync,
-  ) {
-  }
+  ) {}
 
   private async _getBlob(blobId: Uint8Array): Promise<SpaceSnapshot> {
     const blob = await this._blobStore.get(blobId);

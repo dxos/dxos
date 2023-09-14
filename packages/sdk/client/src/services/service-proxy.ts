@@ -14,18 +14,17 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 export class ClientServicesProxy implements ClientServicesProvider {
   private readonly _proxy: ProtoRpcPeer<ClientServices>;
 
-  // prettier-ignore
   constructor(
     port: RpcPort,
     // NOTE: With lower timeout the shared worker does not have enough time to start.
     // TODO(dmaretskyi): Find better ways to detected when the worker has finished loading. It might take a while on slow connections.
-    private readonly _timeout = 30_000
+    private readonly _timeout = 30_000,
   ) {
     this._proxy = createProtoRpcPeer({
       requested: clientServiceBundle,
       exposed: {},
       handlers: {},
-      port
+      port,
     });
   }
 

@@ -7,9 +7,9 @@ import type { ValueEncoding } from 'hypercore';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
+import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;
@@ -32,10 +32,7 @@ const evaluate = <T extends {}, P>(builder: TestBuilder<T>, arg: P | PropertyPro
 export class TestBuilder<T extends {}> {
   static readonly ROOT_DIR = 'feeds';
 
-  // prettier-ignore
-  constructor(
-    public readonly _properties: TestBuilderOptions<T> = {}
-  ) {}
+  constructor(public readonly _properties: TestBuilderOptions<T> = {}) {}
 
   /**
    * Creates a new builder with the current builder's properties.

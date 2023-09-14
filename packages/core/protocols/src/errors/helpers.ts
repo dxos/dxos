@@ -5,7 +5,6 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { Error as SerializedErrorProto } from '../proto/gen/dxos/error';
 import {
   CancelledError,
   ConnectionResetError,
@@ -28,6 +27,7 @@ import {
   UnknownModelError,
   UnknownProtocolError,
 } from './errors';
+import { Error as SerializedErrorProto } from '../proto/gen/dxos/error';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;

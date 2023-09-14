@@ -6,9 +6,9 @@ import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
+import { Avatar, AvatarRootProps, useAvatarContext } from './Avatar';
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
-import { Avatar, AvatarRootProps, useAvatarContext } from './Avatar';
 
 type AvatarGroupRootProps = Omit<AvatarRootProps, 'status' | 'maskId' | 'inGroup'> &
   ThemedClassName<ComponentPropsWithRef<'div'>>;

@@ -32,11 +32,10 @@ export class ShellManager {
   private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
-  // prettier-ignore
   constructor(
     private readonly _iframeManager: IFrameManager,
     private readonly _joinedSpace: Event<PublicKey>,
-    private readonly _channel = DEFAULT_SHELL_CHANNEL
+    private readonly _channel = DEFAULT_SHELL_CHANNEL,
   ) {}
 
   get display() {

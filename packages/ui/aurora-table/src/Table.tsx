@@ -3,21 +3,23 @@
 //
 
 import {
+  flexRender,
+  getCoreRowModel,
+  getGroupedRowModel,
+  useReactTable,
+  ColumnSizingInfoState,
+  ColumnSizingState,
+  GroupingState,
+  HeaderGroup,
   Row,
   RowData,
   RowSelectionState,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  VisibilityState,
-  ColumnSizingInfoState,
-  HeaderGroup,
   TableState,
-  GroupingState,
-  getGroupedRowModel,
+  VisibilityState,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
+import { debounce } from '@dxos/async';
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
 import { defaultTableSlots, TableSlots } from './theme';
@@ -130,9 +132,10 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
 
   // Resizing.
   const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
+  const onColumnResizeDebounced = debounce<ColumnSizingState>((info) => onColumnResize?.(info), 500);
   useEffect(() => {
     if (columnSizingInfo.columnSizingStart?.length === 0) {
-      onColumnResize?.(table.getState().columnSizing);
+      onColumnResizeDebounced(table.getState().columnSizing);
     }
   }, [columnSizingInfo]);
 
@@ -147,7 +150,7 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
     data,
     columns,
     defaultColumn: {
-      size: 200, // Required in order remove default width.
+      size: 400, // Required in order remove default width.
       maxSize: 800,
     },
     getCoreRowModel: getCoreRowModel(),
@@ -211,11 +214,11 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
-    <div ref={containerRef} className={mx('grow overflow-auto', inputSurface, slots?.root?.className)}>
+    <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
       <table
         // Styles:
         // table-fixed: Prevents fixed sized columns from shrinking.
-        className={mx(!fullWidth && 'table-fixed ', 'border-collapse', slots?.table?.className)}
+        className={mx(!fullWidth && 'table-fixed', inputSurface, slots?.table?.className)}
         style={{
           width: fullWidth ? '100%' : table.getTotalSize(),
         }}
@@ -369,6 +372,8 @@ const TableHead = <TData extends RowData>({
                     width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                   }}
                   // Relative for resize handle.
+                  // TODO(burdon): Border scrolls with main content.
+                  //  https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
                   className={mx(
                     'relative text-left',
                     border && 'border',
@@ -387,7 +392,7 @@ const TableHead = <TData extends RowData>({
                   {header.column.columnDef.meta?.resizable && (
                     <div
                       className={mx(
-                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
+                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px]',
                         'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
                         header.column.getIsResizing() && 'hidden',
                       )}

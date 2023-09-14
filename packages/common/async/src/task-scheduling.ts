@@ -19,10 +19,9 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null; // Can't be rejected.
 
-  // prettier-ignore
   constructor(
     private readonly _ctx: Context,
-    private readonly _callback: () => Promise<void>
+    private readonly _callback: () => Promise<void>,
   ) {}
 
   schedule() {

@@ -43,13 +43,10 @@ export class SimplePeerTransportProxy implements Transport {
   private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: SimplePeerTransportProxyParams
-  ) {
+  constructor(private readonly _params: SimplePeerTransportProxyParams) {
     this._serviceStream = this._params.bridgeService.open({
       proxyId: this._proxyId,
-      initiator: this._params.initiator
+      initiator: this._params.initiator,
     });
 
     this._serviceStream.waitUntilReady().then(
@@ -65,21 +62,25 @@ export class SimplePeerTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.pipe(new Writable({
-          write: (chunk, _, callback) => {
-            this._params.bridgeService.sendData({
-              proxyId: this._proxyId,
-              payload: chunk
-            }).then(
-              () => callback(),
-              (err: any) => {
-                log.catch(err);
-              }
-            );
-          },
-        }));
+        this._params.stream.pipe(
+          new Writable({
+            write: (chunk, _, callback) => {
+              this._params.bridgeService
+                .sendData({
+                  proxyId: this._proxyId,
+                  payload: chunk,
+                })
+                .then(
+                  () => callback(),
+                  (err: any) => {
+                    log.catch(err);
+                  },
+                );
+            },
+          }),
+        );
       },
-      (error) => log.catch(error)
+      (error) => log.catch(error),
     );
   }
 
@@ -185,15 +186,15 @@ export class SimplePeerTransportProxyFactory implements TransportFactory {
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;
 
-  if (message.includes('ConnectionResetError')) {
+  if (message.includes('CONNECTION_RESET')) {
     return new ConnectionResetError(message);
-  } else if (message.includes('TimeoutError')) {
+  } else if (message.includes('TIMEOUT')) {
     return new TimeoutError(message);
-  } else if (message.includes('ProtocolError')) {
+  } else if (message.includes('PROTOCOL_ERROR')) {
     return new ProtocolError(message);
-  } else if (message.includes('ConnectivityError')) {
+  } else if (message.includes('CONNECTIVITY_ERROR')) {
     return new ConnectivityError(message);
-  } else if (message.includes('UnknownProtocolError')) {
+  } else if (message.includes('UNKNOWN_PROTOCOL_ERROR')) {
     return new UnknownProtocolError(message);
   } else {
     return typeof err === 'string' ? new Error(err) : err;

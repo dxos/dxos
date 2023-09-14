@@ -12,9 +12,9 @@ import { createSimplePeerTransportFactory, TransportFactory } from '@dxos/networ
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
+import { ShellRuntimeImpl } from './shell-runtime';
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
-import { ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 

@@ -24,7 +24,7 @@ export const WorkflowTable = ({ items }: { items: any[] }) => {
       conclusion: !conclusion ? chalk.gray('…') : conclusion === 'success' ? chalk.bold.green('✔') : chalk.red('✗'),
       updated: chalk.blue(relativeTime(Date.parse(updated_at).valueOf())),
       branch: chalk.bold.gray(formatPullRequest(pull_requests)),
-      title: chalk.dim.green(display_title)
+      title: chalk.dim.green(display_title),
     })),
     {
       columns: ['id', 'name', 'updated', 'conclusion', 'branch', 'title'],
@@ -32,24 +32,24 @@ export const WorkflowTable = ({ items }: { items: any[] }) => {
       headingTransform: (str) => str.toLowerCase(),
       config: {
         name: {
-          maxWidth: 24
+          maxWidth: 24,
         },
         updated: {
           align: 'right',
-          minWidth: 14
+          minWidth: 14,
         },
         conclusion: {
           showHeaders: false,
-          minWidth: 4
+          minWidth: 4,
         },
         branch: {
-          maxWidth: 40
+          maxWidth: 40,
         },
         title: {
-          maxWidth: 40
-        }
-      }
-    }
+          maxWidth: 40,
+        },
+      },
+    },
   );
 
   return (

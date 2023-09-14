@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 
-import { GITHUB_PLUGIN } from '../../props';
 import { ResolverTree } from './ResolverTree';
+import { GITHUB_PLUGIN } from '../../props';
 
 export const ResolverDialog = ({
   handleJoinSpace,

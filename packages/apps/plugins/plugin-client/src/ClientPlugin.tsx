@@ -23,11 +23,12 @@ export const ClientPlugin = (
   registerSignalFactory();
   const client = new Client(options);
 
-  // Open devtools on keypress
-  const onKeypress = async (e: KeyboardEvent) => {
-    // Cmd + Shift + X
-    if (e.metaKey && e.shiftKey && e.key === 'x') {
-      e.preventDefault();
+  // Open devtools on keypress.
+  // TODO(burdon): Move to DebugPlugin and add key binding to action.
+  const onKeypress = async (event: KeyboardEvent) => {
+    // Cmd + Shift + X.
+    if (event.metaKey && event.shiftKey && event.key === 'x') {
+      event.preventDefault();
 
       const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
 
@@ -63,6 +64,11 @@ export const ClientPlugin = (
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           firstRun = true;
           await client.halo.createIdentity();
+        } else if (client.halo.identity.get() && deviceInvitationCode) {
+          // Ignore device invitation if identity already exists.
+          // TODO(wittjosiah): Identity merging.
+          searchParams.delete('deviceInvitationCode');
+          window.history.replaceState({}, '', `${location.pathname}?${searchParams}`);
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
@@ -90,6 +96,10 @@ export const ClientPlugin = (
             });
           }, 2000);
         }
+      }
+
+      if (client.halo.identity.get()) {
+        await client.spaces.isReady.wait();
       }
 
       return {

@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
 
+import { defaultGraphStyles } from './styles';
 import {
   createSimulationDrag,
   AttributesOptions,
@@ -15,7 +16,6 @@ import {
   GraphRenderer,
   LabelOptions,
 } from '../graph';
-import { defaultGraphStyles } from './styles';
 
 export interface GraphProps {
   className?: string;

@@ -6,10 +6,10 @@ import { Subscription } from '@dxos/echo-schema';
 import { DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
-import { Bot } from '../bot';
-import { getKey } from '../util';
 import { ChatModel } from './chat-model';
 import { ContactStackResolver } from './generators';
+import { Bot } from '../bot';
+import { getKey } from '../util';
 
 export class KaiBot extends Bot {
   private _chatModel?: ChatModel;

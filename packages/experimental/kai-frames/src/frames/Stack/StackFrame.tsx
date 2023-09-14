@@ -9,9 +9,9 @@ import { Stack, StackRow } from '@dxos/mosaic';
 import { Input } from '@dxos/react-appkit';
 import { useConfig } from '@dxos/react-client';
 
-import { useFrameContext } from '../../hooks';
 import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
+import { useFrameContext } from '../../hooks';
 
 export const StackFrame = () => {
   const config = useConfig();

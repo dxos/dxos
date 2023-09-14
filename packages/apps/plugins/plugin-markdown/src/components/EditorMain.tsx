@@ -8,9 +8,9 @@ import { useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
-import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
+import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
 
 // TODO(wittjosiah): Rename aurora-composer to aurora-editor.
 export const EditorMain = ({

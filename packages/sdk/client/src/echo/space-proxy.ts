@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
+import { ClientServicesProvider, Properties, Space, SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
@@ -22,7 +22,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
-import { Properties } from '../proto';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -72,18 +71,17 @@ export class SpaceProxy implements Space {
   private _cachedProperties: Properties;
   private _properties?: TypedObject = undefined;
 
-  // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter
+    databaseRouter: DatabaseRouter,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
-      spaceKey: this.key
+      spaceKey: this.key,
     }));
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
@@ -131,7 +129,7 @@ export class SpaceProxy implements Space {
     return this._data.state === SpaceState.READY && this._initialized;
   }
 
-  get properties() {
+  get properties(): TypedObject {
     if (this._properties) {
       return this._properties;
     } else {

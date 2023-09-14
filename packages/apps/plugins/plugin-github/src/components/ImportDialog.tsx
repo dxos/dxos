@@ -8,8 +8,8 @@ import { Button, Dialog, useTranslation } from '@dxos/aurora';
 import { MarkdownComposerRef } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
-import { GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
+import { GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
 
 export const ImportDialog = ({
   data: [_, docGhId, editorRef],

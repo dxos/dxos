@@ -6,8 +6,8 @@ import fs, { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 

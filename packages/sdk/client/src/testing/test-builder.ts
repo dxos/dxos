@@ -20,6 +20,7 @@ import {
   MemoryTransportFactory,
   TransportKind,
   TransportFactory,
+  TcpTransportFactory,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
@@ -84,6 +85,9 @@ export class TestBuilder {
           transportFactory = createLibDataChannelTransportFactory({
             iceServers: this.config.get('runtime.services.ice'),
           });
+          break;
+        case TransportKind.TCP:
+          transportFactory = TcpTransportFactory;
           break;
         default:
           throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
