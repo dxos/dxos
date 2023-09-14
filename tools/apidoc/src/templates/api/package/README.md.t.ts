@@ -3,7 +3,7 @@ import template from '../template.t.js';
 import { packagesInProject } from '../util.t/index.js';
 
 export default template.define.group(({ input }) => {
-  const modules = packagesInProject(input!);
+  const modules = packagesInProject(input! as any);
   return modules
     .map((module) => {
       const source = module.sources?.[0].fileName;

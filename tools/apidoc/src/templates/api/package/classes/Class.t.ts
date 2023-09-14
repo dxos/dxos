@@ -1,12 +1,11 @@
 import path from 'node:path';
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
 import template from '../../template.t.js';
-import { plate } from '@dxos/plate';
 import { Stringifier, packagesInProject, reflectionsOfKind } from '../../util.t/index.js';
 
 export default template.define.group(({ input }) => {
-  const packages = packagesInProject(input!);
-  const stringifier = new Stringifier(input!);
+  const packages = packagesInProject(input! as any);
+  const stringifier = new Stringifier(input! as any);
   return packages
     .map((pkage) => {
       const classes = reflectionsOfKind(pkage, ReflectionKind.Class) as S.ContainerReflection[];

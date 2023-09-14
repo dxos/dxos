@@ -5,8 +5,8 @@ import { packagesInProject, Stringifier, reflectionsOfKind } from '../util.t/ind
 import template from '../template.t.js';
 
 export default template.define.group(({ input }) => {
-  const packages = packagesInProject(input!);
-  const stringifier = new Stringifier(input!);
+  const packages = packagesInProject(input! as any);
+  const stringifier = new Stringifier(input! as any);
   return packages
     .filter((p) => p?.name)
     .map((pkage) => {

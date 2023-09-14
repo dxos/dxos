@@ -5,8 +5,8 @@ import { ReflectionKind, JSONOutput as Schema } from 'typedoc';
 import { packagesInProject, reflectionsOfKind, Stringifier } from '../util.t/index.js';
 
 export default template.define.group(({ input }) => {
-  const packages = packagesInProject(input!);
-  const stringifier = new Stringifier(input!);
+  const packages = packagesInProject(input! as any);
+  const stringifier = new Stringifier(input! as any);
   return packages
     .filter((p) => p?.name)
     .map((pkage) => {

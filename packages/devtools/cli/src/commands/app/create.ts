@@ -50,13 +50,13 @@ export default class Create extends BaseCommand<typeof Create> {
   async run(): Promise<any> {
     const { default: bare, isDxosMonorepoSync } = await import('@dxos/bare-template');
     const { default: hello } = await import('@dxos/hello-template');
-    const { exists } = await import('@dxos/plate');
+    const { fileExists } = await import('@dxos/plate');
 
     const { name } = this.args;
     const { template, interactive, verbose } = this.flags;
 
     const outputDirectory = `${cwd()}/${name}`;
-    const outputDirExists = await exists(outputDirectory);
+    const outputDirExists = await fileExists(outputDirectory);
     const isOutputEmpty = outputDirExists && (await isDirEmpty(outputDirectory));
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`);
@@ -77,7 +77,7 @@ export default class Create extends BaseCommand<typeof Create> {
     };
 
     const monorepo = isDxosMonorepoSync();
-    const result = await templates[template as keyof typeof templates].execute({
+    const result = await templates[template as keyof typeof templates].apply({
       outputDirectory,
       interactive,
       verbose,
@@ -87,6 +87,6 @@ export default class Create extends BaseCommand<typeof Create> {
       },
     });
 
-    void result.save({ printFiles: verbose });
+    void result.apply();
   }
 }

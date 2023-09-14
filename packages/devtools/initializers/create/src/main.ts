@@ -29,13 +29,13 @@ void (async () => {
     ...args
   };
 
-  const result = await template.execute({
+  const result = await template.apply({
     verbose,
     input: interactive
       ? { monorepo }
       : { name, pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false }
   });
-  await result.save();
+  await result.apply();
 
   // TODO(wittjosiah): Move this functionality into plate.
   console.log('Installing dependencies...');

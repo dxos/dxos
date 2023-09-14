@@ -12,4 +12,6 @@ export {
 } from './InteractiveDirectoryTemplate';
 export * from './util/template';
 export * from './util/file';
+export * from './util/fileExists';
 export * from './util/catFiles';
+export * from './util/zodInquire';

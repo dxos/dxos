@@ -61,14 +61,15 @@ export type Slotify<I, T extends Slots<I>> = {
 };
 
 export type Options<I, S extends Slots<I> = Slots<I>> = {
-  input?: I;
+  input?: Partial<I>;
   slots?: S;
   outputDirectory?: Path;
   relativeTo?: Path;
   overwrite?: boolean;
 };
 
-export type Context<I = any, S extends Slots<I> = Slots<I>> = Required<Omit<Options<I, S>, 'slots'>> & {
+export type Context<I = any, S extends Slots<I> = Slots<I>> = Required<Omit<Options<I, S>, 'slots' | 'input'>> & {
+  input: I;
   outputFile: Path;
   slots: SlotProducers<S>;
   inherited: FileResults<I> | undefined;

@@ -4,11 +4,11 @@ import template from '../../template.t.js';
 import { Stringifier, reflectionsOfKind, packagesInProject } from '../../util.t/index.js';
 
 export default template.define.group(({ input }) => {
-  const packages = packagesInProject(input!);
+  const packages = packagesInProject(input! as any);
   return packages
     .map((pkage) => {
       const ifaces = reflectionsOfKind(pkage, ReflectionKind.Interface) as S.ContainerReflection[];
-      const stringifier = new Stringifier(input!);
+      const stringifier = new Stringifier(input! as any);
       return ifaces
         .map((iface) => {
           return [

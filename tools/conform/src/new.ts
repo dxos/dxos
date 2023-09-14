@@ -6,10 +6,16 @@ import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate, inquire, z } from '@dxos/plate';
+import { inquire, z } from '@dxos/plate';
+
+import packageTemplate from './templates/package/template.t';
 
 const things = {
   package: path.resolve(__dirname, './templates/package'),
+};
+
+const templates = {
+  package: packageTemplate,
 };
 
 const main = async () => {
@@ -37,15 +43,15 @@ const main = async () => {
         );
         const names = outputDirectory.split('/');
         const name = names[names.length - 1];
-        const result = await executeDirectoryTemplate({
+        const result = await templates[thing as keyof typeof templates].apply({
           outputDirectory,
           overwrite: overwrite ? !!overwrite : false,
-          templateDirectory: path.resolve(__dirname, 'templates', thing),
+          src: path.resolve(__dirname, 'templates', thing),
           input: {
             name: `@dxos/${name}`,
           },
         });
-        void result.save();
+        await result.apply();
         console.log('done');
       },
     })

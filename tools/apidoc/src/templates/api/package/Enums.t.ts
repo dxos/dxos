@@ -5,8 +5,8 @@ import template from '../template.t.js';
 import { packagesInProject, reflectionsOfKind, Stringifier } from '../util.t/index.js';
 
 export default template.define.group(({ input }) => {
-  const packages = packagesInProject(input!);
-  const stringifier = new Stringifier(input!);
+  const packages = packagesInProject(input! as any);
+  const stringifier = new Stringifier(input! as any);
 
   return packages.map((pkage) => {
     const enums = reflectionsOfKind(pkage, ReflectionKind.Enum) as S.ContainerReflection[];
