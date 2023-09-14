@@ -8,6 +8,7 @@
 		<true/>
 		<key>ProgramArguments</key>
 		<array>
+			<string>LOG_FILTER=info</string>
 			<string>??DX_PATH??</string>
 			<string>agent</string>
 			<string>start</string>
