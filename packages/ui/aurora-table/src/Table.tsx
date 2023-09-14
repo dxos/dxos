@@ -215,7 +215,7 @@ export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...pro
       <table
         // Styles:
         // table-fixed: Prevents fixed sized columns from shrinking.
-        className={mx(!fullWidth && 'table-fixed', 'border-collapse', inputSurface, slots?.table?.className)}
+        className={mx(!fullWidth && 'table-fixed', inputSurface, slots?.table?.className)}
         style={{
           width: fullWidth ? '100%' : table.getTotalSize(),
         }}
@@ -369,6 +369,8 @@ const TableHead = <TData extends RowData>({
                     width: fullWidth && header.column.columnDef.meta?.expand ? undefined : header.getSize(),
                   }}
                   // Relative for resize handle.
+                  // TODO(burdon): Border scrolls with main content.
+                  //  https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
                   className={mx(
                     'relative text-left',
                     border && 'border',
@@ -387,7 +389,7 @@ const TableHead = <TData extends RowData>({
                   {header.column.columnDef.meta?.resizable && (
                     <div
                       className={mx(
-                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px] _bg-neutral-500',
+                        'absolute top-0 pl-1 h-full z-[10] w-[7px] -right-[5px]',
                         'cursor-col-resize select-none touch-none opacity-20 hover:opacity-100',
                         header.column.getIsResizing() && 'hidden',
                       )}

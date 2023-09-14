@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { baseSurface, descriptionText, mx } from '@dxos/aurora-theme';
 
 import { SPACE_PLUGIN } from '../types';
 
@@ -14,7 +14,7 @@ export const SpaceMainEmpty = () => {
   return (
     <div
       role='none'
-      className='min-bs-screen is-full flex items-center justify-center p-8'
+      className={mx(baseSurface, 'min-bs-screen is-full flex items-center justify-center p-8')}
       data-testid='composer.firstRunMessage'
     >
       <p

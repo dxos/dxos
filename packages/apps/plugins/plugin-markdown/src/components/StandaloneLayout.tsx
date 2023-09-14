@@ -6,7 +6,14 @@ import React, { MutableRefObject, PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { baseSurface, coarseBlockPaddingStart, inputSurface, mx, textBlockWidth } from '@dxos/aurora-theme';
+import {
+  baseSurface,
+  coarseBlockPaddingStart,
+  inputSurface,
+  mx,
+  surfaceElevation,
+  textBlockWidth,
+} from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
@@ -25,7 +32,7 @@ export const StandaloneLayout = ({
           role='none'
           className={mx(
             inputSurface,
-            // surfaceElevation({ elevation: 'group' }),
+            surfaceElevation({ elevation: 'group' }),
             'mbs-2 mbe-6 pli-6 rounded',
             'min-bs-[calc(100dvh-5rem)] flex flex-col',
           )}

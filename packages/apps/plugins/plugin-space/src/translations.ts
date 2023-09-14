@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
-        'first run message': 'Choose a document or create one to get started',
+        'first run message': 'Nothing selected.',
         'empty space message': 'No documents',
         'empty tree message': 'No spaces',
         'untitled space title': 'New space',
