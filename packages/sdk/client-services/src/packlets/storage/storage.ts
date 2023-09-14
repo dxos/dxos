@@ -15,29 +15,29 @@ import StorageDriver = Runtime.Client.Storage.StorageDriver;
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
   const {
-    path = isNode() ? DX_DATA : 'dxos/storage', // TODO(burdon): Factor out const.
-    storageType,
-    keyStorage,
     persistent = false,
+    keyStore,
+    dataStore,
+    dataRoot = isNode() ? DX_DATA : 'dxos/storage', // TODO(burdon): Factor out const.
   } = config ?? {};
 
-  if (persistent && storageType === StorageDriver.RAM) {
+  if (persistent && dataStore === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
   }
-  if (!persistent && storageType !== undefined && storageType !== StorageDriver.RAM) {
+  if (!persistent && dataStore !== undefined && dataStore !== StorageDriver.RAM) {
     throw new InvalidConfigError('Cannot use a persistent storage in not persistent mode.');
   }
-  if (persistent && keyStorage === StorageDriver.RAM) {
+  if (persistent && keyStore === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM key storage cannot be used in persistent mode.');
   }
-  if (!persistent && keyStorage !== StorageDriver.RAM && keyStorage !== undefined) {
+  if (!persistent && keyStore !== StorageDriver.RAM && keyStore !== undefined) {
     throw new InvalidConfigError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
     storage: createStorage({
-      type: persistent ? toStorageType(storageType) : StorageType.RAM,
-      root: `${path}/`,
+      type: persistent ? toStorageType(dataStore) : StorageType.RAM,
+      root: `${dataRoot}/`,
     }),
   };
 };
