@@ -15,6 +15,8 @@ export type ProcessInfo = {
 export type StartOptions = {
   config?: string;
   metrics?: boolean;
+  monitor?: boolean;
+  ws?: number;
 };
 
 export type StopOptions = {
