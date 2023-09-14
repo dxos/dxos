@@ -19,6 +19,7 @@ import { AgentParams, PlanResults, TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
+const SUMMARY_FILENAME = 'test.json';
 
 export type PlanOptions = {
   staggerAgents?: number;
@@ -166,7 +167,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     await Promise.all(promises);
 
     log.info('test complete', {
-      summary: join(outDir, 'test.json'),
+      summary: join(outDir, SUMMARY_FILENAME),
     });
   }
 
@@ -189,7 +190,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     agents,
   };
 
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
+  writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
 };

@@ -324,6 +324,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       }
     }
 
+    const resultsSummary: Record<string, any> = {};
     if (reconnectLogs.length) {
       const reconnectsCountByAgent = Object.fromEntries(
         range(params.spec.agents).map((agentIdx) => [
@@ -332,11 +333,62 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         ]),
       );
       log.info('reconnects by agent', reconnectsCountByAgent);
+      resultsSummary['reconnects by agent'] = reconnectsCountByAgent;
     }
+
+    const mutationsByAgent = Object.fromEntries(
+      range(params.spec.agents).map((agentIdx) => {
+        const mutationRates = statsLogs
+          .filter((entry) => entry.context.agentIdx === agentIdx)
+          .map((entry) => entry.context.mutationsPerSec)
+          .sort((n1, n2) => n1 - n2);
+
+        const meanMutationRate = mutationRates.reduce((sum, rate) => sum + rate, 0) / mutationRates.length;
+        const medianMutationRate = mutationRates[Math.floor(mutationRates.length / 2)];
+        const ninetyfifthPercentileMutationRate =
+          mutationRates
+            .reverse()
+            .slice(0, Math.floor(mutationRates.length * 0.95))
+            .reduce((sum, rate) => sum + rate, 0) / mutationRates.length;
+
+        return [
+          agentIdx,
+          {
+            totalMutations:
+              statsLogs.filter((entry) => entry.context.agentIdx === agentIdx).findLast(() => true)?.context
+                .totalMutations ?? 0,
+            meanMutationRate,
+            medianMutationRate,
+            ninetyfifthPercentileMutationRate,
+          },
+        ];
+      }),
+    );
+    log.info('mutations by agent', mutationsByAgent);
+    resultsSummary['mutations by agent'] = mutationsByAgent;
+
+    const totalMutations = Object.values(mutationsByAgent).map((entry) => entry.totalMutations);
+    const mutationsMatch = totalMutations.every((val, i, arr) => Math.abs(val - arr[0]) < 2);
+
+    if (!mutationsMatch) {
+      log.warn('not all agents have the same number of mutations +/-1', { totalMutations });
+    }
+
+    resultsSummary['agent mutations summary'] = {
+      mutationsMatch,
+      totalMutations: totalMutations[0],
+      mutationRate:
+        Object.values(mutationsByAgent).reduce((sum, entry) => sum + entry.medianMutationRate, 0) /
+        Object.keys(mutationsByAgent).length,
+    };
+
+    log.info('mutation summary', resultsSummary['agent mutations summary']);
 
     if (params.spec.showPNG) {
       await this.generatePNG(params, statsLogs, syncLogs);
     }
+
+    return resultsSummary;
   }
 
   private async generatePNG(
