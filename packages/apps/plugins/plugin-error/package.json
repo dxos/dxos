@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/client-services": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*"
   },

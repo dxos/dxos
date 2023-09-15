@@ -14,8 +14,8 @@ import {
   AlertDialogRootProps,
   Tooltip,
 } from '@dxos/aurora';
-import { Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
-import { getAsyncValue, Provider } from '@dxos/util';
+import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
+import { Provider, getAsyncValue, safariCheck } from '@dxos/util';
 
 import { ERROR_PLUGIN } from '../../constants';
 
@@ -55,9 +55,26 @@ export const ResetDialog = ({
   const error = propsError && parseError(t, propsError);
   const [showStack, setShowStack] = useState(false);
 
-  const onCopyError = useCallback(() => {
+  const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
+
+  const handleReset = async () => {
+    // Safari does not use remote vault.
+    if (safariCheck()) {
+      const config = new Config(Defaults());
+
+      const { ClientServicesHost } = await import('@dxos/client-services');
+      const services = new ClientServicesHost({ config });
+      await services.reset();
+      return;
+    }
+
+    // TODO(wittjosiah): This is a hack.
+    //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
+    const config = await getAsyncValue(configProvider);
+    window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_VAULT_URL}#reset`, '_blank');
+  };
 
   const Caret = showStack ? CaretDown : CaretRight;
 
@@ -88,7 +105,7 @@ export const ResetDialog = ({
           {showStack && (
             <Tooltip.Root>
               <Tooltip.Trigger>
-                <Button onClick={onCopyError}>
+                <Button onClick={handleCopyError}>
                   <Clipboard weight='duotone' size='1em' />
                 </Button>
               </Tooltip.Trigger>
@@ -103,16 +120,7 @@ export const ResetDialog = ({
             <DropdownMenu.Portal>
               <DropdownMenu.Content side='top' classNames='z-[51]'>
                 <DropdownMenu.Viewport>
-                  <DropdownMenu.Item
-                    onClick={async () => {
-                      // TODO(wittjosiah): This is a hack.
-                      //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
-                      const config = await getAsyncValue(configProvider);
-                      window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_VAULT_URL}#reset`, '_blank');
-                    }}
-                  >
-                    {t('reset client confirm label')}
-                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={handleReset}>{t('reset client confirm label')}</DropdownMenu.Item>
                 </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>

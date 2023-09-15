@@ -768,6 +768,7 @@ importers:
       '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
@@ -777,6 +778,7 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/client-services': link:../../../sdk/client-services
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
     devDependencies:
