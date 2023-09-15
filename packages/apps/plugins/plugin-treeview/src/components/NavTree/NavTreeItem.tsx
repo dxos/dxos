@@ -102,7 +102,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const actions = sortActions(node.actions);
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
     const { navigationSidebarOpen } = useSidebars();
+    // TODO(wittjosiah): Pass in as prop.
     const { active: treeViewActive } = useTreeView();
+    // TODO(wittjosiah): Pass in as prop.
     const { popoverAnchorId } = useSplitView();
     const { graph } = useGraph();
 
@@ -118,6 +120,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
+      // TODO(wittjosiah): Factor out as callback so that this doesn't depend on graph context.
       // Excludes selected node from being opened by selection.
       if (treeViewActive && graph.getPath(treeViewActive)?.slice(0, -2).includes(node.id)) {
         setOpen(true);

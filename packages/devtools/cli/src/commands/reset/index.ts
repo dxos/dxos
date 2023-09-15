@@ -61,8 +61,6 @@ export default class Reset extends BaseCommand<typeof Reset> {
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
       });
-
-      await this.maybeStartDaemon();
     } else {
       this.log('Files', paths);
     }

@@ -17,12 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-graph/src/index.ts"
+          "packages/apps/plugins/plugin-graph/src/index.ts",
+          "packages/apps/plugins/plugin-graph/src/testing.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib",
-        "platforms": [
-          "browser"
-        ]
+        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

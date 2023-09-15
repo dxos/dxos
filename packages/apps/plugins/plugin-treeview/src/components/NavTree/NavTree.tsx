@@ -39,7 +39,18 @@ export const NavTree = (props: TreeViewProps) => {
 
 type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
 
-const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items: Graph.Node[]; level: number }) => {
+/**
+ * @internal Storybook only
+ */
+export const TreeViewSortableImpl = ({
+  node,
+  items,
+  level,
+}: {
+  node: Graph.Node;
+  items: Graph.Node[];
+  level: number;
+}) => {
   const dnd = useDnd();
 
   const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);
