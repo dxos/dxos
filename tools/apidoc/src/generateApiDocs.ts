@@ -6,21 +6,24 @@ import * as url from 'url';
 
 import { Config } from './config.js';
 import { loadTypedocJson } from './loadTypedocJson.js';
-import template from './templates/api/template.t.js';
+import template, { Input } from './templates/api/template.t.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 export const generateApiDocs = async (config: Config) => {
-  const { apiDocsPath } = config;
-  const api = await loadTypedocJson(config);
-  const files = await template.apply({
+  const { apiDocsPath, packagesPath } = config;
+  const input: Input = {
+    ...(await loadTypedocJson(config)),
+    packagesPath,
+  };
+  const result = await template.apply({
     outputDirectory: apiDocsPath,
-    input: api,
+    input,
     overwrite: true,
     compilerOptions: {
       module: 'esnext',
     },
     moduleLoaderFunction: (p: string) => import(p),
   });
-  void files.apply();
+  void result.apply();
 };

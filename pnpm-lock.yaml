@@ -6274,8 +6274,10 @@ importers:
       unified: ^10.1.2
       unist-util-visit: ^4.1.0
       vfile: ^5.3.6
+      vite: ^4.3.9
       vite-node: ^0.34.4
     dependencies:
+      vite: 4.3.9
       vite-node: 0.34.4
     devDependencies:
       '@dxos/plate': link:../../packages/common/plate

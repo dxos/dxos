@@ -3,6 +3,7 @@ import template from '../template.t.js';
 import { packagesInProject } from '../util.t/index.js';
 
 export default template.define.group(({ input }) => {
+  const { packagesPath } = input!;
   const modules = packagesInProject(input! as any);
   return modules
     .map((module) => {
@@ -11,7 +12,7 @@ export default template.define.group(({ input }) => {
       return packageReadme
         ? template.define.text({
             path: path.join(module.name, 'README.md'),
-            copyOf: path.resolve(process.cwd(), '..', packageReadme),
+            copyOf: path.resolve(packagesPath!.replace(/packages\/?$/, ''), packageReadme),
           })
         : null!;
     })
