@@ -1,11 +1,11 @@
-# @dxos/hello-template
+# @dxos/tasks-template
 
 An application template for local-first progressive web apps
 
 ## Installation
 
 ```bash
-pnpm i @dxos/hello-template
+pnpm i @dxos/tasks-template
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ pnpm i @dxos/hello-template
 This is an encapsulated [`@dxos/plate`](https://www.npmjs.com/package/@dxos/plate) template, the default export is a `ConfigurationDeclaration` from `plate`.
 
 ```ts
-import template from "@dxos/hello-template";
+import template from "@dxos/tasks-template";
 
 // get the template outputs without writing to disk:
 const results = await template.apply({
