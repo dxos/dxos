@@ -31,6 +31,8 @@ export default [
         'personal space label': 'Personal Space',
         'shared spaces label': 'Shared Spaces',
         'show hidden spaces label': 'Show hidden spaces',
+        'rename object label': 'Rename',
+        'delete object label': 'Delete',
       },
     },
   },
