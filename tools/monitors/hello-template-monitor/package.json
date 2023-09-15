@@ -15,6 +15,7 @@
   "devDependencies": {
     "@dxos/cli": "main",
     "@playwright/test": "^1.36.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "wait-for-expect": "^3.0.2"
   }
 }

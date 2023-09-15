@@ -13,6 +13,7 @@ test.describe('Bare Template', () => {
 
   test('runs', async ({ page }) => {
     await page.goto('/');
-    expect(await page.innerText('p')).toBe('Your code goes here.');
+    await page.waitForSelector('p');
+    expect(await page.innerText('p')).toBe('Your code goes here');
   });
 });

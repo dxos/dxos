@@ -3,14 +3,17 @@
 //
 
 const { exec: execCb } = require('node:child_process');
+const { existsSync } = require('node:fs');
 const { rm } = require('node:fs/promises');
 const { promisify } = require('node:util');
 
 const exec = promisify(execCb);
 
 const setup = async () => {
-  console.log('Cleaning up...');
-  await rm('tmp', { recursive: true });
+  if (existsSync('tmp')) {
+    console.log('Cleaning up...');
+    await rm('tmp', { recursive: true });
+  }
 
   console.log('Installing dependencies...');
   await exec('npm install --no-package-lock');

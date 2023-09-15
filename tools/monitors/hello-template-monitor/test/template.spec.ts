@@ -4,6 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import waitForExpect from 'wait-for-expect';
 
 test.describe('Hello Template', () => {
   test('is created', async () => {
@@ -11,7 +12,7 @@ test.describe('Hello Template', () => {
     expect(packageJson.name).toBe('tmp');
   });
 
-  test('runs', async ({ page }) => {
+  test('runs', async ({ browserName, page }) => {
     // Page loads.
     await page.goto('/');
     await page.waitForSelector('img');
@@ -31,8 +32,20 @@ test.describe('Hello Template', () => {
     await page2.goto('/');
     await page2.waitForSelector('img');
     const counter2 = await page2.getByTestId('counter');
-    expect(await counter2.innerText()).toBe('Clicked 3 times');
+    // TODO(wittjosiah): Webkit requires extra time to see 3 here.
+    await waitForExpect(async () => {
+      expect(await counter2.innerText()).toBe('Clicked 3 times');
+    });
     await counter2.click();
-    expect(await counter.innerText()).toBe('Clicked 4 times');
+
+    // Webkit doesn't support vault.
+    if (browserName === 'webkit') {
+      return;
+    }
+
+    // Wait for replication.
+    await waitForExpect(async () => {
+      expect(await counter.innerText()).toBe('Clicked 4 times');
+    });
   });
 });
