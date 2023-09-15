@@ -3,12 +3,10 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
-import path, { dirname } from 'node:path';
-import { writeHeapSnapshot } from 'node:v8';
+import { dirname } from 'node:path';
 
-import { scheduleTaskInterval } from '@dxos/async';
 import { Config, Client, PublicKey } from '@dxos/client';
 import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
