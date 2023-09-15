@@ -1,6 +1,6 @@
-# @dxos/cli-monitor
+# @dxos/hello-template-monitor
 
-Used for testing releases by installing `@dxos/cli` from npm and verifying it works as expected.
+Used for testing releases by installing `@dxos/cli` from npm and verifying the hello app template works as expected.
 
 ## DXOS Resources
 

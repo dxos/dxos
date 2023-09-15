@@ -78,4 +78,4 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Monitor Pre-release
-        run: node .github/workflows/scripts/monitor.js --next
+        run: node .github/workflows/scripts/monitor.js
