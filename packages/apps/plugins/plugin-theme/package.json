@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "deepsignal": "^1.3.3",
+    "deepsignal": "^1.3.6",
     "i18next": "^21.10.0"
   },
   "devDependencies": {
