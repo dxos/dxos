@@ -7,7 +7,9 @@ import { useCallback } from 'react';
 
 import { useMosaic } from '../../mosaic';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
+import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
+import { nextIndex } from '../util';
 
 export const useHandleCopyDragStart = () => {
   const dnd = useDnd();
@@ -31,13 +33,16 @@ export const useHandleCopyDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active }: DragEndEvent, previousResult?: string | null) => {
+  return useCallback(({ active, over }: DragEndEvent, previousResult?: string | null) => {
     let result = null;
     const activeId = active.id.toString();
     console.log('[copy drag end]', previousResult, activeId, dnd.copyDestinationId);
     if (!previousResult && activeId && dnd.copyDestinationId) {
       // create new tile
       const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
+      // update copied tile’s index
+      const index = nextIndex(getSubtiles(relations[dnd.copyDestinationId].child, tiles), activeId, over?.id);
+      copiedTile.index = index ?? copiedTile.index;
       // update mosaic state
       tiles[copiedTile.id] = copiedTile;
       relations[copiedTile.id] = { parent: new Set([dnd.copyDestinationId]), child: new Set() };
@@ -47,6 +52,7 @@ export const useHandleCopyDragEnd = () => {
         type: 'copy',
         id: copiedTile.id,
         toId: dnd.copyDestinationId,
+        ...(index && { index }),
       });
       // update animation
       dnd.overlayDropAnimation = 'into';
