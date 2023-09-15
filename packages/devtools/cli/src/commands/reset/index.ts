@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
 
-import { DX_CACHE, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
+import { DX_CACHE, DX_CONFIG, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
 
@@ -30,6 +30,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
           getProfilePath(DX_DATA, profile),
           getProfilePath(DX_STATE, profile),
           getProfilePath(DX_RUNTIME, profile),
+          getProfilePath(DX_CONFIG, profile) + '.yml', // TODO(mykola): remove?
           storage,
         ]
           .sort()
