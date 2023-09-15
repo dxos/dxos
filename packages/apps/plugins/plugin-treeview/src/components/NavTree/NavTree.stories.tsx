@@ -4,48 +4,103 @@
 
 import '@dxosTheme';
 
+import { faker } from '@faker-js/faker';
+import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { DndPluginContext, DndPluginStoreValue } from '@braneframe/plugin-dnd';
-import { GraphContext, GraphStore } from '@braneframe/plugin-graph';
+import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
-import { Tooltip, Tree } from '@dxos/aurora';
+import { DensityProvider, Tooltip } from '@dxos/aurora';
+import { getDndId, Mosaic, MosaicRootProps, MosaicState } from '@dxos/aurora-grid';
 
-import { TreeViewSortableImpl } from './NavTree';
+import { NavTreeRoot } from './NavTree';
+import { NavTreeItemDelegator } from './NavTreeItem';
 import { TreeViewContext } from '../../TreeViewContext';
 import { TreeViewContextValue } from '../../types';
 
+faker.seed(1234);
+const fake = faker.helpers.fake;
+
 export default {
-  component: TreeViewSortableImpl,
+  component: NavTreeRoot,
+  argTypes: { onMosaicChange: { action: 'mosaic changed' } },
 };
 
-const graph = new GraphStore();
-buildGraph(graph, [
-  {
-    id: 'test1',
-    label: 'test1',
-    children: [
-      {
-        id: 'test1.1',
-        label: 'test1.1',
-      },
-      {
-        id: 'test1.2',
-        label: 'test1.2',
-      },
-    ],
-  },
-  {
-    id: 'test2',
-    label: 'test2',
-  },
-]);
+const content = [...Array(4)].map(() => ({
+  id: faker.string.uuid(),
+  label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+  description: fake('{{commerce.productDescription}}'),
+  children: [...Array(4)].map(() => ({
+    id: faker.string.uuid(),
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+    description: fake('{{commerce.productDescription}}'),
+    children: [...Array(4)].map(() => ({
+      id: faker.string.uuid(),
+      label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+      description: fake('{{commerce.productDescription}}'),
+    })),
+  })),
+}));
 
-const dndState = deepSignal<DndPluginStoreValue>({
-  overlayDropAnimation: 'away',
+const graph = new GraphStore();
+buildGraph(graph, content);
+
+const defaultIndices = getIndices(99);
+let defaultIndicesCursor = 0;
+
+const mosaicAcc: MosaicState = {
+  tiles: {},
+  relations: {},
+};
+
+const mosaicData: Record<string, any> = {};
+
+const getLevel = (node: Graph.Node, level = 0): number => {
+  if (!node.parent) {
+    return level;
+  } else {
+    return getLevel(node.parent, level + 1);
+  }
+};
+
+const navTreeId = 'navTree';
+
+graph.traverse({
+  onVisitNode: (node) => {
+    const level = getLevel(node, -1);
+    const id = getDndId(navTreeId, node.id);
+    mosaicAcc.tiles[id] = {
+      id,
+      index: defaultIndices[defaultIndicesCursor],
+      variant: 'treeitem',
+      sortable: true,
+      expanded: false,
+      level,
+      acceptMigrationClass: new Set([`level-${level + 1}`]),
+      migrationClass: `level-${level}`,
+    };
+    mosaicAcc.relations[id] = { child: new Set(), parent: new Set() };
+    mosaicData[id] = node;
+    defaultIndicesCursor += 1;
+  },
 });
+
+graph.traverse({
+  onVisitNode: (node) => {
+    const id = getDndId(navTreeId, node.id);
+    if (node.children && node.children.length) {
+      node.children.forEach((child) => {
+        const childId = getDndId(navTreeId, child.id);
+        mosaicAcc.relations[id].child.add(childId);
+        mosaicAcc.relations[childId].parent.add(id);
+      });
+    }
+  },
+});
+
+const mosaicState = deepSignal<MosaicState>(mosaicAcc);
 
 const splitViewState = deepSignal<SplitViewState>({
   sidebarOpen: true,
@@ -67,23 +122,27 @@ const treeViewState = deepSignal<TreeViewContextValue>({
 }) as RevertDeepSignal<TreeViewContextValue>;
 
 export const Default = {
-  render: () => (
-    <Tree.Root>
-      <TreeViewSortableImpl {...{ node: graph.root, items: graph.root.children, level: 0 }} />
-    </Tree.Root>
+  render: (args: MosaicRootProps) => (
+    <Mosaic.Provider {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator} getData={(id) => mosaicData[id]}>
+      <Mosaic.Root>
+        <NavTreeRoot id={navTreeId} />
+      </Mosaic.Root>
+    </Mosaic.Provider>
   ),
   decorators: [
     (Story: any) => (
       <Tooltip.Provider>
-        <DndPluginContext.Provider value={dndState}>
-          <GraphContext.Provider value={{ graph }}>
-            <SplitViewContext.Provider value={splitViewState}>
-              <TreeViewContext.Provider value={treeViewState}>
-                <Story />
-              </TreeViewContext.Provider>
-            </SplitViewContext.Provider>
-          </GraphContext.Provider>
-        </DndPluginContext.Provider>
+        <GraphContext.Provider value={{ graph }}>
+          <SplitViewContext.Provider value={splitViewState}>
+            <TreeViewContext.Provider value={treeViewState}>
+              <DensityProvider density='fine'>
+                <div role='none' className='p-2'>
+                  <Story />
+                </div>
+              </DensityProvider>
+            </TreeViewContext.Provider>
+          </SplitViewContext.Provider>
+        </GraphContext.Provider>
       </Tooltip.Provider>
     ),
   ],
