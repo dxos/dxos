@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../.eslintrc.js"
+  ],
+  "parserOptions": {
+    "project": "tools/ridoculous/tsconfig.json"
+  }
+}
