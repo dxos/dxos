@@ -1,17 +1,16 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from './config.t';
+import { plate } from '@dxos/plate';
+import template from './template.t';
 
-export default defineTemplate<typeof config>(({ input }) => {
-  const { name } = input;
-  return text`
+export default template.define.text({
+  content: ({ input: { name } }) => plate`
   version: 1
   package:
     modules:
-      - name: ${name}
+      - name: '${name}'
         type: dxos:type/app
         build:
           command: npm run build
-          outdir: out/${name}
+          outdir: 'out/${name}'
   runtime:
     client:
       storage:
@@ -23,5 +22,5 @@ export default defineTemplate<typeof config>(({ input }) => {
       ice:
         - urls: turn:kube.dxos.org:3478
           username: dxos
-          credential: dxos`
+          credential: dxos`,
 });

@@ -3,13 +3,20 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [bootstrap]()
 Type: <code>string[]</code>
 
+
+
 ### [port]()
 Type: <code>string</code>
 
+
+
 ### [privatekey]()
 Type: <code>string</code>
+
+
+
+    

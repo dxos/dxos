@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [filter]()
 Type: <code>string</code>
@@ -18,3 +17,5 @@ Type: <code>string</code>
 Options:
   - (env_var) = "LOG_PREFIX"
   - proto3_optional = true
+
+    

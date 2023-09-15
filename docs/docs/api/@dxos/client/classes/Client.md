@@ -4,9 +4,9 @@
 
 The Client class encapsulates the core client-side API of DXOS.
 
-
 ## Constructors
 ### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L78)
+
 
 
 
@@ -15,6 +15,7 @@ Returns: <code>[Client](/api/@dxos/client/classes/Client)</code>
 Arguments: 
 
 `options`: <code>[ClientOptions](/api/@dxos/client/types/ClientOptions)</code>
+
 
 
 ## Properties
@@ -30,6 +31,8 @@ Current configuration object.
 
 ### [dbRouter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L167)
 Type: <code>DatabaseRouter</code>
+
+
 
 ### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L151)
 Type: <code>HaloProxy</code>
@@ -67,16 +70,18 @@ Client services system status.
 
 
 
+
 Returns: <code>string</code>
 
 Arguments: none
 
+
+
+
 ### [acceptInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L206)
 
 
-
 Accept an invitation to a space.
-
 
 Returns: <code>AuthenticatingInvitationObservable</code>
 
@@ -84,7 +89,9 @@ Arguments:
 
 `invitation`: <code>Invitation</code>
 
+
 ### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L171)
+
 
 
 
@@ -94,12 +101,11 @@ Arguments:
 
 `schema`: <code>EchoSchema</code>
 
+
 ### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L199)
 
 
-
 Creates a new space.
-
 
 Returns: <code>Promise&lt;Space&gt;</code>
 
@@ -107,24 +113,24 @@ Arguments:
 
 `meta`: <code>PropertiesProps</code>
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L304)
 
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L304)
 
 
 Cleanup, release resources.
 Open/close is re-entrant.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
+
+
+
 ### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L213)
 
 
-
 Get client diagnostics data.
-
 
 Returns: <code>Promise&lt;any&gt;</code>
 
@@ -132,14 +138,13 @@ Arguments:
 
 `options`: <code>JsonKeyOptions</code>
 
-### [getSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L187)
 
+### [getSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L187)
 
 
 Get an existing space by its key.
 
 If no key is specified the default space is returned.
-
 
 Returns: <code>undefined | Space</code>
 
@@ -147,47 +152,56 @@ Arguments:
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L230)
 
+### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L230)
 
 
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L331)
 
+
+
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L331)
 
 
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L322)
 
+
+
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L322)
 
 
 Reinitialized the client session with the remote service host.
 This is useful when connecting to a host running behind a resource lock
 (e.g., HALO when SharedWorker is unavailable).
 
-
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
+
+
+
 ### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L103)
+
 
 
 
 Returns: <code>object</code>
 
 Arguments: none
+
+
+
+

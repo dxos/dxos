@@ -1,9 +1,8 @@
-import { defineTemplate } from '@dxos/plate';
 import { PackageJson } from 'types-package-json';
-import config from './config.t';
+import template from './template.t';
 
-export default defineTemplate(
-  ({ input }) => {
+export default template.define.text({
+  content: ({ input }) => {
     const { name } = input;
     const packageJson: PackageJson = {
       name,
@@ -17,6 +16,5 @@ export default defineTemplate(
       }
     };
     return JSON.stringify(packageJson, null, 2);
-  },
-  { config }
-);
+  }
+});

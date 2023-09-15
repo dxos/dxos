@@ -1,12 +1,14 @@
-import { text, defineTemplate } from "@dxos/plate";
-import config from "./config.t";
+import { plate } from '@dxos/plate';
+import template from './template.t';
 
-export default defineTemplate<typeof config>(({ input }) => {
-  const { name, pwa, react, dxosUi, storybook } = input;
-  return text`
+export default template.define.text({
+  content: ({ input }) => {
+    const { name, pwa, react, dxosUi, storybook } = input;
+    return plate`
   # ${name}
 
-  This app was created with the DXOS \`bare\` application template.
+  This app was created with a DXOS application template.
+
   ${pwa && `- [x] Progressive Web App support`}
   ${react && `- [x] React`}
   ${dxosUi && `- [x] DXOS UI System`}
@@ -28,14 +30,18 @@ export default defineTemplate<typeof config>(({ input }) => {
   npm run deploy
   \`\`\`
 
-  ${storybook && text`
+  ${
+    storybook &&
+    plate`
   Run storybook in this project
   \`\`\`bash
   npm run storybook
   \`\`\`
-  `}
+  `
+  }
 
   [📚 Using ECHO with React](https://docs.dxos.org/guide/react)
   [📚 DXOS Documentation](https://docs.dxos.org)
-  `
-})
+  `;
+  },
+});

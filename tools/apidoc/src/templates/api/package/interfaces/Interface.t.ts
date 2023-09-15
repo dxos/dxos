@@ -1,20 +1,19 @@
+import path from 'node:path';
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
-import { Input } from '../../config.t.js';
+import template from '../../template.t.js';
 import { Stringifier, reflectionsOfKind, packagesInProject } from '../../util.t/index.js';
 
-import { TemplateFunction, text, File } from '@dxos/plate';
-const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
-  const packages = packagesInProject(input);
+export default template.define.group(({ input }) => {
+  const packages = packagesInProject(input! as any);
   return packages
     .map((pkage) => {
       const ifaces = reflectionsOfKind(pkage, ReflectionKind.Interface) as S.ContainerReflection[];
-      const stringifier = new Stringifier(input);
-      const interfacesDir = [outputDirectory, pkage.name ?? '', 'interfaces'];
+      const stringifier = new Stringifier(input! as any);
       return ifaces
         .map((iface) => {
           return [
-            new File({
-              path: [...interfacesDir, `${iface.name}.md`],
+            template.define.text({
+              path: path.join(pkage.name, 'interfaces', `${iface.name}.md`),
               content: stringifier.interface(iface)
             })
           ];
@@ -22,6 +21,4 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
         .flat();
     })
     .flat();
-};
-
-export default template;
+});

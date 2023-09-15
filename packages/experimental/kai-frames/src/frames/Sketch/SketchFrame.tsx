@@ -32,7 +32,7 @@ const convertToCanvasPath = ({ width, color, points }: Sketch.Path): CanvasPath 
     strokeWidth: width,
     strokeColor: color,
     paths: points,
-  }) as CanvasPath;
+  } as CanvasPath);
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
