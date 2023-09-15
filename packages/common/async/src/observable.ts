@@ -7,6 +7,7 @@ import type { ObservableLike, Observer, Subscriber } from 'zen-observable/esm';
 import PushStream from 'zen-push';
 
 import { Event } from './events';
+import { Trigger } from './trigger';
 
 export { Observable, PushStream, Subscriber };
 
@@ -21,11 +22,9 @@ export { Observable, PushStream, Subscriber };
 export class MulticastObservable<T> extends Observable<T> {
   private readonly _observers = new Set<Observer<T>>();
   private readonly _observable: Observable<T>;
+  private readonly _completed = new Trigger();
 
-  constructor(
-    subscriber: Observable<T> | Subscriber<T>,
-    protected _value?: T,
-  ) {
+  constructor(subscriber: Observable<T> | Subscriber<T>, protected _value?: T) {
     super((observer) => this._subscribe(observer));
 
     this._observable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
@@ -72,6 +71,16 @@ export class MulticastObservable<T> extends Observable<T> {
     }
 
     return this._value;
+  }
+
+  /**
+   * Wait for the observable to complete.
+   *
+   * @returns Promise that resolves to the value of the observable at the time of completion.
+   */
+  async wait(): Promise<T> {
+    await this._completed.wait();
+    return this.get();
   }
 
   override forEach(callback: (value: T) => void): Promise<void> {
@@ -147,6 +156,7 @@ export class MulticastObservable<T> extends Observable<T> {
       this._observers.forEach((observer) => observer.error?.(err));
     },
     complete: () => {
+      this._completed.wake();
       this._observers.forEach((observer) => observer.complete?.());
     },
   };

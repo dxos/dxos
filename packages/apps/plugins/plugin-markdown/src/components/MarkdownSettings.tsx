@@ -31,22 +31,24 @@ export const MarkdownSettings = () => {
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
-    <Input.Root>
-      <Input.Label>{t('editor mode label')}</Input.Label>
-      <Select.Root value={settings.editorMode} onValueChange={handleValueChange}>
-        <Select.TriggerButton placeholder={t('select editor mode placeholder')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {EditorModes.map((mode) => (
-                <Select.Option key={mode} value={mode}>
-                  {t(`${mode} editor mode label`)}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-    </Input.Root>
+    <div>
+      <Input.Root>
+        <Input.Label>{t('editor mode label')}</Input.Label>
+        <Select.Root value={settings.editorMode} onValueChange={handleValueChange}>
+          <Select.TriggerButton classNames='mbs-0.5' placeholder={t('select editor mode placeholder')} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {EditorModes.map((mode) => (
+                  <Select.Option key={mode} value={mode}>
+                    {t(`${mode} editor mode label`)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </Input.Root>
+    </div>
   );
 };

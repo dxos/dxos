@@ -4,7 +4,6 @@
 
 This options object configures the DXOS Client.
 
-
 ## Properties
 ### [config](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L46)
 Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
@@ -22,3 +21,6 @@ Custom model factory.
 Type: <code>MaybePromise&lt;ClientServicesProvider&gt;</code>
 
 Custom services provider.
+
+
+

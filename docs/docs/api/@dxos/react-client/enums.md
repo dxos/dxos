@@ -7,36 +7,37 @@ title: Enumerations
 Defined in:
    file://./../../dxos/iframe.proto
 
-
 Values:
-- `FULLSCREEN`
+- `FULLSCREEN` 
 
-- `NONE`
+- `NONE` 
+
 
 ### [`ShellLayout`]()
 
 Defined in:
    file://./../../dxos/iframe.proto
 
-
 Values:
-- `DEFAULT`
+- `DEFAULT` 
 
-- `DEVICE_INVITATIONS`
+- `DEVICE_INVITATIONS` 
 
-- `INITIALIZE_IDENTITY`
+- `INITIALIZE_IDENTITY` 
 
-- `JOIN_SPACE`
+- `JOIN_SPACE` 
 
-- `SPACE_INVITATIONS`
+- `SPACE_INVITATIONS` 
+
 
 ### [`SystemStatus`]()
 
 Defined in:
    file://./../../../dxos/client/services.proto
 
-
 Values:
-- `ACTIVE`
+- `ACTIVE` 
 
-- `INACTIVE`
+- `INACTIVE` 
+
+

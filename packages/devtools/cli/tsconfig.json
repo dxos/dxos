@@ -48,6 +48,9 @@
       "path": "../../common/plate"
     },
     {
+      "path": "../../common/process"
+    },
+    {
       "path": "../../common/sentry"
     },
     {

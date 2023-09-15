@@ -85,10 +85,9 @@ export class DataPipeline implements CredentialProcessor {
   @trace.metricsCounter()
   private _mutations = new TimeSeriesCounter();
 
-  constructor(private readonly _params: DataPipelineParams) {}
+  public databaseHost?: DatabaseHost;
 
   public itemManager!: ItemManager;
-  public databaseHost?: DatabaseHost;
 
   /**
    * Current epoch. Might be still processing.
@@ -101,6 +100,8 @@ export class DataPipeline implements CredentialProcessor {
   public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
   public readonly onNewEpoch = new Event<Credential>();
+
+  constructor(private readonly _params: DataPipelineParams) {}
 
   get isOpen() {
     return this._isOpen;
@@ -287,7 +288,7 @@ export class DataPipeline implements CredentialProcessor {
       // Add properties to cache.
       const propertiesItem = this.itemManager.items.find(
         (item) =>
-          item.modelMeta?.type === 'dxos:model/document' &&
+          item.modelMeta?.type === 'dxos.org/model/document' &&
           // TODO(burdon): Document?
           (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === TYPE_PROPERTIES,
       );

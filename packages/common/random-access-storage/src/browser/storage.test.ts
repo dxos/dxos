@@ -16,12 +16,12 @@ import { storageTests } from '../testing';
 const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
-  for (const storageType of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
-    if (mochaExecutor.environment === 'webkit' && storageType === StorageType.WEBFS) {
+  for (const dataStore of [StorageType.RAM, StorageType.IDB, StorageType.WEBFS] as StorageType[]) {
+    if (mochaExecutor.environment === 'webkit' && dataStore === StorageType.WEBFS) {
       // Skip WEBFS in webkit.
       continue;
     }
-    storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+    storageTests(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));
   }
 
   test.skip(`Used ${StorageType.WEBFS} by default`, async () => {

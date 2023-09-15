@@ -1,0 +1,30 @@
+{
+  "sourceRoot": "packages/common/process/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/process/src/index.ts",
+        "outputPath": "packages/common/process/dist",
+        "tsConfig": "packages/common/process/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/process/src/**/*.{ts,js,tsx,jsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

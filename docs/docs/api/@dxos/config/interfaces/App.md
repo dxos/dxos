@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [build]()
 Type: <code>[BuildInfo](/api/@dxos/config/interfaces/BuildInfo)</code>
@@ -41,3 +40,5 @@ Type: <code>string</code>
 
 Options:
   - proto3_optional = true
+
+    

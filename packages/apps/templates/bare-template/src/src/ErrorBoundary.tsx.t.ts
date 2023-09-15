@@ -1,11 +1,10 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input: { react } }) => {
-    return !react
-      ? null
-      : text`
+export default template.define.text({
+  content: ({ input: { react } }) =>
+    react &&
+    plate`
       import React, { Component, FC, PropsWithChildren } from 'react';
 
       type Props = PropsWithChildren<{
@@ -32,9 +31,5 @@ export default defineTemplate(
 
           return this.props.children;
         }
-      }`;
-  },
-  {
-    config
-  }
-);
+      }`,
+});

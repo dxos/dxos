@@ -12,7 +12,7 @@
     "src"
   ],
   "scripts": {
-    "storage": "ts-node ./src/generate-storage"
+    "snapshot": "ts-node ./src/generate-snapshot"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

@@ -15,7 +15,7 @@ import { storageBenchmark } from '../testing/benchmark.blueprint-test';
 const ROOT_DIRECTORY = 'testing';
 
 describe.skip('bench', () => {
-  for (const storageType of [StorageType.RAM, StorageType.IDB] as StorageType[]) {
-    storageBenchmark(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+  for (const dataStore of [StorageType.RAM, StorageType.IDB] as StorageType[]) {
+    storageBenchmark(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));
   }
 });

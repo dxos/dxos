@@ -80,11 +80,7 @@ class Agent {
   public messages: FeedMessageBlock[] = [];
   public writePromise: Promise<any> = Promise.resolve();
 
-  constructor(
-    private readonly builder: TestFeedBuilder,
-    public feedStore: FeedStore<FeedMessage>,
-    public id: string,
-  ) {}
+  constructor(private readonly builder: TestFeedBuilder, public feedStore: FeedStore<FeedMessage>, public id: string) {}
 
   async open() {
     const key = await this.builder.keyring.createKey();
@@ -135,10 +131,7 @@ type Real = {
 };
 
 class WriteCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(
-    public agent: string,
-    public count: number,
-  ) {}
+  constructor(public agent: string, public count: number) {}
 
   check = () => true;
 

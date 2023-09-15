@@ -32,7 +32,7 @@ export const remarkDocumentation = async (config: Config) => {
         //   Our plugin types change the type of the chain such that all following plugins require arrays.
         .use(Remark.apiDocGenerateDirective)
         .use([codeImport])
-        .use([remarkPrettier])
+        .use([remarkPrettier as any]) // TODO(burdon): Hack.
         .use([remarkStringify as any]) // TODO(burdon): Hack.
         .process(
           new VFile({

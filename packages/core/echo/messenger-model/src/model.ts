@@ -32,7 +32,7 @@ class MessengerModelStateMachine implements StateMachine<Message[], Message, {}>
  */
 export class MessengerModel extends Model<Message[], Message> {
   static meta: ModelMeta = {
-    type: 'dxos:model/messenger',
+    type: 'dxos.org/model/messenger',
     stateMachine: () => new MessengerModelStateMachine(),
     mutationCodec: schema.getCodecForType('dxos.echo.model.messenger.Message'),
   };

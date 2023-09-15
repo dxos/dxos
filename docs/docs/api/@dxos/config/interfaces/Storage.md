@@ -3,9 +3,8 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
-### [keyStorage]()
+### [keyStore]()
 Type: <code>[StorageDriver](/api/@dxos/config/enums#StorageDriver)</code>
 
 Options:
@@ -23,8 +22,10 @@ Type: <code>boolean</code>
 Options:
   - proto3_optional = true
 
-### [storageType]()
+### [dataStore]()
 Type: <code>[StorageDriver](/api/@dxos/config/enums#StorageDriver)</code>
 
 Options:
   - proto3_optional = true
+
+    

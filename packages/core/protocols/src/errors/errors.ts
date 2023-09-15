@@ -11,11 +11,7 @@ import type { ItemID } from '../types';
  * Errors can optionally include a JSON context object.
  */
 class BaseError extends Error {
-  constructor(
-    readonly code: string,
-    message?: string,
-    readonly context?: Record<string, any>,
-  ) {
+  constructor(readonly code: string, message?: string, readonly context?: Record<string, any>) {
     super(message ?? code);
     this.name = code;
     // NOTE: Restores prototype chain (https://stackoverflow.com/a/48342359).
@@ -125,14 +121,14 @@ export class TimeoutError extends BaseError {
   }
 }
 
-// General protocol error
+// General protocol error.
 export class ProtocolError extends BaseError {
   constructor(message?: string, context?: any) {
     super('PROTOCOL_ERROR', message, context);
   }
 }
 
-// General connectivity errors
+// General connectivity errors.
 export class ConnectivityError extends BaseError {
   constructor(message?: string, context?: any) {
     super('CONNECTIVITY_ERROR', message, context);

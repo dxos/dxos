@@ -2,28 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from 'path';
 import * as url from 'url';
-
-import { executeDirectoryTemplate } from '@dxos/plate';
 
 import { Config } from './config.js';
 import { loadTypedocJson } from './loadTypedocJson.js';
+import template, { Input } from './templates/api/template.t.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 export const generateApiDocs = async (config: Config) => {
-  const { apiDocsPath } = config;
-  const api = await loadTypedocJson(config);
-  const files = await executeDirectoryTemplate({
+  const { apiDocsPath, packagesPath } = config;
+  const input: Input = {
+    ...(await loadTypedocJson(config)),
+    packagesPath,
+  };
+  const result = await template.apply({
     outputDirectory: apiDocsPath,
-    templateDirectory: path.resolve(__dirname, 'templates/api'),
-    input: api,
+    input,
     overwrite: true,
     compilerOptions: {
       module: 'esnext',
+      esModuleInterop: true,
     },
     moduleLoaderFunction: (p: string) => import(p),
   });
-  void files.save();
+  void result.apply();
 };
