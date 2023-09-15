@@ -32,11 +32,11 @@
     "remark-directive": "^2.0.1",
     "remark-frontmatter": "^4.0.1",
     "remark-parse": "^10.0.1",
-    "remark-prettier": "^2.0.0",
     "remark-stringify": "^10.0.2",
     "typedoc": "^0.23.22",
     "typescript": "^5.2.2",
     "unified": "^10.1.2",
+    "unified-prettier": "^2.0.0",
     "unist-util-visit": "^4.1.0",
     "vfile": "^5.3.6"
   }
