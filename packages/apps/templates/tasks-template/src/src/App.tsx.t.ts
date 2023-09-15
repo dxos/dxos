@@ -2,7 +2,7 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.script({
-  content: plate`
+  content: plate /* javascript */ `
   import React, { useEffect } from 'react';
   import {
     Navigate,
