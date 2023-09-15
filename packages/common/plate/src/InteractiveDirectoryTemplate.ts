@@ -9,10 +9,16 @@ import { logger } from './util/logger';
 import { FileResults } from './util/template';
 import { InquirableZodType, QuestionOptions, inquire, unDefault } from './util/zodInquire';
 
+// export type QuestionOptions<TInput> = {
+//   [K in keyof TInput]?: {
+//     when?: (inputs: TInput) => boolean;
+//     default?: (inputs: TInput) => TInput[K];
+//   };
+// };
 export interface InteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>
   extends DirectoryTemplateOptions<z.infer<IShape>> {
   inputShape: IShape;
-  inputQuestions?: any;
+  inputQuestions?: QuestionOptions<z.infer<IShape>>;
 }
 
 export interface ExecuteInteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>

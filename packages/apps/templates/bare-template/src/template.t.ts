@@ -28,16 +28,16 @@ export default interactiveDirectory({
     })
     .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
     .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' }),
-  // inputQuestions: {
-  //   dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
-  //   tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
-  //   storybook: { when: ({ react }) => react, default: ({ react }) => react }
-  // },
-  context({ input, outputDirectory, ...rest }) {
-    const { name, createFolder } = input;
+  inputQuestions: {
+    dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
+    tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
+    storybook: { when: ({ react }) => react, default: ({ react }) => react }
+  },
+  options({ input, outputDirectory, ...rest }) {
+    const { name, createFolder } = {...input};
     return {
       input,
-      outputDirectory: createFolder ? path.resolve(outputDirectory, sanitize(name)) : outputDirectory,
+      outputDirectory: createFolder ? path.resolve(outputDirectory, sanitize(name ?? '')) : outputDirectory,
       ...rest,
     };
   },
@@ -45,6 +45,7 @@ export default interactiveDirectory({
     const cwd = process.cwd();
     const relative = path.relative(cwd, outputDirectory);
     console.log(plate`
+    
     Application ${chalk.green(chalk.bold(name))} created.
 
     Run the app:

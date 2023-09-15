@@ -6,14 +6,13 @@ import path from 'node:path';
 import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef, ZodType } from 'zod';
 
-import { executeFileTemplate } from './FileTemplate';
+import { ExecuteFileTemplateOptions, executeFileTemplate } from './FileTemplate';
 import { Plate } from './api';
 import { Effect } from './util/effect';
 import { FileEffect, Path } from './util/file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
 import { LoadModuleOptions } from './util/loadModule';
 import { logger } from './util/logger';
-import { MaybePromise } from './util/promise';
 import { runPromises } from './util/runPromises';
 import {
   Template,
@@ -78,8 +77,8 @@ export type DirectoryTemplateOptions<I = any> = IncludeExclude<I> & {
   inherits?: Template<I>;
   defaultInput?: Partial<I>;
   before?: () => any;
-  after?: (options: Required<ExecuteDirectoryTemplateOptions<I>>, results: FileResults) => any;
-  context?: (context: Context<I>) => MaybePromise<Context<I>>;
+  after?: false | ((options: Required<ExecuteDirectoryTemplateOptions<I>>, results: FileResults) => any);
+  options?: (context: Required<ExecuteDirectoryTemplateOptions<I>>) => Required<ExecuteDirectoryTemplateOptions<I>>;
 };
 
 export type DirectoryTemplateContext<I> = Context<I>;
@@ -101,7 +100,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
   public define = new Plate<I>();
 
   async apply(options?: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults<I>> {
-    const mergedOptions = mergeOptions<ExecuteDirectoryTemplateOptions<I>>(
+    const bareMergedOptions = mergeOptions<ExecuteDirectoryTemplateOptions<I>>(
       {
         parallel: true,
         verbose: false,
@@ -111,6 +110,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       this.options,
       options ?? {},
     ) as Required<ExecuteDirectoryTemplateOptions<I>>;
+    const mergedOptions = bareMergedOptions?.options ? bareMergedOptions.options(bareMergedOptions) : bareMergedOptions;
     const { src, parallel, include, exclude, outputDirectory, verbose, input } = mergedOptions;
     if (!src) {
       throw new Error('a template src file is required');
@@ -194,7 +194,9 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
     debug(combined.join('\n'));
     const result = results(combined);
     debug(`done executing template ${src}\n---`);
-    mergedOptions?.after?.(mergedOptions, result);
+    if (mergedOptions?.after) {
+      mergedOptions?.after(mergedOptions, result);
+    }
     return result;
   }
 }

@@ -19,22 +19,22 @@ describe('bare template', () => {
   });
 
   it('execute with permuted inputs', async () => {
-    console.log('executing', scenarios.length, 'configurations');
+    console.log('executing', scenarios.length, 'scenarios...');
     const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'bare-template' });
-    console.log(`temp folder: ${tempFolder.path}`);
 
     const promises = scenarios.map(async (scenario) => {
       const outputDirectory = path.resolve(tempFolder.path, scenario.name);
 
       const results = await template.apply({
         input: { ...scenario, monorepo: false, name: `${packageJson.name}-${scenario.name}` },
-        outputDirectory
+        outputDirectory,
+        after: false, // do not print messages
       });
 
       return await results.apply();
     });
     await Promise.all(promises);
-    console.log('done executing template scenarios');
+    console.log('done executing scenarios');
     console.log(`temp folder: ${tempFolder.path}`);
   });
 });
