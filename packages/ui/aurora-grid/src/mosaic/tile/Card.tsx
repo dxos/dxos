@@ -6,12 +6,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef } from 'react';
 
-import { useMosaic, useMosaicData, useMosaicDnd } from '../mosaic';
+import { useMosaic, useMosaicDnd } from '../mosaic';
 import { CardTile } from '../types';
 
 const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
-  const { Delegator } = useMosaic();
-  const { [tile.id]: cardData } = useMosaicData();
+  const {
+    data: { [tile.id]: cardData },
+    Delegator,
+  } = useMosaic();
   const { activeId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: tile.id,

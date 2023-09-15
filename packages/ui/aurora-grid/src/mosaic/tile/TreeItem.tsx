@@ -11,7 +11,7 @@ import React, { forwardRef } from 'react';
 
 import { Tree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
 
-import { useMosaic, useMosaicData, useMosaicDnd } from '../mosaic';
+import { useMosaic, useMosaicDnd } from '../mosaic';
 import { TreeItemTile } from '../types';
 
 const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]>; level: number }) => {
@@ -30,13 +30,13 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwardedRef) => {
   const {
-    Delegator,
     mosaic: { tiles, relations },
+    data: { [tile.id]: treeItemData },
+    Delegator,
   } = useMosaic();
-  const { [tile.id]: treeItemData } = useMosaicData();
   const { activeId, migrationDestinationId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform } = useSortable({
-    id: tile.isOverlay ? `${tile.id}--overlay` : tile.id,
+    id: tile.id,
     data: tile,
   });
   const ref = useComposedRefs(setNodeRef, forwardedRef);

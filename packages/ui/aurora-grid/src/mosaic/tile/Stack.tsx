@@ -6,15 +6,15 @@ import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef } from 'react';
 
 import { Tile } from './';
-import { useMosaic, useMosaicData } from '../mosaic';
+import { useMosaic } from '../mosaic';
 import { StackTile } from '../types';
 
 const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
+    data: { [tile.id]: stackData },
     Delegator,
   } = useMosaic();
-  const { [tile.id]: stackData } = useMosaicData();
   const subtileIds = relations[tile.id]?.child ?? new Set();
   const subtiles = Array.from(subtileIds)
     .map((id) => tiles[id])

@@ -29,9 +29,9 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
     mosaic: {
       tiles: { [id]: activeTile },
     },
+    data: { [id]: data },
     Delegator,
   } = useMosaic();
-  const { [id]: data } = useMosaicData();
   const Root = activeTile.variant === 'treeitem' ? List : 'div';
   return (
     <Root role='none'>
@@ -42,37 +42,20 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
 
 const MosaicOverlay = () => {
   const { activeId } = useMosaicDnd();
+  console.log('[activeId]', activeId);
   return <DragOverlay>{activeId ? <MosaicOverlayTile id={activeId} /> : null}</DragOverlay>;
 };
 
 const defaultMosaicContextValue: MosaicContextValue = {
   data: {},
+  mosaic: { tiles: {}, relations: {} },
+  onMosaicChange: () => {},
+  Delegator: () => null,
 };
 
 const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
-const useMosaicData = () => useContext(MosaicContext).data;
-
-const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
-  return (
-    <MosaicContext.Provider value={contextValue}>
-      <DndProvider>{children}</DndProvider>
-    </MosaicContext.Provider>
-  );
-};
-
-const defaultMosaicRootContextValue: MosaicRootContextValue = {
-  mosaic: { tiles: {}, relations: {} },
-  Delegator: () => null,
-  onMosaicChange: () => {},
-  id: 'never',
-};
-
-const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRootContextValue);
-
-const useMosaic = () => useContext(MosaicRootContext);
-
-const MosaicRootImpl = ({ children }: PropsWithChildren) => {
+const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   const handleDragStart = useHandleMigrateDragStart();
   const handleRearrangeDragEnd = useHandleRearrangeDragEnd();
   const handleMigrateDragEnd = useHandleMigrateDragEnd();
@@ -94,13 +77,28 @@ const MosaicRootImpl = ({ children }: PropsWithChildren) => {
   );
 };
 
+const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
+  return (
+    <MosaicContext.Provider value={contextValue}>
+      <DndProvider>
+        <MosaicProviderImpl>{children}</MosaicProviderImpl>
+      </DndProvider>
+    </MosaicContext.Provider>
+  );
+};
+
+const defaultMosaicRootContextValue: MosaicRootContextValue = {
+  id: 'never',
+};
+
+const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRootContextValue);
+
+const useMosaic = () => useContext(MosaicContext);
+const useMosaicRoot = () => useContext(MosaicRootContext);
+
 const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) => {
   const id = useId('mosaic', value.id);
-  return (
-    <MosaicRootContext.Provider value={{ ...value, id }}>
-      <MosaicRootImpl>{children}</MosaicRootImpl>
-    </MosaicRootContext.Provider>
-  );
+  return <MosaicRootContext.Provider value={{ ...value, id }}>{children}</MosaicRootContext.Provider>;
 };
 
 export const Mosaic = {
@@ -112,4 +110,4 @@ export const Mosaic = {
   TreeItem,
 };
 
-export { useMosaic, useMosaicData, useMosaicDnd };
+export { useMosaic, useMosaicRoot, useMosaicDnd };

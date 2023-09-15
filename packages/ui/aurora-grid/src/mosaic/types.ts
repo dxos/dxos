@@ -73,13 +73,13 @@ export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 
 export type MosaicContextValue = {
   data: Record<string, any>;
+  mosaic: DeepSignal<MosaicState>;
+  onMosaicChange?: MosaicChangeHandler;
+  Delegator: Delegator;
 };
 
 export type MosaicRootContextValue = {
   id: string;
-  mosaic: DeepSignal<MosaicState>;
-  Delegator: Delegator;
-  onMosaicChange?: MosaicChangeHandler;
 };
 
 export type MosaicRootProps = Omit<MosaicRootContextValue, 'id'> & Partial<Pick<MosaicRootContextValue, 'id'>>;
