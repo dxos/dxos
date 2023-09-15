@@ -28,9 +28,7 @@ describe('bare template', () => {
 
       const results = await template.apply({
         input: { ...scenario, monorepo: false, name: `${packageJson.name}-${scenario.name}` },
-        outputDirectory,
-        interactive: false,
-        verbose: true,
+        outputDirectory
       });
 
       return await results.apply();

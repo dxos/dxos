@@ -28,6 +28,7 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
       esm,
       compilerOptions: {
         strict: false,
+        target: 'es5',
         module: 'commonjs',
         ...options?.compilerOptions,
       },
@@ -36,7 +37,13 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
     tsnodeRegistered = true;
   }
   const loader = options?.moduleLoaderFunction ?? ((m: string) => require(m));
-  return loader(p);
+  try {
+    return loader(p);
+  } catch (err: any) {
+    console.error('problem loading template ' + p);
+    console.error(err);
+    throw err;
+  }
 };
 
 export const safeLoadModule = async (p: string, options?: LoadModuleOptions) => {
