@@ -4,15 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { AlertDialog, useTranslation } from '@dxos/aurora';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { Client, ClientContext, ClientOptions, InvalidStorageVersionError, SystemStatus } from '@dxos/react-client';
+import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-client';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import translations from './translations';
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
@@ -105,7 +103,6 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
-        translations,
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
 
@@ -123,23 +120,6 @@ export const ClientPlugin = (
         },
         components: {
           default: () => {
-            if (error instanceof InvalidStorageVersionError) {
-              const { t } = useTranslation(CLIENT_PLUGIN);
-
-              return (
-                <AlertDialog.Root open>
-                  <AlertDialog.Overlay>
-                    <AlertDialog.Content>
-                      <AlertDialog.Title>{t('invalid storage version title')}</AlertDialog.Title>
-                      <AlertDialog.Description>
-                        {t('invalid storage version message', error.context)}
-                      </AlertDialog.Description>
-                    </AlertDialog.Content>
-                  </AlertDialog.Overlay>
-                </AlertDialog.Root>
-              );
-            }
-
             if (error) {
               throw error;
             }
