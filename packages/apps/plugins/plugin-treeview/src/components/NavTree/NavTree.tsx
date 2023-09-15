@@ -14,5 +14,5 @@ export const NavTreeRoot = () => {
     },
   } = useMosaic();
 
-  return <Mosaic.Stack {...(root as StackTile)} variant='stack' />;
+  return root ? <Mosaic.Stack {...(root as StackTile)} variant='stack' /> : null;
 };

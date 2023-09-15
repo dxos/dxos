@@ -117,7 +117,13 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         if (!!data && typeof data === 'object') {
           switch (role) {
             case 'mosaic-delegator':
-              if ('id' in data && parseDndId(data?.id as string)[0] === TREE_VIEW_PLUGIN) {
+              if (
+                'tile' in data &&
+                typeof data.tile === 'object' &&
+                !!data.tile &&
+                'id' in data.tile &&
+                parseDndId((data.tile.id as string) ?? '')[0] === TREE_VIEW_PLUGIN
+              ) {
                 return NavTreeItemDelegator;
               } else {
                 return null;
