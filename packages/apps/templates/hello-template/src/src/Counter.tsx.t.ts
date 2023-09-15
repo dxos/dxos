@@ -30,6 +30,7 @@ export default template.define.script({
           {counter && (
             <button
               className='p-4 m-2 border'
+              data-testid='counter'
               onClick={() => {
                 counter.count = (counter.count ?? 0) + 1;
               }}>
