@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { plate } from '@dxos/plate';
-import template from '../template.t';
+import template from '../template.t.js';
 import { ReflectionKind, JSONOutput as Schema } from 'typedoc';
 import { packagesInProject, reflectionsOfKind, Stringifier } from '../util.t/index.js';
 

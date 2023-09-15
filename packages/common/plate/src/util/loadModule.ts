@@ -7,7 +7,7 @@ import * as tsnode from 'ts-node';
 export const isCodeModule = (file: string) => /\.[tj]sx?$/.test(file);
 
 export type LoadModuleOptions = {
-  compilerOptions?: object;
+  compilerOptions?: any;
   moduleLoaderFunction?: (m: string) => any;
 };
 
@@ -17,18 +17,23 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
   if (!isCodeModule(p)) {
     throw new Error(`only ts or js files can be loaded. attempted: ${p}`);
   }
+  // if (/\.tsx?$/.test(p)) {
+  const esm = options?.compilerOptions?.module === 'esnext';
+
   if (/\.tsx?$/.test(p) && !tsnodeRegistered) {
-    tsnode.register({
+    const r = {
       transpileOnly: true,
-      swc: true,
+      swc: false,
       skipIgnore: true,
+      esm,
       compilerOptions: {
         strict: false,
-        target: 'es5',
         module: 'commonjs',
         ...options?.compilerOptions,
       },
-    });
+    };
+    console.log('registering ts-node ', r);
+    tsnode.register(r);
     tsnodeRegistered = true;
   }
   const loader = options?.moduleLoaderFunction ?? ((m: string) => require(m));

@@ -32,7 +32,7 @@ const main = async () => {
   const flags = process.argv.slice(2);
   const tasks = {
     apidoc: generateApiDocs,
-    remark: remarkDocumentation,
+    // remark: remarkDocumentation,
   };
   const plan = flags?.length ? flags : Object.keys(tasks);
   await Promise.all(plan.map((step: string) => (step in tasks ? tasks[step as keyof typeof tasks]?.(config) : null)));
