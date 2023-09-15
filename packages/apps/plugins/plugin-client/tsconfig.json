@@ -37,12 +37,6 @@
     },
     {
       "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../../../ui/aurora"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }
