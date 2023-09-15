@@ -64,6 +64,11 @@ export const ClientPlugin = (
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           firstRun = true;
           await client.halo.createIdentity();
+        } else if (client.halo.identity.get() && deviceInvitationCode) {
+          // Ignore device invitation if identity already exists.
+          // TODO(wittjosiah): Identity merging.
+          searchParams.delete('deviceInvitationCode');
+          window.history.replaceState({}, '', `${location.pathname}?${searchParams}`);
         } else if (deviceInvitationCode) {
           void client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
         }
@@ -91,6 +96,10 @@ export const ClientPlugin = (
             });
           }, 2000);
         }
+      }
+
+      if (client.halo.identity.get()) {
+        await client.spaces.isReady.wait();
       }
 
       return {

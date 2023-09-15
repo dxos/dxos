@@ -4,11 +4,8 @@
 
 import { DocumentModel } from '@dxos/document-model';
 
-// TODO(burdon): Change: dxos.org/type/schema (search elsewhere).
-//  https://github.com/dxos/dxos/issues/3981
-export const TYPE_SCHEMA = 'dxos:type/schema';
-export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
-export const MODEL_DOCUMENT = 'dxos:model/document'; // TODO(burdon): Move to document-model.
+export const TYPE_PROPERTIES = 'dxos.org/type/space-properties';
+export const TYPE_SCHEMA = 'dxos.org/type/schema'; // TODO(burdon): Experimental.
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'ref';
 

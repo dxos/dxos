@@ -5,7 +5,7 @@
 import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, surfaceElevation, groupSurface, dialogMotion } from '../fragments';
+import { descriptionText, focusRing, surfaceElevation, groupSurface, dialogMotion, groupBorder } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -27,6 +27,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     dialogMotion,
     surfaceElevation({ elevation }),
     groupSurface,
+    groupBorder,
     focusRing,
     ...etc,
   );

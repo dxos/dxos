@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import { useEffect, useState } from 'react';
+
 import { PublicKeyLike } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
-import { useIdentity } from '../halo';
 
 /**
  * Get a specific Space using its key.
@@ -19,21 +20,29 @@ import { useIdentity } from '../halo';
  */
 export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
   const client = useClient();
-  const identity = useIdentity();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Only wait for ready if looking for the default space.
+    if (spaceKey) {
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      await client.spaces.isReady.wait();
+      setReady(true);
+    });
+
+    return () => clearTimeout(timeout);
+  }, [client, spaceKey]);
 
   if (spaceKey) {
     return spaces.find((space) => space.key.equals(spaceKey));
   }
 
-  if (identity) {
-    try {
-      return client.spaces.default;
-    } catch {
-      // TODO(wittjosiah): Shouldn't be necessary. If identity exists, the default space should exist.
-      //   Seems to throw in Shell during the identity creation process.
-      return undefined;
-    }
+  if (ready) {
+    return client.spaces.default;
   }
 };
 

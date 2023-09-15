@@ -32,6 +32,19 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
     const error = !!node.properties?.error;
     const modified = node.properties?.modified ?? false;
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+
+    const handleSelect = async () => {
+      await sendIntent({
+        plugin: TREE_VIEW_PLUGIN,
+        action: TreeViewAction.ACTIVATE,
+        data: {
+          id: node.id,
+        },
+      });
+      void defaultAction?.invoke();
+      !isLg && closeNavigationSidebar();
+    };
 
     return (
       <div
@@ -39,6 +52,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
         className={mx(
           'grow flex items-center gap-1 pli-0',
           level < 1 && topLevelText,
+          // TODO(burdon): Theme.
           level < 1 && topLevelHeadingColor(node.properties?.palette),
           level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
           error && valenceColorText('error'),
@@ -69,27 +83,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
-
-                await sendIntent({
-                  plugin: TREE_VIEW_PLUGIN,
-                  action: TreeViewAction.ACTIVATE,
-                  data: {
-                    id: node.id,
-                  },
-                });
-                !isLg && closeNavigationSidebar();
+                void handleSelect();
               }
             }}
-            onClick={async () => {
-              await sendIntent({
-                plugin: TREE_VIEW_PLUGIN,
-                action: TreeViewAction.ACTIVATE,
-                data: {
-                  id: node.id,
-                },
-              });
-              !isLg && closeNavigationSidebar();
-            }}
+            onClick={handleSelect}
             density='fine'
             variant='ghost'
             classNames={['grow gap-1', isBranch && '-mis-6']}

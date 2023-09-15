@@ -15,9 +15,9 @@ import { compareObject, compareString } from '@dxos/util';
 // TODO(burdon): Type selector.
 
 const iconTypes: { [index: string]: { Icon: FC<any>; color: string } } = {
-  'dxos:type/bot': { Icon: Robot, color: 'text-green-400' },
-  'dxos:type/frame': { Icon: AppWindow, color: 'text-orange-400' },
-  'dxos:type/schema': { Icon: Code, color: 'text-blue-400' },
+  'dxos.org/type/bot': { Icon: Robot, color: 'text-green-400' },
+  'dxos.org/type/frame': { Icon: AppWindow, color: 'text-orange-400' },
+  'dxos.org/type/schema': { Icon: Code, color: 'text-blue-400' },
 };
 
 // TODO(burdon): Re-use in console.

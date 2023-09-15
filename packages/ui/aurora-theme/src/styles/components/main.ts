@@ -37,7 +37,8 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
   mx(
     'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-    'border-neutral-200 dark:border-neutral-800',
+    // TODO(burdon): Coordinate with groupBorder.
+    'border-neutral-100 dark:border-neutral-800',
     side === 'inline-start' ? sidebarSlots.start.width : sidebarSlots.end.width,
     side === 'inline-start'
       ? inlineStartSidebarOpen
