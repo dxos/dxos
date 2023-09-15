@@ -16,6 +16,35 @@ This means:
 *   Protocols, libraries, and SDKs are likely to change, so DXOS SDK components should not yet be used for production.
 *   Security of the platform and SDK is immature and incomplete. Identity and device authentication is verified using strong encryption. Data is encrypted in transit. Data stored locally, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) may not be encrypted.
 
+# Performance, Reliability, and Scale: Current state
+## Cold Start
+On startup, all mutations must be loaded before the space is available to use.
+
+**Browser: 35k mutations/sec**
+
+**Agent: 50k mutations/sec**
+
+Under normal conditions, a space will have 5,000 or less mutations, so cold startup time will be **less than a second**.
+
+## Replication
+Changes to a space need to be replicated to peers. When sharing a space to a new peer, or when a peer comes back online, it must receive all mutations.
+
+**Browser: 800 mutations/sec**
+
+**Agent: 1300 mutations/sec**
+
+**1 MB/s throughput.**
+
+Under normal conditions, full replication will take **10 seconds** or less.
+
+## Reliability and Scalability
+Our current limitation for scale and reliability is a combination of two factors: the number of users and the number of spaces shared.
+
+With a nominal amount of continuous activity (400 mutations/sec), our communications protocol can handle a maxmimum of 40 connections.
+
+For example, 10 users could share four spaces, or 4 users could share 10 spaces.
+
+
 # License
 
 MIT License
