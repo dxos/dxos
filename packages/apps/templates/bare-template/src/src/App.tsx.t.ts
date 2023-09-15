@@ -3,7 +3,7 @@ import template from '../template.t';
 
 export default template.define
   .slots({
-    content: '<div>Your code goes here</div>',
+    content: '<p>Your code goes here</p>',
     extraImports: '',
   })
   .script({

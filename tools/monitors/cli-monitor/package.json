@@ -12,7 +12,7 @@
     "monitor": "mocha -r ts-node/register --reporter mocha-multi-reporters --reporter-options configFile=config.json ./test/*.test.ts"
   },
   "devDependencies": {
-    "@dxos/cli": "latest",
+    "@dxos/cli": "main",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.2",
     "chai": "^4.3.4",

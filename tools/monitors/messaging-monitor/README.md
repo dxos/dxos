@@ -2,12 +2,6 @@
 
 Used for testing releases by installing `@dxos/messaging` from npm and verifying it works as expected.
 
-## Installation
-
-```bash
-pnpm i @dxos/messaging-monitor
-```
-
 ## DXOS Resources
 
 - [Website](https://dxos.org)
