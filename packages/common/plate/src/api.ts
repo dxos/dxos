@@ -97,7 +97,7 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
                 path: renderedPath
                   ? path.resolve(outputDirectory, renderedPath)
                   : path.resolve(outputDirectory, relativeOutputPath),
-                content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
+                content: typeof content === 'string' ? await pretty(content, relativeOutputPath) : content,
                 copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
               }),
             ]

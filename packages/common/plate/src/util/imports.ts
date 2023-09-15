@@ -21,6 +21,11 @@ type PathLike = string | string[];
 
 type LazyPathLike = () => PathLike;
 
+type Lazy<T> = () => T;
+type DoubleLazy<T> = () => Lazy<T>;
+
+export type Imports = ReturnType<typeof imports>;
+
 export const imports = (defaultRelativeTo?: LazyPathLike) => {
   const imports: { [k: string]: Import } = {};
   const render = (relativeTo: PathLike = defaultRelativeTo?.() ?? '') => {
@@ -69,9 +74,11 @@ export const imports = (defaultRelativeTo?: LazyPathLike) => {
       .map(([key, val]) => format.fromGroup(key, Array.from(val.values())))
       .join(os.EOL);
   };
+
   function use(name: string, from: PathLike, options?: ImportOptions): string;
   function use(name: string[], from: PathLike, options?: ImportOptions): string[];
-  const use = (name: string | string[], from: PathLike, options?: ImportOptions): string | string[] => {
+  // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+  function use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
     const { aliasOf, isDefault } = { ...options };
     const flatFrom = Array.isArray(from) ? path.join(...from) : from;
     const names = Array.isArray(name) ? name : [name];
@@ -84,14 +91,21 @@ export const imports = (defaultRelativeTo?: LazyPathLike) => {
       };
     });
     return Array.isArray(name) ? names : names[0];
-  };
-  function lazy(name: string, from: PathLike, o?: ImportOptions): () => string;
-  function lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, () => string>;
-  const lazy = (name: string | string[], from: PathLike, o?: ImportOptions) =>
-    Array.isArray(name) ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)])) : () => use(name, from, o);
-  const result = () => render;
+  }
+
+  function lazy(name: string, from: PathLike, o?: ImportOptions): Lazy<string>;
+  function lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, Lazy<string>>;
+  // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+  function lazy(
+    name: string | string[],
+    from: PathLike,
+    o?: ImportOptions,
+  ): Record<string, Lazy<string>> | Lazy<string> {
+    return Array.isArray(name)
+      ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)]))
+      : () => use(name, from, o);
+  }
+  const result = () => render; // intentional non-invocation, to allow for lazy evaluation in plate`` templates
   result.use = lazy;
   return result;
 };
-
-export type Imports = ReturnType<typeof imports>;
