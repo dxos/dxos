@@ -1,6 +1,6 @@
-# @dxos/cli-monitor
+# @dxos/bare-template-monitor
 
-Used for testing releases by installing `@dxos/cli` from npm and verifying it works as expected.
+Used for testing releases by installing `@dxos/cli` from npm and verifying the bare app template works as expected.
 
 ## DXOS Resources
 
