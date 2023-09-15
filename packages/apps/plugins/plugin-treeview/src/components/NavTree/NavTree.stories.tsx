@@ -7,18 +7,19 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
-import React from 'react';
+import React, { forwardRef, Ref } from 'react';
 
-import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
+import { GraphStore, GraphContext } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import { getDndId, Mosaic, MosaicRootProps, MosaicState } from '@dxos/aurora-grid';
+import { DelegatorProps, getDndId, Mosaic, MosaicRootProps, MosaicState, parseDndId } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
 import { TreeViewContext } from '../../TreeViewContext';
 import { TreeViewContextValue } from '../../types';
+import { getLevel } from '../useGraphMosaic';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;
@@ -55,16 +56,6 @@ const mosaicAcc: MosaicState = {
   relations: {},
 };
 
-const mosaicData: Record<string, any> = {};
-
-const getLevel = (node: Graph.Node, level = 0): number => {
-  if (!node.parent) {
-    return level;
-  } else {
-    return getLevel(node.parent, level + 1);
-  }
-};
-
 const navTreeId = 'navTree';
 
 graph.traverse({
@@ -82,7 +73,6 @@ graph.traverse({
       migrationClass: `level-${level}`,
     };
     mosaicAcc.relations[id] = { child: new Set(), parent: new Set() };
-    mosaicData[id] = node;
     defaultIndicesCursor += 1;
   },
 });
@@ -121,11 +111,23 @@ const treeViewState = deepSignal<TreeViewContextValue>({
   appState: undefined,
 }) as RevertDeepSignal<TreeViewContextValue>;
 
+const StorybookNavTreeItemDelegator = forwardRef<HTMLElement, DelegatorProps>((props, forwardedRef) => (
+  <NavTreeItemDelegator data={props} ref={forwardedRef as Ref<HTMLOListElement>} />
+));
+
 export const Default = {
   render: (args: MosaicRootProps) => (
-    <Mosaic.Provider {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator} getData={(id) => mosaicData[id]}>
-      <Mosaic.Root>
-        <NavTreeRoot id={navTreeId} />
+    <Mosaic.Provider
+      {...args}
+      mosaic={mosaicState}
+      Delegator={StorybookNavTreeItemDelegator}
+      getData={(dndId) => {
+        const [_, entityId] = parseDndId(dndId);
+        return graph.find(entityId);
+      }}
+    >
+      <Mosaic.Root id={navTreeId}>
+        <NavTreeRoot />
       </Mosaic.Root>
     </Mosaic.Provider>
   ),

@@ -2,12 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, {
-  FC,
   forwardRef,
   ForwardRefExoticComponent,
   Fragment,
@@ -35,7 +31,6 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
-import { NavTree } from './NavTree';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
@@ -43,62 +38,31 @@ import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
 
-type SortableBranchTreeViewItemProps = SharedTreeItemProps &
-  Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
-
-export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
-  node,
-  level,
-  rearranging,
-  migrating,
-  isPreview,
-}: SortableBranchTreeViewItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: `treeitem:${node.id}`,
-    data: { dragoverlay: node, treeitem: node },
-  });
-  return (
-    <NavTreeItem
-      node={node}
-      level={level}
-      draggableAttributes={attributes}
-      draggableListeners={listeners}
-      rearranging={rearranging}
-      isPreview={isPreview}
-      migrating={migrating}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      ref={setNodeRef}
-    />
-  );
-};
-
-type DroppableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'migrating'>;
-
-export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
-  node,
-  level,
-  migrating,
-}: DroppableBranchTreeViewItemProps) => {
-  const { setNodeRef } = useDroppable({
-    id: `treeitem:${node.id}`,
-    data: { dragoverlay: node, treeitem: node },
-  });
-  return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
-};
-
 type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
 
-export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Graph.Node>> = forwardRef<
-  HTMLOListElement,
-  DelegatorProps<Graph.Node>
->(
+export const NavTreeItemDelegator = forwardRef<HTMLOListElement, { data: DelegatorProps<Graph.Node> }>(
   (
-    { tile, data, dragHandleListeners, dragHandleAttributes, style, children, isActive, isMigrationDestination },
+    {
+      data: {
+        tile,
+        data,
+        dragHandleListeners,
+        dragHandleAttributes,
+        style,
+        children,
+        isActive,
+        isMigrationDestination,
+      },
+    },
     forwardedRef,
   ) => {
     switch (tile.variant) {
       case 'stack':
-        return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
+        return (
+          <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef}>
+            {children}
+          </Tree.Root>
+        );
       case 'treeitem':
         return (
           <NavTreeItem
@@ -107,10 +71,9 @@ export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Grap
             draggableAttributes={dragHandleAttributes}
             draggableListeners={dragHandleListeners}
             style={style}
-            ref={forwardedRef}
             rearranging={isActive}
-            childrenManaged
             {...(isMigrationDestination && { migrating: 'into' })}
+            ref={forwardedRef}
           >
             {children}
           </NavTreeItem>
@@ -140,7 +103,6 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       migrating,
       isPreview,
       isOverlay,
-      childrenManaged,
     },
     forwardedRef,
   ) => {
@@ -310,14 +272,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </Tooltip.Root>
           )}
         </HeadingWithActionsRoot>
-        {childrenManaged
-          ? children
-          : isBranch &&
-            !forceCollapse && (
-              <TreeItem.Body>
-                <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
-              </TreeItem.Body>
-            )}
+        {children}
       </TreeItem.Root>
     );
   },

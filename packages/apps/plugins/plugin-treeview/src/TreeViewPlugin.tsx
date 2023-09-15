@@ -9,14 +9,15 @@ import React from 'react';
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
+import { parseDndId } from '@dxos/aurora-grid';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import {
   Fallback,
+  NavTreeItemDelegator,
   TreeItemMainHeading,
   TreeViewContainer,
-  TreeItemDragOverlay,
   TreeViewDocumentTitle,
 } from './components';
 import translations from './translations';
@@ -113,21 +114,25 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         DocumentTitle: TreeViewDocumentTitle,
       },
       component: (data, role) => {
-        switch (role) {
-          case 'dragoverlay':
-            if (!!data && typeof data === 'object' && 'id' in data && 'label' in data) {
-              return TreeItemDragOverlay;
-            } else {
+        if (!!data && typeof data === 'object') {
+          switch (role) {
+            case 'mosaic-delegator':
+              if ('id' in data && parseDndId(data?.id as string)[0] === TREE_VIEW_PLUGIN) {
+                return NavTreeItemDelegator;
+              } else {
+                return null;
+              }
+            case 'heading':
+              if ('label' in data && 'parent' in data) {
+                return TreeItemMainHeading;
+              } else {
+                return null;
+              }
+            default:
               return null;
-            }
-          case 'heading':
-            if (!!data && typeof data === 'object' && 'label' in data && 'parent' in data) {
-              return TreeItemMainHeading;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+          }
+        } else {
+          return null;
         }
       },
       intent: {

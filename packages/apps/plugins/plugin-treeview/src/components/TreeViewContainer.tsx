@@ -6,23 +6,24 @@ import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
-import { useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
+import { Mosaic } from '@dxos/aurora-grid';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { usePlugin } from '@dxos/react-surface';
 
 import { HaloButton } from './HaloButton';
-import { NavTree } from './NavTree';
+import { NavTreeRoot } from './NavTree';
 import { VersionInfo } from './VersionInfo';
+import { useGraphMosaic } from './useGraphMosaic';
 import { TREE_VIEW_PLUGIN } from '../types';
 
 export const TreeViewContainer = () => {
   const config = useConfig();
   const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
-  const { graph } = useGraph();
+  useGraphMosaic();
 
   const identity = useIdentity();
 
@@ -94,13 +95,9 @@ export const TreeViewContainer = () => {
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>
-            <NavTree
-              level={0}
-              role='tree'
-              classNames='pbs-1 pbe-4 pli-1'
-              node={graph.root}
-              items={graph.root.children}
-            />
+            <Mosaic.Root id={TREE_VIEW_PLUGIN}>
+              <NavTreeRoot />
+            </Mosaic.Root>
           </div>
           <VersionInfo config={config} />
         </div>

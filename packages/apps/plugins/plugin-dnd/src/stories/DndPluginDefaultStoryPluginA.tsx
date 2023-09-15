@@ -6,11 +6,11 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { useContext, useState } from 'react';
 
+import { useDnd, useDragEnd, useDragOver, useDragStart } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaultStoryPlugin';
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '../DndPlugin';
 
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);

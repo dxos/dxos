@@ -26,9 +26,10 @@ export const useHandleMigrateDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active, over }: DragEndEvent, previousResult?: string | null) => {
-    let result = null;
+  return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
+    let result = previousResult;
     const activeId = active.id.toString();
+    console.log('[migrate drag end]', previousResult, activeId, dnd.migrationDestinationId);
     if (!previousResult && activeId && dnd.migrationDestinationId) {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);

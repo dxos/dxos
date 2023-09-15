@@ -69,6 +69,7 @@ const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   const handleCopyDragEnd = useHandleCopyDragEnd();
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      console.log('[mosaic drag end]', event);
       handleMigrateDragEnd(event, handleCopyDragEnd(event, handleRearrangeDragEnd(event)));
     },
     [handleRearrangeDragEnd, handleCopyDragEnd, handleMigrateDragEnd],

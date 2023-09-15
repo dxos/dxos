@@ -33,8 +33,8 @@ export const useHandleCopyDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active, over }: DragEndEvent, previousResult?: string | null) => {
-    let result = null;
+  return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
+    let result = previousResult;
     const activeId = active.id.toString();
     console.log('[copy drag end]', previousResult, activeId, dnd.copyDestinationId);
     if (!previousResult && activeId && dnd.copyDestinationId) {
