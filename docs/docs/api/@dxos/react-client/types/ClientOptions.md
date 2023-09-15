@@ -4,7 +4,6 @@
 
 This options object configures the DXOS Client.
 
-
 ## Properties
 ### [config]()
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
@@ -22,3 +21,6 @@ Custom model factory.
 Type: <code>MaybePromise&lt;[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)&gt;</code>
 
 Custom services provider.
+
+
+

@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defineTemplate, Imports, text } from '@dxos/plate';
-import config from './config.t';
+import { plate } from '@dxos/plate';
+import template from './template.t';
 // import { uiDeps } from './package.json.t';
 
-export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
-  const { react, name, dxosUi, pwa, monorepo } = input;
-  const imports = new Imports();
-  const reactPlugin = imports.lazy('react', '@vitejs/plugin-react', { isDefault: true });
-  const ThemePlugin = imports.lazy('ThemePlugin', '@dxos/aurora-theme/plugin');
-  const VitePWA = imports.lazy('VitePWA', 'vite-plugin-pwa');
-  const resolve = imports.lazy('resolve', monorepo ? 'node:path' : 'path');
+export default template.define.script({
+  content: ({ input, imports }) => {
+    const { react, name, dxosUi, pwa, monorepo } = input;
+    const reactPlugin = imports.use('react', '@vitejs/plugin-react', { isDefault: true });
+    const ThemePlugin = imports.use('ThemePlugin', '@dxos/aurora-theme/plugin');
+    const VitePWA = imports.use('VitePWA', 'vite-plugin-pwa');
+    const resolve = imports.use('resolve', monorepo ? 'node:path' : 'path');
 
-  const monorepoConfig = text`
+    const monorepoConfig = plate`
     optimizeDeps: {
       force: true,
       include: [
@@ -46,16 +46,16 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       }
     },
     `;
-  const basicConfig = text`
+    const basicConfig = plate`
     build: {
       outDir: 'out/${name}'
     },
     `;
-  return /* javascript */ text`
+    return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
   import { VaultPlugin } from '@dxos/vault/vite-plugin';
-  ${() => imports.render(defaultOutputFile)}
+  ${imports}
 
   // https://vitejs.dev/config/
   export default defineConfig({
@@ -72,16 +72,16 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
         : ''}
       ${
         dxosUi
-          ? `${ThemePlugin()}({
+          ? plate`${ThemePlugin}({
         content: [
-          ${resolve()}(__dirname, './index.html'),
-          ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+          ${resolve}(__dirname, './index.html'),
+          ${resolve}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
           ${
             dxosUi &&
-            text`
-          ${resolve()}(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
-          ${resolve()}(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
+            plate`
+          ${resolve}(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
+          ${resolve}(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+          ${resolve}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
           }
         ]
       }),`
@@ -89,7 +89,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       }
       ${
         pwa
-          ? `${VitePWA()}({
+          ? plate`${VitePWA}({
         registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000
@@ -118,4 +118,5 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
     ]
   });
   `;
+  },
 });

@@ -1,10 +1,9 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from './config.t';
+import { plate } from '@dxos/plate';
+import template from './template.t';
 
-export default defineTemplate<typeof config>(() => {
-  return text`
+export default template.define.text({
+  content: () => plate`
   version: 1
-
   runtime:
     client:
       remoteSource: http://localhost:3967/vault.html
@@ -12,7 +11,7 @@ export default defineTemplate<typeof config>(() => {
       signaling: [
         server: wss://kube.dxos.org/.well-known/dx/signal
       ]
-  `;
+  `,
   // TODO(wittjosiah): Use local signal in monorepo.
   // ${monorepo && text`services:
   //   signal:

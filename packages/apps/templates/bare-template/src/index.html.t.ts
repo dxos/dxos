@@ -1,12 +1,15 @@
-import { defineTemplate, Imports, renderSlots, text } from '@dxos/plate';
-import config from './config.t';
+import { plate } from '@dxos/plate';
+import template from './template.t';
 
-export default defineTemplate(
-  ({ input, slots, ...rest }) => {
-    const { name, react } = input;
-    const imports = new Imports();
-    const render = renderSlots(slots)({ input, imports, ...rest });
-    return text`
+export default template.define
+  .slots({
+    head: '',
+    body: '',
+  })
+  .text({
+    content: ({ input, slots }) => {
+      const { name, react } = input;
+      return plate`
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -14,21 +17,14 @@ export default defineTemplate(
           <meta name="viewport" content="width=device-width,initial-scale=1">
           <title>${name}</title>
           <link rel="icon" href="/favicon.ico">
-          ${render.head?.()}
+          ${slots.head}
         </head>
         <body>
           ${react && '<div id="root"></div>'}
-          ${render.body?.()}
+          ${slots.body}
           <script type="module" src="/src/main.ts${react ? 'x' : ''}"></script>
         </body>
       </html>
       `;
-  },
-  {
-    config,
-    slots: {
-      head: '',
-      body: ''
-    }
-  }
-);
+    },
+  });

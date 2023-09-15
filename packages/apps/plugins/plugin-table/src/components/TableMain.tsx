@@ -56,11 +56,7 @@ const getSchemaType = (type?: TableSchemaProp['type']): SchemaType.PropType => {
 
 // TODO(burdon): Factor out.
 class QueryModel implements SelectQueryModel<TypedObject> {
-  constructor(
-    private readonly _db: EchoDatabase,
-    private readonly _schema: string,
-    private readonly _prop: string,
-  ) {}
+  constructor(private readonly _db: EchoDatabase, private readonly _schema: string, private readonly _prop: string) {}
 
   getId(object: TypedObject) {
     return object.id;

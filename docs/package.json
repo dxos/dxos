@@ -8,7 +8,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "apidoc": "apidoc",
+    "apidoc": "NODE_OPTIONS='--loader ts-node/esm' apidoc",
     "bundle": "vuepress build docs",
     "clean:api": "rm -rf docs/api",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
@@ -52,7 +52,7 @@
     "gray-matter": "^4.0.3",
     "markdown-it-container": "^3.0.0",
     "markdown-it-highlightjs": "^4.0.1",
-    "prettier": "^3.0.3",
+    "prettier": "^2.8.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",

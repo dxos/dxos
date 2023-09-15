@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [package]()
 Type: <code>[Package](/api/@dxos/config/interfaces/Package)</code>
@@ -22,3 +21,5 @@ Type: <code>number</code>
 
 Options:
   - proto3_optional = true
+
+    
