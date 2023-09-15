@@ -13,6 +13,7 @@
     "assets"
   ],
   "devDependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@storybook/addons": "^7.0.6",

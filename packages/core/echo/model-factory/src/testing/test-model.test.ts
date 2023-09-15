@@ -6,9 +6,9 @@ import expect from 'expect';
 
 import { describe, test } from '@dxos/test';
 
-import { ModelFactory } from '../model-factory';
 import { TestBuilder } from './test-builder';
 import { TestModel } from './test-model';
+import { ModelFactory } from '../model-factory';
 
 describe.skip('test model', () => {
   test('basic mutations', async () => {

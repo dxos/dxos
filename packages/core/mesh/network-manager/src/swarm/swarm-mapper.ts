@@ -37,10 +37,7 @@ export class SwarmMapper {
     return Array.from(this._peers.values());
   }
 
-  // prettier-ignore
-  constructor(
-    private readonly _swarm: Swarm
-  ) {
+  constructor(private readonly _swarm: Swarm) {
     this._subscriptions.add(
       _swarm.connectionAdded.on((connection) => {
         this._update();
@@ -48,9 +45,9 @@ export class SwarmMapper {
           connection.remoteId,
           connection.stateChanged.on(() => {
             this._update();
-          })
+          }),
         );
-      })
+      }),
     );
 
     this._subscriptions.add(
@@ -58,7 +55,7 @@ export class SwarmMapper {
         this._connectionSubscriptions.get(peerId)?.();
         this._connectionSubscriptions.delete(peerId);
         this._update();
-      })
+      }),
     );
 
     // if (_presence) {

@@ -21,7 +21,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
   };
 
   async run(): Promise<any> {
-    const storage = this.clientConfig?.get('runtime.client.storage.path');
+    const storage = this.clientConfig?.get('runtime.client.storage.dataRoot');
     const profile = this.flags.profile;
     const paths = [
       ...new Set<string>(
@@ -61,8 +61,6 @@ export default class Reset extends BaseCommand<typeof Reset> {
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
       });
-
-      await this.maybeStartDaemon();
     } else {
       this.log('Files', paths);
     }

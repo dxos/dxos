@@ -8,9 +8,9 @@ import React, { PropsWithChildren } from 'react';
 import '@dxosTheme';
 import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
+import { Button, ButtonGroup, ButtonProps } from './Button';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
-import { Button, ButtonGroup, ButtonProps } from './Button';
 
 export default {
   component: Button,

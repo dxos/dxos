@@ -10,8 +10,8 @@ import { PublicKey } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
-import { Replicator, useYjsModel } from '../../testing';
 import { MarkdownComposer } from './Markdown';
+import { Replicator, useYjsModel } from '../../testing';
 
 export default {
   component: MarkdownComposer,

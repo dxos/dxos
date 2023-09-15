@@ -7,9 +7,9 @@ import React from 'react';
 
 import '@dxosTheme';
 
+import { Toolbar } from './Toolbar';
 import { Toggle } from '../Buttons';
 import { Select } from '../Select';
-import { Toolbar } from './Toolbar';
 
 type StorybookToolbarProps = {};
 

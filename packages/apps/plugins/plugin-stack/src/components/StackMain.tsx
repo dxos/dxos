@@ -9,8 +9,9 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 
+import { StackSectionsSortable } from './StackSectionsSortable';
 import { stackState } from '../stores';
 import {
   GenericStackObject,
@@ -20,7 +21,6 @@ import {
   StackModel,
   StackProperties,
 } from '../types';
-import { StackSectionsSortable } from './StackSectionsSortable';
 
 export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
@@ -38,7 +38,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   );
 
   return (
-    <Main.Content bounce classNames={coarseBlockPaddingStart}>
+    <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
       <StackSectionsSortable
         sections={stack.sections}
         id={stack.id}

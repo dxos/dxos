@@ -36,7 +36,7 @@ const assertState = async (model: Model, real: Real) => {
   // Wait for replication.
   await waitForExpect(() => {
     for (const [peerId, peer] of real.peers.entries()) {
-      const space = peer.getSpace(real.spaceKey);
+      const space = peer.spaces.get(real.spaceKey);
       if (space) {
         if (!model.peers.has(peerId)) {
           throw new Error(`Expected peer to not be in space: ${peerId.truncate()}`);
@@ -75,7 +75,7 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
     await client.initialize();
     await client.halo.createIdentity();
     if (real.peers.size === 0) {
-      const space = await client.createSpace();
+      const space = await client.spaces.create();
       const content = new Text();
       content.doc?.getText('utf8').insert(0, initialContent);
       await space.db.add(new Expando({ content }));
@@ -105,7 +105,11 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 // }
 
 class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peerId: PublicKey, readonly index: number, readonly text: string) {}
+  constructor(
+    readonly peerId: PublicKey,
+    readonly index: number,
+    readonly text: string,
+  ) {}
 
   check(model: Model) {
     return model.peers.has(this.peerId) && model.text.length >= this.index;
@@ -116,7 +120,7 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
     model.text = model.text.slice(0, this.index) + this.text + model.text.slice(this.index);
 
     const peer = real.peers.get(this.peerId);
-    const space = peer!.getSpace(real.spaceKey)!;
+    const space = peer!.spaces.get(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.insert(this.index, this.text);
@@ -131,7 +135,11 @@ class InsertTextCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly peerId: PublicKey, readonly index: number, readonly length: number) {}
+  constructor(
+    readonly peerId: PublicKey,
+    readonly index: number,
+    readonly length: number,
+  ) {}
 
   check(model: Model) {
     return model.peers.has(this.peerId) && model.text.length > this.index + this.length;
@@ -142,7 +150,7 @@ class RemoveTextCommand implements fc.AsyncCommand<Model, Real> {
     model.text = model.text.slice(0, this.index) + model.text.slice(this.index + this.length);
 
     const peer = real.peers.get(this.peerId);
-    const space = peer!.getSpace(real.spaceKey)!;
+    const space = peer!.spaces.get(real.spaceKey)!;
     const [document] = space.db.query((obj) => !!obj.content).objects;
     const text = (document.content.doc as Doc).getText('utf8');
     text.delete(this.index, this.length);

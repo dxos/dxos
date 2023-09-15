@@ -43,10 +43,10 @@ export const SpacesPage = ({
 
   const invitationParam = searchParams.get('invitation');
 
-  const acceptInvitation = useCallback((invitation: Invitation) => client.acceptInvitation(invitation), [client]);
+  const acceptInvitation = useCallback((invitation: Invitation) => client.spaces.join(invitation), [client]);
 
   const handleCreateSpace = useCallback(async () => {
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await onSpaceCreate?.(space);
   }, [client]);
 

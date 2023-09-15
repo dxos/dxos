@@ -17,7 +17,7 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
   if (!isCodeModule(p)) {
     throw new Error(`only ts or js files can be loaded. attempted: ${p}`);
   }
-  // if (/\.tsx?$/.test(p)) {
+
   const esm = options?.compilerOptions?.module === 'esnext';
 
   if (/\.tsx?$/.test(p) && !tsnodeRegistered) {
@@ -32,7 +32,6 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
         ...options?.compilerOptions,
       },
     };
-    console.log('registering ts-node ', r);
     tsnode.register(r);
     tsnodeRegistered = true;
   }

@@ -55,9 +55,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/errors"
-    },
-    {
       "path": "../chess-app"
     },
     {

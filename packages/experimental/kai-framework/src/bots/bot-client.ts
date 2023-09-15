@@ -220,7 +220,7 @@ export class BotClient {
 
   private async inviteBotToSpace(botClient: Client) {
     const connected = new Trigger();
-    const invitation = this._space.createInvitation({
+    const invitation = this._space.share({
       authMethod: Invitation.AuthMethod.NONE,
     });
 
@@ -229,7 +229,7 @@ export class BotClient {
         switch (invitation1.state) {
           case Invitation.State.CONNECTING: {
             log('invitation1', invitation1);
-            const observable2 = botClient.acceptInvitation(invitation1);
+            const observable2 = botClient.spaces.join(invitation1);
             observable2.subscribe(
               (invitation2) => {
                 switch (invitation2.state) {

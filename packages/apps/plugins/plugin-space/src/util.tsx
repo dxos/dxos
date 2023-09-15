@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -13,7 +13,7 @@ import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
 
@@ -39,14 +39,22 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
-export const spaceToGraphNode = (
-  space: Space,
-  parent: Graph.Node,
-  appState?: AppState,
-  defaultIndex?: string,
-): Graph.Node<Space> => {
+export const spaceToGraphNode = ({
+  space,
+  parent,
+  settings,
+  appState,
+  defaultIndex,
+}: {
+  space: Space;
+  parent: Graph.Node;
+  settings: SpaceSettingsProps;
+  appState?: AppState;
+  defaultIndex?: string;
+}): Graph.Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
+  // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
@@ -56,12 +64,14 @@ export const spaceToGraphNode = (
     id,
     label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,
-    icon: (props) => <Planet {...props} />,
+    ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
     data: space,
     properties: {
+      // TODO(burdon): Factor out palette constants.
       palette: parent.id === 'root' ? 'teal' : undefined,
+      'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
       role: 'branch',
-      hidden: inactive,
+      hidden: settings.showHidden ? false : inactive,
       disabled,
       error,
       index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
@@ -75,10 +85,7 @@ export const spaceToGraphNode = (
         // create clone of child and add to migration destination
         const object = clone(child.data, {
           retainId: true,
-          additional: [
-            ...(child.data.content ? [child.data.content] : []),
-            ...(child.data.meta ? [child.data.meta] : []),
-          ],
+          additional: [child.data.content],
         });
         space.db.add(object);
         object.meta.index = nextIndex;
@@ -135,12 +142,21 @@ export const spaceToGraphNode = (
   );
 
   if (parent.id !== 'root') {
-    node.addAction({
-      id: 'close-space',
-      label: ['close space label', { ns: SPACE_PLUGIN }],
-      icon: (props) => <X {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.CLOSE },
-    });
+    if (space.state.get() === SpaceState.READY) {
+      node.addAction({
+        id: 'close-space',
+        label: ['close space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <X {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.CLOSE },
+      });
+    } else {
+      node.addAction({
+        id: 'open-space',
+        label: ['open space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <ClockCounterClockwise {...props} />,
+        intent: { ...baseIntent, action: SpaceAction.OPEN },
+      });
+    }
   }
 
   return node;

@@ -44,10 +44,7 @@ export type TrustedKeySetAuthVerifierParams = {
 export class TrustedKeySetAuthVerifier {
   private _ctx = new Context();
 
-  // prettier-ignore
-  constructor(
-    private readonly _params: TrustedKeySetAuthVerifierParams
-  ) {}
+  constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
 
   async close() {
     await this._ctx.dispose();
@@ -64,7 +61,7 @@ export class TrustedKeySetAuthVerifier {
         return false;
       }
 
-      if (!credential.proof.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
+      if (!credential.proof!.nonce || !Buffer.from(nonce).equals(credential.proof!.nonce)) {
         log('Invalid nonce', { nonce, credential });
         return false;
       }

@@ -4,18 +4,15 @@
 
 import { faker } from '@faker-js/faker';
 
-import { emptyGraph, GraphData, GraphModel } from '../graph';
 import { createLink, createNode } from './data';
 import { TestNode } from './types';
+import { emptyGraph, GraphData, GraphModel } from '../graph';
 
 /**
  * Test graph.
  */
 export class TestGraphModel extends GraphModel<TestNode> {
-  // prettier-ignore
-  constructor(
-    private readonly _graph: GraphData<TestNode> = emptyGraph
-  ) {
+  constructor(private readonly _graph: GraphData<TestNode> = emptyGraph) {
     super();
   }
 

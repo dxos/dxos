@@ -8,10 +8,10 @@ import React from 'react';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { PluginProvider } from '@dxos/react-surface';
 
-import { DndPlugin } from '../DndPlugin';
 import { DndPluginDefaultStoryPlugin } from './DndPluginDefaultStoryPlugin';
 import { DndPluginDefaultStoryPluginA } from './DndPluginDefaultStoryPluginA';
 import { DndPluginDefaultStoryPluginB } from './DndPluginDefaultStoryPluginB';
+import { DndPlugin } from '../DndPlugin';
 
 const DndSurfacesApp = () => (
   <PluginProvider

@@ -3,7 +3,7 @@
 //
 
 import { Circle, IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { TimeoutError } from '@dxos/async';
@@ -183,7 +183,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
 };
 
 export const DebugStatus = () => {
-  const indicators = useMemo(() => [SavingIndicator, ErrorIndicator, SwarmIndicator], []);
+  const indicators = [SavingIndicator, ErrorIndicator, SwarmIndicator];
   return (
     <div className='flex items-center px-1 gap-1 h-6 text-neutral-300 dark:text-neutral-700 border-l border-t'>
       {indicators.map((Indicator) => (

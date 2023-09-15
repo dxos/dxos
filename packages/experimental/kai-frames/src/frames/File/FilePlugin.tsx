@@ -14,9 +14,9 @@ import { EditableObjectList } from '@dxos/mosaic';
 import { useConfig } from '@dxos/react-client';
 import { Space, useQuery } from '@dxos/react-client/echo';
 
-import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';
 import { FileFrameRuntime, defaultFileTypes } from './defs';
+import { useFileDownload, useIpfsClient } from '../../hooks';
 
 // TODO(burdon): Plugin signature.
 export type FileListProps = {

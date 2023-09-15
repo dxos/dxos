@@ -48,10 +48,12 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...p
   const [open, setOpen] = useState(false);
   return (
     <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>
-      <Tooltip.Content side='bottom' sideOffset={12}>
-        <span>{label}</span>
-        <Tooltip.Arrow />
-      </Tooltip.Content>
+      <Tooltip.Portal>
+        <Tooltip.Content side='bottom' sideOffset={12} classNames='z-30'>
+          <span>{label}</span>
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
       <Tooltip.Trigger
         aria-label={label}
         {...props}

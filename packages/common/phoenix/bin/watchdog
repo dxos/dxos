@@ -1,0 +1,20 @@
+#!/usr/bin/env -S node
+
+const { log } = require('@dxos/log');
+const { WatchDog } = require('../dist/lib/node/index.cjs');
+
+const params = JSON.parse(process.argv[2]);
+
+const watchdog = new WatchDog(params);
+watchdog.start().then(() => {
+  log(`Watchdog started`);
+
+}).catch((err) => {
+  log.catch(err);
+});
+
+process.on('SIGINT', async () => {
+  await watchdog.stop();
+  process.exit(0);
+});
+

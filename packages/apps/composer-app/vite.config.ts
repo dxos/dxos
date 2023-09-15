@@ -40,7 +40,7 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
-          aurora: ['@dxos/react-appkit', '@dxos/aurora', '@dxos/aurora-theme'],
+          aurora: ['@dxos/aurora', '@dxos/aurora-theme'],
           editor: ['@dxos/aurora-composer'],
         },
       },

@@ -45,7 +45,7 @@ export default class Join extends BaseCommand<typeof Join> {
       ux.action.start('Waiting for peer to connect');
       const done = new Trigger();
       const invitation = await acceptInvitation({
-        observable: client.halo.acceptInvitation(InvitationEncoder.decode(encoded!)),
+        observable: client.halo.join(InvitationEncoder.decode(encoded!)),
         callbacks: {
           onConnecting: async () => ux.action.stop(),
           onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),

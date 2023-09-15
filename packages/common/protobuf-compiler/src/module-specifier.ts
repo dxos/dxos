@@ -18,7 +18,10 @@ export class ModuleSpecifier {
     return new ModuleSpecifier(pathWithDot, context);
   }
 
-  constructor(public readonly name: string, public readonly contextPath: string) {
+  constructor(
+    public readonly name: string,
+    public readonly contextPath: string,
+  ) {
     invariant(isAbsolute(contextPath));
   }
 

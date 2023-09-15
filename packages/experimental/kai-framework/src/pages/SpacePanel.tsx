@@ -11,9 +11,9 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState } from '@dxos/react-client/echo';
 
+import { SpaceLoading } from './SpaceLoading';
 import { AppMenu, BotManager, Surface, MetagraphPanel } from '../containers';
 import { Section, useAppRouter, useAppState, useTheme } from '../hooks';
-import { SpaceLoading } from './SpaceLoading';
 
 const SPACE_PANEL_NAME = 'KaiFrameworkSpacePanel';
 

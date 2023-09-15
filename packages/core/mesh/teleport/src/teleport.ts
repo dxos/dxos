@@ -7,11 +7,10 @@ import { Duplex } from 'node:stream';
 import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { TimeoutError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, RpcClosedError } from '@dxos/protocols';
+import { schema, RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -49,8 +48,9 @@ export class Teleport {
       if (this._destroying || this._aborting) {
         return;
       }
-      log('abort teleport due to onTimeout in ControlExtension');
-      this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
+      // TODO(egorgripasov): Evaluate use of abort instead of destroy.
+      log('destroy teleport due to onTimeout in ControlExtension');
+      this.destroy(new TimeoutError('control extension')).catch((err) => log.catch(err));
     },
   });
 
@@ -136,14 +136,17 @@ export class Teleport {
     await this.destroy(err);
   }
 
+  @synchronized
   async abort(err?: Error) {
-    if (this._ctx.disposed) {
-      return;
-    }
     if (this._aborting || this._destroying) {
       return;
     }
     this._aborting = true;
+
+    if (this._ctx.disposed) {
+      return;
+    }
+
     await this._ctx.dispose();
 
     for (const extension of this._extensions.values()) {

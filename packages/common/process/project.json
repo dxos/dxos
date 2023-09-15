@@ -19,7 +19,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/common/process/src/**/*.{ts,js,tsx,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

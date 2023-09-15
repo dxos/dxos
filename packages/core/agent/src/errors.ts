@@ -7,3 +7,9 @@ export class AgentWaitTimeoutError extends Error {
     super('Timeout waiting for agent.');
   }
 }
+
+export class AgentIsNotStartedByCLIError extends Error {
+  constructor() {
+    super('Agent is not started by CLI.');
+  }
+}

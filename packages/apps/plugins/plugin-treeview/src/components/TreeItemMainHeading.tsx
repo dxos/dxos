@@ -1,23 +1,35 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
+import { useIntent } from '@braneframe/plugin-intent';
 import { Breadcrumb, Button, useTranslation } from '@dxos/aurora';
 
-import { TREE_VIEW_PLUGIN } from '../types';
+import { TREE_VIEW_PLUGIN, TreeViewAction } from '../types';
 import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ data: node }: { data: Graph.Node }) => {
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
+  const { sendIntent } = useIntent();
+
+  const handleActivate = (node: Graph.Node) => {
+    void sendIntent({
+      plugin: TREE_VIEW_PLUGIN,
+      action: TreeViewAction.ACTIVATE,
+      data: { id: node.id },
+    });
+  };
+
   return (
     <Breadcrumb.Root aria-label={t('breadcrumb label')} classNames='shrink min-is-0'>
       <Breadcrumb.List>
-        {node.parent && (
+        {node.parent && node.parent.id !== 'root' && (
           <>
             <Breadcrumb.ListItem>
-              <Breadcrumb.Link asChild>
+              <Breadcrumb.Link asChild onClick={() => node.parent && handleActivate(node.parent)}>
                 <Button variant='ghost' classNames='shrink text-sm pli-0 gap-1 overflow-hidden'>
                   {node.parent.icon && <node.parent.icon className='shrink-0' />}
                   <span className='min-is-0  flex-1 truncate'>{getTreeItemLabel(node.parent, t)}</span>

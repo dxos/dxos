@@ -8,10 +8,9 @@ import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
-import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { ConnectionResetError, ConnectivityError, ProtocolError, UnknownProtocolError, trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -73,36 +72,39 @@ export class SimplePeerTransport implements Transport {
         } else {
           this.errors.raise(new UnknownProtocolError('unknown RTCError', err));
         }
-
-        // Safari specific? are all errors of code: "DATA_CHANNEL_ERROR" connection aborts?
-      } else if (err.name === 'InvalidStateError') {
-        this.errors.raise(new ConnectionResetError('safari WebRTC error', err));
         // catch more generic simple-peer errors: https://github.com/feross/simple-peer/blob/master/README.md#error-codes
       } else if ('code' in err) {
+        log.info('simple-peer error', err);
         switch (err.code) {
           case 'ERR_WEBRTC_SUPPORT':
             this.errors.raise(new ProtocolError('WebRTC not supported', err));
+            break;
           case 'ERR_ICE_CONNECTION_FAILURE':
           case 'ERR_DATA_CHANNEL':
           case 'ERR_CONNECTION_FAILURE':
           case 'ERR_SIGNALING':
             this.errors.raise(new ConnectivityError('unknown communication failure', err));
+            break;
+          // errors due to library issues or improper API usage
           case 'ERR_CREATE_OFFER':
           case 'ERR_CREATE_ANSWER':
           case 'ERR_SET_LOCAL_DESCRIPTION':
           case 'ERR_SET_REMOTE_DESCRIPTION':
           case 'ERR_ADD_ICE_CANDIDATE':
             this.errors.raise(new UnknownProtocolError('unknown simple-peer library failure', err));
+            break;
           default:
             this.errors.raise(new Error('unknown simple-peer error'));
+            break;
         }
       } else {
+        log.info('unknown peer connection error', err);
         this.errors.raise(err);
       }
 
       // Try to gather additional information about the connection.
       try {
-        if (typeof (this._peer as any)?._pc.getStats === 'function') {
+        if (typeof (this._peer as any)?._pc?.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
             log.warn('report after webrtc error', {
               config: this.params.webrtcConfig,

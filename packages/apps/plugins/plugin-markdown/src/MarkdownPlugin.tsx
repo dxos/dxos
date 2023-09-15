@@ -49,6 +49,7 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
 
+// TODO(wittjosiah): Expand message & translate.
 const INITIAL_CONTENT = '# Welcome to Composer!\n\nComposer is a collaborative peer-to-peer application.';
 
 export const isDocument = (data: unknown): data is Document =>
@@ -167,9 +168,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
-        const space = clientPlugin.provides.client.getSpace();
-        // TODO(wittjosiah): Expand message & translate.
-        const document = space?.db.add(new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }));
+        const document = clientPlugin.provides.client.spaces.default.db.add(
+          new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }),
+        );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.sendIntent({
             action: TreeViewAction.ACTIVATE,
@@ -185,7 +186,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }

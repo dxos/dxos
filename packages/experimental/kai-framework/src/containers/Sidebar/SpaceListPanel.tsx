@@ -34,7 +34,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
   const shell = useShell();
 
   const handleCreateSpace = async () => {
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     onNavigate(createPath({ spaceKey: space.key, frame: defaultFrameId }));
   };
 
@@ -70,7 +70,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
           variant='ghost'
           classNames='flex p-0 justify-start'
           title='Create new space'
-          data-testid='sidebar.createSpace'
+          data-testid='sidebar.spaces.create'
           onClick={handleCreateSpace}
         >
           <PlusCircle className={getSize(6)} />

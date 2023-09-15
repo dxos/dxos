@@ -20,6 +20,12 @@
   ],
   "references": [
     {
+      "path": "../../apps/plugins/plugin-telemetry"
+    },
+    {
+      "path": "../../apps/plugins/plugin-treeview"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -47,7 +53,7 @@
       "path": "../../ui/aurora-theme"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../client"
@@ -66,6 +72,9 @@
     },
     {
       "path": "../react-shell"
+    },
+    {
+      "path": "../react-surface"
     }
   ]
 }

@@ -6,8 +6,8 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { Button } from '../Buttons';
 import { Dialog } from './Dialog';
+import { Button } from '../Buttons';
 
 type StorybookDialogProps = Partial<{
   title: string;

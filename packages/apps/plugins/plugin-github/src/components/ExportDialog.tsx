@@ -4,13 +4,12 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Button, Dialog, Trans, useTranslation } from '@dxos/aurora';
+import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/aurora';
 import { ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
-import { Input } from '@dxos/react-appkit';
 
-import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
+import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
 
 export const ExportDialog = ({
   data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],
@@ -118,22 +117,26 @@ export const ExportDialog = ({
         </>
       ) : (
         <div role='none' className='mbs-2 space-b-2'>
-          <Input
-            disabled={exportViewState === 'pending'}
-            label={t('github branch name label')}
-            placeholder={t('github branch name placeholder')}
-            value={ghBranchValue}
-            onChange={({ target: { value } }) => setGhBranchValue(value)}
-            slots={{ input: { autoFocus: true, className: 'font-mono' } }}
-          />
-          <Input
-            disabled={exportViewState === 'pending'}
-            label={t('github commit message label')}
-            placeholder={t('github commit message placeholder')}
-            value={ghMessageValue}
-            onChange={({ target: { value } }) => setGhMessageValue(value)}
-            size='textarea'
-          />
+          <Input.Root>
+            <Input.Label>{t('github branch name label')}</Input.Label>
+            <Input.TextInput
+              autoFocus
+              classNames='font-mono'
+              disabled={exportViewState === 'pending'}
+              placeholder={t('github branch name placeholder')}
+              value={ghBranchValue}
+              onChange={({ target: { value } }) => setGhBranchValue(value)}
+            />
+          </Input.Root>
+          <Input.Root>
+            <Input.Label>{t('github commit message label')}</Input.Label>
+            <Input.TextArea
+              disabled={exportViewState === 'pending'}
+              placeholder={t('github commit message placeholder')}
+              value={ghMessageValue}
+              onChange={({ target: { value } }) => setGhMessageValue(value)}
+            />
+          </Input.Root>
           <div role='none' className='flex justify-end gap-2'>
             <Dialog.Close asChild>
               <Button onClick={() => setExportViewState(null)}>{t('close label', { ns: 'os' })}</Button>

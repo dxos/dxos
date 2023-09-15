@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { structSubstitutions } from './struct';
 import { EncodingOptions, WithTypeUrl } from '../common';
 import { TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
-import { structSubstitutions } from './struct';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {

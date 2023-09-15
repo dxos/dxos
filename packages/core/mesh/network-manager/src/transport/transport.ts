@@ -11,6 +11,7 @@ export enum TransportKind {
   LIBDATACHANNEL = 'LIBDATACHANNEL',
   SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
   MEMORY = 'MEMORY',
+  TCP = 'TCP',
 }
 
 /**

@@ -16,11 +16,11 @@ import { TestBuilder } from '../testing';
 chai.use(chaiAsPromised);
 
 describe('Client', () => {
-  const persistentStoragePath = '/tmp/dxos/client/storage';
+  const dataRoot = '/tmp/dxos/client/storage';
 
   afterEach(async () => {
     // Clean up.
-    isNode() && rmSync(persistentStoragePath, { recursive: true, force: true });
+    isNode() && rmSync(dataRoot, { recursive: true, force: true });
   });
 
   test('creates client with embedded services', async () => {
@@ -68,7 +68,7 @@ describe('Client', () => {
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     afterTest(() => client.destroy());
-    await expect(client.createSpace()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
+    await expect(client.spaces.create()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
   }).timeout(1_000);
 
   test('creates identity then resets', async () => {
@@ -76,7 +76,7 @@ describe('Client', () => {
       version: 1,
       runtime: {
         client: {
-          storage: { persistent: true, path: persistentStoragePath },
+          storage: { persistent: true, dataRoot },
         },
       },
     });

@@ -27,7 +27,7 @@ export const Join: FC<{
 
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
-    const observable = await client.acceptInvitation(invitation);
+    const observable = await client.spaces.join(invitation);
     observable.subscribe(
       (invitation: Invitation) => {
         if (invitation.state === Invitation.State.SUCCESS) {
@@ -44,7 +44,7 @@ export const Join: FC<{
     try {
       setStatus({ processing: 'Authenticating...' });
       // await invitation!.authenticate(Buffer.from(secret));
-      // const space = await invitation!.getSpace();
+      // const space = await invitation!.spaces.get();
       // setInvitation(undefined);
       // setStatus({ success: 'OK' });
       // setSpaceKey(space.key);

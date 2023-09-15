@@ -55,6 +55,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'eslint-config-semistandard': {
+      packageJson.peerDependencies['eslint-plugin-n'] = '^16.1.0';
+      break;
+    }
+
     case 'eslint-plugin-unused-imports': {
       packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^6.5.0';
       break;

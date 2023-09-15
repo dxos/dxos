@@ -9,7 +9,6 @@ import React from 'react';
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -53,26 +52,20 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-      if (!clientPlugin) {
+      const client = clientPlugin?.provides.client;
+      if (!client?.spaces.isReady.get()) {
         return;
       }
 
-      const client = clientPlugin.provides.client;
-
-      // todo(thure): remove the `??` fallback when `client.getSpace()` reliably returns the default space.
-      const defaultSpace =
-        client.getSpace() ?? client.spaces?.get().filter((space) => space.state.get() !== SpaceState.INACTIVE)[0];
-      if (defaultSpace) {
-        // Ensure defaultSpace has the app state persistor
-        await defaultSpace.waitUntilReady();
-        const appStates = defaultSpace.db.query(AppState.filter()).objects;
-        if (appStates.length < 1) {
-          const appState = new AppState();
-          defaultSpace.db.add(appState);
-          state.appState = appState;
-        } else {
-          state.appState = (appStates as AppState[])[0];
-        }
+      // Ensure defaultSpace has the app state persistor
+      const defaultSpace = client.spaces.default;
+      const appStates = defaultSpace.db.query(AppState.filter()).objects;
+      if (appStates.length < 1) {
+        const appState = new AppState();
+        defaultSpace.db.add(appState);
+        state.appState = appState;
+      } else {
+        state.appState = (appStates as AppState[])[0];
       }
     },
     provides: {

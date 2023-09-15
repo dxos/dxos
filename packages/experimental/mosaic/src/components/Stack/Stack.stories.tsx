@@ -11,12 +11,12 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Item } from '../../layout';
-import { createItem, SeedDecorator, TestData } from '../../testing';
-import { ScrollContainer } from '../ScrollContainer';
 import { Stack } from './Stack';
 import { StackAction, StackMenu } from './StackMenu';
 import { StackRow } from './StackRow';
+import { Item } from '../../layout';
+import { createItem, SeedDecorator, TestData } from '../../testing';
+import { ScrollContainer } from '../ScrollContainer';
 
 const num = 8;
 

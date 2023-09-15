@@ -7,8 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { InvalidConfigError } from '@dxos/errors';
-import { schema } from '@dxos/protocols';
+import { InvalidConfigError, schema } from '@dxos/protocols';
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { ConfigKey, DeepIndex, ParseKey } from './types';

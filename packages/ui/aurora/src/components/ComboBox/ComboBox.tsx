@@ -114,7 +114,7 @@ const ComboBoxInput = forwardRef<HTMLDivElement, ComboBoxInputProps>(
             {...getToggleButtonProps()}
             aria-label='toggle menu'
             variant='ghost'
-            classNames={tx('combobox.button', 'combobox__button', {}, classNames)}
+            classNames={tx('combobox.button', 'combobox__button')}
           >
             {(isOpen && <CaretUp />) || <CaretDown />}
           </Button>

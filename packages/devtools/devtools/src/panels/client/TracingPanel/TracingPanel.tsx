@@ -11,12 +11,12 @@ import { Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 import { LogView } from './LogView';
 import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
 import { ResourceState, State } from './types';
+import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 
 const { helper } = createColumnBuilder<ResourceState>();
 const columns: TableColumnDef<ResourceState, any>[] = [

@@ -10,18 +10,18 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { ShellLayout, useConfig } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { usePlugin } from '@dxos/react-surface';
 
-import { TREE_VIEW_PLUGIN } from '../types';
 import { HaloButton } from './HaloButton';
 import { NavTree } from './NavTree';
 import { VersionInfo } from './VersionInfo';
+import { TREE_VIEW_PLUGIN } from '../types';
 
 export const TreeViewContainer = () => {
   const config = useConfig();
-  const { plugins } = usePlugins();
+  const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
   const { graph } = useGraph();
 
   const identity = useIdentity();
@@ -29,14 +29,6 @@ export const TreeViewContainer = () => {
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const splitView = useSplitView();
-
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-
-  const openIdentityPanel = () => {
-    if (clientPlugin) {
-      clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
-    }
-  };
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -48,7 +40,11 @@ export const TreeViewContainer = () => {
                 role='none'
                 className='shrink-0 flex items-center gap-1 pis-4 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1 bs-10'
               >
-                <HaloButton size={6} identityKey={identity?.identityKey.toHex()} onClick={openIdentityPanel} />
+                <HaloButton
+                  size={6}
+                  identityKey={identity?.identityKey.toHex()}
+                  onClick={() => clientPlugin?.provides.client.shell.shareIdentity()}
+                />
                 <div className='grow'></div>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>

@@ -11,10 +11,10 @@ import { TransportKind } from '@dxos/network-manager';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
+import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 
 export type TransportTestSpec = {
   agents: number;

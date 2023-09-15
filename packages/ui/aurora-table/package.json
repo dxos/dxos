@@ -16,9 +16,10 @@
     "src"
   ],
   "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
+    "chromatic": "true"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",

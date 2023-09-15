@@ -68,9 +68,9 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
-  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
+  credential.proof!.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
-    credential.proof.chain = chain;
+    credential.proof!.chain = chain;
   }
 
   credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload));

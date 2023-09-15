@@ -34,7 +34,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/plugins/plugin-space/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

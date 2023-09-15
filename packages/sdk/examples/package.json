@@ -10,14 +10,13 @@
   "type": "module",
   "scripts": {
     "chromatic": "chromatic --only-changed --project-token=\"chpt_7b7f447ccad9f73\" --storybook-build-dir out --exit-zero-on-changes",
-    "prebuild": "dxtype src/proto/TaskList.proto src/proto/gen/TaskList.ts"
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "devDependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",

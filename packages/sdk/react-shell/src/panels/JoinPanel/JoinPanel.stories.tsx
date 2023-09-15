@@ -5,10 +5,10 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { StorybookDialog } from '../../components/StorybookDialog';
 import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
+import { StorybookDialog } from '../../components/StorybookDialog';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',

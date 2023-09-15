@@ -63,8 +63,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/metagraph/**/*.{ts,js}"
-        ]
+          "packages/experimental/metagraph/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

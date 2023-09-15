@@ -21,8 +21,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/executors/toolbox/**/*.{ts,js}"
-        ]
+          "tools/executors/toolbox/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

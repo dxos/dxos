@@ -9,15 +9,15 @@ import React, { FC, useEffect, useState } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
-import { THREAD_PLUGIN } from '../types';
 import { ThreadChannel } from './ThreadChannel';
+import { THREAD_PLUGIN } from '../types';
 
 // TODO(burdon): Goals.
 // - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
@@ -51,7 +51,7 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
   }
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <ThreadContainer space={space} thread={object} />
     </Main.Content>
   );

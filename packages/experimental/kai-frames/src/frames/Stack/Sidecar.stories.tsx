@@ -7,9 +7,9 @@ import React from 'react';
 
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { TestFrameContainer } from '../../testing';
 import { Sidecar, Section, SidecarStack } from './Sidecar';
 import { StackFrameRuntime } from './defs';
+import { TestFrameContainer } from '../../testing';
 
 import '@dxosTheme';
 

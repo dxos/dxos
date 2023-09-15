@@ -17,8 +17,6 @@ export default [
         'empty choose markdown from space message': 'None available; try creating a new one instead?',
         'chooser done label': 'Add selected',
         'create document label': 'Create document',
-        'delete document label': 'Delete',
-        'rename document label': 'Rename',
         'editor placeholder': 'Start typing here…',
         'editor mode label': 'Editor mode',
         'select editor mode placeholder': 'Select editor mode…',
