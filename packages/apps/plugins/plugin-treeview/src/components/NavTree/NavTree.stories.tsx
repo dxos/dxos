@@ -13,7 +13,7 @@ import { GraphStore, GraphContext, Graph } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import { Mosaic, MosaicRootProps, MosaicState } from '@dxos/aurora-grid';
+import { getDndId, Mosaic, MosaicRootProps, MosaicState } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
@@ -65,11 +65,14 @@ const getLevel = (node: Graph.Node, level = 0): number => {
   }
 };
 
+const navTreeId = 'navTree';
+
 graph.traverse({
   onVisitNode: (node) => {
     const level = getLevel(node, -1);
-    mosaicAcc.tiles[node.id] = {
-      id: node.id,
+    const id = getDndId(navTreeId, node.id);
+    mosaicAcc.tiles[id] = {
+      id,
       index: defaultIndices[defaultIndicesCursor],
       variant: 'treeitem',
       sortable: true,
@@ -78,18 +81,20 @@ graph.traverse({
       acceptMigrationClass: new Set([`level-${level + 1}`]),
       migrationClass: `level-${level}`,
     };
-    mosaicAcc.relations[node.id] = { child: new Set(), parent: new Set() };
-    mosaicData[node.id] = node;
+    mosaicAcc.relations[id] = { child: new Set(), parent: new Set() };
+    mosaicData[id] = node;
     defaultIndicesCursor += 1;
   },
 });
 
 graph.traverse({
   onVisitNode: (node) => {
+    const id = getDndId(navTreeId, node.id);
     if (node.children && node.children.length) {
       node.children.forEach((child) => {
-        mosaicAcc.relations[node.id].child.add(child.id);
-        mosaicAcc.relations[child.id].parent.add(node.id);
+        const childId = getDndId(navTreeId, child.id);
+        mosaicAcc.relations[id].child.add(childId);
+        mosaicAcc.relations[childId].parent.add(id);
       });
     }
   },
@@ -118,9 +123,11 @@ const treeViewState = deepSignal<TreeViewContextValue>({
 
 export const Default = {
   render: (args: MosaicRootProps) => (
-    <Mosaic.Root {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator}>
-      <NavTreeRoot />
-    </Mosaic.Root>
+    <Mosaic.Provider {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator} data={mosaicData}>
+      <Mosaic.Root>
+        <NavTreeRoot id={navTreeId} />
+      </Mosaic.Root>
+    </Mosaic.Provider>
   ),
   decorators: [
     (Story: any) => (
@@ -128,13 +135,11 @@ export const Default = {
         <GraphContext.Provider value={{ graph }}>
           <SplitViewContext.Provider value={splitViewState}>
             <TreeViewContext.Provider value={treeViewState}>
-              <Mosaic.Provider data={mosaicData}>
-                <DensityProvider density='fine'>
-                  <div role='none' className='p-2'>
-                    <Story />
-                  </div>
-                </DensityProvider>
-              </Mosaic.Provider>
+              <DensityProvider density='fine'>
+                <div role='none' className='p-2'>
+                  <Story />
+                </div>
+              </DensityProvider>
             </TreeViewContext.Provider>
           </SplitViewContext.Provider>
         </GraphContext.Provider>

@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { Tree, TreeRootProps } from '@dxos/aurora';
-import { Mosaic, StackTile, useMosaic } from '@dxos/aurora-grid';
+import { getDndId, Mosaic, StackTile, useMosaic } from '@dxos/aurora-grid';
 import { Surface } from '@dxos/react-surface';
 
 import { DroppableTreeViewItem, SortableTreeViewItem } from './NavTreeItem';
@@ -43,10 +43,10 @@ type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | 
 /**
  * @internal Storybook only
  */
-export const NavTreeRoot = () => {
+export const NavTreeRoot = ({ id }: { id: string }) => {
   const {
     mosaic: {
-      tiles: { root },
+      tiles: { [getDndId(id, 'root')]: root },
     },
   } = useMosaic();
 
