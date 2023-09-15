@@ -18,6 +18,7 @@ type Options = Required<Runtime.Agent.Plugins.EpochMontior>;
 
 // TODO(dmaretskyi): Review defaults.
 const DEFAULT_OPTIONS: Options = {
+  enabled: true,
   minMessagesBetweenEpochs: 10_000,
   minTimeBetweenEpochs: 120_000,
   minInactivityBeforeEpoch: 30_000,
