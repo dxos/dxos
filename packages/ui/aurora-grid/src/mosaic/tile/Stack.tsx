@@ -6,6 +6,7 @@ import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef } from 'react';
 
 import { Tile } from './';
+import { useDnd } from '../dnd';
 import { useMosaic } from '../mosaic';
 import { StackTile } from '../types';
 
@@ -15,13 +16,17 @@ const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
     data: { [tile.id]: stackData },
     Delegator,
   } = useMosaic();
+  const { migrationDestinationId, copyDestinationId } = useDnd();
   const subtileIds = relations[tile.id]?.child ?? new Set();
   const subtiles = Array.from(subtileIds)
     .map((id) => tiles[id])
     .sort(sortByIndex);
 
+  const isMigrationDestination = tile.id === migrationDestinationId;
+  const isCopyDestination = tile.id === copyDestinationId;
+
   return (
-    <Delegator data={stackData} tile={tile} ref={forwardedRef}>
+    <Delegator data={stackData} tile={tile} ref={forwardedRef} {...{ isMigrationDestination, isCopyDestination }}>
       <SortableContext items={subtiles} strategy={verticalListSortingStrategy}>
         {subtiles.map((tile) => (
           <Tile key={tile.id} {...tile} />

@@ -11,7 +11,7 @@ import { Button } from '@dxos/aurora';
 import { getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { Mosaic } from './Mosaic';
-import { getDndId } from '../dnd';
+import { getDndId, parseDndId } from '../dnd';
 import type { DelegatorProps, MosaicChangeHandler, MosaicState, StackTile } from '../types';
 
 faker.seed(1234);
@@ -32,7 +32,7 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
   acc[id] = {
     id,
     index: `a${index}`,
-    ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card' }),
+    ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card', copyClass: rearrangeMosaicId }),
   };
   return acc;
 }, {});
@@ -127,7 +127,9 @@ const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => 
   acc[id] = {
     id,
     index: `a${index}`,
-    ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card' }),
+    ...(index === 0
+      ? { variant: 'stack', sortable: true, acceptCopyClass: new Set([rearrangeMosaicId]) }
+      : { variant: 'card' }),
   };
   return acc;
 }, {});
@@ -167,6 +169,12 @@ export const Copy = {
     return (
       <Mosaic.Provider
         Delegator={RearrangeDelegator as FC<DelegatorProps>}
+        copyTile={(id, toId, mosaic) => {
+          const [_, cardId] = parseDndId(id);
+          const [stackId] = parseDndId(toId);
+          const nextId = getDndId(stackId, cardId);
+          return { ...mosaic.tiles[id], id: nextId, copyClass: stackId };
+        }}
         data={copyData}
         mosaic={copyMosaic}
         {...rootProps}

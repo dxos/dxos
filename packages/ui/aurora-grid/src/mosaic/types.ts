@@ -15,6 +15,8 @@ type TileSharedProps = {
   variant: TileVariant;
   migrationClass?: string;
   acceptMigrationClass?: Set<string>;
+  copyClass?: string;
+  acceptCopyClass?: Set<string>;
   // Secondary props
   sortable?: boolean;
 };
@@ -57,6 +59,7 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
   style?: ComponentPropsWithoutRef<'div'>['style'];
   isActive?: boolean;
   isMigrationDestination?: boolean;
+  isCopyDestination?: boolean;
   isOverlay?: boolean;
 }>;
 
@@ -65,16 +68,20 @@ export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
 export type Handler<E> = (event: E) => void;
 
 export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: string };
-export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; relation: string };
+export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; index?: string };
+export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
 
-export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent;
+export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
 
 export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
+
+export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => Tile;
 
 export type MosaicContextValue = {
   data: Record<string, any>;
   mosaic: DeepSignal<MosaicState>;
   onMosaicChange?: MosaicChangeHandler;
+  copyTile?: CopyTileAction;
   Delegator: Delegator;
 };
 

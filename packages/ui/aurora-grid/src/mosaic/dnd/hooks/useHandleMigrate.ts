@@ -24,11 +24,10 @@ export const useHandleMigrateDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active }: DragEndEvent, rearrangeResult?: string | null) => {
+  return useCallback(({ active }: DragEndEvent, previousResult?: string | null) => {
     let result = null;
     const activeId = active.id.toString();
-    console.log('[migrate drag end]', rearrangeResult, activeId, dnd.migrationDestinationId);
-    if (!rearrangeResult && activeId && dnd.migrationDestinationId) {
+    if (!previousResult && activeId && dnd.migrationDestinationId) {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
@@ -42,7 +41,6 @@ export const useHandleMigrateDragEnd = () => {
         id: activeId,
         fromId: parentIds[0],
         toId: dnd.migrationDestinationId,
-        relation: 'child',
       });
       // update animation
       dnd.overlayDropAnimation = 'into';

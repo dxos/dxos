@@ -15,6 +15,7 @@ import {
   useDragStart,
   useHandleRearrangeDragEnd,
 } from '../dnd';
+import { useHandleCopyDragEnd, useHandleCopyDragOver, useHandleCopyDragStart } from '../dnd/hooks/useHandleCopy';
 import {
   useHandleMigrateDragEnd,
   useHandleMigrateDragOver,
@@ -56,19 +57,30 @@ const defaultMosaicContextValue: MosaicContextValue = {
 const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
 const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
-  const handleDragStart = useHandleMigrateDragStart();
+  // Drag start: do both.
+  const handleMigrateDragStart = useHandleMigrateDragStart();
+  useDragStart(handleMigrateDragStart, [handleMigrateDragStart]);
+  const handleCopyDragStart = useHandleCopyDragStart();
+  useDragStart(handleCopyDragStart, [handleCopyDragStart]);
+
+  // Drag end: do one.
   const handleRearrangeDragEnd = useHandleRearrangeDragEnd();
   const handleMigrateDragEnd = useHandleMigrateDragEnd();
+  const handleCopyDragEnd = useHandleCopyDragEnd();
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      handleMigrateDragEnd(event, handleRearrangeDragEnd(event));
+      handleMigrateDragEnd(event, handleCopyDragEnd(event, handleRearrangeDragEnd(event)));
     },
-    [handleRearrangeDragEnd, handleMigrateDragEnd],
+    [handleRearrangeDragEnd, handleCopyDragEnd, handleMigrateDragEnd],
   );
-  const handleDragOver = useHandleMigrateDragOver();
-  useDragStart(handleDragStart, [handleDragStart]);
   useDragEnd(handleDragEnd, [handleDragEnd]);
-  useDragOver(handleDragOver, [handleDragOver]);
+
+  // Drag over: do both.
+  const handleMigrateDragOver = useHandleMigrateDragOver();
+  useDragOver(handleMigrateDragOver, [handleMigrateDragOver]);
+  const handleCopyDragOver = useHandleCopyDragOver();
+  useDragOver(handleCopyDragOver, [handleCopyDragOver]);
+
   return (
     <>
       {children}
