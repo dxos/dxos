@@ -77,7 +77,6 @@ export class PhoenixDaemon implements Daemon {
           `--profile=${profile}`,
           options?.metrics ? '--metrics' : undefined,
           options?.config ? `--config=${options.config}` : undefined,
-          options?.monitor ? '--monitor' : undefined,
           options?.ws ? `--ws=${options.ws}` : undefined,
         ].filter(Boolean) as string[],
         // TODO(burdon): Make optional.
@@ -128,7 +127,6 @@ export class PhoenixDaemon implements Daemon {
       error: new AgentWaitTimeoutError(),
     });
 
-    removeSocketFile(profile);
     return proc;
   }
 
