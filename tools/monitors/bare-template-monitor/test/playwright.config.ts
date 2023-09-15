@@ -24,12 +24,13 @@ export default defineConfig({
         browserName: 'firefox',
       },
     },
-    {
-      name: 'webkit',
-      use: {
-        browserName: 'webkit',
-      },
-    },
+    // TODO(wittjosiah): Setup dependencies for webkit in CI.
+    // {
+    //   name: 'webkit',
+    //   use: {
+    //     browserName: 'webkit',
+    //   },
+    // },
   ],
   webServer: {
     command: 'npm run serve',
