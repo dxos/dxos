@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './mosaic';
+export * from './Tile';
