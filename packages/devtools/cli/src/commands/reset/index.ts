@@ -39,7 +39,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
     if (storage && storage !== getProfilePath(DX_DATA, profile)) {
       this.warn(
-        chalk`The config storage path does not match the default:\n- config: {yellow ${storage}}\n- expected: {green ${getProfilePath(
+        chalk`The storage path does not match the default:\n- config: {yellow ${storage}}\n- expected: {green ${getProfilePath(
           DX_DATA,
           profile,
         )}}`,
