@@ -64,10 +64,7 @@ export class LocalStorageStore<T extends object> {
 
   public readonly values: DeepSignal<T>;
 
-  constructor(
-    private readonly _prefix?: string,
-    defaults?: T,
-  ) {
+  constructor(private readonly _prefix?: string, defaults?: T) {
     this.values = deepSignal<T>(defaults ?? ({} as T));
   }
 
