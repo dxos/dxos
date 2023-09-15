@@ -1,10 +1,11 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input }) => {
-    const { react } = input;
-    const content = text`
+export default template.define.text({
+  content: ({ input: { react } }) => {
+    return (
+      react &&
+      plate`
     {
       // Place your dxos workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
       // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
@@ -36,7 +37,6 @@ export default defineTemplate(
       }
     }
     `
-    return react ? content : null;
+    );
   },
-  { config }
-);
+});

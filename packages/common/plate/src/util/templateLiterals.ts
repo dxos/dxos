@@ -10,8 +10,9 @@ import prettier from 'prettier';
 const force = (a: Function | any) => (typeof a === 'function' ? a() : a);
 const join = (a: any[] | any) => (Array.isArray(a) ? a.filter(Boolean).join(os.EOL) : a);
 const squelch = (a: any) => (!a ? '' : a);
-const trim = (a: string) => a.trim();
-const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
+// const trim = (a: string) => a.trim();
+// const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
+const leadingTrim = (a: string) => (a.startsWith(os.EOL) ? a.slice(1) : a);
 
 const removeLeadingTabs = (literal: string, n?: number) => {
   const chars = n ?? detectParasiticTabs(literal);
@@ -27,24 +28,23 @@ const detectParasiticTabs = (literal: string): number => {
   return chars;
 };
 
-export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) => {
+export const plate = (literals: TemplateStringsArray, ...args: any[]) => {
   const tabs = detectParasiticTabs(literals[0]);
   const cleanArgs = args.map((a) => squelch(join(squelch(force(a)))));
-  return terminalNewline(
+  return leadingTrim(
     flatten(
       zip(
         literals.map((l) => removeLeadingTabs(l, tabs)),
-        cleanArgs,
+        cleanArgs.map(force),
       ).filter(Boolean),
     ).join(''),
   );
 };
 
-export const text = (literals: TemplateStringsArray, ...args: any[]) =>
-  terminalNewline(trim(textUntrimmed(literals, ...args)));
+// export const plate = (literals: TemplateStringsArray, ...args: any[]) => textUntrimmed(literals, ...args);
 
 export const ts = (literals: TemplateStringsArray, ...args: any[]) => {
-  const result = text(literals, ...args);
+  const result = plate(literals, ...args);
   try {
     return prettier.format(result, {
       parser: 'typescript',

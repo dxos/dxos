@@ -2,7 +2,6 @@
 > Declared in [`packages/sdk/config/src/plugin/types.ts`]()
 
 
-
 ## Properties
 ### [configPath](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/plugin/types.ts#L9)
 Type: <code>string</code>
@@ -35,3 +34,5 @@ If set to  `production`  then config loaders behave differently:
 Type: <code>string</code>
 
 Public URL of the published app. Also used to load the dynamic config.
+
+    

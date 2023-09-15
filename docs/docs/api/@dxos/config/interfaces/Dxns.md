@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [account]()
 Type: <code>string</code>
@@ -45,3 +44,5 @@ DXNS endpoint.
 
 Options:
   - proto3_optional = true
+
+    

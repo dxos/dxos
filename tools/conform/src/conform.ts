@@ -10,7 +10,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { catFiles } from '@dxos/plate';
 
-import template from './templates/readme/config.t';
+import template from './templates/readme/template.t';
 
 const main = async () => {
   yargs(hideBin(process.argv))
@@ -32,14 +32,14 @@ const main = async () => {
           .map((pkg) => path.dirname(pkg));
         console.log(`conforming ${packages.length} packages ...`);
         const promises = packages.map(async (pkg) => {
-          const result = await template.execute({
+          const result = await template.apply({
             outputDirectory: pkg,
             overwrite: overwrite ? !!overwrite : false,
-            input: await catFiles(['package.json', 'README.yml'], {
+            input: (await catFiles(['package.json', 'README.yml'], {
               relativeTo: pkg,
-            }),
+            })) as any,
           });
-          return result.save();
+          return result.apply();
         });
         await Promise.all(promises);
         console.log(packages.length, 'packages conformed');

@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/iframe.proto
-
 ## Properties
 ### [display]()
 Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
@@ -28,3 +27,5 @@ The key of the joined space
 
 Options:
   - proto3_optional = true
+
+    

@@ -5,3 +5,6 @@
 Retrieves a property type in a series of nested objects.
 
 Read more: https://stackoverflow.com/a/61648690.
+
+
+

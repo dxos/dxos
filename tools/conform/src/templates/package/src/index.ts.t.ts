@@ -1,14 +1,11 @@
+import template from '../template.t';
 
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
-
-export default defineTemplate(
-  ({ input }) => {
-    return text`
+export default template.define.text({
+  content: () => {
+    return `
     //
     // Copyright 2023 DXOS.org
     //
     `;
   },
-  { config }
-);
+});
