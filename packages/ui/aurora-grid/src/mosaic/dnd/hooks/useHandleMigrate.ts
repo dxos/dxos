@@ -7,7 +7,9 @@ import { useCallback } from 'react';
 
 import { useMosaic } from '../../mosaic';
 import { MosaicState, Tile } from '../../types';
+import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
+import { nextIndex } from '../util';
 
 export const useHandleMigrateDragStart = () => {
   const dnd = useDnd();
@@ -24,13 +26,16 @@ export const useHandleMigrateDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active }: DragEndEvent, previousResult?: string | null) => {
+  return useCallback(({ active, over }: DragEndEvent, previousResult?: string | null) => {
     let result = null;
     const activeId = active.id.toString();
     if (!previousResult && activeId && dnd.migrationDestinationId) {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
+      // update active tile’s index
+      const index = nextIndex(getSubtiles(relations[dnd.migrationDestinationId].child, tiles), activeId, over?.id);
+      tiles[activeId].index = index ?? tiles[activeId].index;
       // update active tile’s parent relation
       relations[activeId].parent = new Set([dnd.migrationDestinationId]);
       // add active tile to new parent’s child relations
@@ -41,6 +46,7 @@ export const useHandleMigrateDragEnd = () => {
         id: activeId,
         fromId: parentIds[0],
         toId: dnd.migrationDestinationId,
+        ...(index && { index }),
       });
       // update animation
       dnd.overlayDropAnimation = 'into';
