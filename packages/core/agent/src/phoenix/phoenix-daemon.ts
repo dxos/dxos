@@ -19,7 +19,12 @@ import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } f
  * Manager of daemon processes started with @dxos/phoenix.
  */
 export class PhoenixDaemon implements Daemon {
-  constructor(private readonly _rootDir: string) {}
+  constructor(private readonly _rootDir: string) {
+    const dir = join(this._rootDir, 'profile');
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  }
 
   async connect(): Promise<void> {
     // no-op.
@@ -77,7 +82,6 @@ export class PhoenixDaemon implements Daemon {
           `--profile=${profile}`,
           options?.metrics ? '--metrics' : undefined,
           options?.config ? `--config=${options.config}` : undefined,
-          options?.monitor ? '--monitor' : undefined,
           options?.ws ? `--ws=${options.ws}` : undefined,
         ].filter(Boolean) as string[],
         // TODO(burdon): Make optional.
@@ -128,7 +132,6 @@ export class PhoenixDaemon implements Daemon {
       error: new AgentWaitTimeoutError(),
     });
 
-    removeSocketFile(profile);
     return proc;
   }
 
