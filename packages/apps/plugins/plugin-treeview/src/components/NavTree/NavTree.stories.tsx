@@ -123,7 +123,7 @@ const treeViewState = deepSignal<TreeViewContextValue>({
 
 export const Default = {
   render: (args: MosaicRootProps) => (
-    <Mosaic.Provider {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator} data={mosaicData}>
+    <Mosaic.Provider {...args} mosaic={mosaicState} Delegator={NavTreeItemDelegator} getData={(id) => mosaicData[id]}>
       <Mosaic.Root>
         <NavTreeRoot id={navTreeId} />
       </Mosaic.Root>
