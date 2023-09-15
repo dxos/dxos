@@ -53,7 +53,11 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
     if (!dryRun) {
       // TODO(burdon): Problem if running manually.
-      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile, { force: this.flags.force }));
+      await this.execWithDaemon(async (daemon) => {
+        if (await daemon.isRunning(this.flags.profile)) {
+          await daemon.stop(this.flags.profile, { force: this.flags.force });
+        }
+      });
       if (this.flags.verbose) {
         this.log(chalk`{red Deleting files...}`);
         paths.forEach((path) => this.log(`- ${path}`));
