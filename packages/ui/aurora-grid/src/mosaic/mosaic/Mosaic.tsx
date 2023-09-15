@@ -30,13 +30,13 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
     mosaic: {
       tiles: { [id]: activeTile },
     },
-    data: { [id]: data },
+    getData,
     Delegator,
   } = useMosaic();
   const Root = activeTile.variant === 'treeitem' ? List : 'div';
   return (
     <Root role='none'>
-      <Delegator data={data} tile={activeTile} isOverlay />
+      <Delegator data={getData(id)} tile={activeTile} isOverlay />
     </Root>
   );
 };
@@ -48,7 +48,7 @@ const MosaicOverlay = () => {
 };
 
 const defaultMosaicContextValue: MosaicContextValue = {
-  data: {},
+  getData: () => ({}),
   mosaic: { tiles: {}, relations: {} },
   onMosaicChange: () => {},
   Delegator: () => null,

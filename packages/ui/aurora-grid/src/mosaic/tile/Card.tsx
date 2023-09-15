@@ -10,10 +10,7 @@ import { useMosaic, useMosaicDnd } from '../mosaic';
 import { CardTile } from '../types';
 
 const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
-  const {
-    data: { [tile.id]: cardData },
-    Delegator,
-  } = useMosaic();
+  const { getData, Delegator } = useMosaic();
   const { activeId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: tile.id,
@@ -23,7 +20,7 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
   const ref = useComposedRefs(setNodeRef, forwardedRef);
   return (
     <Delegator
-      data={cardData}
+      data={getData(tile.id)}
       tile={tile}
       dragHandleAttributes={attributes}
       dragHandleListeners={listeners}

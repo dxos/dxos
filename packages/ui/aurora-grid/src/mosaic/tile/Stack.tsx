@@ -13,7 +13,7 @@ import { StackTile } from '../types';
 const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
-    data: { [tile.id]: stackData },
+    getData,
     Delegator,
   } = useMosaic();
   const { migrationDestinationId, copyDestinationId } = useDnd();
@@ -26,7 +26,12 @@ const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const isCopyDestination = tile.id === copyDestinationId;
 
   return (
-    <Delegator data={stackData} tile={tile} ref={forwardedRef} {...{ isMigrationDestination, isCopyDestination }}>
+    <Delegator
+      data={getData(tile.id)}
+      tile={tile}
+      ref={forwardedRef}
+      {...{ isMigrationDestination, isCopyDestination }}
+    >
       <SortableContext items={subtiles} strategy={verticalListSortingStrategy}>
         {subtiles.map((tile) => (
           <Tile key={tile.id} {...tile} />

@@ -78,7 +78,7 @@ export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => Tile;
 
 export type MosaicContextValue = {
-  data: Record<string, any>;
+  getData: (dndId: string) => any;
   mosaic: DeepSignal<MosaicState>;
   onMosaicChange?: MosaicChangeHandler;
   copyTile?: CopyTileAction;

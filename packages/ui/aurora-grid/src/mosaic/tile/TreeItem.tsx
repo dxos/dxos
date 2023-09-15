@@ -31,7 +31,7 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
-    data: { [tile.id]: treeItemData },
+    getData,
     Delegator,
   } = useMosaic();
   const { activeId, migrationDestinationId } = useMosaicDnd();
@@ -51,7 +51,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwarde
 
   return (
     <Delegator
-      data={treeItemData}
+      data={getData(tile.id)}
       tile={tile}
       dragHandleAttributes={attributes}
       dragHandleListeners={listeners}

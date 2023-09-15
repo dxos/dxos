@@ -89,7 +89,8 @@ const rearrangeMosaicState = {
 };
 const rearrangeMosaic = deepSignal<MosaicState>(rearrangeMosaicState);
 const rearrangeData = rearrangeIds.reduce((acc: Record<string, StorybookDataProps>, id) => {
-  acc[id] = {
+  const [_, entityId] = parseDndId(id);
+  acc[entityId] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
   };
@@ -108,7 +109,10 @@ export const Rearrange = {
       <Mosaic.Provider
         {...props}
         Delegator={RearrangeDelegator as FC<DelegatorProps>}
-        data={rearrangeData}
+        getData={(dndId) => {
+          const [_, entityId] = parseDndId(dndId);
+          return rearrangeData[entityId];
+        }}
         mosaic={rearrangeMosaic}
       >
         <Mosaic.Root id={rearrangeMosaicId}>
@@ -155,7 +159,8 @@ const copyMosaic = deepSignal<MosaicState>({
   relations: { ...copyMosaicState.relations, ...rearrangeMosaicState.relations },
 });
 const copyData = copyIds.reduce((acc: Record<string, StorybookDataProps>, id) => {
-  acc[id] = {
+  const [_, entityId] = parseDndId(id);
+  acc[entityId] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
   };
@@ -175,7 +180,10 @@ export const Copy = {
           const nextId = getDndId(stackId, cardId);
           return { ...mosaic.tiles[id], id: nextId, copyClass: stackId };
         }}
-        data={copyData}
+        getData={(dndId) => {
+          const [_, entityId] = parseDndId(dndId);
+          return copyData[entityId];
+        }}
         mosaic={copyMosaic}
         {...rootProps}
       >
