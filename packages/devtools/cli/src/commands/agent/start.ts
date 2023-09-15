@@ -10,6 +10,7 @@ import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } f
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
@@ -92,11 +93,6 @@ export default class Start extends BaseCommand<typeof Start> {
 
     await agent.start();
     this.log('Agent started... (ctrl-c to exit)');
-    process.on('SIGINT', async () => {
-      void this._ctx.dispose();
-      await agent.stop();
-      process.exit(0);
-    });
 
     this._sendTelemetry();
 
@@ -116,7 +112,6 @@ export default class Start extends BaseCommand<typeof Start> {
         const process = await daemon.start(this.flags.profile, {
           config: this.flags.config,
           metrics: this.flags.metrics,
-          monitor: this.flags.monitor,
           ws: this.flags.ws,
         });
         if (process) {
