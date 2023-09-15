@@ -12,18 +12,8 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import {
-  ClientProvider,
-  Config,
-  Dynamics,
-  Local,
-  Defaults,
-  useShell,
-  useClient,
-  ShellLayout,
-} from '@dxos/react-client';
+import { ClientProvider, Config, Dynamics, Local, Defaults, useShell } from '@dxos/react-client';
 import { useSpace, useQuery } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 
 import { TaskList } from './TaskList';
 import { Task } from './proto';
@@ -31,7 +21,7 @@ import { Task } from './proto';
 // Dynamics allows configuration to be supplied by the hosting KUBE.
 const config = async () => new Config(await Dynamics(), Local(), Defaults());
 
-export const SpaceTaskList = () => {
+export const TaskListContainer = () => {
   const { spaceKey } = useParams<{ spaceKey: string }>();
 
   const space = useSpace(spaceKey);
@@ -56,8 +46,11 @@ export const SpaceTaskList = () => {
       onTaskRemove={(task) => {
         space?.db.remove(task);
       }}
-      onTaskChange={(task, newTitle) => {
+      onTaskTitleChange={(task, newTitle) => {
         task.title = newTitle;
+      }}
+      onTaskCheck={(task, checked) => {
+        task.completed = checked;
       }}
     />
   );
@@ -99,7 +92,7 @@ export const Home = () => {
 const router = createBrowserRouter([
   {
     path: '/space/:spaceKey',
-    element: <SpaceTaskList />,
+    element: <TaskListContainer />,
   },
   {
     path: '/',

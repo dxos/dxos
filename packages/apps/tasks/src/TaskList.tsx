@@ -11,11 +11,12 @@ export type TaskListProps = {
   onInviteClick?: () => any;
   onTaskCreate?: (text: string) => any;
   onTaskRemove?: (task: Task) => any;
-  onTaskChange?: (task: Task, newTitle: string) => any;
+  onTaskTitleChange?: (task: Task, newTitle: string) => any;
+  onTaskCheck?: (task: Task, checked: boolean) => any;
 };
 
 export const TaskList = (props: TaskListProps) => {
-  const { tasks, onInviteClick, onTaskCreate, onTaskRemove, onTaskChange } = props;
+  const { tasks, onInviteClick, onTaskCreate, onTaskRemove, onTaskTitleChange, onTaskCheck } = props;
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<number | null>(null);
@@ -56,7 +57,7 @@ export const TaskList = (props: TaskListProps) => {
                   className='mr-2 rounded shadow hover:pointer-cursor'
                   type='checkbox'
                   checked={task.completed}
-                  onChange={() => (task.completed = !task.completed)}
+                  onChange={(e) => onTaskCheck?.(task, e.target.checked)}
                 />
                 <div className='hover:pointer-cursor flex-grow' onClick={() => setEditingTask(index)}>
                   {editingTask === index ? (
@@ -66,7 +67,7 @@ export const TaskList = (props: TaskListProps) => {
                         type='text'
                         value={task.title}
                         onChange={(e) => {
-                          onTaskChange?.(task, e.target.value);
+                          onTaskTitleChange?.(task, e.target.value);
                         }}
                         onKeyUp={(e) => {
                           if (e.key === 'Enter') {
