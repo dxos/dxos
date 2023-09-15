@@ -35,6 +35,7 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
+import { NavTree } from './NavTree';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
@@ -108,6 +109,7 @@ export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Grap
             style={style}
             ref={forwardedRef}
             rearranging={isActive}
+            childrenManaged
             {...(isMigrationDestination && { migrating: 'into' })}
           >
             {children}
@@ -138,6 +140,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       migrating,
       isPreview,
       isOverlay,
+      childrenManaged,
     },
     forwardedRef,
   ) => {
@@ -307,7 +310,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </Tooltip.Root>
           )}
         </HeadingWithActionsRoot>
-        {children}
+        {childrenManaged
+          ? children
+          : isBranch &&
+            !forceCollapse && (
+              <TreeItem.Body>
+                <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
+              </TreeItem.Body>
+            )}
       </TreeItem.Root>
     );
   },
