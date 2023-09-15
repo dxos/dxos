@@ -5,7 +5,7 @@
 import { DragEndEvent, DragOverlay } from '@dnd-kit/core';
 import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
 
-import { List } from '@dxos/aurora';
+import { List, useId } from '@dxos/aurora';
 
 import {
   DndProvider,
@@ -22,6 +22,7 @@ import {
 } from '../dnd/hooks/useHandleMigrate';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
+import { MosaicRootProps } from '../types';
 
 const MosaicOverlayTile = ({ id }: { id: string }) => {
   const {
@@ -34,7 +35,7 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
   const Root = activeTile.variant === 'treeitem' ? List : 'div';
   return (
     <Root role='none'>
-      <Delegator data={data} tile={{ ...activeTile, isOverlay: true }} />
+      <Delegator data={data} tile={activeTile} isOverlay />
     </Root>
   );
 };
@@ -64,6 +65,7 @@ const defaultMosaicRootContextValue: MosaicRootContextValue = {
   mosaic: { tiles: {}, relations: {} },
   Delegator: () => null,
   onMosaicChange: () => {},
+  id: 'never',
 };
 
 const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRootContextValue);
@@ -92,9 +94,10 @@ const MosaicRootImpl = ({ children }: PropsWithChildren) => {
   );
 };
 
-const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootContextValue>) => {
+const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) => {
+  const id = useId('mosaic', value.id);
   return (
-    <MosaicRootContext.Provider value={value}>
+    <MosaicRootContext.Provider value={{ ...value, id }}>
       <MosaicRootImpl>{children}</MosaicRootImpl>
     </MosaicRootContext.Provider>
   );

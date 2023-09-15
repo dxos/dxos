@@ -13,12 +13,10 @@ type TileSharedProps = {
   id: string;
   index: string;
   variant: TileVariant;
-  // Secondary props
   migrationClass?: string;
   acceptMigrationClass?: Set<string>;
+  // Secondary props
   sortable?: boolean;
-  isOverlay?: boolean;
-  isPreview?: boolean;
 };
 
 export type TreeItemTile = TileSharedProps & {
@@ -59,6 +57,7 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
   style?: ComponentPropsWithoutRef<'div'>['style'];
   isActive?: boolean;
   isMigrationDestination?: boolean;
+  isOverlay?: boolean;
 }>;
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
@@ -77,9 +76,10 @@ export type MosaicContextValue = {
 };
 
 export type MosaicRootContextValue = {
+  id: string;
   mosaic: DeepSignal<MosaicState>;
   Delegator: Delegator;
   onMosaicChange?: MosaicChangeHandler;
 };
 
-export type MosaicRootProps = MosaicRootContextValue;
+export type MosaicRootProps = Omit<MosaicRootContextValue, 'id'> & Partial<Pick<MosaicRootContextValue, 'id'>>;

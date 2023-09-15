@@ -14,9 +14,10 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
   const { [tile.id]: cardData } = useMosaicData();
   const { activeId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: tile.isOverlay ? `${tile.id}--overlay` : tile.id,
+    id: tile.id,
     data: tile,
   });
+  const isActive = activeId === tile.id;
   const ref = useComposedRefs(setNodeRef, forwardedRef);
   return (
     <Delegator
@@ -27,8 +28,8 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
-        ...(activeId === tile.id && { opacity: 0 }),
       }}
+      isActive={isActive}
       ref={ref}
     />
   );

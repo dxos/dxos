@@ -8,3 +8,4 @@ export * from '@dnd-kit/utilities';
 
 export * from './DndContext';
 export * from './hooks';
+export * from './dndId';
