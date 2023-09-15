@@ -85,52 +85,54 @@ export const ResetDialog = ({
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
-      <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
-      <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
-      <AlertDialog.Content>
-        {error && (
-          <>
-            <button className='flex items-center' onClick={() => setShowStack((showStack) => !showStack)}>
-              <Caret />
-              <span className='mis-2'>{t('show stack label')}</span>
-            </button>
-            {showStack && (
-              <Message.Root key={error.message} valence='error' className='mlb-4 overflow-auto max-bs-72'>
-                <pre className='text-xs'>{error.stack}</pre>
-              </Message.Root>
-            )}
-          </>
-        )}
-        <div role='none' className='flex gap-2 mbs-4'>
-          {showStack && (
-            <Tooltip.Root>
-              <Tooltip.Trigger>
-                <Button onClick={handleCopyError}>
-                  <Clipboard weight='duotone' size='1em' />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
-            </Tooltip.Root>
+      <AlertDialog.Overlay>
+        <AlertDialog.Content>
+          <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+          <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
+          {error && (
+            <>
+              <button className='flex items-center' onClick={() => setShowStack((showStack) => !showStack)}>
+                <Caret />
+                <span className='mis-2'>{t('show stack label')}</span>
+              </button>
+              {showStack && (
+                <Message.Root key={error.message} valence='error' className='mlb-4 overflow-auto max-bs-72'>
+                  <pre className='text-xs'>{error.stack}</pre>
+                </Message.Root>
+              )}
+            </>
           )}
-          <div role='none' className='flex-grow' />
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>{t('reset client label')}</Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content side='top' classNames='z-[51]'>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={handleReset}>{t('reset client confirm label')}</DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-          <Button variant='primary' onClick={() => location.reload()}>
-            {t('reload page label')}
-          </Button>
-        </div>
-      </AlertDialog.Content>
+          <div role='none' className='flex gap-2 mbs-4'>
+            {showStack && (
+              <Tooltip.Root>
+                <Tooltip.Trigger>
+                  <Button onClick={handleCopyError}>
+                    <Clipboard weight='duotone' size='1em' />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
+              </Tooltip.Root>
+            )}
+            <div role='none' className='flex-grow' />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button variant='ghost'>{t('reset client label')}</Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content side='top' classNames='z-[51]'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={handleReset}>{t('reset client confirm label')}</DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+            <Button variant='primary' onClick={() => location.reload()}>
+              {t('reload page label')}
+            </Button>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Overlay>
     </AlertDialog.Root>
   );
 };
