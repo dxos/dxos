@@ -38,12 +38,9 @@ Changes to a space need to be replicated to peers. When sharing a space to a new
 Under normal conditions, full replication will take **10 seconds** or less.
 
 ## Reliability and Scalability
-Our current limitation for scale and reliability is a combination of two factors: the number of users and the number of spaces shared.
+Our communications protocol currently establishes a separate mesh of connections per shared space. A [Mostly Minimal Spanning Tree](https://github.com/RangerMauve/mostly-minimal-spanning-tree) is used to minimize the connections per node. For example, two users sharing three spaces will result in three connections, but four users sharing one space will create slightly more than the minimum of three connections.
 
-With a nominal amount of continuous activity (400 mutations/sec), our communications protocol can handle a maxmimum of 40 connections.
-
-For example, 10 users could share four spaces, or 4 users could share 10 spaces.
-
+With a nominal amount of continuous activity (400 mutations/sec), our communications protocol can handle a maxmimum of 40 total connections.
 
 # License
 
