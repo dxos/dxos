@@ -10,7 +10,6 @@ import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } f
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
