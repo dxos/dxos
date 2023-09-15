@@ -23,8 +23,10 @@
     "deepsignal": "^1.3.6"
   },
   "devDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-grid": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -35,6 +37,8 @@
     "typescript": "^5.2.2"
   },
   "peerDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@dxos/aurora-grid": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
