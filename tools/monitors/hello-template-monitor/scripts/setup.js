@@ -3,7 +3,7 @@
 //
 
 const { exec: execCb } = require('node:child_process');
-const { rm, readFile, writeFile } = require('node:fs/promises');
+const { rm } = require('node:fs/promises');
 const { promisify } = require('node:util');
 
 const exec = promisify(execCb);
@@ -19,8 +19,6 @@ const setup = async () => {
   await exec('dx app create tmp');
 
   console.log('Installing app dependencies...');
-  // TODO(wittjosiah): Remove this.
-  await writeFile('tmp/package.json', (await readFile('tmp/package.json', 'utf-8')).replaceAll('workspace:*', 'main'));
   await exec('npm install --no-package-lock', {
     cwd: 'tmp',
   });
