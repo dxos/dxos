@@ -55,10 +55,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 export class MutationBuilder {
   _mutations: ObjectMutation[] = [];
 
-  constructor(
-    private readonly _model?: DocumentModel,
-    private readonly _meta?: boolean,
-  ) {}
+  constructor(private readonly _model?: DocumentModel, private readonly _meta?: boolean) {}
 
   set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));

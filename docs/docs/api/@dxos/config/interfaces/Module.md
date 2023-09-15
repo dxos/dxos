@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [build]()
 Type: <code>[Build](/api/@dxos/config/interfaces/Build)</code>
@@ -19,6 +18,8 @@ Options:
 
 ### [deps]()
 Type: <code>[Module](/api/@dxos/config/interfaces/Module)[]</code>
+
+
 
 ### [description]()
 Type: <code>string</code>
@@ -55,8 +56,12 @@ Options:
 ### [repos]()
 Type: <code>[Repo](/api/@dxos/config/interfaces/Repo)[]</code>
 
+
+
 ### [tags]()
 Type: <code>string[]</code>
+
+
 
 ### [tunnel]()
 Type: <code>boolean</code>
@@ -69,3 +74,5 @@ Type: <code>string</code>
 
 Options:
   - proto3_optional = true
+
+    

@@ -3,10 +3,11 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [plugins]()
 Type: <code>[Plugins](/api/@dxos/config/interfaces/Plugins)</code>
 
 Options:
   - proto3_optional = true
+
+    

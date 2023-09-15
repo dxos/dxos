@@ -1,9 +1,9 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input: { react } }) => {
-    return react ? text /* javascript */`
+export default template.define.script({
+  content: ({ input: { react } }) => {
+    return react ? plate /* javascript */`
     import React, { useEffect, useState } from 'react';
     import { useIdentity } from '@dxos/react-client/halo';
     import { Counter } from './Counter';
@@ -74,6 +74,4 @@ export default defineTemplate(
       );
     };
     ` : null;
-  },
-  { config }
-);
+  }});
