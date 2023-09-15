@@ -85,6 +85,7 @@ export default class Create extends BaseCommand<typeof Create> {
       input: {
         monorepo,
         name,
+        createFolder: false,
       },
     });
 
