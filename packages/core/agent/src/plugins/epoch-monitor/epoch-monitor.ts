@@ -2,27 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PublicKey } from '@dxos/client';
+import { scheduleTask } from '@dxos/async';
+import { Client, PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client-protocol';
-import { checkCredentialType, SpecificCredential } from '@dxos/credentials';
+import { Context } from '@dxos/context';
+import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
-type SpaceState = {
-  spaceKey: PublicKey;
-  currentEpoch?: SpecificCredential<Epoch>;
-  epochTriggered?: number;
-  subscriptions: ZenObservable.Subscription[];
-};
+type Options = Required<Runtime.Agent.Plugins.EpochMontior>;
 
-const DEFAULT_EPOCH_LIMIT = 10_000;
-
-export type EpochMonitorOptions = {
-  limit?: number;
+// TODO(dmaretskyi): Review defaults.
+const DEFAULT_OPTIONS: Options = {
+  enabled: true,
+  minMessagesBetweenEpochs: 10_000,
+  minTimeBetweenEpochs: 120_000,
+  minInactivityBeforeEpoch: 30_000,
+  maxInactivityDelay: 60_000,
 };
 
 /**
@@ -32,91 +32,161 @@ export type EpochMonitorOptions = {
  */
 // TODO(burdon): Create test.
 export class EpochMonitor extends AbstractPlugin {
-  private _subscriptions: ZenObservable.Subscription[] = [];
-  private _spaceStates = new ComplexMap<PublicKey, SpaceState>(PublicKey.hash);
+  private _ctx = new Context();
+  private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
-  constructor(private readonly _options: EpochMonitorOptions = {}) {
-    super();
-  }
+  private _options?: Options = undefined;
 
   /**
    * Monitor spaces for which the agent is the leader.
    */
   async open() {
     invariant(this._client);
-    this._subscriptions.push(
-      this._client.spaces.subscribe((spaces) => {
-        spaces.forEach(async (space) => {
-          if (!this._spaceStates.has(space.key)) {
-            const state: SpaceState = {
-              spaceKey: space.key,
-              subscriptions: [],
-            };
 
-            this._spaceStates.set(space.key, state);
+    const config = this._client.config.values.runtime?.agent?.plugins?.epochMonitor;
+    if (!config || config.enabled === false) {
+      log.info('epoch monitor disabled from config');
+      return;
+    }
 
-            // Process asynchronously.
-            if (space.isOpen) {
-              setTimeout(async () => {
-                await space.waitUntilReady();
-                await this._monitorSpace(space, state);
-              });
-            }
-          }
-        });
-      }),
-    );
+    this._options = { ...DEFAULT_OPTIONS, ...config };
+    log.info('epoch monitor open', { options: this._options });
+
+    const process = (spaces: Space[]) => {
+      spaces.forEach(async (space) => {
+        if (!this._monitors.has(space.key)) {
+          invariant(this._options);
+          const monitor = new SpaceMonitor(this._client!, space, this._options);
+          this._monitors.set(space.key, monitor);
+
+          log.info('init', { space: space.key, isOpen: space.isOpen });
+
+          // Process asynchronously.
+          scheduleTask(this._ctx, async () => {
+            await monitor.open();
+          });
+        }
+      });
+    };
+
+    const sub = this._client.spaces.subscribe(process);
+    process(this._client.spaces.get());
+    this._ctx.onDispose(() => sub.unsubscribe());
   }
 
   async close() {
-    this._subscriptions.forEach((subscription) => subscription.unsubscribe());
-    this._spaceStates.forEach((state) => state.subscriptions.forEach((subscription) => subscription.unsubscribe()));
-    this._spaceStates.clear();
+    await this._ctx.dispose();
+    this._monitors.forEach((monitor) => {
+      void monitor.close();
+    });
+    this._monitors.clear();
   }
+}
 
-  // TODO(burdon): Subscribe to space members to update address book.
-  private async _monitorSpace(space: Space, state: SpaceState) {
-    state.subscriptions.push(
-      space.members.subscribe((members) =>
-        log('updated', { members: members.map((member) => member.identity.identityKey) }),
-      ),
-    );
+class SpaceMonitor {
+  private readonly _ctx = new Context();
+
+  private _epochCreationTask?: NodeJS.Timeout = undefined;
+  private _maxTimeoutTask?: NodeJS.Timeout = undefined;
+  private _creatingEpoch = false;
+  private _previousEpochNumber = -1;
+
+  constructor(
+    private readonly _client: Client,
+    private readonly _space: Space,
+    private readonly _options: Options,
+  ) {}
+
+  async open() {
+    await this._space.waitUntilReady();
 
     // Monitor spaces owned by this agent.
-    if (this._client!.halo.identity.get()!.identityKey.equals(space.internal.data.creator!)) {
-      log('monitoring', { space: state.spaceKey });
+    if (!this._client!.halo.identity.get()!.identityKey.equals(this._space.internal.data.creator!)) {
+      log.info('space is not owned by this agent', {
+        key: this._space.key,
+        creator: this._space.internal.data.creator,
+        identityKey: this._client!.halo.identity.get()!.identityKey,
+      });
+      return;
+    }
 
-      // Listen for epochs.
-      const limit = this._options.limit ?? DEFAULT_EPOCH_LIMIT;
-      state.subscriptions.push(
-        space.pipeline.subscribe(async (pipeline) => {
-          // TODO(burdon): Rather than total messages, implement inequality in timeframe?
-          invariant(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
-          const timeframe = pipeline.currentEpoch?.subject.assertion.timeframe;
-          // TODO(burdon): timeframe.newMessages().
-          const currentEpoch = timeframe.totalMessages();
-          const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
-          log('updated', {
-            space: space.key,
-            totalMessages,
-            currentEpoch,
-            epochTriggered: state.epochTriggered,
-          });
+    log.info('will create epochs for space', { key: this._space.key, options: this._options });
 
-          // Prevent epoch creation while one is already being created.
-          if (state.epochTriggered !== undefined) {
-            state.epochTriggered = undefined;
-          } else {
-            // TODO(burdon): New epoch message # is off by one.
-            const triggerEpoch = totalMessages > currentEpoch && totalMessages % limit === 0;
-            if (triggerEpoch) {
-              log('trigger epoch', { space: space.key });
-              state.epochTriggered = totalMessages;
-              await this._clientServices!.services.SpacesService!.createEpoch({ spaceKey: space.key });
-            }
-          }
-        }),
-      );
+    const sub = this._space.pipeline.subscribe(async (pipeline) => {
+      // Cancel creation if base epoch has changed.
+      if (
+        this._maxTimeoutTask !== undefined &&
+        pipeline.currentEpoch &&
+        this._previousEpochNumber !== pipeline.currentEpoch.subject.assertion.number
+      ) {
+        log.info('epoch changed, cancelling epoch creation', {
+          key: this._space.key,
+          previousEpochNumber: this._previousEpochNumber,
+          currentEpochNumber: pipeline.currentEpoch.subject.assertion.number,
+        });
+        clearTimeout(this._maxTimeoutTask!);
+        this._maxTimeoutTask = undefined;
+        clearTimeout(this._epochCreationTask!);
+        this._epochCreationTask = undefined;
+      }
+
+      if (this._creatingEpoch) {
+        return;
+      }
+
+      if (!pipeline.currentEpoch || !pipeline.currentDataTimeframe) {
+        return;
+      }
+
+      // TODO(burdon): Rather than total messages, implement inequality in timeframe?
+      invariant(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
+
+      const newMessages = pipeline.currentDataTimeframe!.newMessages(pipeline.currentEpoch.subject.assertion.timeframe);
+      const timeSinceLastEpoch = Date.now() - pipeline.currentEpoch.issuanceDate.getTime();
+
+      if (
+        newMessages > this._options.minMessagesBetweenEpochs &&
+        timeSinceLastEpoch > this._options.minTimeBetweenEpochs
+      ) {
+        if (!this._maxTimeoutTask) {
+          log.info('wanting to create epoch', { key: this._space.key, options: this._options });
+          this._previousEpochNumber = pipeline.currentEpoch.subject.assertion.number;
+          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxInactivityDelay);
+        }
+        if (this._epochCreationTask) {
+          clearTimeout(this._epochCreationTask);
+        }
+        this._epochCreationTask = setTimeout(this._createEpoch.bind(this), this._options.minInactivityBeforeEpoch);
+      }
+    });
+    this._ctx.onDispose(() => sub.unsubscribe());
+  }
+
+  async close() {
+    await this._ctx.dispose();
+    clearTimeout(this._maxTimeoutTask!);
+    this._maxTimeoutTask = undefined;
+    clearTimeout(this._epochCreationTask!);
+    this._epochCreationTask = undefined;
+  }
+
+  private async _createEpoch() {
+    if (this._creatingEpoch) {
+      return;
+    }
+    this._creatingEpoch = true;
+    try {
+      log.info('creating epoch', { key: this._space.key });
+      await this._space.internal.createEpoch();
+      log.info('epoch created');
+    } catch (e) {
+      log.catch(e);
+    } finally {
+      this._creatingEpoch = false;
+      clearTimeout(this._maxTimeoutTask!);
+      this._maxTimeoutTask = undefined;
+      clearTimeout(this._epochCreationTask!);
+      this._epochCreationTask = undefined;
     }
   }
 }
