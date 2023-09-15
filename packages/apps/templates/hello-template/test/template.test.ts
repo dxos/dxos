@@ -28,7 +28,7 @@ describe('hello template', () => {
       const results = await template.apply({
         input: { ...scenario, monorepo: false, name: `${packageJson.name}-${scenario.name}` },
         outputDirectory,
-        after: false
+        after: false,
       });
 
       return await results.apply();

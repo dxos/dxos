@@ -6,7 +6,7 @@ import path from 'node:path';
 import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef, ZodType } from 'zod';
 
-import { ExecuteFileTemplateOptions, executeFileTemplate } from './FileTemplate';
+import { executeFileTemplate } from './FileTemplate';
 import { Plate } from './api';
 import { Effect } from './util/effect';
 import { FileEffect, Path } from './util/file';
