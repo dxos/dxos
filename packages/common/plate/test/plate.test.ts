@@ -6,11 +6,11 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import path from 'node:path';
 
-import { plate } from '../src';
 import extended from './extend/template.t';
 import simpleFileGroup from './file-templates/group.t';
 import simpleFile from './file-templates/simple.md.t';
 import simpleDir from './simple/template.t';
+import { plate } from '../src';
 
 chai.use(chaiAsPromised);
 

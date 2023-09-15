@@ -9,9 +9,9 @@ import { codeImport } from 'remark-code-import';
 import remarkDirective from 'remark-directive';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParse from 'remark-parse';
+import remarkPrettier from 'remark-prettier';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
-import unifiedPrettier from 'unified-prettier';
 import { VFile } from 'vfile';
 
 import { Remark } from './apiDocDirective.js';
@@ -32,7 +32,7 @@ export const remarkDocumentation = async (config: Config) => {
         //   Our plugin types change the type of the chain such that all following plugins require arrays.
         .use(Remark.apiDocGenerateDirective)
         .use([codeImport])
-        .use([unifiedPrettier as any]) // TODO(burdon): Hack.
+        .use([remarkPrettier as any]) // TODO(burdon): Hack.
         .use([remarkStringify as any]) // TODO(burdon): Hack.
         .process(
           new VFile({

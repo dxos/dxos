@@ -7,9 +7,9 @@ import chaiAsPromised from 'chai-as-promised';
 import path from 'path';
 import tmp from 'tmp-promise';
 
+import { scenarios } from './scenarios';
 import packageJson from '../package.json';
 import template from '../src/template.t';
-import { scenarios } from './scenarios';
 
 chai.use(chaiAsPromised);
 

@@ -7,8 +7,8 @@ import memoize from 'lodash.memoize';
 import MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
+import remarkPrettier from 'remark-prettier';
 import { unified } from 'unified';
-import unifiedPrettier from 'unified-prettier';
 import { visit } from 'unist-util-visit';
 
 import { loadConfig as _loadConfig } from './config.js';
@@ -82,10 +82,7 @@ export namespace Remark {
           level: node?.attributes?.level ? Number(node?.attributes?.level) : undefined,
           headers: !!node?.attributes.headers,
         });
-        const insertedAst = await unified()
-          .use(remarkParse)
-          .use(unifiedPrettier as any)
-          .parse(content);
+        const insertedAst = await unified().use(remarkParse).use(remarkPrettier).parse(content);
         node.children = [directiveLabelNode, ...(insertedAst as any).children];
       });
       await Promise.all(promises);

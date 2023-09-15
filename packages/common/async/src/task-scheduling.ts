@@ -19,10 +19,7 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null; // Can't be rejected.
 
-  constructor(
-    private readonly _ctx: Context,
-    private readonly _callback: () => Promise<void>,
-  ) {}
+  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
 
   schedule() {
     if (this._scheduled) {

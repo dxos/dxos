@@ -35,10 +35,7 @@ export class ResourceEntry {
    */
   public readonly sanitizedClassName: string;
 
-  constructor(
-    public data: Resource,
-    public instance: WeakRef<any>,
-  ) {
+  constructor(public data: Resource, public instance: WeakRef<any>) {
     this.sanitizedClassName = sanitizeClassName(data.className);
   }
 
@@ -298,10 +295,7 @@ export class TracingSpan {
   private _showInBrowserTimeline: boolean;
   private readonly _ctx: Context | null = null;
 
-  constructor(
-    private _traceProcessor: TraceProcessor,
-    params: TraceSpanParams,
-  ) {
+  constructor(private _traceProcessor: TraceProcessor, params: TraceSpanParams) {
     this.id = TracingSpan.nextId++;
     this.methodName = params.methodName;
     this.resourceId = _traceProcessor.getResourceId(params.instance);

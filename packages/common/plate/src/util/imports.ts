@@ -22,7 +22,7 @@ type PathLike = string | string[];
 type LazyPathLike = () => PathLike;
 
 type Lazy<T> = () => T;
-type DoubleLazy<T> = () => Lazy<T>;
+// type DoubleLazy<T> = () => Lazy<T>;
 
 export type Imports = ReturnType<typeof imports>;
 
