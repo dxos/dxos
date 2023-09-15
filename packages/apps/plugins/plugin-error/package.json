@@ -19,6 +19,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -29,6 +30,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",

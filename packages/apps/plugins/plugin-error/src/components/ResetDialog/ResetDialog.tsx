@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Clipboard } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
+import React, { useCallback, useState } from 'react';
 
 import {
   AlertDialog,
@@ -17,47 +17,49 @@ import {
 import { Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
 import { getAsyncValue, Provider } from '@dxos/util';
 
-// TODO(burdon): Factor out.
-const parseError = (error: Error) => {
-  const message = String(error); // Error.name + Error.message
+import { ERROR_PLUGIN } from '../../constants';
 
-  let stack = String(error?.stack);
-  if (stack.indexOf(message) === 0) {
-    stack = stack.substr(message.length).trim();
-  }
+// TODO(burdon): Factor out.
+const parseError = (t: (name: string, context?: object) => string, error: Error) => {
+  const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
+
+  const translatedTitle = t(`${error.name} title`, context);
+  const title = translatedTitle === `${error.name} title` ? t('fatal error title') : translatedTitle;
+
+  const translatedMessage = t(`${error.name} message`, context);
+  const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
 
   // Removes indents.
-  stack = stack
+  const stack = String(error?.stack)
     .split('\n')
     .map((text) => text.trim())
     .join('\n');
 
-  return { message, stack };
+  return { title, message, stack, context };
 };
 
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  errors?: Error[];
   config?: Config | Provider<Promise<Config>>;
   isDev?: boolean;
 };
 
 export const ResetDialog = ({
-  error,
-  errors: propsErrors,
+  error: propsError,
   config: configProvider,
-  isDev = false,
   defaultOpen,
   open,
   onOpenChange,
 }: FatalErrorProps) => {
-  const { t } = useTranslation('appkit');
-
-  const errors = [...(error ? [error] : []), ...(propsErrors || [])].map(parseError);
+  const { t } = useTranslation(ERROR_PLUGIN);
+  const error = propsError && parseError(t, propsError);
+  const [showStack, setShowStack] = useState(false);
 
   const onCopyError = useCallback(() => {
-    void navigator.clipboard.writeText(JSON.stringify(errors));
-  }, [error, propsErrors]);
+    void navigator.clipboard.writeText(JSON.stringify(error));
+  }, [error]);
+
+  const Caret = showStack ? CaretDown : CaretRight;
 
   // TODO(burdon): Make responsive (full page mobile).
   return (
@@ -66,22 +68,24 @@ export const ResetDialog = ({
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
-      <AlertDialog.Title>
-        {t(errors.length > 0 ? 'fatal error label' : 'reset dialog label', { count: errors.length })}
-      </AlertDialog.Title>
-      <AlertDialog.Content classNames='block'>
-        {isDev && errors.length > 0 ? (
-          errors.map(({ message, stack }, index) => (
-            <Message.Root key={`${index}--${message}`} valence='error' className='mlb-4 overflow-auto max-bs-72'>
-              <Message.Title>{message}</Message.Title>
-              <pre className='text-xs'>{stack}</pre>
-            </Message.Root>
-          ))
-        ) : (
-          <p>{t(errors.length > 0 ? 'fatal error message' : 'reset dialog message')}</p>
+      <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+      <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
+      <AlertDialog.Content>
+        {error && (
+          <>
+            <button className='flex items-center' onClick={() => setShowStack((showStack) => !showStack)}>
+              <Caret />
+              <span className='mis-2'>{t('show stack label')}</span>
+            </button>
+            {showStack && (
+              <Message.Root key={error.message} valence='error' className='mlb-4 overflow-auto max-bs-72'>
+                <pre className='text-xs'>{error.stack}</pre>
+              </Message.Root>
+            )}
+          </>
         )}
         <div role='none' className='flex gap-2 mbs-4'>
-          {errors.length > 0 && (
+          {showStack && (
             <Tooltip.Root>
               <Tooltip.Trigger>
                 <Button onClick={onCopyError}>
