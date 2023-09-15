@@ -8,7 +8,7 @@ import { DeepSignal, deepSignal } from 'deepsignal';
 import React, { FC, forwardRef } from 'react';
 
 import { Button } from '@dxos/aurora';
-import { getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { dropRing, getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { Mosaic } from './Mosaic';
 import { getDndId, parseDndId } from '../dnd';
@@ -40,7 +40,10 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
 const rearrangeIds = Object.keys(rearrangeTiles);
 
 const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
-  ({ data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive }, forwardedRef) => {
+  (
+    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination },
+    forwardedRef,
+  ) => {
     const { label, description } = data;
     return tile.variant === 'card' ? (
       <div
@@ -66,7 +69,7 @@ const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDa
         <p className='pis-7 pie-4 pbe-2'>{description}</p>
       </div>
     ) : (
-      <div role='group' className='p-2 space-b-2'>
+      <div role='group' className={mx('p-2 m-2 space-b-2 rounded-xl', isCopyDestination && dropRing)}>
         {children}
       </div>
     );
@@ -187,7 +190,7 @@ export const Copy = {
         mosaic={copyMosaic}
         {...rootProps}
       >
-        <div className='fixed inset-0 flex gap-4 pli-4'>
+        <div className='fixed inset-0 flex'>
           <div className='min-is-0 flex-1 overflow-y-auto'>
             <Mosaic.Root id={rearrangeMosaicId}>
               <Mosaic.Tile {...(copyMosaic.tiles[rearrangeRootId] as StackTile)} />
