@@ -91,11 +91,7 @@ class SpaceMonitor {
   private _creatingEpoch = false;
   private _previousEpochNumber = -1;
 
-  constructor(
-    private readonly _client: Client,
-    private readonly _space: Space,
-    private readonly _options: Options,
-  ) {}
+  constructor(private readonly _client: Client, private readonly _space: Space, private readonly _options: Options) {}
 
   async open() {
     await this._space.waitUntilReady();

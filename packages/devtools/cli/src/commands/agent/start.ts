@@ -92,11 +92,6 @@ export default class Start extends BaseCommand<typeof Start> {
 
     await agent.start();
     this.log('Agent started... (ctrl-c to exit)');
-    process.on('SIGINT', async () => {
-      void this._ctx.dispose();
-      await agent.stop();
-      process.exit(0);
-    });
 
     this._sendTelemetry();
 
@@ -116,7 +111,6 @@ export default class Start extends BaseCommand<typeof Start> {
         const process = await daemon.start(this.flags.profile, {
           config: this.flags.config,
           metrics: this.flags.metrics,
-          monitor: this.flags.monitor,
           ws: this.flags.ws,
         });
         if (process) {
