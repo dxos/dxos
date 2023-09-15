@@ -3,11 +3,12 @@
 //
 
 import { DragEndEvent } from '@dnd-kit/core';
-import { getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
 import { useCallback } from 'react';
 
 import { useMosaic } from '../../mosaic';
+import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
+import { nextIndex } from '../util';
 
 export const useHandleRearrangeDragEnd = () => {
   const {
@@ -21,26 +22,16 @@ export const useHandleRearrangeDragEnd = () => {
       const parentIds = Array.from(relations[active.id]?.parent ?? []);
       const parentIsSortable = tiles[parentIds[0]]?.sortable;
       if (parentIsSortable) {
-        const subtileIds: Set<string> = relations[Array.from(parentIds)[0]]?.child ?? new Set();
-        const subtiles = Array.from(subtileIds)
-          .map((id) => tiles[id])
-          .sort(sortByIndex);
+        const subtiles = getSubtiles(relations[Array.from(parentIds)[0]]?.child ?? new Set(), tiles);
         if (subtiles.length) {
           dnd.overlayDropAnimation = 'around';
-          const overOrderIndex = subtiles.findIndex(({ id }) => id === over.id);
-          if (overOrderIndex < 0) {
-            return null;
+          const index = nextIndex(subtiles, active.id, over.id);
+          if (index) {
+            tiles[active.id].index = index;
+            onMosaicChange?.({ type: 'rearrange', id: active.id.toString(), index });
+            return index;
           } else {
-            const activeOrderIndex = subtiles.findIndex(({ id }) => id === active.id);
-            const nextIndex =
-              overOrderIndex < 1
-                ? getIndexBelow(subtiles[overOrderIndex].index)
-                : activeOrderIndex < overOrderIndex
-                ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1]?.index)
-                : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
-            tiles[active.id].index = nextIndex;
-            onMosaicChange?.({ type: 'rearrange', id: active.id.toString(), index: nextIndex });
-            return nextIndex;
+            return null;
           }
         } else {
           return null;
