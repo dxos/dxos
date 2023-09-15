@@ -4,6 +4,7 @@ const { promisify } = require('node:util');
 
 monitors = [
   './tools/monitors/cli-monitor',
+  './tools/monitors/bare-template-monitor',
   './tools/monitors/hello-template-monitor',
   './tools/monitors/messaging-monitor',
 ];
@@ -35,7 +36,17 @@ const monitor = async (path) => {
   }
 }
 
-void Promise.allSettled(monitors.map(monitor)).then((results) => {
-  const failed = results.some((result) => result.status === 'rejected');
-  process.exit(failed ? 1 : 0);
-});
+// NOTE: Can't run in parallel because of colliding ports.
+let error;
+for (const path of monitors) {
+  try {
+    await monitor(path);
+  } catch (err) {
+    error = err;
+  }
+}
+
+if (error) {
+  console.error(error);
+  process.exit(1);
+}
