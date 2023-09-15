@@ -24,7 +24,8 @@ export const isDxosMonorepoSync = () => {
   try {
     const gitRemoteResult = execSync('git remote --v', { stdio: 'pipe' }).toString();
     const isDxosMonorepo = /:dxos\//.test(gitRemoteResult);
-    return isDxosMonorepo;
+    const isMonitor = process.cwd().endsWith('monitor');
+    return isDxosMonorepo && !isMonitor;
   } catch {
     return false;
   }
