@@ -2,10 +2,11 @@
 > Declared in [`packages/sdk/react-client/src/client/ClientContext.tsx`]()
 
 
-
 ## Properties
 ### [children](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L51)
 Type: <code>ReactNode</code>
+
+
 
 ### [client](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L72)
 Type: <code>[Client](/api/@dxos/react-client/classes/Client) | Provider&lt;Promise&lt;[Client](/api/@dxos/react-client/classes/Client)&gt;&gt;</code>
@@ -27,6 +28,8 @@ ReactNode to display until the client is available.
 ### [onInitialized](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L89)
 Type: <code>function</code>
 
+
+
 ### [registerSignalFactory](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L82)
 Type: <code>boolean</code>
 
@@ -34,3 +37,7 @@ Set to false to stop default signal factory from being registered.
 
 ### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L63)
 Type: <code>function</code>
+
+
+
+    

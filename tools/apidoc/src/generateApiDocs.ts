@@ -20,12 +20,11 @@ export const generateApiDocs = async (config: Config) => {
     outputDirectory: apiDocsPath,
     input,
     overwrite: true,
-    verbose: true,
     compilerOptions: {
       module: 'esnext',
       esModuleInterop: true,
     },
-    moduleLoaderFunction: (p: string) => import(/* @vite-ignore */p),
+    moduleLoaderFunction: (p: string) => import(p),
   });
   void result.apply();
 };

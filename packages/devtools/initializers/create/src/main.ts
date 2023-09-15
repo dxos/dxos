@@ -26,14 +26,14 @@ void (async () => {
     interactive: false,
     verbose: false,
     monorepo: false,
-    ...args
+    ...args,
   };
 
   const result = await template.apply({
     verbose,
     input: interactive
       ? { monorepo }
-      : { name, pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false }
+      : { name, pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false },
   });
   await result.apply();
 

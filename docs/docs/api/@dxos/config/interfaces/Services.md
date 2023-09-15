@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [app]()
 Type: <code>[AppServer](/api/@dxos/config/interfaces/AppServer)</code>
@@ -32,6 +31,8 @@ Options:
 ### [ice]()
 Type: <code>[Ice](/api/@dxos/config/interfaces/Ice)[]</code>
 
+
+
 ### [ipfs]()
 Type: <code>[Ipfs](/api/@dxos/config/interfaces/Ipfs)</code>
 
@@ -59,6 +60,8 @@ Options:
 ### [signaling]()
 Type: <code>[Signal](/api/@dxos/config/interfaces/Signal)[]</code>
 
+
+
 ### [supervisor]()
 Type: <code>[Supervisor](/api/@dxos/config/interfaces/Supervisor)</code>
 
@@ -70,3 +73,5 @@ Type: <code>[Tunneling](/api/@dxos/config/interfaces/Tunneling)</code>
 
 Options:
   - proto3_optional = true
+
+    

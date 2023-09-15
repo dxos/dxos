@@ -3,10 +3,11 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [functions]()
 Type: <code>[Functions](/api/@dxos/config/interfaces/Functions)</code>
 
 Options:
   - proto3_optional = true
+
+    

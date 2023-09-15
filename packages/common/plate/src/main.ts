@@ -108,7 +108,6 @@ const main = async () => {
         const tstart = Date.now();
         const {
           _,
-          dry,
           input,
           output = process.cwd(),
           include,
@@ -118,7 +117,6 @@ const main = async () => {
           quiet = false,
           overwrite,
           interactive,
-          printMessage,
           ...restArgs
         } = args;
         const debug = logger(verbose);

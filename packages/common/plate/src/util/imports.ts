@@ -71,7 +71,7 @@ export const imports = (defaultRelativeTo?: LazyPathLike) => {
   };
   function use(name: string, from: PathLike, options?: ImportOptions): string;
   function use(name: string[], from: PathLike, options?: ImportOptions): string[];
-  function use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
+  const use = (name: string | string[], from: PathLike, options?: ImportOptions): string | string[] => {
     const { aliasOf, isDefault } = { ...options };
     const flatFrom = Array.isArray(from) ? path.join(...from) : from;
     const names = Array.isArray(name) ? name : [name];
@@ -84,17 +84,14 @@ export const imports = (defaultRelativeTo?: LazyPathLike) => {
       };
     });
     return Array.isArray(name) ? names : names[0];
-  }
+  };
   function lazy(name: string, from: PathLike, o?: ImportOptions): () => string;
   function lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, () => string>;
-  function lazy(name: string | string[], from: PathLike, o?: ImportOptions) {
-    return Array.isArray(name)
-      ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)]))
-      : () => use(name, from, o);
-  }
+  const lazy = (name: string | string[], from: PathLike, o?: ImportOptions) =>
+    Array.isArray(name) ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)])) : () => use(name, from, o);
   const result = () => render;
   result.use = lazy;
   return result;
-}
+};
 
 export type Imports = ReturnType<typeof imports>;

@@ -4,9 +4,10 @@
 
 import { Args, Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
-import { exec } from '@dxos/process';
 import os from 'os';
 import { cwd } from 'process';
+
+import { exec } from '@dxos/process';
 
 import { BaseCommand } from '../../base-command';
 

@@ -16,10 +16,6 @@
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "typedoc": "typedoc"
   },
-  "dependencies": {
-    "vite": "^4.3.9",
-    "vite-node": "^0.34.4"
-  },
   "devDependencies": {
     "@dxos/plate": "workspace:*",
     "@linkedmd/markdown-it-directive": "^1.0.1",
