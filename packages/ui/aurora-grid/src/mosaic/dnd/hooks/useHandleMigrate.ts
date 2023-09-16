@@ -29,7 +29,6 @@ export const useHandleMigrateDragEnd = () => {
   return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
     let result = previousResult;
     const activeId = active.id.toString();
-    console.log('[migrate drag end]', previousResult, activeId, dnd.migrationDestinationId);
     if (!previousResult && activeId && dnd.migrationDestinationId) {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);

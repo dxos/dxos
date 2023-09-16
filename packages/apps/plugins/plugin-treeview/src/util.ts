@@ -95,8 +95,8 @@ export const computeTreeViewMosaic = (graph: Graph) => {
         sortable: true,
         expanded: false,
         level,
-        acceptMigrationClass: node.properties.acceptMigrationClass,
-        migrationClass: node.properties.migrationClass,
+        ...(node.properties.acceptPersistenceClass && { acceptMigrationClass: node.properties.acceptPersistenceClass }),
+        ...(node.properties.persistenceClass && { migrationClass: node.properties.persistenceClass }),
       };
       mosaic.relations[id] = {
         child: new Set(),

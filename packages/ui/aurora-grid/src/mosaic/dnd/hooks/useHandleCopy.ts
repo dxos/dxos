@@ -36,7 +36,6 @@ export const useHandleCopyDragEnd = () => {
   return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
     let result = previousResult;
     const activeId = active.id.toString();
-    console.log('[copy drag end]', previousResult, activeId, dnd.copyDestinationId);
     if (!previousResult && activeId && dnd.copyDestinationId) {
       // create new tile
       const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
