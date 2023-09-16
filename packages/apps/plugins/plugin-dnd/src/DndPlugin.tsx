@@ -2,20 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeepSignal } from 'deepsignal';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { getDndId, Mosaic, MosaicState, parseDndId } from '@dxos/aurora-grid';
+import { getDndId, Mosaic, parseDndId } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN } from './types';
-
-export type DndPluginProvides = {
-  dnd: DeepSignal<MosaicState>;
-};
+import { DND_PLUGIN, DndPluginProvides } from './types';
 
 const mosaic = deepSignal({
   tiles: {},

@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch } from '@preact/signals-react';
+import { batch, effect } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
-import { parseDndId } from '@dxos/aurora-grid';
+import { EventSubscriptions } from '@dxos/async';
+import { MosaicState, parseDndId } from '@dxos/aurora-grid';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -22,9 +24,12 @@ import {
 } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
+import { computeTreeViewMosaic } from './util';
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  const subscriptions = new EventSubscriptions();
+
   const state = deepSignal<TreeViewContextValue>({
     active: undefined,
     previous: undefined,
@@ -51,6 +56,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
     },
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const client = clientPlugin?.provides.client;
@@ -68,6 +74,22 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       } else {
         state.appState = (appStates as AppState[])[0];
       }
+
+      subscriptions.add(
+        effect(() => {
+          console.log('[use graph mosaic]', 'effect');
+          const graph = graphPlugin?.provides.graph;
+          const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd;
+          if (graph && graph.root && mosaic) {
+            const nextMosaic = computeTreeViewMosaic(graph);
+            mosaic.tiles = nextMosaic.tiles;
+            mosaic.relations = nextMosaic.relations;
+          }
+        }),
+      );
+    },
+    unload: async () => {
+      subscriptions.clear();
     },
     provides: {
       treeView: state,

@@ -5,6 +5,10 @@
 import { Graph } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
+import { getDndId, MosaicState } from '@dxos/aurora-grid';
+
+import { getLevel } from './components/useGraphMosaic';
+import { TREE_VIEW_PLUGIN } from './types';
 
 export const uriToActive = (uri: string) => {
   const [_, ...nodeId] = uri.split('/');
@@ -75,4 +79,44 @@ export const setAppStateIndex = (id: string, value: string, appState?: AppState)
     appState.indices.push({ ref: id, value });
   }
   return value;
+};
+
+export const computeTreeViewMosaic = (graph: Graph) => {
+  const mosaic: MosaicState = { tiles: {}, relations: {} };
+
+  graph.traverse({
+    onVisitNode: (node) => {
+      const level = getLevel(node, -1);
+      const id = getDndId(TREE_VIEW_PLUGIN, node.id);
+      mosaic.tiles[id] = {
+        id,
+        index: node.properties.index,
+        variant: 'treeitem',
+        sortable: true,
+        expanded: false,
+        level,
+        acceptMigrationClass: node.properties.acceptMigrationClass,
+        migrationClass: node.properties.migrationClass,
+      };
+      mosaic.relations[id] = {
+        child: new Set(),
+        parent: new Set(),
+      };
+    },
+  });
+
+  graph.traverse({
+    onVisitNode: (node) => {
+      const id = getDndId(TREE_VIEW_PLUGIN, node.id);
+      if (node.children && node.children.length) {
+        node.children.forEach((child) => {
+          const childId = getDndId(TREE_VIEW_PLUGIN, child.id);
+          mosaic.relations[id].child.add(childId);
+          mosaic.relations[childId].parent.add(id);
+        });
+      }
+    },
+  });
+
+  return mosaic;
 };

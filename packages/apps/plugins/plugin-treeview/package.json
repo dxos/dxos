@@ -21,6 +21,7 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/aurora-grid": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
