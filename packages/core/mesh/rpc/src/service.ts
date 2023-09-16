@@ -28,10 +28,7 @@ export const createServiceBundle = <Service>(services: ServiceBundle<Service>): 
  * Type-safe RPC peer.
  */
 export class ProtoRpcPeer<Service> {
-  constructor(
-    public readonly rpc: Service,
-    private readonly _peer: RpcPeer,
-  ) {}
+  constructor(public readonly rpc: Service, private readonly _peer: RpcPeer) {}
 
   async open() {
     await this._peer.open();
