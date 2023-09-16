@@ -10,6 +10,7 @@ option go_package = "github.com/dxos/kube/proto/def/dxos/error";
 
 /// Serialized error.
 message Error {
+  /// Also error code. Will be used to reconstruct a known error type.
   optional string name = 1;
   optional string message = 2;
   optional google.protobuf.Struct context = 4;

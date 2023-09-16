@@ -5,3 +5,4 @@
 export * from './encoding';
 export * from './errors';
 export * from './helpers';
+export * from './base-errors';
