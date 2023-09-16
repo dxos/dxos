@@ -19,16 +19,16 @@ export class BaseError extends Error {
  * User facing API Errors.
  * E.g., something was misconfigured.
  */
-export class ApiError extends BaseError { }
+export class ApiError extends BaseError {}
 
 /**
  * Internal system errors.
  * E.g., unexpected/unrecoverable runtime error.
  */
-export class SystemError extends BaseError { }
+export class SystemError extends BaseError {}
 
 /**
  * Database errors.
  */
 // TODO(wittjosiah): Same as ApiError?
-export class DatabaseError extends BaseError { }
+export class DatabaseError extends BaseError {}

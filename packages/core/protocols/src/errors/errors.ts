@@ -4,9 +4,9 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import type { ItemID } from '../types';
-import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers';
 import { ApiError, DatabaseError, SystemError, BaseError } from './base-errors';
+import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers';
+import type { ItemID } from '../types';
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.
@@ -161,7 +161,7 @@ export class SpaceNotFoundError extends DatabaseError {
 
 registerError('SPACE_NOT_FOUND', (_, context) => {
   return new SpaceNotFoundError(PublicKey.safeFrom(context.spaceKey) ?? PublicKey.from('00'));
-})
+});
 
 export class EntityNotFoundError extends DatabaseError {
   constructor(entityId: ItemID) {

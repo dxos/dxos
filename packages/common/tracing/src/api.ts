@@ -14,12 +14,13 @@ const resource =
   () =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
     // Wrapping class declaration into an IIFE so it doesn't capture the `klass` class name.
-    const klass = (() => class extends constructor {
-      constructor(...rest: any[]) {
-        super(...rest);
-        TRACE_PROCESSOR.traceResourceConstructor({ constructor, instance: this });
-      }
-    })();
+    const klass = (() =>
+      class extends constructor {
+        constructor(...rest: any[]) {
+          super(...rest);
+          TRACE_PROCESSOR.traceResourceConstructor({ constructor, instance: this });
+        }
+      })();
     Object.defineProperty(klass, 'name', { value: constructor.name });
     return klass;
   };
