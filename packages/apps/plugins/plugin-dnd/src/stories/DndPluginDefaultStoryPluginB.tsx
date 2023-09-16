@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
 import { deepSignal } from 'deepsignal/react';
 import React, { useContext, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver } from '@dxos/aurora-grid';
+import { useDnd, useDragEnd, useDragOver, useDroppable } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
 import { PluginDefinition } from '@dxos/react-surface';
 

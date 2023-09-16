@@ -2,11 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UniqueIdentifier } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { useContext, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '@dxos/aurora-grid';
+import {
+  useDnd,
+  useDragEnd,
+  useDragOver,
+  useDragStart,
+  SortableContext,
+  verticalListSortingStrategy,
+  UniqueIdentifier,
+} from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
