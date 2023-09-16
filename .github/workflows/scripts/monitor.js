@@ -36,17 +36,21 @@ const monitor = async (path) => {
   }
 }
 
-// NOTE: Can't run in parallel because of colliding ports.
-let error;
-for (const path of monitors) {
-  try {
-    await monitor(path);
-  } catch (err) {
-    error = err;
+const run = async () => {
+  // NOTE: Can't run in parallel because of colliding ports.
+  let error;
+  for (const path of monitors) {
+    try {
+      await monitor(path);
+    } catch (err) {
+      error = err;
+    }
   }
-}
 
-if (error) {
-  console.error(error);
-  process.exit(1);
-}
+  if (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+void run();
