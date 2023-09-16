@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { FC, forwardRef } from 'react';
@@ -12,6 +10,7 @@ import { SortableProps } from '@braneframe/plugin-dnd';
 import { useGraph } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { List, ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
+import { useSortable, CSS } from '@dxos/aurora-grid';
 import {
   fineButtonDimensions,
   focusRing,

@@ -1393,10 +1393,8 @@ importers:
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/react-client': workspace:*
@@ -1418,9 +1416,7 @@ importers:
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/aurora-grid': link:../../../ui/aurora-grid
       '@dxos/client': link:../../../sdk/client
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
@@ -1667,9 +1663,7 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -1693,9 +1687,7 @@ importers:
     dependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/types': link:../../types
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/async': link:../../../common/async
       '@dxos/aurora-grid': link:../../../ui/aurora-grid
       '@dxos/debug': link:../../../common/debug
       '@dxos/protocols': link:../../../core/protocols

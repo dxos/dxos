@@ -2,14 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import get from 'lodash.get';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { File as FileType } from '@braneframe/types';
 import { List, useTranslation } from '@dxos/aurora';
+import {
+  useDragEnd,
+  useDragOver,
+  useDragStart,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  useDroppable,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dxos/aurora-grid';
 import { textBlockWidth } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -27,7 +35,6 @@ export const StackSectionsSortable: FC<{
   StackSectionComponent?: typeof StackSection;
 }> = ({ sections, id: stackId, onAdd, persistenceId, StackSectionComponent = StackSection }) => {
   const { t } = useTranslation(STACK_PLUGIN);
-  const dnd = useDnd();
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
   const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
 
@@ -99,14 +106,12 @@ export const StackSectionsSortable: FC<{
     ({ active, over }: DragEndEvent) => {
       const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
       if (activeModelIndex >= 0) {
-        dnd.overlayDropAnimation = 'into';
         setSectionModels(onAdd(activeAddableObject!, activeModelIndex));
       } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
         const nextIndex = sections.findIndex((section) => section?.object?.id === over?.id);
         if (activeSectionId) {
-          dnd.overlayDropAnimation = 'around';
           if (activeSectionId !== overSectionId) {
             const activeIndex = sections.findIndex((section) => section?.object?.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
