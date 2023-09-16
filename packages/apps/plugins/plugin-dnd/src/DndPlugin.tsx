@@ -10,11 +10,14 @@ import { getDndId, Mosaic, parseDndId } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN, DndPluginProvides } from './types';
+import { DND_PLUGIN, DndPluginProvides, DndStore } from './types';
 
-const mosaic = deepSignal({
-  tiles: {},
-  relations: {},
+const dnd: DndStore = deepSignal({
+  mosaic: {
+    tiles: {},
+    relations: {},
+  },
+  onMosaicChangeSubscriptions: [],
 });
 
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
@@ -30,7 +33,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
         const { graph } = useGraph();
         return (
           <Mosaic.Provider
-            mosaic={mosaic}
+            mosaic={dnd.mosaic}
             Delegator={DndDelegator}
             getData={(dndId) => {
               const [_, nodeId] = parseDndId(dndId);
@@ -42,12 +45,17 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
               const nextId = getDndId(mosaicId, nodeId);
               return { ...mosaic.tiles[id], id: nextId };
             }}
+            onMosaicChange={(event) => {
+              dnd.onMosaicChangeSubscriptions.forEach((handler) => {
+                handler(event);
+              });
+            }}
           >
             {children}
           </Mosaic.Provider>
         );
       },
-      dnd: mosaic,
+      dnd,
     },
   };
 };

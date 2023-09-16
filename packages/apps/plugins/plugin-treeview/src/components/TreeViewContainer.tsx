@@ -17,13 +17,11 @@ import { usePlugin } from '@dxos/react-surface';
 import { HaloButton } from './HaloButton';
 import { NavTreeRoot } from './NavTree';
 import { VersionInfo } from './VersionInfo';
-import { useGraphMosaic } from './useGraphMosaic';
 import { TREE_VIEW_PLUGIN } from '../types';
 
 export const TreeViewContainer = () => {
   const config = useConfig();
   const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
-  useGraphMosaic();
 
   const identity = useIdentity();
 

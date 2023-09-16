@@ -11,7 +11,7 @@ import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { MosaicState, parseDndId } from '@dxos/aurora-grid';
+import { MosaicChangeEvent, MosaicState, parseDndId } from '@dxos/aurora-grid';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
@@ -24,7 +24,7 @@ import {
 } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
-import { computeTreeViewMosaic } from './util';
+import { computeTreeViewMosaic, getPersistenceParent } from './util';
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
@@ -56,7 +56,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
     },
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const graph = graphPlugin?.provides.graph;
+
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd.mosaic;
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const client = clientPlugin?.provides.client;
@@ -77,16 +80,41 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
       subscriptions.add(
         effect(() => {
-          console.log('[use graph mosaic]', 'effect');
-          const graph = graphPlugin?.provides.graph;
-          const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd;
-          if (graph && graph.root && mosaic) {
-            const nextMosaic = computeTreeViewMosaic(graph);
+          console.log('[graph mosaic]', 'effect');
+          if (graph && graph.root && mosaic && state.appState) {
+            const nextMosaic = computeTreeViewMosaic(graph, state.appState);
             mosaic.tiles = nextMosaic.tiles;
             mosaic.relations = nextMosaic.relations;
           }
         }),
       );
+
+      if (graph && dndPlugin?.provides.dnd?.onMosaicChangeSubscriptions) {
+        dndPlugin?.provides.dnd?.onMosaicChangeSubscriptions.push((event: MosaicChangeEvent) => {
+          const [rootId, entityId] = parseDndId(event.id);
+          if (rootId === TREE_VIEW_PLUGIN) {
+            const node = graph.find(entityId);
+            let fromNode = null;
+            let toNode = null;
+            if (node) {
+              switch (event.type) {
+                case 'rearrange':
+                  toNode = getPersistenceParent(node, node.properties.persistenceClass);
+                  toNode?.properties.onRearrangeChild?.(node, event.index);
+                  break;
+                case 'migrate':
+                  fromNode = graph.find(parseDndId(event.fromId)[1]);
+                  toNode = graph.find(parseDndId(event.toId)[1]);
+                  console.log('[migrate start]', node, toNode, event.index);
+                  toNode?.properties.onMigrateStartChild?.(node, toNode, event.index);
+                  console.log('[migrate end]', fromNode);
+                  fromNode?.properties.onMigrateEndChild?.(node);
+                  break;
+              }
+            }
+          }
+        });
+      }
     },
     unload: async () => {
       subscriptions.clear();

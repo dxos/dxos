@@ -5,12 +5,14 @@
 import { DeepSignal } from 'deepsignal';
 
 import { ListItemRootProps } from '@dxos/aurora';
-import { MosaicState, useSortable, DraggableAttributes } from '@dxos/aurora-grid';
+import { MosaicState, useSortable, DraggableAttributes, MosaicChangeHandler } from '@dxos/aurora-grid';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
+export type DndStore = DeepSignal<{ mosaic: MosaicState; onMosaicChangeSubscriptions: MosaicChangeHandler[] }>;
+
 export type DndPluginProvides = {
-  dnd: DeepSignal<MosaicState>;
+  dnd: DndStore;
 };
 
 export type SortableProps = Partial<{

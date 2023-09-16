@@ -7,8 +7,15 @@ import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
 import { getDndId, MosaicState } from '@dxos/aurora-grid';
 
-import { getLevel } from './components/useGraphMosaic';
 import { TREE_VIEW_PLUGIN } from './types';
+
+export const getLevel = (node: Graph.Node, level = 0): number => {
+  if (!node.parent) {
+    return level;
+  } else {
+    return getLevel(node.parent, level + 1);
+  }
+};
 
 export const uriToActive = (uri: string) => {
   const [_, ...nodeId] = uri.split('/');
@@ -81,7 +88,7 @@ export const setAppStateIndex = (id: string, value: string, appState?: AppState)
   return value;
 };
 
-export const computeTreeViewMosaic = (graph: Graph) => {
+export const computeTreeViewMosaic = (graph: Graph, appState: AppState) => {
   const mosaic: MosaicState = { tiles: {}, relations: {} };
 
   graph.traverse({
@@ -90,7 +97,8 @@ export const computeTreeViewMosaic = (graph: Graph) => {
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
       mosaic.tiles[id] = {
         id,
-        index: node.properties.index,
+        index:
+          node.properties.persistenceClass === 'appState' ? getAppStateIndex(node.id, appState) : node.properties.index,
         variant: 'treeitem',
         sortable: true,
         expanded: false,
