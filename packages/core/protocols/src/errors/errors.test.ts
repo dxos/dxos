@@ -7,7 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import { describe, test } from '@dxos/test';
 
-import { ApiError } from './errors';
+import { ApiError } from './base-errors';
 
 chai.use(chaiAsPromised);
 
