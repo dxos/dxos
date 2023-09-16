@@ -91,7 +91,7 @@ const resolveComponents = (
         const Component = findComponent(plugins, name);
         return (
           Component && (
-            <Component key={name} {...{ data, role }} {...(index === 0 && { ref: forwardedRef })}>
+            <Component key={name} {...{ data, role }} ref={forwardedRef}>
               {props.children ?? null}
             </Component>
           )
@@ -105,7 +105,7 @@ const resolveComponents = (
         const Component = plugin.provides.component?.(data, role);
         return (
           Component && (
-            <Component key={plugin.meta.id} {...{ data, role }} {...(index === 0 && { ref: forwardedRef })}>
+            <Component key={plugin.meta.id} {...{ data, role }} ref={forwardedRef}>
               {props.children ?? null}
             </Component>
           )

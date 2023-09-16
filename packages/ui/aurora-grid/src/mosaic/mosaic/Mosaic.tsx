@@ -82,12 +82,7 @@ const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   const handleCopyDragOver = useHandleCopyDragOver();
   useDragOver(handleCopyDragOver, [handleCopyDragOver]);
 
-  return (
-    <>
-      {children}
-      <MosaicOverlay />
-    </>
-  );
+  return <>{children}</>;
 };
 
 const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
@@ -117,6 +112,7 @@ const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) 
 export const Mosaic = {
   Provider: MosaicProvider,
   Root: MosaicRoot,
+  Overlay: MosaicOverlay,
   Tile,
   Stack,
   Card,

@@ -23,6 +23,9 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
       id: DND_PLUGIN,
     },
     provides: {
+      components: {
+        default: Mosaic.Overlay,
+      },
       context: ({ children }) => {
         const { graph } = useGraph();
         return (
