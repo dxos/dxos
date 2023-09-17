@@ -15,8 +15,8 @@ type TileSharedProps = {
   variant: TileVariant;
   migrationClass?: string;
   acceptMigrationClass?: Set<string>;
-  copyClass?: string;
-  acceptCopyClass?: Set<string>;
+  copyClass?: Set<string>;
+  acceptCopyClass?: string;
   // Secondary props
   sortable?: boolean;
 };

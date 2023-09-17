@@ -64,10 +64,10 @@ export const useHandleCopyDragEnd = () => {
   }, deps);
 };
 
-const findCopyDestination = (tile: Tile | undefined, copyClass: string, mosaic: MosaicState): string | null => {
+const findCopyDestination = (tile: Tile | undefined, copyClass: Set<string>, mosaic: MosaicState): string | null => {
   if (!tile) {
     return null;
-  } else if (tile.acceptCopyClass?.has(copyClass)) {
+  } else if (tile.acceptCopyClass && copyClass.has(tile.acceptCopyClass)) {
     return tile.id;
   } else if ((mosaic.relations[tile.id]?.parent?.size ?? 0) < 1) {
     return null;

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SetTileHandler } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
@@ -88,24 +89,31 @@ export const setAppStateIndex = (id: string, value: string, appState?: AppState)
   return value;
 };
 
-export const computeTreeViewMosaic = (graph: Graph, appState: AppState) => {
+export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTile: SetTileHandler) => {
   const mosaic: MosaicState = { tiles: {}, relations: {} };
 
   graph.traverse({
     onVisitNode: (node) => {
       const level = getLevel(node, -1);
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
-      mosaic.tiles[id] = {
-        id,
-        index:
-          node.properties.persistenceClass === 'appState' ? getAppStateIndex(node.id, appState) : node.properties.index,
-        variant: 'treeitem',
-        sortable: true,
-        expanded: false,
-        level,
-        ...(node.properties.acceptPersistenceClass && { acceptMigrationClass: node.properties.acceptPersistenceClass }),
-        ...(node.properties.persistenceClass && { migrationClass: node.properties.persistenceClass }),
-      };
+      mosaic.tiles[id] = onSetTile(
+        {
+          id,
+          index:
+            node.properties.persistenceClass === 'appState'
+              ? getAppStateIndex(node.id, appState)
+              : node.properties.index,
+          variant: 'treeitem',
+          sortable: true,
+          expanded: false,
+          level,
+          ...(node.properties.acceptPersistenceClass && {
+            acceptMigrationClass: node.properties.acceptPersistenceClass,
+          }),
+          ...(node.properties.persistenceClass && { migrationClass: node.properties.persistenceClass }),
+        },
+        node,
+      );
       mosaic.relations[id] = {
         child: new Set(),
         parent: new Set(),

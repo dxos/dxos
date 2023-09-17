@@ -7,7 +7,7 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
+import { DndPluginProvides, SetTileHandler } from '@braneframe/plugin-dnd';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
@@ -60,6 +60,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd.mosaic;
+      const onSetTile: SetTileHandler = dndPlugin?.provides.onSetTile ?? ((tile, _) => tile);
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const client = clientPlugin?.provides.client;
@@ -82,7 +83,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         effect(() => {
           console.log('[graph mosaic]', 'effect');
           if (graph && graph.root && mosaic && state.appState) {
-            const nextMosaic = computeTreeViewMosaic(graph, state.appState);
+            const nextMosaic = computeTreeViewMosaic(graph, state.appState, onSetTile);
+            console.log('[next mosaic]', nextMosaic);
             mosaic.tiles = nextMosaic.tiles;
             mosaic.relations = nextMosaic.relations;
           }

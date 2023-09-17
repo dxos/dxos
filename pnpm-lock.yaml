@@ -1124,6 +1124,7 @@ importers:
   packages/apps/plugins/plugin-markdown:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
@@ -1164,6 +1165,7 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview

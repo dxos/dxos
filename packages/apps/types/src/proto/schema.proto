@@ -92,7 +92,8 @@ message Stack {
     // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    dxos.schema.TypedObject object = 1;
+    string index = 1;
+    dxos.schema.TypedObject object = 2;
   }
 
   string title = 1;
@@ -110,7 +111,8 @@ message Kanban {
     option (object) = true;
 
     string title = 1;
-    repeated Item items = 2;
+    string index = 2;
+    repeated Item items = 3;
   }
 
   message Item {
@@ -118,8 +120,9 @@ message Kanban {
     option (object) = true;
 
     dxos.schema.Text title = 1;
+    string index = 2;
     // TODO(burdon): Optional content
-    dxos.schema.TypedObject object = 2;
+    dxos.schema.TypedObject object = 3;
   }
 
   string title = 1;

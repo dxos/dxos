@@ -26,7 +26,7 @@ export type DndContextValue = {
   activeId: string | null;
   activeMigrationClass: string | null;
   migrationDestinationId: string | null;
-  activeCopyClass: string | null;
+  activeCopyClass: Set<string> | null;
   copyDestinationId: string | null;
   dragOverSubscriptions: Handler<DragOverEvent>[];
   dragStartSubscriptions: Handler<DragStartEvent>[];

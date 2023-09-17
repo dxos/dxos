@@ -19,7 +19,7 @@ import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
 import { TreeViewContext } from '../../TreeViewContext';
 import { TreeViewContextValue } from '../../types';
-import { getLevel } from '../useGraphMosaic';
+import { getLevel } from '../../util';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;

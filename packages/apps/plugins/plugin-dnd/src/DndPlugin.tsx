@@ -5,8 +5,8 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
-import { getDndId, Mosaic, parseDndId } from '@dxos/aurora-grid';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
+import { getDndId, Mosaic, parseDndId, Tile } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
@@ -18,6 +18,7 @@ const dnd: DndStore = deepSignal({
     relations: {},
   },
   onMosaicChangeSubscriptions: [],
+  onSetTileSubscriptions: [],
 });
 
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
@@ -56,6 +57,9 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
         );
       },
       dnd,
+      onSetTile: (tile: Tile, node: Graph.Node): Tile => {
+        return dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile);
+      },
     },
   };
 };
