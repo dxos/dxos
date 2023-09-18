@@ -8,13 +8,10 @@ export default template.define.script({
       : plate/* javascript */ `
     import React, { useEffect } from 'react';
 
-    import { Loading } from '@dxos/react-appkit';
-    import { useQuery, Expando, useSpaces } from '@dxos/react-client/echo';
-    import { useIdentity } from '@dxos/react-client/halo';
+    import { Expando, useQuery, useSpace } from '@dxos/react-client/echo';
 
     export const Counter = () => {
-      const identity = useIdentity();
-      const [space] = useSpaces();
+      const space = useSpace();
       const [counter] = useQuery(space, { type: 'counter' });
 
       useEffect(() => {
@@ -25,15 +22,15 @@ export default template.define.script({
       }, [counter, space]);
 
       if (!space) {
-        return <Loading label='Loading' />;
+        return null;
       }
 
       return (
         <div>
-          {identity && \`Hello \${identity?.profile?.displayName}!\`}
           {counter && (
             <button
               className='p-4 m-2 border'
+              data-testid='counter'
               onClick={() => {
                 counter.count = (counter.count ?? 0) + 1;
               }}>

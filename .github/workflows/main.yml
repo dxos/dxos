@@ -76,3 +76,6 @@ jobs:
           pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Monitor Main
+        run: node .github/workflows/scripts/monitor.js

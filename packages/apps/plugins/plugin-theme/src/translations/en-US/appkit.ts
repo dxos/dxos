@@ -31,16 +31,6 @@ export const appkit = (appName?: string) => ({
   'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
-  'fatal error label_one': 'The app encountered an error',
-  'fatal error label_other': 'The app encountered some errors',
-  'fatal error message':
-    'Please refresh the page to continue. If you keep seeing this error, please create a GitHub issue or ask for help on Discord.',
-  'reset dialog label': 'Reload or reset',
-  'reset dialog message':
-    'If you’re encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',
-  'caught error message': 'Something went wrong; check the console for details.',
-  'copy error label': 'Copy this error',
-  'reload page label': 'Reload',
   'generic copy label': 'Copy',
   'generic help label': 'Help',
   'manage profile label': 'Manage identity',
@@ -102,6 +92,4 @@ export const appkit = (appName?: string) => ({
   'list item input placeholder': 'Enter text…',
   'new list item input label': 'New list item title',
   'new list item input placeholder': 'Enter text…',
-  'reset client label': 'Reset',
-  'reset client confirm label': 'Confirm to wipe ALL DATA from local database',
 });
