@@ -5,7 +5,7 @@
 import minimist from 'minimist';
 import { mkdir } from 'node:fs/promises';
 
-import template from '@dxos/hello-template';
+import template from '@dxos/tasks-template';
 
 void (async () => {
   const args = minimist(process.argv.slice(2), {

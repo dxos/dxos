@@ -474,6 +474,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/initializers/create-tasks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
