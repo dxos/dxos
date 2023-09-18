@@ -3,6 +3,7 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
+import { getIndexAbove } from '@tldraw/indices';
 import { DeepSignal } from 'deepsignal';
 import React, { FC, forwardRef, Ref, useCallback, useEffect } from 'react';
 
@@ -34,11 +35,14 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   const { sendIntent } = useIntent();
   const { mosaic } = useMosaic();
   const handleAdd = useCallback(
-    (sectionObject: StackModel['sections'][0], start: number) => {
-      stack.sections.splice(start, 0, sectionObject);
-      return stack.sections;
+    (sectionObject: StackModel['sections'][0]['object']) => {
+      stack.sections.splice(stack.sections.length, 0, {
+        id: sectionObject.id,
+        index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
+        object: sectionObject,
+      });
     },
-    [stack.sections],
+    [stack, stack.sections],
   );
 
   const rootTile: Tile = {
@@ -78,7 +82,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
     console.log('[stack main]', 'effect', tiles, relations);
     mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
     mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
-  }, [stack]);
+  }, [stack, stack.sections]);
 
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
@@ -106,7 +110,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
                       data-testid={testId}
                       onClick={async () => {
                         const { object: nextSection } = await sendIntent(intent);
-                        handleAdd(nextSection, stack.sections.length);
+                        handleAdd(nextSection);
                       }}
                     >
                       <Icon className={getSize(4)} />

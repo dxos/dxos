@@ -21,6 +21,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "deepsignal": "^1.3.6",
     "ipfs-http-client": "~56.0.1",
     "lodash.get": "^4.4.2",
