@@ -61,6 +61,7 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
   isMigrationDestination?: boolean;
   isCopyDestination?: boolean;
   isOverlay?: boolean;
+  isEmpty?: boolean;
 }>;
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
