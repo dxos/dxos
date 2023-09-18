@@ -8,7 +8,7 @@ import React, { forwardRef, ForwardRefExoticComponent, RefAttributes } from 'rea
 
 import { Graph } from '@braneframe/plugin-graph';
 import { ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { DelegatorProps, parseDndId } from '@dxos/aurora-grid';
+import { DelegatorProps, getDndId, parseDndId, useMosaic } from '@dxos/aurora-grid';
 import {
   fineButtonDimensions,
   focusRing,
@@ -36,11 +36,15 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
     { data: { data: stack }, tile, dragHandleAttributes, dragHandleListeners, style, isActive, isOverlay },
     forwardedRef,
   ) => {
-    const [_, _stackId, entityId] = parseDndId(tile.id);
+    const { mosaic } = useMosaic();
+    const [_, stackId, entityId] = parseDndId(tile.id);
     const sectionIndex = stack.sections?.findIndex((section) => section.object.id === entityId) ?? -1;
     const section = stack.sections?.[sectionIndex];
     const { t } = useTranslation(STACK_PLUGIN);
     const handleRemove = () => {
+      delete mosaic.tiles[tile.id];
+      delete mosaic.relations[tile.id];
+      mosaic.relations[getDndId(STACK_PLUGIN, stackId)]?.child.delete(tile.id);
       stack.sections.splice(sectionIndex, 1);
     };
     return section ? (
