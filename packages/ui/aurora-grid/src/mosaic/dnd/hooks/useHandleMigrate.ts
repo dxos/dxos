@@ -12,10 +12,15 @@ import { useDnd } from '../DndContext';
 import { nextIndex } from '../util';
 
 export const useHandleMigrateDragStart = () => {
+  const { mosaic } = useMosaic();
   const dnd = useDnd();
-  const deps = [dnd];
+  const deps = [dnd, mosaic];
   return useCallback(({ active }: DragStartEvent) => {
+    const migrationClass = active?.data?.current?.migrationClass ?? null;
     dnd.activeMigrationClass = active?.data?.current?.migrationClass ?? null;
+    dnd.inhibitMigrationDestinationId = migrationClass
+      ? findMigrationDestination(active.data.current as Tile, migrationClass, mosaic)
+      : null;
   }, deps);
 };
 
@@ -86,7 +91,9 @@ export const useHandleMigrateDragOver = () => {
   return useCallback(({ over }: DragOverEvent) => {
     if (dnd.activeMigrationClass && over?.data?.current) {
       const overTile = over?.data?.current as Tile | undefined;
-      dnd.migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
+      const migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
+      dnd.migrationDestinationId =
+        migrationDestinationId === dnd.inhibitMigrationDestinationId ? null : migrationDestinationId;
     } else {
       dnd.migrationDestinationId = null;
     }

@@ -25,6 +25,7 @@ export type DndContextValue = {
   overlayDropAnimation: OverlayDropAnimation;
   activeId: string | null;
   activeMigrationClass: string | null;
+  inhibitMigrationDestinationId: string | null;
   migrationDestinationId: string | null;
   activeCopyClass: Set<string> | null;
   copyDestinationId: string | null;
@@ -38,6 +39,7 @@ const defaultContextValue: DndContextValue = {
   overlayDropAnimation: 'around',
   activeId: null,
   activeMigrationClass: null,
+  inhibitMigrationDestinationId: null,
   migrationDestinationId: null,
   activeCopyClass: null,
   copyDestinationId: null,
