@@ -7,8 +7,8 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup, List } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, ButtonGroup, List, Tooltip } from '@dxos/aurora';
+import { getSize, groupSurface } from '@dxos/aurora-theme';
 import { useClient } from '@dxos/react-client';
 import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -191,8 +191,8 @@ const Invitations = ({ id }: { id: number }) => {
   );
 
   return (
-    <div className='flex flex-col p-4 flex-1 min-w-0' data-testid={`peer-${id}`}>
-      <div className='mbe-2'>
+    <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
+      <div className={`${groupSurface} rounded p-2 mbe-2`}>
         <h1>{header}</h1>
         {identity ? (
           <List>
@@ -202,13 +202,21 @@ const Invitations = ({ id }: { id: number }) => {
           <div className='text-center'>No identity</div>
         )}
       </div>
-      {identity || panel ? <Panel id={id} panel={panel} setPanel={setPanel} /> : null}
+      {identity || panel ? (
+        <div className={`${groupSurface} rounded p-2`}>
+          <Panel id={id} panel={panel} setPanel={setPanel} />
+        </div>
+      ) : null}
     </div>
   );
 };
 
 export const Default = {
-  render: (args: { id: number }) => <Invitations {...args} />,
+  render: (args: { id: number }) => (
+    <Tooltip.Provider>
+      <Invitations {...args} />
+    </Tooltip.Provider>
+  ),
   decorators: [ClientDecorator({ count: 3 })],
   parameters: {
     chromatic: { disableSnapshot: true },
