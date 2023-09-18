@@ -8,10 +8,11 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';
+import { parseDndId } from '@dxos/aurora-grid';
 import { SpaceProxy } from '@dxos/client/echo';
 import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
-import { StackMain, StackSectionOverlay } from './components';
+import { StackMain, StackSectionDelegator } from './components';
 import { stackState } from './stores';
 import translations from './translations';
 import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
@@ -93,9 +94,15 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             } else {
               return null;
             }
-          case 'dragoverlay':
-            if ('object' in data) {
-              return StackSectionOverlay;
+          case 'mosaic-delegator':
+            if (
+              'tile' in data &&
+              typeof data.tile === 'object' &&
+              !!data.tile &&
+              'id' in data.tile &&
+              parseDndId((data.tile.id as string) ?? '')[0] === STACK_PLUGIN
+            ) {
+              return StackSectionDelegator;
             } else {
               return null;
             }

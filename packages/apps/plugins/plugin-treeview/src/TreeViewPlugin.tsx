@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, effect } from '@preact/signals-react';
+import { batch, effect, untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -84,9 +84,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           console.log('[graph mosaic]', 'effect');
           if (graph && graph.root && mosaic && state.appState) {
             const nextMosaic = computeTreeViewMosaic(graph, state.appState, onSetTile);
-            console.log('[next mosaic]', nextMosaic);
-            mosaic.tiles = nextMosaic.tiles;
-            mosaic.relations = nextMosaic.relations;
+            mosaic.tiles = untracked(() => ({ ...mosaic.tiles, ...nextMosaic.tiles }));
+            mosaic.relations = untracked(() => ({ ...mosaic.relations, ...nextMosaic.relations }));
           }
         }),
       );
