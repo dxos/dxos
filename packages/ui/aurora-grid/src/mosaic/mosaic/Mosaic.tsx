@@ -15,6 +15,7 @@ import {
   useDragStart,
   useHandleRearrangeDragEnd,
 } from '../dnd';
+import { dropAnimations } from '../dnd/drop-animations';
 import { useHandleCopyDragEnd, useHandleCopyDragOver, useHandleCopyDragStart } from '../dnd/hooks/useHandleCopy';
 import {
   useHandleMigrateDragEnd,
@@ -41,9 +42,13 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
 };
 
 const MosaicOverlay = () => {
-  const { activeId } = useMosaicDnd();
+  const { activeId, overlayDropAnimation } = useMosaicDnd();
   console.log('[activeId]', activeId);
-  return <DragOverlay>{activeId ? <MosaicOverlayTile id={activeId} /> : null}</DragOverlay>;
+  return (
+    <DragOverlay adjustScale={false} dropAnimation={dropAnimations[overlayDropAnimation]}>
+      {activeId ? <MosaicOverlayTile id={activeId} /> : null}
+    </DragOverlay>
+  );
 };
 
 const defaultMosaicContextValue: MosaicContextValue = {
