@@ -81,7 +81,6 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
       subscriptions.add(
         effect(() => {
-          console.log('[graph mosaic]', 'effect');
           if (graph && graph.root && mosaic && state.appState) {
             const nextMosaic = computeTreeViewMosaic(graph, state.appState, onSetTile);
             mosaic.tiles = untracked(() => ({ ...mosaic.tiles, ...nextMosaic.tiles }));

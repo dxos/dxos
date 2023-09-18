@@ -62,6 +62,7 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
         style,
         children,
         isActive,
+        isOverlay,
         isMigrationDestination,
       },
     },
@@ -83,6 +84,7 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
             draggableListeners={dragHandleListeners}
             style={style}
             rearranging={isActive}
+            isOverlay={isOverlay}
             {...(isMigrationDestination && { migrating: 'into' })}
             ref={forwardedRef}
           >

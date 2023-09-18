@@ -43,7 +43,6 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
 
 const MosaicOverlay = () => {
   const { activeId, overlayDropAnimation } = useMosaicDnd();
-  console.log('[activeId]', activeId);
   return (
     <DragOverlay adjustScale={false} dropAnimation={dropAnimations[overlayDropAnimation]}>
       {activeId ? <MosaicOverlayTile id={activeId} /> : null}
@@ -73,7 +72,6 @@ const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   const handleCopyDragEnd = useHandleCopyDragEnd();
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      console.log('[mosaic drag end]', event);
       handleMigrateDragEnd(event, handleCopyDragEnd(event, handleRearrangeDragEnd(event)));
     },
     [handleRearrangeDragEnd, handleCopyDragEnd, handleMigrateDragEnd],

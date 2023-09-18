@@ -82,7 +82,6 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
       }
       return acc;
     }, {});
-    console.log('[stack main]', 'effect', tiles, relations);
     mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
     mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
   }, [stack, stack.sections]);

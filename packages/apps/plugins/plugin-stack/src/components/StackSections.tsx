@@ -13,7 +13,6 @@ import { STACK_PLUGIN, StackModel } from '../types';
 export const StackSections: ForwardRefExoticComponent<DelegatorProps<StackModel> & RefAttributes<HTMLDivElement>> =
   forwardRef<HTMLDivElement, DelegatorProps<StackModel>>(({ children, isCopyDestination, isEmpty }, forwardedRef) => {
     const { t } = useTranslation(STACK_PLUGIN);
-    console.log('[stack sections]', children);
     return (
       <div
         role='none'

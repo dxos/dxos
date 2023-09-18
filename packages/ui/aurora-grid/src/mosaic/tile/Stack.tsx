@@ -29,8 +29,6 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
   const isCopyDestination = props.tile.id === copyDestinationId;
   const isEmpty = subtiles.length < 1;
 
-  console.log('[stack impl]', subtiles);
-
   return (
     <Delegator
       data={getData(props.tile.id)}
