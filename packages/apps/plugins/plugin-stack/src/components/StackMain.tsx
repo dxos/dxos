@@ -8,12 +8,15 @@ import { DeepSignal } from 'deepsignal';
 import React, { FC, forwardRef, Ref, useCallback, useEffect } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
+import { File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
 import { Mosaic, DelegatorProps, MosaicState, getDndId, Tile, useMosaic } from '@dxos/aurora-grid';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 
+import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 import { StackSections } from './StackSections';
+import { defaultFileTypes } from '../hooks';
 import { stackState } from '../stores';
 import { STACK_PLUGIN, StackModel, StackProperties } from '../types';
 
@@ -121,6 +124,13 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
+          <FileUpload
+            classNames='p-2'
+            fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+            onUpload={(file: FileType) => {
+              handleAdd(file);
+            }}
+          />
         </ButtonGroup>
       </div>
     </Main.Content>
