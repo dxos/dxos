@@ -2,36 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
+import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-// import { getSize } from '@dxos/aurora-theme';
-// import { CompoundButton } from '@dxos/react-appkit';
+import { getSize } from '@dxos/aurora-theme';
 
-import { StepHeading } from '../../../components';
+import { CompoundButton, StepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export type AdditionMethodChooserProps = JoinStepProps;
 
-// TODO(wittjosiah): Revive this.
 export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps) => {
-  // const disabled = !viewStateProps.active;
-  // const { send } = viewStateProps;
+  const disabled = !viewStateProps.active;
+  const { send } = viewStateProps;
 
   const { t } = useTranslation('os');
 
-  // const sharedButtonProps = {
-  //   disabled,
-  //   after: <CaretRight className={getSize(4)} weight='bold' />,
-  //   slots: { label: { className: 'text-sm' } },
-  // };
+  const sharedButtonProps = {
+    disabled,
+    after: <CaretRight className={getSize(4)} weight='bold' />,
+    slots: { label: { className: 'text-sm' } },
+  };
 
   return (
     <>
       <StepHeading>{t('addition method chooser title')}</StepHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
-        {/* <CompoundButton
+        <CompoundButton
           {...sharedButtonProps}
           description={t('create identity description')}
           before={<Plus className={getSize(6)} />}
@@ -60,7 +58,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
           data-testid='recover-identity'
         >
           {t('recover identity label')}
-        </CompoundButton> */}
+        </CompoundButton>
       </div>
     </>
   );
