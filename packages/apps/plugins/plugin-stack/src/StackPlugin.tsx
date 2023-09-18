@@ -65,14 +65,22 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         dndPlugin.provides.dnd.onMosaicChangeSubscriptions.push((event) => {
           const [_, stackId, entityId] = parseDndId(event.id);
           const stack = graph?.find(stackId)?.data as StackModel | undefined;
-          const sectionObject = graph?.find(entityId)?.data as TypedObject | undefined;
-          console.log('[stack plugin]', 'on mosaic change', stack?.sections, sectionObject);
-          if (stack && sectionObject) {
-            stack.sections.splice(stack.sections.length, 0, {
-              id: entityId,
-              index: event.index,
-              object: sectionObject,
-            });
+          if (stack) {
+            if (event.type === 'copy') {
+              const sectionObject = graph?.find(entityId)?.data as TypedObject | undefined;
+              if (stack && sectionObject) {
+                stack.sections.splice(stack.sections.length, 0, {
+                  id: entityId,
+                  index: event.index!,
+                  object: sectionObject,
+                });
+              }
+            } else if (event.type === 'rearrange') {
+              const sectionIndex = stack.sections.findIndex((section) => section.id === entityId);
+              if (sectionIndex >= 0) {
+                stack.sections[sectionIndex].index = event.index;
+              }
+            }
           }
         });
       }

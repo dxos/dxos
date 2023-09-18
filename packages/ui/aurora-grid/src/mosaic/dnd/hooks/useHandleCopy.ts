@@ -51,7 +51,7 @@ export const useHandleCopyDragEnd = () => {
         type: 'copy',
         id: copiedTile.id,
         toId: dnd.copyDestinationId,
-        ...(index && { index: copiedTile.index }),
+        ...(copiedTile.index && { index: copiedTile.index }),
       });
       // update animation
       dnd.overlayDropAnimation = 'into';
