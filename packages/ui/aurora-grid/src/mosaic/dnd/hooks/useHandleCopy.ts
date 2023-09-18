@@ -41,7 +41,7 @@ export const useHandleCopyDragEnd = () => {
       const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
       // update copied tile’s index
       const index = nextIndex(getSubtiles(relations[dnd.copyDestinationId].child, tiles), activeId, over?.id);
-      copiedTile.index = index ?? copiedTile.index;
+      copiedTile.index = index ?? 'a0';
       // update mosaic state
       tiles[copiedTile.id] = copiedTile;
       relations[copiedTile.id] = { parent: new Set([dnd.copyDestinationId]), child: new Set() };
@@ -51,7 +51,7 @@ export const useHandleCopyDragEnd = () => {
         type: 'copy',
         id: copiedTile.id,
         toId: dnd.copyDestinationId,
-        ...(index && { index }),
+        ...(index && { index: copiedTile.index }),
       });
       // update animation
       dnd.overlayDropAnimation = 'into';
