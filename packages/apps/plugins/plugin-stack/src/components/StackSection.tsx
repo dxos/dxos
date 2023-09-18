@@ -6,8 +6,9 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { forwardRef, ForwardRefExoticComponent, RefAttributes } from 'react';
 
+import { Graph } from '@braneframe/plugin-graph';
 import { ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { DelegatorProps } from '@dxos/aurora-grid';
+import { DelegatorProps, parseDndId } from '@dxos/aurora-grid';
 import {
   fineButtonDimensions,
   focusRing,
@@ -23,9 +24,9 @@ import {
 } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
-import { STACK_PLUGIN, StackSectionModel } from '../types';
+import { STACK_PLUGIN, StackModel } from '../types';
 
-type StackSectionProps = DelegatorProps<StackSectionModel> & {
+type StackSectionProps = DelegatorProps<Graph.Node<StackModel>> & {
   onRemove?: () => void;
 };
 
@@ -34,11 +35,22 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
   ListScopedProps<StackSectionProps>
 >(
   (
-    { onRemove = () => {}, data: section, dragHandleAttributes, dragHandleListeners, style, isActive, isOverlay },
+    {
+      onRemove = () => {},
+      data: { data: stack },
+      tile,
+      dragHandleAttributes,
+      dragHandleListeners,
+      style,
+      isActive,
+      isOverlay,
+    },
     forwardedRef,
   ) => {
+    const [_, _stackId, entityId] = parseDndId(tile.id);
+    const section = stack.sections?.find((section) => section.object.id === entityId);
     const { t } = useTranslation(STACK_PLUGIN);
-    return (
+    return section ? (
       <DensityProvider density='fine'>
         <ListItem.Root
           id={section.object.id}
@@ -85,6 +97,6 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
           </Button>
         </ListItem.Root>
       </DensityProvider>
-    );
+    ) : null;
   },
 );

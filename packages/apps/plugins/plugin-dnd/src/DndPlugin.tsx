@@ -6,7 +6,7 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { Graph, useGraph } from '@braneframe/plugin-graph';
-import { getDndId, Mosaic, parseDndId, Tile } from '@dxos/aurora-grid';
+import { Mosaic, parseDndId, Tile } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
@@ -19,6 +19,7 @@ const dnd: DndStore = deepSignal({
   },
   onMosaicChangeSubscriptions: [],
   onSetTileSubscriptions: [],
+  onCopyTileSubscriptions: [],
 });
 
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
@@ -41,10 +42,12 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
               return graph.find(nodeId);
             }}
             copyTile={(id, toId, mosaic) => {
-              const [_, nodeId] = parseDndId(id);
-              const [mosaicId] = parseDndId(toId);
-              const nextId = getDndId(mosaicId, nodeId);
-              return { ...mosaic.tiles[id], id: nextId };
+              return dnd.onCopyTileSubscriptions.length
+                ? dnd.onCopyTileSubscriptions.reduce(
+                    (tile, handler) => handler(tile, id, toId, mosaic),
+                    mosaic.tiles[id],
+                  )
+                : mosaic.tiles[id];
             }}
             onMosaicChange={(event) => {
               dnd.onMosaicChangeSubscriptions.forEach((handler) => {
@@ -58,7 +61,9 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
       },
       dnd,
       onSetTile: (tile: Tile, node: Graph.Node): Tile => {
-        return dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile);
+        return dnd.onSetTileSubscriptions.length
+          ? dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile)
+          : tile;
       },
     },
   };

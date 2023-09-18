@@ -33,11 +33,10 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
     getData,
     Delegator,
   } = useMosaic();
-  const Root = activeTile.variant === 'treeitem' ? List : 'div';
   return (
-    <Root role='none'>
+    <List role='none'>
       <Delegator data={getData(id)} tile={activeTile} isOverlay />
-    </Root>
+    </List>
   );
 };
 

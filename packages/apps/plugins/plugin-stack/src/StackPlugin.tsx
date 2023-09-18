@@ -5,17 +5,19 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { DndPluginProvides } from '@braneframe/plugin-dnd';
+import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';
-import { parseDndId } from '@dxos/aurora-grid';
-import { SpaceProxy } from '@dxos/client/echo';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { getDndId, parseDndId } from '@dxos/aurora-grid';
+import { SpaceProxy, TypedObject } from '@dxos/client/echo';
+import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionDelegator } from './components';
 import { stackState } from './stores';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
+import { STACK_PLUGIN, StackAction, StackModel, StackPluginProvides, StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -42,6 +44,37 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
           stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
         }
+      }
+      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const graph = graphPlugin?.provides.graph;
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
+        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {
+          if (tile.copyClass?.has('stack-section')) {
+            const [_, entityId] = parseDndId(originalId);
+            tile.id = getDndId(toId, entityId);
+            tile.variant = 'card';
+            tile.sortable = false;
+            tile.acceptCopyClass = undefined;
+            tile.acceptMigrationClass = undefined;
+          }
+          return tile;
+        });
+      }
+      if (dndPlugin && dndPlugin.provides.dnd?.onMosaicChangeSubscriptions) {
+        dndPlugin.provides.dnd.onMosaicChangeSubscriptions.push((event) => {
+          const [_, stackId, entityId] = parseDndId(event.id);
+          const stack = graph?.find(stackId)?.data as StackModel | undefined;
+          const sectionObject = graph?.find(entityId)?.data as TypedObject | undefined;
+          console.log('[stack plugin]', 'on mosaic change', stack?.sections, sectionObject);
+          if (stack && sectionObject) {
+            stack.sections.splice(stack.sections.length, 0, {
+              id: entityId,
+              index: 'a0',
+              object: sectionObject,
+            });
+          }
+        });
       }
     },
     unload: async () => {

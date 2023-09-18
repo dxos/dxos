@@ -20,7 +20,7 @@ export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorPr
   ({ data: props }, forwardedRef) => {
     switch (props.tile.variant) {
       case 'stack':
-        return <StackSections {...props} ref={forwardedRef as Ref<HTMLOListElement>} />;
+        return <StackSections {...props} ref={forwardedRef as Ref<HTMLDivElement>} />;
       case 'card':
         return <StackSection {...props} ref={forwardedRef as Ref<HTMLLIElement>} />;
       default:
@@ -52,8 +52,9 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   useEffect(() => {
     const tiles = stack.sections.reduce(
       (acc: MosaicState['tiles'], section) => {
-        acc[section.id] = {
-          id: getDndId(STACK_PLUGIN, stack.id, section.id),
+        const id = getDndId(STACK_PLUGIN, stack.id, section.id);
+        acc[id] = {
+          id,
           variant: 'card',
           index: section.index,
         };
@@ -66,13 +67,15 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
       if (id === rootTile.id) {
         Object.keys(tiles)
           .filter((id) => id !== rootTile.id)
-          .forEach(acc[id].child.add);
+          .forEach((childId) => {
+            acc[id].child.add(childId);
+          });
       } else {
         acc[id].parent.add(rootTile.id);
       }
       return acc;
     }, {});
-    console.log('[stack main]', 'effect');
+    console.log('[stack main]', 'effect', tiles, relations);
     mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
     mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
   }, [stack]);
