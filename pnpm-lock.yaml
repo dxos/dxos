@@ -436,6 +436,7 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/vault': workspace:*
       '@sentry/vite-plugin': ^0.7.2
@@ -456,16 +457,17 @@ importers:
       '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/vault': link:../../sdk/vault
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@sentry/vite-plugin': 0.7.2
       '@types/node': 18.11.9
       '@types/react': 18.0.21
