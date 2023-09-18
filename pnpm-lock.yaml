@@ -5575,7 +5575,9 @@ importers:
 
   packages/sdk/examples:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
@@ -5592,7 +5594,9 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     devDependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
