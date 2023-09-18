@@ -1,5 +1,4 @@
 ---
-title: Examples
 order: 30
 ---
 
@@ -27,8 +26,7 @@ A simple todo list app build with `dxos`.
 
 - Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/tasks)
 - Run [Tasks](http://tasks.dxos.org) on `dxos.org`
-- Generate your own tasks app using the [tasks application template](./cli/app-templates).
-  ![todomvc-dxos](../assets/images/tasks-app.png)
+  ![Tasks app demo shot](../assets/images/tasks-app.png)
 
 ## TodoMVC
 
