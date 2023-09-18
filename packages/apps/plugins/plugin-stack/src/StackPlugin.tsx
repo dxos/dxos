@@ -65,7 +65,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         dndPlugin.provides.dnd.onMosaicChangeSubscriptions.push((event) => {
           const [_, stackId, entityId] = parseDndId(event.id);
           const stack = graph?.find(stackId)?.data as StackModel | undefined;
-          if (stack) {
+          if (isStack(stack)) {
             if (event.type === 'copy') {
               const sectionObject = graph?.find(entityId)?.data as TypedObject | undefined;
               if (stack && sectionObject) {
