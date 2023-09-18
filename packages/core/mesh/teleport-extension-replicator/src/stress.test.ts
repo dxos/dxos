@@ -27,6 +27,7 @@ class TestAgent {
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
+  // prettier-ignore
   constructor(
     readonly keyring: Keyring,
     readonly peer: Teleport,
@@ -85,6 +86,7 @@ const assertState = async (model: Model, real: Real) => {
 };
 
 class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
+  // prettier-ignore
   constructor(
     readonly agent: AgentName,
     readonly feedKey: PublicKey,
@@ -111,6 +113,7 @@ class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
+  // prettier-ignore
   constructor(
     readonly agent: AgentName,
     readonly feedKey: PublicKey,

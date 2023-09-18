@@ -48,6 +48,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _subGraphs = new Set<SubgraphBuilder>();
 
+  // prettier-ignore
   constructor(
     readonly id: string,
     readonly label?: string,

@@ -18,6 +18,7 @@ export class SVGContext {
   private _size?: Size;
   private _center?: Point;
 
+  // prettier-ignore
   constructor(
     private readonly _scale: Scale = new Scale(),
     private readonly _centered: boolean = true,
