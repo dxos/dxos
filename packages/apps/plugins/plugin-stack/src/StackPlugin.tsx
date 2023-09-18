@@ -78,7 +78,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             } else if (event.type === 'rearrange') {
               const sectionIndex = stack.sections.findIndex((section) => section.id === entityId);
               if (sectionIndex >= 0) {
-                stack.sections[sectionIndex].index = event.index;
+                stack.sections.splice(sectionIndex, 1, {
+                  ...stack.sections[sectionIndex],
+                  index: event.index,
+                });
               }
             }
           }
