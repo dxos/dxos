@@ -18,6 +18,7 @@ export class ModuleSpecifier {
     return new ModuleSpecifier(pathWithDot, context);
   }
 
+  // prettier-ignore
   constructor(
     public readonly name: string,
     public readonly contextPath: string,

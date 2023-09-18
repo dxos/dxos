@@ -25,6 +25,7 @@ export type ServiceProvider<Service> = Service | (() => Service) | (() => Promis
  * Client/server service wrapper.
  */
 export class ServiceDescriptor<S> {
+  // prettier-ignore
   constructor(
     private readonly _service: pb.Service,
     private readonly _schema: Schema<any>,
