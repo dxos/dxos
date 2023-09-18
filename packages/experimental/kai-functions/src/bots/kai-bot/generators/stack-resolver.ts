@@ -24,6 +24,7 @@ const parseJson = (content: string) => {
 };
 
 export class ContactStackResolver implements Resolver<DocumentStack> {
+  // prettier-ignore
   constructor(
     private readonly _id: string,
     private readonly _chatModel: ChatModel,

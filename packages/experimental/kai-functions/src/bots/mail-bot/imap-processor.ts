@@ -24,6 +24,7 @@ const blacklist = [/noreply/, /no-reply/, /notifications/, /billing/, /support/]
 export class ImapProcessor {
   private _connection?: ImapSimple;
 
+  // prettier-ignore
   constructor(
     private readonly _id: string,
     private readonly _config: ImapConfig,

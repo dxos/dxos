@@ -12,6 +12,7 @@ import { defaultIdAccessor, emptyGraph, GraphData, GraphLink } from '../graph';
 export class GraphBuilder<N> {
   readonly updated = new EventEmitter<GraphData<N>>();
 
+  // prettier-ignore
   constructor(
     private readonly _idAccessor = defaultIdAccessor,
     private readonly _graph = emptyGraph,
