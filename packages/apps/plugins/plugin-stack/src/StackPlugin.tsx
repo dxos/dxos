@@ -70,7 +70,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           if (stack && sectionObject) {
             stack.sections.splice(stack.sections.length, 0, {
               id: entityId,
-              index: 'a0',
+              index: event.index,
               object: sectionObject,
             });
           }

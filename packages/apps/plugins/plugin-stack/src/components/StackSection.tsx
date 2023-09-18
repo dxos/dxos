@@ -26,30 +26,23 @@ import { Surface } from '@dxos/react-surface';
 
 import { STACK_PLUGIN, StackModel } from '../types';
 
-type StackSectionProps = DelegatorProps<Graph.Node<StackModel>> & {
-  onRemove?: () => void;
-};
+type StackSectionProps = DelegatorProps<Graph.Node<StackModel>>;
 
 export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
   ListScopedProps<StackSectionProps>
 >(
   (
-    {
-      onRemove = () => {},
-      data: { data: stack },
-      tile,
-      dragHandleAttributes,
-      dragHandleListeners,
-      style,
-      isActive,
-      isOverlay,
-    },
+    { data: { data: stack }, tile, dragHandleAttributes, dragHandleListeners, style, isActive, isOverlay },
     forwardedRef,
   ) => {
     const [_, _stackId, entityId] = parseDndId(tile.id);
-    const section = stack.sections?.find((section) => section.object.id === entityId);
+    const sectionIndex = stack.sections?.findIndex((section) => section.object.id === entityId) ?? -1;
+    const section = stack.sections?.[sectionIndex];
     const { t } = useTranslation(STACK_PLUGIN);
+    const handleRemove = () => {
+      stack.sections.splice(sectionIndex, 1);
+    };
     return section ? (
       <DensityProvider density='fine'>
         <ListItem.Root
@@ -90,7 +83,7 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
           <Button
             variant='ghost'
             classNames={['self-stretch justify-start rounded-is-none', hoverableFocusedControls]}
-            onClick={onRemove}
+            onClick={handleRemove}
           >
             <span className='sr-only'>{t('remove section label')}</span>
             <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
