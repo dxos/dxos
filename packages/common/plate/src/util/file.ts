@@ -66,13 +66,19 @@ export class FileEffect implements Effect<{ overwrite?: boolean }, FileApplyResu
   }
 
   toString() {
+    const PREVIEW_CONTENT = 150;
     return (
       [
         this.copyOf ? 'copy:' : 'file:',
         this.path ? ellipsis(relative(this.path)) : '',
         this.copyOf ? 'from ' + ellipsis(relative(this.copyOf)) : '',
         this.content ? kib(this.content.length) : '',
-      ].join('\t') + (this.content ? '\n' + chalk.gray(this.content) : '')
+      ].join('\t') +
+      (this.content
+        ? '\n' +
+          chalk.gray(this.content.slice(0, PREVIEW_CONTENT)) +
+          (this.content.length > PREVIEW_CONTENT ? ' ...' : '')
+        : '')
     );
   }
 }

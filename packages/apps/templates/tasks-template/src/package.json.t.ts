@@ -15,7 +15,7 @@ export default template.define.text({
               scripts: {
                 'gen-schema': 'dxtype src/proto/schema.proto src/proto/gen/schema.ts',
                 prebuild: 'npm run gen-schema',
-              },
+              }
             }
           : {},
       },
