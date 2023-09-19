@@ -45,6 +45,28 @@ export type SignalAgentConfig = {
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
 
+  defaultSpec(): SignalTestSpec {
+    return {
+      servers: 1,
+      agents: 10,
+      peersPerAgent: 10,
+      serversPerAgent: 1,
+      signalArguments: [
+        // 'p2pserver'
+        'globalsubserver', // TODO(burdon): Import/define types (for KUBE?)
+      ],
+      topicCount: 1,
+      topicsPerAgent: 1,
+      startWaitTime: 1_000,
+      discoverTimeout: 5_000,
+      repeatInterval: 1_000,
+      agentWaitTime: 5_000,
+      duration: 20_000,
+      type: 'discovery',
+      // serverOverride: 'ws://localhost:1337/.well-known/dx/signal'
+    };
+  }
+
   async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     await Promise.all(
       range(spec.servers).map((num) => this.builder.createSignalServer(num, outDir, spec.signalArguments)),
