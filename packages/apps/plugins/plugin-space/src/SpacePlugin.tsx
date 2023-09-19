@@ -104,6 +104,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         });
       }
 
+      // Calculate the active space based on the graph and active node.
       subscriptions.add(
         effect(async () => {
           if (!treeView.activeNode) {
@@ -127,7 +128,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }),
       );
 
-      // TODO(burdon): Comment.
+      // Broadcast active node to other peers in the space.
       subscriptions.add(
         effect(() => {
           const send = () => {
@@ -148,7 +149,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }),
       );
 
-      // TODO(burdon): Comment.
+      // Listen for active nodes from other peers in the space.
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
@@ -162,10 +163,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   state.viewers = [
                     ...state.viewers.filter(
                       (viewer) =>
-                        viewer.identityKey.equals(identityKey) &&
-                        viewer.spaceKey.equals(spaceKey) &&
-                        !removed.some((objectId) => objectId === viewer.objectId) &&
-                        !added.some((objectId) => objectId === viewer.objectId),
+                        !viewer.identityKey.equals(identityKey) ||
+                        !viewer.spaceKey.equals(spaceKey) ||
+                        (viewer.identityKey.equals(identityKey) &&
+                          viewer.spaceKey.equals(spaceKey) &&
+                          !removed.some((objectId) => objectId === viewer.objectId) &&
+                          !added.some((objectId) => objectId === viewer.objectId)),
                     ),
                     ...added.map((objectId) => ({
                       identityKey,
@@ -181,14 +184,15 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         }).unsubscribe,
       );
 
-      // TODO(burdon): Comment.
+      // Keyboard shortcuts for opening shell.
+      //   `Ctrl+.`: Share active space
+      //   `Ctrl+Shift+.`: Open identity dialog
       handleKeyDown = (event) => {
         const modifier = event.ctrlKey || event.metaKey;
         if (event.key === '>' && event.shiftKey && modifier) {
           void client.shell.open();
         } else if (event.key === '.' && modifier) {
           const spaceKey = state.active?.key as PublicKey;
-          console.log({ spaceKey: spaceKey?.truncate() });
           if (spaceKey) {
             void client.shell.shareSpace({ spaceKey });
           }
