@@ -15,6 +15,7 @@ import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN, GhIssueIdentifier } from '../props';
 
+// TODO(burdon): Where do "properties" come from?
 export const MarkdownActions = ({
   data: [model, properties, editorRef],
 }: {
