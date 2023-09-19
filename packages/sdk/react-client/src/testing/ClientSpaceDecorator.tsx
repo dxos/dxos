@@ -57,7 +57,7 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
         fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
-          await client.halo.createIdentity({ displayName: faker.person.firstName() });
+          await client.halo.createIdentity();
           schema && client.spaces.addSchema(schema);
           const space = await client.spaces.create({ name: faker.animal.bird() });
           await onCreateSpace?.(space);
@@ -98,7 +98,7 @@ export const setupPeersInSpace = async (options: Omit<PeersInSpaceProps, 'childr
   register && registerSignalFactory();
   const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
-  await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.person.firstName() })));
+  await Promise.all(clients.map((client) => client.halo.createIdentity()));
   schema && clients.map((client) => client.spaces.addSchema(schema));
   const space = await clients[0].spaces.create({ name: faker.animal.bird() });
   await onCreateSpace?.(space);

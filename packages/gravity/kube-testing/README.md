@@ -3,13 +3,19 @@
 
 KUBE Testing.
 
-## Installation
-
+## Simple Usage
 ```bash
-pnpm i @dxos/kube-testing
+pnpm run-tests <testname>
 ```
 
-## Usage
+tests currently include:
+
+* `signal`
+* `transport`
+* `echo`
+* `replication`
+
+For additional usage, `pnpm run-tests --help`
 
 ## DXOS Resources
 
