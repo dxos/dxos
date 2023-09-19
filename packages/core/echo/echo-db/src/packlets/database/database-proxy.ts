@@ -25,6 +25,8 @@ export type MutateResult = {
   batch: Batch;
 };
 
+export const COMMIT_BATCH_INACTIVITY_DEFAULT = 200;
+
 export type BatchUpdate = {
   size?: number;
   duration?: number; // Set if batch is complete (or failed).
@@ -38,7 +40,6 @@ type DatabaseProxyParams = {
 
   /**
    * Maximum number of mutations in a batch.
-   * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
    */
   maxBatchSize?: number;
 
@@ -73,7 +74,6 @@ export class DatabaseProxy {
   private _pendingBatches = new Map<string, Batch>();
   private _currentBatch?: Batch;
 
-  private _opening = false;
   private _open = false;
 
   private _subscriptionOpen = false;
@@ -81,11 +81,20 @@ export class DatabaseProxy {
   private readonly _service: DataService;
   public readonly _itemManager: ItemManager;
   private readonly _spaceKey: PublicKey;
-
-  constructor(params: DatabaseProxyParams) {
-    this._service = params.service;
-    this._itemManager = params.itemManager;
-    this._spaceKey = params.spaceKey;
+  private _maxBatchSize: number;
+  private readonly _commitBatchInactivity: number;
+  constructor({
+    service,
+    itemManager,
+    spaceKey,
+    maxBatchSize = 64,
+    commitBatchInactivity = COMMIT_BATCH_INACTIVITY_DEFAULT,
+  }: DatabaseProxyParams) {
+    this._service = service;
+    this._itemManager = itemManager;
+    this._spaceKey = spaceKey;
+    this._maxBatchSize = maxBatchSize;
+    this._commitBatchInactivity = commitBatchInactivity;
   }
 
   get isReadOnly(): boolean {
@@ -100,10 +109,16 @@ export class DatabaseProxy {
     return this._currentBatch;
   }
 
+  get maxBatchSize(): number {
+    return this.maxBatchSize;
+  }
+
+  set maxBatchSize(value: number) {
+    this._maxBatchSize = value;
+  }
+
   @synchronized
   async open(modelFactory: ModelFactory): Promise<void> {
-    this._opening = true;
-
     this._itemManager._debugLabel = 'proxy';
 
     // Close previous subscription.
@@ -367,22 +382,28 @@ export class DatabaseProxy {
         batch,
       };
     } finally {
-      // Note: Commit batch after BATCH_COMMIT_AFTER idling without new mutations.
+      // Check if batch is not to big.
+      if (
+        this._currentBatch &&
+        this._currentBatch.data.objects &&
+        this._currentBatch.data.objects.length >= this._maxBatchSize
+      ) {
+        this.commitBatch();
+      }
+
+      // Note: Commit batch after `commitBatchInactivity` idling without new mutations.
       if (batchCreated) {
         // Commit batch after last mutation with delay if there will be no new mutations.
         this._currentBatchCtx = this._ctx.derive();
-        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), this._commitBatchInactivity);
       } else if (this._currentBatchCtx) {
         // Reset the timer.
         // If `this._currentBatchCtx` is set then Batch was created by one of the previous calls of `.mutate()`.
         invariant(this._currentBatch);
         void this._currentBatchCtx.dispose();
-        if (this._currentBatch.data.objects && this._currentBatch.data.objects.length >= BATCH_SIZE_LIMIT) {
-          this.commitBatch();
-        } else {
-          this._currentBatchCtx = this._ctx.derive();
-          scheduleTask(this._currentBatchCtx, () => this.commitBatch(), BATCH_COMMIT_AFTER);
-        }
+
+        this._currentBatchCtx = this._ctx.derive();
+        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), this._commitBatchInactivity);
       }
     }
   }
