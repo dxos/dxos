@@ -1,5 +1,5 @@
 # Class `ApiError`
-<sub>Declared in [packages/sdk/errors/dist/types/src/errors.d.ts:14]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/base-errors.d.ts:14]()</sub>
 
 
 User facing API Errors.
@@ -19,7 +19,7 @@ Arguments:
 
 `message`: <code>string</code>
 
-`context`: <code>any</code>
+`context`: <code>Record&lt;string, any&gt;</code>
 
 
 
@@ -35,7 +35,7 @@ Type: <code>string</code>
 
 
 ### [context]()
-Type: <code>any</code>
+Type: <code>Record&lt;string, any&gt;</code>
 
 
 

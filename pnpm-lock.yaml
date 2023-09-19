@@ -24,7 +24,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/beast': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/conform': workspace:^0.1.0
+      '@dxos/conform': workspace:*
       '@dxos/esbuild': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/eslint-plugin': workspace:*
@@ -5583,7 +5583,9 @@ importers:
 
   packages/sdk/examples:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
@@ -5600,7 +5602,9 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     devDependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
@@ -40352,7 +40356,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.23.0
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

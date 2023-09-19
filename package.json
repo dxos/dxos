@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -28,7 +28,7 @@
     "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\""
   },
   "dependencies": {
-    "@dxos/conform": "workspace:^0.1.0",
+    "@dxos/conform": "workspace:*",
     "execa": "^5.1.0",
     "tslib": "^2.3.0"
   },

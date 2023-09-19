@@ -1,5 +1,5 @@
 # Class `SystemError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:22]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/base-errors.d.ts:20]()</sub>
 
 
 Internal system errors.
