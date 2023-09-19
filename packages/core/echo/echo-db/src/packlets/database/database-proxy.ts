@@ -20,13 +20,6 @@ import { ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
 
-export const BATCH_COMMIT_AFTER = 200;
-/**
- * Maximum number of mutations in a batch.
- * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
- */
-const BATCH_SIZE_LIMIT = 64;
-
 export type MutateResult = {
   objectsUpdated: Item<any>[];
   batch: Batch;
@@ -36,6 +29,23 @@ export type BatchUpdate = {
   size?: number;
   duration?: number; // Set if batch is complete (or failed).
   error?: Error;
+};
+
+type DatabaseProxyParams = {
+  service: DataService;
+  itemManager: ItemManager;
+  spaceKey: PublicKey;
+
+  /**
+   * Maximum number of mutations in a batch.
+   * Note: It is used only in auto created batches, if user creates/commits batch outside it will be ignored.
+   */
+  maxBatchSize?: number;
+
+  /**
+   * Time of inactivity in milliseconds after which batch will be committed.
+   */
+  commitBatchInactivity?: number;
 };
 
 /**
@@ -68,11 +78,15 @@ export class DatabaseProxy {
 
   private _subscriptionOpen = false;
 
-  constructor(
-    private readonly _service: DataService,
-    public readonly _itemManager: ItemManager,
-    private readonly _spaceKey: PublicKey,
-  ) {}
+  private readonly _service: DataService;
+  public readonly _itemManager: ItemManager;
+  private readonly _spaceKey: PublicKey;
+
+  constructor(params: DatabaseProxyParams) {
+    this._service = params.service;
+    this._itemManager = params.itemManager;
+    this._spaceKey = params.spaceKey;
+  }
 
   get isReadOnly(): boolean {
     return false;
