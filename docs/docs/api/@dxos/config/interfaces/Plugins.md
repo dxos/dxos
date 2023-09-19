@@ -4,6 +4,12 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
+### [epochMonitor]()
+Type: <code>[EpochMontior](/api/@dxos/config/interfaces/EpochMontior)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [functions]()
 Type: <code>[Functions](/api/@dxos/config/interfaces/Functions)</code>
 

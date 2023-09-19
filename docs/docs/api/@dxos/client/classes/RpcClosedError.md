@@ -1,5 +1,5 @@
 # Class `RpcClosedError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:32]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:7]()</sub>
 
 
 Thrown when request was terminated because the RPC endpoint has been closed.
