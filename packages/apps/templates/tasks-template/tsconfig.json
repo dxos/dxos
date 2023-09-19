@@ -1,0 +1,28 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "@dxos/test",
+      "node"
+    ]
+  },
+  "include": [
+    "package.json",
+    "src",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../../common/plate"
+    },
+    {
+      "path": "../bare-template"
+    }
+  ]
+}

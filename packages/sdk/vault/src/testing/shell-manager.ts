@@ -11,6 +11,7 @@ export class ShellManager extends NaturalShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
 
+  // prettier-ignore
   constructor(
     override readonly page: Page,
     readonly inIFrame = true,

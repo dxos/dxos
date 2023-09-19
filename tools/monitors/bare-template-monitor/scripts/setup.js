@@ -17,9 +17,10 @@ const setup = async () => {
 
   console.log('Installing dependencies...');
   await exec('npm install --no-package-lock');
+  await exec('npm exec playwright install');
 
   console.log('Creating app...');
-  await exec('dx app create --template bare tmp');
+  await exec('npm exec dx app create tmp -- --template bare');
 
   console.log('Installing app dependencies...');
   await exec('npm install --no-package-lock', {

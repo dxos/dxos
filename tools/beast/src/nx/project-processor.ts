@@ -13,6 +13,7 @@ import { WorkspaceProcessor } from '../nx';
 export class ProjectProcessor {
   private readonly _project: Project;
 
+  // prettier-ignore
   constructor(
     private readonly _workspace: WorkspaceProcessor,
     packageName: string,

@@ -1,0 +1,14 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.app.tasks;
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  bool completed = 2;
+}

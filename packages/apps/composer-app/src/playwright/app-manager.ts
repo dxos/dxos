@@ -14,6 +14,7 @@ export class AppManager {
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
+  // prettier-ignore
   constructor(
     private readonly _browser: Browser,
     inIframe?: boolean,

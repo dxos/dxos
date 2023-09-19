@@ -60,6 +60,7 @@ class TraceInjector extends Visitor {
 
   private _sourceMap?: SourceMapConsumer;
 
+  // prettier-ignore
   constructor(
     private readonly filename: string,
     private readonly code: string,

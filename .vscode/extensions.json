@@ -5,6 +5,7 @@
     "hediet.vscode-drawio",
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "zxh404.vscode-proto3"
+    "zxh404.vscode-proto3",
+    "zjcompt.es6-string-javascript"
   ]
 }

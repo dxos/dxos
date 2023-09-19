@@ -30,6 +30,7 @@ export class DevServer {
   private _port?: number;
   private _registrationId?: string;
 
+  // prettier-ignore
   constructor(
     private readonly _client: Client,
     private readonly _options: DevServerOptions,

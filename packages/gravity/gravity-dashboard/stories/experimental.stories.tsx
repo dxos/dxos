@@ -106,6 +106,7 @@ class CircularLayout {
   private _map = new Map<string, number>();
   private _radius: Fraction = [1, 1];
 
+  // prettier-ignore
   constructor(
     private readonly _context: SVGContext,
     private readonly _duraction = 1000,
@@ -250,10 +251,7 @@ class MeshLayout {
   private readonly _circleLayout: CircularLayout;
   private readonly _kubeLayout: KubeLayout;
 
-  constructor(
-    private readonly _context: SVGContext,
-    private readonly _radius: Fraction = [5, 2],
-  ) {
+  constructor(private readonly _context: SVGContext, private readonly _radius: Fraction = [5, 2]) {
     this._circleLayout = useMemo(() => new CircularLayout(this._context).initialize(this._radius), []);
     this._kubeLayout = useMemo(() => new KubeLayout(this._context).initialize([3, 5]), []);
   }
