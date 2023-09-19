@@ -10,6 +10,7 @@ import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
@@ -40,6 +41,10 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
     getGroupingValue: (value) => value.connection?.remotePeerId?.truncate(),
     size: 80,
   }),
+  helper.accessor((connection) => connection.connection?.identity, {
+    id: 'identity',
+    size: 160,
+  }),
   helper.accessor((connection) => connection.connection?.state, {
     id: 'state',
     getGroupingValue: (value) => value.connection?.state,
@@ -66,6 +71,19 @@ const columns: TableColumnDef<SwarmConnection, any>[] = [
 export const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
   const { data: swarms = [] } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
+  const spaces = useSpaces({ all: true });
+  const identityMap = new ComplexMap<PublicKey, SpaceMember>(PublicKey.hash);
+
+  for (const space of spaces) {
+    const members = useMembers(space.key);
+    for (const member of members) {
+      // TODO(nf): need to iterate through all the peerstates?
+      if (member.peerStates?.length && member.peerStates[0].peerId) {
+        identityMap.set(member.peerStates[0].peerId, member);
+      }
+    }
+  }
+
   const [sessionId, setSessionId] = useState<PublicKey>();
   const handleSelect = (selected: SwarmConnection[] | undefined) => {
     setSessionId(selected?.[0].connection?.sessionId);
@@ -78,6 +96,13 @@ export const SwarmPanel = () => {
       connections.push(swarm);
     } else {
       for (const connection of swarm.connections ?? []) {
+        const identity = identityMap.get(connection.remotePeerId)?.identity;
+        if (identity) {
+          connection.identity = identity.identityKey.truncate();
+          if (identity.profile?.displayName) {
+            connection.identity = connection.identity + ' (' + identity.profile?.displayName + ')';
+          }
+        }
         connectionMap.set(connection.sessionId, connection);
         connections.push({ ...swarm, connection });
       }
@@ -112,6 +137,8 @@ const stateFormat: Record<string, { className?: string }> = {
   CREATED: {},
   CLOSING: { className: 'text-red-500' },
   CLOSED: { className: 'text-red-500' },
+  ABORTING: { className: 'text-red-300' },
+  ABORTED: { className: 'text-red-300' },
 };
 
 const getStats = (connection: ConnectionInfo) => {
