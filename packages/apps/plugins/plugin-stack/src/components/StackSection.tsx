@@ -55,54 +55,56 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
       return null;
     }
     return (
-      <DensityProvider density='fine'>
-        <ListItem.Root
-          id={tile.id}
-          classNames={[
-            surfaceElevation({ elevation: 'group' }),
-            inputSurface,
-            hoverableControls,
-            'grow rounded',
-            isOverlay && staticHoverableControls,
-            isPreview ? 'opacity-50' : isActive ? 'opacity-0' : 'opacity-100',
-          ]}
-          ref={forwardedRef}
-          style={style}
-        >
-          <ListItem.Heading classNames='sr-only'>{get(object, 'title', t('generic section heading'))}</ListItem.Heading>
+      <ListItem.Root id={tile.id} classNames='grow is-full pbe-2' style={style} ref={forwardedRef}>
+        <DensityProvider density='fine'>
           <div
+            role='none'
             className={mx(
-              fineButtonDimensions,
-              focusRing,
-              hoverableFocusedKeyboardControls,
-              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-              isPreview ? 'invisible' : isOverlay && 'text-primary-600 dark:text-primary-300',
+              surfaceElevation({ elevation: 'group' }),
+              inputSurface,
+              hoverableControls,
+              'grow flex rounded',
+              isOverlay && staticHoverableControls,
+              isPreview ? 'opacity-50' : isActive ? 'opacity-0' : 'opacity-100',
             )}
-            {...dragHandleAttributes}
-            {...dragHandleListeners}
           >
-            <DotsSixVertical
-              weight={isOverlay ? 'bold' : 'regular'}
-              className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
-            />
+            <ListItem.Heading classNames='sr-only'>
+              {get(object, 'title', t('generic section heading'))}
+            </ListItem.Heading>
+            <div
+              className={mx(
+                fineButtonDimensions,
+                focusRing,
+                hoverableFocusedKeyboardControls,
+                'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
+                isPreview ? 'invisible' : isOverlay && 'text-primary-600 dark:text-primary-300',
+              )}
+              {...dragHandleAttributes}
+              {...dragHandleListeners}
+            >
+              <DotsSixVertical
+                weight={isOverlay ? 'bold' : 'regular'}
+                className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
+              />
+            </div>
+            <div role='none' className='flex-1'>
+              <Surface role='section' data={object} />
+            </div>
+            <Button
+              variant='ghost'
+              classNames={[
+                'self-stretch justify-start rounded-is-none',
+                hoverableFocusedControls,
+                isPreview && 'invisible',
+              ]}
+              onClick={handleRemove}
+            >
+              <span className='sr-only'>{t('remove section label')}</span>
+              <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
+            </Button>
           </div>
-          <div role='none' className='flex-1'>
-            <Surface role='section' data={object} />
-          </div>
-          <Button
-            variant='ghost'
-            classNames={[
-              'self-stretch justify-start rounded-is-none',
-              hoverableFocusedControls,
-              isPreview && 'invisible',
-            ]}
-            onClick={handleRemove}
-          >
-            <span className='sr-only'>{t('remove section label')}</span>
-            <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
-          </Button>
-        </ListItem.Root>
-      </DensityProvider>
+        </DensityProvider>
+      </ListItem.Root>
     );
   },
 );
