@@ -30,7 +30,7 @@ export const cursor = '#ffffff';
 const monospace = get(tokens, 'fontFamily.mono', ['monospace']).join(',');
 
 export const markdownTheme = {
-  // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated
+  // TODO(thure): consider whether these commented-out rules from one-dark-theme should be integrated.
   // '&': {
   //   color: ivory,
   //   backgroundColor: background
@@ -91,6 +91,9 @@ export const markdownTheme = {
   },
   '& .cm-line': {
     paddingInline: 0,
+  },
+  '& .cm-line *': {
+    lineHeight: 1.6,
   },
   '& .cm-selectionBackground': {
     background: get(tokens, 'extend.colors.primary.150', '#00ffff') + 'aa',
@@ -189,7 +192,7 @@ export const markdownDarkHighlighting = HighlightStyle.define(
         tags.invalid,
       ],
       color: 'inherit !important',
-      opacity: '0.5',
+      // opacity: '0.5',
     },
     {
       tag: [tags.link, tags.url],
