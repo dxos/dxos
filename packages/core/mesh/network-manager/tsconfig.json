@@ -43,9 +43,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/errors"
-    },
-    {
       "path": "../../halo/credentials"
     },
     {

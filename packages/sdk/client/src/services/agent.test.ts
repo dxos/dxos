@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { afterTest, test } from '@dxos/test';
 
-import { Client } from '../client';
 import { fromAgent } from './agent';
+import { Client } from '../client';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {

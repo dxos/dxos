@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [branch]()
 Type: <code>string</code>
@@ -32,3 +31,5 @@ Version from package.json.
 
 Options:
   - proto3_optional = true
+
+    

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -87,9 +87,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -103,7 +100,6 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -124,8 +120,6 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

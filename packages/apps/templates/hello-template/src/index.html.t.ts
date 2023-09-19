@@ -1,12 +1,15 @@
-import { text, defineTemplate } from '@dxos/plate';
-import { indexHtml } from '@dxos/bare-template';
+import { plate } from '@dxos/plate';
 
-import config from './config.t';
+import indexHtml from '@dxos/bare-template/dist/src/index.html.t';
 
-export default defineTemplate(
-  (context) => {
-    const { input: { tailwind, react, name } } = context;
-    const darkModeScript = text`
+import template from './template.t';
+
+export default template.define.text({
+  content: async (context) => {
+    const {
+      input: { tailwind, react, name },
+    } = context;
+    const darkModeScript = plate`
     <script>
       // On page load or when changing themes, best to add inline in 'head' to avoid FOUC
       if (
@@ -28,7 +31,7 @@ export default defineTemplate(
       // localStorage.removeItem('theme')
     </script>
     `;
-    const plainHtmlWelcome = text`
+    const plainHtmlWelcome = plate`
     <div class='dxos flex justify-center align-middle'>
       <div class='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>
         <img src='dxos-white.svg' class='mb-10 dark' />
@@ -38,11 +41,14 @@ export default defineTemplate(
         <p>
           See <code>index.html</code> and <code>src/main.ts</code>
         </p>
-        ${tailwind && `<p>
+        ${
+          tailwind &&
+          `<p>
           <a href='https://tailwindcss.com/docs' target='_blank' rel='noreferrer'>
             Tailwind
           </a> is available.
-        </p>`}
+        </p>`
+        }
         <p>
           Add your <code>css</code> to <code>src/index.css</code> or import <code>.css</code> files from your 
           <code>.ts</code> files directly.
@@ -85,13 +91,13 @@ console.log(client.toJSON());
       </div>
     </div>
     `;
-    return indexHtml({
+    const inherited = await indexHtml({
       ...context,
       slots: {
         head: darkModeScript,
-        body: react ? '' : plainHtmlWelcome
-      }
+        body: react ? '' : plainHtmlWelcome,
+      },
     });
+    return inherited?.files?.[0]?.content ?? '';
   },
-  { config }
-);
+});

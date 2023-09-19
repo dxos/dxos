@@ -6,7 +6,7 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
+import { ThemeFunction, ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -15,9 +15,10 @@ import { translationsPlugins } from './util';
 
 export type ThemePluginOptions = {
   appName?: string;
+  tx?: ThemeFunction<any>;
 };
 
-export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
+export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
@@ -43,14 +44,16 @@ export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' 
       return modeQuery?.removeEventListener('change', setTheme);
     },
     provides: {
-      context: ({ children }) => (
-        <ThemeProvider {...{ tx: auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
-          <Toast.Provider>
-            <Tooltip.Provider>{children}</Tooltip.Provider>
-            <Toast.Viewport />
-          </Toast.Provider>
-        </ThemeProvider>
-      ),
+      context: ({ children }) => {
+        return (
+          <ThemeProvider {...{ tx: propsTx ?? auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+            <Toast.Provider>
+              <Tooltip.Provider>{children}</Tooltip.Provider>
+              <Toast.Viewport />
+            </Toast.Provider>
+          </ThemeProvider>
+        );
+      },
     },
   };
 };

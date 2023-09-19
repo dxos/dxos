@@ -11,7 +11,11 @@ export class ShellManager extends NaturalShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
 
-  constructor(override readonly page: Page, readonly inIFrame = true) {
+  // prettier-ignore
+  constructor(
+    override readonly page: Page,
+    readonly inIFrame = true,
+  ) {
     super();
     this.page.on('console', (message) => this._onConsoleMessage(message));
   }

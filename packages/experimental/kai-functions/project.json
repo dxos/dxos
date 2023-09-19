@@ -30,8 +30,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/kai-functions/**/*.{ts,js}"
-        ]
+          "packages/experimental/kai-functions/**/!(*.d).{ts,js}"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

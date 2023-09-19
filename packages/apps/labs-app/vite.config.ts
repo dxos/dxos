@@ -69,7 +69,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-thread/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
         // TODO(burdon): Required until integrated with theme.
-        resolve(__dirname, './node_modules/@dxos/aurora-grid/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),

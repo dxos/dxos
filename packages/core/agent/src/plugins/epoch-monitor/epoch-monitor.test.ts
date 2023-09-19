@@ -43,7 +43,7 @@ describe('EpochMonitor', () => {
 
     {
       // TODO(burdon): Create mutations and wait for epoch to be triggered.
-      const space = await client.createSpace();
+      const space = await client.spaces.create();
       expect(space.key).to.exist;
 
       // TODO(burdon): Race condition if attempting to close while space waiting to be ready.

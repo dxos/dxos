@@ -1,14 +1,19 @@
-import { text, defineTemplate } from "@dxos/plate";
-import config from "../config.t";
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(({ input })=> {
-  const { tailwind } = input;
-  return !tailwind ? null : text`
-  {
-    "recommendations": [
-      "csstools.postcss",
-      "bradlc.vscode-tailwindcss"
-    ]
-  }
-  `
-}, { config});
+export default template.define.text({
+  content: ({ input }) => {
+    const { tailwind } = input;
+    return (
+      tailwind &&
+      plate`
+      {
+        "recommendations": [
+          "csstools.postcss",
+          "bradlc.vscode-tailwindcss"
+        ]
+      }
+      `
+    );
+  },
+});

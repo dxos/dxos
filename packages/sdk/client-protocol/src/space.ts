@@ -10,7 +10,7 @@ import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/p
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
-import { CancellableInvitationObservable } from './invitations';
+import { CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
   get db(): DatabaseProxy;
@@ -31,6 +31,8 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
+
+  removeMember(memberKey: PublicKey): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -60,7 +62,7 @@ export interface Space {
    */
   get pipeline(): MulticastObservable<SpaceData.PipelineState>;
 
-  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get invitations(): MulticastObservable<CancellableInvitation[]>;
   get members(): MulticastObservable<SpaceMember[]>;
 
   get internal(): SpaceInternal;
@@ -78,7 +80,7 @@ export interface Space {
 
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
-  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
+  share(options?: Partial<Invitation>): CancellableInvitation;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }

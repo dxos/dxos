@@ -34,8 +34,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/agent/**/*.{ts,js}"
-        ]
+          "packages/core/agent/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

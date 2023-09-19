@@ -26,15 +26,24 @@ import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TablePlugin } from '@braneframe/plugin-table';
+import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
+import {
+  auroraTheme,
+  bindTheme,
+  focusRing,
+  groupSurface,
+  mx,
+  popperMotion,
+  surfaceElevation,
+} from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { Defaults } from '@dxos/react-client';
 import { PluginProvider } from '@dxos/react-surface';
 
@@ -50,23 +59,41 @@ const main = async () => {
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
 
-  // TODO(burdon): Normalize telemetry namespace.
-  await initializeAppTelemetry({ namespace: 'labs.dxos.org', config: config! });
+  // TODO(burdon): Custom theme (e.g., primary).
+  const labsTx = bindTheme({
+    ...auroraTheme,
+    popover: {
+      content: (_props, ...etc) =>
+        mx(
+          'z-[30] rounded-xl',
+          popperMotion,
+          // 'bg-orange-200',
+          groupSurface,
+          surfaceElevation({ elevation: 'group' }),
+          focusRing,
+          ...etc,
+        ),
+    },
+  });
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <PluginProvider
         plugins={[
-          IntentPlugin(),
-          ThemePlugin({ appName: 'Labs' }),
+          // TODO(burdon): Document ordering requirements and normalize with composer-app.
+          // TODO(burdon): Normalize namespace across apps.
+          TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
           ClientPlugin({ config, services, debugIdentity: debug }),
           IntentPlugin(),
-          DndPlugin(),
+          ThemePlugin({ appName: 'Labs', tx: labsTx }),
+
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
-          // Inside theme provider so that errors are styled.
           ErrorPlugin(),
+
+          // Inside theme provider so that errors are styled.
           GraphPlugin(),
+          DndPlugin(),
           TreeViewPlugin(),
           UrlSyncPlugin(),
           SplitViewPlugin(),
@@ -89,7 +116,6 @@ const main = async () => {
           ThreadPlugin(),
         ]}
       />
-      ,
     </StrictMode>,
   );
 };

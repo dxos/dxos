@@ -6,8 +6,8 @@ import React, { ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { ScrollContainer } from '../ScrollContainer';
 import { Icon } from './util';
+import { ScrollContainer } from '../ScrollContainer';
 
 // TODO(burdon): Vertical scroll.
 

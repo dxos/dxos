@@ -22,7 +22,7 @@ const client = new Client();
   // ensure an identity exists:
   if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space:
-  const space = await client.createSpace();
+  const space = await client.spaces.create();
 })();
 ```
 
@@ -57,9 +57,9 @@ const client = new Client();
   // ensure an identity exists
   if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space
-  const space = await client.createSpace();
+  const space = await client.spaces.create();
   // create an invitation to join the space
-  const invitation = space.createInvitation();
+  const invitation = space.share();
   // share this code with a friend, it will be used to locate the peer and
   // establish a secure connection
   const code = InvitationEncoder.encode(invitation.get());
@@ -86,11 +86,11 @@ const client = new Client();
   // friend decodes the invitation code
   const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
   // accept the invitation
-  const invitation = client.acceptInvitation(receivedInvitation);
+  const invitation = client.spaces.join(receivedInvitation);
   // verify it's secure by sending the second factor authCode
   await invitation.authenticate('<authentication code here>');
   // space joined!
-  const space = client.getSpace(invitation.get().spaceKey!);
+  const space = client.spaces.get(invitation.get().spaceKey!);
 })();
 ```
 

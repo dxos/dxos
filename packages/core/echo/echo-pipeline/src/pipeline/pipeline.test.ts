@@ -10,8 +10,8 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
+import { TestFeedBuilder } from '../testing';
 
 const TEST_MESSAGE: FeedMessage = {
   timeframe: new Timeframe(),

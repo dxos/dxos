@@ -66,13 +66,15 @@
 }
 
 :root {
-  --surface-bg: theme(colors.neutral.50);
+  --surface-bg: theme(colors.neutral.12);
   --surface-text: theme(colors.neutral.900);
+  --description-text: theme(colors.neutral.650);
 }
 
 .dark {
   --surface-bg: theme(colors.neutral.900);
   --surface-text: theme(colors.neutral.50);
+  --description-text: theme(colors.neutral.300);
 }
 
 html {

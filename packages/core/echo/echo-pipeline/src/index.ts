@@ -4,7 +4,6 @@
 
 export * from './common';
 export * from './db-host';
-export * from './errors';
 export * from './metadata';
 export * from './pipeline';
 export * from './space';

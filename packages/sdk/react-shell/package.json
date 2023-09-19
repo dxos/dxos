@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-shell",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,7 +35,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.12.0",

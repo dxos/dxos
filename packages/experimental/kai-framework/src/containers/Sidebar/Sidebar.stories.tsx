@@ -15,8 +15,8 @@ import { MetagraphProvider } from '@dxos/react-metagraph';
 
 import '@dxosTheme';
 
-import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 import { Sidebar } from './Sidebar';
+import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
 
 const SidebarInvoker = () => {
   const { openNavigationSidebar } = useSidebars();

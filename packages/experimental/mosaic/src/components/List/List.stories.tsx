@@ -10,9 +10,9 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
+import { List, ListItem, IconButton, ListItemText } from './List';
 import { Item } from '../../layout';
 import { createItem, SeedDecorator, TestData } from '../../testing';
-import { List, ListItem, IconButton, ListItemText } from './List';
 
 const num = 20;
 

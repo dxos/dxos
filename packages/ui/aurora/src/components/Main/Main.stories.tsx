@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { Main, useSidebars } from './Main';
+import { Button } from '../Buttons';
 
 type StoryMainArgs = {};
 

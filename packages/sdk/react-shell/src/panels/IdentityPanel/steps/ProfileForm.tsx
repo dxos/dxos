@@ -53,6 +53,7 @@ export const ProfileFormImpl = (props: ProfileFormImplProps) => {
           placeholder={t('display name input placeholder')}
           value={inputValue}
           onChange={({ target: { value } }) => setInputValue(value)}
+          onKeyDown={({ key }) => key === 'Enter' && onUpdateProfile?.({ displayName: inputValue })}
         />
       </div>
       <Actions>

@@ -38,9 +38,9 @@ describe('Spaces', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
 
     await waitForExpect(() => {
-      expect(client.getSpace()).not.to.be.undefined;
+      expect(client.spaces.get()).not.to.be.undefined;
     });
-    const space = client.getSpace()!;
+    const space = client.spaces.default;
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
@@ -57,7 +57,7 @@ describe('Spaces', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
@@ -80,7 +80,7 @@ describe('Spaces', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
 
     // TODO(burdon): Extend basic queries.
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
@@ -96,7 +96,8 @@ describe('Spaces', () => {
 
     let itemId: string;
     {
-      const space = client.getSpace()!;
+      await client.spaces.isReady.wait();
+      const space = client.spaces.default;
       const {
         objectsUpdated: [item],
       } = await testSpace(space.internal.db);
@@ -144,10 +145,10 @@ describe('Spaces', () => {
     afterTest(() => Promise.all([client1.destroy()]));
     afterTest(() => Promise.all([client2.destroy()]));
 
-    const space1 = await client1.createSpace();
-    log('createSpace', { key: space1.key });
+    const space1 = await client1.spaces.create();
+    log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2 }),
+      performInvitation({ host: space1 as SpaceProxy, guest: client2.spaces }),
     );
     const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 
@@ -189,7 +190,7 @@ describe('Spaces', () => {
     afterTest(() => client2.destroy());
     await client1.halo.createIdentity({ displayName: 'Peer 1' });
     await client2.halo.createIdentity({ displayName: 'Peer 2' });
-    const space1 = await client1.createSpace();
+    const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
     const dataSpace1 = services1.host!.context.dataSpaceManager?.spaces.get(space1.key);
@@ -212,7 +213,7 @@ describe('Spaces', () => {
     // log.break();
     // log.info('epoch created', { feedToCheck: feedKey, length: feed1.length })
 
-    await Promise.all(performInvitation({ host: space1, guest: client2 }));
+    await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
     const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
@@ -245,7 +246,7 @@ describe('Spaces', () => {
     afterTest(() => client.destroy());
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     await space.waitUntilReady();
 
     const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
@@ -369,7 +370,7 @@ describe('Spaces', () => {
     afterTest(() => client.destroy());
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
 
     const { id } = space.db.add(new Expando({ data: 'test' }));
     await space.db.flush();
@@ -410,7 +411,7 @@ describe('Spaces', () => {
 
     await client1.halo.createIdentity({ displayName: 'test-user' });
 
-    const space1 = await client1.createSpace();
+    const space1 = await client1.spaces.create();
 
     const { id } = space1.db.add(new Expando({ data: 'test' }));
     await space1.db.flush();
@@ -453,8 +454,8 @@ describe('Spaces', () => {
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
 
-    const hostSpace = await host.createSpace();
-    await Promise.all(performInvitation({ host: hostSpace, guest }));
+    const hostSpace = await host.spaces.create();
+    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
     const hostDocument = hostSpace.db.add(new DocumentType());
@@ -481,7 +482,7 @@ describe('Spaces', () => {
 
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    const space = await client.createSpace();
+    const space = await client.spaces.create();
     const trigger = new Trigger();
     space.properties[subscribe](() => {
       trigger.wake();

@@ -2,39 +2,10 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Rush build all",
+			"label": "Watch & rebuild",
 			"group": "build",
 			"type": "shell",
-			"command": "rush build",
-			"problemMatcher": []
-		},
-		{
-			"label": "Build up to current package",
-			"group": "build",
-			"type": "shell",
-			"command": "rush build --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
-			"options": {
-				"cwd": "${fileDirname}"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "Build only current package",
-			"group": "build",
-			"type": "shell",
-			"command": "rush build --only $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
-			"options": {
-				"cwd": "${fileDirname}"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "Run demos",
-			"type": "shell",
-			"command": "rushx storybook",
-			"options": {
-				"cwd": "packages/demos"
-			},
+			"command": "pnpm -w watch",
 			"problemMatcher": []
 		}
 	]

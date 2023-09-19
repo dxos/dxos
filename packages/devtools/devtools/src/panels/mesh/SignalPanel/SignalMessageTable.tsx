@@ -6,7 +6,7 @@ import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -21,7 +21,7 @@ export type View<T> = {
   title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: GridColumnDef<T, any>[];
+  columns: TableColumnDef<T, any>[];
 };
 
 const { helper, builder } = createColumnBuilder<SignalResponse>();

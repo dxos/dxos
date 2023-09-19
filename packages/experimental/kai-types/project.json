@@ -31,8 +31,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/kai-types/**/*.{ts,js}"
-        ]
+          "packages/experimental/kai-types/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

@@ -14,7 +14,11 @@ export class AppManager {
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
-  constructor(private readonly _browser: Browser, inIframe?: boolean) {
+  // prettier-ignore
+  constructor(
+    private readonly _browser: Browser,
+    inIframe?: boolean,
+  ) {
     this._inIframe = inIframe;
   }
 
@@ -52,7 +56,7 @@ export class AppManager {
   }
 
   async createDocument() {
-    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel2').last().click();
+    await this.page.getByTestId('spacePlugin.spaceTreeItemActionsLevel1').last().click();
     return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 

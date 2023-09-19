@@ -7,9 +7,8 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { CompoundButton } from '@dxos/react-appkit';
 
-import { StepHeading } from '../../../components';
+import { CompoundButton, StepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export type AdditionMethodChooserProps = JoinStepProps;

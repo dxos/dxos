@@ -12,7 +12,7 @@ type HandlerProps = {
 
 export default (event: HandlerProps, context: FunctionContext) => {
   // TODO(burdon): client.spaces.get() is a more natural API.
-  const space = context.client.getSpace(PublicKey.from(event.space))!;
+  const space = context.client.spaces.get(PublicKey.from(event.space))!;
 
   // TODO(burdon): Async.
   // TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine

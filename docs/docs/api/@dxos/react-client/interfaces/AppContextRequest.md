@@ -3,20 +3,11 @@
 
 Defined in:
    file://./../../dxos/iframe.proto
-
 ## Properties
 ### [display]()
 Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
 
 The display mode that shell should use
-
-Options:
-  - proto3_optional = true
-
-### [invalidatedInvitationCode]()
-Type: <code>string</code>
-
-The invitation code which has become invalidated
 
 Options:
   - proto3_optional = true
@@ -28,3 +19,5 @@ The key of the joined space
 
 Options:
   - proto3_optional = true
+
+    

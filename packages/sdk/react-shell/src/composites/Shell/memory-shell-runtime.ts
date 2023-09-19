@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { AppContextRequest, LayoutRequest, PublicKey, ShellLayout, ShellRuntime } from '@dxos/react-client';
 
+// TODO(wittjosiah): Remove?
 export class MemoryShellRuntime implements ShellRuntime {
   readonly layoutUpdate = new Event<LayoutRequest>();
   readonly contextUpdate = new Event<AppContextRequest>();
@@ -30,11 +31,11 @@ export class MemoryShellRuntime implements ShellRuntime {
     return this._spaceKey;
   }
 
-  setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
-    this._layout = layout;
-    this._invitationCode = options.invitationCode;
-    this._spaceKey = options.spaceKey;
-    this.layoutUpdate.emit({ layout, ...options });
+  setLayout(request: LayoutRequest) {
+    this._layout = request.layout;
+    this._invitationCode = request.invitationCode;
+    this._spaceKey = request.spaceKey;
+    this.layoutUpdate.emit(request);
   }
 
   async setAppContext(context: AppContextRequest) {

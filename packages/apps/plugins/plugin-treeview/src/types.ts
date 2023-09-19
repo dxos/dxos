@@ -16,11 +16,13 @@ export enum TreeViewAction {
 
 export type TreeViewContextValue = {
   active: string | undefined;
+  previous: string | undefined;
   activeNode: Graph.Node | undefined;
+  previousNode: Graph.Node | undefined;
   appState: AppState | undefined;
 };
 
 export type TreeViewPluginProvides = IntentProvides &
   TranslationsProvides & {
-    treeView: TreeViewContextValue;
+    treeView: Readonly<TreeViewContextValue>;
   };

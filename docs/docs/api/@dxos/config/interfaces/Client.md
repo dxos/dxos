@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [devtoolsProxy]()
 Type: <code>string</code>
@@ -52,3 +51,5 @@ Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
 
 Options:
   - proto3_optional = true
+
+    

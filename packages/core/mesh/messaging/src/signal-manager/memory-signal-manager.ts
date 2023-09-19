@@ -12,8 +12,8 @@ import { schema } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
+import { CommandTrace, SignalStatus } from '../signal-client';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -59,10 +59,7 @@ export class MemorySignalManager implements SignalManager {
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
 
-  // prettier-ignore
-  constructor(
-    private readonly _context: MemorySignalManagerContext
-  ) {
+  constructor(private readonly _context: MemorySignalManagerContext) {
     this._ctx = new Context();
 
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));

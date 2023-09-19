@@ -8,12 +8,13 @@ import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import type { Graph } from '@braneframe/plugin-graph';
 import { Tree, TreeRootProps } from '@dxos/aurora';
+import { getDndId, Mosaic, StackTile, useMosaic } from '@dxos/aurora-grid';
 import { Surface } from '@dxos/react-surface';
 
-import { getPersistenceParent, sortByIndex } from '../../util';
 import { DroppableTreeViewItem, SortableTreeViewItem } from './NavTreeItem';
+import { getPersistenceParent, sortByIndex } from '../../util';
 
 export type TreeViewProps = {
   level: number;
@@ -39,7 +40,31 @@ export const NavTree = (props: TreeViewProps) => {
 
 type NavTreeDropType = 'rearrange' | 'migrate-origin' | 'migrate-destination' | null;
 
-const TreeViewSortableImpl = ({ node, items, level }: { node: Graph.Node; items: Graph.Node[]; level: number }) => {
+/**
+ * @internal Storybook only
+ */
+export const NavTreeRoot = ({ id }: { id: string }) => {
+  const {
+    mosaic: {
+      tiles: { [getDndId(id, 'root')]: root },
+    },
+  } = useMosaic();
+
+  return <Mosaic.Stack {...(root as StackTile)} variant='stack' />;
+};
+
+/**
+ * @internal Storybook only
+ */
+export const TreeViewSortableImpl = ({
+  node,
+  items,
+  level,
+}: {
+  node: Graph.Node;
+  items: Graph.Node[];
+  level: number;
+}) => {
   const dnd = useDnd();
 
   const [activeNode, setActiveNode] = useState<Graph.Node | null>(null);

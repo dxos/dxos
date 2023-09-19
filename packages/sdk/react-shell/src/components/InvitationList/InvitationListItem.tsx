@@ -13,10 +13,10 @@ import {
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 
+import { SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
 import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';
-import { SharedInvitationListProps } from './InvitationListProps';
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;
@@ -73,8 +73,6 @@ export const InvitationListItemImpl = ({
     Invitation.State.AUTHENTICATING,
     Invitation.State.SUCCESS,
   ].includes(status);
-
-  console.log({ avatarError, status });
 
   return (
     <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>

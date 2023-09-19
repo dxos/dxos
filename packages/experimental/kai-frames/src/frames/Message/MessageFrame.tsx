@@ -10,9 +10,9 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { Contact, Message, Organization } from '@dxos/kai-types';
 import { Space, useQuery } from '@dxos/react-client/echo';
 
+import { formatDate, getCompanyName, sortMessage } from './util';
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext, useFrameRegistry } from '../../hooks';
-import { formatDate, getCompanyName, sortMessage } from './util';
 
 // TODO(burdon): Common container patter (see ContactFrame).
 export const MessageFrame = () => {

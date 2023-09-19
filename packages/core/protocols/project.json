@@ -50,8 +50,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/protocols/**/*.{ts,js}"
-        ]
+          "packages/core/protocols/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

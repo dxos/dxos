@@ -3,10 +3,11 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [disabled]()
 Type: <code>boolean</code>
+
+
 
 ### [logDir]()
 Type: <code>string</code>
@@ -16,3 +17,7 @@ Options:
 
 ### [name]()
 Type: <code>string</code>
+
+
+
+    

@@ -134,6 +134,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-telemetry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-template/package.json",
           "jsonpath": "$.version"
         },
@@ -165,6 +170,11 @@
         {
           "type": "json",
           "path": "packages/apps/templates/hello-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/tasks-template/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -259,7 +269,17 @@
         },
         {
           "type": "json",
+          "path": "packages/common/phoenix/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/process/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -454,6 +474,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/initializers/create-tasks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
@@ -589,11 +614,6 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/errors/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/sdk/examples/package.json",
           "jsonpath": "$.version"
         },
@@ -630,6 +650,11 @@
         {
           "type": "json",
           "path": "packages/ui/aurora-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-table/package.json",
           "jsonpath": "$.version"
         },
         {

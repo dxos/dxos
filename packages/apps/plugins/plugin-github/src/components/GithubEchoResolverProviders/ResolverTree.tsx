@@ -8,10 +8,10 @@ import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
 import { useClient } from '@dxos/react-client';
 import { useSpaces, Space } from '@dxos/react-client/echo';
 
-import { GITHUB_PLUGIN } from '../../props';
 import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';
 import { bindSpace, unbindSpace } from './spaceResolvers';
+import { GITHUB_PLUGIN } from '../../props';
 
 export const ResolverTree = () => {
   const client = useClient();
@@ -74,7 +74,7 @@ export const ResolverTree = () => {
       <Button
         classNames='block is-full'
         onClick={async () => {
-          const space = await client.createSpace();
+          const space = await client.spaces.create();
           bindSpace(space, identityHex!, source!, id!);
           setSpace(space);
         }}

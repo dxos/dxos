@@ -7,8 +7,6 @@ import { expect } from 'chai';
 import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-
 import { AppManager } from './app-manager';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -45,17 +43,14 @@ test.describe('Basic test', () => {
       await host.createDocument();
       await perfomInvitation(host, guest);
 
-      // TODO(wittjosiah): This should wait for document to be visible in DOM.
-      await sleep(1000); // Wait for document to replicate.
-      await guest.expandSpace();
       await guest.page.getByTestId('spacePlugin.documentTreeItemLink').last().click();
       await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await host.page.url()).to.include(await guest.page.url());
       });
 
-      const hostLinks = await Promise.all([host.getDocumentLinks().nth(1).getAttribute('data-itemid')]);
-      const guestLinks = await Promise.all([guest.getDocumentLinks().nth(1).getAttribute('data-itemid')]);
+      const hostLinks = await Promise.all([host.getDocumentLinks().first().getAttribute('data-itemid')]);
+      const guestLinks = await Promise.all([guest.getDocumentLinks().first().getAttribute('data-itemid')]);
       expect(hostLinks[0]).to.equal(guestLinks[0]);
     });
 
@@ -66,10 +61,9 @@ test.describe('Basic test', () => {
       await host.createDocument();
       await perfomInvitation(host, guest);
 
-      await guest.expandSpace();
       await Promise.all([
-        host.getDocumentLinks().nth(1).click(),
-        guest.getDocumentLinks().nth(1).click(),
+        host.getDocumentLinks().first().click(),
+        guest.getDocumentLinks().first().click(),
         host.waitForMarkdownTextbox(),
         guest.waitForMarkdownTextbox(),
       ]);
@@ -99,10 +93,9 @@ test.describe('Basic test', () => {
       ];
       const allParts = parts.join('');
 
-      await guest.expandSpace();
       await Promise.all([
-        host.getDocumentLinks().nth(1).click(),
-        guest.getDocumentLinks().nth(1).click(),
+        host.getDocumentLinks().first().click(),
+        guest.getDocumentLinks().first().click(),
         host.waitForMarkdownTextbox(),
         guest.waitForMarkdownTextbox(),
       ]);

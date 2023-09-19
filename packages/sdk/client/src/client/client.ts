@@ -5,37 +5,25 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import {
-  AuthenticatingInvitationObservable,
-  ClientServicesProvider,
-  Space,
-  STATUS_TIMEOUT,
-} from '@dxos/client-protocol';
+import { ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
-import { trace } from '@dxos/protocols';
-import {
-  GetDiagnosticsRequest,
-  Invitation,
-  SystemStatus,
-  QueryStatusResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { ApiError, trace } from '@dxos/protocols';
+import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import { defaultKey, type EchoProxy } from '../echo';
-import type { HaloProxy, Identity } from '../halo';
-import type { MeshProxy } from '../mesh';
-import type { PropertiesProps } from '../proto';
-import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
+import type { SpaceList } from '../echo';
+import type { HaloProxy } from '../halo';
+import type { MeshProxy } from '../mesh';
+import type { Shell } from '../services';
+import { DXOS_VERSION } from '../version';
 
 /**
  * This options object configures the DXOS Client.
@@ -65,6 +53,8 @@ export class Client {
   private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
+  // TODO(wittjosiah): Remove.
+  private _defaultKey!: string;
 
   private _initialized = false;
   private _statusStream?: Stream<QueryStatusResponse>;
@@ -103,7 +93,7 @@ export class Client {
   toJSON() {
     return {
       initialized: this.initialized,
-      echo: this._runtime?.echo,
+      spaces: this._runtime?.spaces,
       halo: this._runtime?.halo,
       mesh: this._runtime?.mesh,
     };
@@ -140,9 +130,9 @@ export class Client {
     return this._status;
   }
 
-  private get _echo(): EchoProxy {
+  get spaces(): SpaceList {
     invariant(this._runtime, 'Client not initialized.');
-    return this._runtime.echo;
+    return this._runtime.spaces;
   }
 
   /**
@@ -161,50 +151,10 @@ export class Client {
     return this._runtime.mesh;
   }
 
-  /**
-   * @deprecated
-   */
-  get dbRouter(): DatabaseRouter {
-    return this._echo.dbRouter;
-  }
-
-  addSchema(schema: EchoSchema): void {
-    return this._echo.addSchema(schema);
-  }
-
-  /**
-   * ECHO spaces.
-   */
-  get spaces(): MulticastObservable<Space[]> {
-    return this._echo.spaces;
-  }
-
-  /**
-   * Get an existing space by its key.
-   *
-   * If no key is specified the default space is returned.
-   */
-  getSpace(spaceKey?: PublicKey): Space | undefined {
-    if (!spaceKey) {
-      const identityKey = this.halo.identity.get()?.identityKey.toHex();
-      return this.spaces.get().find((space) => space.properties[defaultKey] === identityKey);
-    }
-
-    return this._echo.getSpace(spaceKey);
-  }
-
-  /**
-   * Creates a new space.
-   */
-  createSpace(meta?: PropertiesProps): Promise<Space> {
-    return this._echo.createSpace(meta);
-  }
-
-  /**
-   * Accept an invitation to a space.
-   */
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
-    return this._echo.acceptInvitation(invitation);
+  get shell(): Shell {
+    invariant(this._runtime, 'Client not initialized.');
+    invariant(this._runtime.shell, 'Shell not available.');
+    return this._runtime.shell;
   }
 
   /**
@@ -234,32 +184,43 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame } = await import('../services');
+    const { fromHost, fromIFrame, IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import(
+      '../services'
+    );
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
+    await this._services.open(new Context());
 
-    const { EchoProxy, createDefaultModelFactory, defaultKey } = await import('../echo');
+    const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
-    const handleIdentityCreated = async ({ identityKey }: Identity) => {
-      const defaultSpace = await this.createSpace();
-      defaultSpace.properties[defaultKey] = identityKey.toHex();
-      // Ensure space properties are cached.
-      await defaultSpace.db.flush();
-    };
-
+    this._defaultKey = defaultKey;
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
-    const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
-    const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
-    this._runtime = new ClientRuntime({ echo, halo, mesh });
+    const halo = new HaloProxy(this._services, this._instanceId);
+    const spaces = new SpaceList(
+      this._services,
+      modelFactory,
+      () => halo.identity.get()?.identityKey,
+      this._instanceId,
+    );
 
-    await this._services.open(new Context());
+    let shell: Shell | undefined;
+    if (this._services instanceof IFrameClientServicesHost || this._services instanceof IFrameClientServicesProxy) {
+      invariant(this._services._shellManager, 'ShellManager is not available.');
+      shell = new Shell({
+        shellManager: this._services._shellManager,
+        identity: halo.identity,
+        devices: halo.devices,
+        spaces,
+      });
+    }
 
-    // TODO(burdon): Remove?
+    this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
+
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       const { mountDevtoolsHooks } = await import('../devtools');

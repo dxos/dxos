@@ -1,11 +1,13 @@
 //
 // Copyright 2023 DXOS.org
 //
-import '@dxosTheme';
+
 import React from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { Breadcrumb } from './Breadcrumb';
+import { Button } from '../Buttons';
 
 const StorybookBreadcrumb = () => {
   return (

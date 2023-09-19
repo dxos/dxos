@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/create-tasks",
+  "version": "0.2.0",
+  "description": "Creates a DXOS tasks application",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "bin": "bin/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node bin/main.js"
+  },
+  "dependencies": {
+    "@dxos/tasks-template": "workspace:*",
+    "minimist": "^1.2.7"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.2",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

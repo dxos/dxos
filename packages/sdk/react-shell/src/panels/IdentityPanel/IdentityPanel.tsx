@@ -11,11 +11,11 @@ import { Identity, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { Viewport, Heading, CloseButton } from '../../components';
-import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser, ProfileForm } from './steps';
+import { Viewport, Heading, CloseButton } from '../../components';
+import { InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 

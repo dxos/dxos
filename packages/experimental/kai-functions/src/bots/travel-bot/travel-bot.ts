@@ -10,9 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { Booking, Ticket, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
+import { Amadeus, createFlightQuery } from './data';
 import { Bot } from '../bot';
 import { getKey } from '../util';
-import { Amadeus, createFlightQuery } from './data';
 
 // TODO(burdon): Standardize ENV vars.
 export const COM_AMADEUS_CLIENT_ID = 'COM_AMADEUS_CLIENT_ID';

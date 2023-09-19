@@ -3,16 +3,25 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [commandTemplate]()
 Type: <code>string</code>
 
+
+
 ### [enabled]()
 Type: <code>boolean</code>
+
+
 
 ### [outputRe]()
 Type: <code>string</code>
 
+
+
 ### [port]()
 Type: <code>string</code>
+
+
+
+    

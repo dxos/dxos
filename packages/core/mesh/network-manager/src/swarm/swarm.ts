@@ -14,14 +14,14 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
+import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
+import { Peer } from './peer';
 import { SwarmMessenger, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { WireProtocolProvider } from '../wire-protocol';
-import { Connection, ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
-import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
 

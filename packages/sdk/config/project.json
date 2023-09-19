@@ -65,8 +65,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/sdk/config/**/*.{ts,js}"
-        ]
+          "packages/sdk/config/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

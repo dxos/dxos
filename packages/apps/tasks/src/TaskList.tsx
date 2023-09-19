@@ -4,39 +4,39 @@
 
 import React, { useState } from 'react';
 
-import { ShellLayout, useShell } from '@dxos/react-client';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
-
 import { Task } from './proto';
 
-export const TaskList = () => {
-  const space = useSpace(); // What should the pattern be for find-or-create a space?
-  const shell = useShell();
-  const tasks = useQuery<Task>(space, Task.filter());
+export type TaskListProps = {
+  tasks?: Task[];
+  onInviteClick?: () => any;
+  onTaskCreate?: (text: string) => any;
+  onTaskRemove?: (task: Task) => any;
+  onTaskTitleChange?: (task: Task, newTitle: string) => any;
+  onTaskCheck?: (task: Task, checked: boolean) => any;
+};
+
+export const TaskList = (props: TaskListProps) => {
+  const { tasks, onInviteClick, onTaskCreate, onTaskRemove, onTaskTitleChange, onTaskCheck } = props;
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<number | null>(null);
   const [showDeleteTask, setShowDeleteTask] = useState<number | null>(null);
 
-  const handleNewTask = () => {
-    if (!space || newTaskTitle === '') {
+  const newTask = () => {
+    if (!newTaskTitle) {
       return;
     }
-    if (!space) {
-      return;
-    }
-
-    const task = new Task({ title: newTaskTitle, completed: false });
-    space.db.add(task);
+    onTaskCreate?.(newTaskTitle);
     setNewTaskTitle('');
   };
 
   return (
     <div className='p-2'>
       <button
-        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
-        onClick={() => shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key })}
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+        onClick={onInviteClick}
       >
-        Invite
+        Share
       </button>
       <div className='max-w-sm mx-auto'>
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
@@ -57,15 +57,9 @@ export const TaskList = () => {
                   className='mr-2 rounded shadow hover:pointer-cursor'
                   type='checkbox'
                   checked={task.completed}
-                  onChange={() => (task.completed = !task.completed)}
+                  onChange={(e) => onTaskCheck?.(task, e.target.checked)}
                 />
-                <div
-                  className='hover:pointer-cursor flex-grow'
-                  onClick={() => {
-                    console.log('editing task', index);
-                    setEditingTask(index);
-                  }}
-                >
+                <div className='hover:pointer-cursor flex-grow' onClick={() => setEditingTask(index)}>
                   {editingTask === index ? (
                     <span className='flex justify-between'>
                       <input
@@ -73,7 +67,7 @@ export const TaskList = () => {
                         type='text'
                         value={task.title}
                         onChange={(e) => {
-                          task.title = e.target.value;
+                          onTaskTitleChange?.(task, e.target.value);
                         }}
                         onKeyUp={(e) => {
                           if (e.key === 'Enter') {
@@ -89,11 +83,8 @@ export const TaskList = () => {
                 </div>
                 {showDeleteTask === index && (
                   <button
-                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      space?.db.remove(task);
-                    }}
+                    className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
+                    onClick={() => onTaskRemove?.(task)}
                   >
                     Delete
                   </button>
@@ -112,13 +103,13 @@ export const TaskList = () => {
             }}
             onKeyUp={(e) => {
               if (e.key === 'Enter') {
-                handleNewTask();
+                newTask();
               }
             }}
           />
           <button
-            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow'
-            onClick={handleNewTask}
+            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow active:bg-gray-200'
+            onClick={newTask}
           >
             Add Task
           </button>

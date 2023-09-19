@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-grid",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "Table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,18 +16,22 @@
     "src"
   ],
   "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
+    "chromatic": "true"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.0.5",
+    "@dnd-kit/sortable": "^7.0.1",
+    "@dnd-kit/utilities": "^3.2.0",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.12.0",
-    "@tanstack/react-table": "^8.9.3",
-    "date-fns": "^2.29.3",
+    "@preact/signals-core": "^1.5.0",
+    "@radix-ui/react-compose-refs": "^1.0.0",
+    "@tldraw/indices": "2.0.0-alpha.14",
+    "deepsignal": "^1.3.6",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
@@ -38,7 +42,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^6.17.0",
-    "deepsignal": "^1.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vite": "^4.3.9",

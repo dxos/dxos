@@ -22,10 +22,10 @@ import {
 import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { DXOS_VERSION } from '../../version';
-import { DataSpace } from '../spaces';
 import { getPlatform, Platform } from './platform';
 import { ServiceContext } from './service-context';
+import { DXOS_VERSION } from '../../version';
+import { DataSpace } from '../spaces';
 
 const DEFAULT_TIMEOUT = 1_000;
 

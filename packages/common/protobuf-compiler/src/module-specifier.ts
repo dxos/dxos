@@ -18,7 +18,11 @@ export class ModuleSpecifier {
     return new ModuleSpecifier(pathWithDot, context);
   }
 
-  constructor(public readonly name: string, public readonly contextPath: string) {
+  // prettier-ignore
+  constructor(
+    public readonly name: string,
+    public readonly contextPath: string,
+  ) {
     invariant(isAbsolute(contextPath));
   }
 

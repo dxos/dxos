@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/kai-frames/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

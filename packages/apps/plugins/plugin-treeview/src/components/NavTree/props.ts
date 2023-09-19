@@ -4,7 +4,8 @@
 
 import { Graph } from '@braneframe/plugin-graph';
 
-export type SharedTreeItemProps = { node: Graph.Node; level: number };
+// todo(thure): Remove `childrenManaged`, this is a temporary hack.
+export type SharedTreeItemProps = { node: Graph.Node; level: number; childrenManaged?: boolean };
 
 export type SharedTreeItemHeadingProps = {
   open?: boolean;

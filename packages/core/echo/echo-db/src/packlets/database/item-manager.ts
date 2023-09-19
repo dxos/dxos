@@ -21,6 +21,7 @@ export type ItemConstructionOptions = {
 /**
  * Manages the creation and indexing of items.
  */
+// TODO(burdon): Rename ObjectManager? (In general are Items ECHO Objects?)
 export class ItemManager {
   /**
    * Map of active items.

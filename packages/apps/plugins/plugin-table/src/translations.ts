@@ -11,8 +11,6 @@ export default [
         'plugin name': 'Table',
         'object placeholder': 'New table',
         'create object label': 'Create table',
-        'rename object label': 'Rename',
-        'delete object label': 'Delete',
       },
     },
   },

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-url-sync",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "DXOS Surface plugin for keeping the browser url in sync with the application state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,6 +15,7 @@
     "src"
   ],
   "devDependencies": {
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@types/react": "^18.0.21",
@@ -22,6 +23,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "react": "^18.2.0"

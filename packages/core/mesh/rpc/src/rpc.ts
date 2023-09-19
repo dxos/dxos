@@ -114,10 +114,7 @@ export class RpcPeer {
   private _unsubscribeFromPort: (() => void) | undefined = undefined;
   private _clearOpenInterval: (() => void) | undefined = undefined;
 
-  // prettier-ignore
-  constructor(
-    params: RpcPeerOptions
-  ) {
+  constructor(params: RpcPeerOptions) {
     this._params = {
       timeout: undefined,
       streamHandler: undefined,

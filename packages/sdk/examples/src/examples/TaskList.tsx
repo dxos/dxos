@@ -10,7 +10,8 @@ import { getSize } from '@dxos/aurora-theme';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 
-import { Task } from '../proto';
+// TODO(wittjosiah): Why doesn't Stackblitz understand import of just proto directory?
+import { Task } from '../proto/gen/schema';
 
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);

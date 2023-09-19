@@ -3,8 +3,8 @@
 //
 
 export {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  AuthenticatingInvitation as AuthenticatingInvitationObservable,
+  CancellableInvitation as CancellableInvitationObservable,
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
