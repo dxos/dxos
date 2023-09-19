@@ -69,15 +69,28 @@ export const useHandleCopyDragEnd = () => {
   }, deps);
 };
 
-const findCopyDestination = (tile: Tile | undefined, copyClass: Set<string>, mosaic: MosaicState): string | null => {
+const findCopyDestination = (
+  tile: Tile | undefined,
+  copyClass: Set<string>,
+  mosaic: MosaicState,
+  activeId: string,
+  copyTile: CopyTileAction,
+): string | null => {
   if (!tile) {
     return null;
   } else if (tile.acceptCopyClass && copyClass.has(tile.acceptCopyClass)) {
-    return tile.id;
+    const targetId = copyTile(activeId, tile.id, mosaic).id;
+    return mosaic.tiles[targetId] ? null : tile.id;
   } else if ((mosaic.relations[tile.id]?.parent?.size ?? 0) < 1) {
     return null;
   } else {
-    return findCopyDestination(mosaic.tiles[Array.from(mosaic.relations[tile.id].parent)[0]], copyClass, mosaic);
+    return findCopyDestination(
+      mosaic.tiles[Array.from(mosaic.relations[tile.id].parent)[0]],
+      copyClass,
+      mosaic,
+      activeId,
+      copyTile,
+    );
   }
 };
 
@@ -98,7 +111,8 @@ export const useHandleCopyDragOver = () => {
     }
     if (dnd.activeCopyClass && over?.data?.current) {
       const overTile = over?.data?.current as Tile | undefined;
-      const nextCopyDest = findCopyDestination(overTile, dnd.activeCopyClass, mosaic) ?? null;
+      const nextCopyDest =
+        findCopyDestination(overTile, dnd.activeCopyClass, mosaic, active.id.toString(), copyTile) ?? null;
       if (nextCopyDest) {
         // There is a copy destination, so a preview tile needs to be there
         if (dnd.copyDestinationId) {
