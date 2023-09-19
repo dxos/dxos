@@ -61,7 +61,7 @@ const DemoToggles = ({
       <div className='demo-buttons'>
         <div className='flex'>
           <Input.Root>
-            <Input.Checkbox classNames='me-2' onCheckedChange={handleToggleNetwork} />
+            <Input.Switch classNames='me-2' onCheckedChange={handleToggleNetwork} />
             <Input.Label>
               Disable{' '}
               <a
@@ -78,7 +78,7 @@ const DemoToggles = ({
         </div>
         <div className='flex'>
           <Input.Root>
-            <Input.Checkbox classNames='me-2' onCheckedChange={handleToggleBatching} />
+            <Input.Switch classNames='me-2' onCheckedChange={handleToggleBatching} />
             <Input.Label>Enable mutation batching</Input.Label>
           </Input.Root>
         </div>
