@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Document } from '@braneframe/types';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
@@ -16,6 +16,14 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const [doc] = useQuery(space, Document.filter());
 
   const model = useTextModel({ identity, space, text: doc?.content });
+
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    space.db._backend.maxBatchSize = 0;
+  }, [space]);
 
   return (
     <main className='flex-1 min-w-0'>
