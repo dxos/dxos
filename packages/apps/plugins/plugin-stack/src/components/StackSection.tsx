@@ -55,7 +55,7 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
             surfaceElevation({ elevation: 'group' }),
             inputSurface,
             hoverableControls,
-            'grow rounded mlb-2',
+            'grow rounded',
             isOverlay && staticHoverableControls,
             isActive ? 'opacity-0' : 'opacity-100',
           ]}
