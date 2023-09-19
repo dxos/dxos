@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -23,6 +26,9 @@
     },
     {
       "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
     },
     {
       "path": "../../ui/aurora-theme"
