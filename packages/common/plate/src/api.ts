@@ -31,6 +31,7 @@ import {
   SlotValues,
   ResultOf,
   Slot,
+  SlotProducers,
 } from './util/template';
 import { InquirableZodType } from './util/zodInquire';
 
@@ -40,6 +41,13 @@ export type SlotsWithContext<I, TSlots extends Slots<I, any, TContext>, TContext
   [slotKey in keyof TSlots]: Slot<ResultOf<TSlots[slotKey]>, I, TSlots, TContext>;
 };
 
+const lazy = <T>(o: T) => {
+  const r: { [k in keyof T]: (...args: any[]) => T[k] } = {} as any;
+  for (const k in o) {
+    r[k] = typeof o[k] === 'function' ? (o[k] as () => any) : () => o[k];
+  }
+  return r;
+};
 export class Plate<I = null, TSlots extends Slots<I> = {}> {
   constructor(private parentSlots?: TSlots) {}
 
@@ -66,20 +74,22 @@ export class Plate<I = null, TSlots extends Slots<I> = {}> {
         const ctx = extraContext?.(rendered);
         return {
           input,
-          slots: await renderSlots({ ...this.parentSlots, ...options.slots }, () => ({
-            input,
-            overwrite: false,
-            slots: {
-              ...this.parentSlots,
-              ...options.slots,
-            },
-            ...restOpts,
-            outputFile: relativeOutputPath,
-            outputDirectory,
-            inherited: undefined,
-            relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
-            ...ctx,
-          })),
+          slots: lazy(
+            await renderSlots({ ...this.parentSlots, ...options.slots }, () => ({
+              input,
+              overwrite: false,
+              slots: lazy({
+                ...this.parentSlots,
+                ...options.slots,
+              }),
+              ...restOpts,
+              outputFile: relativeOutputPath,
+              outputDirectory,
+              inherited: undefined,
+              relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+              ...ctx,
+            })),
+          ),
           overwrite: false,
           ...restOpts,
           outputDirectory,
