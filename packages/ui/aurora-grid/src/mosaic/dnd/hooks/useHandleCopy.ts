@@ -42,8 +42,10 @@ export const useHandleCopyDragEnd = () => {
       const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
       // update copied tile’s index
       const subtiles = getSubtiles(relations[dnd.copyDestinationId].child, tiles);
-      const index = nextIndex(subtiles, copiedTile.id, over?.id);
-      copiedTile.index = index ?? subtiles.length > 0 ? getIndexAbove(subtiles[subtiles.length - 1].index) : 'a0';
+      const index =
+        subtiles.find(({ id }) => id.startsWith('preview--'))?.index ?? nextIndex(subtiles, copiedTile.id, over?.id);
+      copiedTile.index = index ?? (subtiles.length > 0 ? getIndexAbove(subtiles[subtiles.length - 1].index) : 'a0');
+      console.log('[index]', index, copiedTile.index);
       // update mosaic state
       tiles[copiedTile.id] = copiedTile;
       relations[copiedTile.id] = { parent: new Set([dnd.copyDestinationId]), child: new Set() };

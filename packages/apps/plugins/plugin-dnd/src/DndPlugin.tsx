@@ -43,10 +43,9 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
             }}
             copyTile={(id, toId, mosaic) => {
               return dnd.onCopyTileSubscriptions.length
-                ? dnd.onCopyTileSubscriptions.reduce(
-                    (tile, handler) => handler(tile, id, toId, mosaic),
-                    mosaic.tiles[id],
-                  )
+                ? dnd.onCopyTileSubscriptions.reduce((tile, handler) => handler(tile, id, toId, mosaic), {
+                    ...mosaic.tiles[id],
+                  })
                 : mosaic.tiles[id];
             }}
             onMosaicChange={(event) => {

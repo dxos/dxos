@@ -76,7 +76,7 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
               focusRing,
               hoverableFocusedKeyboardControls,
               'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
-              isOverlay && 'text-primary-600 dark:text-primary-300',
+              isPreview ? 'invisible' : isOverlay && 'text-primary-600 dark:text-primary-300',
             )}
             {...dragHandleAttributes}
             {...dragHandleListeners}
@@ -91,7 +91,11 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
           </div>
           <Button
             variant='ghost'
-            classNames={['self-stretch justify-start rounded-is-none', hoverableFocusedControls]}
+            classNames={[
+              'self-stretch justify-start rounded-is-none',
+              hoverableFocusedControls,
+              isPreview && 'invisible',
+            ]}
             onClick={handleRemove}
           >
             <span className='sr-only'>{t('remove section label')}</span>
