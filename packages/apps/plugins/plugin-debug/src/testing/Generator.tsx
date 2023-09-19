@@ -59,7 +59,7 @@ export class Generator {
           name,
           website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
         });
-        obj.meta.schema = org;
+        obj.__meta.schema = org;
         return this._space.db.add(obj);
       },
     );
@@ -90,7 +90,7 @@ export class Generator {
           name,
           repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
         });
-        obj.meta.schema = project;
+        obj.__meta.schema = project;
         return this._space.db.add(obj);
       },
     );
@@ -129,7 +129,7 @@ export class Generator {
           ? this._faker!.helpers.arrayElement(organizations)
           : undefined,
       });
-      obj.meta.schema = person;
+      obj.__meta.schema = person;
       return this._space.db.add(obj);
     });
 

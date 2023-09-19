@@ -109,11 +109,11 @@ describe('database', () => {
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-    expect(task.meta.keys).to.exist;
-    expect(task.meta.keys).to.have.length(0);
+    expect(task.__meta.keys).to.exist;
+    expect(task.__meta.keys).to.have.length(0);
 
-    task.meta.keys.push({ source: 'example', id: 'test' });
-    expect(task.meta.keys).to.have.length(1);
+    task.__meta.keys.push({ source: 'example', id: 'test' });
+    expect(task.__meta.keys).to.have.length(1);
   });
 
   test('text objects are auto-created on schema', async () => {
