@@ -15,10 +15,13 @@ This is an encapsulated [`@dxos/plate`](https://www.npmjs.com/package/@dxos/plat
 ```ts
 import template from "@dxos/hello-template";
 
-const results = await template.execute({
+// get the template outputs without writing to disk:
+const results = await template.apply({
   /* ExecuteDirectoryOptions */
+  input: { ... }
 });
-Promise.all(results.map((file) => file.save()));
+// write to disk:
+await results.apply()
 ```
 
 ## DXOS Resources

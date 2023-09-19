@@ -12,9 +12,9 @@ import path from 'path';
 
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
+import { createStorage } from './storage';
 import { File, StorageType } from '../common';
 import { randomText, storageTests } from '../testing';
-import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 
@@ -37,8 +37,8 @@ describe('testing node storage types', () => {
 
   afterAll(() => del(ROOT_DIRECTORY));
 
-  for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
-    storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+  for (const dataStore of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
+    storageTests(dataStore, () => createStorage({ type: dataStore, root: ROOT_DIRECTORY }));
   }
 
   test('create storage with node file by default', async () => {

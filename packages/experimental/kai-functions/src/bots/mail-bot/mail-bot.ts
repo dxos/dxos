@@ -6,8 +6,8 @@ import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
-import { Bot } from '../bot';
 import { ImapProcessor } from './imap-processor';
+import { Bot } from '../bot';
 
 // TODO(burdon): Configure.
 const POLLING_INTERVAL = 10_000;
@@ -21,7 +21,7 @@ class Poller {
   // prettier-ignore
   constructor(
     private readonly _callback: () => Promise<void>,
-    private readonly _interval: number
+    private readonly _interval: number,
   ) {}
 
   async start() {

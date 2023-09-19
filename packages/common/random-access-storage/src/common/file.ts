@@ -31,6 +31,11 @@ export interface File extends RandomAccessStorageProperties {
   close(): Promise<Error | void>;
   destroy(): Promise<Error | void>;
 
+  /**
+   * Save changes to disk.
+   */
+  flush?(): Promise<void>;
+
   // Not supported in node, memory.
   truncate?(offset: number): Promise<void>;
 

@@ -83,7 +83,7 @@ export namespace Remark {
           headers: !!node?.attributes.headers,
         });
         const insertedAst = await unified().use(remarkParse).use(remarkPrettier).parse(content);
-        node.children = [directiveLabelNode, ...insertedAst.children];
+        node.children = [directiveLabelNode, ...(insertedAst as any).children];
       });
       await Promise.all(promises);
       return tree;

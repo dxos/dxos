@@ -19,7 +19,7 @@ export const CreateSpace: FC<{
   const handleSubmit = async (text: string) => {
     const name = text.trim();
     if (name.length) {
-      const space = await client.createSpace();
+      const space = await client.spaces.create();
       space.properties.name = name;
       setName('');
       onCreate?.(space.key);

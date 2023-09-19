@@ -51,7 +51,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
               initialInvitationCode={invitationParam ?? undefined}
               parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
               onJoin={(result) => onSpaceJoined?.(result)}
-              acceptInvitation={(invitation) => client.acceptInvitation(invitation)}
+              acceptInvitation={(invitation) => client.spaces.join(invitation)}
               dialogProps={{
                 defaultOpen: Boolean(invitationParam),
                 openTrigger: (
@@ -65,7 +65,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
             <Button
               variant='primary'
               onClick={async () => {
-                const space = await client.createSpace();
+                const space = await client.spaces.create();
                 onSpaceCreated?.(space);
               }}
               classNames='grow flex gap-1'

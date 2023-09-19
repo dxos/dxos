@@ -4,8 +4,8 @@
 
 import { describe } from '@dxos/test';
 
-import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
 import { basicTestSuite } from './basic-test-suite';
+import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
 
 describe('WebRTC transport', () => {
   const testBuilder = new TestBuilder();

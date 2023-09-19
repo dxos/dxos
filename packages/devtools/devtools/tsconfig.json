@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/plugins/plugin-telemetry"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -85,16 +88,13 @@
       "path": "../../ui/aurora"
     },
     {
-      "path": "../../ui/aurora-grid"
+      "path": "../../ui/aurora-table"
     },
     {
       "path": "../../ui/aurora-theme"
     },
     {
       "path": "../../ui/aurora-theme"
-    },
-    {
-      "path": "../../ui/react-appkit"
     }
   ]
 }

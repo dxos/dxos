@@ -9,10 +9,10 @@ import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { useFrameContext, useFrameRouter, useFrameRegistry } from '../../hooks';
-import { sortMessage } from '../Message';
 import { ChatPanel } from './ChatPanel';
 import { Video } from './Video';
+import { useFrameContext, useFrameRouter, useFrameRegistry } from '../../hooks';
+import { sortMessage } from '../Message';
 
 export const ChatFrame = () => {
   const client = useClient();

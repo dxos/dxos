@@ -14,16 +14,7 @@ import React, {
 } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import {
-  IFrameClientServicesProxy,
-  type PublicKey,
-  ShellDisplay,
-  ShellLayout,
-  IFrameClientServicesHost,
-  useClient,
-  useShell as useShellNatural,
-  LayoutRequest,
-} from '@dxos/react-client';
+import { type PublicKey, ShellDisplay, ShellLayout, useClient, LayoutRequest } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
@@ -39,6 +30,9 @@ export const ShellContext: Context<ShellContextProps> = createContext<ShellConte
 
 type SetLayout = (layout: ShellLayout, options?: Omit<LayoutRequest, 'layout'>) => void;
 
+/**
+ * @deprecated
+ */
 export const useShell = (): { setLayout: SetLayout } => {
   const client = useClient();
   const { runtime, setDisplay } = useContext(ShellContext);
@@ -51,12 +45,10 @@ export const useShell = (): { setLayout: SetLayout } => {
         setDisplay?.(ShellDisplay.FULLSCREEN);
       }
 
-      runtime.setLayout(layout, options);
+      runtime.setLayout({ layout, ...options });
     }
 
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      await client.services.setLayout(layout, options);
-    }
+    await client.shell.open(layout, options);
   };
 
   return {
@@ -73,7 +65,10 @@ export type ShellProviderProps = PropsWithChildren<{
 
 /**
  * Renders the DXOS shell and provides a way to set the layout of the shell from the rest of the app.
+ *
+ * @deprecated
  */
+// TODO(wittjosiah): Remove? Is MemoryShellRuntime needed? We now can use shell with monolithic client.
 export const ShellProvider = ({
   space,
   deviceInvitationCode,
@@ -82,12 +77,6 @@ export const ShellProvider = ({
   children,
 }: ShellProviderProps) => {
   const client = useClient();
-
-  //
-  // IFrame Shell
-  //
-
-  useShellNatural({ spaceKey: space?.key, onJoinedSpace });
 
   //
   // Component Shell
@@ -128,10 +117,10 @@ export const ShellProvider = ({
 
       const modifier = event.ctrlKey || event.metaKey;
       if (event.key === '>' && event.shiftKey && modifier) {
-        shellRuntime.setLayout(ShellLayout.DEVICE_INVITATIONS);
+        shellRuntime.setLayout({ layout: ShellLayout.SHARE_IDENTITY });
         setDisplay(ShellDisplay.FULLSCREEN);
       } else if (event.key === '.' && modifier) {
-        shellRuntime.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+        shellRuntime.setLayout({ layout: ShellLayout.SPACE, spaceKey: space.key });
         setDisplay(ShellDisplay.FULLSCREEN);
       }
     },

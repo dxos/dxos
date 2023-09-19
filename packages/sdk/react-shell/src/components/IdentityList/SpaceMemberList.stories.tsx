@@ -6,8 +6,8 @@ import React from 'react';
 
 import '@dxosTheme';
 
-import { alice } from '../../testing/fixtures/identities';
 import { SpaceMemberListImpl } from './SpaceMemberList';
+import { alice } from '../../testing/fixtures/identities';
 
 export default {
   component: SpaceMemberListImpl,

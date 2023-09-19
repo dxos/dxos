@@ -25,7 +25,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -118,11 +118,12 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   };
 
   const handleCreateObject = async (createContent: boolean) => {
-    generator.createObject({ createContent });
+    // generator.createObject({ createContent });
+    generator.createTables();
   };
 
   const handleCreateInvitation = () => {
-    const invitation = space.createInvitation({
+    const invitation = space.share({
       type: Invitation.Type.MULTIUSE,
       authMethod: Invitation.AuthMethod.NONE,
     });
@@ -153,7 +154,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   };
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
@@ -209,15 +210,16 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleCreateInvitation} title='Space invitation'>
+          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
             <PaperPlaneRight className={getSize(5)} />
           </Button>
-          <Button onClick={handleOpenDevtools} title='DXOS Dectools'>
-            <Toolbox className={getSize(5)} />
+          <Button onClick={handleOpenDevtools} title='Open Dectools'>
+            <Toolbox weight='duotone' className={mx(getSize(5), 'text-red-700')} />
           </Button>
-          <Button onClick={handleCreateEpoch}>
+          <Button onClick={handleCreateEpoch} title='Create epoch'>
             <FlagPennant className={getSize(5)} />
           </Button>
+          {/* TODO(burdon): Alert or shift key. */}
           <Button onClick={handleResetClient} title='Reset client'>
             <Trash className={getSize(5)} />
           </Button>

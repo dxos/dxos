@@ -1,8 +1,14 @@
 diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
-index 824e8e4e0338c5c51c086a40085b02d24e6490eb..39df4c6f6470d37f7b64eac7b400ab3e1f965ca2 100644
+index 824e8e4e0338c5c51c086a40085b02d24e6490eb..aa38e803867405840dde19937dbf217aed9a1c29 100644
 --- a/src/executors/tsc/tsc.impl.js
 +++ b/src/executors/tsc/tsc.impl.js
-@@ -6,9 +6,9 @@ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
+@@ -1,14 +1,15 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.tscExecutor = exports.createTypeScriptCompilationOptions = void 0;
++const fs = require('node:fs');
+ const tslib_1 = require("tslib");
+ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
  const check_dependencies_1 = require("../../utils/check-dependencies");
  const compiler_helper_dependency_1 = require("../../utils/compiler-helper-dependency");
  const inline_1 = require("../../utils/inline");
@@ -14,7 +20,19 @@ index 824e8e4e0338c5c51c086a40085b02d24e6490eb..39df4c6f6470d37f7b64eac7b400ab3e
  const lib_1 = require("./lib");
  function createTypeScriptCompilationOptions(normalizedOptions, context) {
      return {
-@@ -48,16 +48,16 @@ function tscExecutor(_options, context) {
+@@ -35,6 +36,11 @@ function tscExecutor(_options, context) {
+         if (tsLibDependency) {
+             dependencies.push(tsLibDependency);
+         }
++        // Clean output path before build.
++        try {
++            fs.readdir(_options.outputPath);
++            fs.rm(_options.outputPath, { recursive: true });
++        } catch {}
+         const assetHandler = new copy_assets_handler_1.CopyAssetsHandler({
+             projectDir: projectRoot,
+             rootDir: context.root,
+@@ -48,16 +54,16 @@ function tscExecutor(_options, context) {
          }
          const typescriptCompilation = (0, compile_typescript_files_1.compileTypeScriptFiles)(options, tsCompilationOptions, () => tslib_1.__awaiter(this, void 0, void 0, function* () {
              yield assetHandler.processAllAssetsOnce();

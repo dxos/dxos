@@ -2,29 +2,32 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { ReactChild, ReactElement, useMemo, useState } from 'react';
+import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import bytes from 'bytes';
+import React, { useMemo, useState } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { ComplexMap } from '@dxos/util';
 
-import { PanelContainer } from '../../../components';
 import { ConnectionInfoView } from './ConnectionInfoView';
-import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
-import bytes from 'bytes';
+import { PanelContainer } from '../../../components';
 
 type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 
 // TODO(burdon): Add peers/connect/disconnect/error info.
 const { helper, builder } = createColumnBuilder<SwarmConnection>();
-const columns: GridColumnDef<SwarmConnection, any>[] = [
+const columns: TableColumnDef<SwarmConnection, any>[] = [
   helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
-  helper.accessor('topic', builder.key({
-    tooltip: true,
-    getGroupingValue: (value) => value.topic.truncate(),
-  })),
+  helper.accessor(
+    'topic',
+    builder.key({
+      tooltip: true,
+      getGroupingValue: (value) => value.topic.truncate(),
+    }),
+  ),
   helper.accessor('label', { header: 'label' }), // TODO(burdon): Has promise string.
   helper.accessor('isActive', { ...builder.icon({ header: 'active' }), size: 80 }),
   helper.accessor((connection) => connection.connection?.sessionId, {
@@ -33,7 +36,7 @@ const columns: GridColumnDef<SwarmConnection, any>[] = [
   }),
   helper.accessor((connection) => connection.connection?.remotePeerId, {
     id: 'remote peer',
-    ...builder.key({ tooltip: true, }),
+    ...builder.key({ label: 'remote', tooltip: true }),
     getGroupingValue: (value) => value.connection?.remotePeerId?.truncate(),
     size: 80,
   }),
@@ -44,11 +47,19 @@ const columns: GridColumnDef<SwarmConnection, any>[] = [
   }),
   helper.accessor((connection) => connection.connection && getStats(connection.connection), {
     id: 'stats',
-    cell: (cell) => cell.getValue() && <span className='flex flex-row items-baseline gap-1'><ArrowUp />{bytes(cell.getValue().bytesSent)}<ArrowDown />{bytes(cell.getValue().bytesReceived)}</span>
+    cell: (cell) =>
+      cell.getValue() && (
+        <span className='flex flex-row items-baseline gap-1'>
+          <ArrowUp />
+          {bytes(cell.getValue().bytesSent)}
+          <ArrowDown />
+          {bytes(cell.getValue().bytesReceived)}
+        </span>
+      ),
   }),
   helper.accessor((connection) => connection.connection?.closeReason, {
     id: 'close reason',
-    size: 400
+    size: 400,
   }),
 ];
 
@@ -76,12 +87,18 @@ export const SwarmPanel = () => {
   }, []) ?? [swarms];
 
   // TODO(dmaretskyi): Grid already has some sort features.
-  items.sort(comparer(row => row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity));
+  items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
   return (
     <PanelContainer>
-      <div className='h-1/2 overflow-auto'>
-        <Grid<SwarmConnection> columns={columns} data={items} keyAccessor={row => row.id.toHex()} grouping={['topic']} onSelectedChange={handleSelect} />
+      <div className='h-1/2 overflow-hidden'>
+        <Table<SwarmConnection>
+          columns={columns}
+          data={items}
+          keyAccessor={(row) => row.id.toHex()}
+          grouping={['topic']}
+          onSelectedChange={handleSelect}
+        />
       </div>
       <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
     </PanelContainer>
@@ -89,13 +106,13 @@ export const SwarmPanel = () => {
 };
 
 const stateFormat: Record<string, { className?: string }> = {
-  'CONNECTED': { className: 'text-green-500' },
-  'CONNECTING': {},
-  'INITIAL': {},
-  'CREATED': {},
-  'CLOSING': { className: 'text-red-500' },
-  'CLOSED': { className: 'text-red-500' },
-}
+  CONNECTED: { className: 'text-green-500' },
+  CONNECTING: {},
+  INITIAL: {},
+  CREATED: {},
+  CLOSING: { className: 'text-red-500' },
+  CLOSED: { className: 'text-red-500' },
+};
 
 const getStats = (connection: ConnectionInfo) => {
   const stats = {
@@ -104,17 +121,18 @@ const getStats = (connection: ConnectionInfo) => {
     bytesSentRate: 0,
     bytesReceivedRate: 0,
   };
-  connection.streams?.forEach(stream => {
+  connection.streams?.forEach((stream) => {
     stats.bytesSent += stream.bytesSent ?? 0;
     stats.bytesReceived += stream.bytesReceived ?? 0;
     stats.bytesSentRate += stream.bytesSentRate ?? 0;
     stats.bytesReceivedRate += stream.bytesReceivedRate ?? 0;
-  })
+  });
 
   return stats;
-}
-
+};
 
 // TODO(dmaretskyi): Move to util.
-const comparer = <T,>(accessor: (x: T) => number, reverse?: boolean) => (a: T, b: T) =>
-  reverse ? accessor(b) - accessor(a) : accessor(a) - accessor(b);
+const comparer =
+  <T,>(accessor: (x: T) => number, reverse?: boolean) =>
+  (a: T, b: T) =>
+    reverse ? accessor(b) - accessor(a) : accessor(a) - accessor(b);

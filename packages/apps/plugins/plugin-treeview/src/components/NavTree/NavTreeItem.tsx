@@ -11,6 +11,7 @@ import React, {
   forwardRef,
   ForwardRefExoticComponent,
   Fragment,
+  PropsWithChildren,
   RefAttributes,
   useEffect,
   useRef,
@@ -20,7 +21,8 @@ import React, {
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
-import { Button, DropdownMenu, Popover, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, Popover, Tooltip, Tree, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { DelegatorProps } from '@dxos/aurora-grid';
 import {
   dropRing,
   focusRing,
@@ -33,14 +35,13 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
+import { NavTree } from './NavTree';
+import { NavTreeItemHeading } from './NavTreeItemHeading';
+import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
+import { SharedTreeItemProps } from './props';
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
-import { CollapsibleHeading } from './CollapsibleHeading';
-import { NavTree } from './NavTree';
-import { NavigableHeading } from './NavigableHeading';
-import { levelPadding } from './navtree-fragments';
-import { SharedTreeItemProps } from './props';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps &
   Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
@@ -85,14 +86,62 @@ export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
   return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
 };
 
-type TreeViewItemProps = SharedTreeItemProps & SortableProps;
+type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
+
+export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Graph.Node>> = forwardRef<
+  HTMLOListElement,
+  DelegatorProps<Graph.Node>
+>(
+  (
+    { tile, data, dragHandleListeners, dragHandleAttributes, style, children, isActive, isMigrationDestination },
+    forwardedRef,
+  ) => {
+    switch (tile.variant) {
+      case 'stack':
+        return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
+      case 'treeitem':
+        return (
+          <NavTreeItem
+            node={data}
+            level={tile.level}
+            draggableAttributes={dragHandleAttributes}
+            draggableListeners={dragHandleListeners}
+            style={style}
+            ref={forwardedRef}
+            rearranging={isActive}
+            childrenManaged
+            {...(isMigrationDestination && { migrating: 'into' })}
+          >
+            {children}
+          </NavTreeItem>
+        );
+      default:
+        return null;
+    }
+  },
+);
+
+const hoverableDescriptionIcons =
+  '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   TreeViewItemProps
 >(
   (
-    { node, level, draggableListeners, draggableAttributes, style, rearranging, migrating, isPreview, isOverlay },
+    {
+      node,
+      level,
+      children,
+      draggableListeners,
+      draggableAttributes,
+      style,
+      rearranging,
+      migrating,
+      isPreview,
+      isOverlay,
+      childrenManaged,
+    },
     forwardedRef,
   ) => {
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
@@ -100,7 +149,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const actions = sortActions(node.actions);
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
     const { navigationSidebarOpen } = useSidebars();
+    // TODO(wittjosiah): Pass in as prop.
     const { active: treeViewActive } = useTreeView();
+    // TODO(wittjosiah): Pass in as prop.
     const { popoverAnchorId } = useSplitView();
     const { graph } = useGraph();
 
@@ -111,10 +162,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const [open, setOpen] = useState(level < 1);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
+    const forceCollapse = isOverlay || isPreview || rearranging || disabled;
     const active = treeViewActive === node.id;
+    const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
-      if (treeViewActive && graph.getPath(treeViewActive)?.includes(node.id)) {
+      // TODO(wittjosiah): Factor out as callback so that this doesn't depend on graph context.
+      // Excludes selected node from being opened by selection.
+      if (treeViewActive && graph.getPath(treeViewActive)?.slice(0, -2).includes(node.id)) {
         setOpen(true);
       }
     }, [graph, treeViewActive]);
@@ -142,15 +197,16 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     return (
       <TreeItem.Root
         collapsible={isBranch}
-        open={!disabled && open}
-        onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
+        open={!forceCollapse && open}
+        onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
         classNames={[
           'rounded block',
           hoverableFocusedKeyboardControls,
-          focusRing,
           'transition-opacity',
           (rearranging || isPreview) && 'opacity-0',
+          focusRing,
           migrating === 'into' && dropRing,
+          level === 0 ? 'mbs-4 first:mbs-0' : '',
         ]}
         {...draggableAttributes}
         {...draggableListeners}
@@ -163,15 +219,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             levelPadding(level),
             hoverableControls,
             hoverableFocusedWithinControls,
+            hoverableDescriptionIcons,
+            level < 1 && topLevelCollapsibleSpacing,
             !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
             'flex items-start rounded',
           )}
+          data-testid={testId}
         >
-          {isBranch ? (
-            <CollapsibleHeading {...{ open, node, level, active }} />
-          ) : (
-            <NavigableHeading {...{ node, level, active }} />
-          )}
+          <NavTreeItemHeading {...{ open, node, level, active }} />
           {actionGroups.length > 0 && (
             <Tooltip.Root
               open={optionsTooltipOpen}
@@ -255,11 +310,14 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             </Tooltip.Root>
           )}
         </HeadingWithActionsRoot>
-        {isBranch && (
-          <TreeItem.Body>
-            <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
-          </TreeItem.Body>
-        )}
+        {childrenManaged
+          ? children
+          : isBranch &&
+            !forceCollapse && (
+              <TreeItem.Body>
+                <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
+              </TreeItem.Body>
+            )}
       </TreeItem.Root>
     );
   },

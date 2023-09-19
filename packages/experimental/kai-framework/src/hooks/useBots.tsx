@@ -14,25 +14,25 @@ import { BotClient } from '../bots';
 export const botModules: Module[] = [
   {
     id: 'dxos.module.bot.store',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Store',
     description: 'Secure storage.',
   },
   {
     id: 'dxos.module.bot.mail',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'EMail',
     description: 'Email sync.',
   },
   {
     id: 'dxos.module.bot.chess',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Chess',
     description: 'Basic chess engine.',
   },
   {
     id: 'dxos.module.bot.kai',
-    type: 'dxos:type/bot',
+    type: 'dxos.org/type/bot',
     displayName: 'Kai',
     description: 'Research and task assistant.',
   },

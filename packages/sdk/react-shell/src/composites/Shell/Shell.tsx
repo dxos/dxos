@@ -26,12 +26,12 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   }, [runtime]);
 
   useEffect(() => {
-    if (layout === ShellLayout.SPACE_INVITATIONS && !space) {
+    if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
 
       const timeout = setTimeout(async () => {
         await runtime.setAppContext({ display: ShellDisplay.NONE });
-        runtime.setLayout(ShellLayout.DEFAULT);
+        runtime.setLayout({ layout: ShellLayout.DEFAULT });
       });
 
       return () => clearTimeout(timeout);
@@ -46,30 +46,33 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           initialInvitationCode={invitationCode}
           onDone={() => {
             void runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );
 
-    case ShellLayout.DEVICE_INVITATIONS:
+    // TODO(wittjosiah): Jump straight to specific step if SHARE or EDIT are specified.
+    case ShellLayout.IDENTITY:
+    case ShellLayout.SHARE_IDENTITY:
+    case ShellLayout.EDIT_PROFILE:
       return (
         <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );
 
-    case ShellLayout.SPACE_INVITATIONS:
+    case ShellLayout.SPACE:
       return space ? (
         <SpaceDialog
           space={space}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       ) : null;
@@ -78,16 +81,13 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return (
         <JoinDialog
           initialInvitationCode={invitationCode}
-          onInvalidateInvitationCode={async (code: string) => {
-            await runtime.setAppContext({ invalidatedInvitationCode: code });
-          }}
           onDone={async (result) => {
             await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: result?.spaceKey ?? undefined });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
           onExit={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout(ShellLayout.DEFAULT);
+            runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
       );

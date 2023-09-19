@@ -25,6 +25,7 @@ export class TestAgent extends TestPeerBase {
     this.gossip = new Gossip({
       localPeerId: peerId,
     });
+    void this.gossip.open();
     this.presence = new Presence({
       announceInterval,
       offlineTimeout,
@@ -52,7 +53,7 @@ export class TestAgent extends TestPeerBase {
 
   override async destroy() {
     await super.destroy();
-    await this.gossip.destroy();
+    await this.gossip.close();
     await this.presence.destroy();
   }
 }

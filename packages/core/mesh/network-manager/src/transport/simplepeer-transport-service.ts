@@ -25,15 +25,13 @@ type TransportState = {
   transport: SimplePeerTransport;
   stream: Duplex;
   writeCallbacks: (() => void)[];
+  state: 'OPEN' | 'CLOSED';
 };
 
 export class SimplePeerTransportService implements BridgeService {
   private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
-  // prettier-ignore
-  constructor(
-    private readonly _webrtcConfig?: any
-  ) { }
+  constructor(private readonly _webrtcConfig?: any) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
@@ -99,6 +97,7 @@ export class SimplePeerTransportService implements BridgeService {
         transport,
         stream: duplex,
         writeCallbacks: [],
+        state: 'OPEN',
       };
 
       ready();
@@ -115,6 +114,9 @@ export class SimplePeerTransportService implements BridgeService {
   }
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
+    if (this.transports.get(proxyId)?.state !== 'OPEN') {
+      log.debug('transport is closed');
+    }
     invariant(this.transports.has(proxyId));
     const state = this.transports.get(proxyId)!;
     const bufferHasSpace = state.stream.push(payload);
@@ -128,7 +130,9 @@ export class SimplePeerTransportService implements BridgeService {
   async close({ proxyId }: CloseRequest) {
     await this.transports.get(proxyId)?.transport.destroy();
     await this.transports.get(proxyId)?.stream.end();
-    this.transports.delete(proxyId);
+    if (this.transports.get(proxyId)) {
+      this.transports.get(proxyId)!.state = 'CLOSED';
+    }
     log('Closed.');
   }
 }

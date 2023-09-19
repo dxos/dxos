@@ -42,7 +42,7 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+          vendor: ['react', 'react-dom'],
         },
       },
     },
@@ -53,7 +53,11 @@ export default defineConfig({
     }),
     ThemePlugin({
       root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      content: [
+        resolve(__dirname, './*.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+      ],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),

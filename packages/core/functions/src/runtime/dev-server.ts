@@ -33,7 +33,7 @@ export class DevServer {
   // prettier-ignore
   constructor(
     private readonly _client: Client,
-    private readonly _options: DevServerOptions
+    private readonly _options: DevServerOptions,
   ) {}
 
   get port() {

@@ -30,6 +30,7 @@ import {
   EditorView,
 } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
+import { vim } from '@replit/codemirror-vim';
 import React, {
   KeyboardEvent,
   forwardRef,
@@ -46,13 +47,17 @@ import { configColors } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { YText } from '@dxos/text-model';
 
-import { ComposerModel, ComposerSlots } from '../../model';
 import { markdownTagsExtension } from './markdownTags';
 import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
+import { ComposerModel, ComposerSlots } from '../../model';
+
+export const EditorModes = ['default', 'vim'] as const;
+export type EditorMode = (typeof EditorModes)[number];
 
 export type MarkdownComposerProps = {
   model?: ComposerModel;
   slots?: ComposerSlots;
+  editorMode?: EditorMode;
   onChange?: (content: string | Text) => void;
 };
 
@@ -88,7 +93,7 @@ const shadeKeys = {
 };
 
 export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
-  ({ model, slots = {}, onChange }, forwardedRef) => {
+  ({ model, slots = {}, onChange, editorMode }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
     const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
@@ -147,6 +152,8 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
           // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
           listenChangesExtension,
 
+          ...(editorMode === 'vim' ? [vim()] : []),
+
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           highlightActiveLineGutter(),
           highlightSpecialChars(),
@@ -202,19 +209,32 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
         setView(undefined);
         setState(undefined);
       };
-    }, [parent, content, provider?.awareness, themeMode]);
+    }, [parent, content, provider?.awareness, themeMode, editorMode]);
 
     const handleKeyUp = useCallback(
-      ({ key }: KeyboardEvent) => {
+      ({ key, altKey, shiftKey, metaKey, ctrlKey }: KeyboardEvent) => {
         switch (key) {
           case 'Enter':
             view?.contentDOM.focus();
             break;
+
+          case 'Escape':
+            editorMode === 'vim' && (altKey || shiftKey || metaKey || ctrlKey) && parent?.focus();
+            break;
         }
       },
-      [view],
+      [view, editorMode],
     );
 
-    return <div tabIndex={0} key={id} {...slots.root} onKeyUp={handleKeyUp} {...tabsterDOMAttribute} ref={setParent} />;
+    return (
+      <div
+        tabIndex={0}
+        key={id}
+        {...slots.root}
+        onKeyUp={handleKeyUp}
+        {...(editorMode !== 'vim' ? tabsterDOMAttribute : {})}
+        ref={setParent}
+      />
+    );
   },
 );

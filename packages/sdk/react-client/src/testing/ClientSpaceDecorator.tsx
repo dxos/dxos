@@ -26,8 +26,8 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.person.firstName() });
-        schema && client.addSchema(schema);
-        await performInvitation({ host: rootSpace as SpaceProxy, guest: client });
+        schema && client.spaces.addSchema(schema);
+        await performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
       }}
     >
       {children}
@@ -58,8 +58,8 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
         services={services}
         onInitialized={async (client) => {
           await client.halo.createIdentity({ displayName: faker.person.firstName() });
-          schema && client.addSchema(schema);
-          const space = await client.createSpace({ name: faker.animal.bird() });
+          schema && client.spaces.addSchema(schema);
+          const space = await client.spaces.create({ name: faker.animal.bird() });
           await onCreateSpace?.(space);
           setSpace(space);
         }}
@@ -99,10 +99,12 @@ export const setupPeersInSpace = async (options: Omit<PeersInSpaceProps, 'childr
   const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.person.firstName() })));
-  schema && clients.map((client) => client.addSchema(schema));
-  const space = await clients[0].createSpace({ name: faker.animal.bird() });
+  schema && clients.map((client) => client.spaces.addSchema(schema));
+  const space = await clients[0].spaces.create({ name: faker.animal.bird() });
   await onCreateSpace?.(space);
-  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client })));
+  await Promise.all(
+    clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
+  );
 
   return { spaceKey: space.key, clients };
 };

@@ -22,11 +22,11 @@ import { createMockCredential, createServiceHost } from '../testing';
 chai.use(chaiAsPromised);
 
 describe('ClientServicesHost', () => {
-  const persistentStoragePath = '/tmp/dxos/client-services/service-host/storage';
+  const dataRoot = '/tmp/dxos/client-services/service-host/storage';
 
   afterEach(async () => {
     // Clean up.
-    isNode() && rmSync(persistentStoragePath, { recursive: true, force: true });
+    isNode() && rmSync(dataRoot, { recursive: true, force: true });
   });
 
   test('queryCredentials', async () => {
@@ -114,7 +114,7 @@ describe('ClientServicesHost', () => {
 
   test('storage reset', async () => {
     const config = new Config({
-      runtime: { client: { storage: { persistent: true, path: persistentStoragePath } } },
+      runtime: { client: { storage: { persistent: true, dataRoot } } },
     });
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());

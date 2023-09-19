@@ -32,8 +32,9 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/echo-signals/src/**/*.{ts,js}"
-        ]
+          "packages/core/echo/echo-signals/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

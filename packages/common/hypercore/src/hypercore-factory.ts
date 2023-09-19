@@ -14,10 +14,9 @@ import { py } from './util';
  * Creates feeds with default properties.
  */
 export class HypercoreFactory<T> {
-  // prettier-ignore
   constructor(
     private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
-    private readonly _options?: HypercoreOptions
+    private readonly _options?: HypercoreOptions,
   ) {
     invariant(this._root);
   }

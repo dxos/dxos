@@ -29,8 +29,6 @@ export class GossipExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _closed = false;
 
-  private _sendInterval?: NodeJS.Timeout;
-
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _callbacks: GossipCallbacks = {}) {}
@@ -62,14 +60,20 @@ export class GossipExtension implements TeleportExtension {
   async onClose(err?: Error): Promise<void> {
     log('close', { err });
     await this._rpc?.close();
-    this._sendInterval && clearInterval(this._sendInterval);
     await this._callbacks.onClose?.(err);
     this._closed = true;
   }
 
   async onAbort(err?: Error): Promise<void> {
     log('abort', { err });
-    await this._rpc?.abort();
+    try {
+      await this._rpc?.abort();
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      await this._callbacks.onClose?.(err);
+    }
+    this._closed = true;
   }
 
   async sendAnnounce(message: GossipMessage) {

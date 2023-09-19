@@ -4,9 +4,9 @@
 
 Starts a local instance of the service host.
 
-
 ## Constructors
 ### [constructor(_params)]()
+
 
 
 
@@ -17,15 +17,22 @@ Arguments:
 `_params`: <code>ClientServicesHostParams</code>
 
 
+
 ## Properties
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
+
+
 ### [host]()
 Type: <code>undefined | ClientServicesHost</code>
 
+
+
 ### [services]()
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
+
+
 
 
 ## Methods
@@ -33,14 +40,23 @@ Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServ
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+
+
 
 ### [open()]()
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+
+
+

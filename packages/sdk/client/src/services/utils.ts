@@ -5,9 +5,9 @@
 import type { ClientServicesProvider } from '@dxos/client-protocol';
 import type { ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import type { NetworkManagerOptions } from '@dxos/network-manager';
+import { ApiError } from '@dxos/protocols';
 import { getAsyncValue, safariCheck } from '@dxos/util';
 
 import { IFrameClientServicesHost } from './iframe-service-host';

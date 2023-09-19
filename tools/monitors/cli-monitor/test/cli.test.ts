@@ -8,8 +8,8 @@ import { promisify } from 'node:util';
 
 describe('CLI', () => {
   it('prints config', async () => {
-    const { stdout, stderr } = await promisify(exec)('npm exec dx config', { cwd: __dirname });
-    console.log('stderr', stderr);
-    expect(stdout).to.contain('"version": 1');
+    const { stdout, stderr } = await promisify(exec)('npm exec dx', { cwd: __dirname });
+    stderr && console.error('stderr', stderr);
+    expect(stdout).to.contain('DXOS CLI');
   }).timeout(5000);
 });

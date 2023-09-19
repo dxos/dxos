@@ -5,21 +5,21 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { mx } from '@dxos/aurora-theme';
 import { Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 import { LogView } from './LogView';
 import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
 import { ResourceState, State } from './types';
+import { PanelContainer } from '../../../components'; // Deliberately not using the common components export to aid in code-splitting.
 
 const { helper } = createColumnBuilder<ResourceState>();
-const columns: GridColumnDef<ResourceState, any>[] = [
+const columns: TableColumnDef<ResourceState, any>[] = [
   helper.accessor('resource', {
     id: 'name',
     size: 200,
@@ -110,7 +110,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='flex flex-col h-1/3 overflow-hidden'>
-        <Grid<ResourceState>
+        <Table<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
           select='single-toggle'

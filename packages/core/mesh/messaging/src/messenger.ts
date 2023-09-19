@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
+import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, trace } from '@dxos/protocols';
+import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -26,6 +26,11 @@ export interface MessengerOptions {
 const ReliablePayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload');
 const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgement');
 
+const ERROR_LIMIT = 5;
+const NETWORK_REBOOT_DELAY = 3_000;
+
+const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
+
 /**
  * Reliable messenger that works trough signal network.
  */
@@ -41,11 +46,18 @@ export class Messenger {
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  /**
+   * Keys scheduled to be cleared from _receivedMessages on the next iteration.
+   */
+  private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _ctx!: Context;
   private _closed = true;
   private readonly _retryDelay: number;
+  private _errorCount = 0;
+  private _rebooting = false;
 
   constructor({ signalManager, retryDelay = 300 }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -69,6 +81,16 @@ export class Messenger {
         await this._handleMessage(message);
       }),
     );
+
+    // Clear the map periodically.
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._performGc();
+      },
+      RECEIVED_MESSAGES_GC_INTERVAL,
+    );
+
     this._closed = false;
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
@@ -114,10 +136,16 @@ export class Messenger {
 
     scheduleTask(
       messageContext,
-      () => {
+      async () => {
         log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
-        timeoutHit(new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'));
+        await this.errorLimitCheck();
+        timeoutHit(
+          new ProtocolTimeoutError(
+            'signaling message not delivered',
+            new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'),
+          ),
+        );
         void messageContext.dispose();
       },
       MESSAGE_TIMEOUT,
@@ -131,6 +159,33 @@ export class Messenger {
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
     return promise;
+  }
+
+  private async errorLimitCheck() {
+    log(`checking error limit ${this._errorCount}`);
+    if (this._errorCount++ > ERROR_LIMIT) {
+      await this.rebootNetwork();
+    }
+  }
+
+  private async rebootNetwork() {
+    if (this._rebooting) {
+      return;
+    }
+    this._rebooting = true;
+
+    log('rebooting Messenger/SignalManager');
+    await this.close();
+    await this._signalManager.close();
+    log('pausing');
+    await new Promise((resolve) => setTimeout(resolve, NETWORK_REBOOT_DELAY));
+    log('done pausing');
+    await this.open();
+    await this._signalManager.open();
+    log('done rebooting');
+
+    this._errorCount = 0;
+    this._rebooting = false;
   }
 
   /**
@@ -277,6 +332,23 @@ export class Messenger {
           await listener(message);
         }
       }
+    }
+  }
+
+  private _performGc() {
+    const start = performance.now();
+
+    for (const key of this._toClear.keys()) {
+      this._receivedMessages.delete(key);
+    }
+    this._toClear.clear();
+    for (const key of this._receivedMessages.keys()) {
+      this._toClear.add(key);
+    }
+
+    const elapsed = performance.now() - start;
+    if (elapsed > 100) {
+      log.warn('GC took too long', { elapsed });
     }
   }
 }

@@ -23,5 +23,6 @@ export { IFrameClientServicesHost, IFrameClientServicesHostOptions } from './ifr
 export { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 export { LocalClientServices } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
+export { Shell } from './shell';
 export { fromSocket } from './socket';
 export { fromHost, fromIFrame } from './utils';

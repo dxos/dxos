@@ -207,6 +207,7 @@ class Toolbox {
       if (projectJson?.targets) {
         if (projectJson.targets.lint) {
           projectJson.targets.lint.options.format = 'unix';
+          projectJson.targets.lint.options.quiet = true;
         }
 
         const updated = sortJson(projectJson, {

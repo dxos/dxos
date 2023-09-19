@@ -43,13 +43,13 @@ describe('schema', () => {
       JSON.stringify({
         '@id': task1.id,
         '@type': task1.__typename,
-        '@model': 'dxos:model/document',
+        '@model': 'dxos.org/model/document',
         subTasks: [],
         description: { '@id': task1.description.id },
         title: 'Task 1',
         assignee: { '@id': contact.id },
-        meta: { keys: [] }
-      })
+        meta: { keys: [] },
+      }),
     );
   });
 
@@ -61,17 +61,17 @@ describe('schema', () => {
     expect(contact.toJSON()).to.deep.eq({
       '@id': contact.id,
       '@type': contact.__typename,
-      '@model': 'dxos:model/document',
+      '@model': 'dxos.org/model/document',
       name: 'User 1',
       tasks: [
         {
-          '@id': contact.tasks[0].id
+          '@id': contact.tasks[0].id,
         },
         {
-          '@id': contact.tasks[1].id
-        }
+          '@id': contact.tasks[1].id,
+        },
       ],
-      meta: { keys: [] }
+      meta: { keys: [] },
     });
   });
 
@@ -86,12 +86,12 @@ describe('schema', () => {
       {
         name: 'name',
         type: {
-          kind: 'string'
+          kind: 'string',
         },
         options: {
           default: 'Anonymous',
-          required: true
-        }
+          required: true,
+        },
       },
       { name: 'username', type: { kind: 'string' } },
       { name: 'email', type: { kind: 'string' } },
@@ -100,10 +100,10 @@ describe('schema', () => {
         name: 'tasks',
         type: {
           kind: 'array',
-          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos:model/document' }
-        }
+          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos.org/model/document' },
+        },
       },
-      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } }
+      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } },
     ]);
   });
 

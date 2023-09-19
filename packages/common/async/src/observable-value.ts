@@ -80,10 +80,7 @@ export class CancellableObservableProvider<
 > extends ObservableProvider<Events> {
   private _cancelled = false;
 
-  // prettier-ignore
-  constructor(
-    private readonly _handleCancel?: () => Promise<void>
-  ) {
+  constructor(private readonly _handleCancel?: () => Promise<void>) {
     super();
   }
 

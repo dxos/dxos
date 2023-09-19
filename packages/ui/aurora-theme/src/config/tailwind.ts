@@ -10,11 +10,11 @@ import {
 } from '@fluent-blocks/colors';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
-import tailwindcssLogical from 'tailwindcss-logical';
-import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/config.full.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
+import tailwindcssLogical from 'tailwindcss-logical';
+import tailwindcssRadix from 'tailwindcss-radix';
 
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
@@ -304,6 +304,20 @@ export const tailwindConfig = ({
               opacity: 0.3,
             },
           },
+          'progress-indeterminate': {
+            '0%': {
+              left: 0,
+              width: '0%',
+            },
+            '50%': {
+              left: 0,
+              width: '100%',
+            },
+            '100%': {
+              width: '0%',
+              left: '100%',
+            },
+          },
         },
         animation: {
           // Popper chrome
@@ -320,6 +334,8 @@ export const tailwindConfig = ({
           shimmer: 'shimmer-loop 2s infinite',
           // halo-pulse
           'halo-pulse': 'halo-pulse 2s ease-out infinite',
+          // progress-indeterminate
+          'progress-indeterminate': 'progress-indeterminate 2s ease-out infinite',
         },
       },
       ...extensions,

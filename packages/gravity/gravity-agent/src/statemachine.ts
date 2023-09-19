@@ -60,7 +60,7 @@ export class GenericStateMachine extends AgentStateMachine {
     // --- CREATE SPACE ---
     else if (command.createSpace) {
       const id = command.createSpace.id;
-      const space = await this.agent.client.createSpace();
+      const space = await this.agent.client.spaces.create();
       if (id) {
         this.spaces.set(id, space);
       }
@@ -69,14 +69,14 @@ export class GenericStateMachine extends AgentStateMachine {
     else if (command.createSpaceInvitation) {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
-      await space.createInvitation({
+      await space.share({
         authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey),
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
-      await this.agent.client.acceptInvitation({
+      await this.agent.client.spaces.join({
         invitationId: PublicKey.random().toHex(),
         type: Invitation.Type.INTERACTIVE,
         kind: Invitation.Kind.SPACE,

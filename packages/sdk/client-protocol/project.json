@@ -31,10 +31,20 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client-protocol/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/sdk/client-protocol/src/proto/gen"
       ]
     }
   },

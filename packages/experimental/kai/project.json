@@ -83,7 +83,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

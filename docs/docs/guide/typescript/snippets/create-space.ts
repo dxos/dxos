@@ -10,5 +10,5 @@ const client = new Client();
   // ensure an identity exists:
   if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space:
-  const space = await client.createSpace();
+  const space = await client.spaces.create();
 })();

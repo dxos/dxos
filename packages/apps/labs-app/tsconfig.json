@@ -46,13 +46,10 @@
       "path": "../../ui/aurora-composer"
     },
     {
-      "path": "../../ui/aurora-grid"
+      "path": "../../ui/aurora-table"
     },
     {
       "path": "../../ui/aurora-theme"
-    },
-    {
-      "path": "../../ui/react-appkit"
     },
     {
       "path": "../plugins/plugin-chess"
@@ -110,6 +107,9 @@
     },
     {
       "path": "../plugins/plugin-table"
+    },
+    {
+      "path": "../plugins/plugin-telemetry"
     },
     {
       "path": "../plugins/plugin-template"

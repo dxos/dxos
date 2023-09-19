@@ -6,7 +6,7 @@ import { MulticastObservable } from '@dxos/async';
 import { Contact, Device, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
+import { AuthenticatingInvitation, CancellableInvitation } from './invitations';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -16,12 +16,12 @@ export interface Halo {
   get devices(): MulticastObservable<Device[]>;
   get device(): Device | undefined;
   get contacts(): MulticastObservable<Contact[]>;
-  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
+  get invitations(): MulticastObservable<CancellableInvitation[]>;
 
   createIdentity(options?: ProfileDocument): Promise<Identity>;
   recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
   updateProfile(profile: ProfileDocument): Promise<Identity>;
 
-  createInvitation(): CancellableInvitationObservable;
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  share(): CancellableInvitation;
+  join(invitation: Invitation): AuthenticatingInvitation;
 }

@@ -4,7 +4,6 @@
 
 import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
 
-import { ThemedClassName } from '../../util';
 import {
   List,
   LIST_ITEM_NAME,
@@ -17,6 +16,7 @@ import {
   ListScopedProps,
   useListItemContext,
 } from './List';
+import { ThemedClassName } from '../../util';
 
 type TreeRootProps = ListProps;
 

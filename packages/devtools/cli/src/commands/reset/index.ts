@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
 
-import { DX_CACHE, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
+import { DX_CACHE, DX_CONFIG, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
 
@@ -21,7 +21,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
   };
 
   async run(): Promise<any> {
-    const storage = this.clientConfig?.get('runtime.client.storage.path');
+    const storage = this.clientConfig?.get('runtime.client.storage.dataRoot');
     const profile = this.flags.profile;
     const paths = [
       ...new Set<string>(
@@ -30,6 +30,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
           getProfilePath(DX_DATA, profile),
           getProfilePath(DX_STATE, profile),
           getProfilePath(DX_RUNTIME, profile),
+          getProfilePath(DX_CONFIG, profile) + '.yml', // TODO(mykola): remove?
           storage,
         ]
           .sort()
@@ -39,7 +40,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
     if (storage && storage !== getProfilePath(DX_DATA, profile)) {
       this.warn(
-        chalk`The config storage path does not match the default:\n- config: {yellow ${storage}}\n- expected: {green ${getProfilePath(
+        chalk`The storage path does not match the default:\n- config: {yellow ${storage}}\n- expected: {green ${getProfilePath(
           DX_DATA,
           profile,
         )}}`,
@@ -52,7 +53,11 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
     if (!dryRun) {
       // TODO(burdon): Problem if running manually.
-      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile, { force: this.flags.force }));
+      await this.execWithDaemon(async (daemon) => {
+        if (await daemon.isRunning(this.flags.profile)) {
+          await daemon.stop(this.flags.profile, { force: this.flags.force });
+        }
+      });
       if (this.flags.verbose) {
         this.log(chalk`{red Deleting files...}`);
         paths.forEach((path) => this.log(`- ${path}`));
@@ -61,8 +66,6 @@ export default class Reset extends BaseCommand<typeof Reset> {
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
       });
-
-      await this.maybeStartDaemon();
     } else {
       this.log('Files', paths);
     }

@@ -13,9 +13,9 @@ const client = new Client();
   // friend decodes the invitation code
   const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
   // accept the invitation
-  const invitation = client.acceptInvitation(receivedInvitation);
+  const invitation = client.spaces.join(receivedInvitation);
   // verify it's secure by sending the second factor authCode
   await invitation.authenticate('<authentication code here>');
   // space joined!
-  const space = client.getSpace(invitation.get().spaceKey!);
+  const space = client.spaces.get(invitation.get().spaceKey!);
 })();

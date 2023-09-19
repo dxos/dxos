@@ -1,0 +1,72 @@
+{
+  "sourceRoot": "packages/common/phoenix/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/common/phoenix/src/index.ts",
+        "outputPath": "packages/common/phoenix/dist/types",
+        "tsConfig": "packages/common/phoenix/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/phoenix/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/phoenix/dist/lib",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/phoenix/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "ciEnvironments": [
+        "nodejs"
+      ],
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/phoenix",
+        "outputPath": "tmp/mocha/packages/common/phoenix",
+        "resultsPath": "test-results/packages/common/phoenix",
+        "testPatterns": [
+          "packages/common/phoenix/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/phoenix/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

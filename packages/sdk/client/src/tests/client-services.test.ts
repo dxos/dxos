@@ -191,12 +191,12 @@ describe('Client services', () => {
       await peer2.close();
     });
 
-    const hostSpace = await client1.createSpace();
-    log('createSpace', { key: hostSpace.key });
+    const hostSpace = await client1.spaces.create();
+    log('spaces.create', { key: hostSpace.key });
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: hostSpace as SpaceProxy,
-        guest: client2,
+        guest: client2.spaces,
         options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
       }),
     );
@@ -210,7 +210,7 @@ describe('Client services', () => {
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const guestSpace = client2.getSpace(guestInvitation!.spaceKey!);
+      const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
       invariant(guestSpace);
       expect(guestSpace).to.exist;
       trigger.wake(guestSpace);

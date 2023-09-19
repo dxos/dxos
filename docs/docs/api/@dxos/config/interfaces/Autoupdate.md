@@ -3,12 +3,15 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [enabled]()
 Type: <code>boolean</code>
+
+
 
 ### [interval]()
 Type: <code>number</code>
 
 Seconds
+
+    

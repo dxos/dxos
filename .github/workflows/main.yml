@@ -8,7 +8,7 @@ name: main
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -76,3 +76,6 @@ jobs:
           pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Monitor Main
+        run: node .github/workflows/scripts/monitor.js

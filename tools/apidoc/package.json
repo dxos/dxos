@@ -1,6 +1,6 @@
 {
   "name": "@dxos/apidoc",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "Generate nice API documentation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,8 +12,8 @@
     "apidoc": "bin/apidoc.js"
   },
   "scripts": {
+    "main": "vite-node ./src/main.ts",
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
-    "remark": "node dist/src/scripts/apidoc.js",
     "typedoc": "typedoc"
   },
   "devDependencies": {

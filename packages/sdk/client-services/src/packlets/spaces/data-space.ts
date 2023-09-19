@@ -7,11 +7,11 @@ import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
-import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { CancelledError, SystemError } from '@dxos/protocols';
 import { SpaceState, Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -22,9 +22,9 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
@@ -101,7 +101,13 @@ export class DataSpace {
     this._callbacks = params.callbacks ?? {};
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
-      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
+      trustedKeysProvider: () =>
+        new ComplexSet(
+          PublicKey.hash,
+          Array.from(this._inner.spaceState.members.values())
+            .filter((member) => !member.removed)
+            .map((member) => member.key),
+        ),
       update: this._inner.stateUpdate,
       authTimeout: AUTH_TIMEOUT,
     });
@@ -151,6 +157,7 @@ export class DataSpace {
   }
 
   private async _open() {
+    await this._gossip.open();
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open(new Context());
@@ -180,6 +187,7 @@ export class DataSpace {
     await this._notarizationPlugin.close();
 
     await this._presence.destroy();
+    await this._gossip.close();
   }
 
   async postMessage(channel: string, message: any) {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plate",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -41,7 +41,7 @@
     "@types/minimatch": "^5.1.2",
     "@types/mkdirp": "^1.0.2",
     "@types/node": "^18.11.9",
-    "@types/prettier": "^2.7.2",
+    "@types/prettier": "^2.7.3",
     "@types/recursive-readdir": "^2.2.1",
     "@types/yargs": "~16.0.1",
     "ts-node": "10.9.1",
