@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
