@@ -3,7 +3,7 @@
 //
 import path from 'path';
 import { promises as fs } from 'fs';
-import { InputOf } from '@dxos/plate';
+import { InputOf, Slot } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import { PackageJson } from './utils.t/packageJson';
 
@@ -105,7 +105,7 @@ const loadJson = async (moduleRelativePath: string) => {
 };
 
 export default template.define
-  .slots<{ packageJson?: Partial<PackageJson> }>({
+  .slots<{ packageJson?: Slot<Partial<PackageJson>, InputOf<typeof template>, { depVersion?: string }> }>({
     packageJson: {},
   })
   .text({
@@ -129,7 +129,7 @@ export default template.define
         dxosUi && Features.dxosUi(context),
         tailwind && Features.tailwind(),
         storybook && Features.storybook(),
-        slotPackageJson?.() ?? {},
+        slotPackageJson?.({ slots: { depVersion }}) ?? {},
       ].filter(Boolean);
 
       const packageJson = merge(first, ...rest);
