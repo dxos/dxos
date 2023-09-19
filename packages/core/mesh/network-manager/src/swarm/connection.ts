@@ -225,7 +225,6 @@ export class Connection {
     log('aborting...', { err });
 
     if (
-      this._state === ConnectionState.CLOSING ||
       this._state === ConnectionState.CLOSED ||
       this._state === ConnectionState.ABORTING ||
       this._state === ConnectionState.ABORTED
