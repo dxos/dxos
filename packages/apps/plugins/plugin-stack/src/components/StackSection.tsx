@@ -57,7 +57,8 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
             hoverableControls,
             'grow rounded',
             isOverlay && staticHoverableControls,
-            isActive ? 'opacity-0' : 'opacity-100',
+            isActive ? 'opacity-50' : 'opacity-100',
+            'min-h-[160px]', // TODO(burdon): Temporary until DND re-order is fixed.
           ]}
           ref={forwardedRef}
           style={style}
@@ -81,7 +82,7 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
               className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
             />
           </div>
-          <div role='none' className='flex-1'>
+          <div role='none' className={mx('flex-1', isActive && 'opacity-0')}>
             <Surface role='section' data={section.object} />
           </div>
           <Button
