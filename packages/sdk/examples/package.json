@@ -13,7 +13,9 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-composer": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
