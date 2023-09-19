@@ -376,11 +376,11 @@ describe('Invitations', () => {
       afterTest(() => Promise.all([host.destroy()]));
       afterTest(() => Promise.all([guest.destroy()]));
 
-      space = await host.createSpace();
+      space = await host.spaces.create();
     });
 
     testSuite(
-      () => ({ host: space, guest }),
+      () => ({ host: space, guest: guest.spaces }),
       () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });

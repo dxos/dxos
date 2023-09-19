@@ -12,8 +12,8 @@ import { ShellLayout } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useShell } from '@dxos/react-shell';
 
-import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 import { Actions } from './Actions';
+import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 
 export const AppMenu = () => {
   const shell = useShell();
@@ -54,7 +54,7 @@ export const AppMenu = () => {
               <Chat className={getSize(6)} />
             )}
           </Button>
-          <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
+          <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.SHARE_IDENTITY)}>
             <User className={getSize(6)} />
           </Button>
           <DropdownMenu.Root>

@@ -6,8 +6,8 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { FILTER } from '../constants';
 import { AppManager } from './app-manager';
+import { FILTER } from '../constants';
 
 // TODO(burdon): ???
 enum Groceries {

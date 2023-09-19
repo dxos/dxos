@@ -13,7 +13,7 @@ export default [
         'mutation period': 'Mutation period',
         'open devtools label': 'Open DevTools',
         'devtools label': 'DevTools',
-        'show debug panel': 'Show debug panel',
+        'show debug panel': 'Show Debug panel',
         'show devtools panel': 'Show DevTools panel',
       },
     },

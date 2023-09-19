@@ -6,7 +6,7 @@ import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -17,7 +17,7 @@ import { SpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
-const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
+const columns: TableColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
   helper.accessor('feedKey', builder.key({ header: 'key', tooltip: true })),
   helper.accessor('seq', builder.number()),
 ];

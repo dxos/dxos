@@ -47,6 +47,29 @@ export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
   return type ? { message, type, default: defaultValue, validate } : null;
 };
 
+export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape: T): InquirableZodType => {
+  if (shape instanceof z.ZodIntersection) {
+    return z.intersection(unDefault(shape._def.left), unDefault(shape._def.right));
+  } else if (shape instanceof z.ZodEffects) {
+    const inner = shape.innerType();
+    const undefaulted = unDefault(inner);
+    return undefaulted;
+  } else {
+    const undefshape = { ...shape._def.shape() };
+    for (const i in undefshape) {
+      const val = undefshape[i];
+      undefshape[i] = val instanceof z.ZodDefault ? val?.removeDefault() : val;
+    }
+    return z.object(undefshape);
+  }
+};
+
+export type StripDefaults<T extends InquirableZodType> = T extends InquirablePrimitive
+  ? T
+  : T extends InquirableZodObject
+  ? { [k in keyof T]: T[k] extends z.ZodDefault<z.ZodTypeAny> ? z.ZodTypeAny : z.ZodTypeAny }
+  : T;
+
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
   key: string,
@@ -54,7 +77,9 @@ export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> =
 
 export type InquirablePrimitive = z.ZodString | z.ZodNumber | z.ZodBoolean;
 
-export type InquirableZodObject = z.ZodObject<{ [k: string]: InquirablePrimitive | z.ZodDefault<InquirablePrimitive> }>;
+export type InquirableZodObject = z.ZodObject<{
+  [k: string]: InquirablePrimitive | z.ZodDefault<InquirablePrimitive> | z.ZodOptional<InquirablePrimitive>;
+}>;
 
 // TODO: only three refinements allowed per this need to nest them
 export type InquirableZodType =
@@ -104,6 +129,8 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
       extractFromIntersection(shape);
     } else if (shape instanceof z.ZodEffects) {
       extractFromType(shape.innerType());
+    } else if (shape instanceof z.ZodNull) {
+      // do nothing
     } else {
       extractFromObject(shape);
     }

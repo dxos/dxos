@@ -1,12 +1,12 @@
 # Class `IFrameClientServicesHost`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:17]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:15]()</sub>
 
 
 Proxy to host client service via iframe.
 
-
 ## Constructors
 ### [constructor(options)]()
+
 
 
 
@@ -17,24 +17,22 @@ Arguments:
 `options`: <code>[IFrameClientServicesHostOptions](/api/@dxos/react-client/types/IFrameClientServicesHostOptions)</code>
 
 
-## Properties
-### [invalidatedInvitationCode]()
-Type: <code>Event&lt;string&gt;</code>
 
+## Properties
 ### [joinedSpace]()
 Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
 
-### [contextUpdate]()
-Type: <code>Event&lt;[AppContextRequest](/api/@dxos/react-client/interfaces/AppContextRequest)&gt;</code>
+
 
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
-### [display]()
-Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
+
 
 ### [services]()
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
+
+
 
 
 ## Methods
@@ -42,36 +40,23 @@ Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServ
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+
+
 
 ### [open()]()
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [setLayout(layout, \[options\])]()
 
 
 
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: 
-
-`layout`: <code>[ShellLayout](/api/@dxos/react-client/enums#ShellLayout)</code>
-
-`options`: <code>Omit&lt;[LayoutRequest](/api/@dxos/react-client/interfaces/LayoutRequest), "layout"&gt;</code>
-
-### [setSpaceProvider(provider)]()
-
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`provider`: <code>Provider&lt;undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>

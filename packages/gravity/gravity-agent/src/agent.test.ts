@@ -37,7 +37,7 @@ describe('Agent', () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
-    const space = await agent.client!.createSpace();
+    const space = await agent.client!.spaces.create();
     expect(space.key).to.exist;
     expect(space.properties).to.exist;
     await agent.destroy();
@@ -176,14 +176,14 @@ class HostAgentStateMachine extends AgentStateMachine {
       await this.agent.client.halo.createIdentity();
     } else if (command.createSpace) {
       const id = command.createSpace.id;
-      const space = await this.agent.client.createSpace();
+      const space = await this.agent.client.spaces.create();
       if (id) {
         this.spaces.set(id, space);
       }
     } else if (command.createSpaceInvitation) {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
-      const observable = await space.createInvitation({
+      const observable = await space.share({
         authMethod: Invitation.AuthMethod.NONE,
         swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey),
       });
@@ -215,7 +215,7 @@ class GuestAgentStateMachine extends AgentStateMachine {
     if (command.createProfile) {
       await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
-      const observable = await this.agent.client.acceptInvitation({
+      const observable = await this.agent.client.spaces.join({
         invitationId: PublicKey.random().toHex(),
         type: Invitation.Type.INTERACTIVE,
         kind: Invitation.Kind.SPACE,

@@ -22,8 +22,6 @@ type ListProps = ComponentPropsWithRef<typeof Primitive.ol> & {
   itemSizes?: ListItemSizes;
 };
 
-// LIST
-
 const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 
 type ListContextValue = {

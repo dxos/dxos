@@ -1,10 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './Grid';
-
-export * from './helpers';
-export * from './schema';
-export * from './theme';
-export * from './types';
+export * from './mosaic';

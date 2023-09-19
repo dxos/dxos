@@ -19,7 +19,7 @@ module.exports = async (event: any, context: any) => {
 
   // TODO(burdon): Normalized type def.
   const spaceKey = event?.body?.event?.trigger?.spaceKey;
-  const space = client.getSpace(PublicKey.from(spaceKey));
+  const space = client.spaces.get(PublicKey.from(spaceKey));
   await space.waitUntilReady(); // TODO(burdon): Review.
 
   const objectIds: string[] = event?.body?.event?.objects ?? [];

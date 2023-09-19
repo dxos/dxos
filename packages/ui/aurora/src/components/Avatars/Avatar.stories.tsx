@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
+import '@dxosTheme';
 import { Size } from '@dxos/aurora-types';
 
 import { Avatar, useJdenticonHref, AvatarVariant, AvatarStatus, AvatarAnimation } from './Avatar';

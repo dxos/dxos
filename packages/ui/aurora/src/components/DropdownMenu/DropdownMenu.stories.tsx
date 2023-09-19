@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
-
 import React from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { DropdownMenu } from './DropdownMenu';
+import { Button } from '../Buttons';
 
 const StorybookDropdownMenu = () => {
   return (

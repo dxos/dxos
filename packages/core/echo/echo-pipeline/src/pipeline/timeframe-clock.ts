@@ -26,10 +26,7 @@ export class TimeframeClock {
 
   private _pendingTimeframe: Timeframe;
 
-  // prettier-ignore
-  constructor(
-    private _timeframe = new Timeframe()
-  ) {
+  constructor(private _timeframe = new Timeframe()) {
     this._pendingTimeframe = _timeframe;
   }
 

@@ -61,7 +61,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               },
             ],
             properties: {
-              testId: 'gridPlugin.createKanban',
+              testId: 'tablePlugin.createKanban',
             },
           });
 

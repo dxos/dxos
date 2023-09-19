@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { Identity, IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
+import { IdentityServiceImpl } from './identity-service';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-import { IdentityServiceImpl } from './identity-service';
 
 chai.use(chaiAsPromised);
 

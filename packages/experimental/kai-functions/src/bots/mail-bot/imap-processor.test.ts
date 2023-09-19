@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../util';
 import { ImapProcessor } from './imap-processor';
+import { getConfig, getKey } from '../util';
 
 // TODO(burdon): Set-up in-memory test for CI.
 

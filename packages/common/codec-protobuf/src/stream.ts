@@ -80,6 +80,41 @@ export class Stream<T> {
     });
   }
 
+  static async consumeData<T>(stream: Stream<T>): Promise<T[]> {
+    const entries = await Stream.consume(stream);
+    const res: T[] = [];
+    for (const entry of entries) {
+      if ('data' in entry) {
+        res.push(entry.data);
+      } else if ('closed' in entry && entry.closed === true) {
+        if (entry.error) {
+          throw entry.error;
+        } else {
+          break;
+        }
+      }
+    }
+    return res;
+  }
+
+  static async first<T>(stream: Stream<T>): Promise<T | undefined> {
+    return new Promise((resolve, reject) => {
+      stream.subscribe(
+        (data) => {
+          resolve(data);
+          void stream.close();
+        },
+        (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(undefined);
+          }
+        },
+      );
+    });
+  }
+
   /**
    * Maps all data coming through the stream.
    */

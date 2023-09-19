@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React, { ReactNode, useState } from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { Toast } from './Toast';
+import { Button } from '../Buttons';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 

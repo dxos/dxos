@@ -27,7 +27,11 @@ class TestAgent {
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
-  constructor(readonly keyring: Keyring, readonly peer: Teleport) {
+  // prettier-ignore
+  constructor(
+    readonly keyring: Keyring,
+    readonly peer: Teleport,
+  ) {
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
@@ -82,7 +86,11 @@ const assertState = async (model: Model, real: Real) => {
 };
 
 class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly agent: AgentName, readonly feedKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    readonly agent: AgentName,
+    readonly feedKey: PublicKey,
+  ) {}
 
   toString = () => `OpenFeedCommand(${this.agent}, ${this.feedKey.truncate()})`;
 
@@ -105,7 +113,12 @@ class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly agent: AgentName, readonly feedKey: PublicKey, readonly count: number) {}
+  // prettier-ignore
+  constructor(
+    readonly agent: AgentName,
+    readonly feedKey: PublicKey,
+    readonly count: number,
+  ) {}
 
   toString = () => `WriteToFeedCommand(${this.agent}, ${this.feedKey.truncate()}, ${this.count})`;
 

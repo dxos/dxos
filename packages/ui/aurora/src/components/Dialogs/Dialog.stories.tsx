@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { Dialog } from './Dialog';
+import { Button } from '../Buttons';
 
 type StorybookDialogProps = Partial<{
   title: string;

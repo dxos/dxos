@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -21,6 +21,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@braneframe/plugin-url-sync": "workspace:*",
@@ -28,7 +29,6 @@
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "isomorphic-fetch": "^3.0.0",

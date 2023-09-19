@@ -9,9 +9,9 @@ import { Input, useTranslation } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 
-import { THREAD_PLUGIN } from '../types';
 import { BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
+import { THREAD_PLUGIN } from '../types';
 
 // type DailyBlock = {
 //   date?: Date;
@@ -52,7 +52,7 @@ export const ThreadChannel: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 lg:m-auto',
+        'grow flex flex-col w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-0 md:m-auto',
         groupSurface,
       )}
     >

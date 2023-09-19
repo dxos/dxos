@@ -6,15 +6,15 @@ import React from 'react';
 
 import { Client } from '@dxos/client';
 
-import { useModule } from '../../hooks';
-import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
 import { Contacts } from './Contacts';
 import { CreateProfile } from './CreateProfile';
 import { Devices } from './Devices';
 import { Identity } from './Identity';
 import { Keychain } from './Keychain';
 import { RecoverProfile } from './RecoverProfile';
+import { useModule } from '../../hooks';
+import { Join, Share } from '../invitations';
+import { MenuItem, Module, Panel } from '../util';
 
 export const createHaloMenu = (client: Client): MenuItem => {
   return {
@@ -92,7 +92,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                       <Panel>
                         <Share
                           onCreate={() => {
-                            return client.halo.createInvitation();
+                            return client.halo.share();
                           }}
                         />
                       </Panel>

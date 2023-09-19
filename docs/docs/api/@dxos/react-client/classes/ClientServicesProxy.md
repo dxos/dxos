@@ -5,9 +5,9 @@
 Implements services that are not local to the app.
 For example, the services can be located in Wallet Extension.
 
-
 ## Constructors
 ### [constructor(port, \[_timeout\])]()
+
 
 
 
@@ -20,15 +20,22 @@ Arguments:
 `_timeout`: <code>number</code>
 
 
+
 ## Properties
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
+
+
 ### [proxy]()
 Type: <code>ProtoRpcPeer&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
+
+
 ### [services]()
 Type: <code>[ClientServices](/api/@dxos/react-client/types/ClientServices)</code>
+
+
 
 
 ## Methods
@@ -36,14 +43,23 @@ Type: <code>[ClientServices](/api/@dxos/react-client/types/ClientServices)</code
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+
+
 
 ### [open()]()
 
 
 
+
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
+
+
+
+

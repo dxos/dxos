@@ -1,6 +1,6 @@
 {
   "name": "@dxos/context",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "Async utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,7 +16,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*"
   },

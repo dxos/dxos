@@ -1,0 +1,49 @@
+{
+  "name": "@braneframe/plugin-telemetry",
+  "version": "0.2.0",
+  "description": "DXOS Surface plugin for hooking up app telemetry",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./headless": "./dist/lib/browser/telemetry/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "headless": [
+        "dist/types/src/telemetry/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@dxos/telemetry": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "localforage": "^1.10.0"
+  },
+  "devDependencies": {
+    "@braneframe/plugin-treeview": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0",
+    "vite": "^4.3.9"
+  },
+  "peerDependencies": {
+    "@braneframe/plugin-treeview": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
+    "react": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

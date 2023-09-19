@@ -31,7 +31,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/ui/primitives/react-list/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

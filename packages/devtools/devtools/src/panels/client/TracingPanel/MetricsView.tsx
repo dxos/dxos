@@ -7,8 +7,8 @@ import { AxisOptions, Chart } from 'react-charts';
 
 import { Metric, Resource } from '@dxos/protocols/proto/dxos/tracing';
 
-import { JsonTreeView } from '../../../components';
 import { ResourceName } from './Resource';
+import { JsonTreeView } from '../../../components';
 
 export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   if (!resource) {

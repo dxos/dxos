@@ -6,11 +6,10 @@ import CRC32 from 'crc-32';
 
 import { synchronized, Event } from '@dxos/async';
 import { Codec } from '@dxos/codec-protobuf';
-import { DataCorruptionError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { STORAGE_VERSION, schema } from '@dxos/protocols';
+import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   EchoMetadata,
@@ -49,10 +48,7 @@ export class MetadataStore {
 
   public readonly update = new Event<EchoMetadata>();
 
-  // prettier-ignore
-  constructor(
-    private readonly _directory: Directory
-  ) { }
+  constructor(private readonly _directory: Directory) {}
 
   get metadata(): EchoMetadata {
     return this._metadata;

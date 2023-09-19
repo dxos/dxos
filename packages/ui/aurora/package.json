@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "Opinionated, styled, low-level React components for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,6 +29,7 @@
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-dropdown-menu": "^2.0.5",
     "@radix-ui/react-popover": "^1.0.6",
+    "@radix-ui/react-popper": "^1.1.2",
     "@radix-ui/react-primitive": "^1.0.2",
     "@radix-ui/react-scroll-area": "^1.0.3",
     "@radix-ui/react-select": "^1.2.1",
@@ -40,6 +41,7 @@
     "@radix-ui/react-toolbar": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.5",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
+    "downshift": "^8.1.0",
     "i18next": "^21.10.0",
     "jdenticon": "^3.2.0",
     "keyborg": "^2.0.0",

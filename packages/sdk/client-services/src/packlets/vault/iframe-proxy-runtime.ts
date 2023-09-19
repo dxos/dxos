@@ -5,9 +5,9 @@
 import { Trigger } from '@dxos/async';
 import { iframeServiceBundle, ShellRuntime, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { RemoteServiceConnectionError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { SimplePeerTransportService } from '@dxos/network-manager';
+import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';

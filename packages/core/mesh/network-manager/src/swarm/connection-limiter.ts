@@ -4,13 +4,13 @@
 
 import { DeferredTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CancelledError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { CancelledError } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 10;
+export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 50;
 
 export type ConnectionLimiterOptions = {
   maxConcurrentInitConnections?: number;

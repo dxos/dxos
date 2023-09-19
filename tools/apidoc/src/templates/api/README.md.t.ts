@@ -1,10 +1,11 @@
-import { TemplateFunction, text } from '@dxos/plate';
-import { Input } from './config.t.js';
+import { plate } from '@dxos/plate';
+import template from './template.t.js';
 import { href, packagesInProject } from './util.t/index.js';
 
-const template: TemplateFunction<Input> = ({ input }) => {
+export default template.define.text({
+  content: ({ input }) => {
   const modules = packagesInProject(input);
-  return text`
+  return plate`
   # DXOS API Documentation
 
   This reference documentation was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
@@ -14,6 +15,5 @@ const template: TemplateFunction<Input> = ({ input }) => {
   ## Packages:
   ${modules.map((m) => `- [${m.name}](${href.package(m.name)})`)}
   `;
-};
+}});
 
-export default template;

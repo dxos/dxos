@@ -6,7 +6,7 @@ import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 
 import { Main } from '@dxos/aurora';
-import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
 import { invariant } from '@dxos/invariant';
 
@@ -37,7 +37,7 @@ export const ChessMain = ({ data: object }: { data: Game }) => {
   }
 
   return (
-    <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex grow justify-center items-center md:m-8'>
         <div className='flex md:min-w-[600px] md:min-h-[600px]'>
           <Chessboard model={model} onUpdate={handleUpdate} />

@@ -11,15 +11,13 @@ import {
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { Provider } from '@dxos/util';
 
-import { IFrameController } from './iframe-controller';
-import { ShellController } from './shell-controller';
+import { IFrameManager } from './iframe-manager';
+import { ShellManager } from './shell-manager';
 
 export type IFrameClientServicesHostOptions = {
   host: ClientServicesProvider;
@@ -33,10 +31,13 @@ export type IFrameClientServicesHostOptions = {
  * Proxy to host client service via iframe.
  */
 export class IFrameClientServicesHost implements ClientServicesProvider {
-  public readonly joinedSpace = new Event<PublicKey>();
-  public readonly invalidatedInvitationCode = new Event<string>();
-  private _iframeController!: IFrameController;
-  private _shellController!: ShellController;
+  readonly joinedSpace = new Event<PublicKey>();
+
+  /**
+   * @internal
+   */
+  _shellManager?: ShellManager;
+  private _iframeManager?: IFrameManager;
   private readonly _host: ClientServicesProvider;
   private readonly _source: string;
   private readonly _vault: string;
@@ -62,22 +63,6 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     return this._host.services;
   }
 
-  get display(): ShellDisplay {
-    return this._shellController.display;
-  }
-
-  get contextUpdate(): Event<AppContextRequest> {
-    return this._shellController.contextUpdate;
-  }
-
-  setSpaceProvider(provider: Provider<PublicKey | undefined>) {
-    this._shellController.setSpaceProvider(provider);
-  }
-
-  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
-    await this._shellController?.setLayout(layout, options);
-  }
-
   async open() {
     await this._host.open(new Context());
 
@@ -85,17 +70,17 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
     const source = new URL(this._source, window.location.origin);
     const loaded = new Trigger();
-    this._iframeController = new IFrameController({
+    this._iframeManager = new IFrameManager({
       source,
       onOpen: async () => {
         await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
 
-        this._iframeController.iframe?.contentWindow?.postMessage(
+        this._iframeManager?.iframe?.contentWindow?.postMessage(
           {
             channel: this._vault,
             payload: 'init',
           },
-          this._iframeController.source.origin,
+          this._iframeManager.source.origin,
         );
       },
       onMessage: (event) => {
@@ -113,7 +98,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
             port: createWorkerPort({ port: messageChannel.port1 }),
           });
 
-          this._iframeController.iframe?.contentWindow?.postMessage(
+          this._iframeManager?.iframe?.contentWindow?.postMessage(
             {
               channel: this._vault,
               payload: {
@@ -121,7 +106,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
                 port: messageChannel.port2,
               },
             },
-            this._iframeController.source.origin,
+            this._iframeManager.source.origin,
             [messageChannel.port2],
           );
 
@@ -130,32 +115,15 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
       },
     });
 
-    this._shellController = new ShellController(
-      this._iframeController,
-      this.joinedSpace,
-      this.invalidatedInvitationCode,
-    );
-    await this._shellController.open();
-
-    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
-    const searchParams = new URLSearchParams(window.location.search);
-    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-    if (spaceInvitationCode) {
-      await this._shellController.setLayout(ShellLayout.JOIN_SPACE, { invitationCode: spaceInvitationCode });
-      return;
-    }
-
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
-    if (deviceInvitationCode) {
-      await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
-        invitationCode: deviceInvitationCode ?? undefined,
-      });
-    }
+    this._shellManager = new ShellManager(this._iframeManager, this.joinedSpace);
+    await this._shellManager.open();
   }
 
   async close() {
-    await this._shellController.close();
-    await this._iframeController.close();
+    await this._shellManager?.close();
+    this._shellManager = undefined;
+    await this._iframeManager?.close();
+    this._iframeManager = undefined;
     await this._host.close(new Context());
   }
 }

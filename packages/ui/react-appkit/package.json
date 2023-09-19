@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-appkit",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "DXOS opinions for building React applications",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,7 +41,7 @@
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@radix-ui/react-navigation-menu": "^1.1.2",
     "@radix-ui/react-popover": "^1.0.6",
-    "@radix-ui/react-portal": "^1.0.2",
+    "@radix-ui/react-portal": "^1.0.3",
     "@radix-ui/react-select": "^1.2.1",
     "@radix-ui/react-toolbar": "^1.0.3",
     "@radix-ui/react-use-controllable-state": "^1.0.0",

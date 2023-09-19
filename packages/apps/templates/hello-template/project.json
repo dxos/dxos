@@ -3,29 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "echo build ok",
-      "dependsOn": [
-        "^build",
-        "build-resources",
-        "build-tsc"
-      ]
-    },
-    "build-resources": {
-      "dependsOn": [
-        "build-tsc"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "build-resources"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "build-tsc": {
-      "dependsOn": [
-        "^build-tsc"
-      ],
       "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/templates/hello-template/src/index.ts",
@@ -36,25 +13,41 @@
         "{options.outputPath}"
       ]
     },
-    "gen": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "gen"
-      },
-      "outputs": [
-        "packages/apps/templates/hello-template/test/variants"
-      ]
-    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/templates/hello-template/{src,test}/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/apps/templates/hello-template",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/apps/templates/hello-template",
+        "resultsPath": "test-results/packages/apps/templates/hello-template",
+        "testPatterns": [
+          "packages/apps/templates/hello-template/test/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/templates/hello-template/test/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ]
     }
   }

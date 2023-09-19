@@ -26,7 +26,7 @@ export class WorkspaceProcessor {
   // prettier-ignore
   constructor(
     private readonly _baseDir: string,
-    private readonly _options: WorkspaceProcessorOptions = {}
+    private readonly _options: WorkspaceProcessorOptions = {},
   ) {}
 
   get baseDir() {

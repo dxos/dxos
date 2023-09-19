@@ -163,6 +163,7 @@ message SpaceMember {
   enum PresenceState {
     OFFLINE = 0;
     ONLINE = 1;
+    REMOVED = 2;
   }
 
   Identity identity = 1;
@@ -301,6 +302,7 @@ message WriteCredentialsRequest {
 
 message QueryCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
+  optional bool no_tail = 2;
 }
 
 message CreateEpochRequest {

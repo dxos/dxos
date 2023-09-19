@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useSyncExternalStore } from 'react';
+import { Identity } from '@dxos/client/halo';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
@@ -10,15 +11,7 @@ import { useClient } from '../client';
  * Hook returning DXOS identity object.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useIdentity = () => {
+export const useIdentity = (): Identity | null => {
   const client = useClient();
-  const identity = useSyncExternalStore(
-    (listener) => {
-      const subscription = client.halo.identity.subscribe(listener);
-      return () => subscription.unsubscribe();
-    },
-    () => client.halo.identity.get(),
-  );
-
-  return identity;
+  return useMulticastObservable(client.halo.identity);
 };

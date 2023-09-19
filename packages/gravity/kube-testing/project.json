@@ -21,7 +21,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/gravity/kube-testing/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"

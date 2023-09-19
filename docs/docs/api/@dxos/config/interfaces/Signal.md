@@ -3,7 +3,6 @@
 
 Defined in:
    file://./../../dxos/config.proto
-
 ## Properties
 ### [api]()
 Type: <code>string</code>
@@ -14,8 +13,12 @@ Options:
 ### [server]()
 Type: <code>string</code>
 
+
+
 ### [status]()
 Type: <code>string</code>
 
 Options:
   - proto3_optional = true
+
+    

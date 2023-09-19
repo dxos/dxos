@@ -55,7 +55,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/apps/composer-app/**/*.{ts,js}?(x)"
-        ]
+        ],
+        "quiet": true
       },
       "outputs": [
         "{options.outputFile}"
@@ -76,6 +77,17 @@
     },
     "serve-with-vault": {
       "executor": "@dxos/serve-with-vault:run"
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/composer-app/.storybook"
+      }
     }
   },
   "implicitDependencies": [

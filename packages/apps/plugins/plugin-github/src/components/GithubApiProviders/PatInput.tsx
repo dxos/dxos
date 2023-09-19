@@ -8,8 +8,8 @@ import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { GITHUB_PLUGIN } from '../../props';
 import { useOctokitContext } from './OctokitProvider';
+import { GITHUB_PLUGIN } from '../../props';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(GITHUB_PLUGIN);

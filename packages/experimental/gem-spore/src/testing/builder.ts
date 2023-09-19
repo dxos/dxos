@@ -15,7 +15,7 @@ export class GraphBuilder<N> {
   // prettier-ignore
   constructor(
     private readonly _idAccessor = defaultIdAccessor,
-    private readonly _graph = emptyGraph
+    private readonly _graph = emptyGraph,
   ) {}
 
   get graph(): GraphData<N> {

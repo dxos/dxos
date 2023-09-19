@@ -6,14 +6,19 @@ import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
+import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
 
-export const SplitView = () => {
+export type SplitViewProps = {
+  showComplementarySidebar?: boolean;
+};
+
+export const SplitView = (props: SplitViewProps) => {
   const context = useSplitView();
+  const { showComplementarySidebar = true } = props;
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
@@ -46,7 +51,7 @@ export const SplitView = () => {
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
-        {complementarySidebarOpen !== null && (
+        {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
             {/* TODO(burdon): name vs. role? */}
             <Surface name='complementary' role='complementary' />
@@ -56,7 +61,7 @@ export const SplitView = () => {
         {/* Top (header) bar. */}
         <Main.Content
           asChild
-          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, fixedSurface]}
+          classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1', coarseBlockSize, baseSurface]}
         >
           <div role='none' aria-label={t('main header label')}>
             <DensityProvider density='fine'>
@@ -68,7 +73,7 @@ export const SplitView = () => {
               <div role='none' className='grow' />
               {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface name='presence' role='presence' limit={1} />
-              {complementarySidebarOpen !== null && (
+              {complementarySidebarOpen !== null && showComplementarySidebar && (
                 <Button
                   onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
                   variant='ghost'
@@ -98,6 +103,7 @@ export const SplitView = () => {
         <Surface name='main' role='main' />
 
         {/* Global popovers. */}
+        {/* TODO(burdon): Doesn't allow client to control the popover. */}
         <Popover.Portal>
           <Popover.Content
             classNames='z-[60]'
@@ -121,7 +127,8 @@ export const SplitView = () => {
               {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
                 <Dialog.Content>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                  <div className='flex flex-col my-2 space-y-2'>
+                  {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
+                  <div className='flex flex-col my-2 gap-4'>
                     <Surface role='dialog' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>

@@ -88,6 +88,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props) => <Bug {...props} />,
                     data: 'devtools',
+                    properties: {
+                      persistenceClass: 'appState',
+                    },
                   })
                 : parent.remove('devtools');
             });

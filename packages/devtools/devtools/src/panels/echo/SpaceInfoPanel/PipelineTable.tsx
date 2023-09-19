@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -26,7 +26,7 @@ export type PipelineTableRow = {
 };
 
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
-const columns: GridColumnDef<PipelineTableRow, any>[] = [
+const columns: TableColumnDef<PipelineTableRow, any>[] = [
   helper.accessor('feedKey', builder.key({ tooltip: true })),
   helper.accessor('type', { size: 60 }),
   helper.accessor('own', builder.icon()),
@@ -119,5 +119,5 @@ export const PipelineTable: FC<{
     navigate('/echo/feeds');
   };
 
-  return <Grid<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
+  return <Table<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
 };

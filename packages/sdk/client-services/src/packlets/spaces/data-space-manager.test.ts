@@ -164,7 +164,7 @@ describe('DataSpaceManager', () => {
         afterTest(async () => builder.destroy());
 
         const peer = builder.createPeer({
-          storageType: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
+          dataStore: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
         });
         await peer.createIdentity();
         await openAndClose(peer.dataSpaceManager);

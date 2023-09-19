@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
 import { Context } from '@dxos/context';
 import { SignalStatus } from '@dxos/messaging';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -79,7 +79,7 @@ export const SignalStatusTable = () => {
   }
 
   const { helper } = createColumnBuilder<SignalStatus>();
-  const columns: GridColumnDef<SignalStatus, any>[] = [
+  const columns: TableColumnDef<SignalStatus, any>[] = [
     helper.accessor((status) => new URL(status.host).origin, {
       id: 'host',
       cell: (props) => <div className='font-mono'>{props.getValue()}</div>,
@@ -106,7 +106,7 @@ export const SignalStatusTable = () => {
 
   return (
     <div>
-      <Grid<SignalStatus> columns={columns} data={status} />
+      <Table<SignalStatus> columns={columns} data={status} />
     </div>
   );
 };

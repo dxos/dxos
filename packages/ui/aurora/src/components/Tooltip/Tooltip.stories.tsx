@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React from 'react';
 
-import { Button } from '../Buttons';
+import '@dxosTheme';
+
 import { Tooltip } from './Tooltip';
+import { Button } from '../Buttons';
 
 type StoryTooltipProps = {
   content: string;

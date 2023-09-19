@@ -9,9 +9,9 @@ import { ClassDeclaration } from 'ts-morph';
 
 import { describe, test } from '@dxos/test';
 
-import { Flowchart } from '../mermaid';
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
+import { Flowchart } from '../mermaid';
 
 // TODO(burdon): Navigate imports (package), then look for private final, new, etc.
 // TODO(burdon): Find package.

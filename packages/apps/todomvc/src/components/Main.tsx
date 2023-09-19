@@ -3,15 +3,14 @@
 //
 
 import React, { useEffect } from 'react';
-import { generatePath, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { generatePath, Navigate, Outlet, useParams } from 'react-router-dom';
 
-import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, useClient } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
-  const navigate = useNavigate();
   const { spaceKey } = useParams();
 
   const client = useClient();
@@ -19,18 +18,21 @@ export const Main = () => {
   const spaces = useSpaces();
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      return client.services.joinedSpace.on((spaceKey) =>
-        navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() })),
-      );
-    }
-  }, []);
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (event.key === '>' && event.shiftKey && modifier) {
+        await client.shell.open();
+      } else if (space && event.key === '.' && modifier) {
+        await client.shell.shareSpace({ spaceKey: space.key });
+      }
+    };
 
-  useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      client.services.setSpaceProvider(() => space?.key);
-    }
-  }, [space]);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [client, space]);
 
   if (!spaceKey && spaces.length > 0) {
     return <Navigate to={generatePath('/:spaceKey', { spaceKey: spaces[0].key.toHex() })} />;

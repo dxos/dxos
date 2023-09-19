@@ -138,7 +138,14 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             return;
           }
 
-          parent.addAction({
+          const [groupNode] = parent.add({
+            id: 'all-files',
+            label: ['plugin name', { ns: FILES_PLUGIN }],
+            // TODO(burdon): Factor out palette constants.
+            properties: { palette: 'yellow' },
+          });
+
+          groupNode.addAction({
             id: 'open-file-handle',
             label: ['open file label', { ns: FILES_PLUGIN }],
             icon: (props) => <FilePlus {...props} />,
@@ -152,7 +159,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           });
 
           if ('showDirectoryPicker' in window) {
-            parent.addAction({
+            groupNode.addAction({
               id: 'open-directory',
               label: ['open directory label', { ns: FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
@@ -165,12 +172,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               ],
             });
           }
-
-          const [groupNode] = parent.add({
-            id: 'all-files',
-            label: ['plugin name', { ns: FILES_PLUGIN }],
-            properties: { palette: 'yellow' },
-          });
 
           const fileIndices = getIndices(state.files.length);
           onFilesUpdate = () => {

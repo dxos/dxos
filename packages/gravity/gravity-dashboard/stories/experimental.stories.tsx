@@ -106,7 +106,11 @@ class CircularLayout {
   private _map = new Map<string, number>();
   private _radius: Fraction = [1, 1];
 
-  constructor(private readonly _context: SVGContext, private readonly _duraction = 1000) {}
+  // prettier-ignore
+  constructor(
+    private readonly _context: SVGContext,
+    private readonly _duraction = 1000,
+  ) {}
 
   get layout() {
     return this.doLayout.bind(this);

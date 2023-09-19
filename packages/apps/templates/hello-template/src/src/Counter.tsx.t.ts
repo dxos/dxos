@@ -1,20 +1,17 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { plate } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input: { react } }) => {
+export default template.define.script({
+  content: ({ input: { react } }) => {
     return !react
       ? null
-      : text/* javascript */ `
+      : plate/* javascript */ `
     import React, { useEffect } from 'react';
 
-    import { Loading } from '@dxos/react-appkit';
-    import { useQuery, Expando, useSpaces } from '@dxos/react-client/echo';
-    import { useIdentity } from '@dxos/react-client/halo';
+    import { Expando, useQuery, useSpace } from '@dxos/react-client/echo';
 
     export const Counter = () => {
-      const identity = useIdentity();
-      const [space] = useSpaces();
+      const space = useSpace();
       const [counter] = useQuery(space, { type: 'counter' });
 
       useEffect(() => {
@@ -25,15 +22,15 @@ export default defineTemplate(
       }, [counter, space]);
 
       if (!space) {
-        return <Loading label='Loading' />;
+        return null;
       }
 
       return (
         <div>
-          {identity && \`Hello \${identity?.profile?.displayName}!\`}
           {counter && (
             <button
               className='p-4 m-2 border'
+              data-testid='counter'
               onClick={() => {
                 counter.count = (counter.count ?? 0) + 1;
               }}>
@@ -44,6 +41,5 @@ export default defineTemplate(
       );
     };
     `;
-  },
-  { config }
+  }}
 );

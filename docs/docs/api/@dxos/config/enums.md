@@ -7,20 +7,21 @@ title: Enumerations
 Defined in:
    file://./../../dxos/config.proto
 
-
 Values:
-- `CHROME`
+- `CHROME` 
 
-- `FIREFOX`
+- `FIREFOX` 
 
-- `IDB`
+- `IDB` 
 
-- `JSONDOWN`
+- `JSONDOWN` 
 
-- `LEVELJS`
+- `LEVELJS` 
 
-- `NODE`
+- `NODE` 
 
-- `RAM`
+- `RAM` 
 
-- `WEBFS`
+- `WEBFS` 
+
+

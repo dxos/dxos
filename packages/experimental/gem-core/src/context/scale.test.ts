@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { test } from '@dxos/test';
 
-import { Vector } from '../util';
 import { Scale } from './scale';
+import { Vector } from '../util';
 
 test('toVertex', () => {
   const scale = new Scale(16);

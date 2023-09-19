@@ -6,22 +6,24 @@ import { Users } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
+import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { useMembers, Space, useSpace } from '@dxos/react-client/echo';
-import { Identity, useIdentity } from '@dxos/react-client/halo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { useSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { usePlugin } from '@dxos/react-surface';
 
-import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides } from '../types';
+import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides, ObjectViewer } from '../types';
 
 export const SpacePresence = () => {
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
+  const treeviewPlugin = usePlugin<TreeViewPluginProvides>('dxos.org/plugin/treeview');
   const space = spacePlugin?.provides.space.active;
   const defaultSpace = useSpace();
   const identity = useIdentity();
-  if (!identity) {
+
+  if (!identity || !spacePlugin) {
     return null;
   }
 
@@ -41,6 +43,14 @@ export const SpacePresence = () => {
     return null;
   }
 
+  const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
+    return (
+      space.key.equals(viewer.spaceKey) &&
+      treeviewPlugin?.provides.treeView.active === viewer.objectId &&
+      Date.now() - viewer.lastSeen < 30_000
+    );
+  });
+
   return (
     <div className='flex items-center'>
       {intentPlugin && (
@@ -48,25 +58,23 @@ export const SpacePresence = () => {
           <Users className={getSize(5)} />
         </Button>
       )}
-      <SpaceMembers space={space} identity={identity} />
+      <ObjectViewers viewers={viewers} />
     </div>
   );
 };
 
-// TODO(burdon): Don't include current user.
-const SpaceMembers: FC<{ space: Space; identity: Identity }> = ({ space, identity }) => {
-  const members = useMembers(space.key);
+const ObjectViewers: FC<{ viewers: ObjectViewer[] }> = ({ viewers }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger className='flex items-center'>
         <AvatarGroup.Root size={4} classNames='mie-5'>
-          <AvatarGroup.Label classNames='text-xs font-system-semibold'>{members.length}</AvatarGroup.Label>
-          {members.map((member) => (
-            <AvatarGroupItem.Root key={member.identity.identityKey.toHex()}>
+          <AvatarGroup.Label classNames='text-xs font-system-semibold'>{viewers.length}</AvatarGroup.Label>
+          {viewers.map((viewer) => (
+            <AvatarGroupItem.Root key={viewer.identityKey.toHex()}>
               <Avatar.Frame>
                 {/* TODO(burdon): Why `href`? */}
-                <Avatar.Fallback href={member.identity.profile?.displayName ?? member.identity.identityKey.toHex()} />
+                <Avatar.Fallback href={viewer.identityKey.toHex()} />
               </Avatar.Frame>
             </AvatarGroupItem.Root>
           ))}

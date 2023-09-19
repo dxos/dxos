@@ -4,14 +4,14 @@
 
 import React, { useState } from 'react';
 
+import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { log } from '@dxos/log';
-import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { useAsyncEffect } from '@dxos/react-async';
 import { Client, ClientServices, Config, Defaults, DEFAULT_VAULT_ORIGIN } from '@dxos/react-client';
 
-import { namespace } from '../hooks';
 import { Devtools } from './Devtools';
+import { namespace } from '../hooks';
 
 void initializeAppTelemetry({ namespace, config: new Config(Defaults()) });
 

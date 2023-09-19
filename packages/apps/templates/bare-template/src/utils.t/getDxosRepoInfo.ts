@@ -6,13 +6,26 @@ import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-import { exists } from '@dxos/plate';
+// TODO: factor out to own fs package like @dxos/fs
+export const exists = async (...args: string[]): Promise<boolean> => {
+  try {
+    const result = await fs.stat(path.join(...args));
+    return !!result;
+  } catch (err: any) {
+    if (/ENOENT/.test(err.message)) {
+      return false;
+    } else {
+      throw err;
+    }
+  }
+};
 
 export const isDxosMonorepoSync = () => {
   try {
     const gitRemoteResult = execSync('git remote --v', { stdio: 'pipe' }).toString();
     const isDxosMonorepo = /:dxos\//.test(gitRemoteResult);
-    return isDxosMonorepo;
+    const isMonitor = process.cwd().endsWith('monitor');
+    return isDxosMonorepo && !isMonitor;
   } catch {
     return false;
   }

@@ -49,7 +49,7 @@
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../plugins/plugin-telemetry"
     }
   ]
 }

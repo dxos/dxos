@@ -4,8 +4,8 @@
 
 import React, { FC } from 'react';
 
-import { sanitizeClassName } from '@dxos/tracing';
 import { Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { sanitizeClassName } from '@dxos/tracing';
 
 export const ResourceName: FC<{ className?: string; resource: Resource }> = ({ className, resource }) => (
   <span className={className}>

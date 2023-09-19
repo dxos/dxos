@@ -25,9 +25,6 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -67,9 +64,6 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/echo/model-factory"
     },
     {
@@ -104,9 +98,6 @@
     },
     {
       "path": "../config"
-    },
-    {
-      "path": "../errors"
     }
   ]
 }

@@ -5,12 +5,15 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
+import { ClientServicesProvider, Properties, Space, SpaceInternal } from '@dxos/client-protocol';
+import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
+import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
@@ -19,7 +22,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
-import { Properties } from '../proto';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -69,18 +71,17 @@ export class SpaceProxy implements Space {
   private _cachedProperties: Properties;
   private _properties?: TypedObject = undefined;
 
-  // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter
+    databaseRouter: DatabaseRouter,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
-      spaceKey: this.key
+      spaceKey: this.key,
     }));
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
@@ -98,6 +99,7 @@ export class SpaceProxy implements Space {
       createEpoch: this._createEpoch.bind(this),
       open: this._activate.bind(this),
       close: this._deactivate.bind(this),
+      removeMember: this._removeMember.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -127,10 +129,11 @@ export class SpaceProxy implements Space {
     return this._data.state === SpaceState.READY && this._initialized;
   }
 
-  get properties() {
+  get properties(): TypedObject {
     if (this._properties) {
       return this._properties;
     } else {
+      log('using cached properties');
       return this._cachedProperties;
     }
   }
@@ -268,14 +271,19 @@ export class SpaceProxy implements Space {
     this._databaseInitialized.wake();
 
     // Set properties document when it's available.
+    // NOTE: Emits state update event when properties are first available.
+    //   This is needed to ensure reactivity for newly created spaces.
+    // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const query = this._db.query(Properties.filter());
       if (query.objects.length === 1) {
         this._properties = query.objects[0];
+        this._stateUpdate.emit(this._currentState);
       } else {
         const subscription = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
+            this._stateUpdate.emit(this._currentState);
             subscription();
           }
         });
@@ -344,9 +352,9 @@ export class SpaceProxy implements Space {
   /**
    * Creates an interactive invitation.
    */
-  createInvitation(options?: Partial<Invitation>) {
+  share(options?: Partial<Invitation>) {
     log('create invitation', options);
-    return this._invitationsProxy.createInvitation(options);
+    return this._invitationsProxy.share(options);
   }
 
   /**
@@ -378,6 +386,46 @@ export class SpaceProxy implements Space {
   private async _deactivate() {
     await this._db.flush();
     await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
+  }
+
+  private async _removeMember(memberKey: PublicKey) {
+    if (!this._members.get().find((member) => member.identity.identityKey.equals(memberKey))) {
+      throw new Error(`Member ${memberKey} not found`);
+    }
+
+    const credentials = await Stream.consumeData(
+      this._clientServices.services.SpacesService!.queryCredentials({ spaceKey: this.key, noTail: true }),
+    );
+    const credential = credentials.find(
+      (credential) =>
+        checkCredentialType(credential, 'dxos.halo.credentials.SpaceMember') && credential.subject.id.equals(memberKey),
+    );
+    if (!credential) {
+      throw new Error(`Credential for ${memberKey} not found`);
+    }
+    if (!credential.id) {
+      throw new Error(`Credential for ${memberKey} does not have an id`);
+    }
+
+    const identityQuery = await Stream.first(this._clientServices.services.IdentityService!.queryIdentity());
+    const identityKey = identityQuery?.identity?.identityKey;
+    invariant(identityKey, 'Identity key not found');
+
+    await this._clientServices.services.SpacesService!.writeCredentials({
+      spaceKey: this.key,
+      credentials: [
+        {
+          issuer: identityKey,
+          issuanceDate: new Date(),
+          subject: {
+            id: credential.id,
+            assertion: {
+              '@type': 'dxos.halo.credentials.Revocation',
+            },
+          },
+        },
+      ],
+    });
   }
 }
 
