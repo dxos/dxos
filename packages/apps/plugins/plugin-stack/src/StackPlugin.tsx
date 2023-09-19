@@ -20,6 +20,8 @@ import translations from './translations';
 import { STACK_PLUGIN, StackAction, StackModel, StackPluginProvides, StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
+const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;
+
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[StackType.name] = StackType;
@@ -51,8 +53,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
         dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {
           if (tile.copyClass?.has('stack-section')) {
-            const [_, entityId] = parseDndId(originalId);
-            tile.id = getDndId(toId, entityId);
+            const [_, ...idParts] = parseDndId(originalId);
+            tile.id = getDndId(toId, ...idParts);
             tile.variant = 'card';
             tile.sortable = false;
             tile.acceptCopyClass = undefined;
@@ -139,14 +141,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return null;
             }
           case 'mosaic-delegator':
-            if (
-              'tile' in data &&
-              typeof data.tile === 'object' &&
-              !!data.tile &&
-              'id' in data.tile &&
-              parseDndId((data.tile.id as string) ?? '')[0] === STACK_PLUGIN
-            ) {
-              return StackSectionDelegator;
+            if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
+              const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
+              return mosaicId === STACK_PLUGIN || mosaicId === STACK_PLUGIN_PREVIEW_SECTION
+                ? StackSectionDelegator
+                : null;
             } else {
               return null;
             }

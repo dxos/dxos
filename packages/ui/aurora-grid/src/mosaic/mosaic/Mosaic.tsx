@@ -54,6 +54,11 @@ const defaultMosaicContextValue: MosaicContextValue = {
   getData: () => ({}),
   mosaic: { tiles: {}, relations: {} },
   onMosaicChange: () => {},
+  copyTile: () => ({
+    id: 'never',
+    index: 'a0',
+    variant: 'card',
+  }),
   Delegator: () => null,
 };
 

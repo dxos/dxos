@@ -29,6 +29,7 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
         transition: activeId ? 'transform 200ms ease' : 'none',
       }}
       isActive={isActive}
+      isPreview={tile.isPreview}
       ref={ref}
     />
   );

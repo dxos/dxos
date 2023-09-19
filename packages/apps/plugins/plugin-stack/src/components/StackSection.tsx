@@ -25,6 +25,7 @@ import {
 import { Surface } from '@dxos/react-surface';
 
 import { STACK_PLUGIN, StackModel } from '../types';
+import { isStack } from '../util';
 
 type StackSectionProps = DelegatorProps<Graph.Node<StackModel>>;
 
@@ -33,38 +34,42 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
   ListScopedProps<StackSectionProps>
 >(
   (
-    { data: { data: stack }, tile, dragHandleAttributes, dragHandleListeners, style, isActive, isOverlay },
+    { data: { data }, tile, dragHandleAttributes, dragHandleListeners, style, isActive, isOverlay, isPreview },
     forwardedRef,
   ) => {
     const { mosaic } = useMosaic();
     const [_, stackId, entityId] = parseDndId(tile.id);
-    const sectionIndex = stack.sections?.findIndex((section) => section.object.id === entityId) ?? -1;
-    const section = stack.sections?.[sectionIndex];
+    const isSection = isStack(data);
+    const sectionIndex = isSection ? data.sections?.findIndex((section) => section?.object.id === entityId) ?? -1 : -1;
+    const object = isSection ? data.sections?.[sectionIndex]?.object : data;
     const { t } = useTranslation(STACK_PLUGIN);
     const handleRemove = () => {
-      delete mosaic.tiles[tile.id];
-      delete mosaic.relations[tile.id];
-      mosaic.relations[getDndId(STACK_PLUGIN, stackId)]?.child.delete(tile.id);
-      stack.sections.splice(sectionIndex, 1);
+      if (isSection) {
+        delete mosaic.tiles[tile.id];
+        delete mosaic.relations[tile.id];
+        mosaic.relations[getDndId(STACK_PLUGIN, stackId)]?.child.delete(tile.id);
+        data.sections.splice(sectionIndex, 1);
+      }
     };
-    return section ? (
+    if (!object) {
+      return null;
+    }
+    return (
       <DensityProvider density='fine'>
         <ListItem.Root
-          id={section.object.id}
+          id={tile.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
             inputSurface,
             hoverableControls,
             'grow rounded',
             isOverlay && staticHoverableControls,
-            isActive ? 'opacity-0' : 'opacity-100',
+            isPreview ? 'opacity-50' : isActive ? 'opacity-0' : 'opacity-100',
           ]}
           ref={forwardedRef}
           style={style}
         >
-          <ListItem.Heading classNames='sr-only'>
-            {get(section, 'object.title', t('generic section heading'))}
-          </ListItem.Heading>
+          <ListItem.Heading classNames='sr-only'>{get(object, 'title', t('generic section heading'))}</ListItem.Heading>
           <div
             className={mx(
               fineButtonDimensions,
@@ -82,7 +87,7 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
             />
           </div>
           <div role='none' className='flex-1'>
-            <Surface role='section' data={section.object} />
+            <Surface role='section' data={object} />
           </div>
           <Button
             variant='ghost'
@@ -94,6 +99,6 @@ export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttr
           </Button>
         </ListItem.Root>
       </DensityProvider>
-    ) : null;
+    );
   },
 );

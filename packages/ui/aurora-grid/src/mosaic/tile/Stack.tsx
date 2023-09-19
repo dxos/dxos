@@ -34,7 +34,7 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
       data={getData(props.tile.id)}
       {...props}
       ref={forwardedRef}
-      {...{ isMigrationDestination, isCopyDestination, isEmpty }}
+      {...{ isMigrationDestination, isCopyDestination, isEmpty, isPreview: props.isPreview }}
     >
       <SortableContext items={subtiles} strategy={verticalListSortingStrategy}>
         {subtiles.map((tile) => (
