@@ -1,5 +1,5 @@
 # Type `IFrameClientServicesProxyOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-proxy.d.ts:8]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-proxy.d.ts:6]()</sub>
 
 
 

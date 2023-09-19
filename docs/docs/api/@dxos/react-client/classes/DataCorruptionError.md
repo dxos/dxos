@@ -1,5 +1,5 @@
 # Class `DataCorruptionError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:59]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:34]()</sub>
 
 
 Internal system errors.

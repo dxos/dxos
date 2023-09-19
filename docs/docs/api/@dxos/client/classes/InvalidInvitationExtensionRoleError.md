@@ -1,5 +1,5 @@
 # Class `InvalidInvitationExtensionRoleError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:62]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:37]()</sub>
 
 
 Internal system errors.

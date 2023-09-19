@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:29]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:27]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.57"</code>
+Type: <code>"0.2.0"</code>
 
 The version of this client API.
 
@@ -28,11 +28,6 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object.
-
-### [dbRouter]()
-Type: <code>DatabaseRouter</code>
-
-
 
 ### [halo]()
 Type: <code>HaloProxy</code>
@@ -54,10 +49,15 @@ Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientSe
 
 Current client services provider.
 
-### [spaces]()
-Type: <code>MulticastObservable&lt;Space[]&gt;</code>
+### [shell]()
+Type: <code>[Shell](/api/@dxos/react-client/classes/Shell)</code>
 
-ECHO spaces.
+
+
+### [spaces]()
+Type: <code>SpaceList</code>
+
+
 
 ### [status]()
 Type: <code>MulticastObservable&lt;"null" | [SystemStatus](/api/@dxos/react-client/enums#SystemStatus)&gt;</code>
@@ -76,42 +76,6 @@ Returns: <code>string</code>
 Arguments: none
 
 
-
-
-### [acceptInvitation(invitation)]()
-
-
-Accept an invitation to a space.
-
-Returns: <code>AuthenticatingInvitationObservable</code>
-
-Arguments: 
-
-`invitation`: <code>Invitation</code>
-
-
-### [addSchema(schema)]()
-
-
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`schema`: <code>EchoSchema</code>
-
-
-### [createSpace(\[meta\])]()
-
-
-Creates a new space.
-
-Returns: <code>Promise&lt;Space&gt;</code>
-
-Arguments: 
-
-`meta`: <code>PropertiesProps</code>
 
 
 ### [destroy()]()
@@ -137,20 +101,6 @@ Returns: <code>Promise&lt;any&gt;</code>
 Arguments: 
 
 `options`: <code>JsonKeyOptions</code>
-
-
-### [getSpace(\[spaceKey\])]()
-
-
-Get an existing space by its key.
-
-If no key is specified the default space is returned.
-
-Returns: <code>undefined | Space</code>
-
-Arguments: 
-
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
 ### [initialize()]()
