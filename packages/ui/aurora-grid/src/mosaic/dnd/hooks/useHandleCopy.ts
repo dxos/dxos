@@ -3,6 +3,7 @@
 //
 
 import { DragEndEvent, DragOverEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { batch } from '@preact/signals-core';
 import { getIndexAbove } from '@tldraw/indices';
 import { useCallback } from 'react';
 
@@ -105,24 +106,29 @@ export const useHandleCopyDragOver = () => {
           if (nextCopyDest === dnd.copyDestinationId) {
             // Just update preview’s index in-situ
             const previewId = getPreviewId(active.id, nextCopyDest);
-            mosaic.tiles[previewId].index =
+            const index =
               nextIndex(
                 getSubtiles(mosaic.relations[dnd.copyDestinationId].child, mosaic.tiles),
                 previewId,
                 over?.id,
               ) ?? 'a0';
+            if (mosaic.tiles[previewId].index !== index) {
+              mosaic.tiles[previewId].index = index;
+            }
           } else {
             // Remove preview from old parent and add to new parent
             const prevPreviewId = getPreviewId(active.id, dnd.copyDestinationId);
             const nextPreviewId = getPreviewId(active.id, nextCopyDest);
-            mosaic.relations[dnd.copyDestinationId].child.delete(prevPreviewId);
-            mosaic.relations[nextCopyDest].child.add(nextPreviewId);
-            mosaic.tiles[nextPreviewId] = {
-              ...mosaic.tiles[prevPreviewId],
-              id: nextPreviewId,
-            };
-            delete mosaic.tiles[prevPreviewId];
-            dnd.copyDestinationId = nextCopyDest;
+            batch(() => {
+              mosaic.relations[dnd.copyDestinationId!].child.delete(prevPreviewId);
+              mosaic.relations[nextCopyDest].child.add(nextPreviewId);
+              mosaic.tiles[nextPreviewId] = {
+                ...mosaic.tiles[prevPreviewId],
+                id: nextPreviewId,
+              };
+              delete mosaic.tiles[prevPreviewId];
+              dnd.copyDestinationId = nextCopyDest;
+            });
           }
         } else {
           // Create the preview
@@ -133,24 +139,26 @@ export const useHandleCopyDragOver = () => {
             index: '',
             isPreview: true,
           };
-          mosaic.tiles[previewId] = previewTile;
-          mosaic.tiles[previewId].index =
-            nextIndex(getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles), previewId, over?.id) ?? 'a0';
-          mosaic.relations[nextCopyDest].child.add(previewId);
-          console.log('[drag over created preview]', mosaic.tiles[previewId], nextCopyDest, previewId);
-          dnd.copyDestinationId = nextCopyDest;
+          batch(() => {
+            mosaic.tiles[previewId] = previewTile;
+            mosaic.tiles[previewId].index =
+              nextIndex(getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles), previewId, over?.id) ?? 'a0';
+            mosaic.relations[nextCopyDest].child.add(previewId);
+            dnd.copyDestinationId = nextCopyDest;
+          });
         }
       } else {
         // There is no copy destination, so if there is a preview tile it should be removed
         if (dnd.copyDestinationId) {
           // A preview tile was added to mosaic, remove it
-          const previewId = getPreviewId(active.id, dnd.copyDestinationId);
-          mosaic.relations[dnd.copyDestinationId].child.delete(previewId);
-          delete mosaic.tiles[previewId];
-          dnd.copyDestinationId = null;
-        } else {
-          // No action necessary
+          batch(() => {
+            const previewId = getPreviewId(active.id, dnd.copyDestinationId!);
+            mosaic.relations[dnd.copyDestinationId!].child.delete(previewId);
+            delete mosaic.tiles[previewId];
+            dnd.copyDestinationId = null;
+          });
         }
+        // `else`: No action necessary
       }
     }
   }, deps);

@@ -8,7 +8,6 @@ import { getIndexBelow, getIndexBetween } from '@tldraw/indices';
 import { Tile } from '../../types';
 
 export const nextIndex = (subtiles: Tile[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
-  console.log('[next index]', subtiles, activeId, overId);
   const overOrderIndex = subtiles.length > 0 ? subtiles.findIndex(({ id }) => id === overId) : -1;
   if (overOrderIndex >= 0) {
     const activeOrderIndex = subtiles.findIndex(({ id }) => id === activeId);
