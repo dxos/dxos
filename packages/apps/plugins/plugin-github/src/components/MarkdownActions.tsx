@@ -20,7 +20,8 @@ export const MarkdownActions = ({
 }: {
   data: [ComposerModel, MarkdownProperties, RefObject<MarkdownComposerRef>];
 }) => {
-  const ghId = properties.meta?.keys?.find((key) => key.source === 'com.github')?.id;
+  // TODO(burdon): Adhoc assumption that underlying object is ECHO.
+  const ghId = properties.meta?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
   const splitView = useSplitView();
@@ -93,7 +94,7 @@ export const MarkdownActions = ({
           <DropdownMenu.Item
             classNames='gap-2'
             onClick={() => {
-              const index = properties.meta?.keys?.findIndex((key) => key.source === 'com.github');
+              const index = properties.meta?.keys?.findIndex((key) => key.source === 'github.com');
               typeof index !== 'undefined' && index >= 0 && properties.meta?.keys?.splice(index, 1);
             }}
           >

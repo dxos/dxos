@@ -39,7 +39,7 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                properties.meta.keys.push({ source: 'com.github', id: ghId });
+                properties.meta.keys.push({ source: 'github.com', id: ghId });
               }
             }}
           >

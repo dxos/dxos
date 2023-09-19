@@ -39,7 +39,7 @@ export type GithubPluginProvides = TranslationsProvides &
     settings: GithubSettingsProps;
   };
 
-const filter = (obj: Document) => obj.meta?.keys?.find((key) => key?.source?.includes('github'));
+const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   let adapter: GraphNodeAdapter<Document> | undefined;
