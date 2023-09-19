@@ -1,5 +1,5 @@
 # Class `IdentityNotInitializedError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:65]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:40]()</sub>
 
 
 Database errors.

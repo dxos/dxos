@@ -1,5 +1,5 @@
 # Class `InvalidConfigError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:44]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:19]()</sub>
 
 
 User facing API Errors.

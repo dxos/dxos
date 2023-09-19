@@ -1,5 +1,5 @@
 # Class `RemoteServiceConnectionError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:50]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:25]()</sub>
 
 
 Explicit failure to connect with remote client services.

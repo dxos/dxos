@@ -1,5 +1,5 @@
 # Class `RemoteServiceConnectionTimeout`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:56]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:31]()</sub>
 
 
 Failed to open a connection to remote client services.
