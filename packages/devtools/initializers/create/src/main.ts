@@ -18,8 +18,8 @@ void (async () => {
     process.chdir(name);
   }
 
-  const { monorepo, interactive, verbose } = {
-    interactive: !name,
+  const interactive = !name || args.interactive;
+  const { monorepo, verbose } = {
     verbose: false,
     monorepo: false,
     ...args,
