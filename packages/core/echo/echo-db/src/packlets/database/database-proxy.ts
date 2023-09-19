@@ -382,28 +382,24 @@ export class DatabaseProxy {
         batch,
       };
     } finally {
-      // Check if batch is not to big.
-      if (
-        this._currentBatch &&
-        this._currentBatch.data.objects &&
-        this._currentBatch.data.objects.length >= this._maxBatchSize
-      ) {
-        this.commitBatch();
-      }
-
       // Note: Commit batch after `commitBatchInactivity` idling without new mutations.
-      if (batchCreated) {
-        // Commit batch after last mutation with delay if there will be no new mutations.
-        this._currentBatchCtx = this._ctx.derive();
-        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), this._commitBatchInactivity);
-      } else if (this._currentBatchCtx) {
+
+      if (this._currentBatchCtx) {
         // Reset the timer.
         // If `this._currentBatchCtx` is set then Batch was created by one of the previous calls of `.mutate()`.
-        invariant(this._currentBatch);
         void this._currentBatchCtx.dispose();
+      }
 
-        this._currentBatchCtx = this._ctx.derive();
-        scheduleTask(this._currentBatchCtx, () => this.commitBatch(), this._commitBatchInactivity);
+      if (batchCreated || this._currentBatchCtx) {
+        invariant(this._currentBatch);
+        if (this._currentBatch.data.objects && this._currentBatch.data.objects.length >= this._maxBatchSize) {
+          // If batch is full, commit it immediately.
+          this.commitBatch();
+        } else {
+          // Commit batch after last mutation with delay if there will be no new mutations.
+          this._currentBatchCtx = this._ctx.derive();
+          scheduleTask(this._currentBatchCtx, () => this.commitBatch(), this._commitBatchInactivity);
+        }
       }
     }
   }
