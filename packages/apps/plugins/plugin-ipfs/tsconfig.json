@@ -42,6 +42,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-dnd"
+    },
+    {
       "path": "../plugin-graph"
     },
     {

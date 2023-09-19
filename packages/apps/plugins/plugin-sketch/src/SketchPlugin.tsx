@@ -5,11 +5,12 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { SketchMain, SketchSection } from './components';
 import translations from './translations';
@@ -22,6 +23,17 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   return {
     meta: {
       id: SKETCH_PLUGIN,
+    },
+    ready: async (plugins) => {
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+          if (isSketch(node.data)) {
+            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+          }
+          return tile;
+        });
+      }
     },
     unload: async () => {
       adapter.clear();
