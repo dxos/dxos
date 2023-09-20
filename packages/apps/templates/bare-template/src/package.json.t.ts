@@ -129,7 +129,7 @@ export default template.define
         dxosUi && Features.dxosUi(context),
         tailwind && Features.tailwind(),
         storybook && Features.storybook(),
-        slotPackageJson?.({ slots: { depVersion }}) ?? {},
+        slotPackageJson?.() ?? {},
       ].filter(Boolean);
 
       const packageJson = merge(first, ...rest);
