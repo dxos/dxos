@@ -90,17 +90,23 @@ class QueryModel implements SelectQueryModel<TypedObject> {
 
 const schemaPropMapper =
   (table: TableType) =>
-  ({ id, type, label, digits, ref, refProp }: SchemaType.Prop): TableSchemaProp => ({
-    id: id!,
-    type: getPropType(type),
-    label,
-    digits,
-    ref: ref?.id,
-    refProp,
-    size: table.props?.find((prop) => prop.id === id)?.size,
-    editable: true,
-    resizable: true,
-  });
+  ({ id, type, digits, ref }: SchemaType.Prop): TableSchemaProp => {
+    const { label, refProp, size } = table.props?.find((prop) => prop.id === id) ?? {};
+    console.log(label, refProp, size);
+    return {
+      id: id!,
+      type: getPropType(type),
+      ref: ref?.id,
+      digits,
+
+      label,
+      refProp,
+      size,
+
+      editable: true,
+      resizable: true,
+    };
+  };
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const { plugins } = usePlugins();
@@ -117,6 +123,12 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   );
 
   const rows = [...objects, {} as any];
+
+  const updateTableProp = (id: string, props: TableType.Prop) => {
+    const idx = table.props?.findIndex((prop) => prop.id === id);
+    const current = idx !== -1 ? table.props![idx] : {};
+    table.props.splice(idx !== -1 ? idx : 0, 1, { ...current, ...props });
+  };
 
   const columns = useMemo(() => {
     if (!tables.length) {
@@ -140,15 +152,19 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       onColumnUpdate: (id, column) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
-          const { id, type, label, digits, ref, refProp } = column;
+          const { id, type, ref, digits, refProp, label } = column;
+
+          // Update schema.
           table.schema?.props.splice(idx, 1, {
             id,
             type: getSchemaType(type),
-            label,
-            digits,
             ref: type === 'ref' ? tables.find((table) => table.schema.id === ref)?.schema : undefined,
-            refProp,
+            digits,
           });
+
+          // Update table.
+          updateTableProp(id, { refProp, label });
+
           forceUpdate({}); // TODO(burdon): Fix refresh.
         }
       },
@@ -160,7 +176,6 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         }
       },
       onUpdate: (object, prop, value) => {
-        console.log(object, prop, value);
         object[prop] = value;
         if (!object.id) {
           // TODO(burdon): Add directly.
@@ -175,7 +190,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     const actionColumn = createActionColumn<TypedObject>(schemaDef, {
       isDeletable: (row) => !!row.id,
       onColumnCreate: ({ id, type, label, digits }) => {
-        table.schema?.props.push({ id, type: getSchemaType(type), label, digits });
+        table.schema.props.push({ id, type: getSchemaType(type), digits });
+        table.props.push({ id, label });
         forceUpdate({}); // TODO(burdon): Fix refresh.
       },
       onRowDelete: (object) => {
@@ -189,14 +205,11 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
 
   const handleColumnResize = (state: Record<string, number>) => {
     Object.entries(state).forEach(([id, size]) => {
-      const idx = table.props?.findIndex((prop) => prop.id === id);
-      if (idx !== -1) {
-        table.props[idx] = { id, size };
-      } else {
-        (table.props ??= []).push({ id, size });
-      }
+      updateTableProp(id, { size });
     });
   };
+
+  const debug = true;
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
@@ -210,6 +223,12 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             border
           />
         </div>
+        {debug && (
+          <div className='flex text-xs'>
+            <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
+            <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
+          </div>
+        )}
       </DensityProvider>
     </Main.Content>
   );

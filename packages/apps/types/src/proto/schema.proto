@@ -25,12 +25,11 @@ message Schema {
   }
 
   message Prop {
-    string id = 1;
+    string id = 1; // TODO(burdon): Rename key.
     PropType type = 2;
-    string label = 3;
-    int32 digits = 4;
-    Schema ref = 5;
-    string refProp = 6;
+    Schema ref = 3;
+
+    int32 digits = 10;
   }
 
   // FQ type name (e.g., dxos.org/type/Document
@@ -45,8 +44,10 @@ message Table {
   option (object) = true;
 
   message Prop {
-    string id = 1;
-    int32 size = 2;
+    string id = 1; // TODO(burdon): Rename key.
+    string label = 2;
+    string refProp = 3;
+    int32 size = 10;
   }
 
   string title = 1;

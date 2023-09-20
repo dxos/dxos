@@ -20,6 +20,12 @@ const types = new Map<TableSchemaProp['type'], string>([
   ['ref', 'Reference'],
 ]);
 
+const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
+  <div role='none' className={mx('p-2', className)}>
+    {children}
+  </div>
+);
+
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
   schemas: TableSchema[];
@@ -69,32 +75,37 @@ export const ColumnPanel = <TData extends RowData, TValue>({
   };
 
   const handleSave = () => {
-    console.log('!!!!!!!!!!!');
-
-    // Check valid and unique.
-    if (!prop.length || !prop.match(/^[a-zA-Z_].+/i) || schema.props.find((c) => c.id !== column.id && c.id === prop)) {
+    // Check valid.
+    if (!prop.length || !prop.match(/^[a-zA-Z_].+/i)) {
       propRef.current?.focus();
       return;
+    }
+
+    // If already exists then check same type.
+    const current = schema.props.find((c) => c.id !== column.id && c.id === prop);
+    if (current) {
+      console.log(current, column, prop);
+
+      // TODO(burdon): Allow multiple columns with different refProps.
+      if (!(current.type === 'ref' && current.ref !== column.ref)) {
+        // TODO(burdon): Show error.
+        propRef.current?.focus();
+        return;
+      }
     }
 
     onUpdate?.(column.id, {
       ...column,
       id: prop,
       type: type as TableSchemaProp['type'],
-      label,
       digits: safeParseInt(digits),
       ref: refSchema,
+      label,
       refProp,
     });
 
     setOpen(false);
   };
-
-  const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
-    <div role='none' className={mx('p-2', className)}>
-      {children}
-    </div>
-  );
 
   return (
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
