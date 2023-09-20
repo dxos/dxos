@@ -8,7 +8,6 @@ export { type ItemID, DocumentModel } from '@dxos/document-model';
 export {
   TYPE_SCHEMA,
   Item,
-  Schema,
   ShowDeletedOption,
   type QueryOptions,
   type SchemaDef,
@@ -32,6 +31,7 @@ export {
   type Selection,
   type SubscriptionHandle,
   type TypeFilter,
+  Schema,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

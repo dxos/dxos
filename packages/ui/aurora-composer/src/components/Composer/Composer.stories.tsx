@@ -12,7 +12,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
 import { Composer, ComposerProps } from './Composer';
-import { ComposerDocument, schema } from '../../testing';
+import { ComposerDocument, schema$ as schema } from '../../testing';
 
 export default {
   component: Composer,

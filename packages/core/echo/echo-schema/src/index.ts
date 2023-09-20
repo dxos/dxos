@@ -15,3 +15,4 @@ export * from './text-object';
 export * from './typed-object';
 export * from './util';
 export * from './clone';
+export * from './proto';

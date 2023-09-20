@@ -10,9 +10,13 @@ import { EventSubscriptions } from '@dxos/async';
 
 import { Graph } from './types';
 
+/**
+ *
+ */
 export class GraphStore implements Graph {
   private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
+
   private readonly _root: Graph.Node = this._createNode({ id: 'root', label: 'Root' });
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});
@@ -67,6 +71,7 @@ export class GraphStore implements Graph {
         const unsubscribe = builder(this._filterBuilders(from, path, [...ignoreBuilders, builder]));
         unsubscribe && subscriptions.add(unsubscribe);
       });
+
     this._unsubscribe.set(from.id, subscriptions);
   }
 

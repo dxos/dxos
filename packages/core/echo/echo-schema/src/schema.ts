@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
+import { immutable } from './defs';
 import { TypeFilter } from './query';
 
 export type EchoType =
@@ -53,6 +54,11 @@ export class EchoSchemaType {
 
   constructor(private readonly _type: pb.Type) {
     this.fields = getFields(_type);
+  }
+
+  // Compat with runtime schemas.
+  get [immutable]() {
+    return true;
   }
 
   get name() {
