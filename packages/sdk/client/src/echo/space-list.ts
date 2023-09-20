@@ -37,12 +37,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
-  // TODO(burdon): Rethink API (just db?)
-  private readonly dbRouter = new DatabaseRouter();
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
+    private readonly _schemaRegistry: DatabaseRouter,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
@@ -104,7 +103,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
+          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._schemaRegistry);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -225,7 +224,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._invitationProxy.join(invitation);
   }
 
+  /**
+   * @deprecated use client.addSchema
+   */
   addSchema(schema: EchoSchema) {
-    this.dbRouter.addSchema(schema);
+    this._schemaRegistry.addSchema(schema);
   }
 }

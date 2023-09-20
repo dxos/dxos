@@ -505,6 +505,7 @@ importers:
       '@braneframe/plugin-thread': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/plugin-url-sync': workspace:*
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-table': workspace:*
@@ -553,6 +554,7 @@ importers:
       '@braneframe/plugin-thread': link:../plugins/plugin-thread
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
       '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
+      '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-table': link:../../ui/aurora-table

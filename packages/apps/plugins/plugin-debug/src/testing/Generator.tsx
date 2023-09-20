@@ -59,8 +59,7 @@ export class Generator {
         const obj = new Expando({
           name,
           website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.__meta.schema = org;
+        }, { schema: org });
         return this._space.db.add(obj);
       },
     );
@@ -90,8 +89,7 @@ export class Generator {
         const obj = new Expando({
           name,
           repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.__meta.schema = project;
+        }, { schema: project });
         return this._space.db.add(obj);
       },
     );
@@ -129,8 +127,7 @@ export class Generator {
         org: this._faker!.datatype.boolean({ probability: 0.3 })
           ? this._faker!.helpers.arrayElement(organizations)
           : undefined,
-      });
-      obj.__meta.schema = person;
+      }, { schema: person });
       return this._space.db.add(obj);
     });
 

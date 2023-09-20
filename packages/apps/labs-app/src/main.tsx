@@ -46,6 +46,7 @@ import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { Defaults } from '@dxos/react-client';
 import { PluginProvider } from '@dxos/react-surface';
+import { schema$ } from '@braneframe/types'
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -83,7 +84,7 @@ const main = async () => {
           // TODO(burdon): Document ordering requirements and normalize with composer-app.
           // TODO(burdon): Normalize namespace across apps.
           TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
-          ClientPlugin({ config, services, debugIdentity: debug }),
+          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
           IntentPlugin(),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
 

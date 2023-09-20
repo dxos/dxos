@@ -65,7 +65,6 @@ export type ForeignKey = {
 export type ObjectMeta = {
   keys: ForeignKey[];
   index?: string;
-  schema?: Expando;
 };
 
 export type TypedObjectOpts = {
@@ -243,8 +242,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
-      '@type': this.__typename,
-      // '@schema': this.__schema,
+      '@type': this.__typename ?? (isRuntimeSchema(this._schema) ? { '@id': this._schema!.id } : undefined),
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),

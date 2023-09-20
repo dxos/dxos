@@ -16,14 +16,15 @@ import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
+import { getDebugName, isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
-import type { SpaceList } from '../echo';
+import type { EchoSchema, SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
+import { DatabaseRouter } from '@dxos/echo-schema';
 
 /**
  * This options object configures the DXOS Client.
@@ -60,6 +61,8 @@ export class Client {
   private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
+
+  private readonly _schemaRegistry = new DatabaseRouter();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -204,6 +207,7 @@ export class Client {
     const spaces = new SpaceList(
       this._services,
       modelFactory,
+      this._schemaRegistry,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -299,5 +303,9 @@ export class Client {
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
+  }
+
+  addSchema(schema: EchoSchema) {
+    this._schemaRegistry.addSchema(schema);
   }
 }

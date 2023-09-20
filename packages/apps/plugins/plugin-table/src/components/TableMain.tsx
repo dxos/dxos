@@ -72,7 +72,7 @@ class QueryModel implements SelectQueryModel<TypedObject> {
         return null;
       }
 
-      if (object.meta?.schema?.id !== this._schema) {
+      if (object.__schema?.id !== this._schema) {
         return false;
       }
 
@@ -111,7 +111,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
-    (object) => object.meta?.schema?.id === table.schema.id,
+    (object) => (object.__schema as any)?.id === table.schema.id, // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
     {}, // TODO(burdon): Toggle deleted.
     [table.schema],
   );
@@ -164,8 +164,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         object[prop] = value;
         if (!object.id) {
           // TODO(burdon): Add directly.
-          const obj = new Expando(object);
-          obj.meta.schema = table.schema;
+          const obj = new Expando(object, { schema: table.schema });
           // TODO(burdon): Silent exception if try to add plain object directly.
           space!.db.add(obj);
         }
@@ -210,6 +209,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             border
           />
         </div>
+          <div className='flex text-xs'>
+            <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
+            <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
+          </div>
       </DensityProvider>
     </Main.Content>
   );

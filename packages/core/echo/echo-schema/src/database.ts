@@ -13,6 +13,7 @@ import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { base, db } from './defs';
 import { EchoObject } from './object';
+import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
 import { DatabaseRouter } from './router';
 import { Text } from './text-object';
@@ -243,18 +244,25 @@ export class EchoDatabase {
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.modelType === DocumentModel.meta.type) {
       const state = item.state as DocumentModelState;
-      const type = state.type?.protocol === 'protobuf' ? state.type?.itemId : undefined;
-      if (!type) {
+      if (!state.type) {
         return new TypedObject();
       }
-
-      const Proto = this._router.schema?.getPrototype(type);
-      if (!Proto) {
-        log.warn('Unknown schema type', { type });
-        return new TypedObject(); // TODO(burdon): Expando?
-      } else {
-        return new Proto();
+      
+      if(state.type.protocol === 'protobuf') {
+        const type = state.type.itemId;
+        const Proto = this._router.schema?.getPrototype(type);
+        if (!Proto) {
+          log.warn('Unknown schema type', { type: state.type?.encode() });
+          return new TypedObject(); // TODO(burdon): Expando?
+        } else {
+          return new Proto();
+        }
+      } else if(state.type.protocol === undefined) {
+        const schema = this.getObjectById(state.type.itemId);
+        return new TypedObject(undefined, { schema: schema as Schema | undefined })
       }
+
+
     } else if (item.modelType === TextModel.meta.type) {
       return new Text();
     } else {
