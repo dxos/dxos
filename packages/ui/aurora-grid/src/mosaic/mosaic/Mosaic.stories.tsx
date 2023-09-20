@@ -119,6 +119,9 @@ export const Rearrange = {
           return rearrangeData[entityId];
         }}
         mosaic={rearrangeMosaic}
+        copyTile={(id, _toId, mosaic) => ({
+          ...mosaic.tiles[id],
+        })}
       >
         <Mosaic.Root id={rearrangeMosaicId}>
           <Mosaic.Tile {...(rearrangeMosaic.tiles[rearrangeRootId] as StackTile)} />
