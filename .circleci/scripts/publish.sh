@@ -12,6 +12,7 @@ APPS=(
   ./packages/devtools/devtools
   ./packages/experimental/kai
   ./packages/experimental/kube-console
+  ./packages/sdk/examples
   ./docs
 )
 
@@ -51,7 +52,7 @@ for APP in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  if [[ $BRANCH = "production" || ($BRANCH = "main" && $APP = "./docs") ]]; then
+  if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")
@@ -87,7 +88,7 @@ for APP in "${APPS[@]}"; do
       --verbose
   fi
 
-  if [[ $BRANCH = "production" || $BRANCH = "staging" || ($BRANCH = "main" && $APP = "./docs") ]]; then
+  if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
     if [ $? -eq 0 ]; then
         notifySuccess $PACKAGE
     else

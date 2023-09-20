@@ -8,6 +8,11 @@ import {
   CheckboxProps as CheckboxPrimitiveProps,
   Indicator as CheckboxIndicatorPrimitive,
 } from '@radix-ui/react-checkbox';
+import {
+  Root as SwitchPrimitive,
+  Thumb as SwitchThumbPrimitive,
+  SwitchProps as SwitchPrimitiveProps,
+} from '@radix-ui/react-switch';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, ForwardRefExoticComponent, Fragment, useCallback } from 'react';
 
@@ -288,12 +293,61 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   },
 );
 
+type SwitchProps = ThemedClassName<Omit<SwitchPrimitiveProps, 'children'>> & { size?: Size };
+
+const Switch: ForwardRefExoticComponent<SwitchProps> = forwardRef<HTMLButtonElement, InputScopedProps<SwitchProps>>(
+  (
+    {
+      __inputScope,
+      checked: propsChecked,
+      defaultChecked: propsDefaultChecked,
+      onCheckedChange: propsOnCheckedChange,
+      size,
+      classNames,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const [checked, onCheckedChange] = useControllableState({
+      prop: propsChecked,
+      defaultProp: propsDefaultChecked,
+      onChange: propsOnCheckedChange,
+    });
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    // const { tx } = useThemeContext();
+    return (
+      <SwitchPrimitive
+        {...{
+          ...props,
+          checked,
+          onCheckedChange,
+          id,
+          'aria-describedby': descriptionId,
+          ...(validationValence === 'error' && {
+            'aria-invalid': 'true' as const,
+            'aria-errormessage': errorMessageId,
+          }),
+          // className: tx('input.checkbox', 'input--checkbox', { size }, 'shrink-0', classNames),
+          className:
+            'w-[56px] h-[32px] bg-gray-100 rounded-full px-[4px] border border-black relative data-[state=checked]:bg-black outline-none cursor-default',
+        }}
+        ref={forwardedRef}
+      >
+        {/* TODO(wittjosiah): Embed icons/text for on/off states.
+             e.g., https://codepen.io/alvarotrigo/pen/oNoJePo (#13) */}
+        <SwitchThumbPrimitive className='block w-[21px] h-[21px] bg-white rounded-full shadow-[0_2px_2px] shadow-blackA7 transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[24px]' />
+      </SwitchPrimitive>
+    );
+  },
+);
+
 export const Input = {
   Root: InputRoot,
   PinInput,
   TextInput,
   TextArea,
   Checkbox,
+  Switch,
   Label,
   Description,
   Validation,
@@ -307,6 +361,7 @@ export type {
   TextInputProps,
   TextAreaProps,
   CheckboxProps,
+  SwitchProps,
   LabelProps,
   DescriptionProps,
   ValidationProps,
