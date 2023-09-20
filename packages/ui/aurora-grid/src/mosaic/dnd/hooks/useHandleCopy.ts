@@ -34,7 +34,7 @@ export const useHandleCopyDragEnd = () => {
     const activeId = active.id.toString();
     if (!previousResult && activeId && dnd.copyDestinationId) {
       // create new tile
-      const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
+      const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations }, 'copy');
       // update copied tile’s index
       const subtiles = getSubtiles(relations[dnd.copyDestinationId].child, tiles);
       const previewTile = subtiles.find(({ id }) => id.startsWith('preview--'));
@@ -76,7 +76,7 @@ const findCopyDestination = (
   if (!tile) {
     return null;
   } else if (tile.acceptCopyClass && copyClass.has(tile.acceptCopyClass)) {
-    const targetId = copyTile(activeId, tile.id, mosaic).id;
+    const targetId = copyTile(activeId, tile.id, mosaic, 'copy').id;
     return mosaic.tiles[targetId] ? null : tile.id;
   } else if ((mosaic.relations[tile.id]?.parent?.size ?? 0) < 1) {
     return null;
@@ -104,6 +104,8 @@ export const useHandleCopyDragOver = () => {
       const nextDestinationId =
         findCopyDestination(overTile, dnd.activeCopyClass, mosaic, active.id.toString(), copyTile) ?? null;
       managePreview({ operation: 'copy', active, over, mosaic, copyTile, dnd, nextDestinationId });
+    } else {
+      dnd.copyDestinationId = null;
     }
   }, deps);
 };
