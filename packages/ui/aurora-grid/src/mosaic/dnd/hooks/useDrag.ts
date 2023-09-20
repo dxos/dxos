@@ -33,11 +33,9 @@ export const useDragStart = (callback: Handler<DragStartEvent>, dependencies: De
 export const useDragEnd = (callback: Handler<DragEndEvent>, dependencies: DependencyList) => {
   const { dragEndSubscriptions } = useContext(MosaicDndContext);
   useEffect(() => {
-    console.log('[use drag end]', 'sub');
     dragEndSubscriptions.push(callback);
     return () => {
       const index = dragEndSubscriptions.indexOf(callback);
-      console.log('[use drag end]', 'un-sub', index >= 0);
       dragEndSubscriptions.splice(index, 1);
     };
   }, dependencies);

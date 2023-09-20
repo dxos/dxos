@@ -57,8 +57,8 @@ export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
   id: string;
+  index: string;
   object: T;
-  isPreview?: boolean;
 };
 
 export type StackSections<T extends StackObject = GenericStackObject> = StackSectionModel<T>[];
@@ -73,13 +73,8 @@ export type StackProperties = {
   title?: string;
 };
 
-export const getSectionModels = (sections: StackSections): StackSectionModel[] =>
-  Array.from(sections)
-    .filter((section) => section?.object?.id)
-    .map(({ object }) => getSectionModel(object));
-
-export const getSectionModel = (object: GenericStackObject, isPreview?: boolean): StackSectionModel => ({
+export const getSectionModel = (object: GenericStackObject, index: string): StackSectionModel => ({
   id: object.id,
+  index,
   object,
-  isPreview: !!isPreview,
 });
