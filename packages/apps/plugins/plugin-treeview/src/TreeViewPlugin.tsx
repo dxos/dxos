@@ -2,28 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch } from '@preact/signals-react';
+import { batch, effect, untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { DndPluginProvides, SetTileHandler } from '@braneframe/plugin-dnd';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
+import { EventSubscriptions } from '@dxos/async';
+import { MosaicChangeEvent, MosaicState, parseDndId } from '@dxos/aurora-grid';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import {
   Fallback,
+  NavTreeItemDelegator,
   TreeItemMainHeading,
   TreeViewContainer,
-  TreeItemDragOverlay,
   TreeViewDocumentTitle,
 } from './components';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
+import { computeTreeViewMosaic, getPersistenceParent } from './util';
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
+  const subscriptions = new EventSubscriptions();
+
   const state = deepSignal<TreeViewContextValue>({
     active: undefined,
     previous: undefined,
@@ -50,6 +56,11 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
     },
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const graph = graphPlugin?.provides.graph;
+
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd.mosaic;
+      const onSetTile: SetTileHandler = dndPlugin?.provides.onSetTile ?? ((tile, _) => tile);
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const client = clientPlugin?.provides.client;
@@ -67,6 +78,46 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       } else {
         state.appState = (appStates as AppState[])[0];
       }
+
+      subscriptions.add(
+        effect(() => {
+          if (graph && graph.root && mosaic && state.appState) {
+            const nextMosaic = computeTreeViewMosaic(graph, state.appState, onSetTile);
+            mosaic.tiles = untracked(() => ({ ...mosaic.tiles, ...nextMosaic.tiles }));
+            mosaic.relations = untracked(() => ({ ...mosaic.relations, ...nextMosaic.relations }));
+          }
+        }),
+      );
+
+      if (graph && dndPlugin?.provides.dnd?.onMosaicChangeSubscriptions) {
+        dndPlugin?.provides.dnd?.onMosaicChangeSubscriptions.push((event: MosaicChangeEvent) => {
+          const [rootId, entityId] = parseDndId(event.id);
+          if (rootId === TREE_VIEW_PLUGIN) {
+            const node = graph.find(entityId);
+            let fromNode = null;
+            let toNode = null;
+            if (node) {
+              switch (event.type) {
+                case 'rearrange':
+                  toNode = getPersistenceParent(node, node.properties.persistenceClass);
+                  toNode?.properties.onRearrangeChild?.(node, event.index);
+                  break;
+                case 'migrate':
+                  fromNode = graph.find(parseDndId(event.fromId)[1]);
+                  toNode = graph.find(parseDndId(event.toId)[1]);
+                  console.log('[migrate start]', node, toNode, event.index);
+                  toNode?.properties.onMigrateStartChild?.(node, toNode, event.index);
+                  console.log('[migrate end]', fromNode);
+                  fromNode?.properties.onMigrateEndChild?.(node);
+                  break;
+              }
+            }
+          }
+        });
+      }
+    },
+    unload: async () => {
+      subscriptions.clear();
     },
     provides: {
       treeView: state,
@@ -113,21 +164,31 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         DocumentTitle: TreeViewDocumentTitle,
       },
       component: (data, role) => {
-        switch (role) {
-          case 'dragoverlay':
-            if (!!data && typeof data === 'object' && 'id' in data && 'label' in data) {
-              return TreeItemDragOverlay;
-            } else {
+        if (!!data && typeof data === 'object') {
+          switch (role) {
+            case 'mosaic-delegator':
+              if (
+                'tile' in data &&
+                typeof data.tile === 'object' &&
+                !!data.tile &&
+                'id' in data.tile &&
+                parseDndId((data.tile.id as string) ?? '')[0] === TREE_VIEW_PLUGIN
+              ) {
+                return NavTreeItemDelegator;
+              } else {
+                return null;
+              }
+            case 'heading':
+              if ('label' in data && 'parent' in data) {
+                return TreeItemMainHeading;
+              } else {
+                return null;
+              }
+            default:
               return null;
-            }
-          case 'heading':
-            if (!!data && typeof data === 'object' && 'label' in data && 'parent' in data) {
-              return TreeItemMainHeading;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+          }
+        } else {
+          return null;
         }
       },
       intent: {

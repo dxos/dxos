@@ -12,7 +12,7 @@ import { CardTile } from '../types';
 const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
   const { getData, Delegator } = useMosaic();
   const { activeId } = useMosaicDnd();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform } = useSortable({
     id: tile.id,
     data: tile,
   });
@@ -26,9 +26,10 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
       dragHandleListeners={listeners}
       style={{
         transform: CSS.Translate.toString(transform),
-        transition,
+        transition: activeId ? 'transform 200ms ease' : 'none',
       }}
       isActive={isActive}
+      isPreview={tile.isPreview}
       ref={ref}
     />
   );
