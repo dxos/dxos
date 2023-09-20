@@ -7,7 +7,6 @@ import * as pb from 'protobufjs';
 import { plate } from '@dxos/plate';
 import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
-const importPackage = '@dxos/echo-schema';
 const importNamespace = 'dxos_echo_schema';
 
 const reservedTypeNames = [importNamespace];
@@ -116,16 +115,20 @@ const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
   return ns;
 };
 
+export type CodegenOptions = {
+  schemaPackage: string
+}
+
 /**
  * Generate type definitions.
  */
-export const generate = (root: pb.NamespaceBase): string => {
+export const generate = (root: pb.NamespaceBase, options: CodegenOptions): string => {
   const startNamespace = getStartingNamespace(root);
 
   const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return plate`
-  import * as ${importNamespace} from '${importPackage}';
+  import * as ${importNamespace} from '${options.schemaPackage}';
 
   ${createSchema(root)}
 

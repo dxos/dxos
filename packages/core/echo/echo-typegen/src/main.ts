@@ -73,7 +73,7 @@ const loadProtobufBuiltins = () => {
   });
 };
 
-const main = async (source: string, out: string) => {
+const main = async (source: string, out: string, schemaPackage: string) => {
   console.log(`Reading: ${source}`);
   const root = new pb.Root();
   root.loadSync(source);
@@ -83,7 +83,7 @@ const main = async (source: string, out: string) => {
    * @generated @dxos/echo-typegen ${source}
    **/
 
-  ${generate(root)}
+  ${generate(root, { schemaPackage })}
   `;
 
   mkdirSync(path.dirname(out), { recursive: true });
@@ -92,9 +92,20 @@ const main = async (source: string, out: string) => {
 };
 
 // TODO(burdon): Yargs
-const [, , source, out] = argv;
+const args = argv.slice(2);
+
+let schemaPackage = '@dxos/echo-schema'
+{
+  const idx = args.findIndex(x => x === '--schema-package')
+  if (idx !== -1) {
+    schemaPackage = args[idx + 1]
+    args.splice(idx, 2)
+  }
+}
+
+const [source, out] = args;
 
 registerResolver();
 loadProtobufBuiltins();
 
-void main(source, out);
+void main(source, out, schemaPackage);

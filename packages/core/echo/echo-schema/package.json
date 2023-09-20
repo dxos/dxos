@@ -18,6 +18,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "prebuild": "dxtype --schema-package ../../.. ./src/test/proto/test.proto ./src/test/proto/gen/test.ts"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -38,6 +41,7 @@
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

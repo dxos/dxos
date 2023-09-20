@@ -68,10 +68,10 @@ message Reference {
   string itemId                           = 1;
 
   /// "space", or "protobuf"
-  string protocol = 2;
+  optional string protocol = 2;
 
   /// space key, FQN of the schema
-  string host = 3;
+  optional string host = 3;
 }
 
 /**

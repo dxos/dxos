@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { base, clone, db, Expando, Text } from '@dxos/echo-schema';
-import { createDatabase } from '@dxos/echo-schema/testing';
+import { base, clone, db, Expando, Text } from '..'
+import { createDatabase } from '../testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
