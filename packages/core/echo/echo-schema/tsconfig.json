@@ -53,6 +53,9 @@
       "path": "../echo-pipeline"
     },
     {
+      "path": "../echo-typegen"
+    },
+    {
       "path": "../model-factory"
     },
     {

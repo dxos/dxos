@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React, { createContext, PropsWithChildren } from 'react';
 
 import { randomString } from '@dxos/aurora';
+import { useSortable, CSS } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
 import { PluginDefinition, Surface } from '@dxos/react-surface';
 

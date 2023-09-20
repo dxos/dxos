@@ -9,36 +9,6 @@ import "dxos/schema.proto";
 package braneframe;
 
 /**
- * Expando schema definition.
- */
-// TODO(burdon): Use with Table, Kanban, etc.
-message Schema {
-  option (object) = true;
-
-  enum PropType {
-    NONE = 0;
-    STRING = 1;
-    NUMBER = 2;
-    BOOLEAN = 3;
-    DATE = 4;
-    REF = 5;
-  }
-
-  message Prop {
-    string id = 1;
-    PropType type = 2;
-    string label = 3;
-    int32 digits = 4;
-    Schema ref = 5;
-    string refProp = 6;
-  }
-
-  // FQ type name (e.g., dxos.org/type/Document
-  string typename = 1;
-  repeated Prop props = 2;
-}
-
-/**
  * Table view.
  */
 message Table {
@@ -50,7 +20,7 @@ message Table {
   }
 
   string title = 1;
-  Schema schema = 2;
+  dxos.schema.Schema schema = 2;
   repeated Prop props = 3;
 
   // TODO(burdon): Filter.
@@ -92,7 +62,8 @@ message Stack {
     // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    dxos.schema.TypedObject object = 1;
+    string index = 1;
+    dxos.schema.TypedObject object = 2;
   }
 
   string title = 1;
@@ -110,7 +81,8 @@ message Kanban {
     option (object) = true;
 
     string title = 1;
-    repeated Item items = 2;
+    string index = 2;
+    repeated Item items = 3;
   }
 
   message Item {
@@ -118,8 +90,9 @@ message Kanban {
     option (object) = true;
 
     dxos.schema.Text title = 1;
+    string index = 2;
     // TODO(burdon): Optional content
-    dxos.schema.TypedObject object = 2;
+    dxos.schema.TypedObject object = 3;
   }
 
   string title = 1;

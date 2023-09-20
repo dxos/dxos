@@ -8,6 +8,7 @@ import get from 'lodash.get';
 import React, { FC, MutableRefObject, RefCallback, useCallback } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
@@ -179,6 +180,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             data: { id: document.id },
           });
         }
+      }
+
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+          if (isMarkdownContent(node.data)) {
+            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+          }
+          return tile;
+        });
       }
     },
     unload: async () => {

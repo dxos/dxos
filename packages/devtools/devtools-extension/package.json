@@ -38,7 +38,6 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/kai-framework": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/chrome": "^0.0.125",
     "@types/react": "^18.0.21",
