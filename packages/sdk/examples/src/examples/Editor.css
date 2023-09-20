@@ -47,7 +47,7 @@
   content: 'Peer B';
 }
 
-.demo-buttons {
+.demo>.buttons {
   z-index: 20;
   position: absolute;
   left: 70%;
