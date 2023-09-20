@@ -43,15 +43,17 @@ export const useHandleCopyDragEnd = () => {
       const copiedTile = copyTile(activeId, dnd.copyDestinationId, { tiles, relations });
       // update copied tile’s index
       const subtiles = getSubtiles(relations[dnd.copyDestinationId].child, tiles);
-      const index =
-        subtiles.find(({ id }) => id.startsWith('preview--'))?.index ??
-        nextRearrangeIndex(subtiles, copiedTile.id, over?.id);
+      const previewTile = subtiles.find(({ id }) => id.startsWith('preview--'));
+      const index = previewTile?.index ?? nextRearrangeIndex(subtiles, copiedTile.id, over?.id);
       copiedTile.index = index ?? (subtiles.length > 0 ? getIndexAbove(subtiles[subtiles.length - 1].index) : 'a0');
-      console.log('[index]', index, copiedTile.index);
       // update mosaic state
-      tiles[copiedTile.id] = copiedTile;
-      relations[copiedTile.id] = { parent: new Set([dnd.copyDestinationId]), child: new Set() };
-      relations[dnd.copyDestinationId].child.add(copiedTile.id);
+      batch(() => {
+        tiles[copiedTile.id] = copiedTile;
+        previewTile && relations[dnd.copyDestinationId!].child.delete(previewTile.id);
+        relations[copiedTile.id] = { parent: new Set([dnd.copyDestinationId!]), child: new Set() };
+        relations[dnd.copyDestinationId!].child.add(copiedTile.id);
+        previewTile && delete tiles[previewTile.id];
+      });
       // fire onMosaicChange
       onMosaicChange?.({
         type: 'copy',
@@ -158,13 +160,10 @@ export const useHandleCopyDragOver = () => {
           };
           batch(() => {
             mosaic.tiles[previewId] = previewTile;
-            mosaic.tiles[previewId].index =
-              // Use `nextRearrangeIndex` since the preview does not yet exist
-              nextRearrangeIndex(
-                getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles),
-                previewId,
-                over?.id,
-              ) ?? 'a0';
+            mosaic.tiles[previewId].index = nextCopyIndex(
+              getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles),
+              over?.id,
+            );
             mosaic.relations[nextCopyDest].child.add(previewId);
             dnd.copyDestinationId = nextCopyDest;
           });

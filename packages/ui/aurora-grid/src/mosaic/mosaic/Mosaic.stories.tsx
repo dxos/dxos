@@ -43,7 +43,7 @@ const rearrangeIds = Object.keys(rearrangeTiles);
 
 const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
   (
-    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination },
+    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
     forwardedRef,
   ) => {
     const { label, description } = data;
@@ -54,7 +54,7 @@ const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDa
           groupSurface,
           surfaceElevation({ elevation: 'group' }),
           'rounded relative',
-          isActive && 'opacity-0',
+          isPreview ? 'opacity-50' : isActive && 'opacity-0',
         )}
         style={style}
         ref={forwardedRef}
@@ -126,6 +126,7 @@ export const Rearrange = {
         <Mosaic.Root id={rearrangeMosaicId}>
           <Mosaic.Tile {...(rearrangeMosaic.tiles[rearrangeRootId] as StackTile)} />
         </Mosaic.Root>
+        <Mosaic.Overlay />
       </Mosaic.Provider>
     );
   },
@@ -205,6 +206,7 @@ export const Copy = {
             </Mosaic.Root>
           </div>
         </div>
+        <Mosaic.Overlay />
       </Mosaic.Provider>
     );
   },
