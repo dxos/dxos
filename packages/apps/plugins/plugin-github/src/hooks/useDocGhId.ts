@@ -11,7 +11,7 @@ import { GhIdentifier } from '../props';
 export const useDocGhId = (keys: { source?: string; id?: string }[]) => {
   return useMemo<GhIdentifier | null>(() => {
     try {
-      const key = keys?.find((key) => key.source === 'com.github');
+      const key = keys?.find((key) => key.source === 'github.com');
       const [owner, repo, type, ...rest] = key?.id?.split('/') ?? [];
       if (type === 'issues') {
         return {

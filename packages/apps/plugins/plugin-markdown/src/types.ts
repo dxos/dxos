@@ -7,7 +7,7 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Document } from '@braneframe/types';
 import { EditorMode, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { ObjectMeta } from '@dxos/react-client/echo';
+import { ObjectMeta } from '@dxos/client/echo';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
@@ -19,15 +19,16 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = {
   title: string;
-  // TODO(burdon): Factor out (type system).
-  meta: ObjectMeta;
+
+  // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
+  __meta: ObjectMeta;
   readOnly?: boolean;
 };
 
 export type MarkdownProvides = {
   markdown: {
-    onChange?: MarkdownComposerProps['onChange'];
     filter?: (document: Document) => boolean;
+    onChange?: MarkdownComposerProps['onChange'];
   };
 };
 

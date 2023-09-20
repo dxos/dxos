@@ -189,9 +189,9 @@ export const createObjectClass = (type: pb.Type) => {
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
       }
-
+  
       constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOpts) {
-        super({ ...initValues}, ${name}.type, opts);
+        super({ ...initValues}, { schema: ${name}.type, ...opts });
       }
       ${fields}
     }

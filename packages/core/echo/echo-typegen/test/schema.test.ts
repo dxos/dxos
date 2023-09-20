@@ -39,17 +39,21 @@ describe('schema', () => {
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
     expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact.id } });
-    expect(JSON.stringify(task1)).to.equal(
-      JSON.stringify({
-        '@id': task1.id,
-        '@type': task1.__typename,
-        '@model': 'dxos.org/model/document',
-        subTasks: [],
-        description: { '@id': task1.description.id },
-        title: 'Task 1',
-        assignee: { '@id': contact.id },
-        meta: { keys: [] },
-      }),
+    expect(JSON.stringify(task1, null, 4)).to.equal(
+      JSON.stringify(
+        {
+          '@id': task1.id,
+          '@type': task1.__typename,
+          '@model': 'dxos.org/model/document',
+          '@meta': { keys: [] },
+          subTasks: [],
+          description: { '@id': task1.description.id },
+          title: 'Task 1',
+          assignee: { '@id': contact.id },
+        },
+        null,
+        4,
+      ),
     );
   });
 
@@ -62,6 +66,7 @@ describe('schema', () => {
       '@id': contact.id,
       '@type': contact.__typename,
       '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       name: 'User 1',
       tasks: [
         {
@@ -71,7 +76,6 @@ describe('schema', () => {
           '@id': contact.tasks[1].id,
         },
       ],
-      meta: { keys: [] },
     });
   });
 
