@@ -5,6 +5,7 @@
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
+export * from './Center';
 export * from './ComboBox';
 export * from './Dialogs';
 export * from './DropdownMenu';
@@ -14,6 +15,7 @@ export * from './Link';
 export * from './Main';
 export * from './Message';
 export * from './Popover';
+export * from './ProgressBar';
 export * from './ScrollArea';
 export * from './Select';
 export * from './Separator';
