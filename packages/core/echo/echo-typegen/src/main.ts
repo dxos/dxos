@@ -65,6 +65,14 @@ const loadProtobufBuiltins = () => {
                   },
                 },
               },
+              Schema: {
+                fields: {
+                  test: {
+                    type: 'string',
+                    id: 1,
+                  },
+                },
+              },
             },
           },
         },
