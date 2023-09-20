@@ -3,7 +3,7 @@
 //
 
 import { Event, ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel } from '@dxos/document-model';
+import { DocumentModel, DocumentModelState } from '@dxos/document-model';
 import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -242,7 +242,8 @@ export class EchoDatabase {
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.modelType === DocumentModel.meta.type) {
-      const type = item.state['@type'];
+      const state = item.state as DocumentModelState;
+      const type = state.type?.protocol === 'protobuf' ? state.type?.itemId : undefined;
       if (!type) {
         return new TypedObject();
       }

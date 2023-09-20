@@ -23,7 +23,7 @@ import { removeKey } from './util';
 export type DocumentModelState = {
   data: Record<string, any>;
   meta: Record<string, any>;
-  type?: string;
+  type?: Reference;
 };
 
 /**
@@ -242,7 +242,10 @@ export class MutationUtil {
   static applyMutationSet(object: DocumentModelState, message: ObjectMutationSet): DocumentModelState {
     invariant(message);
     if (message.type) {
-      object.type = message.type;
+      object.type = Reference.fromLegacyTypeName(message.type);
+    }
+    if(message.typeRef) {
+      object.type = Reference.fromValue(message.typeRef)
     }
     const { mutations, metaMutations } = message;
     mutations?.forEach((mutation) => MutationUtil.applyMutation(object.data, mutation));

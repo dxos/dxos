@@ -16,7 +16,7 @@ import { EchoObject } from './object';
 import {  EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
-import { type Schema } from './proto'; // NOTE: Keep as type-import.
+import { Schema } from './proto'; // NOTE: Keep as type-import.
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -69,7 +69,7 @@ export type ObjectMeta = {
 };
 
 export type TypedObjectOpts = {
-  schema?: EchoSchemaType;
+  schema?: EchoSchemaType | Schema;
   meta?: ObjectMeta;
   readOnly?: boolean;
 };
@@ -87,7 +87,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private _schema?: EchoSchemaType = undefined;
+  private _schema?: EchoSchemaType | Schema = undefined;
 
   private _readOnly = false;
 
@@ -103,7 +103,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this.__schema instanceof EchoSchemaType) {
       // Set type.
-      this._mutate({ type: this.__schema.name });
+      this._mutate({ typeRef: Reference.fromLegacyTypeName(this.__schema.name) });
 
       for (const field of this.__schema.fields) {
         if (field.type.kind === 'array') {
@@ -112,6 +112,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           this._set(field.name, new Text());
         }
       }
+    } else if(this._schema instanceof Schema) {
+      this._mutate({ typeRef: new Reference(this.__schema!.id) });
     }
 
     if (initialProps) {
@@ -127,7 +129,11 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   get [Symbol.toStringTag]() {
-    return this[base]?._schema?.name ?? 'TypedObject';
+    if(this.__schema instanceof EchoSchemaType) {
+      return this.__schema.name ?? 'TypedObject';
+    } else {
+      return 'TypedObject';
+    }
   }
 
   // TODO(burdon): Reconcile with meta schema.
@@ -149,7 +155,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * @example "example.kai.Task"
    */
   get __typename(): string | undefined {
-    return this[base]._schema?.name ?? this[base]._model?.type ?? undefined;
+    return this.__schema instanceof EchoSchemaType ? this.__schema.name : undefined;
   }
 
   get __meta(): ObjectMeta {
