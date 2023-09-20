@@ -11,8 +11,8 @@ import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protoco
 
 import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
-import { validateKey } from './util';
 import { Reference } from './reference';
+import { validateKey } from './util';
 
 const DEFAULT_META_SNAPSHOT = ValueUtil.createMessage({
   keys: OrderedArray.fromValues([]),
@@ -34,9 +34,9 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
     ValueUtil.applyValue(object, 'data', snapshot.root);
     ValueUtil.applyValue(object, 'meta', snapshot.meta ?? DEFAULT_META_SNAPSHOT);
     this._object = object;
-    if(snapshot.type) {
+    if (snapshot.type) {
       this._object.type = Reference.fromLegacyTypeName(snapshot.type);
-    } else if(snapshot.typeRef) {
+    } else if (snapshot.typeRef) {
       this._object.type = Reference.fromValue(snapshot.typeRef);
     }
   }

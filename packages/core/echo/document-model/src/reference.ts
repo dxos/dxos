@@ -11,14 +11,10 @@ export class Reference {
   }
 
   static fromLegacyTypeName(type: string): Reference {
-    return new Reference(type, 'protobuf', 'dxos.org')
+    return new Reference(type, 'protobuf', 'dxos.org');
   }
 
-  constructor(
-    public readonly itemId: ItemID,
-    public readonly protocol?: string,
-    public readonly host?: string,
-  ) {}
+  constructor(public readonly itemId: ItemID, public readonly protocol?: string, public readonly host?: string) {}
 
   encode(): ReferenceValue {
     return { itemId: this.itemId, host: this.host, protocol: this.protocol };

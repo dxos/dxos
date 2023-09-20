@@ -10,21 +10,21 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
+import { DatabaseRouter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { getDebugName, isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
+import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
+import { ClientRuntime } from './client-runtime';
 import type { EchoSchema, SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
-import { DatabaseRouter } from '@dxos/echo-schema';
 
 /**
  * This options object configures the DXOS Client.

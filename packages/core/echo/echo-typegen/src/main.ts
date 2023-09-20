@@ -102,12 +102,12 @@ const main = async (source: string, out: string, schemaPackage: string) => {
 // TODO(burdon): Yargs
 const args = argv.slice(2);
 
-let schemaPackage = '@dxos/echo-schema'
+let schemaPackage = '@dxos/echo-schema';
 {
-  const idx = args.findIndex(x => x === '--schema-package')
+  const idx = args.findIndex((x) => x === '--schema-package');
   if (idx !== -1) {
-    schemaPackage = args[idx + 1]
-    args.splice(idx, 2)
+    schemaPackage = args[idx + 1];
+    args.splice(idx, 2);
   }
 }
 

@@ -247,8 +247,8 @@ export class EchoDatabase {
       if (!state.type) {
         return new TypedObject();
       }
-      
-      if(state.type.protocol === 'protobuf') {
+
+      if (state.type.protocol === 'protobuf') {
         const type = state.type.itemId;
         const Proto = this._router.schema?.getPrototype(type);
         if (!Proto) {
@@ -257,12 +257,10 @@ export class EchoDatabase {
         } else {
           return new Proto();
         }
-      } else if(state.type.protocol === undefined) {
+      } else if (state.type.protocol === undefined) {
         const schema = this.getObjectById(state.type.itemId);
-        return new TypedObject(undefined, { schema: schema as Schema | undefined })
+        return new TypedObject(undefined, { schema: schema as Schema | undefined });
       }
-
-
     } else if (item.modelType === TextModel.meta.type) {
       return new Text();
     } else {

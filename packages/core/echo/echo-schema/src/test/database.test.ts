@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
-import { base, clone, db, Expando, Text } from '..'
-import { createDatabase } from '../testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { base, clone, db, Expando, Text } from '..';
+import { createDatabase } from '../testing';
 
 describe('database', () => {
   test('creating objects', async () => {

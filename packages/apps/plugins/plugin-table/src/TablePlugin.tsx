@@ -8,9 +8,8 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
+import { SpaceProxy, Expando, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
-import { Schema as SchemaType } from '@dxos/client/echo'
 
 import { TableMain } from './components';
 import translations from './translations';

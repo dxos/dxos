@@ -117,8 +117,8 @@ const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
 };
 
 export type CodegenOptions = {
-  schemaPackage: string
-}
+  schemaPackage: string;
+};
 
 /**
  * Generate type definitions.

@@ -209,10 +209,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             border
           />
         </div>
-          <div className='flex text-xs'>
-            <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
-            <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
-          </div>
+        <div className='flex text-xs'>
+          <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
+        </div>
       </DensityProvider>
     </Main.Content>
   );

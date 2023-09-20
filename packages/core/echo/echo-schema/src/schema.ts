@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { TypeFilter } from './query';
 import { readOnly } from './defs';
+import { TypeFilter } from './query';
 
 export type EchoType =
   | {
@@ -58,7 +58,7 @@ export class EchoSchemaType {
 
   // Compat with runtime schemas.
   get [readOnly]() {
-    return true
+    return true;
   }
 
   get name() {

@@ -52,8 +52,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
 
-    this.addSchema(schemaBuiltin)
-    this.addSchema(schema$)
+    this.addSchema(schemaBuiltin);
+    this.addSchema(schema$);
   }
 
   [inspect.custom]() {

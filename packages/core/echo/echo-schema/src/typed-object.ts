@@ -13,10 +13,10 @@ import { TextModel } from '@dxos/text-model';
 import { EchoArray } from './array';
 import { base, data, proxy, readOnly, schema } from './defs';
 import { EchoObject } from './object';
-import {  EchoSchemaField, EchoSchemaType } from './schema';
+import type { Schema } from './proto'; // NOTE: Keep as type-import.
+import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
-import type { Schema } from './proto'; // NOTE: Keep as type-import.
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -111,7 +111,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           this._set(field.name, new Text());
         }
       }
-    } else if(isRuntimeSchema(this._schema)) {
+    } else if (isRuntimeSchema(this._schema)) {
       this._mutate({ typeRef: new Reference(this.__schema!.id) });
     }
 
@@ -128,7 +128,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   get [Symbol.toStringTag]() {
-    if(this.__schema instanceof EchoSchemaType) {
+    if (this.__schema instanceof EchoSchemaType) {
       return this.__schema.name ?? 'TypedObject';
     } else {
       return 'TypedObject';
@@ -555,4 +555,4 @@ export const Expando: ExpandoConstructor = TypedObject;
 export type Expando = TypedObject;
 
 const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
-  !!schema && !!(schema as any)[base]
+  !!schema && !!(schema as any)[base];

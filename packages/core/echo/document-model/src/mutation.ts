@@ -244,8 +244,8 @@ export class MutationUtil {
     if (message.type) {
       object.type = Reference.fromLegacyTypeName(message.type);
     }
-    if(message.typeRef) {
-      object.type = Reference.fromValue(message.typeRef)
+    if (message.typeRef) {
+      object.type = Reference.fromValue(message.typeRef);
     }
     const { mutations, metaMutations } = message;
     mutations?.forEach((mutation) => MutationUtil.applyMutation(object.data, mutation));

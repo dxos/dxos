@@ -7,10 +7,10 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { readOnly } from '../defs';
 import { Schema } from '../proto';
 import { createDatabase } from '../testing';
 import { Expando } from '../typed-object';
-import { readOnly } from '../defs';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
@@ -121,8 +121,7 @@ describe('static schema', () => {
   });
 });
 
-
-describe('runtime schema', async () => {
+test('runtime schema', async () => {
   const { db: database } = await createDatabase();
 
   const orgSchema = new Schema({
@@ -130,24 +129,27 @@ describe('runtime schema', async () => {
     props: [
       {
         id: 'name',
-        type: Schema.PropType.STRING
+        type: Schema.PropType.STRING,
       },
       {
         id: 'website',
-        type: Schema.PropType.STRING
-      }
-    ]
-  })
-  database.add(orgSchema)
-  
-  const org = new Expando({
-    name: 'DXOS',
-    website: 'dxos.org'
-  }, { schema: orgSchema })
-  database.add(org)
+        type: Schema.PropType.STRING,
+      },
+    ],
+  });
+  database.add(orgSchema);
 
-  expect(org.name).to.eq('DXOS')
-  expect(org.website).to.eq('dxos.org')
-  expect(org.__schema).to.eq(orgSchema)
-  expect(org.__schema?.[readOnly]).to.eq(false)
-})
+  const org = new Expando(
+    {
+      name: 'DXOS',
+      website: 'dxos.org',
+    },
+    { schema: orgSchema },
+  );
+  database.add(org);
+
+  expect(org.name).to.eq('DXOS');
+  expect(org.website).to.eq('dxos.org');
+  expect(org.__schema).to.eq(orgSchema);
+  expect(org.__schema?.[readOnly]).to.eq(false);
+});

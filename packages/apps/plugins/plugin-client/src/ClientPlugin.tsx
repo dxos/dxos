@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { EchoSchema } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -12,9 +13,8 @@ import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
-import { EchoSchema } from '@dxos/client/src/echo';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean, schema?: EchoSchema };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
@@ -56,10 +56,10 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
-        if(options.schema) {
+        if (options.schema) {
           client.addSchema(options.schema);
         }
-        
+
         await client.initialize();
 
         const searchParams = new URLSearchParams(location.search);

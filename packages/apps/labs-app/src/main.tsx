@@ -31,6 +31,7 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
+import { schema$ } from '@braneframe/types';
 import {
   auroraTheme,
   bindTheme,
@@ -46,7 +47,6 @@ import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { Defaults } from '@dxos/react-client';
 import { PluginProvider } from '@dxos/react-surface';
-import { schema$ } from '@braneframe/types'
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
