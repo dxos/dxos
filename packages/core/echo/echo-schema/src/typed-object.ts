@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, readOnly, schema } from './defs';
+import { base, data, proxy, immutable, schema, meta } from './defs';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
@@ -26,10 +26,10 @@ const isValidKey = (key: string | symbol) =>
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
-    key === '__deleted' ||
-    key === '__meta' ||
+    key === '__meta' || // TODO(burdon): Reconcile with schema, typename.
     key === '__schema' ||
-    key === '__typename'
+    key === '__typename' ||
+    key === '__deleted'
   );
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
@@ -67,10 +67,10 @@ export type ObjectMeta = {
   schema?: Expando;
 };
 
-export type TypedObjectOpts = {
+export type TypedObjectOptions = {
   schema?: EchoSchemaType;
   meta?: ObjectMeta;
-  readOnly?: boolean;
+  immutable?: boolean;
 };
 
 /**
@@ -88,13 +88,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 
   private _schema?: EchoSchemaType = undefined;
 
-  private _readOnly = false;
+  private _immutable = false;
 
-  constructor(initialProps?: T, opts?: TypedObjectOpts) {
+  constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
     this._schema = opts?.schema;
-    this._readOnly = opts?.readOnly ?? false;
+    this._immutable = opts?.immutable ?? false;
 
     // Assign initial meta fields.
     this._updateMeta({ keys: [], ...opts?.meta });
@@ -129,38 +129,54 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]?._schema?.name ?? 'TypedObject';
   }
 
-  // TODO(burdon): Reconcile with meta schema.
-  get __schema(): EchoSchemaType | undefined {
-    return this[base]._schema;
+  // System fields:
+  // - exposed as symbolic getters (e.g., `get [symbol]()`).
+  // - exposed as `__property` fields for convenience (avoids importing symbol def).
+  // - stringified as `@property`.
+
+  get [meta](): ObjectMeta {
+    return this.__meta;
   }
 
   /**
    * Returns the schema type descriptor for the object.
-   * @deprecated
    */
-  // TODO(burdon): Method on TypedObject vs EchoObject?
+  // TODO(burdon): Move to meta property.
   get [schema](): EchoSchemaType | undefined {
     return this[base]._schema;
   }
 
-  /**
-   * Fully qualified name of the object type for objects created from the schema.
-   * @example "example.kai.Task"
-   */
-  get __typename(): string | undefined {
-    return this[base]._schema?.name ?? this[base]._model?.type ?? undefined;
+  get [immutable](): boolean {
+    return !!this[base]?._immutable;
   }
+
+  get [data]() {
+    return this[base]._convert({
+      onRef: (id, obj?) => obj ?? { '@id': id },
+    });
+  }
+
+  //
+  // Exposed properties.
+  //
 
   get __meta(): ObjectMeta {
     return this[base]._createProxy({}, undefined, true);
   }
 
-  // TODO(burdon): Standardize properties/getters/__fields, etc.
-  get [readOnly](): boolean {
-    return !!this[base]?._readOnly;
+  // TODO(burdon): Reconcile with meta schema (move to meta).
+  get __schema(): EchoSchemaType | undefined {
+    return this[base]._schema;
   }
 
-  /** Deletion. */
+  /**
+   * Fully qualified name of the object type for objects created from the schema.
+   */
+  // TODO(burdon): Reconcile with meta schema (move to meta).
+  get __typename(): string | undefined {
+    return this[base]._schema?.name ?? this[base]._model?.type ?? undefined;
+  }
+
   get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
   }
@@ -171,12 +187,6 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   toJSON() {
     return this[base]._convert();
-  }
-
-  get [data]() {
-    return this[base]._convert({
-      onRef: (id, obj?) => obj ?? { '@id': id },
-    });
   }
 
   /**
@@ -465,7 +475,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
-        if (this[base]._readOnly && !parent && !meta) {
+        if (this[base]._immutable && !parent && !meta) {
           log.warn('Read only access');
           return false;
         }
@@ -532,7 +542,7 @@ export type TypedObject<T extends Record<string, any> = Record<string, any>> = T
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    opts?: TypedObjectOpts,
+    opts?: TypedObjectOptions,
   ): TypedObject<T>;
 };
 
@@ -542,7 +552,7 @@ export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
  *
  */
 type ExpandoConstructor = {
-  new (initialProps?: Record<string, any>, options?: TypedObjectOpts): Expando;
+  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
