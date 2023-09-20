@@ -9,7 +9,7 @@ import { useMosaic } from '../../mosaic';
 import { MosaicState, Tile } from '../../types';
 import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
-import { nextIndex } from '../util';
+import { nextRearrangeIndex } from '../util';
 
 export const useHandleMigrateDragStart = () => {
   const { mosaic } = useMosaic();
@@ -39,7 +39,11 @@ export const useHandleMigrateDragEnd = () => {
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
       // update active tile’s index
-      const index = nextIndex(getSubtiles(relations[dnd.migrationDestinationId].child, tiles), activeId, over?.id);
+      const index = nextRearrangeIndex(
+        getSubtiles(relations[dnd.migrationDestinationId].child, tiles),
+        activeId,
+        over?.id,
+      );
       tiles[activeId].index = index ?? tiles[activeId].index;
       // update active tile’s parent relation
       relations[activeId].parent = new Set([dnd.migrationDestinationId]);

@@ -11,7 +11,7 @@ import { useMosaic } from '../../mosaic';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
 import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
-import { getDndId, nextIndex, parseDndId } from '../util';
+import { getDndId, nextCopyIndex, nextRearrangeIndex, parseDndId } from '../util';
 
 export const useHandleCopyDragStart = () => {
   const dnd = useDnd();
@@ -44,7 +44,8 @@ export const useHandleCopyDragEnd = () => {
       // update copied tile’s index
       const subtiles = getSubtiles(relations[dnd.copyDestinationId].child, tiles);
       const index =
-        subtiles.find(({ id }) => id.startsWith('preview--'))?.index ?? nextIndex(subtiles, copiedTile.id, over?.id);
+        subtiles.find(({ id }) => id.startsWith('preview--'))?.index ??
+        nextRearrangeIndex(subtiles, copiedTile.id, over?.id);
       copiedTile.index = index ?? (subtiles.length > 0 ? getIndexAbove(subtiles[subtiles.length - 1].index) : 'a0');
       console.log('[index]', index, copiedTile.index);
       // update mosaic state
@@ -120,14 +121,16 @@ export const useHandleCopyDragOver = () => {
           if (nextCopyDest === dnd.copyDestinationId) {
             // Just update preview’s index in-situ
             const previewId = getPreviewId(active.id, nextCopyDest);
-            const index =
-              nextIndex(
+            if (over?.id === previewId) {
+              // Do nothing
+            } else {
+              const index = nextCopyIndex(
                 getSubtiles(mosaic.relations[dnd.copyDestinationId].child, mosaic.tiles),
-                previewId,
                 over?.id,
-              ) ?? 'a0';
-            if (mosaic.tiles[previewId].index !== index) {
-              mosaic.tiles[previewId].index = index;
+              );
+              if (mosaic.tiles[previewId].index !== index) {
+                mosaic.tiles[previewId].index = index;
+              }
             }
           } else {
             // Remove preview from old parent and add to new parent
@@ -156,7 +159,12 @@ export const useHandleCopyDragOver = () => {
           batch(() => {
             mosaic.tiles[previewId] = previewTile;
             mosaic.tiles[previewId].index =
-              nextIndex(getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles), previewId, over?.id) ?? 'a0';
+              // Use `nextRearrangeIndex` since the preview does not yet exist
+              nextRearrangeIndex(
+                getSubtiles(mosaic.relations[nextCopyDest].child, mosaic.tiles),
+                previewId,
+                over?.id,
+              ) ?? 'a0';
             mosaic.relations[nextCopyDest].child.add(previewId);
             dnd.copyDestinationId = nextCopyDest;
           });

@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { useMosaic } from '../../mosaic';
 import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
-import { nextIndex } from '../util';
+import { nextRearrangeIndex } from '../util';
 
 export const useHandleRearrangeDragEnd = () => {
   const {
@@ -28,7 +28,7 @@ export const useHandleRearrangeDragEnd = () => {
         } else {
           const subtiles = getSubtiles(relations[Array.from(parentIds)[0]]?.child ?? new Set(), tiles);
           if (subtiles.length) {
-            const index = nextIndex(subtiles, active.id, over.id);
+            const index = nextRearrangeIndex(subtiles, active.id, over.id);
             if (index) {
               tiles[active.id].index = index;
               onMosaicChange?.({ type: 'rearrange', id: active.id.toString(), index });
