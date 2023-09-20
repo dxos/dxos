@@ -45,7 +45,7 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
   );
 });
 
-const StackDroppableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
+const StackSortableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: tile.id,
     data: tile,
@@ -65,7 +65,7 @@ const StackDroppableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwarde
   );
 });
 
-const StackSortableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
+const StackDroppableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
   const { setNodeRef } = useDroppable({
     id: tile.id,
     data: tile,
