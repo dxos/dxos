@@ -27,7 +27,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "portfinder": "^1.0.32"
   },
   "devDependencies": {
