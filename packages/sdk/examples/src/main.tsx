@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Document } from '@braneframe/types';
-import { Input, ThemeProvider, Tooltip } from '@dxos/aurora';
+import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 import { ClientContext } from '@dxos/react-client';
 import { Text } from '@dxos/react-client/echo';
@@ -16,6 +16,8 @@ import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
 
 import { EditorExample } from './examples';
+
+const root = createRoot(document.getElementById('root')!);
 
 // TODO(wittjosiah): Migrate to story once chromatic publish is fixed.
 const main = async () => {
@@ -104,7 +106,16 @@ const main = async () => {
     );
   };
 
-  createRoot(document.getElementById('root')!).render(<TwoPeersExample />);
+  root.render(<TwoPeersExample />);
 };
 
-void main();
+const fallback = () => {
+  root.render(
+    <Center>
+      <ProgressBar indeterminate />
+    </Center>
+  );
+};
+
+void fallback();
+setTimeout(main, 0);
