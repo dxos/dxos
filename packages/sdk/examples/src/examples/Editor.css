@@ -1,0 +1,56 @@
+/* TODO(wittjosiah): Tailwind plugin complains if css is nested. */
+
+.demo {
+  z-index: 10;
+  flex-grow: 1;
+  height: 32em;
+  position: relative;
+}
+
+.demo>.client {
+  border: 1px solid black;
+  width: 70%;
+  height: 75%;
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
+  background-color: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  padding-block-start: 1rem;
+}
+
+.demo>.client::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.5em 1.2em;
+  color: gray;
+  font-family: monospace;
+  border-radius: 12px 0 0 0;
+}
+
+.demo>.client-0 {
+  top: 0;
+  left: 0;
+}
+
+.demo>.client-0::before {
+  content: 'Peer A';
+}
+
+.demo>.client-1 {
+  bottom: 0;
+  right: 0;
+}
+
+.demo>.client-1::before {
+  content: 'Peer B';
+}
+
+.demo>.buttons {
+  z-index: 20;
+  position: absolute;
+  left: 70%;
+  bottom: 75%;
+  margin: 2em;
+}
