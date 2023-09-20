@@ -125,6 +125,7 @@ export const Default = {
         const [_, entityId] = parseDndId(dndId);
         return graph.find(entityId);
       }}
+      copyTile={(id, _toId, mosaic) => ({ ...mosaic.tiles[id] })}
     >
       <Mosaic.Root id={navTreeId}>
         <NavTreeRoot />
