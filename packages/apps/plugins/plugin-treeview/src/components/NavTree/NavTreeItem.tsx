@@ -64,6 +64,7 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
         isActive,
         isOverlay,
         isMigrationDestination,
+        isPreview,
       },
     },
     forwardedRef,
@@ -85,6 +86,7 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
             style={style}
             rearranging={isActive}
             isOverlay={isOverlay}
+            isPreview={isPreview}
             {...(isMigrationDestination && { migrating: 'into' })}
             ref={forwardedRef}
           >
@@ -179,7 +181,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             'rounded block',
             hoverableFocusedKeyboardControls,
             'transition-opacity',
-            (rearranging || isPreview) && 'opacity-0',
+            isPreview ? 'opacity-50' : rearranging && 'opacity-0',
             focusRing,
             migrating === 'into' && dropRing,
             level === 0 ? 'mbs-4 first:mbs-0' : '',

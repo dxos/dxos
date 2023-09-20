@@ -78,7 +78,7 @@ export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | Mosa
 
 export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 
-export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => Tile;
+export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState, operation: 'copy' | 'migrate') => Tile;
 
 export type MosaicContextValue = {
   getData: (dndId: string) => any;
