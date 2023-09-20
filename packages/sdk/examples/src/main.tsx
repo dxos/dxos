@@ -4,24 +4,31 @@
 
 import '@dxosTheme';
 import { Airplane, Stack } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Document } from '@braneframe/types';
-import { Input, ThemeProvider, Tooltip } from '@dxos/aurora';
+import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 import { ClientContext } from '@dxos/react-client';
+import { Text } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
 
 import { EditorExample } from './examples';
+
+const root = createRoot(document.getElementById('root')!);
 
 // TODO(wittjosiah): Migrate to story once chromatic publish is fixed.
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
     onCreateSpace: (space) => {
-      space.db.add(new Document());
+      space.db.add(
+        new Document({
+          content: new Text('## Type here...\n\ntry the airplane mode switch.'),
+        }),
+      );
     },
   });
 
@@ -40,47 +47,75 @@ const main = async () => {
     });
   };
 
-  createRoot(document.getElementById('root')!).render(
-    <ThemeProvider tx={auroraTx}>
-      <div className='demo'>
-        <Tooltip.Provider>
-          <div className='buttons'>
-            <div className='flex'>
-              <Input.Root>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <Input.Label>
-                      <Airplane />
-                    </Input.Label>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>Toggle Network</Tooltip.Content>
-                </Tooltip.Root>
-                <Input.Switch classNames='me-2' onCheckedChange={handleToggleNetwork} />
-              </Input.Root>
+  const TwoPeersExample = () => {
+    const [offline, setOffline] = useState(false);
+    const [batching, setBatching] = useState(false);
+
+    return (
+      <ThemeProvider tx={auroraTx}>
+        <div className='demo'>
+          <Tooltip.Provider>
+            <div className='buttons'>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <div className='flex'>
+                    <Input.Root>
+                      <Input.Switch
+                        classNames='me-2'
+                        onCheckedChange={(e) => {
+                          setOffline(!offline);
+                          return handleToggleNetwork(e);
+                        }}
+                      />
+                      <Input.Label>
+                        <Airplane size={28} className={offline ? 'active' : ''} />
+                      </Input.Label>
+                    </Input.Root>
+                  </div>
+                </Tooltip.Trigger>
+                <Tooltip.Content>Offline mode</Tooltip.Content>
+              </Tooltip.Root>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <div className='flex'>
+                    <Input.Root>
+                      <Input.Switch
+                        classNames='me-2'
+                        onCheckedChange={(e) => {
+                          setBatching(!batching);
+                          return handleToggleBatching(e);
+                        }}
+                      />
+                      <Input.Label>
+                        <Stack size={28} className={batching ? 'active' : ''} />
+                      </Input.Label>
+                    </Input.Root>
+                  </div>
+                </Tooltip.Trigger>
+                <Tooltip.Content>Write batching</Tooltip.Content>
+              </Tooltip.Root>
             </div>
-            <div className='flex'>
-              <Input.Root>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <Input.Label>
-                      <Stack />
-                    </Input.Label>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>Toggle database batching</Tooltip.Content>
-                </Tooltip.Root>
-                <Input.Switch classNames='me-2' onCheckedChange={handleToggleBatching} />
-              </Input.Root>
-            </div>
-          </div>
-        </Tooltip.Provider>
-        {clients.map((client, index) => (
-          <ClientContext.Provider key={index} value={{ client }}>
-            <EditorExample id={index} spaceKey={spaceKey} />
-          </ClientContext.Provider>
-        ))}
-      </div>
-    </ThemeProvider>,
+          </Tooltip.Provider>
+          {clients.map((client, index) => (
+            <ClientContext.Provider key={index} value={{ client }}>
+              <EditorExample id={index} spaceKey={spaceKey} />
+            </ClientContext.Provider>
+          ))}
+        </div>
+      </ThemeProvider>
+    );
+  };
+
+  root.render(<TwoPeersExample />);
+};
+
+const fallback = () => {
+  root.render(
+    <Center>
+      <ProgressBar indeterminate />
+    </Center>,
   );
 };
 
-void main();
+void fallback();
+setTimeout(main, 0);

@@ -329,13 +329,13 @@ const Switch: ForwardRefExoticComponent<SwitchProps> = forwardRef<HTMLButtonElem
           }),
           // className: tx('input.checkbox', 'input--checkbox', { size }, 'shrink-0', classNames),
           className:
-            'w-[56px] h-[32px] bg-gray-100 rounded-full px-[4px] border border-black relative data-[state=checked]:bg-black outline-none cursor-default',
+            'w-[56px] h-[32px] bg-transparent rounded-full px-[4px] border-2 border-neutral-500 relative data-[state=checked]:border-primary-500 data-[state=checked]:bg-primary-500 outline-none cursor-default',
         }}
         ref={forwardedRef}
       >
         {/* TODO(wittjosiah): Embed icons/text for on/off states.
              e.g., https://codepen.io/alvarotrigo/pen/oNoJePo (#13) */}
-        <SwitchThumbPrimitive className='block w-[21px] h-[21px] bg-white rounded-full shadow-[0_2px_2px] shadow-blackA7 transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[24px]' />
+        <SwitchThumbPrimitive className='block w-[22px] h-[22px] bg-neutral-500 rounded-full border-neutral-100 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[22px] data-[state=checked]:bg-white'></SwitchThumbPrimitive>
       </SwitchPrimitive>
     );
   },
