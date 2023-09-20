@@ -5,7 +5,7 @@
 import React, { FC, useMemo, useState } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
-import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
+import { Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
 import {
   createColumns,
@@ -16,7 +16,7 @@ import {
   SelectQueryModel,
 } from '@dxos/aurora-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { Expando, EchoDatabase, TypedObject } from '@dxos/client/echo';
+import { Expando, EchoDatabase, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 

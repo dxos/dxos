@@ -5,7 +5,8 @@
 import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
-import { Document as DocumentType, Schema as SchemaType, Table as TableType } from '@braneframe/types';
+import { Schema as SchemaType } from '@dxos/client/echo'
+import { Document as DocumentType, Table as TableType } from '@braneframe/types';
 import { Space, Text } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
