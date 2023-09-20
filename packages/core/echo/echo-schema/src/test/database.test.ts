@@ -19,6 +19,8 @@ describe('database', () => {
     expect(task.id).to.exist;
     expect(task[base]).to.exist;
     expect(task[db]).to.be.undefined;
+    expect(task.__schema).to.eq(Task.type);
+    expect(task.__typename).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();

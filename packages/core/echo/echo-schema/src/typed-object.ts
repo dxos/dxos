@@ -557,4 +557,4 @@ export const Expando: ExpandoConstructor = TypedObject;
 export type Expando = TypedObject;
 
 const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
-  !!schema && schema[readOnly] === false
+  !!schema && !!(schema as any)[base]

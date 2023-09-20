@@ -21,6 +21,6 @@ export class Reference {
   ) {}
 
   encode(): ReferenceValue {
-    return { itemId: this.itemId };
+    return { itemId: this.itemId, host: this.host, protocol: this.protocol };
   }
 }

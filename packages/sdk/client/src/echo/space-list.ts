@@ -13,10 +13,11 @@ import {
   Space,
   Properties,
   PropertiesProps,
+  schema$,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoSchema, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -51,6 +52,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
+
+    this.addSchema(schemaBuiltin)
+    this.addSchema(schema$)
   }
 
   [inspect.custom]() {
