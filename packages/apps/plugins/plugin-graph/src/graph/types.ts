@@ -94,27 +94,30 @@ export namespace Graph {
     icon?: FC<IconProps>;
 
     /**
-     * Data the node represents.
-     */
-    // TODO(burdon): Type system (e.g., minimally provide identifier string vs. TypedObject vs. Graph mixin type system)?
-    data: TData;
-
-    /**
      * Properties of the node relevant to displaying the node.
      *
      * @example { index: 'a1' }
      */
+    // TODO(burdon): Make this extensible and move label, description, and icon into here?
     properties: TProperties;
+
+    /**
+     * Data the node represents.
+     */
+    // TODO(burdon): Type system (e.g., minimally provide identifier string vs. TypedObject vs. Graph mixin type system)?
+    //  type field would prevent convoluted sniffing of object properties. And allow direct pass-through for ECHO TypedObjects.
+    // TODO(burdon): In some places `null` is cast to TData so make optional?
+    data: TData;
 
     /**
      * Children of the node stored by their id.
      */
-    childrenMap: { [key: string]: Node };
+    childrenMap: Record<string, Node>;
 
     /**
      * Actions of the node stored by their id.
      */
-    actionsMap: { [key: string]: Action };
+    actionsMap: Record<string, Action>;
 
     /**
      * Children of the node in default order.
@@ -126,14 +129,17 @@ export namespace Graph {
      */
     get actions(): Action[];
 
+    // TODO(burdon): addNode/removeNode.
     add<TChildData = null, TChildProperties extends { [key: string]: any } = { [key: string]: any }>(
       ...node: (Pick<Node, 'id' | 'label'> & Partial<Node<TChildData, TChildProperties>>)[]
     ): Node<TChildData, TChildProperties>[];
     remove(id: string): Node;
+
     addAction<TActionProperties extends { [key: string]: any } = { [key: string]: any }>(
       ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
     ): Action<TActionProperties>[];
     removeAction(id: string): Action;
+
     addProperty(key: string, value: any): void;
     removeProperty(key: string): void;
   };

@@ -34,7 +34,6 @@ export class GraphStore {
 
   findNode(id: string): Graph.Node | undefined {
     const path = this.getPath(id);
-    console.log(':::::::::', id, path, this._index);
     if (!path) {
       return undefined;
     }
