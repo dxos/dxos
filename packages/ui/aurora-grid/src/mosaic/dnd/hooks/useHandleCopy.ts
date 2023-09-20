@@ -97,7 +97,6 @@ export const useHandleCopyDragOver = () => {
   const deps = [mosaic, dnd];
   return useCallback(({ active, over }: DragOverEvent) => {
     if (over?.id.toString().startsWith('preview--')) {
-      console.log('[over preview]');
       return;
     }
     if (dnd.activeCopyClass && over?.data?.current) {
