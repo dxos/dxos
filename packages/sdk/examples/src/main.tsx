@@ -113,7 +113,7 @@ const fallback = () => {
   root.render(
     <Center>
       <ProgressBar indeterminate />
-    </Center>
+    </Center>,
   );
 };
 
