@@ -5,12 +5,12 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { ClientServicesProvider, schema$, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { DatabaseRouter } from '@dxos/echo-schema';
+import { DatabaseRouter, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -87,6 +87,9 @@ export class Client {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
     }
+
+    this.addSchema(schemaBuiltin);
+    this.addSchema(schema$);
   }
 
   [inspect.custom]() {

@@ -4,20 +4,19 @@
 
 import { inspect } from 'node:util';
 
-import { Event, scheduleTask, Trigger, MulticastObservable, PushStream } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
   ClientServicesProvider,
-  defaultKey,
   Echo,
-  Space,
   Properties,
   PropertiesProps,
-  schema$,
+  Space,
+  defaultKey
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter, EchoSchema, schemaBuiltin } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -26,8 +25,8 @@ import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
+import { SpaceProxy } from './space-proxy';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -51,9 +50,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
-
-    this.addSchema(schemaBuiltin);
-    this.addSchema(schema$);
   }
 
   [inspect.custom]() {
