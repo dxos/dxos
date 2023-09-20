@@ -1,0 +1,16 @@
+servers: 1
+agents: 10
+peersPerAgent: 10
+serversPerAgent: 1
+signalArguments:
+# - p2pserver
+  - globalsubserver #TODO(burdon): Import/define types (for KUBE?)
+topicCount: 1
+topicsPerAgent: 1
+startWaitTime: 1000
+discoverTimeout: 5000
+repeatInterval: 1000
+agentWaitTime: 5000
+duration: 20000
+type: discovery
+# serverOverride: 'ws://localhost:1337/.well-known/dx/signal'

@@ -251,7 +251,7 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   async close(): Promise<void> {
-    log.info('close');
+    log('close');
     await this._teleport.close();
   }
 

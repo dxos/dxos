@@ -1,5 +1,5 @@
 # Class `InvalidInvitationError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:68]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:43]()</sub>
 
 
 Database errors.

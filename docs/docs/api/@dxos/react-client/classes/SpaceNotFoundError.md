@@ -1,5 +1,5 @@
 # Class `SpaceNotFoundError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:89]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:64]()</sub>
 
 
 Database errors.

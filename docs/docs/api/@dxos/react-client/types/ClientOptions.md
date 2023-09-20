@@ -1,5 +1,5 @@
 # Type `ClientOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:18]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:16]()</sub>
 
 
 This options object configures the DXOS Client.

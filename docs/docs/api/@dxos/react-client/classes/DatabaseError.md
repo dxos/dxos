@@ -1,5 +1,5 @@
 # Class `DatabaseError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:27]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/base-errors.d.ts:25]()</sub>
 
 
 Database errors.

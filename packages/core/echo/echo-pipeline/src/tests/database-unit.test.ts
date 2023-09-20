@@ -6,7 +6,13 @@ import expect from 'expect';
 
 import { sleep } from '@dxos/async';
 import { DocumentModel, MutationBuilder, OrderedArray } from '@dxos/document-model';
-import { BATCH_COMMIT_AFTER, Item, createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
+import {
+  COMMIT_BATCH_INACTIVITY_DEFAULT,
+  Item,
+  createModelMutation,
+  encodeModelMutation,
+  genesisMutation,
+} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -260,7 +266,7 @@ describe('database (unit)', () => {
       model.insert('Hello', 0);
       model.insert(' World!', 5);
       // Wait for batch commit.
-      await sleep(BATCH_COMMIT_AFTER + 10);
+      await sleep(COMMIT_BATCH_INACTIVITY_DEFAULT + 10);
 
       // Mutations got merged.
       expect(peer.feedMessages.length).toEqual(1);
@@ -268,7 +274,7 @@ describe('database (unit)', () => {
       model.insert(' DXOS', 5);
       // New batch is still not committed.
       expect(peer.feedMessages.length).toEqual(1);
-      await sleep(BATCH_COMMIT_AFTER + 10);
+      await sleep(COMMIT_BATCH_INACTIVITY_DEFAULT + 10);
       // New batch is committed.
       expect(peer.feedMessages.length).toEqual(2);
     });
