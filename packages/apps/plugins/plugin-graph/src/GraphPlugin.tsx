@@ -8,7 +8,7 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, GraphStore } from './graph';
+import { Graph, GraphBuilder, GraphStore } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
@@ -18,7 +18,8 @@ import { graphPlugins } from './util';
  * This includes actions and annotation each other's nodes.
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
-  const graph = new GraphStore();
+  const builder = new GraphBuilder();
+  const result: { graph?: GraphStore } = {};
 
   return {
     meta: {
@@ -26,23 +27,26 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
     },
     ready: async (plugins) => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      graph._setSendIntent(intentPlugin?.provides.intent.sendIntent);
+      builder._setSendIntent(intentPlugin?.provides.intent.sendIntent);
 
       graphPlugins(plugins)
         .map((plugin) => plugin.provides.graph.withPlugins)
         .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
-        .forEach((builder) => graph.registerNodeBuilder(builder(plugins)));
+        .forEach((nodeBuilder) => builder.registerNodeBuilder(nodeBuilder(plugins)));
 
       graphPlugins(plugins)
         .map((plugin) => plugin.provides.graph.nodes)
         .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
-        .forEach((builder) => graph.registerNodeBuilder(builder));
+        .forEach((nodeBuilder) => builder.registerNodeBuilder(nodeBuilder));
 
-      graph.construct();
+      result.graph = builder.construct();
     },
+    // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {
-      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
-      graph,
+      context: ({ children }) => (
+        <GraphContext.Provider value={{ graph: result.graph! }}>{children}</GraphContext.Provider>
+      ),
+      graph: result.graph!,
     },
   };
 };

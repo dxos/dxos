@@ -103,10 +103,10 @@ const treeViewState = deepSignal<TreeViewContextValue>({
   active: undefined,
   previous: undefined,
   get activeNode() {
-    return this.active && graph.find(this.active);
+    return this.active && graph.findNode(this.active);
   },
   get previousNode() {
-    return this.previous && graph.find(this.previous);
+    return this.previous && graph.findNode(this.previous);
   },
   appState: undefined,
 }) as RevertDeepSignal<TreeViewContextValue>;
@@ -123,7 +123,7 @@ export const Default = {
       Delegator={StorybookNavTreeItemDelegator}
       getData={(dndId) => {
         const [_, entityId] = parseDndId(dndId);
-        return graph.find(entityId);
+        return graph.findNode(entityId);
       }}
       copyTile={(id, _toId, mosaic) => ({ ...mosaic.tiles[id] })}
     >

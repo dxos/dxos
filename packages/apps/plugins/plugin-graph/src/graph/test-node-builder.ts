@@ -2,15 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GraphStore } from './graph';
 import { Graph } from './types';
-
-const checkDepth = (node: Graph.Node, depth = 0): number => {
-  if (!node.parent) {
-    return depth;
-  }
-
-  return checkDepth(node.parent, depth + 1);
-};
 
 /**
  * Create a test node builder that always adds nodes and actions to the specified depth.
@@ -21,9 +14,10 @@ const checkDepth = (node: Graph.Node, depth = 0): number => {
  *
  * @returns A test node builder
  */
+// TODO(burdon): Change to TestNodeBuilder class.
 export const createTestNodeBuilder = (id: string, depth = 1) => {
   const nodes = new Map<string, Graph.Node>();
-  const builder: Graph.NodeBuilder = (parent) => {
+  const nodeBuilder: Graph.NodeBuilder = (parent) => {
     if (checkDepth(parent) >= depth) {
       return;
     }
@@ -101,7 +95,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
     return parent.removeProperty(key);
   };
 
-  return { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty };
+  return { nodeBuilder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty };
 };
 
 /**
@@ -133,8 +127,9 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  *   },
  * ]);
  */
+
 // TODO(wittjosiah): Type nodes.
-export const buildGraph = (graph: Graph, nodes: any[]) => {
+export const buildGraph = (graph: GraphStore, nodes: any[]) => {
   addNodes(graph.root, nodes);
 };
 
@@ -144,4 +139,12 @@ const addNodes = (root: Graph.Node, nodes: any[]) => {
     addNodes(child, node.children || []);
     node.actions?.forEach((action: any) => child.addAction(action));
   });
+};
+
+const checkDepth = (node: Graph.Node, depth = 0): number => {
+  if (!node.parent) {
+    return depth;
+  }
+
+  return checkDepth(node.parent, depth + 1);
 };

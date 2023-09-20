@@ -5,77 +5,58 @@
 import type { IconProps } from '@phosphor-icons/react';
 import { FC } from 'react';
 
+// TODO(burdon): Consider making intents part of graph.
+//  (does it make sense to have trivially decomposed plugins that require each other)?
 import type { Intent } from '@braneframe/plugin-intent';
 import type { UnsubscribeCallback } from '@dxos/async';
 
-/**
- * Contract for UI affordances which present, organize and navigate over the graph of user knowledge.
- */
-export interface Graph {
-  /**
-   * The root node of the graph which is the entry point for all knowledge.
-   */
-  get root(): Graph.Node;
+// /**
+//  * Contract for UI affordances which present, organize and navigate over the graph of user knowledge.
+//  */
+// export interface Graph {
+//   /**
+//    * The root node of the graph which is the entry point for all knowledge.
+//    */
+//   get root(): Graph.Node;
+//
+//   /**
+//    * Get the path through the graph from the root to the node with the given id.
+//    */
+//   getPath(id: string): string[] | undefined;
+//
+//   /**
+//    * Find the node with the given id in the graph.
+//    */
+//   find(id: string): Graph.Node | undefined;
+//
+//   /**
+//    * Traverse the graph from the given node.
+//    */
+//   traverse(options: Graph.TraverseOptions): void;
+//
+//   /**
+//    * Register a node builder which will be called in order to construct the graph.
+//    */
+//   registerNodeBuilder(builder: Graph.NodeBuilder): void;
+//
+//   /**
+//    * Remove a node builder from the graph.
+//    */
+//   removeNodeBuilder(builder: Graph.NodeBuilder): void;
+//
+//   /**
+//    * Construct the graph, starting by calling all registered node builders on the root node.
+//    * Node builders will be filtered out as they are used such that they are only used once on any given path.
+//    */
+//   construct(): void;
+// }
 
-  /**
-   * Get the path through the graph from the root to the node with the given id.
-   */
-  getPath(id: string): string[] | undefined;
-
-  /**
-   * Find the node with the given id in the graph.
-   */
-  find(id: string): Graph.Node | undefined;
-
-  /**
-   * Traverse the graph from the given node.
-   */
-  traverse(options: Graph.TraverseOptions): void;
-
-  /**
-   * Register a node builder which will be called in order to construct the graph.
-   */
-  registerNodeBuilder(builder: Graph.NodeBuilder): void;
-
-  /**
-   * Remove a node builder from the graph.
-   */
-  removeNodeBuilder(builder: Graph.NodeBuilder): void;
-
-  /**
-   * Construct the graph, starting by calling all registered node builders on the root node.
-   * Node builders will be filtered out as they are used such that they are only used once on any given path.
-   */
-  construct(): void;
-}
-
+// TODO(burdon): Instead of namespace, move graph to separate package.
 export namespace Graph {
   /**
    * Called when a node is added to the graph, allowing other node builders to add children, actions or properties.
    */
   export type NodeBuilder = (parent: Node) => UnsubscribeCallback | void;
-
-  export type TraverseOptions = {
-    /**
-     * The node to start traversing from. Defaults to the root node.
-     */
-    from?: Node;
-
-    /**
-     * The direction to traverse the graph. Defaults to 'down'.
-     */
-    direction?: 'up' | 'down';
-
-    /**
-     * A predicate to filter nodes which are passed to the `onVisitNode` callback.
-     */
-    predicate?: (node: Node) => boolean;
-
-    /**
-     * A callback which is called for each node visited during traversal.
-     */
-    onVisitNode?: (node: Node) => void;
-  };
 
   /**
    * Represents a node in the graph.
@@ -115,6 +96,7 @@ export namespace Graph {
     /**
      * Data the node represents.
      */
+    // TODO(burdon): Type system (e.g., minimally provide identifier string vs. TypedObject vs. Graph mixin type system)?
     data: TData;
 
     /**
@@ -154,6 +136,28 @@ export namespace Graph {
     removeAction(id: string): Action;
     addProperty(key: string, value: any): void;
     removeProperty(key: string): void;
+  };
+
+  export type TraverseOptions = {
+    /**
+     * The node to start traversing from. Defaults to the root node.
+     */
+    from?: Node;
+
+    /**
+     * The direction to traverse the graph. Defaults to 'down'.
+     */
+    direction?: 'up' | 'down';
+
+    /**
+     * A predicate to filter nodes which are passed to the `onVisitNode` callback.
+     */
+    predicate?: (node: Node) => boolean;
+
+    /**
+     * A callback which is called for each node visited during traversal.
+     */
+    onVisitNode?: (node: Node) => void;
   };
 
   /**
