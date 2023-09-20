@@ -19,7 +19,9 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "dxtype --schema-package ../../.. ./src/test/proto/test.proto ./src/test/proto/gen/test.ts"
+    "gen-schema": "dxtype --schema-package ../reexports ./src/proto/schema.proto ./src/proto/gen/schema.ts",
+    "gen-test": "dxtype --schema-package ../../.. ./src/test/proto/test.proto ./src/test/proto/gen/test.ts",
+    "prebuild": "pnpm gen-schema && pnpm gen-test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

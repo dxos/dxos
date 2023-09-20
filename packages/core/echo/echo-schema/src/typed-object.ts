@@ -13,9 +13,10 @@ import { TextModel } from '@dxos/text-model';
 import { EchoArray } from './array';
 import { base, data, proxy, readOnly, schema } from './defs';
 import { EchoObject } from './object';
-import { EchoSchemaField, EchoSchemaType } from './schema';
+import {  EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
+import { type Schema } from './proto'; // NOTE: Keep as type-import.
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -100,7 +101,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     this._updateMeta({ keys: [], ...opts?.meta });
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
-    if (this.__schema) {
+    if (this.__schema instanceof EchoSchemaType) {
       // Set type.
       this._mutate({ type: this.__schema.name });
 
@@ -130,7 +131,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   // TODO(burdon): Reconcile with meta schema.
-  get __schema(): EchoSchemaType | undefined {
+  get __schema(): EchoSchemaType | Schema | undefined {
     return this[base]._schema;
   }
 
@@ -139,7 +140,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * @deprecated
    */
   // TODO(burdon): Method on TypedObject vs EchoObject?
-  get [schema](): EchoSchemaType | undefined {
+  get [schema](): EchoSchemaType | Schema | undefined {
     return this[base]._schema;
   }
 
@@ -280,7 +281,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
-    if (!type && this.__schema) {
+    if (!type && this.__schema instanceof EchoSchemaType) {
       const field = this.__schema.fields.find((field) => field.name === key);
       if (field?.type.kind === 'array') {
         type = 'array';
@@ -399,7 +400,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
      */
     return new Proxy(object, {
       ownKeys: (target) => {
-        if (this.__schema && !parent && !meta) {
+        if (this.__schema instanceof EchoSchemaType && !parent && !meta) {
           return this.__schema.fields.map(({ name }: EchoSchemaField) => name) ?? [];
         } else {
           return this._properties(parent, meta);
@@ -419,7 +420,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return false;
         }
 
-        if (this.__schema && !parent && !meta) {
+        if (this.__schema instanceof EchoSchemaType && !parent && !meta) {
           return !!this.__schema?.fields.find(({ name }: EchoSchemaField) => name === property);
         } else {
           return this._properties(parent, meta).includes(property);

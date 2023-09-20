@@ -17,7 +17,8 @@ const reservedFieldNames = ['id', '__typename', '__deleted', 'meta'];
 const injectedTypes = [
   '.dxos.schema.Text',
   '.dxos.schema.Expando',
-  '.dxos.schema.TypedObject'
+  '.dxos.schema.TypedObject',
+  '.dxos.schema.Schema'
 ];
 
 /**
@@ -132,7 +133,7 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
 
   ${createSchema(root)}
 
-  export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
+  export const schema$ = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
   `;
@@ -140,7 +141,8 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
   if (ns instanceof pb.Type) {
-    if (injectedTypes.includes(ns.fullName)) {
+    // NOTE: Hack to allow schema.proto to compile.
+    if (injectedTypes.includes(ns.fullName) && ns.fieldsArray.length === 1) {
       return;
     }
 
@@ -187,7 +189,7 @@ export const createObjectClass = (type: pb.Type) => {
     export type ${name}Props = {\n${initializer}\n};
 
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
-      static readonly type = schema.getType('${fullName}');
+      static readonly type = schema$.getType('${fullName}');
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
@@ -199,7 +201,7 @@ export const createObjectClass = (type: pb.Type) => {
       ${fields}
     }
 
-    schema.registerPrototype(${name});
+    schema$.registerPrototype(${name});
   `;
 };
 

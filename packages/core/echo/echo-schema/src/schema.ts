@@ -10,6 +10,7 @@ import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { TypeFilter } from './query';
+import { readOnly } from './defs';
 
 export type EchoType =
   | {
@@ -53,6 +54,11 @@ export class EchoSchemaType {
 
   constructor(private readonly _type: pb.Type) {
     this.fields = getFields(_type);
+  }
+
+  // Compat with runtime schemas.
+  get [readOnly]() {
+    return true
   }
 
   get name() {
