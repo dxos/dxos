@@ -27,10 +27,10 @@ export const nextCopyIndex = (subtiles: Tile[], overId?: UniqueIdentifier) => {
   if (overOrderIndex >= 0) {
     return overOrderIndex < 1
       ? getIndexBelow(subtiles[overOrderIndex].index)
-      : previewOrderIndex < overOrderIndex
+      : previewOrderIndex < overOrderIndex && previewOrderIndex >= 0
       ? getIndexBetween(subtiles[overOrderIndex].index, subtiles[overOrderIndex + 1]?.index)
-      : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex].index);
+      : getIndexBetween(subtiles[overOrderIndex - 1].index, subtiles[overOrderIndex]?.index);
   } else {
-    return getIndexAbove(subtiles[subtiles.length - 1].index);
+    return subtiles.length ? getIndexAbove(subtiles[subtiles.length - 1].index) : 'a0';
   }
 };
