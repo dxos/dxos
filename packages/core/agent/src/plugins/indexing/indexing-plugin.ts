@@ -36,6 +36,10 @@ export class Indexing extends AbstractPlugin {
     void this._ctx.dispose();
   }
 
+  async indexSpaces(): Promise<void> {
+    log.info('Indexing spaces...');
+  }
+
   _processMessage(message: GossipMessage) {
     log.info('Received message:', message);
   }
