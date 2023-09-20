@@ -3442,7 +3442,6 @@ importers:
       '@dxos/util': workspace:*
       '@oclif/core': ^2.9.4
       '@oclif/plugin-help': ^5.2.14
-      '@oclif/plugin-plugins': ^3.1.8
       '@oclif/test': ^2.3.31
       '@octokit/core': ^4.0.4
       '@types/cli-progress': ^3.11.0
@@ -3495,7 +3494,6 @@ importers:
       '@dxos/util': link:../../common/util
       '@oclif/core': 2.9.4_sxkixsbzgfj5nygwm6be4klchu
       '@oclif/plugin-help': 5.2.14_sxkixsbzgfj5nygwm6be4klchu
-      '@oclif/plugin-plugins': 3.1.8_sxkixsbzgfj5nygwm6be4klchu
       '@octokit/core': 4.1.0
       chalk: 4.1.2
       cli-progress: 3.12.0
@@ -12988,32 +12986,6 @@ packages:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
-      - typescript
-    dev: false
-
-  /@oclif/plugin-plugins/3.1.8_sxkixsbzgfj5nygwm6be4klchu:
-    resolution: {integrity: sha512-514sFBzLcR9QCSMWCHt/1XntfjJEZvb637b9YuV4kwq749pKEPF7fjCxSV1gYQCCP4TjMB5gB4AwPL4cCbe+/A==}
-    engines: {node: '>=16'}
-    dependencies:
-      '@oclif/color': 1.0.4
-      '@oclif/core': 2.9.4_sxkixsbzgfj5nygwm6be4klchu
-      chalk: 4.1.2
-      debug: 4.3.4
-      fs-extra: 9.1.0
-      http-call: 5.3.0
-      load-json-file: 5.3.0
-      npm: 9.8.1
-      npm-run-path: 4.0.1
-      semver: 7.5.4
-      shelljs: 0.8.5
-      tslib: 2.6.0
-      validate-npm-package-name: 5.0.0
-      yarn: 1.22.19
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - supports-color
       - typescript
     dev: false
 
@@ -30716,17 +30688,6 @@ packages:
       strip-bom: 2.0.0
     dev: false
 
-  /load-json-file/5.3.0:
-    resolution: {integrity: sha512-cJGP40Jc/VXUsp8/OrnyKyTZ1y6v/dphm3bioS+RrKXjK2BB6wHUd6JptZEFDGgGahMT+InnZO5i1Ei9mpC8Bw==}
-    engines: {node: '>=6'}
-    dependencies:
-      graceful-fs: 4.2.10
-      parse-json: 4.0.0
-      pify: 4.0.1
-      strip-bom: 3.0.0
-      type-fest: 0.3.1
-    dev: false
-
   /load-yaml-file/0.2.0:
     resolution: {integrity: sha512-OfCBkGEw4nN6JLtgRidPX6QxjBQGQf72q3si2uvqyFEMbycSFFHwAZeXx6cJgFM9wmLrf9zBwCP3Ivqa+LLZPw==}
     engines: {node: '>=6'}
@@ -33117,81 +33078,6 @@ packages:
     dependencies:
       path-key: 4.0.0
     dev: true
-
-  /npm/9.8.1:
-    resolution: {integrity: sha512-AfDvThQzsIXhYgk9zhbk5R+lh811lKkLAeQMMhSypf1BM7zUafeIIBzMzespeuVEJ0+LvY36oRQYf7IKLzU3rw==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    hasBin: true
-    dev: false
-    bundledDependencies:
-      - '@isaacs/string-locale-compare'
-      - '@npmcli/arborist'
-      - '@npmcli/config'
-      - '@npmcli/fs'
-      - '@npmcli/map-workspaces'
-      - '@npmcli/package-json'
-      - '@npmcli/promise-spawn'
-      - '@npmcli/run-script'
-      - abbrev
-      - archy
-      - cacache
-      - chalk
-      - ci-info
-      - cli-columns
-      - cli-table3
-      - columnify
-      - fastest-levenshtein
-      - fs-minipass
-      - glob
-      - graceful-fs
-      - hosted-git-info
-      - ini
-      - init-package-json
-      - is-cidr
-      - json-parse-even-better-errors
-      - libnpmaccess
-      - libnpmdiff
-      - libnpmexec
-      - libnpmfund
-      - libnpmhook
-      - libnpmorg
-      - libnpmpack
-      - libnpmpublish
-      - libnpmsearch
-      - libnpmteam
-      - libnpmversion
-      - make-fetch-happen
-      - minimatch
-      - minipass
-      - minipass-pipeline
-      - ms
-      - node-gyp
-      - nopt
-      - npm-audit-report
-      - npm-install-checks
-      - npm-package-arg
-      - npm-pick-manifest
-      - npm-profile
-      - npm-registry-fetch
-      - npm-user-validate
-      - npmlog
-      - p-map
-      - pacote
-      - parse-conflict-json
-      - proc-log
-      - qrcode-terminal
-      - read
-      - semver
-      - sigstore
-      - ssri
-      - supports-color
-      - tar
-      - text-table
-      - tiny-relative-date
-      - treeverse
-      - validate-npm-package-name
-      - which
-      - write-file-atomic
 
   /npmlog/5.0.1:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
@@ -39315,11 +39201,6 @@ packages:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
 
-  /type-fest/0.3.1:
-    resolution: {integrity: sha512-cUGJnCdr4STbePCgqNFbpVNCepa+kAVohJs1sLhxzdH+gnEoOd8VhbYa7pD3zZYGiURWM2xzEII3fQcRizDkYQ==}
-    engines: {node: '>=6'}
-    dev: false
-
   /type-fest/0.6.0:
     resolution: {integrity: sha512-q+MB8nYR1KDLrgr4G5yemftpMC7/QLqVndBmEEdqzmNj5dcFOO4Oo8qlwZE3ULT3+Zim1F8Kq4cBnikNhlCMlg==}
     engines: {node: '>=8'}
@@ -40078,13 +39959,6 @@ packages:
     resolution: {integrity: sha512-M6w37eVCMMouJ9V/sdPGnC5H4uDr73/+xdq0FBLO3TFFX1+7wiUY6Es328NN+y43tmY+doUdN9g9J21vqB7iLw==}
     dependencies:
       builtins: 1.0.3
-    dev: false
-
-  /validate-npm-package-name/5.0.0:
-    resolution: {integrity: sha512-YuKoXDAhBYxY7SfOKxHBDoSyENFeW5VvIIQp2TGQuit8gpK6MnWaQelBKxso72DoxTZfZdcP3W90LqpSkgPzLQ==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dependencies:
-      builtins: 5.0.1
     dev: false
 
   /validator/13.7.0:
@@ -42179,13 +42053,6 @@ packages:
       which-module: 1.0.0
       y18n: 3.2.2
       yargs-parser: 5.0.1
-    dev: false
-
-  /yarn/1.22.19:
-    resolution: {integrity: sha512-/0V5q0WbslqnwP91tirOvldvYISzaqhClxzyUKXYxs07yUILIs5jx/k6CFe8bvKSkds5w+eiOqta39Wk3WxdcQ==}
-    engines: {node: '>=4.0.0'}
-    hasBin: true
-    requiresBuild: true
     dev: false
 
   /yauzl/2.10.0:
