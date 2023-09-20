@@ -104,8 +104,7 @@ export const useHandleCopyDragOver = () => {
       const nextDestinationId =
         findCopyDestination(overTile, dnd.activeCopyClass, mosaic, active.id.toString(), copyTile) ?? null;
       managePreview({ operation: 'copy', active, over, mosaic, copyTile, dnd, nextDestinationId });
-    } else {
-      dnd.copyDestinationId = null;
+      managePreview({ operation: 'copy', active, over, mosaic, copyTile, dnd, nextDestinationId });
     }
   }, deps);
 };

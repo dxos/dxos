@@ -41,7 +41,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
               const [_, nodeId] = parseDndId(dndId);
               return graph.find(nodeId);
             }}
-            copyTile={(id, toId, mosaic, operation) => {
+            copyTile={(id, toId, mosaic) => {
               return dnd.onCopyTileSubscriptions.length
                 ? dnd.onCopyTileSubscriptions.reduce((tile, handler) => handler(tile, id, toId, mosaic, operation), {
                     ...mosaic.tiles[id],
