@@ -64,7 +64,14 @@ message KeyValueObject {
  * Reference to an Item.
  */
 message Reference {
+  // TODO(dmaretskyi): Rename `id`.
   string itemId                           = 1;
+
+  /// "space", or "protobuf"
+  string protocol = 2;
+
+  /// space key, FQN of the schema
+  string host = 3;
 }
 
 /**
