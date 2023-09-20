@@ -61,6 +61,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwarde
       }}
       isActive={isActive}
       isMigrationDestination={!isActive && isMigrationDestination}
+      isPreview={tile.isPreview}
       ref={ref}
     >
       {subtiles.length > 0 && <TreeItemBody subtiles={subtiles} level={tile.level} />}

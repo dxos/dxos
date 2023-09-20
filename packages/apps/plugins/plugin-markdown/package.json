@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
