@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import './Editor.css';
+
 import React, { useEffect } from 'react';
 
 import { Document } from '@braneframe/types';
@@ -26,7 +28,7 @@ const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   }, [space]);
 
   return (
-    <main className='flex-1 min-w-0'>
+    <main className={`client client-${id}`}>
       <MarkdownComposer
         model={model}
         slots={{
