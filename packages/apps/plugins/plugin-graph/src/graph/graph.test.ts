@@ -7,17 +7,17 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { GraphBuilder } from './graph-builder';
-import { createTestNodeBuilder } from './test-node-builder';
+import { createTestNodeBuilder } from './testing';
 
 describe('Graph', () => {
   test('returns root node', () => {
-    const graph = new GraphBuilder().construct();
+    const graph = new GraphBuilder().build();
     expect(graph.root).to.not.be.undefined;
     expect(graph.root.id).to.equal('root');
   });
 
   test('root node unmodified without builders', () => {
-    const graph = new GraphBuilder().construct();
+    const graph = new GraphBuilder().build();
     expect(graph.root.properties).to.be.empty;
     expect(graph.root.children).to.be.empty;
     expect(graph.root.actions).to.be.empty;
@@ -32,7 +32,7 @@ describe('Graph', () => {
       }
     });
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(graph.root.childrenMap.test.id).to.equal(testNode.id);
     expect(graph.root.childrenMap.test.parent!.id).to.equal(graph.root.id);
   });
@@ -46,7 +46,7 @@ describe('Graph', () => {
       }
     });
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(graph.root.actionsMap.test.id).to.equal(testAction.id);
   });
 
@@ -55,7 +55,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1').nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap)).to.deep.equal(['root-test1', 'root-test2']);
     for (const node of graph.root.children) {
       expect(graph.root.id).to.equal(node.parent!.id);
@@ -67,7 +67,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1').nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(Object.keys(graph.root.actionsMap)).to.deep.equal(['root-test1', 'root-test2']);
   });
 
@@ -76,7 +76,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap['root-test1'].children)).to.be.empty;
     expect(Object.keys(graph.root.childrenMap['root-test2'].childrenMap)).to.deep.equal(['root-test2-test1']);
     for (const node of graph.root.childrenMap['root-test2'].children) {
@@ -89,7 +89,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap['root-test1'].actionsMap)).to.be.empty;
     expect(Object.keys(graph.root.childrenMap['root-test2'].actionsMap)).to.deep.equal(['root-test2-test1']);
   });
@@ -101,7 +101,7 @@ describe('Graph', () => {
       set.add({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
     });
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(Object.keys(graph.root.actionsMap['test-set'].actionsMap)).to.deep.equal(['test-action']);
   });
 
@@ -113,7 +113,7 @@ describe('Graph', () => {
       createTestNodeBuilder('test1', 2);
     builder.registerNodeBuilder(nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     expect(graph.root.children).to.have.length(1);
     addNode('root', { id: 'root-test2', label: 'root-test2' });
     expect(graph.root.children).to.have.length(2);
@@ -153,13 +153,13 @@ describe('Graph', () => {
     // TODO(wittjosiah): Implement.
   });
 
-  // TODO(burdon): Failing.
-  test('can find nodes', () => {
+  // TODO(burdon): Failing (parents are null?)
+  test.only('can find nodes', () => {
     const builder = new GraphBuilder();
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     console.log(graph);
     expect(graph.findNode('root-test1')?.id).to.equal('root-test1');
     expect(graph.findNode('root-test2-test1')?.id).to.equal('root-test2-test1');
@@ -170,7 +170,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({ onVisitNode: (node) => nodes.push(node.id) });
     expect(nodes).to.deep.equal(['root', 'root-test1', 'root-test2', 'root-test2-test1']);
@@ -181,7 +181,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({
       predicate: (node) => node.id.includes('test1'),
@@ -195,7 +195,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({
       from: graph.root.childrenMap['root-test2'],
@@ -209,7 +209,7 @@ describe('Graph', () => {
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
-    const graph = builder.construct();
+    const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({
       direction: 'up',

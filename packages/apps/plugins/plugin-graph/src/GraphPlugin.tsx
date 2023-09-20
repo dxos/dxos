@@ -39,7 +39,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
         .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
         .forEach((nodeBuilder) => builder.registerNodeBuilder(nodeBuilder));
 
-      result.graph = builder.construct();
+      result.graph = builder.build();
     },
     // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {

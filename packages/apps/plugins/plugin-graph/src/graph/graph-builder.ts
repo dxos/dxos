@@ -28,8 +28,7 @@ export class GraphBuilder {
     this._nodeBuilders.delete(builder);
   }
 
-  // TODO(burdon): Rename build().
-  construct(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
+  build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
     const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }), path);
 
     // TODO(burdon): Document.
@@ -52,6 +51,7 @@ export class GraphBuilder {
   /**
    * Updates a Node's add method to filter out builders that have already been applied.
    */
+  // TODO(burdon): Explain.
   private _filterBuilders(node: Graph.Node, path: string[], ignoreBuilders: Graph.NodeBuilder[]): Graph.Node {
     const builderNode = deepSignal({
       ...node,
@@ -60,7 +60,7 @@ export class GraphBuilder {
           const childPath = [...path, 'childrenMap', partial.id];
           const child = this._createNode({ ...partial, parent: builderNode }, childPath, ignoreBuilders);
           builderNode.childrenMap[child.id] = child;
-          this.construct(child, childPath, ignoreBuilders);
+          this.build(child, childPath, ignoreBuilders);
           return child;
         });
       },
@@ -69,15 +69,15 @@ export class GraphBuilder {
     return builderNode;
   }
 
-  private _createNode<TData = null, TProperties extends { [key: string]: any } = { [key: string]: any }>(
+  private _createNode<TData = null, TProperties extends Record<string, any> = {}>(
     partial: Pick<Graph.Node, 'id' | 'label'> & Partial<Graph.Node<TData, TProperties>>,
     path: string[] = [],
     ignoreBuilders: Graph.NodeBuilder[] = [],
   ): Graph.Node<TData, TProperties> {
     // TODO(burdon): Document implications and rationale of deepSignal.
     const node: Graph.Node<TData, TProperties> = deepSignal({
-      data: null as TData,
       parent: null,
+      data: null as TData, // TODO(burdon): Allow null.
       properties: {} as TProperties,
       childrenMap: {},
       actionsMap: {},
@@ -95,7 +95,7 @@ export class GraphBuilder {
           const childPath = [...path, 'childrenMap', partial.id];
           const child = this._createNode({ ...partial, parent: node }, childPath, ignoreBuilders);
           node.childrenMap[child.id] = child;
-          this.construct(child, childPath, ignoreBuilders);
+          this.build(child, childPath, ignoreBuilders);
           return child;
         });
       },

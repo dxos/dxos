@@ -14,7 +14,7 @@ import { Graph } from './types';
  *
  * @returns A test node builder
  */
-// TODO(burdon): Change to TestNodeBuilder class.
+// TODO(burdon): Change to TestNodeBuilder class (see other builder/generator patterns in client/echo).
 export const createTestNodeBuilder = (id: string, depth = 1) => {
   const nodes = new Map<string, Graph.Node>();
   const nodeBuilder: Graph.NodeBuilder = (parent) => {
