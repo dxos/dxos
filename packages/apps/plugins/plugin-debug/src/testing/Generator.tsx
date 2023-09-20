@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
-import { Document as DocumentType, Schema as SchemaType, Table as TableType } from '@braneframe/types';
-import { Space, Text } from '@dxos/client/echo';
+import { Document as DocumentType, Table as TableType } from '@braneframe/types';
+import { Schema as SchemaType, Space, Text } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -55,11 +55,13 @@ export class Generator {
 
     const organizations = this._faker!.helpers.uniqueArray(faker.company.name, options.organizations).map(
       (name: string) => {
-        const obj = new Expando({
-          name,
-          website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.__meta.schema = org;
+        const obj = new Expando(
+          {
+            name,
+            website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+          },
+          { schema: org },
+        );
         return this._space.db.add(obj);
       },
     );
@@ -86,11 +88,13 @@ export class Generator {
 
     const projects = this._faker!.helpers.uniqueArray(faker.commerce.productName, options.projects).map(
       (name: string) => {
-        const obj = new Expando({
-          name,
-          repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.__meta.schema = project;
+        const obj = new Expando(
+          {
+            name,
+            repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+          },
+          { schema: project },
+        );
         return this._space.db.add(obj);
       },
     );
@@ -122,14 +126,16 @@ export class Generator {
     );
 
     const people = this._faker!.helpers.uniqueArray(faker.person.fullName, options.people).map((name: string) => {
-      const obj = new Expando({
-        name,
-        email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
-        org: this._faker!.datatype.boolean({ probability: 0.3 })
-          ? this._faker!.helpers.arrayElement(organizations)
-          : undefined,
-      });
-      obj.__meta.schema = person;
+      const obj = new Expando(
+        {
+          name,
+          email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
+          org: this._faker!.datatype.boolean({ probability: 0.3 })
+            ? this._faker!.helpers.arrayElement(organizations)
+            : undefined,
+        },
+        { schema: person },
+      );
       return this._space.db.add(obj);
     });
 

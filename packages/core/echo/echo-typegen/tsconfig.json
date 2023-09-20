@@ -10,8 +10,7 @@
     ]
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     {
@@ -31,9 +30,6 @@
     },
     {
       "path": "../echo-db"
-    },
-    {
-      "path": "../echo-schema"
     },
     {
       "path": "../model-factory"

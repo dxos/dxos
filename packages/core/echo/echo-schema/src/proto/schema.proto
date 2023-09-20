@@ -1,0 +1,37 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.schema;
+
+/**
+ * Expando schema definition.
+ */
+// TODO(burdon): Use with Table, Kanban, etc.
+message Schema {
+  option (object) = true;
+
+  enum PropType {
+    NONE = 0;
+    STRING = 1;
+    NUMBER = 2;
+    BOOLEAN = 3;
+    DATE = 4;
+    REF = 5;
+  }
+
+  message Prop {
+    string id = 1;
+    PropType type = 2;
+    string label = 3;
+    int32 digits = 4;
+    Schema ref = 5;
+    string refProp = 6;
+  }
+
+  // FQ type name (e.g., dxos.org/type/Document
+  string typename = 1;
+  repeated Prop props = 2;
+}

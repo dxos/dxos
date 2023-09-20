@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
-import { base, clone, db, Expando, Text } from '@dxos/echo-schema';
-import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { base, clone, db, Expando, Text } from '..';
+import { createDatabase } from '../testing';
 
 describe('database', () => {
   test('creating objects', async () => {
@@ -19,6 +19,8 @@ describe('database', () => {
     expect(task.id).to.exist;
     expect(task[base]).to.exist;
     expect(task[db]).to.be.undefined;
+    expect(task.__schema).to.eq(Task.type);
+    expect(task.__typename).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();
