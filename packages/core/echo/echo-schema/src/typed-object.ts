@@ -16,7 +16,7 @@ import { EchoObject } from './object';
 import {  EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
-import { Schema } from './proto'; // NOTE: Keep as type-import.
+import type { Schema } from './proto'; // NOTE: Keep as type-import.
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -112,7 +112,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           this._set(field.name, new Text());
         }
       }
-    } else if(this._schema instanceof Schema) {
+    } else if(isRuntimeSchema(this._schema)) {
       this._mutate({ typeRef: new Reference(this.__schema!.id) });
     }
 
@@ -555,3 +555,6 @@ type ExpandoConstructor = {
 export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
+
+const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
+  !!schema && schema[readOnly] === false
