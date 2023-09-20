@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { MarkdownProperties } from '@braneframe/plugin-markdown';
 import { Dialog, Button, useTranslation, Input } from '@dxos/aurora';
 
-import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
+import { useGhIdFromUrl } from '../hooks';
 import { GITHUB_PLUGIN } from '../props';
 
 export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
@@ -39,7 +39,7 @@ export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownPr
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                properties.meta.keys.push({ source: 'github.com', id: ghId });
+                properties.__meta.keys.push({ source: 'github.com', id: ghId });
               }
             }}
           >

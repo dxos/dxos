@@ -155,9 +155,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]._createProxy({}, undefined, true);
   }
 
-  /**
-   * Returns boolean. If `true`, read only access is activated.
-   */
+  // TODO(burdon): Standardize properties/getters/__fields, etc.
   get [readOnly](): boolean {
     return !!this[base]?._readOnly;
   }

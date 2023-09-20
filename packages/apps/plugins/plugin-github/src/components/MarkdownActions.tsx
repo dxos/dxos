@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
 import React, { RefObject, useCallback } from 'react';
 
@@ -15,19 +16,19 @@ import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
 import { GITHUB_PLUGIN, GhIssueIdentifier } from '../props';
 
-// TODO(burdon): Where do "properties" come from?
+// TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({
   data: [model, properties, editorRef],
 }: {
   data: [ComposerModel, MarkdownProperties, RefObject<MarkdownComposerRef>];
 }) => {
-  // TODO(burdon): Adhoc assumption that underlying object is ECHO.
-  const ghId = properties.meta?.keys?.find((key) => key.source === 'github.com')?.id;
+  // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
+  const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
   const splitView = useSplitView();
 
-  const docGhId = useDocGhId(properties.meta?.keys ?? []);
+  const docGhId = useDocGhId(properties.__meta?.keys ?? []);
 
   const updateIssueContent = useCallback(() => {
     const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
@@ -95,8 +96,8 @@ export const MarkdownActions = ({
           <DropdownMenu.Item
             classNames='gap-2'
             onClick={() => {
-              const index = properties.meta?.keys?.findIndex((key) => key.source === 'github.com');
-              typeof index !== 'undefined' && index >= 0 && properties.meta?.keys?.splice(index, 1);
+              const index = properties.__meta?.keys?.findIndex((key) => key.source === 'github.com');
+              typeof index !== 'undefined' && index >= 0 && properties.__meta?.keys?.splice(index, 1);
             }}
           >
             <LinkBreak className={getSize(4)} />

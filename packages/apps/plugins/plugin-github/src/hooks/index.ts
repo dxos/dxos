@@ -3,3 +3,4 @@
 //
 
 export * from './useDocGhId';
+export * from './useGhIdFromUrl';

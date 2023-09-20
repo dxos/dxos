@@ -7,6 +7,7 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Document } from '@braneframe/types';
 import { EditorMode, MarkdownComposerProps } from '@dxos/aurora-composer';
+import { ObjectMeta } from '@dxos/client/echo';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
@@ -16,9 +17,11 @@ export enum MarkdownAction {
   CREATE = `${MARKDOWN_ACTION}/create`,
 }
 
-// TODO(burdon): This is just pretending not to be an ECHO object.
 export type MarkdownProperties = {
   title: string;
+
+  // TODO(burdon): Since this is always very precisely an ECHO object why obfuscate it?
+  __meta: ObjectMeta;
   readOnly?: boolean;
 };
 
