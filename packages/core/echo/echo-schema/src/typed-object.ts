@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, readOnly, schema } from './defs';
+import { base, data, proxy, immutable, schema, meta } from './defs';
 import { EchoObject } from './object';
 import type { Schema } from './proto'; // NOTE: Keep as type-import.
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -27,10 +27,10 @@ const isValidKey = (key: string | symbol) =>
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
-    key === '__deleted' ||
     key === '__meta' ||
     key === '__schema' ||
-    key === '__typename'
+    key === '__typename' || // TODO(burdon): Reconcile with schema name.
+    key === '__deleted'
   );
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
@@ -67,10 +67,11 @@ export type ObjectMeta = {
   index?: string;
 };
 
-export type TypedObjectOpts = {
+export type TypedObjectOptions = {
+  // TODO(burdon): Reconcile.
   schema?: EchoSchemaType | Schema;
   meta?: ObjectMeta;
-  readOnly?: boolean;
+  immutable?: boolean;
 };
 
 /**
@@ -79,6 +80,7 @@ export type TypedObjectOpts = {
  * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
+// TODO(burdon): Extract interface.
 class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -86,25 +88,25 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private _schema?: EchoSchemaType | Schema = undefined;
+  // TODO(burdon): Reconcile types.
+  private readonly _schema?: EchoSchemaType | Schema = undefined;
+  private readonly _immutable;
 
-  private _readOnly = false;
-
-  constructor(initialProps?: T, opts?: TypedObjectOpts) {
+  constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
     this._schema = opts?.schema;
-    this._readOnly = opts?.readOnly ?? false;
+    this._immutable = opts?.immutable ?? false;
 
     // Assign initial meta fields.
     this._updateMeta({ keys: [], ...opts?.meta });
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
-    if (this.__schema instanceof EchoSchemaType) {
+    if (this._schema instanceof EchoSchemaType) {
       // Set type.
-      this._mutate({ typeRef: Reference.fromLegacyTypeName(this.__schema.name) });
+      this._mutate({ typeRef: Reference.fromLegacyTypeName(this._schema.name) });
 
-      for (const field of this.__schema.fields) {
+      for (const field of this._schema.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
         } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
@@ -112,7 +114,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
         }
       }
     } else if (isRuntimeSchema(this._schema)) {
-      this._mutate({ typeRef: new Reference(this.__schema!.id) });
+      this._mutate({ typeRef: new Reference(this._schema!.id) });
     }
 
     if (initialProps) {
@@ -127,6 +129,31 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this._createProxy(this);
   }
 
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
+  }
+
+  // get [devtoolsFormatter](): DevtoolsFormatter {
+  //   return {
+  //     header: () => [
+  //       'span',
+  //       {},
+  //       ['span', {}, `${this[Symbol.toStringTag]}(`],
+  //       ['span', {}, this.id],
+  //       ['span', {}, ')']
+  //     ],
+  //     hasBody: () => true,
+  //     body: () => {
+  //       const json = this.toJSON();
+  //       return null
+  //     }
+  //   };
+  // }
+
   get [Symbol.toStringTag]() {
     if (this.__schema instanceof EchoSchemaType) {
       return this.__schema.name ?? 'TypedObject';
@@ -135,38 +162,43 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     }
   }
 
-  // TODO(burdon): Reconcile with meta schema.
+  /**
+   * Returns the schema type descriptor for the object.
+   */
+  get [schema](): EchoSchemaType | Schema | undefined {
+    return this[base]._schema;
+  }
+
+  get [meta](): ObjectMeta {
+    return this[base]._createProxy({}, undefined, true);
+  }
+
+  get [data](): any {
+    return this[base]._convert({
+      onRef: (id, obj) => obj ?? { '@id': id },
+    });
+  }
+
+  get [immutable](): boolean {
+    return !!this[base]?._immutable;
+  }
+
   get __schema(): EchoSchemaType | Schema | undefined {
     return this[base]._schema;
   }
 
   /**
-   * Returns the schema type descriptor for the object.
-   * @deprecated
-   */
-  // TODO(burdon): Method on TypedObject vs EchoObject?
-  get [schema](): EchoSchemaType | Schema | undefined {
-    return this[base]._schema;
-  }
-
-  /**
    * Fully qualified name of the object type for objects created from the schema.
-   * @example "example.kai.Task"
    */
+  // TODO(burdon): Reconcile schema type.
   get __typename(): string | undefined {
-    return this.__schema instanceof EchoSchemaType ? this.__schema.name : undefined;
+    return this[base]._schema instanceof EchoSchemaType ? this[base]._schema!.name : undefined;
   }
 
   get __meta(): ObjectMeta {
-    return this[base]._createProxy({}, undefined, true);
+    return this[meta];
   }
 
-  // TODO(burdon): Standardize properties/getters/__fields, etc.
-  get [readOnly](): boolean {
-    return !!this[base]?._readOnly;
-  }
-
-  /** Deletion. */
   get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
   }
@@ -177,12 +209,6 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   toJSON() {
     return this[base]._convert();
-  }
-
-  get [data]() {
-    return this[base]._convert({
-      onRef: (id, obj?) => obj ?? { '@id': id },
-    });
   }
 
   /**
@@ -243,6 +269,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return {
       '@id': this.id,
       '@type': this.__typename ?? (isRuntimeSchema(this._schema) ? { '@id': this._schema!.id } : undefined),
+      // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
       ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
@@ -250,34 +277,10 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     };
   }
 
-  [inspect.custom](
-    depth: number,
-    options: InspectOptionsStylized,
-    inspect_: (value: any, options?: InspectOptionsStylized) => string,
-  ) {
-    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
-  }
-
-  // get [devtoolsFormatter](): DevtoolsFormatter {
-  //   return {
-  //     header: () => [
-  //       'span',
-  //       {},
-  //       ['span', {}, `${this[Symbol.toStringTag]}(`],
-  //       ['span', {}, this.id],
-  //       ['span', {}, ')']
-  //     ],
-  //     hasBody: () => true,
-  //     body: () => {
-  //       const json = this.toJSON();
-  //       return null
-  //     }
-  //   };
-  // }
-
   /**
    * @internal
-   * @param meta Get from `meta` key-space.
+   * @param key
+   * @param meta If true then get from `meta` key-space.
    */
   private _get(key: string, meta?: boolean): any {
     this._signal?.notifyRead();
@@ -285,8 +288,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
-    if (!type && this.__schema instanceof EchoSchemaType) {
-      const field = this.__schema.fields.find((field) => field.name === key);
+    if (!type && this._schema instanceof EchoSchemaType) {
+      const field = this._schema.fields.find((field) => field.name === key);
       if (field?.type.kind === 'array') {
         type = 'array';
       }
@@ -404,8 +407,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
      */
     return new Proxy(object, {
       ownKeys: (target) => {
-        if (this.__schema instanceof EchoSchemaType && !parent && !meta) {
-          return this.__schema.fields.map(({ name }: EchoSchemaField) => name) ?? [];
+        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
+          return this._schema.fields.map(({ name }: EchoSchemaField) => name) ?? [];
         } else {
           return this._properties(parent, meta);
         }
@@ -424,8 +427,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return false;
         }
 
-        if (this.__schema instanceof EchoSchemaType && !parent && !meta) {
-          return !!this.__schema?.fields.find(({ name }: EchoSchemaField) => name === property);
+        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
+          return !!this._schema?.fields.find(({ name }: EchoSchemaField) => name === property);
         } else {
           return this._properties(parent, meta).includes(property);
         }
@@ -470,7 +473,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
-        if (this[base]._readOnly && !parent && !meta) {
+        if (this[base]._immutable && !parent && !meta) {
           log.warn('Read only access');
           return false;
         }
@@ -537,7 +540,7 @@ export type TypedObject<T extends Record<string, any> = Record<string, any>> = T
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    opts?: TypedObjectOpts,
+    opts?: TypedObjectOptions,
   ): TypedObject<T>;
 };
 
@@ -547,7 +550,7 @@ export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
  *
  */
 type ExpandoConstructor = {
-  new (initialProps?: Record<string, any>, options?: TypedObjectOpts): Expando;
+  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;

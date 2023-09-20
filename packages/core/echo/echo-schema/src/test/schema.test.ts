@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
-import { readOnly } from '../defs';
+import { immutable } from '../defs';
 import { Schema } from '../proto';
 import { createDatabase } from '../testing';
 import { Expando } from '../typed-object';
@@ -151,5 +151,5 @@ test('runtime schema', async () => {
   expect(org.name).to.eq('DXOS');
   expect(org.website).to.eq('dxos.org');
   expect(org.__schema).to.eq(orgSchema);
-  expect(org.__schema?.[readOnly]).to.eq(false);
+  expect(org.__schema?.[immutable]).to.eq(false);
 });
