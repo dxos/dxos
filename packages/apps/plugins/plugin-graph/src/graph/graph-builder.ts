@@ -19,8 +19,7 @@ export class GraphBuilder {
 
   private _sendIntent?: SendIntent;
 
-  // TODO(burdon): add/remove or register/unregister.
-  registerNodeBuilder(builder: Graph.NodeBuilder): void {
+  addNodeBuilder(builder: Graph.NodeBuilder): void {
     this._nodeBuilders.add(builder);
   }
 
@@ -28,12 +27,21 @@ export class GraphBuilder {
     this._nodeBuilders.delete(builder);
   }
 
+  /**
+   * Constructs a new Graph object.
+   * @param root
+   * @param path
+   * @param ignoreBuilders
+   */
   // TODO(burdon): Document ignoreBuilders.
   build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
     const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }));
     return this._build(graph, graph.root, path, ignoreBuilders);
   }
 
+  /**
+   * Called recursively.
+   */
   private _build(
     graph: GraphStore,
     node: Graph.Node,
@@ -71,7 +79,7 @@ export class GraphBuilder {
   ): Graph.Node {
     const builderNode = deepSignal({
       ...node,
-      add: (...partials) => {
+      addNode: (...partials) => {
         return partials.map((partial) => {
           const childPath = [...path, 'childrenMap', partial.id];
           const child = this._createNode({ ...partial, parent: builderNode }, childPath, ignoreBuilders);
@@ -93,11 +101,13 @@ export class GraphBuilder {
     // TODO(burdon): Document implications and rationale of deepSignal.
     const node: Graph.Node<TData, TProperties> = deepSignal({
       parent: null,
-      data: null as TData, // TODO(burdon): Allow null.
+      data: null as TData, // TODO(burdon): Allow null property?
       properties: {} as TProperties,
       childrenMap: {},
       actionsMap: {},
+      // TODO(burdon): Document.
       ...partial,
+
       // TODO(wittjosiah): Default sort.
       get children() {
         return Object.values(node.childrenMap);
@@ -105,8 +115,15 @@ export class GraphBuilder {
       get actions() {
         return Object.values(node.actionsMap);
       },
-      // TODO(burdon): Rename addNode (distinguish from addAction).
-      add: (...partials) => {
+
+      addProperty: (key, value) => {
+        (node.properties as { [key: string]: any })[key] = value;
+      },
+      removeProperty: (key) => {
+        delete (node.properties as { [key: string]: any })[key];
+      },
+
+      addNode: (...partials) => {
         return partials.map((partial) => {
           const childPath = [...path, 'childrenMap', partial.id];
           const child = this._createNode({ ...partial, parent: node }, childPath, ignoreBuilders);
@@ -115,11 +132,12 @@ export class GraphBuilder {
           return child;
         });
       },
-      remove: (id) => {
+      removeNode: (id) => {
         const child = node.childrenMap[id];
         delete node.childrenMap[id];
         return child;
       },
+
       addAction: (...partials) => {
         return partials.map((partial) => {
           const action = this._createAction(partial);
@@ -131,12 +149,6 @@ export class GraphBuilder {
         const action = node.actionsMap[id];
         delete node.actionsMap[id];
         return action;
-      },
-      addProperty: (key, value) => {
-        (node.properties as { [key: string]: any })[key] = value;
-      },
-      removeProperty: (key) => {
-        delete (node.properties as { [key: string]: any })[key];
       },
     }) as RevertDeepSignal<Graph.Node<TData, TProperties>>;
 

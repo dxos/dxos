@@ -32,12 +32,12 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       graphPlugins(plugins)
         .map((plugin) => plugin.provides.graph.withPlugins)
         .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
-        .forEach((nodeBuilder) => builder.registerNodeBuilder(nodeBuilder(plugins)));
+        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder(plugins)));
 
       graphPlugins(plugins)
         .map((plugin) => plugin.provides.graph.nodes)
         .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
-        .forEach((nodeBuilder) => builder.registerNodeBuilder(nodeBuilder));
+        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder));
 
       result.graph = builder.build();
     },

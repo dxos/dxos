@@ -129,19 +129,18 @@ export namespace Graph {
      */
     get actions(): Action[];
 
-    // TODO(burdon): addNode/removeNode.
-    add<TChildData = null, TChildProperties extends { [key: string]: any } = { [key: string]: any }>(
+    addProperty(key: string, value: any): void;
+    removeProperty(key: string): void;
+
+    addNode<TChildData = null, TChildProperties extends { [key: string]: any } = { [key: string]: any }>(
       ...node: (Pick<Node, 'id' | 'label'> & Partial<Node<TChildData, TChildProperties>>)[]
     ): Node<TChildData, TChildProperties>[];
-    remove(id: string): Node;
+    removeNode(id: string): Node;
 
     addAction<TActionProperties extends { [key: string]: any } = { [key: string]: any }>(
       ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
     ): Action<TActionProperties>[];
     removeAction(id: string): Action;
-
-    addProperty(key: string, value: any): void;
-    removeProperty(key: string): void;
   };
 
   export type TraverseOptions = {

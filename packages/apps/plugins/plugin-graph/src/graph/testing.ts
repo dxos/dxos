@@ -22,7 +22,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
       return;
     }
 
-    const [child] = parent.add({
+    const [child] = parent.addNode({
       id: `${parent.id}-${id}`,
       label: `${parent.id}-${id}`,
       data: null,
@@ -45,7 +45,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
       return;
     }
 
-    const [child] = parent.add(node);
+    const [child] = parent.addNode(node);
     nodes.set(child.id, child);
     return child;
   };
@@ -56,7 +56,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
       return;
     }
 
-    return parent.remove(id);
+    return parent.removeNode(id);
   };
 
   const addAction = (parentId: string, action: Pick<Graph.Action, 'id' | 'label'> & Partial<Graph.Action>) => {
@@ -135,7 +135,7 @@ export const buildGraph = (graph: GraphStore, nodes: any[]) => {
 
 const addNodes = (root: Graph.Node, nodes: any[]) => {
   nodes.forEach((node) => {
-    const [child] = root.add(node);
+    const [child] = root.addNode(node);
     addNodes(child, node.children || []);
     node.actions?.forEach((action: any) => child.addAction(action));
   });
