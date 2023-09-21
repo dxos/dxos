@@ -30,6 +30,16 @@ export class GraphBuilder {
 
   build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
     const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }), path);
+    return this._build(graph, graph.root, path, ignoreBuilders);
+  }
+
+  private _build(
+    graph: GraphStore,
+    node: Graph.Node,
+    path: string[] = [],
+    ignoreBuilders: Graph.NodeBuilder[] = [],
+  ): GraphStore {
+    (graph as any)._index[node.id] = path;
 
     // TODO(burdon): Document.
     const subscriptions = this._unsubscribe.get(graph.root.id) ?? new EventSubscriptions();
@@ -39,7 +49,7 @@ export class GraphBuilder {
     Array.from(this._nodeBuilders.values())
       .filter((builder) => ignoreBuilders.findIndex((ignore) => ignore === builder) === -1)
       .forEach((builder) => {
-        const unsubscribe = builder(this._filterBuilders(graph.root, path, [...ignoreBuilders, builder]));
+        const unsubscribe = builder(this._filterBuilders(graph, node, path, [...ignoreBuilders, builder]));
         unsubscribe && subscriptions.add(unsubscribe);
       });
 
@@ -52,7 +62,12 @@ export class GraphBuilder {
    * Updates a Node's add method to filter out builders that have already been applied.
    */
   // TODO(burdon): Explain.
-  private _filterBuilders(node: Graph.Node, path: string[], ignoreBuilders: Graph.NodeBuilder[]): Graph.Node {
+  private _filterBuilders(
+    graph: GraphStore,
+    node: Graph.Node,
+    path: string[],
+    ignoreBuilders: Graph.NodeBuilder[],
+  ): Graph.Node {
     const builderNode = deepSignal({
       ...node,
       add: (...partials) => {
@@ -60,7 +75,7 @@ export class GraphBuilder {
           const childPath = [...path, 'childrenMap', partial.id];
           const child = this._createNode({ ...partial, parent: builderNode }, childPath, ignoreBuilders);
           builderNode.childrenMap[child.id] = child;
-          this.build(child, childPath, ignoreBuilders);
+          this._build(graph, child, childPath, ignoreBuilders);
           return child;
         });
       },

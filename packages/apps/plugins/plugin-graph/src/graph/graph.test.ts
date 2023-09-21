@@ -153,14 +153,12 @@ describe('Graph', () => {
     // TODO(wittjosiah): Implement.
   });
 
-  // TODO(burdon): Failing (parents are null?)
-  test.only('can find nodes', () => {
+  test('can find nodes', () => {
     const builder = new GraphBuilder();
     builder.registerNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
     builder.registerNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
-    console.log(graph);
     expect(graph.findNode('root-test1')?.id).to.equal('root-test1');
     expect(graph.findNode('root-test2-test1')?.id).to.equal('root-test2-test1');
   });

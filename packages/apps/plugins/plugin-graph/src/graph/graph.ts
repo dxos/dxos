@@ -18,7 +18,7 @@ export class GraphStore {
 
   constructor(private readonly _root: Graph.Node, path: string[]) {
     // TODO(wittjosiah): Should this support multiple paths to the same node?
-    this._index[this._root.id] = path;
+    // this._index[this._root.id] = path;
   }
 
   // TODO(burdon): Traverse.
