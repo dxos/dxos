@@ -12,6 +12,10 @@ import { afterTest, describe, test } from '@dxos/test';
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
 describe('Indexing', () => {
+  /**
+   * Test lunr search.
+   * @see https://lunrjs.com/guides/index_prebuilding.html
+   */
   test('lunr search', async () => {
     const lunr = new Builder();
     lunr.metadataWhitelist.push('position');
