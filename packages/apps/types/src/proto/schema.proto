@@ -16,7 +16,10 @@ message Table {
 
   message Prop {
     string id = 1;
-    int32 size = 2;
+    string prop = 2;
+    string label = 3;
+    string refProp = 4;
+    int32 size = 10;
   }
 
   string title = 1;

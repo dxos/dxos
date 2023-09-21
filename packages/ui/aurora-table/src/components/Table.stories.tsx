@@ -14,9 +14,8 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Table } from './Table';
-import { createColumnBuilder, ValueUpdater } from './helpers';
-import { createActionColumn, createColumns, TableSchema } from './schema';
-import { TableColumnDef } from './types';
+import { createColumnBuilder, ValueUpdater } from '../helpers';
+import { TableColumnDef } from '../types';
 
 // TODO(burdon): Header menu builder.
 // TODO(burdon): Expand width if not all columns have explicit size.
@@ -47,7 +46,8 @@ const updateItems = <TValue = any,>(items: Item[], key: PublicKey, id: string, v
   return items.map((item) => (item.publicKey.equals(key) ? { ...item, [id]: value } : item));
 };
 
-// TODO(burdon): Move to separate test.
+/*
+// TODO(burdon): Remove.
 const schamas: TableSchema[] = [
   {
     id: 'a',
@@ -98,6 +98,7 @@ const schamas: TableSchema[] = [
     ],
   },
 ];
+*/
 
 const { helper, builder } = createColumnBuilder<Item>();
 const columns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, any>[] => [
@@ -280,6 +281,8 @@ export const Editable = {
   },
 };
 
+/*
+// TODO(burdon): Remove.
 export const Schema = {
   render: () => {
     const [schema, setSchema] = useState(schamas[0]);
@@ -312,7 +315,6 @@ export const Schema = {
 
     return (
       <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
         <Table<Item>
           keyAccessor={row => row.publicKey.toHex()}
           columns={[...columns, actionColumn]}
@@ -323,3 +325,4 @@ export const Schema = {
     );
   },
 };
+*/

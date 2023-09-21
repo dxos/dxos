@@ -27,6 +27,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {

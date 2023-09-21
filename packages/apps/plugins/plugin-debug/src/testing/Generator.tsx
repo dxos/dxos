@@ -113,7 +113,6 @@ export class Generator {
           id: 'org',
           type: SchemaType.PropType.REF,
           ref: org,
-          refProp: 'name',
         },
       ],
     });
@@ -122,6 +121,19 @@ export class Generator {
       new TableType({
         title: 'People',
         schema: person,
+        props: [
+          {
+            id: 'name',
+          },
+          {
+            id: 'email',
+          },
+          {
+            id: 'org',
+            label: 'Organization',
+            refProp: 'name',
+          },
+        ],
       }),
     );
 

@@ -36,6 +36,7 @@ import {
   auroraTheme,
   bindTheme,
   focusRing,
+  groupBorder,
   groupSurface,
   mx,
   popperMotion,
@@ -64,12 +65,14 @@ const main = async () => {
   const labsTx = bindTheme({
     ...auroraTheme,
     popover: {
+      ...auroraTheme.popover,
       content: (_props, ...etc) =>
         mx(
           'z-[30] rounded-xl',
           popperMotion,
           // 'bg-orange-200',
           groupSurface,
+          groupBorder,
           surfaceElevation({ elevation: 'group' }),
           focusRing,
           ...etc,
