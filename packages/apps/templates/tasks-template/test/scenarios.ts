@@ -16,5 +16,6 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: true,
     createFolder: false,
+    proto: true,
   },
 ];

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import chalk from 'chalk';
 import path from 'node:path';
 import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef, ZodType } from 'zod';
@@ -109,6 +110,9 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       defaultOptions,
       this.options,
       options ?? {},
+      {
+        input: { ...this.options.defaultInput, ...options?.input },
+      },
     ) as Required<ExecuteDirectoryTemplateOptions<I>>;
     const mergedOptions = bareMergedOptions?.options ? bareMergedOptions.options(bareMergedOptions) : bareMergedOptions;
     const { src, parallel, include, exclude, outputDirectory, verbose, input } = mergedOptions;
@@ -119,9 +123,8 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       throw new Error('an output directory is required');
     }
     const debug = logger(!!verbose);
-    debug(`---\nexecuting template ${src}`);
-    debug(pretty(mergedOptions));
-    debug('inputs:', input);
+    debug(`---\n${chalk.magenta('executing template')} ${src}`);
+    debug('options:', pretty(mergedOptions));
     const { inherits, src: _src, ...restOptions } = mergedOptions;
     const inherited = inherits ? await inherits({ ...restOptions, input }) : undefined;
     debug(`${inherited?.files?.length ?? 'no'} inherited results`);
