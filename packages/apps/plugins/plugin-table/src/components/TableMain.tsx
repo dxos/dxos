@@ -56,11 +56,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   };
 
   const columns = useMemo(() => {
-    if (!tables.length) {
+    if (!space || !tables.length) {
       return [];
     }
 
-    // TODO(burdon): Map other tables. Move into builder?
     const tableDefs: TableDef[] = tables.map((table) => ({
       id: table.schema.id,
       name: table.schema.typename ?? table.title,
@@ -71,22 +70,19 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       onColumnUpdate: (id, column) => {
         const { type, refTable, refProp, digits, label } = column;
         updateTableProp({ id, refProp, label });
-
-        // TODO(burdon): Only create new if new property.
         updateSchemaProp({
           id,
           type: getSchemaType(type),
           ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
           digits,
         });
-
-        forceUpdate({}); // TODO(burdon): Fix refresh.
+        forceUpdate({});
       },
       onColumnDelete: (id) => {
         const idx = table.schema?.props.findIndex((prop) => prop.id === id);
         if (idx !== -1) {
           table.schema?.props.splice(idx, 1);
-          forceUpdate({}); // TODO(burdon): Fix refresh.
+          forceUpdate({});
         }
       },
       onRowUpdate: (object, prop, value) => {
@@ -123,8 +119,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
             keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
             columns={columns}
             data={rows}
-            onColumnResize={handleColumnResize}
             border
+            onColumnResize={handleColumnResize}
           />
         </div>
         {debug && (

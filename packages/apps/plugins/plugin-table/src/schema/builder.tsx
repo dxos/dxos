@@ -37,11 +37,11 @@ export class TableColumnBuilder {
   // prettier-ignore
   constructor(
     private readonly _tableDefs: TableDef[],
-    schema: string,
+    tableId: string,
     private readonly _space: Space,
     private readonly _options: TableColumnBuilderOptions
   ) {
-    this._tableDef = this._tableDefs.find((def) => def.id === schema);
+    this._tableDef = this._tableDefs.find((def) => def.id === tableId);
   }
 
   createColumns(): TableColumnDef<TypedObject>[] {
@@ -49,10 +49,10 @@ export class TableColumnBuilder {
       return [];
     }
 
-    const columns = createColumns(this._tableDefs, this._tableDef, this._space, this._options);
+    const dataColumns = createColumns(this._tableDefs, this._tableDef, this._space, this._options);
     const actionColumn = createActionColumn(this._tableDef, this._options);
 
-    return [...columns, actionColumn];
+    return [...dataColumns, actionColumn];
   }
 }
 
