@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
+
 package dxos.error;
 
 option go_package = "github.com/dxos/kube/proto/def/dxos/error";
