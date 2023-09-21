@@ -3438,6 +3438,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/tasks-template': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@oclif/core': ^2.9.4
@@ -3490,6 +3491,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
+      '@dxos/tasks-template': link:../../apps/templates/tasks-template
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@oclif/core': 2.9.4_sxkixsbzgfj5nygwm6be4klchu
