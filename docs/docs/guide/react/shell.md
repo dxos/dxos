@@ -19,11 +19,11 @@ Scenarios:
 The shell appears overtop the calling UI and looks like a full screen dialog panel.
 
 <div class="shell-images" style="display: flex; flex-direction: row; gap: 2em;">
-  <img class="light" src="./images/shell%20panel%20halo%20light.png" alt="Shell profile panel" />
-  <img class="dark" src="./images/shell%20panel%20halo%20dark.png" alt="Shell profile panel" />
+  <img class="light" src="./images/shell-panel-halo-light.png" alt="Shell profile panel" />
+  <img class="dark" src="./images/shell-panel-halo-dark.png" alt="Shell profile panel" />
 
-  <img class="dark" src="./images/shell%20panel%20halo%20device%20invite%20dark.png" alt="Shell device invitation panel" />
-  <img class="light" src="./images/shell%20panel%20halo%20device%20invite%20light.png" alt="Shell device invitation panel" />
+  <img class="dark" src="./images/shell-panel-halo-device-invite-dark.png" alt="Shell device invitation panel" />
+  <img class="light" src="./images/shell-panel-halo-device-invite-light.png" alt="Shell device invitation panel" />
 </div>
 
 ## Installation
