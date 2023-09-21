@@ -39,7 +39,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
             Delegator={DndDelegator}
             getData={(dndId) => {
               const [_, nodeId] = parseDndId(dndId);
-              return graph.find(nodeId);
+              return graph.findNode(nodeId);
             }}
             copyTile={(id, toId, mosaic) => {
               return dnd.onCopyTileSubscriptions.length

@@ -103,7 +103,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
           const previousObjects = this._previousObjects.get(space.key.toHex()) ?? [];
           const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
           this._previousObjects.set(space.key.toHex(), query.objects);
-          removedObjects.forEach((object) => objectParent.remove(object.id));
+          removedObjects.forEach((object) => objectParent.removeNode(object.id));
           query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
         }
       }),

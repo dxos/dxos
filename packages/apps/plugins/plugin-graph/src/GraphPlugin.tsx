@@ -8,7 +8,7 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, GraphBuilder, GraphStore } from './graph';
+import { Graph, GraphBuilder, GraphImpl } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
@@ -19,7 +19,7 @@ import { graphPlugins } from './util';
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const builder = new GraphBuilder();
-  const result: { graph?: GraphStore } = {};
+  const result: { graph?: GraphImpl } = {};
 
   return {
     meta: {

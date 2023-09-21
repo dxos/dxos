@@ -18,7 +18,7 @@ export const objectToGraphNode = (
   object: ThreadType,
   index: string,
 ): Graph.Node<ThreadType> => {
-  const [child] = parent.add({
+  const [child] = parent.addNode({
     id: object.id,
     label: object.title ?? ['thread title placeholder', { ns: THREAD_PLUGIN }],
     icon: (props) => <Chat {...props} />,

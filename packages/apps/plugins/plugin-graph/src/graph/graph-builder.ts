@@ -7,7 +7,7 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import { SendIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
 
-import { GraphStore } from './graph';
+import { GraphImpl } from './graph';
 import { Graph } from './types';
 
 /**
@@ -34,8 +34,8 @@ export class GraphBuilder {
    * @param ignoreBuilders
    */
   // TODO(burdon): Document ignoreBuilders.
-  build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
-    const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }));
+  build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphImpl {
+    const graph = new GraphImpl(root ?? this._createNode({ id: 'root', label: 'Root' }));
     return this._build(graph, graph.root, path, ignoreBuilders);
   }
 
@@ -43,11 +43,11 @@ export class GraphBuilder {
    * Called recursively.
    */
   private _build(
-    graph: GraphStore,
+    graph: GraphImpl,
     node: Graph.Node,
     path: string[] = [],
     ignoreBuilders: Graph.NodeBuilder[] = [],
-  ): GraphStore {
+  ): GraphImpl {
     // TODO(wittjosiah): Should this support multiple paths to the same node?
     graph.setPath(node.id, path);
 
@@ -72,7 +72,7 @@ export class GraphBuilder {
    */
   // TODO(burdon): Explain why this is needed.
   private _filterBuilders(
-    graph: GraphStore,
+    graph: GraphImpl,
     node: Graph.Node,
     path: string[],
     ignoreBuilders: Graph.NodeBuilder[],

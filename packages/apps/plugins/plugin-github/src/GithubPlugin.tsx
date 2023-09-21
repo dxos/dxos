@@ -59,7 +59,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
 
       const createGroup = (parent: Graph.Node) => {
         const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
-        const [presentationNode] = parent.add({
+        const [presentationNode] = parent.addNode({
           id,
           label: ['plugin name', { ns: GITHUB_PLUGIN }],
           icon: (props) => <GithubLogo {...props} />,
@@ -134,7 +134,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
 };
 
 const objectToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
-  const [child] = parent.add({
+  const [child] = parent.addNode({
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
     icon: (props) => <Issue {...props} />,

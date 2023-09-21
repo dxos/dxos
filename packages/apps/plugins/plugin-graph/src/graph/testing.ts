@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphStore } from './graph';
+import { GraphImpl } from './graph';
 import { Graph } from './types';
 
 /**
@@ -129,7 +129,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  */
 
 // TODO(wittjosiah): Type nodes.
-export const buildGraph = (graph: GraphStore, nodes: any[]) => {
+export const buildGraph = (graph: GraphImpl, nodes: any[]) => {
   addNodes(graph.root, nodes);
 };
 

@@ -11,7 +11,7 @@ import { Graph } from './types';
  * The Graph represents...
  */
 // TODO(burdon): Rename Graph (remove interface).
-export class GraphStore {
+export class GraphImpl {
   // TODO(burdon): Document.
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});

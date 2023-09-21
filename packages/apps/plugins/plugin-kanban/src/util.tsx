@@ -35,7 +35,7 @@ export const objectToGraphNode = (
   object: KanbanType,
   index: string,
 ): Graph.Node<KanbanType> => {
-  const [child] = parent.add({
+  const [child] = parent.addNode({
     id: object.id,
     label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
     icon: (props) => <Kanban {...props} />,

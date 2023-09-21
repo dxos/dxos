@@ -83,7 +83,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
             const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
               debug
-                ? parent.add({
+                ? parent.addNode({
                     id: 'devtools',
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props) => <Bug {...props} />,
@@ -92,7 +92,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       persistenceClass: 'appState',
                     },
                   })
-                : parent.remove('devtools');
+                : parent.removeNode('devtools');
             });
 
             return () => unsubscribe?.();
@@ -105,13 +105,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
           const unsubscribe = settings.values.$debug?.subscribe((debug) => {
             debug
-              ? parent.add({
+              ? parent.addNode({
                   id: nodeId,
                   label: 'Debug',
                   icon: (props: IconProps) => <Bug {...props} />,
                   data: { id: nodeId, space: parent.data },
                 })
-              : parent.remove(nodeId);
+              : parent.removeNode(nodeId);
           });
 
           return () => {

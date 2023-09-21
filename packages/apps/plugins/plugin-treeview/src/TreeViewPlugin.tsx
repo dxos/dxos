@@ -38,14 +38,14 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         throw new Error('Graph plugin not found.');
       }
 
-      return this.active && graphPlugin.provides.graph.find(this.active);
+      return this.active && graphPlugin.provides.graph.findNode(this.active);
     },
     get previousNode() {
       if (!graphPlugin) {
         throw new Error('Graph plugin not found.');
       }
 
-      return this.previous && graphPlugin.provides.graph.find(this.previous);
+      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
     },
     appState: undefined,
   }) as RevertDeepSignal<TreeViewContextValue>;
@@ -93,7 +93,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         dndPlugin?.provides.dnd?.onMosaicChangeSubscriptions.push((event: MosaicChangeEvent) => {
           const [rootId, entityId] = parseDndId(event.id);
           if (rootId === TREE_VIEW_PLUGIN) {
-            const node = graph.find(entityId);
+            const node = graph.findNode(entityId);
             let fromNode = null;
             let toNode = null;
             if (node) {
@@ -103,8 +103,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                   toNode?.properties.onRearrangeChild?.(node, event.index);
                   break;
                 case 'migrate':
-                  fromNode = graph.find(parseDndId(event.fromId)[1]);
-                  toNode = graph.find(parseDndId(event.toId)[1]);
+                  fromNode = graph.findNode(parseDndId(event.fromId)[1]);
+                  toNode = graph.findNode(parseDndId(event.toId)[1]);
                   console.log('[migrate start]', node, toNode, event.index);
                   toNode?.properties.onMigrateStartChild?.(node, toNode, event.index);
                   console.log('[migrate end]', fromNode);

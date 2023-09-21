@@ -138,7 +138,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             return;
           }
 
-          const [groupNode] = parent.add({
+          const [groupNode] = parent.addNode({
             id: 'all-files',
             label: ['plugin name', { ns: FILES_PLUGIN }],
             // TODO(burdon): Factor out palette constants.

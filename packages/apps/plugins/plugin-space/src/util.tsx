@@ -60,7 +60,7 @@ export const spaceToGraphNode = ({
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
 
-  const [node] = parent.add({
+  const [node] = parent.addNode({
     id,
     label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
     description: space.properties.description,

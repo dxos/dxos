@@ -3,7 +3,7 @@
 //
 
 import { SetTileHandler } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import { Graph, GraphImpl } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
 import { getDndId, MosaicState } from '@dxos/aurora-grid';
@@ -89,7 +89,7 @@ export const setAppStateIndex = (id: string, value: string, appState?: AppState)
   return value;
 };
 
-export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTile: SetTileHandler) => {
+export const computeTreeViewMosaic = (graph: GraphImpl, appState: AppState, onSetTile: SetTileHandler) => {
   const mosaic: MosaicState = { tiles: {}, relations: {} };
 
   graph.traverse({

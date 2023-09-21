@@ -18,7 +18,7 @@ export const objectToGraphNode = (
   object: SketchType,
   index: string,
 ): Graph.Node<SketchType> => {
-  const [child] = parent.add({
+  const [child] = parent.addNode({
     id: object.id,
     label: object.title ?? ['object title placeholder', { ns: SKETCH_PLUGIN }],
     icon: (props) => <CompassTool {...props} />,

@@ -288,7 +288,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
           // Shared spaces section.
-          const [groupNode] = parent.add({
+          const [groupNode] = parent.addNode({
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
