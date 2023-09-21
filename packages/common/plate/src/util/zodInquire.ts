@@ -113,7 +113,7 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
       const qqn = getQuestion(v);
       if (qqn) {
         const qnOptions = options?.questions?.[k as keyof typeof options.questions];
-        qqn.default = qnOptions?.default;
+        qqn.default = (options?.initialAnswers as any)?.[k] ?? qnOptions?.default ?? qqn.default;
         qqn.when = qnOptions?.when as any;
         questions[k] = { ...qqn, name: k };
       }
