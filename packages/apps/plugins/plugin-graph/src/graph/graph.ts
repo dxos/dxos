@@ -20,8 +20,22 @@ export class GraphImpl {
 
   // TODO(burdon): Traverse.
   toJSON() {
-    const obj = {};
-    return obj;
+    const toJSON = (node: Graph.Node): any => {
+      return {
+        // TODO(burdon): Standardize ids on type/id/x/y (use slashes).
+        id: node.id.slice(0, 16),
+        label: node.label,
+        children: node.children.length ? node.children.map((node) => toJSON(node)) : undefined,
+        actions: node.actions.length
+          ? node.actions.map(({ id, label }) => ({
+              id,
+              label,
+            }))
+          : undefined,
+      };
+    };
+
+    return toJSON(this._root);
   }
 
   get root(): Graph.Node {
@@ -45,8 +59,10 @@ export class GraphImpl {
     return path.length > 0 ? get(this._root, path) : this._root;
   }
 
-  // TODO(burdon): https://www.npmjs.com/package/unist-util-visit.
-  traverse({ node = this._root, direction = 'down', filter, visitor }: Graph.TraverseOptions): void {
+  /**
+   * Recursive breadth-first traversal.
+   */
+  traverse({ node = this._root, direction = 'down', filter, visitor }: Graph.TraversalOptions, depth = 0): void {
     if (!filter || filter(node)) {
       visitor?.(node);
     }
@@ -54,7 +70,7 @@ export class GraphImpl {
     if (direction === 'down') {
       Object.values(node.children).forEach((child) => this.traverse({ node: child, filter, visitor }));
     } else if (direction === 'up' && node.parent) {
-      this.traverse({ node: node.parent, direction, filter, visitor });
+      this.traverse({ node: node.parent, direction, filter, visitor }, depth + 1);
     }
   }
 }

@@ -112,6 +112,7 @@ export namespace Graph {
     /**
      * Children of the node stored by their id.
      */
+    // TODO(burdon): Rename nodes/nodeMap?
     childrenMap: Record<string, Node>;
 
     /**
@@ -143,7 +144,7 @@ export namespace Graph {
     removeAction(id: string): Action;
   };
 
-  export type TraverseOptions = {
+  export type TraversalOptions = {
     /**
      * The node to start traversing from. Defaults to the root node.
      */
@@ -178,8 +179,8 @@ export namespace Graph {
      * Label to be used when displaying the node.
      * For default labels, use a translated string.
      *
-     * @example 'My Action'
-     * @example ['unknown action label, { ns: 'example-plugin' }]
+     * @example 'Test Action'
+     * @example ['test action label, { ns: 'example-plugin' }]
      */
     label: string | [string, { ns: string; count?: number }];
 
@@ -211,11 +212,13 @@ export namespace Graph {
     get actions(): Action[];
 
     invoke: () => Promise<any>;
-    add<TActionProperties extends { [key: string]: any } = { [key: string]: any }>(
-      ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
-    ): Action<TActionProperties>[];
-    remove(id: string): Action;
+
     addProperty(key: string, value: any): void;
     removeProperty(key: string): void;
+
+    addAction<TActionProperties extends { [key: string]: any } = { [key: string]: any }>(
+      ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
+    ): Action<TActionProperties>[];
+    removeAction(id: string): Action;
   };
 }

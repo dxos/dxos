@@ -98,7 +98,7 @@ describe('Graph', () => {
     const builder = new GraphBuilder();
     builder.addNodeBuilder((parent) => {
       const [set] = parent.addAction({ id: 'test-set', label: 'Test Set' });
-      set.add({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
+      set.addAction({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
     });
 
     const graph = builder.build();

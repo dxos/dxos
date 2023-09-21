@@ -174,14 +174,14 @@ export class GraphBuilder {
           return this._sendIntent?.(action.intent);
         }
       },
-      add: (...partials) => {
+      addAction: (...partials) => {
         return partials.map((partial) => {
           const subAction = this._createAction(partial);
           action.actionsMap[subAction.id] = subAction;
           return subAction;
         });
       },
-      remove: (id) => {
+      removeAction: (id) => {
         const subAction = action.actionsMap[id];
         delete action.actionsMap[id];
         return subAction;

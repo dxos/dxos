@@ -34,6 +34,7 @@ import { useClient, useConfig } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
 import { arrayToBuffer, safeParseInt } from '@dxos/util';
 
+import { Tree } from './Tree';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
@@ -67,8 +68,6 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
 export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ data: { graph, space } }) => {
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
-
-  console.log('###', JSON.stringify(graph));
 
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -231,9 +230,12 @@ export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ da
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
         <div className='flex flex-col grow overflow-auto'>
-          <SyntaxHighlighter language='json' style={style} className='w-full'>
-            {JSON.stringify(data, replacer, 2)}
-          </SyntaxHighlighter>
+          <Tree data={graph.toJSON()} />
+          {false && (
+            <SyntaxHighlighter language='json' style={style} className='w-full'>
+              {JSON.stringify(data, replacer, 2)}
+            </SyntaxHighlighter>
+          )}
         </div>
 
         {config.values?.runtime?.app?.build?.timestamp && (
