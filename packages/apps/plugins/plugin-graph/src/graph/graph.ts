@@ -29,6 +29,10 @@ export class GraphStore {
     return this._index[id];
   }
 
+  setPath(id: string, path: string[]) {
+    this._index[id] = path;
+  }
+
   findNode(id: string): Graph.Node | undefined {
     const path = this.getPath(id);
     if (!path) {

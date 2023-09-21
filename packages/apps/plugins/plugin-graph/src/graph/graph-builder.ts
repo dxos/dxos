@@ -41,10 +41,10 @@ export class GraphBuilder {
     ignoreBuilders: Graph.NodeBuilder[] = [],
   ): GraphStore {
     // TODO(wittjosiah): Should this support multiple paths to the same node?
-    (graph as any)._index[node.id] = path;
+    graph.setPath(node.id, path);
 
     // TODO(burdon): Document.
-    const subscriptions = this._unsubscribe.get(graph.root.id) ?? new EventSubscriptions();
+    const subscriptions = this._unsubscribe.get(node.id) ?? new EventSubscriptions();
     subscriptions.clear();
 
     Array.from(this._nodeBuilders.values())
@@ -54,7 +54,7 @@ export class GraphBuilder {
         unsubscribe && subscriptions.add(unsubscribe);
       });
 
-    this._unsubscribe.set(graph.root.id, subscriptions);
+    this._unsubscribe.set(node.id, subscriptions);
 
     return graph;
   }
