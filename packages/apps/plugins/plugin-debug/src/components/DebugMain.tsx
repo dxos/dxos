@@ -7,6 +7,8 @@ import {
   DownloadSimple,
   Flag,
   FlagPennant,
+  Gauge,
+  Graph,
   HandPalm,
   PaperPlaneRight,
   Play,
@@ -25,7 +27,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { GraphImpl } from '@braneframe/plugin-graph';
-import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Main, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
@@ -68,6 +70,8 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
 export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ data: { graph, space } }) => {
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
+
+  const [view, setView] = useState<'diagnostics' | 'graph'>('diagnostics');
 
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -159,6 +163,14 @@ export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ da
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
+          <ToggleGroup type='single' value={view}>
+            <ToggleGroupItem value={'diagnostics'} onClick={() => setView('diagnostics')} title={'Diagnostics'}>
+              <Gauge className={getSize(5)} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
+              <Graph className={getSize(5)} />
+            </ToggleGroupItem>
+          </ToggleGroup>
           <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
             <Plus className={getSize(5)} />
           </Button>
@@ -230,12 +242,12 @@ export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ da
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
         <div className='flex flex-col grow overflow-auto'>
-          <Tree data={graph.toJSON()} />
-          {false && (
+          {view === 'diagnostics' && (
             <SyntaxHighlighter language='json' style={style} className='w-full'>
               {JSON.stringify(data, replacer, 2)}
             </SyntaxHighlighter>
           )}
+          {view === 'graph' && <Tree data={graph.toJSON()} />}
         </div>
 
         {config.values?.runtime?.app?.build?.timestamp && (
