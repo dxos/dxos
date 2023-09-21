@@ -13,6 +13,9 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  pointerWithin,
+  closestCorners,
+  CollisionDetection,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDeepSignal } from 'deepsignal/react';
@@ -52,6 +55,14 @@ const defaultContextValue: DndContextValue = {
 const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);
 
 const useDnd = () => useContext(MosaicDndContext);
+
+const dndCollisionComposition: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  return closestCorners(args);
+};
 
 const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   const contextValue = useDeepSignal<DndContextValue>(defaultContextValue);
@@ -114,6 +125,7 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
+        collisionDetection={dndCollisionComposition}
         sensors={sensors}
       >
         {children}

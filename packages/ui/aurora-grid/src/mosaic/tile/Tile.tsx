@@ -4,6 +4,7 @@
 import React, { forwardRef } from 'react';
 
 import { Card } from './Card';
+import { Kanban } from './Kanban';
 import { Stack } from './Stack';
 import { TreeItem } from './TreeItem';
 import { TileProps } from '../types';
@@ -16,6 +17,8 @@ const Tile = forwardRef<HTMLDivElement, TileProps>((props: TileProps, forwardedR
       return <Card {...props} ref={forwardedRef} />;
     case 'treeitem':
       return <TreeItem {...props} ref={forwardedRef} />;
+    case 'kanban':
+      return <Kanban {...props} ref={forwardedRef} />;
     default:
       return null;
   }

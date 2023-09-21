@@ -3,6 +3,7 @@
 //
 
 import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { batch } from '@preact/signals-core';
 import { useCallback } from 'react';
 
 import { useMosaic } from '../../mosaic';
@@ -39,17 +40,22 @@ export const useHandleMigrateDragEnd = () => {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
-      // update active tile’s index
-      const index = nextRearrangeIndex(
-        getSubtiles(relations[dnd.migrationDestinationId].child, tiles),
-        activeId,
-        over?.id,
-      );
-      tiles[activeId].index = index ?? tiles[activeId].index;
-      // update active tile’s parent relation
-      relations[activeId].parent = new Set([dnd.migrationDestinationId]);
-      // add active tile to new parent’s child relations
-      relations[dnd.migrationDestinationId].child.add(activeId);
+      // get active tile’s index via the preview card, if present
+      const subtiles = getSubtiles(relations[dnd.migrationDestinationId].child, tiles);
+      const previewTile = subtiles.find(({ id }) => id.startsWith('preview--'));
+      const index =
+        previewTile?.index ??
+        nextRearrangeIndex(getSubtiles(relations[dnd.migrationDestinationId].child, tiles), activeId, over?.id);
+      // make deepsignal state changes
+      batch(() => {
+        previewTile && relations[dnd.migrationDestinationId!].child.delete(previewTile.id);
+        tiles[activeId].index = index ?? tiles[activeId].index;
+        // update active tile’s parent relation
+        relations[activeId!].parent = new Set([dnd.migrationDestinationId!]);
+        // add active tile to new parent’s child relations
+        relations[dnd.migrationDestinationId!].child.add(activeId);
+        previewTile && delete tiles[previewTile.id];
+      });
       // fire onMosaicChange
       onMosaicChange?.({
         type: 'migrate',
@@ -59,7 +65,7 @@ export const useHandleMigrateDragEnd = () => {
         ...(index && { index }),
       });
       // update animation
-      dnd.overlayDropAnimation = 'into';
+      dnd.overlayDropAnimation = 'around';
       // return result
       result = dnd.migrationDestinationId;
     }

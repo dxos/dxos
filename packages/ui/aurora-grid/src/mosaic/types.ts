@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
-export type TileVariant = 'stack' | 'card' | 'treeitem';
+export type TileVariant = 'stack' | 'card' | 'treeitem' | 'kanban';
 
 type TileSharedProps = {
   // Primary props
@@ -37,13 +37,19 @@ export type StackTile = TileSharedProps & {
   sortable: true;
 };
 
+export type KanbanTile = TileSharedProps & {
+  // Overrides
+  variant: 'kanban';
+  sortable: true;
+};
+
 export type CardTile = TileSharedProps & {
   // Overrides
   variant: 'card';
   sortable?: false;
 };
 
-export type Tile = TreeItemTile | StackTile | CardTile;
+export type Tile = TreeItemTile | StackTile | CardTile | KanbanTile;
 
 export type TileProps = Tile;
 
