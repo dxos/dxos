@@ -16,10 +16,7 @@ export class GraphStore {
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});
 
-  constructor(private readonly _root: Graph.Node, path: string[]) {
-    // TODO(wittjosiah): Should this support multiple paths to the same node?
-    // this._index[this._root.id] = path;
-  }
+  constructor(private readonly _root: Graph.Node) {}
 
   // TODO(burdon): Traverse.
   // toJSON() {}

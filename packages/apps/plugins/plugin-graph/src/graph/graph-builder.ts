@@ -28,8 +28,9 @@ export class GraphBuilder {
     this._nodeBuilders.delete(builder);
   }
 
+  // TODO(burdon): Document ignoreBuilders.
   build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphStore {
-    const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }), path);
+    const graph = new GraphStore(root ?? this._createNode({ id: 'root', label: 'Root' }));
     return this._build(graph, graph.root, path, ignoreBuilders);
   }
 
@@ -39,13 +40,13 @@ export class GraphBuilder {
     path: string[] = [],
     ignoreBuilders: Graph.NodeBuilder[] = [],
   ): GraphStore {
+    // TODO(wittjosiah): Should this support multiple paths to the same node?
     (graph as any)._index[node.id] = path;
 
     // TODO(burdon): Document.
     const subscriptions = this._unsubscribe.get(graph.root.id) ?? new EventSubscriptions();
     subscriptions.clear();
 
-    // TODO(burdon): Document ignoreBuilders.
     Array.from(this._nodeBuilders.values())
       .filter((builder) => ignoreBuilders.findIndex((ignore) => ignore === builder) === -1)
       .forEach((builder) => {
@@ -59,9 +60,9 @@ export class GraphBuilder {
   }
 
   /**
-   * Updates a Node's add method to filter out builders that have already been applied.
+   * Updates the Node's add method to filter out builders that have already been applied.
    */
-  // TODO(burdon): Explain.
+  // TODO(burdon): Explain why this is needed.
   private _filterBuilders(
     graph: GraphStore,
     node: Graph.Node,
