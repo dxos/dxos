@@ -25,7 +25,7 @@ export const ClientPlugin = (
   // TODO(burdon): Move to DebugPlugin and add key binding to action.
   const onKeypress = async (event: KeyboardEvent) => {
     // Cmd + Shift + X.
-    if (event.metaKey && event.shiftKey && event.key === 'x') {
+    if (event.metaKey && event.shiftKey && event.key === 'z') {
       event.preventDefault();
 
       const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
