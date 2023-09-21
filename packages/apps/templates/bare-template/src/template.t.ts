@@ -20,7 +20,8 @@ export default interactiveDirectory({
       dxosUi: z.boolean().describe('Include the DXOS UI system for react').default(true),
       tailwind: z.boolean().describe('Include tailwind (https://tailwindcss.com)').default(true),
       storybook: z.boolean().describe('Include a Storybook component sandbox (https://storybook.js.org)').default(true),
-      pwa: z.boolean().describe('Enable PWA support').default(false),
+      pwa: z.boolean().describe('Include PWA support').default(false),
+      proto: z.boolean().describe('Include protobuf codegen for typed ECHO objects').default(false),
       monorepo: z
         .boolean()
         .describe('Assume generated output is within the DXOS monorepo')
@@ -49,7 +50,7 @@ export default interactiveDirectory({
     Application ${chalk.green(chalk.bold(name))} created.
 
     Run the app:
-    ${relative ? `$ cd ${relative}` : null}
+    ${!!relative && `$ cd ${relative}`}
     $ npm install
     $ npm serve
 
