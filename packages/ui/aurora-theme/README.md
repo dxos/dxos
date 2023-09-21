@@ -1,11 +1,11 @@
-# @dxos/aurora
+# @dxos/aurora-theme
 
-Opinionated, styled, low-level React components for DXOS.
+A set of design system tokens to use with DXOS Aurora.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/aurora-theme
 ```
 
 ## Documentation

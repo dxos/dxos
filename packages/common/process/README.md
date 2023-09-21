@@ -1,16 +1,10 @@
-# @dxos/aurora
-
-Opinionated, styled, low-level React components for DXOS.
+# @dxos/process
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/process
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

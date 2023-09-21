@@ -1,16 +1,10 @@
-# @dxos/aurora
-
-Opinionated, styled, low-level React components for DXOS.
+# @braneframe/plugin-dnd
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @braneframe/plugin-dnd
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

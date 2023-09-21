@@ -1,16 +1,12 @@
-# @dxos/aurora
+# @dxos/invariant
 
-Opinionated, styled, low-level React components for DXOS.
+Invariant assertion compatible with DXOS logger.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/invariant
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

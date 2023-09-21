@@ -1,16 +1,12 @@
-# @dxos/aurora
+# @dxos/lock-file
 
-Opinionated, styled, low-level React components for DXOS.
+Lock file .
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/lock-file
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

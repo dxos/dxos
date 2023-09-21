@@ -1,16 +1,12 @@
-# @dxos/aurora
+# @dxos/proto-guard
 
-Opinionated, styled, low-level React components for DXOS.
+Test to detect breaking change in DXOS protocols and version them.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/proto-guard
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

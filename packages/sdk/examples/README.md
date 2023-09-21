@@ -1,16 +1,12 @@
-# @dxos/aurora
+# @dxos/examples
 
-Opinionated, styled, low-level React components for DXOS.
+Example stories used by the docs.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/examples
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 

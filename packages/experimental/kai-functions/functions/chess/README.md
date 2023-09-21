@@ -1,16 +1,12 @@
-# @dxos/aurora
+# @dxos/kai-fn-chess
 
-Opinionated, styled, low-level React components for DXOS.
+Demo OpenFaaS function.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/aurora
+pnpm i @dxos/kai-fn-chess
 ```
-
-## Documentation
-
-- [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)
 
 ## DXOS Resources
 
