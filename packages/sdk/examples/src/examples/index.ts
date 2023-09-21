@@ -3,3 +3,4 @@
 //
 
 export { default as TaskListExample } from './TaskList';
+export { default as EditorExample } from './Editor';

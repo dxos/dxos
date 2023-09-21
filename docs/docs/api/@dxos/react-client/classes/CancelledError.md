@@ -1,5 +1,5 @@
 # Class `CancelledError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:41]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:16]()</sub>
 
 
 Internal system errors.

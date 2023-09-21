@@ -21,13 +21,17 @@ Defined in:
 Values:
 - `DEFAULT` 
 
-- `DEVICE_INVITATIONS` 
+- `EDIT_PROFILE` 
+
+- `IDENTITY` 
 
 - `INITIALIZE_IDENTITY` 
 
 - `JOIN_SPACE` 
 
-- `SPACE_INVITATIONS` 
+- `SHARE_IDENTITY` 
+
+- `SPACE` 
 
 
 ### [`SystemStatus`]()

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,7 +37,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^2.29.3",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "isomorphic-ws": "^4.0.1",
     "ws": "^7.4.4"
   },

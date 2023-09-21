@@ -3,6 +3,7 @@
 //
 
 export * from './Clipboard';
+export * from './CompoundButton';
 export * from './IdentityList';
 export * from './InvitationList';
 export * from './Panel';

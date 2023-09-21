@@ -2,16 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, {
-  FC,
   forwardRef,
   ForwardRefExoticComponent,
   Fragment,
   PropsWithChildren,
+  Ref,
   RefAttributes,
   useEffect,
   useRef,
@@ -21,7 +18,17 @@ import React, {
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
-import { Button, DropdownMenu, Popover, Tooltip, Tree, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  DensityProvider,
+  DropdownMenu,
+  Popover,
+  Tooltip,
+  Tree,
+  TreeItem,
+  useSidebars,
+  useTranslation,
+} from '@dxos/aurora';
 import { DelegatorProps } from '@dxos/aurora-grid';
 import {
   dropRing,
@@ -35,7 +42,6 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
-import { NavTree } from './NavTree';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { SharedTreeItemProps } from './props';
@@ -43,62 +49,32 @@ import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
 
-type SortableBranchTreeViewItemProps = SharedTreeItemProps &
-  Pick<SortableProps, 'rearranging' | 'isPreview' | 'migrating'>;
-
-export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
-  node,
-  level,
-  rearranging,
-  migrating,
-  isPreview,
-}: SortableBranchTreeViewItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: `treeitem:${node.id}`,
-    data: { dragoverlay: node, treeitem: node },
-  });
-  return (
-    <NavTreeItem
-      node={node}
-      level={level}
-      draggableAttributes={attributes}
-      draggableListeners={listeners}
-      rearranging={rearranging}
-      isPreview={isPreview}
-      migrating={migrating}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      ref={setNodeRef}
-    />
-  );
-};
-
-type DroppableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'migrating'>;
-
-export const DroppableTreeViewItem: FC<DroppableBranchTreeViewItemProps> = ({
-  node,
-  level,
-  migrating,
-}: DroppableBranchTreeViewItemProps) => {
-  const { setNodeRef } = useDroppable({
-    id: `treeitem:${node.id}`,
-    data: { dragoverlay: node, treeitem: node },
-  });
-  return <NavTreeItem node={node} level={level} migrating={migrating} ref={setNodeRef} />;
-};
-
 type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
 
-export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Graph.Node>> = forwardRef<
-  HTMLOListElement,
-  DelegatorProps<Graph.Node>
->(
+export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorProps<Graph.Node> }>(
   (
-    { tile, data, dragHandleListeners, dragHandleAttributes, style, children, isActive, isMigrationDestination },
+    {
+      data: {
+        tile,
+        data,
+        dragHandleListeners,
+        dragHandleAttributes,
+        style,
+        children,
+        isActive,
+        isOverlay,
+        isMigrationDestination,
+      },
+    },
     forwardedRef,
   ) => {
     switch (tile.variant) {
       case 'stack':
-        return <Tree.Root ref={forwardedRef}>{children}</Tree.Root>;
+        return (
+          <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
+            {children}
+          </Tree.Root>
+        );
       case 'treeitem':
         return (
           <NavTreeItem
@@ -107,10 +83,10 @@ export const NavTreeItemDelegator: ForwardRefExoticComponent<DelegatorProps<Grap
             draggableAttributes={dragHandleAttributes}
             draggableListeners={dragHandleListeners}
             style={style}
-            ref={forwardedRef}
             rearranging={isActive}
-            childrenManaged
+            isOverlay={isOverlay}
             {...(isMigrationDestination && { migrating: 'into' })}
+            ref={forwardedRef}
           >
             {children}
           </NavTreeItem>
@@ -140,7 +116,6 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       migrating,
       isPreview,
       isOverlay,
-      childrenManaged,
     },
     forwardedRef,
   ) => {
@@ -195,130 +170,125 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
         : [{ id: '', actions }];
 
     return (
-      <TreeItem.Root
-        collapsible={isBranch}
-        open={!forceCollapse && open}
-        onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
-        classNames={[
-          'rounded block',
-          hoverableFocusedKeyboardControls,
-          'transition-opacity',
-          (rearranging || isPreview) && 'opacity-0',
-          focusRing,
-          migrating === 'into' && dropRing,
-          level === 0 ? 'mbs-4 first:mbs-0' : '',
-        ]}
-        {...draggableAttributes}
-        {...draggableListeners}
-        style={style}
-        ref={forwardedRef}
-      >
-        <HeadingWithActionsRoot
-          role='none'
-          className={mx(
-            levelPadding(level),
-            hoverableControls,
-            hoverableFocusedWithinControls,
-            hoverableDescriptionIcons,
-            level < 1 && topLevelCollapsibleSpacing,
-            !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
-            'flex items-start rounded',
-          )}
-          data-testid={testId}
+      <DensityProvider density='fine'>
+        <TreeItem.Root
+          collapsible={isBranch}
+          open={!forceCollapse && open}
+          onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
+          classNames={[
+            'rounded block',
+            hoverableFocusedKeyboardControls,
+            'transition-opacity',
+            (rearranging || isPreview) && 'opacity-0',
+            focusRing,
+            migrating === 'into' && dropRing,
+            level === 0 ? 'mbs-4 first:mbs-0' : '',
+          ]}
+          {...draggableAttributes}
+          {...draggableListeners}
+          style={style}
+          ref={forwardedRef}
         >
-          <NavTreeItemHeading {...{ open, node, level, active }} />
-          {actionGroups.length > 0 && (
-            <Tooltip.Root
-              open={optionsTooltipOpen}
-              onOpenChange={(nextOpen) => {
-                if (suppressNextTooltip.current) {
-                  setOptionsTooltipOpen(false);
-                  suppressNextTooltip.current = false;
-                } else {
-                  setOptionsTooltipOpen(nextOpen);
-                }
-              }}
-            >
-              <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[31]' side='bottom'>
-                  {t('tree branch options label')}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-              <DropdownMenu.Root
-                {...{
-                  open: optionsMenuOpen,
-                  onOpenChange: (nextOpen: boolean) => {
-                    if (!nextOpen) {
-                      suppressNextTooltip.current = true;
-                    }
-                    return setOptionsMenuOpen(nextOpen);
-                  },
+          <HeadingWithActionsRoot
+            role='none'
+            className={mx(
+              levelPadding(level),
+              hoverableControls,
+              hoverableFocusedWithinControls,
+              hoverableDescriptionIcons,
+              level < 1 && topLevelCollapsibleSpacing,
+              !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
+              'flex items-start rounded',
+            )}
+            data-testid={testId}
+          >
+            <NavTreeItemHeading {...{ open, node, level, active }} />
+            {actionGroups.length > 0 && (
+              <Tooltip.Root
+                open={optionsTooltipOpen}
+                onOpenChange={(nextOpen) => {
+                  if (suppressNextTooltip.current) {
+                    setOptionsTooltipOpen(false);
+                    suppressNextTooltip.current = false;
+                  } else {
+                    setOptionsTooltipOpen(nextOpen);
+                  }
                 }}
               >
-                <DropdownMenu.Trigger asChild>
-                  <Tooltip.Trigger asChild>
-                    <Button
-                      variant='ghost'
-                      classNames={[
-                        'shrink-0 pli-2 pointer-fine:pli-1',
-                        hoverableControlItem,
-                        hoverableOpenControlItem,
-                        isOverlay && 'invisible',
-                      ]}
-                      data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
-                      {...(!navigationSidebarOpen && { tabIndex: -1 })}
-                    >
-                      <DotsThreeVertical className={getSize(4)} />
-                    </Button>
-                  </Tooltip.Trigger>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content classNames='z-[31]'>
-                    <DropdownMenu.Viewport>
-                      {actionGroups.map(({ id, actions }, i) => (
-                        <Fragment key={id}>
-                          {actions.map((action) => (
-                            <DropdownMenu.Item
-                              key={action.id}
-                              onClick={(event) => {
-                                if (action.properties.disabled) {
-                                  return;
-                                }
-                                event.stopPropagation();
-                                // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                                suppressNextTooltip.current = true;
-                                setOptionsMenuOpen(false);
-                                void action.invoke();
-                              }}
-                              classNames='gap-2'
-                              disabled={action.properties.disabled}
-                              {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                            >
-                              {action.icon && <action.icon className={getSize(4)} />}
-                              <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                            </DropdownMenu.Item>
-                          ))}
-                          {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
-                        </Fragment>
-                      ))}
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </Tooltip.Root>
-          )}
-        </HeadingWithActionsRoot>
-        {childrenManaged
-          ? children
-          : isBranch &&
-            !forceCollapse && (
-              <TreeItem.Body>
-                <NavTree items={Object.values(node.children).flat() as Graph.Node[]} node={node} level={level + 1} />
-              </TreeItem.Body>
+                <Tooltip.Portal>
+                  <Tooltip.Content classNames='z-[31]' side='bottom'>
+                    {t('tree branch options label')}
+                    <Tooltip.Arrow />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+                <DropdownMenu.Root
+                  {...{
+                    open: optionsMenuOpen,
+                    onOpenChange: (nextOpen: boolean) => {
+                      if (!nextOpen) {
+                        suppressNextTooltip.current = true;
+                      }
+                      return setOptionsMenuOpen(nextOpen);
+                    },
+                  }}
+                >
+                  <DropdownMenu.Trigger asChild>
+                    <Tooltip.Trigger asChild>
+                      <Button
+                        variant='ghost'
+                        classNames={[
+                          'shrink-0 pli-2 pointer-fine:pli-1',
+                          hoverableControlItem,
+                          hoverableOpenControlItem,
+                          isOverlay && 'invisible',
+                        ]}
+                        data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
+                        {...(!navigationSidebarOpen && { tabIndex: -1 })}
+                      >
+                        <DotsThreeVertical className={getSize(4)} />
+                      </Button>
+                    </Tooltip.Trigger>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content classNames='z-[31]'>
+                      <DropdownMenu.Viewport>
+                        {actionGroups.map(({ id, actions }, i) => (
+                          <Fragment key={id}>
+                            {actions.map((action) => (
+                              <DropdownMenu.Item
+                                key={action.id}
+                                onClick={(event) => {
+                                  if (action.properties.disabled) {
+                                    return;
+                                  }
+                                  event.stopPropagation();
+                                  // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                                  suppressNextTooltip.current = true;
+                                  setOptionsMenuOpen(false);
+                                  void action.invoke();
+                                }}
+                                classNames='gap-2'
+                                disabled={action.properties.disabled}
+                                {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                              >
+                                {action.icon && <action.icon className={getSize(4)} />}
+                                <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                              </DropdownMenu.Item>
+                            ))}
+                            {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
+                          </Fragment>
+                        ))}
+                      </DropdownMenu.Viewport>
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </Tooltip.Root>
             )}
-      </TreeItem.Root>
+          </HeadingWithActionsRoot>
+          {children}
+        </TreeItem.Root>
+      </DensityProvider>
     );
   },
 );

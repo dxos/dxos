@@ -1,0 +1,20 @@
+{
+  "sourceRoot": "tools/monitors/hello-template-monitor/src",
+  "projectType": "library",
+  "targets": {
+    "monitor": {
+      "dependsOn": [],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "monitor"
+      }
+    },
+    "start": {
+      "dependsOn": [],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "start"
+      }
+    }
+  }
+}

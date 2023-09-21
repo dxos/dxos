@@ -3,7 +3,7 @@ import template from '../template.t';
 
 export default template.define
   .slots({
-    content: '<div>Your code goes here</div>',
+    content: '<p>Your code goes here</p>',
     extraImports: '',
   })
   .script({
@@ -15,6 +15,7 @@ export default template.define
       );
       const ThemeProvider = imports.use('ThemeProvider', '@dxos/react-appkit');
       const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
+      // TODO(wittjosiah): Remove appkit.
       const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.use(
         ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
         '@dxos/react-appkit',
@@ -24,12 +25,19 @@ export default template.define
 
       const coreContent = plate`
       <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
-        <${ClientProvider} config={config} ${dxosUi ? plate`fallback={${GenericFallback}}` : ''}>
+        <${ClientProvider}
+          config={config}${dxosUi ? plate`
+          fallback={${GenericFallback}}` : ''}
+          onInitialized={async (client) => {
+            !client.halo.identity.get() && (await client.halo.createIdentity());
+          }}
+        >
           ${slots.content}
           ${dxosUi && pwa && swToast}
         </${ClientProvider}>
       </ErrorBoundary>`;
 
+      // TODO(wittjosiah): Generic fallback is missing translations.
       const themeProvider = (content: string) => plate`
       <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
         ${content}

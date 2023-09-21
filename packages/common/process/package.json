@@ -1,6 +1,6 @@
 {
   "name": "@dxos/process",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

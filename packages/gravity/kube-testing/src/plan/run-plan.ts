@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import yaml from 'js-yaml';
 import { ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
@@ -17,8 +19,9 @@ import { AgentParams, PlanResults, TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
+const SUMMARY_FILENAME = 'test.json';
 
-type PlanOptions = {
+export type PlanOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
@@ -44,6 +47,11 @@ export type RunPlanParams<S, C> = {
   options: PlanOptions;
 };
 
+export const runAgentForPlan = async <S, C>(planName: string, agentParamsJSON: string, plan: TestPlan<S, C>) => {
+  const params: AgentParams<S, C> = JSON.parse(agentParamsJSON);
+  await runAgent(plan, params);
+};
+
 // TODO(mykola): Introduce Executor class.
 export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
@@ -54,23 +62,30 @@ export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPl
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
       summary.results,
     );
-
     return;
   }
+  // Planner mode.
+  await runPlanner(name, { plan, spec, options });
+};
 
-  if (!process.env.GRAVITY_AGENT_PARAMS) {
-    // Planner mode.
-    await runPlanner(name, { plan, spec, options });
-  } else {
-    // Agent mode.
-    const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
-    await runAgent(plan, params);
-  }
+// TODO(nf): merge with defaults
+export const readYAMLSpecFile = async <S, C>(
+  path: string,
+  plan: TestPlan<S, C>,
+  options: PlanOptions,
+): Promise<() => RunPlanParams<any, any>> => {
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
+  return () => ({
+    plan,
+    spec: yamlSpec,
+    options,
+  });
 };
 
 const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   const testId = createTestPathname();
-  const outDir = `${process.cwd()}/out/results/${testId}`;
+  const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
+  const outDir = `${outDirBase}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
   log.info('starting plan', {
     outDir,
@@ -152,7 +167,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     await Promise.all(promises);
 
     log.info('test complete', {
-      summary: join(outDir, 'test.json'),
+      summary: join(outDir, SUMMARY_FILENAME),
     });
   }
 
@@ -175,7 +190,7 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     agents,
   };
 
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
+  writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
 };

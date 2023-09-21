@@ -4,7 +4,6 @@ This is the verification process to promote something from staging to production
 
 Use your normal, default profile in the browser, falling back to anonymous/guest profiles in case of a problem.
 
-
 ## Composer
 
 - Launch app: [https://composer.staging.dxos.org](https://composer.staging.dxos.org)
@@ -15,7 +14,6 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
   - see that typing into a document replicates both ways
   - cursors should be present
   - selection highlights should be present
-
 
 ## Kai
 
@@ -34,12 +32,10 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
   - Type a bunch of random text quickly (on both sides) observe replication both ways
 - Open Notes frame and create Note, drag it, observe replication both ways (exercises references)
 
-
 ## HALO
 
 - [https://halo.staging.kube.dxos.org] - observe that the app loads
 - invite a device to join, and give the invite code to a mobile device using an anonymous window. Observe that devices join the same halo and see the same spaces.
-
 
 ## CLI
 
@@ -91,10 +87,12 @@ dx device list
 ```
 
 3). Open KAI in a new/anonymous browser profile:
+
 - Copy invitation code and PIN by running `dx halo share` again.
 - Select create identity from authorized device:
 
-4). Open Profile panel in KAI profile above:
+  4). Open Profile panel in KAI profile above:
+
 - Create invitation.
 - Run `dx halo join` in a third CLI profile.
 
@@ -114,7 +112,6 @@ dx device list
 
 You should now see FOUR devices.
 
-
 ## Devtools and ECHO Proxy
 
 ```bash
@@ -123,7 +120,7 @@ dx agent stop
 dx agent run --socket --ws=3456 --http=3000
 ```
 
-- Open devtools and check identity: 
+- Open devtools and check identity:
   https://devtools.dev.dxos.org?target=ws://localhost:3456
 - Create a space and query the ECHO proxy:
 
@@ -132,10 +129,33 @@ dx space create
 curl -i http://localhost:3000/spaces | jq
 ```
 
+## Templates and Docs
+
+- Test the hello template:
+
+```bash
+npm create @dxos@next
+npm install && npm run serve
+```
+
+- Test the bare template:
+
+```bash
+npm create @dxos/bare@next
+npm install && npm run serve
+```
+
+- Test the tasks template:
+
+```bash
+npm create @dxos/tasks@next
+npm install && npm run serve
+```
+
+- Follow the steps in the [React Tutorial](https://docs.dxos.org/guide/tutorial.html) to ensure they can still be followed.
 
 ## KUBE
 
 - ensure a prod kube is running locally
 - pnpm run deploy the app made with @dxos@next just now
 - observe the app on [appname].localhost working
-

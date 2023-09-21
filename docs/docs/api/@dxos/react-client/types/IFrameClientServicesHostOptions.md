@@ -1,5 +1,5 @@
 # Type `IFrameClientServicesHostOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-host.d.ts:5]()</sub>
 
 
 

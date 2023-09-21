@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.1.57",
+  "version": "0.2.0",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -44,11 +44,15 @@
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.11.9",
     "@types/seedrandom": "^3.0.5",
+    "@types/yargs": "~16.0.1",
     "chart.js": "^3.9.1",
+    "js-yaml": "^4.1.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "yargs": "~16.2.0"
   },
   "publishConfig": {
     "access": "restricted"

@@ -15,10 +15,11 @@ type TileSharedProps = {
   variant: TileVariant;
   migrationClass?: string;
   acceptMigrationClass?: Set<string>;
-  copyClass?: string;
-  acceptCopyClass?: Set<string>;
-  // Secondary props
+  copyClass?: Set<string>;
+  acceptCopyClass?: string;
   sortable?: boolean;
+  // Secondary props
+  isPreview?: boolean;
 };
 
 export type TreeItemTile = TileSharedProps & {
@@ -61,6 +62,8 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
   isMigrationDestination?: boolean;
   isCopyDestination?: boolean;
   isOverlay?: boolean;
+  isEmpty?: boolean;
+  isPreview?: boolean;
 }>;
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
@@ -81,7 +84,7 @@ export type MosaicContextValue = {
   getData: (dndId: string) => any;
   mosaic: DeepSignal<MosaicState>;
   onMosaicChange?: MosaicChangeHandler;
-  copyTile?: CopyTileAction;
+  copyTile: CopyTileAction;
   Delegator: Delegator;
 };
 

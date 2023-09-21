@@ -1,6 +1,9 @@
 lockfileVersion: 5.4
 
 patchedDependencies:
+  '@nx/js@16.5.4':
+    hash: st3ukm3rnd3xadn2fxesh4boby
+    path: patches/@nx__js@16.5.4.patch
   '@nx/vite@16.5.4':
     hash: xxzhsuqrsbs6wyvhvm37cpe46m
     path: patches/@nx__vite@16.5.4.patch
@@ -10,9 +13,6 @@ patchedDependencies:
   ts-node@10.9.1:
     hash: rke3py7up3u364r7wwqfla7cdm
     path: patches/ts-node@10.9.1.patch
-  '@nx/js@16.5.4':
-    hash: st3ukm3rnd3xadn2fxesh4boby
-    path: patches/@nx__js@16.5.4.patch
   uuid@8.3.2:
     hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
@@ -24,7 +24,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/beast': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/conform': workspace:^0.1.0
+      '@dxos/conform': workspace:*
       '@dxos/esbuild': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/eslint-plugin': workspace:*
@@ -332,7 +332,7 @@ importers:
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
       vuepress-plugin-check-md: 0.0.3
-      vuepress-theme-hope: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-theme-hope: 2.0.0-beta.197_vuepress@2.0.0-beta.61
 
   packages/apps/composer-app:
     specifiers:
@@ -406,7 +406,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
       vite: 4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/apps/composer-extension:
@@ -420,7 +420,7 @@ importers:
       '@types/webextension-polyfill': 0.10.0
       typescript: 5.2.2
       vite: 4.3.9
-      vite-plugin-web-extension: 3.0.7_vite@4.3.9
+      vite-plugin-web-extension: 3.0.7
       webextension-polyfill: 0.10.0
 
   packages/apps/halo-app:
@@ -436,6 +436,7 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/vault': workspace:*
       '@sentry/vite-plugin': ^0.7.2
@@ -456,16 +457,17 @@ importers:
       '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/vault': link:../../sdk/vault
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@sentry/vite-plugin': 0.7.2
       '@types/node': 18.11.9
       '@types/react': 18.0.21
@@ -473,7 +475,7 @@ importers:
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
       typescript: 5.2.2
       vite: 4.3.9_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/apps/labs-app:
@@ -572,7 +574,7 @@ importers:
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
       vite: 4.3.9
       vite-plugin-mkcert: 1.16.0_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/apps/plugins/plugin-chess:
@@ -594,7 +596,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: 1.0.0-alpha.0
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -606,7 +608,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/invariant': link:../../../common/invariant
       chess.js: 1.0.0-alpha.0
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
@@ -626,8 +628,6 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
-      '@braneframe/plugin-theme': workspace:*
-      '@dxos/aurora': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
@@ -646,8 +646,6 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
-      '@braneframe/plugin-theme': link:../plugin-theme
-      '@dxos/aurora': link:../../../ui/aurora
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -736,26 +734,24 @@ importers:
 
   packages/apps/plugins/plugin-dnd:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^5.2.2
     dependencies:
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      deepsignal: 1.3.4_react@18.2.0
+      '@dxos/aurora-grid': link:../../../ui/aurora-grid
+      deepsignal: 1.3.6
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -769,8 +765,10 @@ importers:
 
   packages/apps/plugins/plugin-error:
     specifiers:
+      '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
@@ -780,9 +778,11 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/client-services': link:../../../sdk/client-services
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
     devDependencies:
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -804,20 +804,20 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-react': ^1.3.3
+      '@preact/signals-react': ^1.3.6
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       localforage: ^1.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@dxos/async': link:../../../common/async
-      '@preact/signals-react': 1.3.4_react@18.2.0
+      '@preact/signals-react': 1.3.6_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       localforage: 1.10.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -915,7 +915,7 @@ importers:
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       react: ^18.2.0
@@ -925,7 +925,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
       '@dxos/util': link:../../../common/util
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       lodash.get: 4.4.2
       lodash.set: 4.3.2
     devDependencies:
@@ -947,11 +947,11 @@ importers:
     specifiers:
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       react: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
@@ -961,6 +961,7 @@ importers:
   packages/apps/plugins/plugin-ipfs:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
@@ -976,7 +977,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -988,11 +989,12 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/client': link:../../../sdk/client
       '@dxos/react-client': link:../../../sdk/react-client
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       lodash.get: 4.4.2
       url-join: 5.0.0
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
@@ -1089,7 +1091,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       leaflet: ^1.9.3
       lodash.get: ^4.4.2
       react: ^18.2.0
@@ -1101,7 +1103,7 @@ importers:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       leaflet: 1.9.3
       lodash.get: 4.4.2
       react-leaflet: 4.2.0_yydtlhsdonbqao6vgvkwhv2zki
@@ -1126,6 +1128,7 @@ importers:
   packages/apps/plugins/plugin-markdown:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
@@ -1141,12 +1144,12 @@ importers:
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-react': ^1.3.3
+      '@preact/signals-react': ^1.3.6
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1160,12 +1163,13 @@ importers:
       '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
-      '@preact/signals-react': 1.3.4_react@18.2.0
+      '@preact/signals-react': 1.3.6_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
@@ -1209,6 +1213,7 @@ importers:
 
   packages/apps/plugins/plugin-sketch:
     specifiers:
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
@@ -1255,6 +1260,7 @@ importers:
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.6.7
     devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-space': link:../plugin-space
@@ -1297,11 +1303,11 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-react': ^1.3.3
+      '@preact/signals-react': ^1.3.6
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       jszip: ^3.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1320,9 +1326,9 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
-      '@preact/signals-react': 1.3.4_react@18.2.0
+      '@preact/signals-react': 1.3.6_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
@@ -1356,14 +1362,14 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@dxos/debug': link:../../../common/debug
       '@dxos/local-storage': link:../../../common/local-storage
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1389,20 +1395,19 @@ importers:
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       ipfs-http-client: ~56.0.1
       lodash.get: ^4.4.2
       node-fetch: ^2.6.0
@@ -1414,13 +1419,12 @@ importers:
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/aurora-grid': link:../../../ui/aurora-grid
       '@dxos/client': link:../../../sdk/client
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
-      deepsignal: 1.3.4_react@18.2.0
+      '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.6
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       lodash.get: 4.4.2
       node-fetch: 2.6.7
@@ -1467,7 +1471,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1480,7 +1484,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/keys': link:../../../common/keys
       '@dxos/react-client': link:../../../sdk/react-client
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
@@ -1545,7 +1549,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1554,7 +1558,7 @@ importers:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
@@ -1579,13 +1583,13 @@ importers:
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       i18next: ^21.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       i18next: 21.10.0
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
@@ -1663,9 +1667,7 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -1675,13 +1677,13 @@ importers:
       '@dxos/react-surface': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-react': ^1.3.3
+      '@preact/signals-react': ^1.3.6
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       date-fns: ^2.29.3
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1689,17 +1691,15 @@ importers:
     dependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/types': link:../../types
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/async': link:../../../common/async
       '@dxos/aurora-grid': link:../../../ui/aurora-grid
       '@dxos/debug': link:../../../common/debug
       '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
-      '@preact/signals-react': 1.3.4_react@18.2.0
+      '@preact/signals-react': 1.3.6_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
       date-fns: 2.29.3
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
@@ -1808,6 +1808,27 @@ importers:
       typescript: 5.2.2
 
   packages/apps/templates/hello-template:
+    specifiers:
+      '@dxos/bare-template': workspace:*
+      '@dxos/plate': workspace:*
+      '@types/node': ^18.11.9
+      postcss: ^8.4.21
+      tailwindcss: ~3.3.2
+      tmp-promise: ^3.0.3
+      ts-node: 10.9.1
+      typescript: ^5.2.2
+    dependencies:
+      '@dxos/bare-template': link:../bare-template
+      '@dxos/plate': link:../../../common/plate
+      postcss: 8.4.24
+      tailwindcss: 3.3.2_ts-node@10.9.1
+    devDependencies:
+      '@types/node': 18.11.9
+      tmp-promise: 3.0.3
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_sxkixsbzgfj5nygwm6be4klchu
+      typescript: 5.2.2
+
+  packages/apps/templates/tasks-template:
     specifiers:
       '@dxos/bare-template': workspace:*
       '@dxos/plate': workspace:*
@@ -2150,13 +2171,13 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/node-std': workspace:*
-      '@preact/signals-core': ^1.3.1
-      deepsignal: ^1.3.3
+      '@preact/signals-core': ^1.5.0
+      deepsignal: ^1.3.6
       react: ^18.2.0
     dependencies:
       '@dxos/node-std': link:../node-std
-      '@preact/signals-core': 1.3.1
-      deepsignal: 1.3.4_react@18.2.0
+      '@preact/signals-core': 1.5.0
+      deepsignal: 1.3.6_@preact+signals-core@1.5.0
     devDependencies:
       '@dxos/async': link:../async
       react: 18.2.0
@@ -2567,7 +2588,7 @@ importers:
       '@types/express': ^4.17.17
       '@types/node': ^18.11.9
       date-fns: ^2.29.3
-      express: 4.17.1
+      express: ^4.17.1
       isomorphic-ws: ^4.0.1
       nodemon: ^2.0.22
       ts-node: 10.9.1
@@ -2591,7 +2612,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
       date-fns: 2.29.3
-      express: 4.17.1
+      express: 4.18.2
       isomorphic-ws: 4.0.1_ws@7.5.9
       ws: 7.5.9
     devDependencies:
@@ -2792,16 +2813,16 @@ importers:
   packages/core/echo/echo-signals:
     specifiers:
       '@dxos/echo-schema': workspace:*
-      '@preact/signals': ^1.1.5
-      '@preact/signals-core': ^1.3.1
-      '@preact/signals-react': ^1.3.3
+      '@preact/signals': ^1.2.1
+      '@preact/signals-core': ^1.5.0
+      '@preact/signals-react': ^1.3.6
       preact: ^10.11.0
       react: ^18.2.0
     dependencies:
       '@dxos/echo-schema': link:../echo-schema
-      '@preact/signals': 1.1.5_preact@10.11.2
-      '@preact/signals-core': 1.3.1
-      '@preact/signals-react': 1.3.4_react@18.2.0
+      '@preact/signals': 1.2.1_preact@10.11.2
+      '@preact/signals-core': 1.5.0
+      '@preact/signals-react': 1.3.6_react@18.2.0
     optionalDependencies:
       preact: 10.11.2
       react: 18.2.0
@@ -2921,7 +2942,7 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
       '@types/express': ^4.17.17
-      express: 4.17.1
+      express: ^4.17.1
       portfinder: ^1.0.32
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2932,7 +2953,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/util': link:../../common/util
-      express: 4.17.1
+      express: 4.18.2
       portfinder: 1.0.32
     devDependencies:
       '@types/express': 4.17.17
@@ -3419,7 +3440,6 @@ importers:
       '@dxos/util': workspace:*
       '@oclif/core': ^2.9.4
       '@oclif/plugin-help': ^5.2.14
-      '@oclif/plugin-plugins': ^3.1.8
       '@oclif/test': ^2.3.31
       '@octokit/core': ^4.0.4
       '@types/cli-progress': ^3.11.0
@@ -3472,7 +3492,6 @@ importers:
       '@dxos/util': link:../../common/util
       '@oclif/core': 2.9.4_sxkixsbzgfj5nygwm6be4klchu
       '@oclif/plugin-help': 5.2.14_sxkixsbzgfj5nygwm6be4klchu
-      '@oclif/plugin-plugins': 3.1.8_sxkixsbzgfj5nygwm6be4klchu
       '@octokit/core': 4.1.0
       chalk: 4.1.2
       cli-progress: 3.12.0
@@ -3546,7 +3565,7 @@ importers:
       bytes: ^3.1.2
       change-case: ^4.1.2
       date-fns: ^2.29.3
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       flame-chart-js: ^2.3.1
       isomorphic-ws: ^4.0.1
       localforage: ^1.10.0
@@ -3597,7 +3616,7 @@ importers:
       bytes: 3.1.2
       change-case: 4.1.2
       date-fns: 2.29.3
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       flame-chart-js: 2.3.1
       isomorphic-ws: 4.0.1_ws@7.5.9
       localforage: 1.10.0
@@ -3626,7 +3645,7 @@ importers:
       typescript: 5.2.2
       vite: 4.3.9
       vite-plugin-fonts: 0.7.0_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -3663,7 +3682,7 @@ importers:
       copy: ~0.3.2
       crx: ^5.0.1
       esbuild-plugin-inline-image: ^0.0.9
-      express: 4.17.1
+      express: ^4.17.1
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3712,7 +3731,7 @@ importers:
       copy: 0.3.2
       crx: 5.0.1
       esbuild-plugin-inline-image: 0.0.9
-      express: 4.17.1
+      express: 4.18.2
       postcss: 8.4.24
       rmdir: 1.2.0
       safe-compare: 1.1.4
@@ -3741,6 +3760,19 @@ importers:
       typescript: ^5.2.2
     dependencies:
       '@dxos/bare-template': link:../../../apps/templates/bare-template
+      minimist: 1.2.8
+    devDependencies:
+      '@types/minimist': 1.2.2
+      typescript: 5.2.2
+
+  packages/devtools/initializers/create-tasks:
+    specifiers:
+      '@dxos/tasks-template': workspace:*
+      '@types/minimist': ^1.2.2
+      minimist: ^1.2.7
+      typescript: ^5.2.2
+    dependencies:
+      '@dxos/tasks-template': link:../../../apps/templates/tasks-template
       minimist: 1.2.8
     devDependencies:
       '@types/minimist': 1.2.2
@@ -4031,7 +4063,7 @@ importers:
       vite-plugin-fonts: 0.7.0_vite@4.3.9
       vite-plugin-inspect: 0.7.15_vite@4.3.9
       vite-plugin-mkcert: 1.16.0_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/experimental/kai-bots:
@@ -4047,7 +4079,7 @@ importers:
       '@types/http-proxy': ^1.17.10
       cors: ^2.8.5
       esbuild: ^0.19.2
-      express: 4.17.1
+      express: ^4.17.1
       http-proxy: ^1.18.1
       node-http-proxy: ^0.2.4
       sort-keys: ^5.0.0
@@ -4063,7 +4095,7 @@ importers:
       '@types/http-proxy': 1.17.10
       cors: 2.8.5
       esbuild: 0.19.2
-      express: 4.17.1
+      express: 4.18.2
       http-proxy: 1.18.1
       node-http-proxy: 0.2.4
       sort-keys: 5.0.0
@@ -4264,7 +4296,7 @@ importers:
       vite: 4.3.9
       vite-plugin-fonts: 0.7.0_vite@4.3.9
       vite-plugin-inspect: 0.7.15_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/experimental/kai-framework:
@@ -4429,7 +4461,7 @@ importers:
       vite-plugin-fonts: 0.7.0_vite@4.3.9
       vite-plugin-inspect: 0.7.15_vite@4.3.9
       vite-plugin-mkcert: 1.16.0_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/experimental/kai-functions:
@@ -4968,7 +5000,7 @@ importers:
       vite: 4.3.9
       vite-plugin-fonts: 0.7.0_vite@4.3.9
       vite-plugin-inspect: 0.7.15_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/experimental/plexus:
@@ -5037,7 +5069,7 @@ importers:
       vite: 4.3.9
       vite-plugin-fonts: 0.7.0_vite@4.3.9
       vite-plugin-inspect: 0.7.15_vite@4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
   packages/experimental/react-metagraph:
@@ -5246,15 +5278,19 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
+      '@types/js-yaml': ^4.0.5
       '@types/node': ^18.11.9
       '@types/seedrandom': ^3.0.5
+      '@types/yargs': ~16.0.1
       chart.js: ^3.9.1
       chartjs-node-canvas: ^4.1.6
       danfojs-node: ^1.1.2
+      js-yaml: ^4.1.0
       redis: ^4.6.6
       seedrandom: ^3.0.5
       ts-node: 10.9.1
       typescript: ^5.2.2
+      yargs: ~16.2.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -5282,11 +5318,15 @@ importers:
       redis: 4.6.6
       seedrandom: 3.0.5
     devDependencies:
+      '@types/js-yaml': 4.0.5
       '@types/node': 18.11.9
       '@types/seedrandom': 3.0.5
+      '@types/yargs': 16.0.4
       chart.js: 3.9.1
+      js-yaml: 4.1.0
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_sxkixsbzgfj5nygwm6be4klchu
       typescript: 5.2.2
+      yargs: 16.2.0
 
   packages/gravity/proto-guard:
     specifiers:
@@ -5539,7 +5579,9 @@ importers:
 
   packages/sdk/examples:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
@@ -5556,7 +5598,9 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     devDependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
@@ -5811,6 +5855,7 @@ importers:
       '@radix-ui/react-select': ^1.2.1
       '@radix-ui/react-separator': ^1.0.3
       '@radix-ui/react-slot': ^1.0.1
+      '@radix-ui/react-switch': ^1.0.3
       '@radix-ui/react-toast': ^1.1.3
       '@radix-ui/react-toggle': ^1.0.2
       '@radix-ui/react-toggle-group': ^1.0.3
@@ -5847,6 +5892,7 @@ importers:
       '@radix-ui/react-select': 1.2.1_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-separator': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-slot': 1.0.2_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-switch': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-toast': 1.1.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toggle': 1.0.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toggle-group': 1.0.3_biqbaboplfbrettd7655fr4n2y
@@ -5928,11 +5974,11 @@ importers:
       y-protocols: ^1.0.5
       yjs: ^13.6.7
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/commands': 6.2.2
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/language': 6.6.0
-      '@codemirror/language-data': 6.1.0_252h5dwvsiu2pnu2vr7ql3rya4
+      '@codemirror/language-data': 6.1.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
@@ -5961,7 +6007,7 @@ importers:
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
       '@tiptap/react': 2.0.0-beta.220_xig6hpp4glylmgjqbtp4uwsv5e
       '@tiptap/starter-kit': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      codemirror: 6.0.1_@lezer+common@1.0.2
+      codemirror: 6.0.1
       lib0: 0.2.78
       lodash.get: 4.4.2
       prosemirror-model: 1.19.0
@@ -5995,13 +6041,14 @@ importers:
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-core': ^1.5.0
       '@radix-ui/react-compose-refs': ^1.0.0
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -6017,9 +6064,10 @@ importers:
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/util': link:../../common/util
+      '@preact/signals-core': 1.5.0
       '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6_@preact+signals-core@1.5.0
       lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@faker-js/faker': 8.0.2
@@ -6051,7 +6099,7 @@ importers:
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
       date-fns: ^2.29.3
-      deepsignal: ^1.3.3
+      deepsignal: ^1.3.6
       lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -6076,7 +6124,7 @@ importers:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       chromatic: 6.17.0
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.3.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
@@ -9402,13 +9450,8 @@ packages:
       minimist: 1.2.8
     dev: true
 
-  /@codemirror/autocomplete/6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e:
+  /@codemirror/autocomplete/6.4.2:
     resolution: {integrity: sha512-8WE2xp+D0MpWEv5lZ6zPW1/tf4AGb358T5GWYiKEuCP8MvFfT3tH2mIF9Y2yr2e3KbHuSvsVhosiEyqCpiJhZQ==}
-    peerDependencies:
-      '@codemirror/language': ^6.0.0
-      '@codemirror/state': ^6.0.0
-      '@codemirror/view': ^6.0.0
-      '@lezer/common': ^1.0.0
     dependencies:
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -9432,23 +9475,20 @@ packages:
       '@lezer/cpp': 1.1.0
     dev: false
 
-  /@codemirror/lang-css/6.1.1_i3aqn63zftbgivbr4riltn5mqe:
+  /@codemirror/lang-css/6.1.1:
     resolution: {integrity: sha512-P6jdNEHyRcqqDgbvHYyC9Wxkek0rnG3a9aVSRi4a7WrjPbQtBTaOmvYpXmm13zZMAatO4Oqpac+0QZs7sy+LnQ==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/css': 1.1.1
-    transitivePeerDependencies:
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-html/6.4.2:
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
-      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/autocomplete': 6.4.2
+      '@codemirror/lang-css': 6.1.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
@@ -9468,7 +9508,7 @@ packages:
   /@codemirror/lang-javascript/6.1.4:
     resolution: {integrity: sha512-OxLf7OfOZBTMRMi6BO/F72MNGmgOd9B0vetOLvHsDACFXayBzW8fm8aWnDM0yuy68wTK03MBf4HbjSBNRG5q7A==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/state': 6.2.0
@@ -9505,16 +9545,12 @@ packages:
       '@lezer/php': 1.0.1
     dev: false
 
-  /@codemirror/lang-python/6.1.2_252h5dwvsiu2pnu2vr7ql3rya4:
+  /@codemirror/lang-python/6.1.2:
     resolution: {integrity: sha512-nbQfifLBZstpt6Oo4XxA2LOzlSp4b/7Bc5cmodG1R+Cs5PLLCTUvsMNWDnziiCfTOG/SW1rVzXq/GbIr6WXlcw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@lezer/python': 1.1.2
-    transitivePeerDependencies:
-      - '@codemirror/state'
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-rust/6.0.1:
@@ -9524,17 +9560,14 @@ packages:
       '@lezer/rust': 1.0.0
     dev: false
 
-  /@codemirror/lang-sql/6.4.0_i3aqn63zftbgivbr4riltn5mqe:
+  /@codemirror/lang-sql/6.4.0:
     resolution: {integrity: sha512-UWGK1+zc9+JtkiT+XxHByp4N6VLgLvC2x0tIudrJG26gyNtn0hWOVoB0A8kh/NABPWkKl3tLWDYf2qOBJS9Zdw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/highlight': 1.1.3
       '@lezer/lr': 1.3.3
-    transitivePeerDependencies:
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/lang-wast/6.0.1:
@@ -9545,40 +9578,34 @@ packages:
       '@lezer/lr': 1.3.3
     dev: false
 
-  /@codemirror/lang-xml/6.0.2_@codemirror+view@6.9.2:
+  /@codemirror/lang-xml/6.0.2:
     resolution: {integrity: sha512-JQYZjHL2LAfpiZI2/qZ/qzDuSqmGKMwyApYmEUUCTxLM4MWS7sATUEfIguZQr9Zjx/7gcdnewb039smF6nC2zw==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/language': 6.6.0
       '@codemirror/state': 6.2.0
       '@lezer/common': 1.0.2
       '@lezer/xml': 1.0.1
-    transitivePeerDependencies:
-      - '@codemirror/view'
     dev: false
 
-  /@codemirror/language-data/6.1.0_252h5dwvsiu2pnu2vr7ql3rya4:
+  /@codemirror/language-data/6.1.0:
     resolution: {integrity: sha512-g9V23fuLRI9AEbpM6bDy1oquqgpFlIDHTihUhL21NPmxp+x67ZJbsKk+V71W7/Bj8SCqEO1PtqQA/tDGgt1nfw==}
     dependencies:
       '@codemirror/lang-cpp': 6.0.2
-      '@codemirror/lang-css': 6.1.1_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/lang-css': 6.1.1
       '@codemirror/lang-html': 6.4.2
       '@codemirror/lang-java': 6.0.1
       '@codemirror/lang-javascript': 6.1.4
       '@codemirror/lang-json': 6.0.1
       '@codemirror/lang-markdown': 6.1.0
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2_252h5dwvsiu2pnu2vr7ql3rya4
+      '@codemirror/lang-python': 6.1.2
       '@codemirror/lang-rust': 6.0.1
-      '@codemirror/lang-sql': 6.4.0_i3aqn63zftbgivbr4riltn5mqe
+      '@codemirror/lang-sql': 6.4.0
       '@codemirror/lang-wast': 6.0.1
-      '@codemirror/lang-xml': 6.0.2_@codemirror+view@6.9.2
+      '@codemirror/lang-xml': 6.0.2
       '@codemirror/language': 6.6.0
       '@codemirror/legacy-modes': 6.3.1
-    transitivePeerDependencies:
-      - '@codemirror/state'
-      - '@codemirror/view'
-      - '@lezer/common'
     dev: false
 
   /@codemirror/language/6.6.0:
@@ -12939,32 +12966,6 @@ packages:
       - typescript
     dev: false
 
-  /@oclif/plugin-plugins/3.1.8_sxkixsbzgfj5nygwm6be4klchu:
-    resolution: {integrity: sha512-514sFBzLcR9QCSMWCHt/1XntfjJEZvb637b9YuV4kwq749pKEPF7fjCxSV1gYQCCP4TjMB5gB4AwPL4cCbe+/A==}
-    engines: {node: '>=16'}
-    dependencies:
-      '@oclif/color': 1.0.4
-      '@oclif/core': 2.9.4_sxkixsbzgfj5nygwm6be4klchu
-      chalk: 4.1.2
-      debug: 4.3.4
-      fs-extra: 9.1.0
-      http-call: 5.3.0
-      load-json-file: 5.3.0
-      npm: 9.8.1
-      npm-run-path: 4.0.1
-      semver: 7.5.4
-      shelljs: 0.8.5
-      tslib: 2.6.0
-      validate-npm-package-name: 5.0.0
-      yarn: 1.22.19
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - supports-color
-      - typescript
-    dev: false
-
   /@oclif/plugin-warn-if-update-available/2.0.32_sxkixsbzgfj5nygwm6be4klchu:
     resolution: {integrity: sha512-uuSaAssSHzUUlI/tbdlkXudz8/CQXbkMwT7Onx0wvDxEeYNJHoOICXFW1ew3mKFOe3DdW90QGMBrDLFSb63Pqw==}
     engines: {node: '>=12.0.0'}
@@ -13464,24 +13465,26 @@ packages:
     resolution: {integrity: sha512-50/17A98tWUfQ176raKiOGXuYpLyyVMkxxG6oylzL3BPOlA6ADGdK7EYunSa4I064xerltq9TGXs8HmOk5E+vw==}
     dev: false
 
-  /@preact/signals-core/1.3.1:
-    resolution: {integrity: sha512-DL+3kDssZ3UOMz9HufwSYE/gK0+TnT1jzegfF5rstgyPrnyfjz4BHAoxmzQA6Mkp4UlKe8qjsgl3v5a/obzNig==}
+  /@preact/signals-core/1.5.0:
+    resolution: {integrity: sha512-U2diO1Z4i1n2IoFgMYmRdHWGObNrcuTRxyNEn7deSq2cru0vj0583HYQZHsAqcs7FE+hQyX3mjIV7LAfHCvy8w==}
+    dev: false
 
-  /@preact/signals-react/1.3.4_react@18.2.0:
-    resolution: {integrity: sha512-+MIGr7ZXpRwGhk9VrK4sT5SGQSzzNCgNHuPRJ1so4rwj/DY0Ks1//2ie0sMyPhWjO7NDA91Mp4ph1Nzo3hDHhA==}
+  /@preact/signals-react/1.3.6_react@18.2.0:
+    resolution: {integrity: sha512-jr/4lhcRo5W3hfieCJGDPbxq3YjfZDvpmTcisJ+lRhjWvnoYrgMKBoTiLsFPACO8VIEATaIBZXYiGAV08YvnfQ==}
     peerDependencies:
       react: ^16.14.0 || 17.x || 18.x
     dependencies:
-      '@preact/signals-core': 1.3.1
+      '@preact/signals-core': 1.5.0
       react: 18.2.0
       use-sync-external-store: 1.2.0_react@18.2.0
+    dev: false
 
-  /@preact/signals/1.1.5_preact@10.11.2:
-    resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
+  /@preact/signals/1.2.1_preact@10.11.2:
+    resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
-      '@preact/signals-core': 1.3.1
+      '@preact/signals-core': 1.5.0
       preact: 10.11.2
     dev: false
 
@@ -14498,6 +14501,33 @@ packages:
       '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@types/react': 18.0.21
       react: 18.2.0
+    dev: false
+
+  /@radix-ui/react-switch/1.0.3_5uumaiclxbdbzaqafclbf6maf4:
+    resolution: {integrity: sha512-mxm87F88HyHztsI7N+ZUmEoARGkC22YVW5CaC+Byc+HRpuvCrOBPTAnXgf+tZ/7i0Sg/eOePGdMhUKhPaQEqow==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.22.15
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-context': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-primitive': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-use-controllable-state': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-use-previous': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-use-size': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@radix-ui/react-tabs/1.0.4_5uumaiclxbdbzaqafclbf6maf4:
@@ -16899,7 +16929,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.3.1
@@ -16912,7 +16942,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -16927,7 +16957,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.3.1
@@ -16939,7 +16969,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       csstype: 3.1.2
     dev: true
 
@@ -16950,7 +16980,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -16963,7 +16993,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -16974,7 +17004,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_qikmzbpbtkvyqr7q6j4irlhsle
+      '@emotion/react': 11.10.4_ogvc6ewgr3qq5z6tmbtquhqyui
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -19011,7 +19041,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.21.3
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -19882,6 +19912,7 @@ packages:
     resolution: {integrity: sha512-xjIYgE8HBrkpd/sJqOGNspf8uHG+NOHGOw6a/Urj8taM2EXfdNAH2oFcPeIFfsv3+kz/mJrS5VuMqbNLjCa2vw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+    dev: true
 
   /add/2.0.6:
     resolution: {integrity: sha512-j5QzrmsokwWWp6kUcJQySpbG+xfOBqqKnup3OIk1pz+kB/80SLorZ9V8zHFLO92Lcd+hbvq8bT+zOGoPkmBV0Q==}
@@ -21165,6 +21196,7 @@ packages:
       type-is: 1.6.18
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /body-parser/1.20.1:
     resolution: {integrity: sha512-jWi7abTbYwajOytWCQc37VulmWiRae5RyTpaCyDcS5/lMdtwSz5lOpDE67srw/HYe35f1z3fDQw+3txg7gNtWw==}
@@ -21184,7 +21216,6 @@ packages:
       unpipe: 1.0.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /boolbase/1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -21494,6 +21525,7 @@ packages:
   /bytes/3.1.0:
     resolution: {integrity: sha512-zauLjrfCG+xvoyaqLoV8bLVXXNGC4JqlxFCutSDWA6fJrTo2ZuvLYTqZ7aHBLZSMOopbzwv8f+wZcVzfVTI2Dg==}
     engines: {node: '>= 0.8'}
+    dev: true
 
   /bytes/3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -21637,7 +21669,7 @@ packages:
     resolution: {integrity: sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==}
     dependencies:
       function-bind: 1.1.1
-      get-intrinsic: 1.1.3
+      get-intrinsic: 1.2.1
 
   /call-me-maybe/1.0.2:
     resolution: {integrity: sha512-HpX65o1Hnr9HH25ojC1YGs7HCQLq0GCOibSaWER0eNpgJ/Z1MZv2mTc7+xh6WOPxbRVcmgbv4hGU+uSQ/2xFZQ==}
@@ -22309,18 +22341,16 @@ packages:
     resolution: {integrity: sha512-LuO8/7LW6XuR5ERn1yavXAfodGRhuY2yP60JTZIw5yNYMCE5lUVbk3NFUCJxjnphQH+Xemp5hOGb1LgUXm00Xw==}
     dev: true
 
-  /codemirror/6.0.1_@lezer+common@1.0.2:
+  /codemirror/6.0.1:
     resolution: {integrity: sha512-J8j+nZ+CdWmIeFIGXEFbFPtpiYacFMDR8GlHK3IyHQJMCaVRfGx9NT+Hxivv1ckLWPvNdZqndbr/7lVhrf/Svg==}
     dependencies:
-      '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
+      '@codemirror/autocomplete': 6.4.2
       '@codemirror/commands': 6.2.2
       '@codemirror/language': 6.6.0
       '@codemirror/lint': 6.2.0
       '@codemirror/search': 6.3.0
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
-    transitivePeerDependencies:
-      - '@lezer/common'
     dev: false
 
   /codepage/1.15.0:
@@ -22665,12 +22695,6 @@ packages:
     engines: {node: '>= 0.6'}
     dev: true
 
-  /content-disposition/0.5.3:
-    resolution: {integrity: sha512-ExO0774ikEObIAEV9kDo50o+79VCUdEB6n6lzKgGwupcVeRlhrj3qGAfwq8G6uBJjkqLrhT0qEYFcWng8z1z0g==}
-    engines: {node: '>= 0.6'}
-    dependencies:
-      safe-buffer: 5.1.2
-
   /content-disposition/0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
     engines: {node: '>= 0.6'}
@@ -22695,10 +22719,6 @@ packages:
 
   /cookie-signature/1.0.6:
     resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
-
-  /cookie/0.4.0:
-    resolution: {integrity: sha512-+Hp8fLp57wnUSt0tY0tHEXh4voZRDnoIrZPqlo3DPiI4y9lwg/jqx+1Om94/W6ZaPDOUbnjOt/99w66zk+l1Xg==}
-    engines: {node: '>= 0.6'}
 
   /cookie/0.4.2:
     resolution: {integrity: sha512-aSWTXFzaKWkvHO1Ny/s+ePFpvKsPnjc551iI41v3ny/ow6tBG5Vd+FuqGNhh1LxOmVzOlGUriIlOaokOvhaStA==}
@@ -23696,13 +23716,62 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  /deepsignal/1.3.4_react@18.2.0:
-    resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
+  /deepsignal/1.3.6:
+    resolution: {integrity: sha512-yjd+vtiznL6YaMptOsKnEKkPr60OEApa+LRe+Qe6Ile/RfCOrELKk/YM3qVpXFZiyOI3Ng67GDEyjAlqVc697g==}
+    peerDependencies:
+      '@preact/signals': ^1.1.4
+      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
+      preact: '*'
+    peerDependenciesMeta:
+      '@preact/signals':
+        optional: true
+      '@preact/signals-core':
+        optional: true
+      '@preact/signals-react':
+        optional: true
+      preact:
+        optional: true
+
+  /deepsignal/1.3.6_@preact+signals-core@1.5.0:
+    resolution: {integrity: sha512-yjd+vtiznL6YaMptOsKnEKkPr60OEApa+LRe+Qe6Ile/RfCOrELKk/YM3qVpXFZiyOI3Ng67GDEyjAlqVc697g==}
+    peerDependencies:
+      '@preact/signals': ^1.1.4
+      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
+      preact: '*'
+    peerDependenciesMeta:
+      '@preact/signals':
+        optional: true
+      '@preact/signals-core':
+        optional: true
+      '@preact/signals-react':
+        optional: true
+      preact:
+        optional: true
     dependencies:
-      '@preact/signals-core': 1.3.1
-      '@preact/signals-react': 1.3.4_react@18.2.0
-    transitivePeerDependencies:
-      - react
+      '@preact/signals-core': 1.5.0
+    dev: false
+
+  /deepsignal/1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm:
+    resolution: {integrity: sha512-yjd+vtiznL6YaMptOsKnEKkPr60OEApa+LRe+Qe6Ile/RfCOrELKk/YM3qVpXFZiyOI3Ng67GDEyjAlqVc697g==}
+    peerDependencies:
+      '@preact/signals': ^1.1.4
+      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
+      preact: '*'
+    peerDependenciesMeta:
+      '@preact/signals':
+        optional: true
+      '@preact/signals-core':
+        optional: true
+      '@preact/signals-react':
+        optional: true
+      preact:
+        optional: true
+    dependencies:
+      '@preact/signals-react': 1.3.6_react@18.2.0
+    dev: false
 
   /default-browser-id/3.0.0:
     resolution: {integrity: sha512-OZ1y3y0SqSICtE8DE4S8YOE9UZOJ8wO16fKWVP5J1Qz42kV9jcnMVFrEE/noXb/ss3Q4pZIH79kxofzyNNtUNA==}
@@ -23843,13 +23912,9 @@ packages:
       minimalistic-assert: 1.0.1
     dev: false
 
-  /destroy/1.0.4:
-    resolution: {integrity: sha512-3NdhDuEXnfun/z7x9GOElY49LoqVHoGScmOKwmxhsS8N5Y+Z8KyPPDnaSzqWgYt/ji4mqwfTS34Htrk0zPIXVg==}
-
   /destroy/1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-    dev: true
 
   /detect-indent/6.1.0:
     resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
@@ -24385,7 +24450,7 @@ packages:
       es-to-primitive: 1.2.1
       function-bind: 1.1.1
       function.prototype.name: 1.1.5
-      get-intrinsic: 1.1.3
+      get-intrinsic: 1.2.1
       get-symbol-description: 1.0.0
       has: 1.0.3
       has-property-descriptors: 1.0.0
@@ -24397,7 +24462,7 @@ packages:
       is-shared-array-buffer: 1.0.2
       is-string: 1.0.7
       is-weakref: 1.0.2
-      object-inspect: 1.12.2
+      object-inspect: 1.12.3
       object-keys: 1.1.1
       object.assign: 4.1.4
       regexp.prototype.flags: 1.4.3
@@ -25619,43 +25684,6 @@ packages:
       jest-util: 29.5.0
     dev: true
 
-  /express/4.17.1:
-    resolution: {integrity: sha512-mHJ9O79RqluphRrcw2X/GTh3k9tVv8YcoyY4Kkh4WDMUYKRZUq0h1o0w2rrrxBqM7VoeUVqgb27xlEMXTnYt4g==}
-    engines: {node: '>= 0.10.0'}
-    dependencies:
-      accepts: 1.3.8
-      array-flatten: 1.1.1
-      body-parser: 1.19.0
-      content-disposition: 0.5.3
-      content-type: 1.0.4
-      cookie: 0.4.0
-      cookie-signature: 1.0.6
-      debug: 2.6.9
-      depd: 1.1.2
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      etag: 1.8.1
-      finalhandler: 1.1.2
-      fresh: 0.5.2
-      merge-descriptors: 1.0.1
-      methods: 1.1.2
-      on-finished: 2.3.0
-      parseurl: 1.3.3
-      path-to-regexp: 0.1.7
-      proxy-addr: 2.0.7
-      qs: 6.7.0
-      range-parser: 1.2.1
-      safe-buffer: 5.1.2
-      send: 0.17.1
-      serve-static: 1.14.1
-      setprototypeof: 1.1.1
-      statuses: 1.5.0
-      type-is: 1.6.18
-      utils-merge: 1.0.1
-      vary: 1.1.2
-    transitivePeerDependencies:
-      - supports-color
-
   /express/4.18.2:
     resolution: {integrity: sha512-5/PsL6iGPdfQ/lKM1UuielYgv3BUoJfz1aUwU9vHZ+J7gyvwdQXFEBIEIaxeGf0GIcreATNyBExtalisDbuMqQ==}
     engines: {node: '>= 0.10.0'}
@@ -25693,7 +25721,6 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /extend-shallow/2.0.1:
     resolution: {integrity: sha512-zCnTtlxNoAiDc3gqY2aYAWFx7XWWiasuF2K8Me5WbN8otHKTUKBwjPtNpRs/rbUZm7KxWAaNj7P1a/p52GbVug==}
@@ -26044,20 +26071,6 @@ packages:
     dependencies:
       to-regex-range: 5.0.1
 
-  /finalhandler/1.1.2:
-    resolution: {integrity: sha512-aAWcW57uxVNrQZqFXjITpW3sIUQmHGG3qSb9mUah9MgMC4NeWhNOlNjXEYq3HjRAvL6arUviZGGJsBg6z0zsWA==}
-    engines: {node: '>= 0.8'}
-    dependencies:
-      debug: 2.6.9
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      on-finished: 2.3.0
-      parseurl: 1.3.3
-      statuses: 1.5.0
-      unpipe: 1.0.0
-    transitivePeerDependencies:
-      - supports-color
-
   /finalhandler/1.2.0:
     resolution: {integrity: sha512-5uXcUVftlQMFnWC9qu/svkWv3GTd2PfUhK/3PLkYNAe7FbqJMt3515HaxE6eRL74GdsriiwujiawdaB1BpEISg==}
     engines: {node: '>= 0.8'}
@@ -26071,7 +26084,6 @@ packages:
       unpipe: 1.0.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /find-cache-dir/2.1.0:
     resolution: {integrity: sha512-Tq6PixE0w/VMFfCgbONnkiQIVol/JJL7nRMi20fqzA4NRs9AfeqMGeRdPi3wIhYkxjeBaWh2rxwapn5Tu3IqOQ==}
@@ -26556,13 +26568,6 @@ packages:
   /get-func-name/2.0.0:
     resolution: {integrity: sha512-Hm0ixYtaSZ/V7C8FJrtZIuBBI+iSgL+1Aq82zSu8VQNB4S3Gk8e7Qs3VwBDJAhmRZcFqkl3tQu36g/Foh5I5ig==}
     dev: true
-
-  /get-intrinsic/1.1.3:
-    resolution: {integrity: sha512-QJVz1Tj7MS099PevUG5jvnt9tSkXN8K14dxQlikJuPt4uD9hHAHjLyLBiLR5zELelBdD9QNRAXZzsJx0WaDL9A==}
-    dependencies:
-      function-bind: 1.1.1
-      has: 1.0.3
-      has-symbols: 1.0.3
 
   /get-intrinsic/1.2.1:
     resolution: {integrity: sha512-2DcsyfABl+gVHEfCOaTrWgyt+tb6MSEGmKq+kI5HwLbIYgjgmMcV8KQ41uaKz1xxUcn9tJtgFbQUEVcEbd0FYw==}
@@ -27087,7 +27092,7 @@ packages:
   /has-property-descriptors/1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
     dependencies:
-      get-intrinsic: 1.1.3
+      get-intrinsic: 1.2.1
 
   /has-proto/1.0.1:
     resolution: {integrity: sha512-7qE+iP+O+bgF9clE5+UoBFzE65mlBiVj3tKCrlNQ0Ogwm0BjpT/gK4SlLYDMybDh5I3TCTKnPPa0oMG7JDYrhg==}
@@ -27470,16 +27475,7 @@ packages:
       setprototypeof: 1.1.1
       statuses: 1.5.0
       toidentifier: 1.0.0
-
-  /http-errors/1.7.3:
-    resolution: {integrity: sha512-ZTTX0MWrsQ2ZAhA1cejAwDLycFsd7I7nVtnkT3Ol0aqodaKW+0CTZDQ1uBv5whptCnc8e8HeRRJxRs0kmm/Qfw==}
-    engines: {node: '>= 0.6'}
-    dependencies:
-      depd: 1.1.2
-      inherits: 2.0.4
-      setprototypeof: 1.1.1
-      statuses: 1.5.0
-      toidentifier: 1.0.0
+    dev: true
 
   /http-errors/2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
@@ -27862,6 +27858,7 @@ packages:
 
   /inherits/2.0.3:
     resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
+    dev: true
 
   /inherits/2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -27918,7 +27915,7 @@ packages:
       ink: '>=3.0.0'
       react: '>=16.8.0'
     dependencies:
-      ink: 3.2.0_react@18.2.0
+      ink: 3.2.0_iapumuv4e6jcjznwuxpf4tt22e
       object-hash: 2.2.0
       react: 18.2.0
     dev: false
@@ -30666,17 +30663,6 @@ packages:
       strip-bom: 2.0.0
     dev: false
 
-  /load-json-file/5.3.0:
-    resolution: {integrity: sha512-cJGP40Jc/VXUsp8/OrnyKyTZ1y6v/dphm3bioS+RrKXjK2BB6wHUd6JptZEFDGgGahMT+InnZO5i1Ei9mpC8Bw==}
-    engines: {node: '>=6'}
-    dependencies:
-      graceful-fs: 4.2.10
-      parse-json: 4.0.0
-      pify: 4.0.1
-      strip-bom: 3.0.0
-      type-fest: 0.3.1
-    dev: false
-
   /load-yaml-file/0.2.0:
     resolution: {integrity: sha512-OfCBkGEw4nN6JLtgRidPX6QxjBQGQf72q3si2uvqyFEMbycSFFHwAZeXx6cJgFM9wmLrf9zBwCP3Ivqa+LLZPw==}
     engines: {node: '>=6'}
@@ -32427,6 +32413,7 @@ packages:
 
   /ms/2.1.1:
     resolution: {integrity: sha512-tgp+dl5cGk28utYktBsrFqA7HKgrhgPsg6Z/EfhWI4gl1Hwq8B/GmY/0oXZ6nF8hDVesS/FpnYaD/kOWhYQvyg==}
+    dev: true
 
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -33067,81 +33054,6 @@ packages:
       path-key: 4.0.0
     dev: true
 
-  /npm/9.8.1:
-    resolution: {integrity: sha512-AfDvThQzsIXhYgk9zhbk5R+lh811lKkLAeQMMhSypf1BM7zUafeIIBzMzespeuVEJ0+LvY36oRQYf7IKLzU3rw==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    hasBin: true
-    dev: false
-    bundledDependencies:
-      - '@isaacs/string-locale-compare'
-      - '@npmcli/arborist'
-      - '@npmcli/config'
-      - '@npmcli/fs'
-      - '@npmcli/map-workspaces'
-      - '@npmcli/package-json'
-      - '@npmcli/promise-spawn'
-      - '@npmcli/run-script'
-      - abbrev
-      - archy
-      - cacache
-      - chalk
-      - ci-info
-      - cli-columns
-      - cli-table3
-      - columnify
-      - fastest-levenshtein
-      - fs-minipass
-      - glob
-      - graceful-fs
-      - hosted-git-info
-      - ini
-      - init-package-json
-      - is-cidr
-      - json-parse-even-better-errors
-      - libnpmaccess
-      - libnpmdiff
-      - libnpmexec
-      - libnpmfund
-      - libnpmhook
-      - libnpmorg
-      - libnpmpack
-      - libnpmpublish
-      - libnpmsearch
-      - libnpmteam
-      - libnpmversion
-      - make-fetch-happen
-      - minimatch
-      - minipass
-      - minipass-pipeline
-      - ms
-      - node-gyp
-      - nopt
-      - npm-audit-report
-      - npm-install-checks
-      - npm-package-arg
-      - npm-pick-manifest
-      - npm-profile
-      - npm-registry-fetch
-      - npm-user-validate
-      - npmlog
-      - p-map
-      - pacote
-      - parse-conflict-json
-      - proc-log
-      - qrcode-terminal
-      - read
-      - semver
-      - sigstore
-      - ssri
-      - supports-color
-      - tar
-      - text-table
-      - tiny-relative-date
-      - treeverse
-      - validate-npm-package-name
-      - which
-      - write-file-atomic
-
   /npmlog/5.0.1:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
     dependencies:
@@ -33391,9 +33303,6 @@ packages:
     resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
     engines: {node: '>= 6'}
 
-  /object-inspect/1.12.2:
-    resolution: {integrity: sha512-z+cPxW0QGUp0mcqcsgQyLVRDoXFQbXOwBaqyF7VIgI4TWNQsDHrBpUQslRmIfAoYWdYzs6UlKJtB2XJpTaNSpQ==}
-
   /object-inspect/1.12.3:
     resolution: {integrity: sha512-geUvdk7c+eizMNUDkRpW1wJwgfOiOeHbxBR/hLXK1aT6zmVSO0jsQcs7fj6MGw89jC/cjGfLcNOrtMYtGqm81g==}
 
@@ -33549,13 +33458,13 @@ packages:
     engines: {node: '>= 0.8'}
     dependencies:
       ee-first: 1.1.1
+    dev: true
 
   /on-finished/2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
     engines: {node: '>= 0.8'}
     dependencies:
       ee-first: 1.1.1
-    dev: true
 
   /on-headers/1.0.2:
     resolution: {integrity: sha512-pZAE+FJLoyITytdqK0U5s+FIpjN0JP3OzFi/u8Rx+EV5/W+JTWGXG8xFzevE7AjBfDqHv/8vL8qQsIhHnqRkrA==}
@@ -35111,6 +35020,7 @@ packages:
   /qs/6.7.0:
     resolution: {integrity: sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==}
     engines: {node: '>=0.6'}
+    dev: true
 
   /querystring/0.2.0:
     resolution: {integrity: sha512-X/xY82scca2tau62i9mDyU9K+I+djTMUsvwf7xnUX5GLvVzgJybOJf4Y6o9Zx3oJK/LSXg5tTZBjwzqVPaPO2g==}
@@ -35283,6 +35193,7 @@ packages:
       http-errors: 1.7.2
       iconv-lite: 0.4.24
       unpipe: 1.0.0
+    dev: true
 
   /raw-body/2.5.1:
     resolution: {integrity: sha512-qqJBtEyVgS0ZmPGdCFPWJ3FreoqvG4MVQln/kCgF7Olq95IbOp0/BWyMwbdtn4VTvkM8Y7khCQ2Xgk/tcrCXig==}
@@ -35292,7 +35203,6 @@ packages:
       http-errors: 2.0.0
       iconv-lite: 0.4.24
       unpipe: 1.0.0
-    dev: true
 
   /rc/1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
@@ -37031,26 +36941,6 @@ packages:
     dependencies:
       lru-cache: 6.0.0
 
-  /send/0.17.1:
-    resolution: {integrity: sha512-BsVKsiGcQMFwT8UxypobUKyv7irCNRHk1T0G680vk88yf6LBByGcZJOTJCrTP2xVN6yI+XjPJcNuE3V4fT9sAg==}
-    engines: {node: '>= 0.8.0'}
-    dependencies:
-      debug: 2.6.9
-      depd: 1.1.2
-      destroy: 1.0.4
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      etag: 1.8.1
-      fresh: 0.5.2
-      http-errors: 1.7.3
-      mime: 1.6.0
-      ms: 2.1.1
-      on-finished: 2.3.0
-      range-parser: 1.2.1
-      statuses: 1.5.0
-    transitivePeerDependencies:
-      - supports-color
-
   /send/0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
     engines: {node: '>= 0.8.0'}
@@ -37070,7 +36960,6 @@ packages:
       statuses: 2.0.1
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /sentence-case/3.0.4:
     resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
@@ -37130,17 +37019,6 @@ packages:
       range-parser: 1.2.0
     dev: true
 
-  /serve-static/1.14.1:
-    resolution: {integrity: sha512-JMrvUwE54emCYWlTI+hGrGv5I8dEwmco/00EvkzIIsR7MqrHonbD9pO2MOfFnpFntl7ecpZs+3mW+XbQZu9QCg==}
-    engines: {node: '>= 0.8.0'}
-    dependencies:
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      parseurl: 1.3.3
-      send: 0.17.1
-    transitivePeerDependencies:
-      - supports-color
-
   /serve-static/1.15.0:
     resolution: {integrity: sha512-XGuRDNjXUijsUL0vl6nSD7cwURuzEgglbOaFuZM9g3kwDXOWVTck0jLzjPzGD+TazWbboZYu52/9/XPdUgne9g==}
     engines: {node: '>= 0.8.0'}
@@ -37151,7 +37029,6 @@ packages:
       send: 0.18.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /serve/14.1.2:
     resolution: {integrity: sha512-luwVfJwbeE7dhCKeRU0vIBpt4bXdbAfzwsWJIQ5eqrIW2e+4nLWXbSlZ0WzelSFHQq+FlueOW6dr90jEewS9zw==}
@@ -37208,6 +37085,7 @@ packages:
 
   /setprototypeof/1.1.1:
     resolution: {integrity: sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==}
+    dev: true
 
   /setprototypeof/1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
@@ -37315,8 +37193,8 @@ packages:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
     dependencies:
       call-bind: 1.0.2
-      get-intrinsic: 1.1.3
-      object-inspect: 1.12.2
+      get-intrinsic: 1.2.1
+      object-inspect: 1.12.3
 
   /siginfo/2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
@@ -37885,6 +37763,7 @@ packages:
   /statuses/1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
+    dev: true
 
   /statuses/2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
@@ -38960,6 +38839,7 @@ packages:
   /toidentifier/1.0.0:
     resolution: {integrity: sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==}
     engines: {node: '>=0.6'}
+    dev: true
 
   /toidentifier/1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -39144,7 +39024,7 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.11.9
-      acorn: 8.8.2
+      acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
@@ -39175,7 +39055,7 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.11.9
-      acorn: 8.8.2
+      acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
@@ -39295,11 +39175,6 @@ packages:
   /type-fest/0.21.3:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
-
-  /type-fest/0.3.1:
-    resolution: {integrity: sha512-cUGJnCdr4STbePCgqNFbpVNCepa+kAVohJs1sLhxzdH+gnEoOd8VhbYa7pD3zZYGiURWM2xzEII3fQcRizDkYQ==}
-    engines: {node: '>=6'}
-    dev: false
 
   /type-fest/0.6.0:
     resolution: {integrity: sha512-q+MB8nYR1KDLrgr4G5yemftpMC7/QLqVndBmEEdqzmNj5dcFOO4Oo8qlwZE3ULT3+Zim1F8Kq4cBnikNhlCMlg==}
@@ -39963,6 +39838,7 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
+    dev: false
 
   /use/3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
@@ -40058,13 +39934,6 @@ packages:
     resolution: {integrity: sha512-M6w37eVCMMouJ9V/sdPGnC5H4uDr73/+xdq0FBLO3TFFX1+7wiUY6Es328NN+y43tmY+doUdN9g9J21vqB7iLw==}
     dependencies:
       builtins: 1.0.3
-    dev: false
-
-  /validate-npm-package-name/5.0.0:
-    resolution: {integrity: sha512-YuKoXDAhBYxY7SfOKxHBDoSyENFeW5VvIIQp2TGQuit8gpK6MnWaQelBKxso72DoxTZfZdcP3W90LqpSkgPzLQ==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dependencies:
-      builtins: 5.0.1
     dev: false
 
   /validator/13.7.0:
@@ -40242,11 +40111,10 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.14.1_hjemcocyspwkenofjo4wnksrci:
+  /vite-plugin-pwa/0.14.1_vite@4.3.9:
     resolution: {integrity: sha512-5zx7yhQ8RTLwV71+GA9YsQQ63ALKG8XXIMqRJDdZkR8ZYftFcRgnzM7wOWmQZ/DATspyhPih5wCdcZnAIsM+mA==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
-      workbox-window: ^6.5.4
     dependencies:
       '@rollup/plugin-replace': 5.0.2_rollup@3.23.0
       debug: 4.3.4
@@ -40265,10 +40133,8 @@ packages:
     resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
     dev: true
 
-  /vite-plugin-web-extension/3.0.7_vite@4.3.9:
+  /vite-plugin-web-extension/3.0.7:
     resolution: {integrity: sha512-zi+Dd0WV7tiqqWM2kTowV5D1s+jy5rB76R6uN0gaoUDaz2QAhVcmBg/T7qF5p1g7SBjtvgclQggQ8uxglk+moQ==}
-    peerDependencies:
-      vite: ^4
     dependencies:
       ajv: 8.12.0
       async-lock: 1.4.0
@@ -40283,11 +40149,17 @@ packages:
       webextension-polyfill: 0.10.0
       yaml: 2.2.2
     transitivePeerDependencies:
+      - '@types/node'
       - body-parser
       - bufferutil
       - express
+      - less
       - safe-compare
+      - sass
+      - stylus
+      - sugarss
       - supports-color
+      - terser
       - utf-8-validate
     dev: true
 
@@ -40469,11 +40341,10 @@ packages:
       '@vue/shared': 3.2.47
     dev: true
 
-  /vuepress-plugin-auto-catalog/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-auto-catalog/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-imWdtiliNOrYZmJhjZnH3YU7VuR0FFtzZ7vyzHTQLZlRc9N5yryiYgYhmQbK4WCSNEdxfYRZbbFCEnSiHLbzpg==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40503,19 +40374,18 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-components: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-components: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-blog2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-blog2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-0OmYfWd6mxG2X1DUagd5sOhTjG65l0L8RV3L8Vhj9j/36If3UttRU7g6VdUjfIfxAWmInsIIwhUAskEez9PUfQ==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
       vuepress-webpack: 2.0.0-beta.61
@@ -40539,7 +40409,7 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
@@ -40553,11 +40423,10 @@ packages:
       - supports-color
     dev: true
 
-  /vuepress-plugin-comment2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-comment2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-AXvAmvRNdBEVsx105ykjB5EvNj0vIb4ny7RgM2BM0mXcWImxdKWaO8GGdzIu5Eqk/Aiv7FXJoBIJ6uhkxIfPuQ==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40588,18 +40457,17 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-components/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-components/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-pJd1oKVwHW/4eO2NeY9FSQWHo1pF8c0/rSrQLXPcnAaQojHG6QiLDdZ+EM4eGL3dHXixyIvT8wPU3IEOPlStqA==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40637,19 +40505,18 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-reading-time2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-reading-time2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-copy-code2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-copy-code2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-kWPye53Bxsy7BxxcTOglsBjjAmOuzq6niHUAeqnEokhPeDcBEwwFcXIDDI1yj94e0fPcfKf1iKxH2C18VKFgow==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40678,18 +40545,17 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-copyright2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-copyright2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-QCnu8BUy6SW3YTHgK8kU4WfKcrYfIOBTUG0D7HSqR/54y5ItKng4VsLG5hqruzwnRJoRPCnulJfoS7cGeEoBIQ==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
       vuepress-webpack: 2.0.0-beta.61
@@ -40712,13 +40578,13 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-feed2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-feed2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-tBNMyPWgPf71HIOlEvqEbb2Oq/WwYNzu9/imlMSyw4N+hnDuO3tSOPV/jOllhjMHG67KVR58YatrIDjE8PWatA==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
@@ -40737,19 +40603,17 @@ packages:
       '@vuepress/utils': 2.0.0-beta.61
       cheerio: 1.0.0-rc.12
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
       xml-js: 1.6.11
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - '@vuepress/client'
       - supports-color
     dev: true
 
-  /vuepress-plugin-md-enhance/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-md-enhance/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-k5pfWW/xZCg7wEYrXFLHSUr5Laqc0nlfUg+IFYDbBXbKpbN53UgGwe05mcctZUSXokBDNJDRX62+kb4wFq4xTw==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40807,18 +40671,17 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-photo-swipe/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-photo-swipe/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-yQICqlkEXC/PCkWVyqPkWSoT2FJ3yM1FQSNVNvAwP1WBIWlaCLnW896dVbCbwFfIStdgkfQW5//svqMI73l8sQ==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40847,18 +40710,17 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-pwa2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-pwa2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-P7DCMxNuTyj1P1BY+Wmkz9dtVPtrzwO3SSjSSan+f2d31ak7H4mWa16s8+6YzwNkkXViUW+YrOo19lwxZHRrRQ==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -40888,8 +40750,8 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
       workbox-build: 6.5.4
     transitivePeerDependencies:
       - '@types/babel__core'
@@ -40897,7 +40759,7 @@ packages:
       - supports-color
     dev: true
 
-  /vuepress-plugin-reading-time2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-reading-time2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-SrtJHCfFmKxYhJK+pvvnC8RyjM7CHsCa3egNyBLYqs1oLlypCFS2ocb0UE1k1EHhSOyKuA9MigO+W95E3esg+A==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
@@ -40915,10 +40777,9 @@ packages:
         optional: true
     dependencies:
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - '@vuepress/client'
       - supports-color
     dev: true
 
@@ -40942,13 +40803,13 @@ packages:
       '@vuepress/utils': 2.0.0-beta.61
       vue: 3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
       - supports-color
     dev: true
 
-  /vuepress-plugin-sass-palette/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-sass-palette/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-xXA3fTD44W9pahejX79FQ0B9dIHbz5PzJ/8n7q0F4uep1/6j4BCKFDk1eyh+J9pBoTmZH+f9QxGxNZceGeOv2A==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
@@ -40973,14 +40834,13 @@ packages:
       chokidar: 3.5.3
       sass: 1.59.3
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - '@vuepress/client'
       - supports-color
     dev: true
 
-  /vuepress-plugin-seo2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-seo2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-xaDGK2+XA/pQA9RGBuvjhzgHm1+Bmo9FzPxrDe6WQa/7S3qJfyYhkEqEApDzPzHaIIKBjUB9fHyUb7N+MWOLfg==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
@@ -40998,14 +40858,13 @@ packages:
       '@vuepress/shared': 2.0.0-beta.61
       '@vuepress/utils': 2.0.0-beta.61
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - '@vuepress/client'
       - supports-color
     dev: true
 
-  /vuepress-plugin-sitemap2/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-plugin-sitemap2/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-yhLTRG67Sm0esVJHp+niS6CGUFBMoucxD7ul4D29fI0GIkK6634z5UDLD3TiJXbsRH32pbvURNGAHeZrJ1kYnA==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
@@ -41026,18 +40885,16 @@ packages:
       '@vuepress/utils': 2.0.0-beta.61
       sitemap: 7.1.1
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - '@vuepress/client'
       - supports-color
     dev: true
 
-  /vuepress-shared/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-shared/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-eTs6AT9w0djzsxNPPXiWK6lHcsS5AVnwRdu90/YthGkpPY2pGarN9KrtGX7+qVr+G4HS8v4Qu43+X+iDInNBgg==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
       vuepress-webpack: 2.0.0-beta.61
@@ -41070,11 +40927,10 @@ packages:
       - supports-color
     dev: true
 
-  /vuepress-theme-hope/2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe:
+  /vuepress-theme-hope/2.0.0-beta.197_vuepress@2.0.0-beta.61:
     resolution: {integrity: sha512-1mRhF4uk8bQaSYFjcJ+1hUHJ5OCHxHJVEzNWBHcgsDf4eqM/IYz+KXePwC9ndXAOOKPoKk6c1XAk5Nu5F3U7wA==}
     engines: {node: ^14.18.0 || >=16.0.0, npm: '>=8', pnpm: '>=7'}
     peerDependencies:
-      '@vuepress/client': 2.0.0-beta.61
       sass-loader: ^13.2.0
       vuepress: 2.0.0-beta.61
       vuepress-vite: 2.0.0-beta.61
@@ -41161,22 +41017,22 @@ packages:
       vue: 3.2.47
       vue-router: 4.1.6_vue@3.2.47
       vuepress: 2.0.0-beta.61_mxasr7fx7twrhhnursmb25rlzi
-      vuepress-plugin-auto-catalog: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-blog2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-comment2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-components: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-copy-code2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-copyright2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-feed2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-md-enhance: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-photo-swipe: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-pwa2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-reading-time2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-auto-catalog: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-blog2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-comment2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-components: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-copy-code2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-copyright2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-feed2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-md-enhance: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-photo-swipe: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-pwa2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-reading-time2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
       vuepress-plugin-rtl: 2.0.0-beta.197_vuepress@2.0.0-beta.61
-      vuepress-plugin-sass-palette: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-seo2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-plugin-sitemap2: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
-      vuepress-shared: 2.0.0-beta.197_44bug2q4gvgfsg4b36ccgweufe
+      vuepress-plugin-sass-palette: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-seo2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-plugin-sitemap2: 2.0.0-beta.197_vuepress@2.0.0-beta.61
+      vuepress-shared: 2.0.0-beta.197_vuepress@2.0.0-beta.61
     transitivePeerDependencies:
       - '@types/babel__core'
       - '@vue/composition-api'
@@ -42161,13 +42017,6 @@ packages:
       yargs-parser: 5.0.1
     dev: false
 
-  /yarn/1.22.19:
-    resolution: {integrity: sha512-/0V5q0WbslqnwP91tirOvldvYISzaqhClxzyUKXYxs07yUILIs5jx/k6CFe8bvKSkds5w+eiOqta39Wk3WxdcQ==}
-    engines: {node: '>=4.0.0'}
-    hasBin: true
-    requiresBuild: true
-    dev: false
-
   /yauzl/2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
     dependencies:
@@ -42345,5 +42194,3 @@ packages:
 
   /zwitch/2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
-
-# First generated on 2023-09-15T07:51:01.186Z by zhenya

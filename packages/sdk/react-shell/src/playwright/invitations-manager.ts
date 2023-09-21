@@ -149,6 +149,7 @@ export class InvitationsManager extends ShellManager {
     if (type === 'device') {
       await peer.getByTestId('join-identity').click();
     }
+    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).waitFor({ timeout: 500 });
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input`).type(invitation);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-input-continue`).click();
   }
