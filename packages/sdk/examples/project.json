@@ -12,6 +12,15 @@
         "{options.outputPath}"
       ]
     },
+    "bundle": {
+      "executor": "@nx/vite:build",
+      "options": {
+        "outputPath": "packages/sdk/examples/out/demo"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
@@ -30,6 +39,12 @@
       "outputs": [
         "packages/sdk/examples/src/proto/gen"
       ]
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "examples:bundle"
+      }
     },
     "storybook": {
       "configurations": {

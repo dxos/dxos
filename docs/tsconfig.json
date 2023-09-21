@@ -54,6 +54,9 @@
       "path": "../packages/sdk/react-client"
     },
     {
+      "path": "../packages/sdk/react-shell"
+    },
+    {
       "path": "../packages/sdk/vault"
     },
     {
