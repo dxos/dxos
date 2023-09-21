@@ -22,8 +22,8 @@ import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { inputSurface, mx } from '@dxos/aurora-theme';
 
-import { defaultTableSlots, TableSlots } from './theme';
-import { TableColumnDef, KeyValue } from './types';
+import { defaultTableSlots, TableSlots } from '../theme';
+import { TableColumnDef, KeyValue } from '../types';
 
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Drag-and-drop.
@@ -96,7 +96,6 @@ export type TableProps<TData extends RowData> = {
   debug?: boolean;
 } & TableSelection<TData>;
 
-// TODO(burdon): Rename Table.
 export const Table = <TData extends RowData>({ slots = defaultTableSlots, ...props }: TableProps<TData>) => {
   const {
     data = [],

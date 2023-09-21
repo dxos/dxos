@@ -15,9 +15,10 @@ message Table {
   option (object) = true;
 
   message Prop {
-    string id = 1; // TODO(burdon): Rename key.
-    string label = 2;
-    string refProp = 3;
+    string id = 1;
+    string prop = 2;
+    string label = 3;
+    string refProp = 4;
     int32 size = 10;
   }
 

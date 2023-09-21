@@ -7,7 +7,7 @@ import React from 'react';
 import '@dxosTheme';
 
 import { ColumnPanel } from './ColumnMenu';
-import { TableSchemaProp } from './schema';
+import { ColumnProps } from '../schema';
 
 export default {
   component: ColumnPanel,
@@ -18,7 +18,7 @@ export const Default = {
     column: {
       id: 'test',
       label: 'test',
-    } as TableSchemaProp,
+    } as ColumnProps,
   },
   decorators: [
     (Story: any) => (

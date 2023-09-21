@@ -6,19 +6,11 @@ import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import { HeaderContext, RowData } from '@tanstack/react-table';
 import React, { FC, PropsWithChildren, useRef, useState } from 'react';
 
-import { Button, DensityProvider, Input, Popover, Select, useId } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Popover, Select } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { TableSchema, TableSchemaProp } from './schema';
-
-const types = new Map<TableSchemaProp['type'], string>([
-  ['string', 'Text'],
-  ['boolean', 'Checkbox'],
-  ['number', 'Number'],
-  ['date', 'Date'],
-  ['ref', 'Reference'],
-]);
+import { TableDef, ColumnProps, columnTypes } from '../schema';
 
 const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
   <div role='none' className={mx('p-2', className)}>
@@ -28,10 +20,10 @@ const Section: FC<PropsWithChildren & { className?: string }> = ({ children, cla
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
-  schemas: TableSchema[];
-  schema: TableSchema;
-  column: TableSchemaProp;
-  onUpdate?: (id: string, column: TableSchemaProp) => void;
+  tableDefs: TableDef[];
+  tableDef: TableDef;
+  column: ColumnProps;
+  onUpdate?: (id: string, column: ColumnProps) => void;
   onDelete?: (id: string) => void;
 };
 
@@ -53,16 +45,15 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
 
 export const ColumnPanel = <TData extends RowData, TValue>({
   context,
-  schemas,
-  schema,
+  tableDefs,
+  tableDef,
   column,
   onUpdate,
   onDelete,
 }: ColumnMenuProps<TData, TValue>) => {
-  const typeSelectId = useId('columnMenu__type');
   const [open, setOpen] = useState(false);
   const [prop, setProp] = useState(column.id);
-  const [refSchema, setRefSchema] = useState(column.ref);
+  const [refTable, setRefTable] = useState(column.refTable);
   const [refProp, setRefProp] = useState(column.refProp);
   const [type, setType] = useState(String(column.type));
   const [label, setLabel] = useState(column.label);
@@ -82,26 +73,24 @@ export const ColumnPanel = <TData extends RowData, TValue>({
     }
 
     // If already exists then check same type.
-    const current = schema.props.find((c) => c.id !== column.id && c.id === prop);
+    const current = tableDef.columns.find((c) => c.id !== column.id && c.id === prop);
     if (current) {
-      console.log(current, column, prop);
-
-      // TODO(burdon): Allow multiple columns with different refProps.
-      if (!(current.type === 'ref' && current.ref !== column.ref)) {
+      // TODO(burdon): Allow multiple columns with different refProps. Ensure correct table prop is updated.
+      if (current.type !== 'ref' /* || current.ref !== refTable */) {
         // TODO(burdon): Show error.
         propRef.current?.focus();
         return;
       }
     }
 
-    onUpdate?.(column.id, {
-      ...column,
-      id: prop,
-      type: type as TableSchemaProp['type'],
-      digits: safeParseInt(digits),
-      ref: refSchema,
+    onUpdate?.(prop, {
+      id: prop, // TODO(burdon): Make unique.
+      prop,
       label,
+      type: type as ColumnProps['type'],
+      refTable,
       refProp,
+      digits: safeParseInt(digits),
     });
 
     setOpen(false);
@@ -124,7 +113,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     <Input.Label classNames='mbe-1'>Label</Input.Label>
                     <Input.TextInput
                       placeholder='Column label'
-                      value={label}
+                      value={label ?? ''}
                       onChange={(event) => setLabel(event.target.value)}
                       autoFocus
                     />
@@ -135,18 +124,18 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                       ref={propRef}
                       placeholder='Property key'
                       // TODO(burdon): Provide hooks for value normalization, ENTER, ESC, etc.
-                      value={prop}
+                      value={prop ?? ''}
                       onChange={(event) => setProp(event.target.value.replace(/[^\w_]/g, ''))}
                     />
                   </Input.Root>
-                  <Input.Root id={typeSelectId}>
+                  <Input.Root>
                     <Input.Label classNames='mbe-1 mbs-3'>Type</Input.Label>
                     <Select.Root value={type} onValueChange={setType}>
-                      <Select.TriggerButton placeholder='Type' classNames='is-full' id={typeSelectId} />
+                      <Select.TriggerButton placeholder='Type' classNames='is-full' />
                       <Select.Portal>
                         <Select.Content>
                           <Select.Viewport>
-                            {Array.from(types.entries()).map(([type, label]) => (
+                            {Array.from(columnTypes.entries()).map(([type, label]) => (
                               <Select.Option key={type} value={type}>
                                 {label}
                               </Select.Option>
@@ -164,7 +153,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                       <Input.Root>
                         <Input.Label classNames='mbe-1 mbs-3'>Decimal places</Input.Label>
                         {/* TODO(burdon): Constrain input to numbers. */}
-                        <Input.TextInput value={digits} onChange={(event) => setDigits(event.target.value)} />
+                        <Input.TextInput value={digits ?? ''} onChange={(event) => setDigits(event.target.value)} />
                       </Input.Root>
                     </Section>
                   </>
@@ -176,13 +165,13 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     <Section>
                       <Input.Root>
                         <Input.Label classNames='mbe-1 mbs-3'>Table</Input.Label>
-                        <Select.Root value={refSchema} onValueChange={setRefSchema}>
-                          <Select.TriggerButton placeholder='Table' classNames='is-full' id={typeSelectId} />
+                        <Select.Root value={refTable} onValueChange={setRefTable}>
+                          <Select.TriggerButton placeholder='Table' classNames='is-full' />
                           <Select.Portal>
                             <Select.Content>
                               <Select.Viewport>
-                                {schemas
-                                  .filter((s) => s.id !== schema.id)
+                                {tableDefs
+                                  .filter((t) => t.id !== tableDef.id)
                                   .map(({ id, name }) => (
                                     <Select.Option key={id} value={id}>
                                       {name ?? id}
@@ -194,17 +183,17 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                         </Select.Root>
                       </Input.Root>
 
-                      {refSchema && (
+                      {refTable && (
                         <Input.Root>
                           <Input.Label classNames='mbe-1 mbs-3'>Table property</Input.Label>
                           <Select.Root value={refProp} onValueChange={setRefProp}>
-                            <Select.TriggerButton placeholder='Property' classNames='is-full' id={typeSelectId} />
+                            <Select.TriggerButton placeholder='Property' classNames='is-full' />
                             <Select.Portal>
                               <Select.Content>
                                 <Select.Viewport>
-                                  {schemas
-                                    .find((schema) => schema.id === refSchema)
-                                    ?.props.map(({ id, label }) => (
+                                  {tableDefs
+                                    .find((tableDef) => tableDef.id === refTable)
+                                    ?.columns.map(({ id, label }) => (
                                       <Select.Option key={id} value={id}>
                                         {label ?? id}
                                       </Select.Option>

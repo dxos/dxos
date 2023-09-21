@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Table';
-
+export * from './components';
 export * from './helpers';
 export * from './schema';
 export * from './theme';
