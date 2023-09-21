@@ -5,9 +5,11 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-import { ThemeProvider } from '@dxos/aurora-theme';
+import { ThemeProvider } from '@dxos/aurora';
 
 render(
-  <ThemeProvider>{/* your components here */}</ThemeProvider>,
+  <ThemeProvider>
+    {/* your components using aurora here */}
+  </ThemeProvider>,
   document.getElementById('root'),
 );
