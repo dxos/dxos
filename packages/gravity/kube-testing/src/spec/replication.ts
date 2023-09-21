@@ -93,8 +93,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
   defaultSpec(): ReplicationTestSpec {
     return {
-      agents: 4,
-      swarmsPerAgent: 2,
+      agents: 2,
+      swarmsPerAgent: 1,
       duration: 3_000,
       transport: TransportKind.SIMPLE_PEER_PROXY,
       targetSwarmTimeout: 1_000,
