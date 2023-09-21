@@ -52,7 +52,7 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider tx={auroraTx}>
+      <ThemeProvider tx={auroraTx} themeMode='light'>
         <div className='demo'>
           <Tooltip.Provider>
             <div className='buttons'>
