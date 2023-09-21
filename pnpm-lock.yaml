@@ -248,6 +248,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/vault': workspace:*
       '@stackblitz/sdk': ^1.9.0
@@ -298,6 +299,7 @@ importers:
       '@dxos/protocols': link:../packages/core/protocols
       '@dxos/react-appkit': link:../packages/ui/react-appkit
       '@dxos/react-client': link:../packages/sdk/react-client
+      '@dxos/react-shell': link:../packages/sdk/react-shell
       '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/vault': link:../packages/sdk/vault
       '@stackblitz/sdk': 1.9.0
