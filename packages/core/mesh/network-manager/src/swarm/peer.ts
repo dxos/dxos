@@ -108,7 +108,10 @@ export class Peer {
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
-    if (this.connection && ![ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.connection.state)) {
+    if (
+      this.connection &&
+      ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
+    ) {
       log.info(`received offer when connection already in ${this.connection.state} state`);
       return { accept: false };
     }
@@ -173,11 +176,12 @@ export class Peer {
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
 
+    let answer: Answer;
     try {
       await this._connectionLimiter.connecting(sessionId);
       connection.initiate();
 
-      const answer = await this._signalMessaging.offer({
+      answer = await this._signalMessaging.offer({
         author: this.localPeerId,
         recipient: this.id,
         sessionId,
@@ -189,21 +193,51 @@ export class Peer {
         log('ignoring response');
         return;
       }
+    } catch (err: any) {
+      log('initiation error: send offer', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      await connection.abort(err);
+      throw err;
+    } finally {
+      this.initiating = false;
+    }
 
+    try {
       if (!answer.accept) {
         this._callbacks.onRejected();
         return;
       }
+    } catch (err: any) {
+      log('initiation error: accept answer', {
+        err,
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+      });
+      await connection.abort(err);
+      throw err;
+    } finally {
+      this.initiating = false;
+    }
+
+    try {
+      log('opening connection as initiator');
       await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
-      log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      log('initiation error: open connection', {
+        err,
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+      });
       if (err instanceof TimeoutError) {
         log.warn('aborting connection due to signalling failure');
         await connection.abort(err);
+      } else {
+        log.info('closing connection due to error on openConnection', { err });
+        // Calls `onStateChange` with CLOSED state.
+        await this.closeConnection(err);
       }
-      // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -297,7 +331,13 @@ export class Peer {
     this._connectionCtx = this._ctx.derive();
 
     connection.errors.handle((err) => {
-      log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
+      log.warn('connection error, closing', {
+        topic: this.topic,
+        peerId: this.localPeerId,
+        remoteId: this.id,
+        initiator,
+        err,
+      });
       log.trace('dxos.mesh.connection.error', {
         topic: this.topic,
         localPeerId: this.localPeerId,
@@ -342,12 +382,12 @@ export class Peer {
   }
 
   @synchronized
-  async destroy() {
+  async destroy(reason?: Error) {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
     // Won't throw.
-    await this?.connection?.close();
+    await this?.connection?.close(reason);
   }
 }
 
