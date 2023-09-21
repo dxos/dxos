@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Index } from 'lunr';
+import { existsSync, readFileSync } from 'node:fs';
+
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -11,6 +14,19 @@ import { AbstractPlugin } from '../plugin';
 
 export class Indexing extends AbstractPlugin {
   private readonly _ctx = new Context();
+  private readonly _index?: Index;
+
+  constructor(private readonly _indexPath: string) {
+    super();
+    if (existsSync(_indexPath)) {
+      try {
+        const serializedIndex = readFileSync(_indexPath, { encoding: 'utf8' });
+        this._index = Index.load(JSON.parse(serializedIndex));
+      } catch (error) {
+        log.warn('Failed to load index from file:', { error });
+      }
+    }
+  }
 
   async open(): Promise<void> {
     log.info('Opening indexing plugin...');
@@ -27,9 +43,9 @@ export class Indexing extends AbstractPlugin {
 
         this._ctx.onDispose(unsubscribe);
       })
-      .catch((error: Error) => {
-        log.catch(error);
-      });
+      .catch((error: Error) => log.catch(error));
+
+    this.indexSpaces().catch((error: Error) => log.catch(error));
   }
 
   async close(): Promise<void> {
@@ -37,7 +53,7 @@ export class Indexing extends AbstractPlugin {
   }
 
   async indexSpaces(): Promise<void> {
-    log.info('Indexing spaces...');
+    
   }
 
   _processMessage(message: GossipMessage) {

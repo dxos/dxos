@@ -3,8 +3,9 @@
 //
 
 import { expect } from 'chai';
-import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { Builder, Index } from 'lunr';
+import MiniSearch, { Options } from 'minisearch';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { afterTest, describe, test } from '@dxos/test';
@@ -12,12 +13,27 @@ import { afterTest, describe, test } from '@dxos/test';
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
 describe('Indexing', () => {
+  const documents = [
+    {
+      '@id': 1,
+      hello: 'world',
+      foo: 'bar',
+    },
+    {
+      '@id': 2,
+      nested: {
+        deep: { foo: 'asdf bar' },
+      },
+    },
+  ];
+
   /**
    * Test lunr search.
    * @see https://lunrjs.com/guides/index_prebuilding.html
    */
   test('lunr search', async () => {
     const lunr = new Builder();
+    lunr.ref('@id');
     lunr.metadataWhitelist.push('position');
     lunr.field('hello');
     lunr.field('foo');
@@ -26,17 +42,7 @@ describe('Indexing', () => {
         return doc?.nested?.deep?.foo;
       },
     });
-    lunr.add({
-      id: 1,
-      hello: 'world',
-      foo: 'bar',
-    });
-    lunr.add({
-      id: 2,
-      nested: {
-        deep: { foo: 'asdf bar' },
-      },
-    });
+    documents.forEach((doc) => lunr.add(doc));
     const index = lunr.build();
 
     const check = (index: Index) => {
@@ -65,6 +71,47 @@ describe('Indexing', () => {
       // Read index from file.
       const readJson = JSON.parse(readFileSync(file, 'utf8'));
       const readIndex = Index.load(readJson);
+      check(readIndex);
+    }
+  });
+
+  /**
+   * Test MiniSearch.
+   * @see https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
+   */
+  test('minisearch', async () => {
+    const opts: Options = {
+      fields: ['hello', 'foo', 'nested.deep.foo'],
+      extractField: (document: any, fieldName: string) => {
+        return fieldName.split('.').reduce((doc, key) => doc && doc[key], document);
+      },
+      idField: '@id',
+    };
+    const miniSearch = new MiniSearch(opts);
+
+    miniSearch.addAll(documents);
+
+    const check = (index: MiniSearch) => {
+      const searchResult = index.search('bar');
+      expect(searchResult).to.have.lengthOf(2);
+      expect(searchResult.find((r) => r.id === 1)?.match.bar).to.deep.equal(['foo']);
+      expect(searchResult.find((r) => r.id === 2)?.match.bar).to.deep.equal(['nested.deep.foo']);
+    };
+
+    check(miniSearch);
+
+    const file = path.join(TEST_DIR, 'index.json');
+    {
+      // Write index to file.
+      const json = miniSearch.toJSON();
+      mkdirSync(TEST_DIR, { recursive: true });
+      writeFileSync(file, JSON.stringify(json, null, 2), { encoding: 'utf8' });
+      afterTest(() => unlinkSync(file));
+    }
+
+    {
+      // Read index from file.
+      const readIndex = MiniSearch.loadJSON(readFileSync(file, 'utf8'), opts);
       check(readIndex);
     }
   });
