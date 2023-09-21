@@ -68,7 +68,7 @@ export class GraphBuilder {
   }
 
   /**
-   * Updates the Node's add method to filter out builders that have already been applied.
+   * Updates the Node's `addNode` method to filter out builders that have already been applied.
    */
   // TODO(burdon): Explain why this is needed.
   private _filterBuilders(

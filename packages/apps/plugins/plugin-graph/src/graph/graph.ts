@@ -19,7 +19,10 @@ export class GraphImpl {
   constructor(private readonly _root: Graph.Node) {}
 
   // TODO(burdon): Traverse.
-  // toJSON() {}
+  toJSON() {
+    const obj = {};
+    return obj;
+  }
 
   get root(): Graph.Node {
     return this._root;
@@ -42,15 +45,16 @@ export class GraphImpl {
     return path.length > 0 ? get(this._root, path) : this._root;
   }
 
-  traverse({ from = this._root, direction = 'down', predicate, onVisitNode }: Graph.TraverseOptions): void {
-    if (!predicate || predicate(from)) {
-      onVisitNode?.(from);
+  // TODO(burdon): https://www.npmjs.com/package/unist-util-visit.
+  traverse({ node = this._root, direction = 'down', filter, visitor }: Graph.TraverseOptions): void {
+    if (!filter || filter(node)) {
+      visitor?.(node);
     }
 
     if (direction === 'down') {
-      Object.values(from.children).forEach((child) => this.traverse({ from: child, predicate, onVisitNode }));
-    } else if (direction === 'up' && from.parent) {
-      this.traverse({ from: from.parent, direction, predicate, onVisitNode });
+      Object.values(node.children).forEach((child) => this.traverse({ node: child, filter, visitor }));
+    } else if (direction === 'up' && node.parent) {
+      this.traverse({ node: node.parent, direction, filter, visitor });
     }
   }
 }

@@ -11,7 +11,6 @@ import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
 import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
-import { defaultMap } from '@dxos/util';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
@@ -25,6 +24,7 @@ export type GraphNodeAdapterOptions<T extends TypedObject> = {
   createGroup?: (parent: Graph.Node) => Graph.Node;
 };
 
+// TODO(burdon): Reconcile with GraphNodeBuilder.
 export class GraphNodeAdapter<T extends TypedObject> {
   private readonly _queries = new Map<string, Query<T>>();
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
@@ -79,12 +79,12 @@ export class GraphNodeAdapter<T extends TypedObject> {
       return;
     }
 
+    if (this._subscriptions.has(space.key.toHex())) {
+      return;
+    }
+
     // TODO(burdon): Do we need to cache here or be re-entrant (per space)?
-    const query = defaultMap(
-      this._queries,
-      space.key.toHex(),
-      () => space.db.query<T>(this._filter as any), // TODO(burdon): Fix types.
-    );
+    const query = space.db.query<T>(this._filter as any); // TODO(burdon): Fix types.
     this._previousObjects.set(space.key.toHex(), query.objects);
 
     // TODO(burdon): Provided by graph?

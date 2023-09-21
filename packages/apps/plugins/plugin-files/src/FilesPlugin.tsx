@@ -99,7 +99,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             const active = treeViewPlugin.provides.treeView.active;
             const path =
               active &&
-              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
+              graphPlugin.provides
+                .graph()
+                .getPath(active)
+                ?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
             const current =
               (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {

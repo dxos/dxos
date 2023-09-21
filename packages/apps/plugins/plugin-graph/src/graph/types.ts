@@ -147,7 +147,7 @@ export namespace Graph {
     /**
      * The node to start traversing from. Defaults to the root node.
      */
-    from?: Node;
+    node?: Node;
 
     /**
      * The direction to traverse the graph. Defaults to 'down'.
@@ -155,14 +155,14 @@ export namespace Graph {
     direction?: 'up' | 'down';
 
     /**
-     * A predicate to filter nodes which are passed to the `onVisitNode` callback.
+     * A predicate to filter nodes which are passed to the `visitor` callback.
      */
-    predicate?: (node: Node) => boolean;
+    filter?: (node: Node) => boolean;
 
     /**
      * A callback which is called for each node visited during traversal.
      */
-    onVisitNode?: (node: Node) => void;
+    visitor?: (node: Node) => void;
   };
 
   /**

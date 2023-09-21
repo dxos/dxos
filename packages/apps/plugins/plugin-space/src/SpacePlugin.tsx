@@ -111,20 +111,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const space = await new Promise<Space | undefined>((resolve) => {
+          state.active = await new Promise<Space | undefined>((resolve) => {
             graphPlugin?.provides.graph().traverse({
-              from: treeView.activeNode,
+              node: treeView.activeNode,
               direction: 'up',
-              onVisitNode: (node) => {
+              visitor: (node) => {
                 if (isSpace(node.data)) {
                   resolve(node.data);
                 }
               },
             });
+
             resolve(undefined);
           });
-
-          state.active = space;
         }),
       );
 

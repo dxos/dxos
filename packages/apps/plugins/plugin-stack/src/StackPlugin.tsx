@@ -48,7 +48,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       }
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const graph = graphPlugin?.provides.graph;
+      const graph = graphPlugin?.provides.graph();
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
         dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {

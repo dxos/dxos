@@ -170,7 +170,7 @@ describe('Graph', () => {
 
     const graph = builder.build();
     const nodes: string[] = [];
-    graph.traverse({ onVisitNode: (node) => nodes.push(node.id) });
+    graph.traverse({ visitor: (node) => nodes.push(node.id) });
     expect(nodes).to.deep.equal(['root', 'root-test1', 'root-test2', 'root-test2-test1']);
   });
 
@@ -182,8 +182,8 @@ describe('Graph', () => {
     const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({
-      predicate: (node) => node.id.includes('test1'),
-      onVisitNode: (node) => nodes.push(node.id),
+      filter: (node) => node.id.includes('test1'),
+      visitor: (node) => nodes.push(node.id),
     });
     expect(nodes).to.deep.equal(['root-test1', 'root-test2-test1']);
   });
@@ -196,8 +196,8 @@ describe('Graph', () => {
     const graph = builder.build();
     const nodes: string[] = [];
     graph.traverse({
-      from: graph.root.childrenMap['root-test2'],
-      onVisitNode: (node) => nodes.push(node.id),
+      node: graph.root.childrenMap['root-test2'],
+      visitor: (node) => nodes.push(node.id),
     });
     expect(nodes).to.deep.equal(['root-test2', 'root-test2-test1']);
   });
@@ -211,8 +211,8 @@ describe('Graph', () => {
     const nodes: string[] = [];
     graph.traverse({
       direction: 'up',
-      from: graph.root.childrenMap['root-test2'].childrenMap['root-test2-test1'],
-      onVisitNode: (node) => nodes.push(node.id),
+      node: graph.root.childrenMap['root-test2'].childrenMap['root-test2-test1'],
+      visitor: (node) => nodes.push(node.id),
     });
     expect(nodes).to.deep.equal(['root-test2-test1', 'root-test2', 'root']);
   });

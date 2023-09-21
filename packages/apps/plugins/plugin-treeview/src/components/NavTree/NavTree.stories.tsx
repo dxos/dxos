@@ -59,7 +59,7 @@ const mosaicAcc: MosaicState = {
 const navTreeId = 'navTree';
 
 graph.traverse({
-  onVisitNode: (node) => {
+  visitor: (node) => {
     const level = getLevel(node, -1);
     const id = getDndId(navTreeId, node.id);
     mosaicAcc.tiles[id] = {
@@ -78,7 +78,7 @@ graph.traverse({
 });
 
 graph.traverse({
-  onVisitNode: (node) => {
+  visitor: (node) => {
     const id = getDndId(navTreeId, node.id);
     if (node.children && node.children.length) {
       node.children.forEach((child) => {

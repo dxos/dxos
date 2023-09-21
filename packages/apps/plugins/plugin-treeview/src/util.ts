@@ -93,7 +93,7 @@ export const computeTreeViewMosaic = (graph: GraphImpl, appState: AppState, onSe
   const mosaic: MosaicState = { tiles: {}, relations: {} };
 
   graph.traverse({
-    onVisitNode: (node) => {
+    visitor: (node) => {
       const level = getLevel(node, -1);
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
       mosaic.tiles[id] = onSetTile(
@@ -122,7 +122,7 @@ export const computeTreeViewMosaic = (graph: GraphImpl, appState: AppState, onSe
   });
 
   graph.traverse({
-    onVisitNode: (node) => {
+    visitor: (node) => {
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
       if (node.children && node.children.length) {
         node.children.forEach((child) => {

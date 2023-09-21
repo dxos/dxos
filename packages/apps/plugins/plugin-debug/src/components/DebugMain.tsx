@@ -24,6 +24,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
+import { GraphImpl } from '@braneframe/plugin-graph';
 import { Button, DensityProvider, Input, Main, useThemeContext } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
@@ -63,9 +64,11 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
   );
 };
 
-export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
+export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ data: { graph, space } }) => {
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
+
+  console.log('###', JSON.stringify(graph));
 
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
