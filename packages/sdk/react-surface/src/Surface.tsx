@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
+import React, { FC, PropsWithChildren, createContext, useContext, forwardRef, Ref } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { Plugin } from './Plugin';
@@ -67,7 +67,12 @@ const SurfaceContext = createContext<SurfaceContextValue | null>(null);
 
 // If component is specified in props or context, grab a component by name.
 // Otherwise, iterate through plugins where `plugin.provides.component(data)` returns something.
-const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
+const resolveComponents = (
+  plugins: Plugin[],
+  props: SurfaceProps,
+  context: SurfaceContextValue | null,
+  forwardedRef: Ref<HTMLElement>,
+) => {
   const componentName = props.component ?? (props.name && context?.surfaces?.[props.name]?.component);
   const data = props.data ?? (props.name && context?.surfaces?.[props.name]?.data);
   const role = props.role ?? (props.name && context?.surfaces?.[props.name]?.role);
@@ -75,18 +80,18 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
     const Component = findComponent(plugins, componentName);
     return Component
       ? [
-          <Component key={componentName} {...{ data, role }}>
+          <Component key={componentName} {...{ data, role }} ref={forwardedRef}>
             {props.children ?? null}
           </Component>,
         ]
       : [];
   } else if (Array.isArray(componentName)) {
     const components = componentName
-      .map((name) => {
+      .map((name, index) => {
         const Component = findComponent(plugins, name);
         return (
           Component && (
-            <Component key={name} {...{ data, role }}>
+            <Component key={name} {...{ data, role }} ref={forwardedRef}>
               {props.children ?? null}
             </Component>
           )
@@ -96,11 +101,11 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
     return props.limit ? components.slice(0, props.limit) : components;
   } else {
     const components = plugins
-      .map((plugin) => {
+      .map((plugin, index) => {
         const Component = plugin.provides.component?.(data, role);
         return (
           Component && (
-            <Component key={plugin.meta.id} {...{ data, role }}>
+            <Component key={plugin.meta.id} {...{ data, role }} ref={forwardedRef}>
               {props.children ?? null}
             </Component>
           )
@@ -122,7 +127,7 @@ const findComponent = (plugins: Plugin[], name: string): FC<PropsWithChildren<an
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = (props: SurfaceProps) => {
+export const Surface = forwardRef<HTMLElement, SurfaceProps>((props: SurfaceProps, forwardedRef) => {
   const context = useContext(SurfaceContext);
   const data = props.data ?? (props.name && context?.surfaces?.[props.name]?.data);
   const fallback = props.fallback ?? (props.name && context?.surfaces?.[props.name]?.fallback);
@@ -134,16 +139,16 @@ export const Surface = (props: SurfaceProps) => {
           <SurfaceResolver {...props} />
         </ErrorBoundary>
       ) : (
-        <SurfaceResolver {...props} />
+        <SurfaceResolver {...props} ref={forwardedRef} />
       )}
     </>
   );
-};
+});
 
-const SurfaceResolver = (props: SurfaceProps) => {
+const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props: SurfaceProps, forwardedRef) => {
   const { plugins } = usePlugins();
   const parent = useContext(SurfaceContext);
-  const components = resolveComponents(plugins, props, parent);
+  const components = resolveComponents(plugins, props, parent, forwardedRef);
   const currentContext = {
     ...((props.name && parent?.surfaces?.[props.name]) ?? {}),
     ...props,
@@ -151,4 +156,4 @@ const SurfaceResolver = (props: SurfaceProps) => {
   };
 
   return <SurfaceContext.Provider value={currentContext}>{components}</SurfaceContext.Provider>;
-};
+});

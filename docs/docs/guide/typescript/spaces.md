@@ -39,7 +39,16 @@ const client = new Client();
   await client.initialize();
   // get a list of all spaces
   const spaces = client.spaces.get();
-})()
+})();
+```
+
+## Default Space
+
+Whenever an Identity is created, a Space is automatically created and marked as the **default Space**. In order to get the default space:
+
+```ts file=./snippets/obtain-space.ts#L16-17
+// get the default space
+const defaultSpace = client.spaces.default;
 ```
 
 ## Creating an invitation
@@ -67,7 +76,7 @@ const client = new Client();
   // side-channel and they'll send it to us over the new connection which
   // will verify that it's secure.
   const authCode = invitation.get().authCode;
-})()
+})();
 ```
 
 ## Accepting invitations

@@ -11,7 +11,7 @@ import { exec } from '@dxos/process';
 
 import { BaseCommand } from '../../base-command';
 
-export const APP_TEMPLATES = ['hello', 'bare'];
+export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
 
 // TODO(zhenyasav): factor this out into @dxos/fs or something (along with 'exists' from plate?)
 const isDirEmpty = async (dirpath: string) => {
@@ -51,6 +51,7 @@ export default class Create extends BaseCommand<typeof Create> {
   async run(): Promise<any> {
     const { default: bare, isDxosMonorepoSync } = await import('@dxos/bare-template');
     const { default: hello } = await import('@dxos/hello-template');
+    const { default: tasks } = await import('@dxos/tasks-template');
     const { fileExists } = await import('@dxos/plate');
 
     const { name } = this.args;
@@ -75,6 +76,7 @@ export default class Create extends BaseCommand<typeof Create> {
     const templates = {
       bare,
       hello,
+      tasks,
     };
 
     const monorepo = isDxosMonorepoSync();

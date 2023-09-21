@@ -27,7 +27,7 @@ export const EditorSection = ({
       slots={{
         root: {
           role: 'none',
-          className: mx(focusRing, 'shrink-0 grow flex flex-col'),
+          className: mx(focusRing, 'min-bs-[10rem] shrink-0 grow flex flex-col'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {

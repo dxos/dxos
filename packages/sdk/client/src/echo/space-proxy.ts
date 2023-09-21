@@ -86,7 +86,11 @@ export class SpaceProxy implements Space {
 
     invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);
-    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this._itemManager, this.key);
+    this._dbBackend = new DatabaseProxy({
+      service: this._clientServices.services.DataService,
+      itemManager: this._itemManager,
+      spaceKey: this.key,
+    });
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias

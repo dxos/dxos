@@ -113,7 +113,11 @@ export class DatabaseTestPeer {
     }
 
     this.items = new ItemManager(this.modelFactory);
-    this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), this.items, SPACE_KEY);
+    this.proxy = new DatabaseProxy({
+      service: this.host.createDataServiceHost(),
+      itemManager: this.items,
+      spaceKey: SPACE_KEY,
+    });
     await this.proxy.open(this.modelFactory);
   }
 

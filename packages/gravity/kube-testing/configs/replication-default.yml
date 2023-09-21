@@ -1,0 +1,14 @@
+agents: 2
+swarmsPerAgent: 1
+duration: 3000
+transport: SIMPLE_PEER_PROXY
+targetSwarmTimeout: 1000
+fullSwarmTimeout: 10000
+signalArguments:
+  - globalsubserver
+repeatInterval: 100
+feedsPerSwarm: 1
+feedAppendInterval: 0
+feedMessageSize: 500
+# feedLoadDuration: 10_000,
+feedMessageCount: 5000

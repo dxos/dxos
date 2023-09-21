@@ -45,6 +45,24 @@ export type TransportAgentConfig = {
 export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportAgentConfig> {
   signalBuilder = new SignalTestBuilder();
 
+  defaultSpec(): TransportTestSpec {
+    return {
+      agents: 4,
+      swarmsPerAgent: 10,
+      duration: 60_000,
+      transport: TransportKind.SIMPLE_PEER,
+      targetSwarmTimeout: 10_000,
+      fullSwarmTimeout: 60_000,
+      iterationDelay: 1_000,
+      streamsDelay: 60_000,
+      signalArguments: ['globalsubserver'],
+      repeatInterval: 5_000,
+      streamLoadInterval: 1,
+      streamLoadChunkSize: 5_000_000,
+      showPNG: true,
+    };
+  }
+
   async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 

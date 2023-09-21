@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren, RefAttributes } from 'react';
 
 /**
  * Props passed to a component by the `Surface` resolver.
@@ -10,7 +10,8 @@ import { FC, PropsWithChildren } from 'react';
 export type PluginComponentProps = PropsWithChildren<{
   data: any;
   role?: string;
-}>;
+}> &
+  RefAttributes<HTMLElement>;
 
 /**
  * Capabilities provided by a plugin.

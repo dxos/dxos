@@ -16,6 +16,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: false,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'pwa',
@@ -26,6 +27,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: false,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'dxosui',
@@ -36,6 +38,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: true,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'react',
@@ -46,6 +49,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: false,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'storybook',
@@ -56,6 +60,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: true,
     tailwind: false,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'tailwind',
@@ -66,6 +71,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: true,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'react-tailwind',
@@ -76,6 +82,7 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: false,
     tailwind: true,
     createFolder: false,
+    proto: true,
   },
   {
     name: 'max',
@@ -86,5 +93,6 @@ export const scenarios: InputOf<typeof template>[] = [
     storybook: true,
     tailwind: true,
     createFolder: false,
+    proto: true,
   },
 ];
