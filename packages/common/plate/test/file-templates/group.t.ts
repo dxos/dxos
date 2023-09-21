@@ -1,4 +1,4 @@
-import { template } from '..';
+import { template, plate } from '..';
 
 export default template().group((context) => [
   template().text({
@@ -9,6 +9,6 @@ export default template().group((context) => [
     .slots({ name: 'foo' })
     .text({
       path: 'content-2.md',
-      content: ({ slots }) => `content was slots ${slots?.name}`,
+      content: ({ slots }) => plate`content was slots ${slots?.name}`,
     }),
 ]);
