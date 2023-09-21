@@ -72,3 +72,7 @@ A specific point in time when the members of a [space](#space) agree to drop or 
 ### PWA
 
 [Progressive Web App](https://en.wikipedia.org/wiki/Progressive_web_app).
+
+### Shell
+
+The vault implements a few generic UI flows for managing spaces, membership, and identity. The shell can be invoked by the dxos client API and is rendered by the Vault in an iframe, minimizing impact to the consuming application.

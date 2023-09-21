@@ -30,6 +30,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@stackblitz/sdk": "^1.9.0",
