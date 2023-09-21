@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.1](https://github.com/dxos/dxos/compare/v0.2.0...v0.2.1) (2023-09-21)
+
+
+### Features
+
+* Make batching configurable ([#4280](https://github.com/dxos/dxos/issues/4280)) ([c9d16ae](https://github.com/dxos/dxos/commit/c9d16ae30fbaa7155ac3a2b8759910079edd60ea))
+* make proto codegen a feature in templates ([#4276](https://github.com/dxos/dxos/issues/4276)) ([617b24c](https://github.com/dxos/dxos/commit/617b24c7c3ef45bede8256813c0aeee890c6ea04))
+* prettify live demo for website ([#4294](https://github.com/dxos/dxos/issues/4294)) ([9c7e801](https://github.com/dxos/dxos/commit/9c7e8011217f15b6a051fb64eb9287d379043897))
+* testbench enhancements ([#4275](https://github.com/dxos/dxos/issues/4275)) ([c06c65d](https://github.com/dxos/dxos/commit/c06c65d33037cad834790c39e7ae1b5e2d1932e1))
+
+
+### Bug Fixes
+
+* **aurora-table:** Popover content & borders ([#4299](https://github.com/dxos/dxos/issues/4299)) ([864bb49](https://github.com/dxos/dxos/commit/864bb497affaeeaec08d68dfc75c08e5074626ac))
+* **aurora-theme:** Fix Labs theme override, remove redundant style ([#4296](https://github.com/dxos/dxos/issues/4296)) ([c0cd511](https://github.com/dxos/dxos/commit/c0cd511d1785671991020f7466f624c0b42027bb))
+* **cli:** Delete dependency with vulnerability ([#4292](https://github.com/dxos/dxos/issues/4292)) ([1c7a1b5](https://github.com/dxos/dxos/commit/1c7a1b58a24a05c6bde8bd0aef4acda66e22cd34))
+* **cli:** Fix security vulnerabilities ([#4278](https://github.com/dxos/dxos/issues/4278)) ([0d1583e](https://github.com/dxos/dxos/commit/0d1583ee25da9e543627167327b532981cb85558))
+* Fix conform version in root package.json ([#4279](https://github.com/dxos/dxos/issues/4279)) ([315a800](https://github.com/dxos/dxos/commit/315a800c1e775dc3066a8340320bb6298519bcb7))
+* **halo-app:** vault styles ([#4288](https://github.com/dxos/dxos/issues/4288)) ([310641e](https://github.com/dxos/dxos/commit/310641eb19c7342ba072c568fa2aecea3fc29e87))
+* **plugin-space:** visiting computation ([#4281](https://github.com/dxos/dxos/issues/4281)) ([be48707](https://github.com/dxos/dxos/commit/be487074bf0ffe719b01b38ccbfb0e9404bc7b5c))
+
 ## [0.2.0](https://github.com/dxos/dxos/compare/v0.1.57...v0.2.0) (2023-09-18)
 
 
