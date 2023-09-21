@@ -1,6 +1,7 @@
 ---
 order: 15
 ---
+
 # Shell
 
 The shell is a set of components and pre-built workflows for managing [ECHO](../platform) spaces, invitations, and identity.
@@ -10,11 +11,12 @@ It runs as part of the vault and renders within the vault iframe controlled by D
 The shell can be invoked via the client API.
 
 Scenarios:
-- View and edit the user's basic profile
-- Invite someone to a space
-- Accept an invitation to join another space
-- Join another device to the user's HALO identity
-- Accept a device invitation to join the current device to an existing HALO identity
+
+*   View and edit the user's basic profile
+*   Invite someone to a space
+*   Accept an invitation to join another space
+*   Join another device to the user's HALO identity
+*   Accept a device invitation to join the current device to an existing HALO identity
 
 The shell appears overtop the calling UI and looks like a full screen dialog panel.
 
@@ -27,6 +29,7 @@ The shell appears overtop the calling UI and looks like a full screen dialog pan
 </div>
 
 ## Installation
+
 Shell is part of the DXOS client:
 
 ```bash
@@ -73,6 +76,8 @@ const Component = () => {
         });
       }}
     ></div>
+  );
+};
 ```
 
 See more in the [API documentation](../../api/@dxos/client/classes/Client.md#shell) for the Shell.

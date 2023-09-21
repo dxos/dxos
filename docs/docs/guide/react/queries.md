@@ -61,13 +61,14 @@ Arguments:
 
 It's possible to obtain strongly typed objects from `useQuery<T>`.
 
-Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject). 
+Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject).
 
 DXOS provides a tool to generate these types from a schema definition file.
 
 ::: details Benefits of schema declarations
-- ability to generate type-safe data access code, which makes development faster and safer.
-:::
+
+*   ability to generate type-safe data access code, which makes development faster and safer.
+    :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -100,14 +101,17 @@ Note the directives `option (object) = true;` which instruct the framework to ge
 Using a tool called `dxtype` from `@dxos/echo-typegen` we can generate corresponding classes for use with DXOS Client.
 
 Install the `dxtype` tool as a dev dependency:
+
 ```bash
 npm install --save-dev @dxos/echo-typegen
 ```
+
 Install base types for the generated code:
-```
-npm install @dxos/echo-schema
-```
+
+    npm install @dxos/echo-schema
+
 Now scripts have access to `dxtype`:
+
 ```bash
 dxtype <input protobuf file> <output typescript file>
 ```
@@ -156,6 +160,7 @@ For example, defining types in a folder named `schema`:
 
 The schema protobuf file:
 ::: details schema/schema.proto
+
 ```protobuf{6,13} file=./snippets/schema.proto
 syntax = "proto3";
 
@@ -175,10 +180,12 @@ message TaskList {
   repeated Task tasks = 2;
 }
 ```
+
 :::
 
 The script in package.json:
 ::: details package.json
+
 ```json
 {
   "scripts": {
@@ -186,6 +193,7 @@ The script in package.json:
   }
 }
 ```
+
 :::
 
 After executing `npm run prebuild`, types are available in `schema/index.ts`:
