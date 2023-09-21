@@ -61,9 +61,13 @@ Arguments:
 
 It's possible to obtain strongly typed objects from `useQuery<T>`.
 
-Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject). DXOS provides a tool to generate these types from a schema definition file.
+Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject). 
 
-> There are many benefits to expressing the type schema of an application in a language-neutral and interoperable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
+DXOS provides a tool to generate these types from a schema definition file.
+
+::: details Benefits of schema declarations
+- ability to generate type-safe data access code, which makes development faster and safer.
+:::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -89,15 +93,24 @@ message TaskList {
 }
 ```
 
-Using a tool called `dxtype` from `@dxos/echo-typegen` we can generate corresponding classes for use with DXOS Client.
-
-```bash
-dxtype <input protobuf file> <output typescript file>
-```
-
 ::: note
 Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 :::
+
+Using a tool called `dxtype` from `@dxos/echo-typegen` we can generate corresponding classes for use with DXOS Client.
+
+Install the `dxtype` tool as a dev dependency:
+```bash
+npm install --save-dev @dxos/echo-typegen
+```
+Install base types for the generated code:
+```
+npm install @dxos/echo-schema
+```
+Now scripts have access to `dxtype`:
+```bash
+dxtype <input protobuf file> <output typescript file>
+```
 
 ::: info Tip
 If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
@@ -137,7 +150,45 @@ Declared are the ancestor class and specific fields on the type.
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
 :::
 
-To use the type declarations, simply import the relevant type like `Task` from the typescript location out of `dxtype` and pass it to `useQuery<T>`:
+To use the type declarations, simply import the relevant type like `Task` from the location where `dxtype` produces output and pass it to `useQuery<T>`.
+
+For example, defining types in a folder named `schema`:
+
+The schema protobuf file:
+::: details schema/schema.proto
+```proto{6,13} file=./snippets/schema.proto
+syntax = "proto3";
+
+package example.tasks;
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  bool completed = 2;
+}
+
+message TaskList {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 2;
+}
+```
+:::
+
+The script in package.json:
+::: details package.json
+```json
+{
+  "scripts": {
+    "prebuild": "dxtype schema/schema.proto schema/index.ts"
+  }
+}
+```
+:::
+
+After executing `npm run prebuild`, types are available in `schema/index.ts`:
 
 ```tsx{11,16} file=./snippets/use-query-typed.tsx#L5-
 import React from 'react';
