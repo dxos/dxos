@@ -2,22 +2,22 @@
 order: 20
 ---
 
-# UI Components
+# Aurora UI
 
 There are several open-source packages of UI components available:
 
 | Package                  | Description                                                                                                                                                                                                                                                      | Audience |
 | :----------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- |
-| `@dxos/react-components` | A set of pure components and tokens like colors and sizes that form a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application. |
-| `@dxos/react-shell`         | A set of components, pages, layouts and specific user workflows for working with [ECHO](../platform) [spaces](../glossary#space), invitations, and join-flows. Depends on `@dxos/react-components`. | Any react application using ECHO and HALO. |
-| `@dxos/react-appkit`     | A set of components, pages, and layouts that are shared across DXOS-owned applications like the [HALO app](../platform/halo) itself. | Applications built and operated by DXOS. |
+| `@dxos/aurora` | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application. |
+| `@dxos/aurora-theme` | A default theme for aurora | Any react application. |
+| `@dxos/react-shell`         | A set of components and specific workflows for managing [ECHO](../platform) spaces, invitations, and identity. | Any react application using ECHO and HALO. |
 
-## Installation
+## Aurora Installation
 
-To use components from any of the packages above, the main theme stylesheet needs to be imported from `@dxos/react-components`.
+Install the `@dxos/aurora` package with your package manager and follow steps below.
 
 ::: note
-Apps based on the DXOS [application templates](../cli/app-templates) have DXOS UI Components built-in by default.
+Apps based on the DXOS [application templates](../cli/app-templates) have Aurora built-in by default.
 :::
 
 ### With [Vite](https://vitejs.dev)
@@ -57,3 +57,17 @@ createRoot(document.getElementById('root')!).render(<main></main>);
 ::: tip Tip
 For best results, load `@dxosTheme` ahead of any other stylesheets.
 :::
+
+### With other bundlers
+
+The special `@dxosTheme` import will not be a available. Include the following stylesheet in your `index.html`:
+
+```
+node_modules/@dxos/aurora/dist/plugin/node/theme.css
+```
+
+## Using Aurora
+
+To use aurora components, ensure you have the `ThemeProvider` component somewhere in the tree above your usage:
+  
+  ```tsx file=./snippets/theme-provider.tsx#L5-
