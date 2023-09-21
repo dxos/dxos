@@ -9,13 +9,18 @@ import { useMosaic } from '../../mosaic';
 import { MosaicState, Tile } from '../../types';
 import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
-import { nextIndex } from '../util';
+import { nextRearrangeIndex } from '../util';
 
 export const useHandleMigrateDragStart = () => {
+  const { mosaic } = useMosaic();
   const dnd = useDnd();
-  const deps = [dnd];
+  const deps = [dnd, mosaic];
   return useCallback(({ active }: DragStartEvent) => {
+    const migrationClass = active?.data?.current?.migrationClass ?? null;
     dnd.activeMigrationClass = active?.data?.current?.migrationClass ?? null;
+    dnd.inhibitMigrationDestinationId = migrationClass
+      ? findMigrationDestination(active.data.current as Tile, migrationClass, mosaic)
+      : null;
   }, deps);
 };
 
@@ -26,15 +31,19 @@ export const useHandleMigrateDragEnd = () => {
   } = useMosaic();
   const dnd = useDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
-  return useCallback(({ active, over }: DragEndEvent, previousResult?: string | null) => {
-    let result = null;
+  return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
+    let result = previousResult;
     const activeId = active.id.toString();
     if (!previousResult && activeId && dnd.migrationDestinationId) {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
       // update active tile’s index
-      const index = nextIndex(getSubtiles(relations[dnd.migrationDestinationId].child, tiles), activeId, over?.id);
+      const index = nextRearrangeIndex(
+        getSubtiles(relations[dnd.migrationDestinationId].child, tiles),
+        activeId,
+        over?.id,
+      );
       tiles[activeId].index = index ?? tiles[activeId].index;
       // update active tile’s parent relation
       relations[activeId].parent = new Set([dnd.migrationDestinationId]);
@@ -86,7 +95,9 @@ export const useHandleMigrateDragOver = () => {
   return useCallback(({ over }: DragOverEvent) => {
     if (dnd.activeMigrationClass && over?.data?.current) {
       const overTile = over?.data?.current as Tile | undefined;
-      dnd.migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
+      const migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
+      dnd.migrationDestinationId =
+        migrationDestinationId === dnd.inhibitMigrationDestinationId ? null : migrationDestinationId;
     } else {
       dnd.migrationDestinationId = null;
     }

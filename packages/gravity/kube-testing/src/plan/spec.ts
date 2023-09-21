@@ -38,4 +38,5 @@ export interface TestPlan<S, C> {
   init(params: TestParams<S>): Promise<C[]>; // 1
   run(env: AgentEnv<S, C>): Promise<void>; // N
   finish(params: TestParams<S>, results: PlanResults): Promise<any>;
+  defaultSpec(): S;
 }

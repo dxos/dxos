@@ -15,7 +15,7 @@ export const baseSurface = 'bg-neutral-12 dark:bg-neutral-900';
 export const fixedSurface = 'bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur';
 
 // Cards, dialogs, other such groups.
-export const groupSurface = 'bg-neutral-50 dark:bg-neutral-850 border';
+export const groupSurface = 'bg-neutral-50 dark:bg-neutral-850';
 
 // Tooltips, popovers, menus, etc. – not dialogs.
 export const chromeSurface = 'bg-neutral-12 dark:bg-neutral-800';

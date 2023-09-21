@@ -31,7 +31,7 @@ export const FileUpload: FC<{
   }
 
   return (
-    <div className={mx('hidden md:flex shrink-0 flex-col')}>
+    <div className={mx('flex shrink-0 flex-col')}>
       <FileUploader
         name='file'
         types={fileTypes}
@@ -41,7 +41,7 @@ export const FileUpload: FC<{
         handleChange={handleUpdate}
       >
         <div className={mx('flex flex-col items-center cursor-pointer', classNames)}>
-          <FilePlus weight='thin' className={getSize(10)} />
+          <FilePlus weight='light' className={getSize(8)} />
         </div>
       </FileUploader>
     </div>

@@ -1,9 +1,8 @@
 ---
-label: Sample Code
 order: 30
 ---
 
-# Sample Code
+# Example Applications
 
 ## Composer
 
@@ -20,6 +19,14 @@ A build of Composer with experimental plugins and features.
 *   Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/labs-app)
 *   Run [Labs](http://labs.dxos.org) on `dxos.org`
     ![labs-app](../assets/images/composer-app.png)
+
+## Tasks
+
+A simple todo list app build with `dxos`.
+
+*   Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/tasks)
+*   Run [Tasks](http://tasks.dxos.org) on `dxos.org`
+    ![Tasks app demo shot](../assets/images/tasks-app.png)
 
 ## TodoMVC
 

@@ -15,6 +15,7 @@ import {
   useDragStart,
   useHandleRearrangeDragEnd,
 } from '../dnd';
+import { dropAnimations } from '../dnd/drop-animations';
 import { useHandleCopyDragEnd, useHandleCopyDragOver, useHandleCopyDragStart } from '../dnd/hooks/useHandleCopy';
 import {
   useHandleMigrateDragEnd,
@@ -33,24 +34,31 @@ const MosaicOverlayTile = ({ id }: { id: string }) => {
     getData,
     Delegator,
   } = useMosaic();
-  const Root = activeTile.variant === 'treeitem' ? List : 'div';
   return (
-    <Root role='none'>
+    <List role='none'>
       <Delegator data={getData(id)} tile={activeTile} isOverlay />
-    </Root>
+    </List>
   );
 };
 
 const MosaicOverlay = () => {
-  const { activeId } = useMosaicDnd();
-  console.log('[activeId]', activeId);
-  return <DragOverlay>{activeId ? <MosaicOverlayTile id={activeId} /> : null}</DragOverlay>;
+  const { activeId, overlayDropAnimation } = useMosaicDnd();
+  return (
+    <DragOverlay adjustScale={false} dropAnimation={dropAnimations[overlayDropAnimation]}>
+      {activeId ? <MosaicOverlayTile id={activeId} /> : null}
+    </DragOverlay>
+  );
 };
 
 const defaultMosaicContextValue: MosaicContextValue = {
   getData: () => ({}),
   mosaic: { tiles: {}, relations: {} },
   onMosaicChange: () => {},
+  copyTile: () => ({
+    id: 'never',
+    index: 'a0',
+    variant: 'card',
+  }),
   Delegator: () => null,
 };
 
@@ -81,12 +89,7 @@ const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   const handleCopyDragOver = useHandleCopyDragOver();
   useDragOver(handleCopyDragOver, [handleCopyDragOver]);
 
-  return (
-    <>
-      {children}
-      <MosaicOverlay />
-    </>
-  );
+  return <>{children}</>;
 };
 
 const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
@@ -116,6 +119,7 @@ const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) 
 export const Mosaic = {
   Provider: MosaicProvider,
   Root: MosaicRoot,
+  Overlay: MosaicOverlay,
   Tile,
   Stack,
   Card,

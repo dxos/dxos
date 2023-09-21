@@ -32,7 +32,9 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
   acc[id] = {
     id,
     index: `a${index}`,
-    ...(index === 0 ? { variant: 'stack', sortable: true } : { variant: 'card', copyClass: rearrangeMosaicId }),
+    ...(index === 0
+      ? { variant: 'stack', sortable: true }
+      : { variant: 'card', copyClass: new Set([rearrangeMosaicId]) }),
   };
   return acc;
 }, {});
@@ -41,7 +43,7 @@ const rearrangeIds = Object.keys(rearrangeTiles);
 
 const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
   (
-    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination },
+    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
     forwardedRef,
   ) => {
     const { label, description } = data;
@@ -52,7 +54,7 @@ const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDa
           groupSurface,
           surfaceElevation({ elevation: 'group' }),
           'rounded relative',
-          isActive && 'opacity-0',
+          isPreview ? 'opacity-50' : isActive && 'opacity-0',
         )}
         style={style}
         ref={forwardedRef}
@@ -117,10 +119,14 @@ export const Rearrange = {
           return rearrangeData[entityId];
         }}
         mosaic={rearrangeMosaic}
+        copyTile={(id, _toId, mosaic) => ({
+          ...mosaic.tiles[id],
+        })}
       >
         <Mosaic.Root id={rearrangeMosaicId}>
           <Mosaic.Tile {...(rearrangeMosaic.tiles[rearrangeRootId] as StackTile)} />
         </Mosaic.Root>
+        <Mosaic.Overlay />
       </Mosaic.Provider>
     );
   },
@@ -134,9 +140,7 @@ const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => 
   acc[id] = {
     id,
     index: `a${index}`,
-    ...(index === 0
-      ? { variant: 'stack', sortable: true, acceptCopyClass: new Set([rearrangeMosaicId]) }
-      : { variant: 'card' }),
+    ...(index === 0 ? { variant: 'stack', sortable: true, acceptCopyClass: rearrangeMosaicId } : { variant: 'card' }),
   };
   return acc;
 }, {});
@@ -181,7 +185,7 @@ export const Copy = {
           const [_, cardId] = parseDndId(id);
           const [stackId] = parseDndId(toId);
           const nextId = getDndId(stackId, cardId);
-          return { ...mosaic.tiles[id], id: nextId, copyClass: stackId };
+          return { ...mosaic.tiles[id], id: nextId, copyClass: new Set([stackId]) };
         }}
         getData={(dndId) => {
           const [_, entityId] = parseDndId(dndId);
@@ -202,6 +206,7 @@ export const Copy = {
             </Mosaic.Root>
           </div>
         </div>
+        <Mosaic.Overlay />
       </Mosaic.Provider>
     );
   },

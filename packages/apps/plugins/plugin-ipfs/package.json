@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-ipfs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",

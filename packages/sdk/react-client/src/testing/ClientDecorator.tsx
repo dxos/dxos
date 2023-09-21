@@ -19,6 +19,7 @@ export type ClientDecoratorOptions = {
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
+  className?: string;
 };
 
 /**
@@ -29,12 +30,17 @@ export type ClientDecoratorOptions = {
  * @returns {DecoratorFunction}
  */
 export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> => {
-  const { clients, count = 1, registerSignalFactory: register = true } = options;
+  const {
+    clients,
+    count = 1,
+    registerSignalFactory: register = true,
+    className = 'flex place-content-evenly',
+  } = options;
   register && registerSignalFactory();
 
   if (clients) {
     return (Story, context) => (
-      <div className='flex place-content-evenly'>
+      <div className={className}>
         {clients.map((client, index) => (
           <ClientContext.Provider key={index} value={{ client }}>
             {Story({ args: { id: index, count: clients.length, ...context.args } })}
@@ -45,7 +51,7 @@ export const ClientDecorator = (options: ClientDecoratorOptions = {}): Decorator
   }
 
   return (Story, context) => (
-    <div className='flex place-content-evenly'>
+    <div className={className}>
       {[...Array(count)].map((_, index) => (
         <ClientProvider key={index} services={services} fallback={() => <p>Loading</p>}>
           {Story({ args: { id: index, count, ...context.args } })}
