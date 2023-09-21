@@ -69,8 +69,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   defaultSpec(): EchoTestSpec {
     return {
-      agents: 5,
-      duration: 600_000,
+      agents: 4,
+      duration: 1_800_000,
       iterationDelay: 2000,
       epochPeriod: 8,
       // measureNewAgentSyncTime: true,
