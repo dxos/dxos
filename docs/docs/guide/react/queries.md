@@ -73,7 +73,7 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
-```proto{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=./snippets/schema.proto
 syntax = "proto3";
 
 package example.tasks;
@@ -156,7 +156,7 @@ For example, defining types in a folder named `schema`:
 
 The schema protobuf file:
 ::: details schema/schema.proto
-```proto{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=./snippets/schema.proto
 syntax = "proto3";
 
 package example.tasks;
@@ -190,7 +190,7 @@ The script in package.json:
 
 After executing `npm run prebuild`, types are available in `schema/index.ts`:
 
-```tsx{11,16} file=./snippets/use-query-typed.tsx#L5-
+```tsx{7,12} file=./snippets/use-query-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';

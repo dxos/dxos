@@ -76,7 +76,7 @@ DXOS provides a tool for conveniently generating entity classes (like `Task` abo
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
-```proto{6,13} file=../react/snippets/schema.proto
+```protobuf{6,13} file=../react/snippets/schema.proto
 syntax = "proto3";
 
 package example.tasks;
@@ -163,7 +163,7 @@ For example, defining types in a folder named `schema`:
 
 The schema protobuf file:
 ::: details schema/schema.proto
-```proto{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=./snippets/schema.proto
 syntax = "proto3";
 
 package example.tasks;
