@@ -71,7 +71,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       settings.prop(settings.values.$showHidden!, 'showHidden', LocalStorageStore.bool);
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN); // TODO(burdon): Const vs string?
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, TREE_VIEW_PLUGIN);
       if (!clientPlugin || !treeViewPlugin) {
         return;
@@ -112,7 +112,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const space = await new Promise<Space | undefined>((resolve) => {
-            graphPlugin?.provides.graph.traverse({
+            graphPlugin?.provides.graph().traverse({
               from: treeView.activeNode,
               direction: 'up',
               onVisitNode: (node) => {

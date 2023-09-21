@@ -21,6 +21,7 @@ export type GraphNodeAdapterOptions<T extends TypedObject> = {
   filter: Filter<T>;
   adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node;
   propertySubscriptions?: string[];
+  // TODO(burdon): ???
   createGroup?: (parent: Graph.Node) => Graph.Node;
 };
 
@@ -78,6 +79,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
       return;
     }
 
+    // TODO(burdon): Do we need to cache here or be re-entrant (per space)?
     const query = defaultMap(
       this._queries,
       space.key.toHex(),
@@ -116,7 +118,6 @@ export class GraphNodeAdapter<T extends TypedObject> {
     // Subscribe to all objects.
     query.objects.forEach((object, index) => {
       const id = `${space.key.toHex()}:${object.id}`;
-
       this._subscriptions.set(
         id,
         object[subscribe](() => {

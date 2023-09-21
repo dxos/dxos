@@ -35,7 +35,7 @@ export class GraphBuilder {
    */
   // TODO(burdon): Document ignoreBuilders.
   build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphImpl {
-    const graph = new GraphImpl(root ?? this._createNode({ id: 'root', label: 'Root' }));
+    const graph: GraphImpl = new GraphImpl(root ?? this._createNode(() => graph, { id: 'root', label: 'Root' }));
     return this._build(graph, graph.root, path, ignoreBuilders);
   }
 
@@ -82,7 +82,7 @@ export class GraphBuilder {
       addNode: (...partials) => {
         return partials.map((partial) => {
           const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode({ ...partial, parent: builderNode }, childPath, ignoreBuilders);
+          const child = this._createNode(() => graph, { ...partial, parent: builderNode }, childPath, ignoreBuilders);
           builderNode.childrenMap[child.id] = child;
           this._build(graph, child, childPath, ignoreBuilders);
           return child;
@@ -93,7 +93,8 @@ export class GraphBuilder {
     return builderNode;
   }
 
-  private _createNode<TData = null, TProperties extends Record<string, any> = {}>(
+  private _createNode<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
+    getGraph: () => GraphImpl,
     partial: Pick<Graph.Node, 'id' | 'label'> & Partial<Graph.Node<TData, TProperties>>,
     path: string[] = [],
     ignoreBuilders: Graph.NodeBuilder[] = [],
@@ -126,9 +127,9 @@ export class GraphBuilder {
       addNode: (...partials) => {
         return partials.map((partial) => {
           const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode({ ...partial, parent: node }, childPath, ignoreBuilders);
+          const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, ignoreBuilders);
           node.childrenMap[child.id] = child;
-          this.build(child, childPath, ignoreBuilders);
+          this._build(getGraph(), child, childPath, ignoreBuilders);
           return child;
         });
       },

@@ -20,5 +20,5 @@ export type GraphProvides = {
 };
 
 export type GraphPluginProvides = {
-  graph: GraphImpl;
+  graph: () => GraphImpl;
 };

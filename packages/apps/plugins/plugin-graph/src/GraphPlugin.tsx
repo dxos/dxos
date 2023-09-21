@@ -19,7 +19,7 @@ import { graphPlugins } from './util';
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const builder = new GraphBuilder();
-  const result: { graph?: GraphImpl } = {};
+  const state: { graph?: GraphImpl } = {}; // TODO(burdon): Use signal?
 
   return {
     meta: {
@@ -39,14 +39,14 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
         .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
         .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder));
 
-      result.graph = builder.build();
+      state.graph = builder.build();
     },
     // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {
       context: ({ children }) => (
-        <GraphContext.Provider value={{ graph: result.graph! }}>{children}</GraphContext.Provider>
+        <GraphContext.Provider value={{ graph: state.graph! }}>{children}</GraphContext.Provider>
       ),
-      graph: result.graph!,
+      graph: () => state.graph!,
     },
   };
 };

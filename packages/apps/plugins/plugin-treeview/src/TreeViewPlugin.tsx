@@ -38,14 +38,14 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         throw new Error('Graph plugin not found.');
       }
 
-      return this.active && graphPlugin.provides.graph.findNode(this.active);
+      return this.active && graphPlugin.provides.graph().findNode(this.active);
     },
     get previousNode() {
       if (!graphPlugin) {
         throw new Error('Graph plugin not found.');
       }
 
-      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
+      return this.previous && graphPlugin.provides.graph().findNode(this.previous);
     },
     appState: undefined,
   }) as RevertDeepSignal<TreeViewContextValue>;
@@ -56,7 +56,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
     },
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const graph = graphPlugin?.provides.graph;
+      const graph = graphPlugin?.provides.graph();
 
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       const mosaic: MosaicState | undefined = dndPlugin?.provides.dnd.mosaic;

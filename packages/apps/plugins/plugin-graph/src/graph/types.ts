@@ -61,7 +61,7 @@ export namespace Graph {
   /**
    * Represents a node in the graph.
    */
-  export type Node<TData = any, TProperties extends { [key: string]: any } = { [key: string]: any }> = {
+  export type Node<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
     /**
      * Globally unique ID.
      */
