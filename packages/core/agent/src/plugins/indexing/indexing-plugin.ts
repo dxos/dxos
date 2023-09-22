@@ -2,26 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Index } from 'lunr';
+import MiniSearch from 'minisearch';
 import { existsSync, readFileSync } from 'node:fs';
 
+import { scheduleTask } from '@dxos/async';
+import { PublicKey } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { Query, Subscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
 export class Indexing extends AbstractPlugin {
   private readonly _ctx = new Context();
-  private readonly _index?: Index;
+  private _index?: MiniSearch;
+  private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
 
   constructor(private readonly _indexPath: string) {
     super();
     if (existsSync(_indexPath)) {
       try {
         const serializedIndex = readFileSync(_indexPath, { encoding: 'utf8' });
-        this._index = Index.load(JSON.parse(serializedIndex));
+        const { index, options } = JSON.parse(serializedIndex);
+        this._index = MiniSearch.loadJS(index, options);
       } catch (error) {
         log.warn('Failed to load index from file:', { error });
       }
@@ -45,18 +52,68 @@ export class Indexing extends AbstractPlugin {
       })
       .catch((error: Error) => log.catch(error));
 
-    this.indexSpaces().catch((error: Error) => log.catch(error));
+    // Index space asynchronously to not block the main thread.
+    scheduleTask(this._ctx, async () => {
+      this._indexSpaces();
+    });
   }
 
   async close(): Promise<void> {
     void this._ctx.dispose();
   }
 
-  async indexSpaces(): Promise<void> {
-    
+  private _indexSpaces() {
+    if (!this._index) {
+      this._index = new MiniSearch({
+        fields: ['json'],
+        idField: 'id',
+      });
+    }
+    const process = (spaces: Space[]) => {
+      spaces.forEach((space) => {
+        if (!this._spaceIndexes.has(space.key)) {
+          this._spaceIndexes.set(space.key, this._indexSpace(space));
+        }
+      });
+    };
+
+    invariant(this._client, 'Client is undefined.');
+    const sub = this._client.spaces.subscribe(process);
+    process(this._client.spaces.get());
+    this._ctx.onDispose(() => sub.unsubscribe());
   }
 
-  _processMessage(message: GossipMessage) {
+  private _indexSpace(space: Space): SpaceIndex {
+    const query = space.db.query();
+    return {
+      space,
+      query,
+      subscription: query.subscribe((query) => {
+        invariant(this._index);
+        query.objects.forEach((object) => {
+          const document: IndexDocument = {
+            id: object.id,
+            json: object.toJSON(),
+          };
+          this._index!.remove(document);
+          this._index!.add(document);
+        });
+      }),
+    };
+  }
+
+  private _processMessage(message: GossipMessage) {
     log.info('Received message:', message);
   }
 }
+
+type IndexDocument = {
+  id: string;
+  json: string;
+};
+
+type SpaceIndex = {
+  space: Space;
+  query: Query;
+  subscription: Subscription;
+};
