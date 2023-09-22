@@ -109,7 +109,7 @@ export class WebsocketSignalManager implements SignalManager {
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('Join', { topic, peerId });
     invariant(this._opened, 'Closed');
-    await this._forEachServer((server: SignalClient) => server.join({ topic, peerId }));
+    await this._forEachServer((server) => server.join({ topic, peerId }));
   }
 
   @synchronized
@@ -117,7 +117,7 @@ export class WebsocketSignalManager implements SignalManager {
     log('leaving', { topic, peerId });
     invariant(this._opened, 'Closed');
 
-    await this._forEachServer((server: SignalClient) => server.leave({ topic, peerId }));
+    await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
 
   async sendMessage({
@@ -132,7 +132,7 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Signal ${recipient.truncate()}`);
     invariant(this._opened, 'Closed');
 
-    void this._forEachServer(async (server: SignalClient, serverName: string) => {
+    void this._forEachServer(async (server, serverName) => {
       void server.sendMessage({ author, recipient, payload }).catch((err) => {
         log(`error sending to ${serverName}`, { err });
         void this.checkServerFailure(serverName);
@@ -156,14 +156,14 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Subscribed for message stream peerId=${peerId}`);
     invariant(this._opened, 'Closed');
 
-    await this._forEachServer(async (server: SignalClient) => server.subscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.subscribeMessages(peerId));
   }
 
   async unsubscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
     invariant(this._opened, 'Closed');
 
-    await this._forEachServer(async (server: SignalClient) => server.unsubscribeMessages(peerId));
+    await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
   }
 
   private _initContext() {
@@ -173,13 +173,8 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private async _forEachServer<ReturnType>(
-    fn:
-      | ((server: SignalClient) => Promise<ReturnType>)
-      | ((server: SignalClient, serverName: string) => Promise<ReturnType>),
+    fn: (server: SignalClient, serverName: string) => Promise<ReturnType>,
   ): Promise<ReturnType[]> {
-    if (fn.length === 1) {
-      return Promise.all(Array.from(this._servers.values()).map(fn as (server: SignalClient) => Promise<ReturnType>));
-    }
     return Promise.all(Array.from(this._servers.entries()).map(([serverName, server]) => fn(server, serverName)));
   }
 }
