@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -47,6 +47,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^2.9.4",

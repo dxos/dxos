@@ -37,6 +37,7 @@ message ConnectionInfo {
   repeated ConnectionEvent events = 6;
   repeated StreamStats streams = 7;
   optional string close_reason = 8;
+  optional string identity = 9;
 }
 
 message ConnectionEvent {

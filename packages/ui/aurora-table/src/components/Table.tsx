@@ -20,7 +20,7 @@ import {
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { inputSurface, mx } from '@dxos/aurora-theme';
+import { groupBorder, inputSurface, mx } from '@dxos/aurora-theme';
 
 import { defaultTableSlots, TableSlots } from '../theme';
 import { TableColumnDef, KeyValue } from '../types';
@@ -375,7 +375,7 @@ const TableHead = <TData extends RowData>({
                   //  https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
                   className={mx(
                     'relative text-left',
-                    border && 'border',
+                    border && groupBorder,
                     slots?.header?.className,
                     header.column.columnDef.meta?.slots?.header?.className,
                   )}
@@ -489,7 +489,7 @@ const TableBody = <TData extends RowData>({
               return (
                 <td
                   key={cell.id}
-                  className={mx(border && 'border', cell.column.columnDef.meta?.slots?.cell?.className)}
+                  className={mx(border && groupBorder, cell.column.columnDef.meta?.slots?.cell?.className)}
                 >
                   {flexRender(cell.column.columnDef.cell, { className: 'px-2', ...cell.getContext() })}
                 </td>
@@ -527,7 +527,7 @@ const TableFoot = <TData extends RowData>({ footers, expand, slots, debug, borde
               <th
                 key={footer.id}
                 className={mx(
-                  border && 'border',
+                  border && groupBorder,
                   'text-left',
                   slots?.footer?.className,
                   footer.column.columnDef.meta?.slots?.footer?.className,

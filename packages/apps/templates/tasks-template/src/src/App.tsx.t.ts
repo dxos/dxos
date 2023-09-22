@@ -37,8 +37,6 @@ export default template.define.script({
             return;
           }
           void shell.shareSpace({ spaceKey: space?.key });
-          // TODO: desired API to teach shell how to form share URLs
-          // void shell.shareSpace({ spaceKey: space?.key, invitationUrl: (invitationCode) => \`/space/\${space.key}?spaceInvitationCode=\${invitationCode}\` });
         }}
         onTaskCreate={(newTaskTitle) => {
           const task = new Task({ title: newTaskTitle, completed: false });
@@ -67,8 +65,6 @@ export default template.define.script({
   
     useEffect(() => {
       if (deviceInvitationCode) {
-        // TODO: desired API for joining a device
-        // shell.joinDevice({ invitationCode: deviceInvitationCode });
         setSearchParams((p) => {
           p.delete('deviceInvitationCode');
           return p;

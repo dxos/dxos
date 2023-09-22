@@ -68,12 +68,12 @@ export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends D
   override async apply(options: ExecuteInteractiveDirectoryTemplateOptions<I>): Promise<FileResults<z.infer<I>>> {
     const { inputShape, inputQuestions } = this.options;
     const { interactive, input, ...rest } = options;
-    let acquired = input;
+    let acquired: Partial<z.infer<I>> = { ...this.options.defaultInput, ...input };
     if (inputShape) {
       if (interactive) {
-        acquired = await acquireInput(inputShape, input, inputQuestions, options.verbose);
+        acquired = await acquireInput(inputShape, acquired, inputQuestions, options.verbose);
       } else {
-        const parse = inputShape.safeParse(input);
+        const parse = inputShape.safeParse(acquired);
         if (!parse.success) {
           throw new Error('invalid input: ' + formatErrors([parse.error]));
         }

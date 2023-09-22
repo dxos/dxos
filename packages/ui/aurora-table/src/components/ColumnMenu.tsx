@@ -6,7 +6,7 @@ import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import { HeaderContext, RowData } from '@tanstack/react-table';
 import React, { FC, PropsWithChildren, useRef, useState } from 'react';
 
-import { Button, DensityProvider, Input, Popover, Select } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Popover, Select, Separator, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -42,6 +42,12 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
     </div>
   );
 };
+
+const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
+  <div role='none' className={mx('p-2', className)}>
+    {children}
+  </div>
+);
 
 export const ColumnPanel = <TData extends RowData, TValue>({
   context,
@@ -107,7 +113,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
         <Popover.Content>
           <Popover.Viewport classNames='w-60'>
             <DensityProvider density='fine'>
-              <div className='flex flex-col space-y-1 divide-y'>
+              <div className='flex flex-col gap-1'>
                 <Section>
                   <Input.Root>
                     <Input.Label classNames='mbe-1'>Label</Input.Label>
@@ -207,6 +213,8 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     </Section>
                   </>
                 )}
+
+                <Separator classNames='mli-2' />
 
                 <Section className='space-b-1.5'>
                   {/* TODO(burdon): Style as DropdownMenuItem. */}
