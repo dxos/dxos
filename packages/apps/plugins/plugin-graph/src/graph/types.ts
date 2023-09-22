@@ -53,6 +53,9 @@ import type { UnsubscribeCallback } from '@dxos/async';
 
 // TODO(burdon): Instead of namespace, move graph to separate package.
 export namespace Graph {
+  // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
+  export type Label = string | [string, { ns: string; count?: number }];
+
   /**
    * Called when a node is added to the graph, allowing other node builders to add children, actions or properties.
    */
@@ -79,8 +82,7 @@ export namespace Graph {
      * @example 'My Node'
      * @example ['unknown node label, { ns: 'example-plugin' }]
      */
-    // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
-    label: string | [string, { ns: string; count?: number }];
+    label: Label;
 
     /**
      * Description to be used when displaying a detailed view of the node.
@@ -144,28 +146,6 @@ export namespace Graph {
     removeAction(id: string): Action;
   };
 
-  export type TraversalOptions = {
-    /**
-     * The node to start traversing from. Defaults to the root node.
-     */
-    node?: Node;
-
-    /**
-     * The direction to traverse the graph. Defaults to 'down'.
-     */
-    direction?: 'up' | 'down';
-
-    /**
-     * A predicate to filter nodes which are passed to the `visitor` callback.
-     */
-    filter?: (node: Node) => boolean;
-
-    /**
-     * A callback which is called for each node visited during traversal.
-     */
-    visitor?: (node: Node) => void;
-  };
-
   /**
    * An action on a node in the graph which may be invoked by sending the associated intent.
    */
@@ -182,7 +162,7 @@ export namespace Graph {
      * @example 'Test Action'
      * @example ['test action label, { ns: 'example-plugin' }]
      */
-    label: string | [string, { ns: string; count?: number }];
+    label: Label;
 
     /**
      * Icon to be used when displaying the node.
@@ -220,5 +200,27 @@ export namespace Graph {
       ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
     ): Action<TActionProperties>[];
     removeAction(id: string): Action;
+  };
+
+  export type TraversalOptions = {
+    /**
+     * The node to start traversing from. Defaults to the root node.
+     */
+    node?: Node;
+
+    /**
+     * The direction to traverse the graph. Defaults to 'down'.
+     */
+    direction?: 'up' | 'down';
+
+    /**
+     * A predicate to filter nodes which are passed to the `visitor` callback.
+     */
+    filter?: (node: Node) => boolean;
+
+    /**
+     * A callback which is called for each node visited during traversal.
+     */
+    visitor?: (node: Node) => void;
   };
 }

@@ -6,6 +6,7 @@ import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
 import { Graph } from './types';
+import NodeLabel = Graph.Label;
 
 /**
  * The Graph represents...
@@ -20,16 +21,18 @@ export class GraphImpl {
 
   // TODO(burdon): Traverse.
   toJSON() {
+    const toLabel = (label: NodeLabel) => (Array.isArray(label) ? `${label[1].ns}[${label[0]}]` : label);
     const toJSON = (node: Graph.Node): any => {
       return {
         // TODO(burdon): Standardize ids on type/id/x/y (use slashes).
         id: node.id.slice(0, 16),
-        label: node.label,
+        label: toLabel(node.label),
         children: node.children.length ? node.children.map((node) => toJSON(node)) : undefined,
         actions: node.actions.length
-          ? node.actions.map(({ id, label }) => ({
+          ? node.actions.map(({ id, label, intent }) => ({
               id,
-              label,
+              label: toLabel(label),
+              intent: Array.isArray(intent) ? intent.map(({ action }) => ({ action })) : intent?.action,
             }))
           : undefined,
       };
