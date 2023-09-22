@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-types",
-  "version": "0.1.57",
+  "version": "0.2.1",
   "description": "Types for DXOS Aurora and its themes.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

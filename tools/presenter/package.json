@@ -1,6 +1,6 @@
 {
   "name": "@dxos/presenter",
-  "version": "0.1.57",
+  "version": "0.2.1",
   "private": true,
   "description": "Slide presentations using Vite/Tailwind.",
   "homepage": "https://dxos.org",

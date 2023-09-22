@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.57",
+  "version": "0.2.1",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -47,11 +47,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^2.9.4",
     "@oclif/plugin-help": "^5.2.14",
-    "@oclif/plugin-plugins": "^3.1.8",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -99,8 +99,7 @@
       "command_not_found": "./dist/src/hooks/command-not-found"
     },
     "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-help"
     ],
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",

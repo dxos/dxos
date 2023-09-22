@@ -91,6 +91,24 @@ export type ReplicationAgentConfig = {
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
   signalBuilder = new SignalTestBuilder();
 
+  defaultSpec(): ReplicationTestSpec {
+    return {
+      agents: 2,
+      swarmsPerAgent: 1,
+      duration: 3_000,
+      transport: TransportKind.SIMPLE_PEER_PROXY,
+      targetSwarmTimeout: 1_000,
+      fullSwarmTimeout: 10_000,
+      signalArguments: ['globalsubserver'],
+      repeatInterval: 100,
+      feedsPerSwarm: 1,
+      feedAppendInterval: 0,
+      feedMessageSize: 500,
+      // feedLoadDuration: 10_000,
+      feedMessageCount: 5_000,
+    };
+  }
+
   async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<ReplicationAgentConfig[]> {
     if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');

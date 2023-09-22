@@ -2,12 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DraggableAttributes } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
+import { DeepSignal } from 'deepsignal';
 
+import { Graph } from '@braneframe/plugin-graph';
 import { ListItemRootProps } from '@dxos/aurora';
+import { MosaicState, useSortable, DraggableAttributes, MosaicChangeHandler, Tile } from '@dxos/aurora-grid';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';
+
+export type SetTileHandler = (tile: Tile, node: Graph.Node) => Tile;
+
+export type CopyTileHandler = (tile: Tile, id: string, toId: string, mosaic: MosaicState) => Tile;
+
+export type DndStore = DeepSignal<{
+  mosaic: MosaicState;
+  onMosaicChangeSubscriptions: MosaicChangeHandler[];
+  onSetTileSubscriptions: SetTileHandler[];
+  onCopyTileSubscriptions: CopyTileHandler[];
+}>;
+
+export type DndPluginProvides = {
+  dnd: DndStore;
+  onSetTile: SetTileHandler;
+};
 
 export type SortableProps = Partial<{
   draggableAttributes: DraggableAttributes;

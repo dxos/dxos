@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-intent",
-  "version": "0.1.57",
+  "version": "0.2.1",
   "description": "DXOS Surface plugin for triggering actions based on intents",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

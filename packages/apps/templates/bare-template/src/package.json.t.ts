@@ -3,7 +3,7 @@
 //
 import path from 'path';
 import { promises as fs } from 'fs';
-import { InputOf } from '@dxos/plate';
+import { InputOf, Slot } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import { PackageJson } from './utils.t/packageJson';
 
@@ -94,8 +94,8 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^5.0.4',
-      vite: '^4.3.9'
-    }
+      vite: '^4.3.9',
+    },
   };
 };
 
@@ -104,32 +104,37 @@ const loadJson = async (moduleRelativePath: string) => {
   return JSON.parse(content.toString());
 };
 
-export default template.define.text({
-  content: async ({ input }) => {
-    const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
-    const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
-    const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
-    const version = monorepo ? packageVersion : '0.1.0';
-    const depVersion = monorepo ? `workspace:*` : packageVersion;
+export default template.define
+  .slots<{ packageJson?: Slot<Partial<PackageJson>, InputOf<typeof template>, { depVersion?: string }> }>({
+    packageJson: {},
+  })
+  .text({
+    content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
+      const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
+      const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
+      const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
+      const version = monorepo ? packageVersion : '0.1.0';
+      const depVersion = monorepo ? `workspace:*` : packageVersion;
 
-    const context = {
-      version,
-      depVersion,
-      ...input,
-    };
+      const context = {
+        version,
+        depVersion,
+        ...input,
+      };
 
-    const [first, ...rest] = [
-      base(context),
-      react && Features.react(context),
-      pwa && Features.pwa(),
-      dxosUi && Features.dxosUi(context),
-      tailwind && Features.tailwind(),
-      storybook && Features.storybook(),
-    ].filter(Boolean);
+      const [first, ...rest] = [
+        base(context),
+        react && Features.react(context),
+        pwa && Features.pwa(),
+        dxosUi && Features.dxosUi(context),
+        tailwind && Features.tailwind(),
+        storybook && Features.storybook(),
+        slotPackageJson?.() ?? {},
+      ].filter(Boolean);
 
-    const packageJson = merge(first, ...rest);
+      const packageJson = merge(first, ...rest);
 
-    const result = JSON.stringify(packageJson, null, 2);
-    return result;
-  },
-});
+      const result = JSON.stringify(packageJson, null, 2);
+      return result;
+    },
+  });

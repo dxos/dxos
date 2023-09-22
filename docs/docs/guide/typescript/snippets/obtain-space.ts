@@ -13,6 +13,9 @@ const space = await client.spaces.create();
 // get spaces
 const spaces = client.spaces.get();
 
+// get the default space
+const defaultSpace = client.spaces.default;
+
 // create an invitation to join the space, it will be used to locate the inviter
 // in the MESH and to create a secured peer connection
 const invitation = space.share();

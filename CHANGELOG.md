@@ -1,5 +1,106 @@
 # Changelog
 
+## [0.2.1](https://github.com/dxos/dxos/compare/v0.2.0...v0.2.1) (2023-09-21)
+
+
+### Features
+
+* Make batching configurable ([#4280](https://github.com/dxos/dxos/issues/4280)) ([c9d16ae](https://github.com/dxos/dxos/commit/c9d16ae30fbaa7155ac3a2b8759910079edd60ea))
+* make proto codegen a feature in templates ([#4276](https://github.com/dxos/dxos/issues/4276)) ([617b24c](https://github.com/dxos/dxos/commit/617b24c7c3ef45bede8256813c0aeee890c6ea04))
+* prettify live demo for website ([#4294](https://github.com/dxos/dxos/issues/4294)) ([9c7e801](https://github.com/dxos/dxos/commit/9c7e8011217f15b6a051fb64eb9287d379043897))
+* testbench enhancements ([#4275](https://github.com/dxos/dxos/issues/4275)) ([c06c65d](https://github.com/dxos/dxos/commit/c06c65d33037cad834790c39e7ae1b5e2d1932e1))
+
+
+### Bug Fixes
+
+* **aurora-table:** Popover content & borders ([#4299](https://github.com/dxos/dxos/issues/4299)) ([864bb49](https://github.com/dxos/dxos/commit/864bb497affaeeaec08d68dfc75c08e5074626ac))
+* **aurora-theme:** Fix Labs theme override, remove redundant style ([#4296](https://github.com/dxos/dxos/issues/4296)) ([c0cd511](https://github.com/dxos/dxos/commit/c0cd511d1785671991020f7466f624c0b42027bb))
+* **cli:** Delete dependency with vulnerability ([#4292](https://github.com/dxos/dxos/issues/4292)) ([1c7a1b5](https://github.com/dxos/dxos/commit/1c7a1b58a24a05c6bde8bd0aef4acda66e22cd34))
+* **cli:** Fix security vulnerabilities ([#4278](https://github.com/dxos/dxos/issues/4278)) ([0d1583e](https://github.com/dxos/dxos/commit/0d1583ee25da9e543627167327b532981cb85558))
+* Fix conform version in root package.json ([#4279](https://github.com/dxos/dxos/issues/4279)) ([315a800](https://github.com/dxos/dxos/commit/315a800c1e775dc3066a8340320bb6298519bcb7))
+* **halo-app:** vault styles ([#4288](https://github.com/dxos/dxos/issues/4288)) ([310641e](https://github.com/dxos/dxos/commit/310641eb19c7342ba072c568fa2aecea3fc29e87))
+* **plugin-space:** visiting computation ([#4281](https://github.com/dxos/dxos/issues/4281)) ([be48707](https://github.com/dxos/dxos/commit/be487074bf0ffe719b01b38ccbfb0e9404bc7b5c))
+
+## [0.2.0](https://github.com/dxos/dxos/compare/v0.1.57...v0.2.0) (2023-09-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client:** introduce new external shell api ([#4164](https://github.com/dxos/dxos/issues/4164))
+* **client:** introduce new external spaces api ([#4173](https://github.com/dxos/dxos/issues/4173))
+
+### Features
+
+* Add tcp transport ([#4175](https://github.com/dxos/dxos/issues/4175)) ([03af36b](https://github.com/dxos/dxos/commit/03af36bbec90dd40917f697777c22d6e7b307b46))
+* **agent:** Add OS services templates ([#4229](https://github.com/dxos/dxos/issues/4229)) ([ae92ec9](https://github.com/dxos/dxos/commit/ae92ec993b5daae2360e561ac0fa5451325fe19e))
+* **agent:** Integrate Phoenix daemon ([#4176](https://github.com/dxos/dxos/issues/4176)) ([5e5d64f](https://github.com/dxos/dxos/commit/5e5d64f1b19ab76a41ceec93831df193bc8c6e44))
+* **agent:** Reconcile lock file ([#4207](https://github.com/dxos/dxos/issues/4207)) ([46db3b4](https://github.com/dxos/dxos/commit/46db3b461fc6571db0a1a33d0c5925fc5bbf0882))
+* Aurora ComboBox ([#4167](https://github.com/dxos/dxos/issues/4167)) ([c10e16a](https://github.com/dxos/dxos/commit/c10e16a1d65b6fa3f44afa0d88940398631f071e))
+* **aurora-grid:** “Mosaic” API prototype ([#4206](https://github.com/dxos/dxos/issues/4206)) ([c171de6](https://github.com/dxos/dxos/commit/c171de69d5518f2cef570ce240121054d544f83d))
+* **client:** introduce new external shell api ([#4164](https://github.com/dxos/dxos/issues/4164)) ([4cbb52d](https://github.com/dxos/dxos/commit/4cbb52d12261e1241be08b98c6104fd2d6ea68f9))
+* **client:** introduce new external spaces api ([#4173](https://github.com/dxos/dxos/issues/4173)) ([88606fb](https://github.com/dxos/dxos/commit/88606fb2c8d5ba127449a5a03eb8a4e612166584))
+* composer and shell tweaks ([#4168](https://github.com/dxos/dxos/issues/4168)) ([576e3eb](https://github.com/dxos/dxos/commit/576e3ebfd4da898325d41e5061012c2dae7606f1))
+* debounced table resizing ([#4245](https://github.com/dxos/dxos/issues/4245)) ([e2fb32f](https://github.com/dxos/dxos/commit/e2fb32f05ee273de142ae236444738ad190b3c45))
+* fix tasks app ([#4248](https://github.com/dxos/dxos/issues/4248)) ([1c76085](https://github.com/dxos/dxos/commit/1c76085c364a24a7c259ff0c156df2a3ecd6ed4d))
+* **labs-app,composer-app:** Adjust mobile root font-size ([#4185](https://github.com/dxos/dxos/issues/4185)) ([f117c08](https://github.com/dxos/dxos/commit/f117c0891f86f8a97146bb57acd7a381beedb3db))
+* Light mode theme ([#4231](https://github.com/dxos/dxos/issues/4231)) ([d647118](https://github.com/dxos/dxos/commit/d647118936ea6e4f3c2a7260ee4106a00a17e106))
+* Member removal ([#4199](https://github.com/dxos/dxos/issues/4199)) ([9626f9e](https://github.com/dxos/dxos/commit/9626f9e2444e4cd94c4d33e732c4dc2071aacab7))
+* new templating API ([#4224](https://github.com/dxos/dxos/issues/4224)) ([8fb8ffa](https://github.com/dxos/dxos/commit/8fb8ffab328c4e04ab839447c650ff40634bf1c5))
+* **phoenix:** Add @dxos/phoenix ([#4114](https://github.com/dxos/dxos/issues/4114)) ([60c63b5](https://github.com/dxos/dxos/commit/60c63b506a3e7a90ec9eabdf80effe97967f6a95))
+* **plugin-client:** Catch incompatible version errors ([#4138](https://github.com/dxos/dxos/issues/4138)) ([59c38c1](https://github.com/dxos/dxos/commit/59c38c1ab72f63c4d23d67047812ea647917f832))
+* **plugin-markdown:** vim mode ([#4180](https://github.com/dxos/dxos/issues/4180)) ([31dfb10](https://github.com/dxos/dxos/commit/31dfb103b9bd46a1c461996e74e8a7c3a489114e))
+* **plugin-space:** helper includes rename and delete actions ([#4197](https://github.com/dxos/dxos/issues/4197)) ([1d74417](https://github.com/dxos/dxos/commit/1d7441751e6ff601dede87f147b784f80b73b244))
+* **plugin-space:** track objects viewed ([#4133](https://github.com/dxos/dxos/issues/4133)) ([73a8891](https://github.com/dxos/dxos/commit/73a889152c4d091b69f6e76eaf3f0ad9a191ae48))
+* **plugin-treeview:** optional default action ([#4228](https://github.com/dxos/dxos/issues/4228)) ([e945335](https://github.com/dxos/dxos/commit/e945335263115fdabab1b29a60f219fe5006d789))
+* Protocol breaking changes ([#4213](https://github.com/dxos/dxos/issues/4213)) ([09c7b08](https://github.com/dxos/dxos/commit/09c7b08232751f75222c2dee970d971d550a3604))
+* Refactor epoch monitor ([#4230](https://github.com/dxos/dxos/issues/4230)) ([7822bed](https://github.com/dxos/dxos/commit/7822bed69a966facf53005ddd4be76b0a4948b56))
+* Remove eslint toolbox script ([#4225](https://github.com/dxos/dxos/issues/4225)) ([5c20179](https://github.com/dxos/dxos/commit/5c201796b43c34688fd79735bac1b48f0c6c7d48))
+* Rename aurora-grid =&gt; aurora-table ([#4186](https://github.com/dxos/dxos/issues/4186)) ([47053bc](https://github.com/dxos/dxos/commit/47053bc5b43cb10d7e36405600b401a1df6687cf))
+* Show/restore closed spaces ([#4200](https://github.com/dxos/dxos/issues/4200)) ([827aed9](https://github.com/dxos/dxos/commit/827aed93fc415c72fd9a46dc47ec150da1b039f2))
+* Table with combobox ([#4160](https://github.com/dxos/dxos/issues/4160)) ([6f6722d](https://github.com/dxos/dxos/commit/6f6722ddb5276f0d4b3a7153664e9e98e300c0cc))
+* testbench logging and stability ([#4219](https://github.com/dxos/dxos/issues/4219)) ([4162526](https://github.com/dxos/dxos/commit/4162526620522eb2f88663ee70d24d9d54635b1e))
+
+
+### Bug Fixes
+
+* abort on ERR_ICE_CONNECTION_FAILURE ([#4242](https://github.com/dxos/dxos/issues/4242)) ([82680ea](https://github.com/dxos/dxos/commit/82680ea67e69b16b714362508ae47f4ce730045b))
+* **aurora-mosaic:** Restore index computation for migrate and copy ([#4256](https://github.com/dxos/dxos/issues/4256)) ([4bb68e8](https://github.com/dxos/dxos/commit/4bb68e8029debd816f03fc47f473f18bc3ef356b))
+* **aurora-theme:** Restore surface token cadence ([#4221](https://github.com/dxos/dxos/issues/4221)) ([72c6b22](https://github.com/dxos/dxos/commit/72c6b22fed6e88aae5c5ad87754e6c4fe2b6346f))
+* bundle ([#4244](https://github.com/dxos/dxos/issues/4244)) ([3c4b26c](https://github.com/dxos/dxos/commit/3c4b26c4b1cdd4511a2c211d461a6022907861cc))
+* **client-services:** emit removal event when invitation completes ([#4177](https://github.com/dxos/dxos/issues/4177)) ([353d0d1](https://github.com/dxos/dxos/commit/353d0d1edb8f6b23eb22b77c47101bccf7eb82b7))
+* **cli:** Finish renaming `path` -&gt; `dataRoot` in configs ([#4250](https://github.com/dxos/dxos/issues/4250)) ([28491f9](https://github.com/dxos/dxos/commit/28491f94a5238be836f2e9f956fe4d9a1ce6b6cc))
+* **cli:** Fix ux flows ([#4241](https://github.com/dxos/dxos/issues/4241)) ([f4192cb](https://github.com/dxos/dxos/commit/f4192cb8de8eb6c223477ba9af657aba770bfccb))
+* **composer:** handle client being uninitialized ([#4246](https://github.com/dxos/dxos/issues/4246)) ([0009f6a](https://github.com/dxos/dxos/commit/0009f6ab2190ff63b321cc8009235d92f30f85ba))
+* connectivity and error handling ([#4139](https://github.com/dxos/dxos/issues/4139)) ([b605d47](https://github.com/dxos/dxos/commit/b605d47ace1972bf3df808717ef1d48d4a6b33f3))
+* **create:** default to interactive if no name provided ([#4269](https://github.com/dxos/dxos/issues/4269)) ([a349582](https://github.com/dxos/dxos/commit/a34958214e8aa29e277d67d2922214881e38bd5a))
+* downgrade RpcClosedError severity for gossip ([#4234](https://github.com/dxos/dxos/issues/4234)) ([6e2a7a9](https://github.com/dxos/dxos/commit/6e2a7a9e5fdf1cc14532b69cbcd9a6119036709b))
+* echo testbench to drop/init connections ([#4172](https://github.com/dxos/dxos/issues/4172)) ([d82e9a3](https://github.com/dxos/dxos/commit/d82e9a31f564c80a1d87ecd6221ec591fe57da46))
+* ensure halo-app loads in shell styles ([#4271](https://github.com/dxos/dxos/issues/4271)) ([6d0af18](https://github.com/dxos/dxos/commit/6d0af18cdd4ecd70d7e75f3eba92a72198bc1971))
+* error hack in simplepeer transport proxy ([#4217](https://github.com/dxos/dxos/issues/4217)) ([eedac7a](https://github.com/dxos/dxos/commit/eedac7a0a22330b16e26d35c08f94d0e08527768))
+* **examples:** change schema import to work in stackblitz ([#4192](https://github.com/dxos/dxos/issues/4192)) ([c92d924](https://github.com/dxos/dxos/commit/c92d9247f89402a391d9773d8ef47baf4667f4f2))
+* extra log message ([#4211](https://github.com/dxos/dxos/issues/4211)) ([94338f5](https://github.com/dxos/dxos/commit/94338f53db574b60cb82f50fdb428ccde5ecefdd))
+* Fix sentry processor leak ([#4182](https://github.com/dxos/dxos/issues/4182)) ([c4d3e15](https://github.com/dxos/dxos/commit/c4d3e15b7ae7ab9d49a325e0d2278963bbe89bef))
+* Flush keyring file after saving the key ([#4169](https://github.com/dxos/dxos/issues/4169)) ([b53b126](https://github.com/dxos/dxos/commit/b53b126f4b600164c768a3c7790b3a49698e1c1a))
+* getting composer e2e running again ([#4214](https://github.com/dxos/dxos/issues/4214)) ([9a149c5](https://github.com/dxos/dxos/commit/9a149c558f1e0cd10bc15b2dea532320059323eb))
+* ignore errors sent to closed transport ([#4232](https://github.com/dxos/dxos/issues/4232)) ([0b23736](https://github.com/dxos/dxos/commit/0b23736a223e098f432ddab56295836482cfc475))
+* ignore offer if connection not initial ([#4233](https://github.com/dxos/dxos/issues/4233)) ([385b5e4](https://github.com/dxos/dxos/commit/385b5e4ba0a3a1d6edf99cb9036b11018c86189c))
+* Labs DnD ([#4162](https://github.com/dxos/dxos/issues/4162)) ([0fabfcd](https://github.com/dxos/dxos/commit/0fabfcd962e6190ad5be446853ebc97ea37a2d59))
+* make testbench run ([#4209](https://github.com/dxos/dxos/issues/4209)) ([1dc5c31](https://github.com/dxos/dxos/commit/1dc5c31578e8859966f5f27a0c69415252f1138a))
+* Memory leaks ([#4188](https://github.com/dxos/dxos/issues/4188)) ([6c0bd88](https://github.com/dxos/dxos/commit/6c0bd889ed66c5c41f657b78ccfc8ad85215db6d))
+* Meta assignment bug ([#4170](https://github.com/dxos/dxos/issues/4170)) ([46f22ad](https://github.com/dxos/dxos/commit/46f22ad2c7fdbd77cb79bbfd03aadd09d5fd8f0b))
+* misc network updates ([#4239](https://github.com/dxos/dxos/issues/4239)) ([503d745](https://github.com/dxos/dxos/commit/503d745522b1a0cae2c64aa44a7d7f783c664505))
+* Moving objects between spaces ([#4210](https://github.com/dxos/dxos/issues/4210)) ([935caa2](https://github.com/dxos/dxos/commit/935caa29359a439fc07f2d078b70048c010d2a42))
+* multiuse invitations ([#4183](https://github.com/dxos/dxos/issues/4183)) ([afe71a8](https://github.com/dxos/dxos/commit/afe71a8017dc27b05ca884213e7057a3b8879209))
+* **plugin-files:** move open actions to group node ([#4179](https://github.com/dxos/dxos/issues/4179)) ([4ca8c61](https://github.com/dxos/dxos/commit/4ca8c61c2c3ba6e16cecf44ba359c0aba01989d7))
+* **plugin-github:** bad translation ns ([#4198](https://github.com/dxos/dxos/issues/4198)) ([44da53d](https://github.com/dxos/dxos/commit/44da53d27feed9aefe8a96b8baea9ebc88d881c5))
+* **plugin-treeview,plugin-thread:** Close sidebar buttons up to `lg` ([#4166](https://github.com/dxos/dxos/issues/4166)) ([ffbb8a1](https://github.com/dxos/dxos/commit/ffbb8a18e92d926747b3289d50ccd9df99206bb4))
+* **plugin-treeview:** Revert use of `ScrollArea` with draggable content (for now) ([#4165](https://github.com/dxos/dxos/issues/4165)) ([75cbd70](https://github.com/dxos/dxos/commit/75cbd7037a894eb97e286bc17738efe4d7322593))
+* **plugins-treeview:** hook up breadcrumb link ([#4222](https://github.com/dxos/dxos/issues/4222)) ([1de830f](https://github.com/dxos/dxos/commit/1de830f1413c812589e883780a39cf1d7062afc6))
+* **proto-guard:** Fix snapshot generation and breaking change test ([#4240](https://github.com/dxos/dxos/issues/4240)) ([73843bc](https://github.com/dxos/dxos/commit/73843bc98d81d718f78ed1b305b853822e5d1654))
+* **react-shell:** submit profile form on enter ([#4196](https://github.com/dxos/dxos/issues/4196)) ([88259d8](https://github.com/dxos/dxos/commit/88259d8cba76f1bc1d41c1573fdc11659c226886))
+* simplepeer transport error cleanup ([#4216](https://github.com/dxos/dxos/issues/4216)) ([fa022ee](https://github.com/dxos/dxos/commit/fa022eeace22c07d5550940b390d294fe940fcab))
+* updates for echo testbench after breaking api changes ([#4205](https://github.com/dxos/dxos/issues/4205)) ([3ded39a](https://github.com/dxos/dxos/commit/3ded39a8fe4a24704a75c62e064f47e84a9ee57a))
+
 ## [0.1.57](https://github.com/dxos/dxos/compare/v0.1.56...v0.1.57) (2023-09-07)
 
 

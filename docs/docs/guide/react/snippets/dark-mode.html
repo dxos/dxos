@@ -1,0 +1,11 @@
+<head>
+  <script>
+    function setTheme(darkMode) {
+      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+    }
+    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+      setTheme(e.matches)
+    });
+  </script>
+</head>

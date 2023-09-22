@@ -1,5 +1,5 @@
 # Class `RpcNotOpenError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:38]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:13]()</sub>
 
 
 Thrown when  `request`  is called when RPC has not been opened.

@@ -203,16 +203,16 @@ Arguments:
 `observable`: <code>MulticastObservable&lt;T&gt;</code>
 
 
-### [useShell(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useShell.ts#L38)
+### [useShell()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useShell.ts#L12)
 
 
-Use this hook to fully integrate an app with the shell.
+Helper hook to access the shell.
 
-Returns: <code>UseShellResult</code>
+Returns: <code>[Shell](/api/@dxos/react-client/classes/Shell)</code>
 
-Arguments: 
+Arguments: none
 
-`options`: <code>[UseShellOptions](/api/@dxos/react-client/types/UseShellOptions)</code>
+
 
 
 ### [useStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/useStatus.ts#L12)
