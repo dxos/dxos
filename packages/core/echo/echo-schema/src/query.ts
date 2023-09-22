@@ -7,6 +7,7 @@ import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 
 import { EchoObject } from './object';
 import { isTypedObject, TypedObject } from './typed-object';
+import { createSignal } from './signal';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -32,6 +33,7 @@ export type Subscription = () => void;
 export class Query<T extends TypedObject = TypedObject> {
   private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined = undefined;
+  private _signal = createSignal?.();
 
   constructor(
     private readonly _objects: Map<string, EchoObject>,
@@ -41,9 +43,14 @@ export class Query<T extends TypedObject = TypedObject> {
   ) {
     this._filters.push(filterDeleted(options?.deleted));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
+
+    // TODO(dmaretskyi): Needs to be weak.
+    this._updateEvent.on(() => this._signal?.notifyWrite());
   }
 
   get objects(): T[] {
+    this._signal?.notifyRead();
+
     if (!this._cache) {
       this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
     }
