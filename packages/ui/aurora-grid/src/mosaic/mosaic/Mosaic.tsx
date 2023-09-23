@@ -9,19 +9,19 @@ import { List, useId } from '@dxos/aurora';
 
 import {
   DndProvider,
+  dropAnimations,
   useDnd as useMosaicDnd,
   useDragEnd,
   useDragOver,
   useDragStart,
-  useHandleRearrangeDragEnd,
-} from '../dnd';
-import { dropAnimations } from '../dnd/drop-animations';
-import { useHandleCopyDragEnd, useHandleCopyDragOver, useHandleCopyDragStart } from '../dnd/hooks/useHandleCopy';
-import {
+  useHandleCopyDragEnd,
+  useHandleCopyDragOver,
+  useHandleCopyDragStart,
   useHandleMigrateDragEnd,
   useHandleMigrateDragOver,
   useHandleMigrateDragStart,
-} from '../dnd/hooks/useHandleMigrate';
+  useHandleRearrangeDragEnd,
+} from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 import { MosaicRootProps } from '../types';

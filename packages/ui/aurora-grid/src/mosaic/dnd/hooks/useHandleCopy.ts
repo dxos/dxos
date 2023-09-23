@@ -11,8 +11,7 @@ import { useMosaic } from '../../mosaic';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
 import { getSubtiles } from '../../util';
 import { useDnd } from '../DndContext';
-import { nextRearrangeIndex } from '../util';
-import { managePreview } from '../util/manage-preview';
+import { nextRearrangeIndex, managePreview } from '../util';
 
 export const useHandleCopyDragStart = () => {
   const dnd = useDnd();
