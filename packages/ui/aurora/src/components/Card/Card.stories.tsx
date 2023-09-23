@@ -5,13 +5,14 @@
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { ScrollArea } from '@dxos/aurora';
+// TODO(burdon): Theme.
 import { chromeSurface, groupSurface, mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
 
 import { DraggableCard } from './DraggableCard';
 import { generators } from './testing';
+import { ScrollArea } from '../ScrollArea';
 
 faker.seed(1);
 

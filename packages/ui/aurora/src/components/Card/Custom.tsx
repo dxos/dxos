@@ -4,9 +4,11 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 
-import { ClassNameValue, Input, List, ListItem } from '@dxos/aurora';
+import { ClassNameValue } from '@dxos/aurora-types';
 
 import { Card, FormCard, ImageCard, LayoutProps } from './Card';
+import { Input } from '../Input';
+import { List, ListItem } from '../Lists';
 
 export type TypeCardProps = PropsWithChildren<{
   id: string;
@@ -15,6 +17,7 @@ export type TypeCardProps = PropsWithChildren<{
   sqaure?: boolean;
 }>;
 
+// TODO(burdon): Move to story.
 // TODO(burdon): Create factory of layouts with property binders.
 export const TypeCard: FC<LayoutProps & TypeCardProps> = ({ id, type, classNames, handle, sqaure, menu, ...props }) => {
   const data: any = props;

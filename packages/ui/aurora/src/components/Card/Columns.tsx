@@ -5,8 +5,10 @@
 import { useDroppable } from '@dnd-kit/core';
 import React, { FC, PropsWithChildren } from 'react';
 
-import { ClassNameValue, ScrollArea } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
+import { ClassNameValue } from '@dxos/aurora-types';
+
+import { ScrollArea } from '../ScrollArea';
 
 export const Columns: FC<PropsWithChildren & { id: string; classNames?: ClassNameValue }> = ({
   id,
