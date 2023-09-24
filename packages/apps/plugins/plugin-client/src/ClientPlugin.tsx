@@ -74,8 +74,6 @@ export const ClientPlugin = (
         error = err;
       }
 
-      document.addEventListener('keydown', onKeypress);
-
       // Debugging (e.g., for monolithic mode).
       if (options.debugIdentity) {
         if (!client.halo.identity.get()) {
@@ -129,9 +127,11 @@ export const ClientPlugin = (
         },
       };
     },
+    ready: async () => {
+      document.addEventListener('keydown', onKeypress);
+    },
     unload: async () => {
       document.removeEventListener('keydown', onKeypress);
-
       await client.destroy();
     },
   };

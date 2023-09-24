@@ -28,16 +28,45 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     typeof data.id === 'string' &&
     nodeIds.some((nodeId) => nodeId === data.id);
 
+  let focused: EventTarget | null = null;
+  const onFocus = (event: FocusEvent) => {
+    focused = event.target;
+  };
+  const onBlur = () => {
+    focused = null;
+  };
+
+  // TODO(burdon): Standardize key bindings.
+  const onKeypress = async (event: KeyboardEvent) => {
+    if (event.metaKey && event.key === 'e') {
+      event.preventDefault();
+
+      // TODO(burdon): Check what is selected and chose content accordintly.
+      // TODO(burdon): Remove range.
+      console.log('!!!', focused);
+      const sel = window.getSelection();
+      const c = document.createElement('span');
+      sel?.getRangeAt(0).surroundContents(c);
+      c.innerHTML = 'hello';
+    }
+  };
+
   return {
     meta: {
       id: DEBUG_PLUGIN,
     },
     ready: async (plugins) => {
+      document.addEventListener('focusin', onFocus);
+      document.addEventListener('focusout', onBlur);
+      document.addEventListener('keydown', onKeypress);
       settings
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
     },
     unload: async () => {
+      document.removeEventListener('focusin', onFocus);
+      document.removeEventListener('focusout', onBlur);
+      document.removeEventListener('keydown', onKeypress);
       settings.close();
     },
     provides: {
