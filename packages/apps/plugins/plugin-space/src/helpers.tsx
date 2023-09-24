@@ -10,8 +10,10 @@ import { Graph } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
+import { Query, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
+import { log } from '@dxos/log';
+import { effect } from '@preact/signals-react';
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
 export { getIndices } from '@tldraw/indices';
@@ -75,31 +77,19 @@ export class GraphNodeAdapter<T extends TypedObject> {
   }
 
   createNodes(space: Space, parent: Graph.Node) {
-    if (space.state.get() !== SpaceState.READY) {
-      return;
-    }
+    space.waitUntilReady().then(() => {
+      if (this._subscriptions.has(space.key.toHex())) {
+        log.warn('called multiple times', { space })
+        return;
+      }
 
-    if (this._subscriptions.has(space.key.toHex())) {
-      return;
-    }
+      const query = space.db.query<T>(this._filter as any);
 
-    // TODO(burdon): Do we need to cache here or be re-entrant (per space)?
-    const query = space.db.query<T>(this._filter as any); // TODO(burdon): Fix types.
-    this._previousObjects.set(space.key.toHex(), query.objects);
+      const indices = getIndices(query.objects.length);
 
-    // TODO(burdon): Provided by graph?
-    const indices = getIndices(query.objects.length);
+      const getObjectParent = () => (this._createGroup ? this._group : parent);
 
-    const getObjectParent = () => (this._createGroup ? this._group : parent);
-
-    // Subscribe to query.
-    this._subscriptions.set(
-      space.key.toHex(),
-      query.subscribe(() => {
-        if (this._createGroup && query.objects.length > 0) {
-          this._group = this._createGroup(parent);
-        }
-
+      const clear = effect(() => {
         const objectParent = getObjectParent();
         if (objectParent) {
           const previousObjects = this._previousObjects.get(space.key.toHex()) ?? [];
@@ -108,48 +98,17 @@ export class GraphNodeAdapter<T extends TypedObject> {
           removedObjects.forEach((object) => objectParent.removeNode(object.id));
           query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
         }
-      }),
-    );
+      })
 
-    if (this._createGroup && query.objects.length > 0) {
-      this._group = this._createGroup(parent);
-    }
+      this._subscriptions.set(space.key.toHex(), clear);
 
-    // Subscribe to all objects.
-    query.objects.forEach((object, index) => {
-      const id = `${space.key.toHex()}:${object.id}`;
-      this._subscriptions.set(
-        id,
-        object[subscribe](() => {
-          const objectParent = getObjectParent();
-          if (object.__deleted) {
-            this._subscriptions.get(id)?.();
-            this._subscriptions.delete(id);
-          } else if (objectParent) {
-            this._adapter(objectParent, object, indices[index]);
-          }
-        }),
-      );
+      // TODO(burdon): Provided by graph?
 
-      this._propertySubscriptions?.forEach((property) => {
-        const id = `${space.key.toHex()}:${object.id}:${property}`;
-        return this._subscriptions.set(
-          id,
-          object[property][subscribe](() => {
-            const objectParent = getObjectParent();
-            if (object.__deleted) {
-              this._subscriptions.get(id)?.();
-              this._subscriptions.delete(id);
-            } else if (objectParent) {
-              this._adapter(objectParent, object, indices[index]);
-            }
-          }),
-        );
-      });
+      if (this._createGroup && query.objects.length > 0) {
+        this._group = this._createGroup(parent);
+      }
+    })
 
-      const objectParent = getObjectParent();
-      objectParent && this._adapter(objectParent, object, indices[index]);
-    });
 
     return () => {
       Array.from(this._subscriptions.keys())
