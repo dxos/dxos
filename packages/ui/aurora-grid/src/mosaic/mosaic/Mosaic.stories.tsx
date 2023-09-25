@@ -1,7 +1,9 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { DeepSignal, deepSignal } from 'deepsignal';

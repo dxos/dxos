@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
-
-import '@dxosTheme';
 
 import { Table, TableColumn } from './Table';
 import { Item } from '../../layout';

@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { auroraTx } from '@dxos/aurora-theme';
+
 import React, { createElement, useEffect } from 'react';
 import { ThemeProvider } from '../src';
-import { auroraTx } from '@dxos/aurora-theme';
 
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},

@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import '@dxosTheme';
 import { Config, Defaults } from '@dxos/config';
 import { AppState } from '@dxos/kai-framework';
 import { log } from '@dxos/log';

@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
 import { TypedObject } from '@dxos/react-client/echo';

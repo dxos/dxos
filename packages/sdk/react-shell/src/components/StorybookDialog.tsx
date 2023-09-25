@@ -12,6 +12,7 @@ export type StorybookDialogProps = PropsWithChildren & {
   inOverlayLayout?: boolean;
 };
 
+// TODO(burdon): Move out of components.
 export const StorybookDialog = (props: StorybookDialogProps) => {
   const { inOverlayLayout = false } = props;
   const { tx } = useThemeContext();

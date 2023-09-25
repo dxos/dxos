@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
-import '@dxosTheme';
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
