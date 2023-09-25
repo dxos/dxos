@@ -164,7 +164,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
       const filter = (document: Document) =>
         document.__typename === Document.type.name && filters.every((filter) => filter(document));
-      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode, propertySubscriptions: ['content'] });
+      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
