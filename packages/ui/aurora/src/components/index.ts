@@ -5,6 +5,7 @@
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Buttons';
+export * from './Card';
 export * from './Center';
 export * from './ComboBox';
 export * from './Dialogs';

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
@@ -9,8 +11,6 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 
 import { FrameContextProvider, FrameRegistryContextProvider, useFrameContext } from './useFrameContext';
-
-import '@dxosTheme';
 
 export default {
   component: FrameContextProvider,

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useState } from 'react';
 
 import { Task } from '@dxos/kai-types';
 import { ClientDecorator } from '@dxos/react-client/testing';
-
-import '@dxosTheme';
 
 import { TaskList } from './TaskList';
 

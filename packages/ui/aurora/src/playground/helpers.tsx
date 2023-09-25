@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { FunctionComponent } from 'react';
 
 import { Density } from '@dxos/aurora-types';
 
-import '@dxosTheme';
 import { DensityProvider, ElevationProvider } from '../components';
 
 // TODO(burdon): Grid: density, variant (context?), elevation.
