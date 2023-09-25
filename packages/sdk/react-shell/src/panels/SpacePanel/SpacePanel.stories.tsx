@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -12,11 +13,10 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { SpacePanelImpl } from './SpacePanel';
 import { SpacePanelImplProps } from './SpacePanelProps';
 import { SpaceManagerImpl } from './steps';
-import { InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
-import { InvitationList } from '../../components/InvitationList/InvitationList';
+import { InvitationListItemImpl, SpaceMemberListImpl, InvitationList } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, InvitationManagerProps } from '../../steps';
-import { inviteWithState } from '../../testing/fixtures/invitations';
+import { inviteWithState } from '../../testing';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',

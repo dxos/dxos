@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { MetagraphClientFake } from '@dxos/metagraph';
@@ -12,8 +14,6 @@ import { FrameRegistry } from './FrameRegistry';
 import { frameDefs } from '../../frames';
 import { FrameRegistryContextProvider, useFrameRegistry } from '../../hooks';
 import { FullscreenDecorator } from '../../testing';
-
-import '@dxosTheme';
 
 export default {
   component: FrameRegistry,

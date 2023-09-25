@@ -16,6 +16,7 @@ const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
     id: tile.id,
     data: tile,
   });
+
   const isActive = activeId === tile.id;
   const ref = useComposedRefs(setNodeRef, forwardedRef);
   return (

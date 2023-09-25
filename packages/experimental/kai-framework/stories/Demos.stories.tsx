@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React, { ComponentProps, FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 // @ts-ignore
 import { range, MinMax } from '@dxos/kai-types';
-
-import '@dxosTheme';
 
 const Frame: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8'>{children}</div>;
