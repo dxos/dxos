@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useEffect, useState } from 'react';
 
 import { BitField } from '@dxos/util';
-
-import '@dxosTheme';
 
 import { Bitbar } from './Bitbar';
 

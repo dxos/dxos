@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-
 import '@dxosTheme';
+
+import React from 'react';
 
 import { DropdownMenu } from './DropdownMenu';
 import { Button } from '../Buttons';
@@ -19,15 +19,15 @@ const StorybookDropdownMenu = () => {
       <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
         <DropdownMenu.Viewport>
           <DropdownMenu.Item>
-            <span className='grow'>New Tab </span>
+            <span className='grow'>New Tab</span>
             <span className='opacity-50'>⌘+T</span>
           </DropdownMenu.Item>
           <DropdownMenu.Item>
-            <span className='grow'>New Window </span>
+            <span className='grow'>New Window</span>
             <span className='opacity-50'>⌘+N</span>
           </DropdownMenu.Item>
           <DropdownMenu.Item disabled>
-            <span className='grow'>New Private Window </span>
+            <span className='grow'>New Private Window</span>
             <span className='opacity-50'>⇧+⌘+N</span>
           </DropdownMenu.Item>
           {/* <DropdownMenu.Sub> */}

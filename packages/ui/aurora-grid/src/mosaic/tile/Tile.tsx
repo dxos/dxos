@@ -10,12 +10,12 @@ import { TileProps } from '../types';
 
 const Tile = forwardRef<HTMLDivElement, TileProps>((props: TileProps, forwardedRef) => {
   switch (props.variant) {
-    case 'stack':
-      return <Stack {...props} ref={forwardedRef} />;
+    case 'treeitem': // TODO(burdon): listitem?
+      return <TreeItem {...props} ref={forwardedRef} />;
     case 'card':
       return <Card {...props} ref={forwardedRef} />;
-    case 'treeitem':
-      return <TreeItem {...props} ref={forwardedRef} />;
+    case 'stack': // TODO(burdon): section?
+      return <Stack {...props} ref={forwardedRef} />;
     default:
       return null;
   }

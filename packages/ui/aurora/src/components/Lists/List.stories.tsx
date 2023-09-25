@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { DndContext, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useState } from 'react';
 
-import '@dxosTheme';
 import { getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { List, ListItem, ListProps, ListScopedProps } from './List';
@@ -46,14 +47,13 @@ export const UniformSizeDraggable = {
         text: `List item ${index + 1}`,
       })),
     );
+
     const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
-
       if (active.id !== over?.id) {
         setItems((items) => {
           const oldIndex = items.findIndex((item) => item.id === active.id);
           const newIndex = items.findIndex((item) => item.id === over?.id);
-
           return arrayMove(items, oldIndex, newIndex);
         });
       }

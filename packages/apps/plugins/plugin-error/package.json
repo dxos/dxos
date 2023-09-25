@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-error",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "DXOS Surface plugin for providing an error boundary.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

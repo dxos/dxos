@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
@@ -10,8 +12,6 @@ import React, { useEffect, useState } from 'react';
 import { DensityProvider } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
-
-import '@dxosTheme';
 
 import { Table } from './Table';
 import { createColumnBuilder, ValueUpdater } from './helpers';
