@@ -47,12 +47,12 @@ export class Query<T extends TypedObject = TypedObject> {
     // TODO(dmaretskyi): Needs to be weak.
     this._updateEvent.on(() => {
       this._cache = undefined;
-      this._signal!.notifyWrite()
+      this._signal?.notifyWrite()
     });
   }
 
   get objects(): T[] {
-    this._signal!.notifyRead();
+    this._signal?.notifyRead();
 
     if (!this._cache) {
       this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
