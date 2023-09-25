@@ -3,93 +3,129 @@
 //
 
 import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
-import React, { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import React, {
+  ComponentPropsWithoutRef,
+  ComponentPropsWithRef,
+  FC,
+  forwardRef,
+  ForwardRefExoticComponent,
+} from 'react';
 
-import { getSize, inputSurface } from '@dxos/aurora-theme';
-import { ChromaticPalette, ClassNameValue, MessageValence, NeutralPalette } from '@dxos/aurora-types';
-
-import { useThemeContext } from '../../hooks';
+import { useDensityContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
-type CardRootProps = ThemedClassName<PropsWithChildren<{
-  palette?: NeutralPalette | ChromaticPalette | MessageValence;
+type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   square?: boolean;
   noPadding?: boolean;
-}>>;
+};
 
-const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(({ classNames, children, palette, square, noPadding, ...props }, forwardedRef) => {
+const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
+  ({ square, noPadding, classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <div {...props} ref={forwardedRef} className={tx('card.root', 'card', { square, noPadding }, classNames)}>
+        {children}
+      </div>
+    );
+  },
+);
+
+type CardHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { floating?: boolean };
+
+export const CardHeader: FC<CardHeaderProps> = ({ floating, classNames, children, ...props }) => {
   const { tx } = useThemeContext();
   return (
-    <div
-      {...props}
-      ref={forwardedRef}
-      className={tx('card.root', 'card', { palette }, classNames)}
-      // className={tx(
-        {/*'flex flex-col group w-full min-w-[280px] max-w-[400px] max-h-[400px] overflow-hidden',*/}
-        // square && 'aspect-square',
-        {/*'shadow-sm rounded',*/}
-        // !noPadding && 'py-2 gap-1',
-        // inputSurface,
-        // classNames,
-      // )}
-    >
+    <div {...props} className={tx('card.header', 'card', { floating }, classNames)}>
       {children}
     </div>
   );
 };
 
-export const CardHeader: FC<PropsWithChildren<{ classNames?: ClassNameValue }>> = ({ classNames, children }) => {
-  const { tx } = useThemeContext();
-  // return <div className={tx('flex w-full px-2 overflow-hidden', classNames)}>{children}</div>;
-  return <div className={tx('card.header', 'card', {}, classNames)}>{children}</div>
+type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  padding?: boolean;
+  center?: boolean;
+  title?: string;
 };
 
-export const CardBody: FC<PropsWithChildren<{ classNames?: ClassNameValue; indent?: boolean }>> = ({
-  classNames,
-  children,
-  indent,
-}) => {
+export const CardTitle: FC<CardTitleProps> = ({ padding, center, title, classNames, ...props }) => {
   const { tx } = useThemeContext();
-  // return <div className={tx('flex flex-col px-2 gap-2', indent && 'ml-8', classNames)}>{children}</div>;
-  return <div className={tx('card.body', 'card', {}, classNames)}>{children}</div>
+  return (
+    <div {...props} className={tx('card.title', 'card', { padding, center }, classNames)}>
+      {title}
+    </div>
+  );
 };
 
-// TODO(burdon): Doesn't truncate.
-export const CardTitle: FC<{ classNames?: ClassNameValue; title?: string }> = ({ classNames, title }) => {
+// TODO(burdon): Reuse ListItemEndcap?
+type CardDragHandleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' };
+
+const CardDragHandle = forwardRef<HTMLDivElement, CardDragHandleProps>(
+  ({ position, classNames, ...props }, forwardRef) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext();
+    return (
+      <div {...props} className={tx('card.dragHandle', 'card', { density, position }, classNames)} ref={forwardRef}>
+        <DotsSixVertical className={tx('card.dragHandleIcon', 'card')} />
+      </div>
+    );
+  },
+);
+
+type CardMenuProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' };
+
+const CardMenu: FC<CardMenuProps> = ({ position, classNames, ...props }) => {
   const { tx } = useThemeContext();
-  // return <div className={tx('w-full truncate', classNames)}>{title}</div>;
-  return <div className={tx('card.root', 'card', {}, classNames)}>{children}</div>
+  const density = useDensityContext();
+  return (
+    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
+      <DotsThreeVertical className={tx('card.menuIcon', 'card', {})} />
+    </div>
+  );
 };
 
-export const CardHandle: FC<any> = ({ ...props }) => {
+type CardBodyProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { gutter?: boolean };
+
+export const CardBody: FC<CardBodyProps> = ({ gutter, classNames, children, ...props }) => {
   const { tx } = useThemeContext();
-  return <div className={tx('card.root', 'card', {}, classNames)}>{children}</div>
-  // return (
-  //   <div className={'flex shrink-0 mx-1 w-6 h-6 justify-center items-center'} {...props}>
-  //     <DotsSixVertical className={tx(getSize(5), 'outline-none cursor-pointer')} />
-  //   </div>
-  // );
+  return (
+    <div {...props} className={tx('card.body', 'card', { gutter }, classNames)}>
+      {children}
+    </div>
+  );
 };
 
-export const CardMenu: FC<any> = () => {
+type CardMediaProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { src?: string; contain?: boolean };
+
+export const CardMedia: FC<CardMediaProps> = ({ src, contain, classNames, ...props }) => {
   const { tx } = useThemeContext();
-  return <div className={tx('card.root', 'card', {}, classNames)}>{children}</div>
-  // return (
-  //   <div className={'flex shrink-0 mx-1 w-6 h-6 justify-center items-center'}>
-  //     <DotsThreeVertical className={tx(getSize(5), 'outline-none cursor-pointer')} />
-  //   </div>
-  // );
+  return (
+    <img
+      {...props}
+      className={tx('card.media', 'card', { contain }, classNames)}
+      src={src}
+      onError="this.onerror=null;this.src='https://placeimg.com/200/300/animals';"
+    />
+  );
 };
 
-export const Card = {
+// TODO(burdon): Forward refs for all components?
+export const Card: {
+  Root: ForwardRefExoticComponent<CardRootProps>;
+  Header: FC<CardHeaderProps>;
+  DragHandle: ForwardRefExoticComponent<CardDragHandleProps>;
+  Menu: FC<CardMenuProps>;
+  Title: FC<CardTitleProps>;
+  Body: FC<CardBodyProps>;
+  Media: FC<CardMediaProps>;
+} = {
   Root: CardRoot,
   Header: CardHeader,
-  Handle: CardHandle,
+  DragHandle: CardDragHandle,
   Menu: CardMenu,
   Title: CardTitle,
   Body: CardBody,
+  Media: CardMedia,
 };
 
-export type {
-  CardRootProps
-}
+export type { CardRootProps };

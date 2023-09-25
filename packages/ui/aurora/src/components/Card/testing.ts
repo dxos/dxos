@@ -8,7 +8,8 @@ type CardType = 'document' | 'message' | 'contact' | 'image' | 'event' | 'projec
 
 // https://unsplash.com
 // TODO(burdon): Use https://picsum.photos/
-const images = [
+export const testImages = [
+  // 'https://images.unsplash.com/photo-1554629947-334ff61d85dc',
   'https://images.unsplash.com/photo-1616394158624-a2ba9cfe2994',
   'https://images.unsplash.com/photo-1507941097613-9f2157b69235',
   'https://images.unsplash.com/photo-1431274172761-fca41d930114',
@@ -44,7 +45,7 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
   image: () => ({
     type: 'image',
     id: faker.string.uuid(),
-    src: faker.helpers.arrayElement(images),
+    src: faker.helpers.arrayElement(testImages),
     body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
   }),
   event: () => ({
