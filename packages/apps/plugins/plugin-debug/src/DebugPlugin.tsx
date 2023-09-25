@@ -41,13 +41,29 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     if (event.metaKey && event.key === 'e') {
       event.preventDefault();
 
-      // TODO(burdon): Check what is selected and chose content accordintly.
-      // TODO(burdon): Remove range.
-      console.log('!!!', focused);
-      const sel = window.getSelection();
-      const c = document.createElement('span');
-      sel?.getRangeAt(0).surroundContents(c);
-      c.innerHTML = 'hello';
+      const insert = (text: string) => {
+        const selection = document.getSelection();
+        if (selection) {
+          const range = selection.getRangeAt(0);
+          const content = document.createElement('span');
+          range.surroundContents(content);
+          content.innerHTML = text;
+          range.collapse();
+        }
+      };
+
+      // TODO(burdon): Check what is selected and chose content.
+      const text = 'This is some scripted text to insert automatically.';
+      const words = text.split(' ');
+      let i = 0;
+      const t: any = setInterval(() => {
+        if (i >= words.length) {
+          clearInterval(t);
+        } else {
+          const word = words[i++];
+          insert(word + ' ');
+        }
+      }, 300);
     }
   };
 
