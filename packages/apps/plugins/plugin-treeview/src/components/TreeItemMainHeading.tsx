@@ -4,18 +4,18 @@
 
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Breadcrumb, Button, useTranslation } from '@dxos/aurora';
 
 import { TREE_VIEW_PLUGIN, TreeViewAction } from '../types';
 import { getTreeItemLabel } from '../util';
 
-export const TreeItemMainHeading = ({ data: node }: { data: Graph.Node }) => {
+export const TreeItemMainHeading = ({ data: node }: { data: Node }) => {
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { sendIntent } = useIntent();
 
-  const handleActivate = (node: Graph.Node) => {
+  const handleActivate = (node: Node) => {
     void sendIntent({
       plugin: TREE_VIEW_PLUGIN,
       action: TreeViewAction.ACTIVATE,

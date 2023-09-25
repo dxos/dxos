@@ -6,18 +6,13 @@ import { CompassTool } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { Graph } from '@braneframe/plugin-graph';
-// TODO(burdon): Move to graph?
+import type { Node } from '@braneframe/plugin-graph';
 import { Sketch as SketchType } from '@braneframe/types';
 import { Space } from '@dxos/client/echo';
 
 import { SKETCH_PLUGIN } from './types';
 
-export const objectToGraphNode = (
-  parent: Graph.Node<Space>,
-  object: SketchType,
-  index: string,
-): Graph.Node<SketchType> => {
+export const objectToGraphNode = (parent: Node<Space>, object: SketchType, index: string): Node<SketchType> => {
   const [child] = parent.addNode(SKETCH_PLUGIN, {
     id: object.id,
     label: object.title ?? ['object title placeholder', { ns: SKETCH_PLUGIN }],

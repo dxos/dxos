@@ -3,13 +3,13 @@
 //
 
 import { Intersect, Planet } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-react';
+import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { Node, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import {
@@ -283,30 +283,27 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          let groupNode!: Graph.Node;
-          batch(() => {
-            // Ensure default space is always first.
-            spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
+          // Ensure default space is always first.
+          spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
-            // Shared spaces section.
-            [groupNode] = parent.addNode(SPACE_PLUGIN, {
-              id: getSpaceId('all-spaces'),
-              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-              properties: {
-                // TODO(burdon): Factor out palette constants.
-                palette: 'pink',
-                'data-testid': 'spacePlugin.allSpaces',
-                acceptPersistenceClass: new Set(['appState']),
-                childrenPersistenceClass: 'appState',
-                onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
-                  child.properties.index = setAppStateIndex(
-                    child.id,
-                    nextIndex,
-                    treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
-                  );
-                },
+          // Shared spaces section.
+          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
+            id: getSpaceId('all-spaces'),
+            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
+            properties: {
+              // TODO(burdon): Factor out palette constants.
+              palette: 'pink',
+              'data-testid': 'spacePlugin.allSpaces',
+              acceptPersistenceClass: new Set(['appState']),
+              childrenPersistenceClass: 'appState',
+              onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
+                child.properties.index = setAppStateIndex(
+                  child.id,
+                  nextIndex,
+                  treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
+                );
               },
-            });
+            },
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {

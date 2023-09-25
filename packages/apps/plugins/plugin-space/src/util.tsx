@@ -7,7 +7,7 @@ import { batch } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-treeview';
 import { AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
@@ -48,11 +48,11 @@ export const spaceToGraphNode = ({
   defaultIndex,
 }: {
   space: Space;
-  parent: Graph.Node;
+  parent: Node;
   settings: SpaceSettingsProps;
   appState?: AppState;
   defaultIndex?: string;
-}): Graph.Node<Space> => {
+}): Node<Space> => {
   const id = getSpaceId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
@@ -61,7 +61,8 @@ export const spaceToGraphNode = ({
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
 
-  let node!: Graph.Node;
+  let node!: Node;
+  // TODO(wittjosiah): Why is this batch needed?
   batch(() => {
     [node] = parent.addNode(SPACE_PLUGIN, {
       id,
@@ -78,13 +79,13 @@ export const spaceToGraphNode = ({
         disabled,
         error,
         index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
-        onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
+        onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
           // TODO(burdon): Decouple from object's data structure.
           child.data.meta.index = nextIndex;
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
-        onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+        onMigrateStartChild: (child: Node<TypedObject>, nextParent: Node<Space>, nextIndex: string) => {
           // create clone of child and add to migration destination
           const object = clone(child.data, {
             retainId: true,
@@ -93,7 +94,7 @@ export const spaceToGraphNode = ({
           space.db.add(object);
           object.meta.index = nextIndex;
         },
-        onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
+        onMigrateEndChild: (child: Node<TypedObject>) => {
           // remove child being replicated from migration origin
           space.db.remove(child.data);
         },

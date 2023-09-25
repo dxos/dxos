@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Filter } from '@dxos/echo-schema';
 import { Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
@@ -18,17 +18,17 @@ export { getIndices } from '@tldraw/indices';
 
 export type GraphNodeAdapterOptions<T extends TypedObject> = {
   filter: Filter<T>;
-  adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node;
+  adapter: (parent: Node, object: T, index: string) => Node;
   // TODO(burdon): ???
-  createGroup?: (parent: Graph.Node) => Graph.Node;
+  createGroup?: (parent: Node) => Node;
 };
 
 // TODO(burdon): Reconcile with GraphNodeBuilder.
 export class GraphNodeAdapter<T extends TypedObject> {
   private readonly _filter: Filter<T>;
-  private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node;
-  private readonly _createGroup?: (parent: Graph.Node) => Graph.Node;
-  private _group?: Graph.Node;
+  private readonly _adapter: (parent: Node, object: T, index: string) => Node;
+  private readonly _createGroup?: (parent: Node) => Node;
+  private _group?: Node;
 
   constructor({ filter, adapter, createGroup }: GraphNodeAdapterOptions<T>) {
     this._filter = filter;
@@ -63,7 +63,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
 
   clear() {}
 
-  createNodes(space: Space, parent: Graph.Node) {
+  createNodes(space: Space, parent: Node) {
     // TODO(dmaretskyi): Turn into subscription.
     if (space.state.get() !== SpaceState.READY) {
       return;

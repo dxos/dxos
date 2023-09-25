@@ -9,7 +9,7 @@ import React, { FC, MutableRefObject, RefCallback, useCallback } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
@@ -126,7 +126,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
+  const StandaloneMainMenu: FC<{ data: Node<Document> }> = ({ data }) => {
     const identity = useIdentity();
     const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.active;

@@ -6,7 +6,7 @@ import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 
 import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID, LocalDirectory, LocalEntity, LocalFile, LocalFilesAction } from './types';
 
@@ -112,7 +112,7 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent: Graph.Node) => {
+export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent: Node) => {
   if ('children' in entity) {
     return localDirectoryToGraphNode(entity, index, parent);
   } else {
@@ -120,7 +120,7 @@ export const localEntityToGraphNode = (entity: LocalEntity, index: string, paren
   }
 };
 
-const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, parent: Graph.Node<LocalDirectory>) => {
+const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, parent: Node<LocalDirectory>) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
     label: directory.title,
@@ -164,7 +164,7 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
   return node;
 };
 
-const localFileToGraphNode = (file: LocalFile, index: string, parent: Graph.Node<LocalDirectory>) => {
+const localFileToGraphNode = (file: LocalFile, index: string, parent: Node<LocalDirectory>) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,

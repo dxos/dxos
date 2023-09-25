@@ -8,7 +8,7 @@ import {
   Flag,
   FlagPennant,
   Gauge,
-  Graph,
+  Graph as GraphIcon,
   HandPalm,
   PaperPlaneRight,
   Play,
@@ -26,7 +26,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { GraphImpl } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import { Button, DensityProvider, Input, Main, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
@@ -67,7 +67,7 @@ export const useFileDownload = (): ((data: Blob | string, filename: string) => v
   );
 };
 
-export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ data: { graph, space } }) => {
+export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: { graph, space } }) => {
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
@@ -168,7 +168,7 @@ export const DebugMain: FC<{ data: { graph: GraphImpl; space: Space } }> = ({ da
               <Gauge className={getSize(5)} />
             </ToggleGroupItem>
             <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
-              <Graph className={getSize(5)} />
+              <GraphIcon className={getSize(5)} />
             </ToggleGroupItem>
           </ToggleGroup>
           <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
