@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-
-import '@dxosTheme';
 
 import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 
