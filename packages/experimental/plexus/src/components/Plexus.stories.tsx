@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import {
   AirplaneTakeoff,
@@ -23,8 +25,6 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Markers, GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
-
-import '@dxosTheme';
 
 import { Plexus } from './Plexus';
 

@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';

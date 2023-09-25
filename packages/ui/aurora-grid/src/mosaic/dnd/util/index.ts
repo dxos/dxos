@@ -3,4 +3,5 @@
 //
 
 export * from './dnd-id';
+export * from './manage-preview';
 export * from './next-index';
