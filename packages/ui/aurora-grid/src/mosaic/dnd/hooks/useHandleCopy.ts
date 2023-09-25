@@ -20,6 +20,7 @@ export const useHandleCopyDragStart = () => {
     dnd.activeCopyClass = active?.data?.current?.copyClass ?? null;
   }, deps);
 };
+
 export const useHandleCopyDragEnd = () => {
   const {
     mosaic: { tiles, relations },

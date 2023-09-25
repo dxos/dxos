@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -9,8 +11,6 @@ import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren, useState } from 'react';
 
 import { chromeSurface, mx } from '@dxos/aurora-theme';
-
-import '@dxosTheme';
 
 import { Card } from './Card';
 import { testImages } from './testing';
@@ -39,13 +39,11 @@ const DraggableCard: FC<{ data: CardData; onDelete: (id: string) => void }> = ({
   const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
   const t = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  // TODO(burdon): Menu.
   return (
     <Card.Root ref={setNodeRef} style={{ transform: CSS.Transform.toString(t) }}>
       <Card.Header>
         <Card.DragHandle {...listeners} {...attributes} />
         <Card.Title title={title} />
-
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <Card.Menu />

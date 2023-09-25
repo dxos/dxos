@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
