@@ -53,7 +53,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       };
 
       // TODO(burdon): Check what is selected and chose content.
-      const text = 'This is some scripted text to insert automatically.';
+      const text = 'This is some scripted text that will be automatically inserted into the document.';
       const words = text.split(' ');
       let i = 0;
       const t: any = setInterval(() => {
