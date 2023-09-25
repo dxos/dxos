@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, TimeoutError, sleep, synchronized } from '@dxos/async';
+import { Event, sleep, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';

@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { CancelledError, SystemError, TimeoutError } from '@dxos/protocols';
+import { CancelledError, SystemError } from '@dxos/protocols';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Connection, ConnectionState } from './connection';
