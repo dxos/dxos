@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
-import '@dxosTheme';
 import { MessageValence } from '@dxos/aurora-types';
 
 import { Input } from './Input';

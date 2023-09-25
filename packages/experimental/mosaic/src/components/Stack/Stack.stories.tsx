@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { getSize } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
 import { range } from '@dxos/util';
-
-import '@dxosTheme';
 
 import { Stack } from './Stack';
 import { StackAction, StackMenu } from './StackMenu';

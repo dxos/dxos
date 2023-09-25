@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { Presentation } from '@dxos/kai-types';
@@ -10,8 +12,6 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { PresenterFrame } from './PresenterFrame';
 import { PresenterFrameRuntime } from './defs';
 import { TestFrameContainer } from '../../testing';
-
-import '@dxosTheme';
 
 export default {
   component: PresenterFrame,
