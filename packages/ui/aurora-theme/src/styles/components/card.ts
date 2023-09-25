@@ -64,12 +64,26 @@ export const cardMenu: ComponentFunction<CardStyleProps & { position?: 'left' | 
 
 export const cardMenuIcon: ComponentFunction<CardStyleProps> = (_, ...etc) => mx(getSize(5), 'cursor-pointer');
 
-// TODO(burdon): Density-specific margin.
-export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> = ({ gutter, noPadding }, ...etc) =>
-  mx('flex flex-col my-2', !noPadding && 'px-4', gutter && 'ml-[32px] pl-0', ...etc);
+export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> = (
+  { density, gutter, noPadding },
+  ...etc
+) =>
+  mx(
+    'flex flex-col my-2',
+    !noPadding && 'px-4',
+    // TODO(burdon): Create density-specific constants.
+    gutter && (density === 'fine' ? 'pl-0 ml-[32px]' : 'pl-0 ml-[40px]'),
+    ...etc,
+  );
 
 export const cardMedia: ComponentFunction<CardStyleProps & { contain?: boolean }> = ({ contain }, ...etc) =>
-  mx('w-full h-full', contain ? 'object-contain' : 'object-cover', ...etc);
+  mx(
+    'w-full h-full',
+    // Hide broken image links (e.g., if offline).
+    "before:content-[''] before:block before:w-full before:h-full before:border-0",
+    contain ? 'object-contain' : 'object-cover',
+    ...etc,
+  );
 
 export const cardTheme: Theme<CardStyleProps> = {
   root: cardRoot,
