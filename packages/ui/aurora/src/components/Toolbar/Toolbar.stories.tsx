@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { ArrowClockwise, Bug, FileJs, FileTs, TextB, TextItalic, TextUnderline } from '@phosphor-icons/react';
 import React from 'react';
-
-import '@dxosTheme';
 
 import { Toolbar } from './Toolbar';
 import { Toggle } from '../Buttons';

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-
 import '@dxosTheme';
+
+import React from 'react';
 
 import { Avatar, useJdenticonHref } from './Avatar';
 import { AvatarGroup, AvatarGroupItem } from './AvatarGroup';

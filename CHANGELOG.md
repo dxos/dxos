@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.3](https://github.com/dxos/dxos/compare/v0.2.2...v0.2.3) (2023-09-25)
+
+
+### Features
+
+* add identity to swarm panel in devtools ([#4289](https://github.com/dxos/dxos/issues/4289)) ([060c13d](https://github.com/dxos/dxos/commit/060c13d2fa52db965820b46a7b9ccfee50b35416))
+* show identity/device key in devtools footer ([#4307](https://github.com/dxos/dxos/issues/4307)) ([19efe7f](https://github.com/dxos/dxos/commit/19efe7f9e27c6818e2657f36d84a6f4f33c9195e))
+* Theme ([#4312](https://github.com/dxos/dxos/issues/4312)) ([450a215](https://github.com/dxos/dxos/commit/450a21566f302f5be90dbd88851c2f73eb5e016f))
+* Views and cards ([#4309](https://github.com/dxos/dxos/issues/4309)) ([93531f7](https://github.com/dxos/dxos/commit/93531f7a0223dc8f08d0b318feec895e20361ec6))
+
+
+### Bug Fixes
+
+* **labs-app:** ensure remote source config ([#4314](https://github.com/dxos/dxos/issues/4314)) ([c9a018f](https://github.com/dxos/dxos/commit/c9a018f2db3ca3fbb6ca7b9c6bacfea73011d8f4))
+* protobuf sync with kube repo ([#4306](https://github.com/dxos/dxos/issues/4306)) ([70ad57e](https://github.com/dxos/dxos/commit/70ad57e986cfea785bb105c9ed689ba8712e7879))
+* restore previous testbench defaults ([#4308](https://github.com/dxos/dxos/issues/4308)) ([1800537](https://github.com/dxos/dxos/commit/1800537b042f1c955bd933745697bb3678a24162))
+* skip old published versions ([#4315](https://github.com/dxos/dxos/issues/4315)) ([2d1ef8a](https://github.com/dxos/dxos/commit/2d1ef8a61a774d3afce6cba2cebe68e8c1284089))
+
 ## [0.2.1](https://github.com/dxos/dxos/compare/v0.2.0...v0.2.1) (2023-09-21)
 
 

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React, { FC, useEffect, useState } from 'react';
 
-import '@dxosTheme';
 import { ComboBox, ComboBoxItem } from './ComboBox';
 
 type TestItem = { id: string; text: string };

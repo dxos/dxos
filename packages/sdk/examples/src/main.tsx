@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';

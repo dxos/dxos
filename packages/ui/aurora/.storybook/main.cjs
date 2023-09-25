@@ -1,8 +1,13 @@
-const { mergeConfig } = require('vite');
+//
+// Copyright 2023 DXOS.org
+//
+
 const { resolve } = require('path');
+const { mergeConfig } = require('vite');
+
+const turbosnap = require('vite-plugin-turbosnap');
 
 const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
-const turbosnap = require('vite-plugin-turbosnap');
 
 module.exports = {
   stories: [
