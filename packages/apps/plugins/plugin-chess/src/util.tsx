@@ -17,7 +17,7 @@ export const objectToGraphNode = (
   object: TypedObject,
   index: string,
 ): Graph.Node<TypedObject> => {
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(CHESS_PLUGIN, {
     id: object.id,
     label: object.title ?? ['game title placeholder', { ns: CHESS_PLUGIN }],
     icon: (props) => <ShieldChevron {...props} />,

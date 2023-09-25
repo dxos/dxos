@@ -6,7 +6,8 @@ import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
 import { Graph } from './types';
-import NodeLabel = Graph.Label;
+
+type NodeLabel = Graph.Label;
 
 /**
  * The Graph represents...

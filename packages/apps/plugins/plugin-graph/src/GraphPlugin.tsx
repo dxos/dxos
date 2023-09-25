@@ -30,14 +30,14 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       builder._setSendIntent(intentPlugin?.provides.intent.sendIntent);
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.withPlugins)
-        .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
-        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder(plugins)));
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
+        .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder(plugins)));
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.nodes)
-        .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
-        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder));
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.nodes])
+        .filter((nodes): nodes is [string, Graph.NodeBuilder] => !!nodes[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder));
 
       state.graph = builder.build();
     },

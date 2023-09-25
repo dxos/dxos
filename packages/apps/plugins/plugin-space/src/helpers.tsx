@@ -3,6 +3,7 @@
 //
 
 import { PencilSimpleLine, Trash } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -11,7 +12,6 @@ import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { Filter } from '@dxos/echo-schema';
 import { Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
-import { effect } from '@preact/signals-react';
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
 export { getIndices } from '@tldraw/indices';
@@ -35,8 +35,6 @@ export class GraphNodeAdapter<T extends TypedObject> {
     this._createGroup = createGroup;
 
     this._adapter = (parent, object, index) => {
-      console.log('add object to graph', { parentId: parent.id, typename: object.__typename, objId: object.id, parent, object, index,  })
-
       const child = adapter(parent, object, index);
 
       child.addAction({
@@ -63,10 +61,11 @@ export class GraphNodeAdapter<T extends TypedObject> {
     };
   }
 
-  clear() { }
+  clear() {}
 
   createNodes(space: Space, parent: Graph.Node) {
-    if (space.state.get() !== SpaceState.READY) { // TODO(dmaretskyi): Turn into subscription.
+    // TODO(dmaretskyi): Turn into subscription.
+    if (space.state.get() !== SpaceState.READY) {
       return;
     }
 
@@ -86,7 +85,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
 
       removedObjects.forEach((object) => objectParent.removeNode(object.id));
       query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
-    })
+    });
 
     if (this._createGroup && query.objects.length > 0) {
       this._group = this._createGroup(parent);

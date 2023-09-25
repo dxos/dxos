@@ -26,9 +26,10 @@ describe('Graph', () => {
   test('builder can add children to root node', () => {
     const builder = new GraphBuilder();
     const testNode = { id: 'test', label: 'Test', data: null };
-    builder.addNodeBuilder((parent) => {
+    const id = 'test';
+    builder.addNodeBuilder(id, (parent) => {
       if (parent.id === 'root') {
-        parent.addNode(testNode);
+        parent.addNode(id, testNode);
       }
     });
 
@@ -40,7 +41,7 @@ describe('Graph', () => {
   test('builder can add actions to root node', () => {
     const builder = new GraphBuilder();
     const testAction = { id: 'test', label: 'Test', intent: { action: 'test' } };
-    builder.addNodeBuilder((parent) => {
+    builder.addNodeBuilder('test', (parent) => {
       if (parent.id === 'root') {
         parent.addAction(testAction);
       }
@@ -52,8 +53,8 @@ describe('Graph', () => {
 
   test('multiple builders can add children to root node', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1').nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1').nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap)).to.deep.equal(['root-test1', 'root-test2']);
@@ -64,8 +65,8 @@ describe('Graph', () => {
 
   test('multiple builders can add actions to root node', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1').nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1').nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     expect(Object.keys(graph.root.actionsMap)).to.deep.equal(['root-test1', 'root-test2']);
@@ -73,8 +74,8 @@ describe('Graph', () => {
 
   test('builders can add children to child node', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap['root-test1'].children)).to.be.empty;
@@ -86,8 +87,8 @@ describe('Graph', () => {
 
   test('builders can add actions to child node', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     expect(Object.keys(graph.root.childrenMap['root-test1'].actionsMap)).to.be.empty;
@@ -96,7 +97,7 @@ describe('Graph', () => {
 
   test('builders can add actions to action sets', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder((parent) => {
+    builder.addNodeBuilder('test', (parent) => {
       const [set] = parent.addAction({ id: 'test-set', label: 'Test Set' });
       set.addAction({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
     });
@@ -111,7 +112,7 @@ describe('Graph', () => {
     // TODO(burdon): Return TestNodeBuilder object.
     const { nodeBuilder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty } =
       createTestNodeBuilder('test1', 2);
-    builder.addNodeBuilder(nodeBuilder);
+    builder.addNodeBuilder('test1', nodeBuilder);
 
     const graph = builder.build();
     expect(graph.root.children).to.have.length(1);
@@ -155,8 +156,8 @@ describe('Graph', () => {
 
   test('can find nodes', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     expect(graph.findNode('root-test1')?.id).to.equal('root-test1');
@@ -165,8 +166,8 @@ describe('Graph', () => {
 
   test('can be traversed', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     const nodes: string[] = [];
@@ -176,8 +177,8 @@ describe('Graph', () => {
 
   test('traversal can be limited by predicate', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     const nodes: string[] = [];
@@ -190,8 +191,8 @@ describe('Graph', () => {
 
   test('traversal can be started from any node', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     const nodes: string[] = [];
@@ -204,8 +205,8 @@ describe('Graph', () => {
 
   test('can traverse up', () => {
     const builder = new GraphBuilder();
-    builder.addNodeBuilder(createTestNodeBuilder('test1', 2).nodeBuilder);
-    builder.addNodeBuilder(createTestNodeBuilder('test2').nodeBuilder);
+    builder.addNodeBuilder('test1', createTestNodeBuilder('test1', 2).nodeBuilder);
+    builder.addNodeBuilder('test2', createTestNodeBuilder('test2').nodeBuilder);
 
     const graph = builder.build();
     const nodes: string[] = [];

@@ -3,6 +3,7 @@
 //
 
 import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import { batch } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -14,7 +15,6 @@ import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceSettingsProps } from './types';
-import { batch } from '@preact/signals-react';
 
 type Index = ReturnType<typeof getIndices>[number];
 
@@ -63,7 +63,7 @@ export const spaceToGraphNode = ({
 
   let node!: Graph.Node;
   batch(() => {
-    [node] = parent.addNode({
+    [node] = parent.addNode(SPACE_PLUGIN, {
       id,
       label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
       description: space.properties.description,

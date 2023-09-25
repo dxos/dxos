@@ -16,7 +16,7 @@ export const objectToGraphNode = (
   object: TypedObject,
   index: string,
 ): Graph.Node<TypedObject> => {
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(TABLE_PLUGIN, {
     id: object.id,
     label: object.title ?? ['object placeholder', { ns: TABLE_PLUGIN }],
     icon: (props) => <Table {...props} />,

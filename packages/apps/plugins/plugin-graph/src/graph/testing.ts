@@ -22,7 +22,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
       return;
     }
 
-    const [child] = parent.addNode({
+    const [child] = parent.addNode(id, {
       id: `${parent.id}-${id}`,
       label: `${parent.id}-${id}`,
       data: null,
@@ -45,7 +45,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
       return;
     }
 
-    const [child] = parent.addNode(node);
+    const [child] = parent.addNode(id, node);
     nodes.set(child.id, child);
     return child;
   };

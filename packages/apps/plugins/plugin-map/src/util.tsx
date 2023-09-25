@@ -17,7 +17,7 @@ export const objectToGraphNode = (
   object: TypedObject,
   index: string,
 ): Graph.Node<TypedObject> => {
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(MAP_PLUGIN, {
     id: object.id,
     label: object.title ?? ['object title placeholder', { ns: MAP_PLUGIN }],
     icon: (props) => <Compass {...props} />,

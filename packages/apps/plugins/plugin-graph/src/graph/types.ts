@@ -136,6 +136,7 @@ export namespace Graph {
     removeProperty(key: string): void;
 
     addNode<TChildData = null, TChildProperties extends { [key: string]: any } = { [key: string]: any }>(
+      id: string,
       ...node: (Pick<Node, 'id' | 'label'> & Partial<Node<TChildData, TChildProperties>>)[]
     ): Node<TChildData, TChildProperties>[];
     removeNode(id: string): Node;

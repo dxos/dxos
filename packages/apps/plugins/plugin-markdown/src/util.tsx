@@ -81,7 +81,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
           : {};
       })();
 
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(MARKDOWN_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) =>

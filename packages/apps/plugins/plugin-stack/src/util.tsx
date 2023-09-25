@@ -24,7 +24,7 @@ export const isStack = <T extends StackObject = GenericStackObject>(data: unknow
 export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
 export const stackToGraphNode = (parent: Graph.Node<Space>, object: StackType, index: string): Graph.Node => {
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(STACK_PLUGIN, {
     id: object.id,
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <StackSimple {...props} />,

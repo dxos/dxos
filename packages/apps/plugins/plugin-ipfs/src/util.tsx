@@ -18,7 +18,7 @@ export const objectToGraphNode = (
   object: KanbanType,
   index: string,
 ): Graph.Node<KanbanType> => {
-  const [child] = parent.addNode({
+  const [child] = parent.addNode(IPFS_PLUGIN, {
     id: object.id,
     label: object.title ?? ['object title placeholder', { ns: IPFS_PLUGIN }],
     icon: (props) => <Image {...props} />,

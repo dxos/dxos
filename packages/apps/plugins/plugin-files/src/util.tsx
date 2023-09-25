@@ -121,7 +121,7 @@ export const localEntityToGraphNode = (entity: LocalEntity, index: string, paren
 };
 
 const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, parent: Graph.Node<LocalDirectory>) => {
-  const [node] = parent.addNode({
+  const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
     label: directory.title,
     icon: (props) => <Folder {...props} />,
@@ -165,7 +165,7 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
 };
 
 const localFileToGraphNode = (file: LocalFile, index: string, parent: Graph.Node<LocalDirectory>) => {
-  const [node] = parent.addNode({
+  const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,
     icon: (props) => <FileIcon {...props} />,
