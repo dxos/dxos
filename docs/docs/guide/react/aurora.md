@@ -54,6 +54,7 @@ Import the special DXOS theme stylesheet `@dxosTheme` anywhere in code such as `
 
 ```tsx{1} file=./snippets/vite-main.tsx#L5-
 import '@dxosTheme';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
