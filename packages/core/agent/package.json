@@ -38,6 +38,7 @@
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^2.29.3",
     "express": "^4.17.1",
+    "flexsearch": "^0.7.31",
     "isomorphic-ws": "^4.0.1",
     "lunr": "^2.3.9",
     "minisearch": "^3.0.2",
