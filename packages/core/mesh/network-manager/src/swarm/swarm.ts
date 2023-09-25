@@ -189,7 +189,7 @@ export class Swarm {
           void this._destroyPeer(peer.id, 'peer left').catch((err) => log.catch(err));
         }
       } else {
-        log('received peerLeft but no peer not found', { peer: swarmEvent.peerLeft.peer });
+        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer });
       }
     }
 

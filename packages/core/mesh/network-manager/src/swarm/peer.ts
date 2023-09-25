@@ -230,14 +230,10 @@ export class Peer {
         peerId: this.localPeerId,
         remoteId: this.id,
       });
-      if (err instanceof TimeoutError) {
-        log.warn('aborting connection due to signalling failure');
-        await connection.abort(err);
-      } else {
-        log.info('closing connection due to error on openConnection', { err });
-        // Calls `onStateChange` with CLOSED state.
-        await this.closeConnection(err);
-      }
+      // TODO(nf): unsure when this will be called and the connection won't abort itself. but if it does fall through we should probably abort and not close.
+      log.warn('closing connection due to unhandled error on openConnection', { err });
+      // Calls `onStateChange` with CLOSED state.
+      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, TimeoutError, sleep, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -97,7 +97,7 @@ export class WebsocketSignalManager implements SignalManager {
     invariant(server, 'server not found');
 
     await server.close();
-    await new Promise((resolve) => setTimeout(resolve, WSS_SIGNAL_SERVER_REBOOT_DELAY));
+    await sleep(WSS_SIGNAL_SERVER_REBOOT_DELAY);
     await server.open();
   }
 

@@ -95,6 +95,7 @@ export enum ConnectionState {
  */
 export class Connection {
   private readonly _ctx = new Context();
+  private connectedTimeoutContext = new Context();
 
   private _state: ConnectionState = ConnectionState.CREATED;
   private _transport: Transport | undefined;
@@ -173,9 +174,8 @@ export class Connection {
       this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
-    const connectedContext = new Context();
     scheduleTask(
-      connectedContext,
+      this.connectedTimeoutContext,
       async () => {
         log.warn('timeout waiting for transport to connect, aborting');
         await this.abort().catch((err) => this.errors.raise(err));
@@ -192,7 +192,7 @@ export class Connection {
 
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
-      await connectedContext.dispose();
+      await this.connectedTimeoutContext.dispose();
       this._callbacks?.onConnected?.();
     });
 
@@ -202,7 +202,7 @@ export class Connection {
       this.abort().catch((err) => this.errors.raise(err));
     });
 
-    this._transport.errors.handle((err) => {
+    this._transport.errors.handle(async (err) => {
       log('transport error:', { err });
       if (!this.closeReason) {
         this.closeReason = err?.message;
@@ -220,6 +220,7 @@ export class Connection {
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
+        await this.connectedTimeoutContext.dispose();
         this.errors.raise(err);
       }
     });
@@ -244,6 +245,7 @@ export class Connection {
       return;
     }
 
+    await this.connectedTimeoutContext.dispose();
     this._changeState(ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
@@ -291,6 +293,7 @@ export class Connection {
     const lastState = this._state;
     this._changeState(ConnectionState.CLOSING);
 
+    await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
     log('closing...', { peerId: this.ownId });
@@ -343,7 +346,8 @@ export class Connection {
         data: { signalBatch: { signals } },
       });
     } catch (err) {
-      if (err instanceof CancelledError) {
+      // TODO(nf): determine why instanceof doesn't work here
+      if (err instanceof CancelledError || (err instanceof Error && err.message?.includes('CANCELLED'))) {
         return;
       }
 
