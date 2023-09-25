@@ -10,6 +10,9 @@ import get from 'lodash.get';
 import { markdownTags } from './markdownTags';
 import { bold, heading, italic, mark, strikethrough, tokens } from '../../styles';
 
+// TODO(burdon): Use theme colors.
+// TODO(burdon): Light mode.
+
 export const chalky = '#e5c07b';
 export const coral = '#e06c75';
 export const cyan = '#56b6c2';
@@ -68,19 +71,19 @@ export const markdownTheme = {
   //   color: '#ddd'
   // },
 
-  '.cm-tooltip': {
+  '.dark & .cm-tooltip': {
     border: 'none',
     backgroundColor: tooltipBackground,
   },
-  '.cm-tooltip .cm-tooltip-arrow:before': {
+  '.dark & .cm-tooltip .cm-tooltip-arrow:before': {
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
   },
-  '.cm-tooltip .cm-tooltip-arrow:after': {
+  '.dark & .cm-tooltip .cm-tooltip-arrow:after': {
     borderTopColor: tooltipBackground,
     borderBottomColor: tooltipBackground,
   },
-  '.cm-tooltip-autocomplete': {
+  '.dark & .cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
       backgroundColor: highlightBackground,
       color: ivory,
@@ -192,7 +195,6 @@ export const markdownDarkHighlighting = HighlightStyle.define(
         tags.invalid,
       ],
       color: 'inherit !important',
-      // opacity: '0.5',
     },
     {
       tag: [tags.link, tags.url],
@@ -206,21 +208,21 @@ export const markdownDarkHighlighting = HighlightStyle.define(
     },
     {
       tag: [
-        markdownTags.headingMark,
-        markdownTags.quoteMark,
-        markdownTags.listMark,
-        markdownTags.linkMark,
-        markdownTags.emphasisMark,
         markdownTags.codeMark,
-        markdownTags.url,
+        markdownTags.emphasisMark,
+        markdownTags.headingMark,
         markdownTags.linkLabel,
         markdownTags.linkReference,
-        tags.processingInstruction,
+        markdownTags.listMark,
+        markdownTags.quoteMark,
+        markdownTags.url,
         tags.meta,
+        tags.processingInstruction,
       ],
       class: mark,
     },
     { tag: [markdownTags.codeText, markdownTags.inlineCode], class: 'font-mono' },
+    { tag: tags.emphasis, class: italic },
     { tag: tags.heading1, class: heading[1] },
     { tag: tags.heading2, class: heading[2] },
     { tag: tags.heading3, class: heading[3] },
@@ -228,7 +230,6 @@ export const markdownDarkHighlighting = HighlightStyle.define(
     { tag: tags.heading5, class: heading[5] },
     { tag: tags.heading6, class: heading[6] },
     { tag: tags.strikethrough, class: strikethrough },
-    { tag: tags.emphasis, class: italic },
     { tag: tags.strong, class: bold },
   ],
   { scope: markdownLanguage, all: { fontFamily: get(tokens, 'fontFamily.body', []).join(',') } },
