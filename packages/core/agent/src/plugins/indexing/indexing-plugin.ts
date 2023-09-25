@@ -43,8 +43,8 @@ export class Indexing extends AbstractPlugin {
 
         const space = this._client.spaces.default;
 
-        const unsubscribe = space.listen('dxos.agent.indexing-plugin', (message) => {
-          this._processMessage(message);
+        const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
+          await this._processMessage(message);
         });
         log.info('Listening for indexing messages at default space.', { spaceKey: space.key.toHex() });
 
@@ -92,7 +92,7 @@ export class Indexing extends AbstractPlugin {
         invariant(this._index);
         query.objects.forEach((object) => {
           const document: IndexDocument = {
-            id: object.id,
+            id: `${space.key.toHex()}:${object.id}`,
             json: object.toJSON(),
           };
           this._index!.remove(document);
@@ -102,10 +102,45 @@ export class Indexing extends AbstractPlugin {
     };
   }
 
-  private _processMessage(message: GossipMessage) {
-    log.info('Received message:', message);
+  private async _processMessage(message: GossipMessage) {
+    const request: SearchRequest = message.payload;
+    if (request.query) {
+      this._search(request);
+    }
+  }
+
+  private _search(request: SearchRequest): SearchResponse {
+    invariant(this._index);
+    const results = this._index!.search(request.query, request.options);
+    return {
+      results: results.map((result) => {
+        return {
+          spaceKey: result.id.split(':')[0],
+          objectId: result.id.split(':')[1],
+          score: result.score,
+          matches: Object.entries(result.match).map(([term, keys]) => ({
+            term,
+            positions: keys.map((key: string) => ({ key })),
+          })),
+        };
+      }),
+    };
   }
 }
+
+type SearchRequest = {
+  query: string;
+  options?: {};
+};
+
+type SearchResponse = {
+  results: {
+    spaceKey: string;
+    objectId: string;
+    score: number;
+    matches: { term: string; positions: { key: string }[] }[];
+  }[];
+};
 
 type IndexDocument = {
   id: string;

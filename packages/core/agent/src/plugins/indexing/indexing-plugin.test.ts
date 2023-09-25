@@ -21,6 +21,7 @@ describe('Indexing', () => {
     },
     {
       '@id': 2,
+      foo: 'bar',
       nested: {
         deep: { foo: 'asdf bar' },
       },
@@ -92,10 +93,10 @@ describe('Indexing', () => {
     miniSearch.addAll(documents);
 
     const check = (index: MiniSearch) => {
-      const searchResult = index.search('bar');
+      const searchResult = index.search('bas', { fuzzy: true });
       expect(searchResult).to.have.lengthOf(2);
       expect(searchResult.find((r) => r.id === 1)?.match.bar).to.deep.equal(['foo']);
-      expect(searchResult.find((r) => r.id === 2)?.match.bar).to.deep.equal(['nested.deep.foo']);
+      expect(searchResult.find((r) => r.id === 2)?.match.bar).to.deep.equal(['foo', 'nested.deep.foo']);
     };
 
     check(miniSearch);
