@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-url-sync",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "DXOS Surface plugin for keeping the browser url in sync with the application state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
