@@ -3,7 +3,7 @@
 //
 
 import MiniSearch from 'minisearch';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import { scheduleTask } from '@dxos/async';
 import { PublicKey } from '@dxos/client';
@@ -22,11 +22,16 @@ export class Indexing extends AbstractPlugin {
   private _index?: MiniSearch;
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
 
-  constructor(private readonly _indexPath: string) {
+  private readonly _indexOptions = {
+    fields: ['json'],
+    idField: 'id',
+  };
+
+  constructor(private readonly _indexPath?: string) {
     super();
-    if (existsSync(_indexPath)) {
+    if (this._indexPath && existsSync(this._indexPath)) {
       try {
-        const serializedIndex = readFileSync(_indexPath, { encoding: 'utf8' });
+        const serializedIndex = readFileSync(this._indexPath, { encoding: 'utf8' });
         const { index, options } = JSON.parse(serializedIndex);
         this._index = MiniSearch.loadJS(index, options);
       } catch (error) {
@@ -59,15 +64,23 @@ export class Indexing extends AbstractPlugin {
   }
 
   async close(): Promise<void> {
+    this._saveIndex();
     void this._ctx.dispose();
+  }
+
+  // TODO(mykola): Save index periodically.
+  private _saveIndex() {
+    if (this._indexPath) {
+      invariant(this._index);
+      const serializedIndex = JSON.stringify({ index: this._index.toJSON(), options: this._indexOptions });
+      log('Saving index to file:', { path: this._indexPath });
+      writeFileSync(this._indexPath, serializedIndex, { encoding: 'utf8' });
+    }
   }
 
   private _indexSpaces() {
     if (!this._index) {
-      this._index = new MiniSearch({
-        fields: ['json'],
-        idField: 'id',
-      });
+      this._index = new MiniSearch(this._indexOptions);
     }
     const process = (spaces: Space[]) => {
       spaces.forEach((space) => {
@@ -95,7 +108,11 @@ export class Indexing extends AbstractPlugin {
             id: `${space.key.toHex()}:${object.id}`,
             json: object.toJSON(),
           };
-          this._index!.remove(document);
+          try {
+            this._index!.remove(document);
+          } catch (error) {
+            // Ignore.
+          }
           this._index!.add(document);
         });
       }),
