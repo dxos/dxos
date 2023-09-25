@@ -14,6 +14,7 @@ import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceSettingsProps } from './types';
+import { batch } from '@preact/signals-react';
 
 type Index = ReturnType<typeof getIndices>[number];
 
@@ -60,41 +61,44 @@ export const spaceToGraphNode = ({
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
 
-  const [node] = parent.addNode({
-    id,
-    label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
-    description: space.properties.description,
-    ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
-    data: space,
-    properties: {
-      // TODO(burdon): Factor out palette constants.
-      palette: parent.id === 'root' ? 'teal' : undefined,
-      'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
-      role: 'branch',
-      hidden: settings.showHidden ? false : inactive,
-      disabled,
-      error,
-      index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
-      onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
-        // TODO(burdon): Decouple from object's data structure.
-        child.data.meta.index = nextIndex;
+  let node!: Graph.Node;
+  batch(() => {
+    [node] = parent.addNode({
+      id,
+      label: parent.id === 'root' ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
+      description: space.properties.description,
+      ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
+      data: space,
+      properties: {
+        // TODO(burdon): Factor out palette constants.
+        palette: parent.id === 'root' ? 'teal' : undefined,
+        'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
+        role: 'branch',
+        hidden: settings.showHidden ? false : inactive,
+        disabled,
+        error,
+        index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
+        onRearrangeChild: (child: Graph.Node<TypedObject>, nextIndex: Index) => {
+          // TODO(burdon): Decouple from object's data structure.
+          child.data.meta.index = nextIndex;
+        },
+        persistenceClass: 'appState',
+        acceptPersistenceClass: new Set(['spaceObject']),
+        onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
+          // create clone of child and add to migration destination
+          const object = clone(child.data, {
+            retainId: true,
+            additional: [child.data.content],
+          });
+          space.db.add(object);
+          object.meta.index = nextIndex;
+        },
+        onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
+          // remove child being replicated from migration origin
+          space.db.remove(child.data);
+        },
       },
-      persistenceClass: 'appState',
-      acceptPersistenceClass: new Set(['spaceObject']),
-      onMigrateStartChild: (child: Graph.Node<TypedObject>, nextParent: Graph.Node<Space>, nextIndex: string) => {
-        // create clone of child and add to migration destination
-        const object = clone(child.data, {
-          retainId: true,
-          additional: [child.data.content],
-        });
-        space.db.add(object);
-        object.meta.index = nextIndex;
-      },
-      onMigrateEndChild: (child: Graph.Node<TypedObject>) => {
-        // remove child being replicated from migration origin
-        space.db.remove(child.data);
-      },
-    },
+    });
   });
 
   if (parent.id !== 'root') {

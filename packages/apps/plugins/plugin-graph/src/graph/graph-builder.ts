@@ -3,6 +3,7 @@
 //
 
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { untracked } from '@preact/signals-react'
 
 import { SendIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
@@ -80,12 +81,14 @@ export class GraphBuilder {
     const builderNode = deepSignal({
       ...node,
       addNode: (...partials) => {
-        return partials.map((partial) => {
-          const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode(() => graph, { ...partial, parent: builderNode }, childPath, ignoreBuilders);
-          builderNode.childrenMap[child.id] = child;
-          this._build(graph, child, childPath, ignoreBuilders);
-          return child;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const childPath = [...path, 'childrenMap', partial.id];
+            const child = this._createNode(() => graph, { ...partial, parent: builderNode }, childPath, ignoreBuilders);
+            builderNode.childrenMap[child.id] = child;
+            this._build(graph, child, childPath, ignoreBuilders);
+            return child;
+          });
         });
       },
     }) as RevertDeepSignal<Graph.Node>;
@@ -118,38 +121,50 @@ export class GraphBuilder {
       },
 
       addProperty: (key, value) => {
-        (node.properties as { [key: string]: any })[key] = value;
+        untracked(() => {
+          (node.properties as { [key: string]: any })[key] = value;
+        })
       },
       removeProperty: (key) => {
-        delete (node.properties as { [key: string]: any })[key];
+        untracked(() => {
+          delete (node.properties as { [key: string]: any })[key];
+        });
       },
 
       addNode: (...partials) => {
-        return partials.map((partial) => {
-          const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, ignoreBuilders);
-          node.childrenMap[child.id] = child;
-          this._build(getGraph(), child, childPath, ignoreBuilders);
-          return child;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const childPath = [...path, 'childrenMap', partial.id];
+            const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, ignoreBuilders);
+            node.childrenMap[child.id] = child;
+            this._build(getGraph(), child, childPath, ignoreBuilders);
+            return child;
+          });
         });
       },
       removeNode: (id) => {
-        const child = node.childrenMap[id];
-        delete node.childrenMap[id];
-        return child;
+        return untracked(() => {
+          const child = node.childrenMap[id];
+          delete node.childrenMap[id];
+          return child;
+        });
       },
 
       addAction: (...partials) => {
-        return partials.map((partial) => {
-          const action = this._createAction(partial);
-          node.actionsMap[action.id] = action;
-          return action;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const action = this._createAction(partial);
+            node.actionsMap[action.id] = action;
+            return action;
+          });
         });
       },
       removeAction: (id) => {
-        const action = node.actionsMap[id];
-        delete node.actionsMap[id];
-        return action;
+        return untracked(() => {
+          const action = node.actionsMap[id];
+          delete node.actionsMap[id];
+          return action;
+        });
       },
     }) as RevertDeepSignal<Graph.Node<TData, TProperties>>;
 
@@ -175,22 +190,30 @@ export class GraphBuilder {
         }
       },
       addAction: (...partials) => {
-        return partials.map((partial) => {
-          const subAction = this._createAction(partial);
-          action.actionsMap[subAction.id] = subAction;
-          return subAction;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const subAction = this._createAction(partial);
+            action.actionsMap[subAction.id] = subAction;
+            return subAction;
+          });
         });
       },
       removeAction: (id) => {
-        const subAction = action.actionsMap[id];
-        delete action.actionsMap[id];
-        return subAction;
+        return untracked(() => {
+          const subAction = action.actionsMap[id];
+          delete action.actionsMap[id];
+          return subAction;
+        });
       },
       addProperty: (key, value) => {
-        (action.properties as { [key: string]: any })[key] = value;
+        return untracked(() => {
+          (action.properties as { [key: string]: any })[key] = value;
+        });
       },
       removeProperty: (key) => {
-        delete (action.properties as { [key: string]: any })[key];
+        return untracked(() => {
+          delete (action.properties as { [key: string]: any })[key];
+        });
       },
     }) as RevertDeepSignal<Graph.Action<TProperties>>;
 

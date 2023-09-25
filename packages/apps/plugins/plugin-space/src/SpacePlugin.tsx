@@ -3,7 +3,7 @@
 //
 
 import { Intersect, Planet } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-react';
+import { batch, effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -283,27 +283,30 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          // Ensure default space is always first.
-          spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
+          let groupNode!: Graph.Node;
+          batch(() => {
+            // Ensure default space is always first.
+            spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
-          // Shared spaces section.
-          const [groupNode] = parent.addNode({
-            id: getSpaceId('all-spaces'),
-            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-            properties: {
-              // TODO(burdon): Factor out palette constants.
-              palette: 'pink',
-              'data-testid': 'spacePlugin.allSpaces',
-              acceptPersistenceClass: new Set(['appState']),
-              childrenPersistenceClass: 'appState',
-              onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
-                child.properties.index = setAppStateIndex(
-                  child.id,
-                  nextIndex,
-                  treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
-                );
+            // Shared spaces section.
+            [groupNode] = parent.addNode({
+              id: getSpaceId('all-spaces'),
+              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
+              properties: {
+                // TODO(burdon): Factor out palette constants.
+                palette: 'pink',
+                'data-testid': 'spacePlugin.allSpaces',
+                acceptPersistenceClass: new Set(['appState']),
+                childrenPersistenceClass: 'appState',
+                onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
+                  child.properties.index = setAppStateIndex(
+                    child.id,
+                    nextIndex,
+                    treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
+                  );
+                },
               },
-            },
+            });
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {

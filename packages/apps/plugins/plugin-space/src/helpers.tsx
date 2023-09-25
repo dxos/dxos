@@ -12,7 +12,6 @@ import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
 import { Query, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
-import { log } from '@dxos/log';
 import { effect } from '@preact/signals-react';
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
@@ -43,6 +42,8 @@ export class GraphNodeAdapter<T extends TypedObject> {
     this._createGroup = createGroup;
 
     this._adapter = (parent, object, index) => {
+      console.log('add object to graph', { parentId: parent.id, typename: object.__typename, objId: object.id, parent, object, index,  })
+
       const child = adapter(parent, object, index);
 
       child.addAction({
@@ -65,7 +66,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
         },
       });
 
-      return child;
+      return child!;
     };
   }
 
@@ -77,38 +78,41 @@ export class GraphNodeAdapter<T extends TypedObject> {
   }
 
   createNodes(space: Space, parent: Graph.Node) {
-    space.waitUntilReady().then(() => {
-      if (this._subscriptions.has(space.key.toHex())) {
-        log.warn('called multiple times', { space })
+    if (space.state.get() !== SpaceState.READY) { // TODO(dmaretskyi): Turn into subscription.
+      return;
+    }
+
+    // if (this._subscriptions.has(space.key.toHex())) {
+    //   log.warn('called multiple times', { space })
+    //   return;
+    // }
+
+    const query = space.db.query<T>(this._filter as any);
+
+    const indices = getIndices(query.objects.length);
+
+    const getObjectParent = () => (this._createGroup ? this._group : parent);
+
+    const clear = effect(() => {
+      const objectParent = getObjectParent();
+      if (!objectParent) {
         return;
       }
 
-      const query = space.db.query<T>(this._filter as any);
-
-      const indices = getIndices(query.objects.length);
-
-      const getObjectParent = () => (this._createGroup ? this._group : parent);
-
-      const clear = effect(() => {
-        const objectParent = getObjectParent();
-        if (objectParent) {
-          const previousObjects = this._previousObjects.get(space.key.toHex()) ?? [];
-          const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-          this._previousObjects.set(space.key.toHex(), query.objects);
-          removedObjects.forEach((object) => objectParent.removeNode(object.id));
-          query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
-        }
-      })
-
-      this._subscriptions.set(space.key.toHex(), clear);
-
-      // TODO(burdon): Provided by graph?
-
-      if (this._createGroup && query.objects.length > 0) {
-        this._group = this._createGroup(parent);
-      }
+      const previousObjects = this._previousObjects.get(space.key.toHex()) ?? [];
+      const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+      this._previousObjects.set(space.key.toHex(), query.objects);
+      removedObjects.forEach((object) => objectParent.removeNode(object.id));
+      query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
     })
 
+    this._subscriptions.set(space.key.toHex(), clear);
+
+    // TODO(burdon): Provided by graph?
+
+    if (this._createGroup && query.objects.length > 0) {
+      this._group = this._createGroup(parent);
+    }
 
     return () => {
       Array.from(this._subscriptions.keys())

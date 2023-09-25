@@ -29,6 +29,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
     provides: {
       translations,
       graph: {
+        // exactly once per parent
         nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
