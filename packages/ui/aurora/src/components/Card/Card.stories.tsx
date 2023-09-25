@@ -15,6 +15,7 @@ import '@dxosTheme';
 import { Card } from './Card';
 import { testImages } from './testing';
 import { DensityProvider } from '../DensityProvider';
+import { DropdownMenu } from '../DropdownMenu';
 import { Input } from '../Input';
 import { ScrollArea } from '../ScrollArea';
 
@@ -44,7 +45,17 @@ const DraggableCard: FC<{ data: CardData; onDelete: (id: string) => void }> = ({
       <Card.Header>
         <Card.DragHandle {...listeners} {...attributes} />
         <Card.Title title={title} />
-        <Card.Menu onClick={() => onDelete(id)} />
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Card.Menu />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              <DropdownMenu.Item onClick={() => onDelete(id)}>Delete</DropdownMenu.Item>
+            </DropdownMenu.Viewport>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </Card.Header>
       <Card.Body classNames={'text-sm'} gutter>
         <p>{body}</p>

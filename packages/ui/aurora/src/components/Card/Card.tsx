@@ -67,15 +67,15 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
 
 type CardMenuProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' };
 
-const CardMenu: FC<CardMenuProps> = ({ position, classNames, ...props }) => {
+const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(({ position, classNames, ...props }, forwardRef) => {
   const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
+    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)} ref={forwardRef}>
       <DotsThreeVertical className={tx('card.menuIcon', 'card', {})} />
     </div>
   );
-};
+});
 
 type CardBodyProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { gutter?: boolean };
 
