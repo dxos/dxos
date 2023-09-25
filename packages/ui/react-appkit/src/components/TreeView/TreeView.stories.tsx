@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { TreeView, mapJsonToHierarchy } from './TreeView';
-import '@dxosTheme';
 
 export default {
   component: TreeView,

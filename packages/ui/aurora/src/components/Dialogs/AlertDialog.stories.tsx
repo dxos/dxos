@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-
 import '@dxosTheme';
+
+import React from 'react';
 
 import { AlertDialog } from './AlertDialog';
 import { Button } from '../Buttons';

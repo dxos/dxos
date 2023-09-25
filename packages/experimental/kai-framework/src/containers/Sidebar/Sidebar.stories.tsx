@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
@@ -12,8 +14,6 @@ import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { MetagraphProvider } from '@dxos/react-metagraph';
-
-import '@dxosTheme';
 
 import { Sidebar } from './Sidebar';
 import { AppStateProvider, createPath, defaultFrames } from '../../hooks';
