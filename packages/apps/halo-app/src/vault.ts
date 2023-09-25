@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { registerSW } from 'virtual:pwa-register';
 
 import { initializeAppTelemetry } from '@braneframe/plugin-telemetry/headless';

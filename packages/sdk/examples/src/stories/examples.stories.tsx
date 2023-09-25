@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import '@dxosTheme';
 import { Document } from '@braneframe/types';
 import { Input } from '@dxos/aurora';
 import { Client, PublicKey } from '@dxos/react-client';
