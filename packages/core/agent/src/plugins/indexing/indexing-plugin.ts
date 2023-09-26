@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Query, Subscription } from '@dxos/echo-schema';
+import { Query, Subscription, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -103,24 +103,31 @@ export class Indexing extends AbstractPlugin {
   private async _indexSpace(space: Space): Promise<SpaceIndex> {
     await space.waitUntilReady();
     const query = space.db.query();
-    return {
+    const processObjects = (objects: TypedObject[]) => {
+      objects.forEach((object) => {
+        const document: IndexDocument = {
+          id: `${space.key.toHex()}:${object.id}`,
+          json: JSON.stringify(object.toJSON()),
+        };
+        if (this._indexedObjects.has(document.id)) {
+          this._index!.remove(this._indexedObjects.get(document.id)!);
+        }
+        this._index!.add(document);
+        this._indexedObjects.set(document.id, document);
+      });
+    };
+
+    const spaceIndex = {
       space,
       query,
       subscription: query.subscribe((query) => {
         invariant(this._index);
-        query.objects.forEach((object) => {
-          const document: IndexDocument = {
-            id: `${space.key.toHex()}:${object.id}`,
-            json: JSON.stringify(object.toJSON()),
-          };
-          if (this._indexedObjects.has(document.id)) {
-            this._index!.remove(this._indexedObjects.get(document.id)!);
-          }
-          this._index!.add(document);
-          this._indexedObjects.set(document.id, document);
-        });
+        processObjects(query.objects);
       }),
     };
+
+    processObjects(query.objects);
+    return spaceIndex;
   }
 
   private async _processMessage(message: GossipMessage) {
