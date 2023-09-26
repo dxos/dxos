@@ -3,11 +3,12 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 
 import { EchoObject } from './object';
-import { isTypedObject, TypedObject } from './typed-object';
 import { createSignal } from './signal';
+import { isTypedObject, TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -35,6 +36,9 @@ export class Query<T extends TypedObject = TypedObject> {
   private _cache: T[] | undefined = undefined;
   private _signal = createSignal?.();
 
+  // Hold a reference to the listener to prevent it from being garbage collected.
+  private _weakListener: () => void;
+
   constructor(
     private readonly _objects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
@@ -44,11 +48,13 @@ export class Query<T extends TypedObject = TypedObject> {
     this._filters.push(filterDeleted(options?.deleted));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
 
-    // TODO(dmaretskyi): Needs to be weak.
-    this._updateEvent.on(() => {
+    // Create a weak listener that will not prevent the Query
+    this._weakListener = () => {
       this._cache = undefined;
-      this._signal?.notifyWrite()
-    });
+      this._signal?.notifyWrite();
+    };
+    // TODO(dmaretskyi): Allow to specify a retainer.
+    this._updateEvent.on(new Context(), this._weakListener, { weak: true });
   }
 
   get objects(): T[] {
