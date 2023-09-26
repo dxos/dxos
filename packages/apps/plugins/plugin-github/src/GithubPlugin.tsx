@@ -6,7 +6,7 @@ import { GithubLogo } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Graph, GraphProvides } from '@braneframe/plugin-graph';
+import { Node, GraphProvides } from '@braneframe/plugin-graph';
 import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
@@ -57,9 +57,9 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       const appState = treeViewPlugin?.provides.treeView?.appState as AppState | undefined;
       const defaultIndices = getIndices(plugins.length);
 
-      const createGroup = (parent: Graph.Node) => {
+      const createGroup = (parent: Node) => {
         const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
-        const [presentationNode] = parent.add({
+        const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
           id,
           label: ['plugin name', { ns: GITHUB_PLUGIN }],
           icon: (props) => <GithubLogo {...props} />,
@@ -133,8 +133,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   };
 };
 
-const objectToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
-  const [child] = parent.add({
+const objectToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
+  const [child] = parent.addNode(GITHUB_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
     icon: (props) => <Issue {...props} />,

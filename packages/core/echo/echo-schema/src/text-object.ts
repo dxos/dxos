@@ -47,6 +47,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   get content(): YText | YXmlFragment | undefined {
+    // TODO(dmaretskyi): Notify read?
     return this.model?.content;
   }
 

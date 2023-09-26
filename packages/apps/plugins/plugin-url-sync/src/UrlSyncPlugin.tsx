@@ -16,12 +16,12 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
     components: {
       default: () => {
         const treeView = useTreeView();
-        const { sendIntent } = useIntent();
+        const { dispatch } = useIntent();
 
         // Update selection based on browser navigation.
         useEffect(() => {
           const handleNavigation = async () => {
-            await sendIntent({
+            await dispatch({
               plugin: TREE_VIEW_PLUGIN,
               action: TreeViewAction.ACTIVATE,
               data: {

@@ -5,7 +5,7 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { Graph, useGraph } from '@braneframe/plugin-graph';
+import { Node, useGraph } from '@braneframe/plugin-graph';
 import { Mosaic, parseDndId, Tile } from '@dxos/aurora-grid';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -39,7 +39,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
             Delegator={DndDelegator}
             getData={(dndId) => {
               const [_, nodeId] = parseDndId(dndId);
-              return graph.find(nodeId);
+              return graph.findNode(nodeId);
             }}
             copyTile={(id, toId, mosaic) => {
               return dnd.onCopyTileSubscriptions.length
@@ -59,7 +59,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
         );
       },
       dnd,
-      onSetTile: (tile: Tile, node: Graph.Node): Tile => {
+      onSetTile: (tile: Tile, node: Node): Tile => {
         return dnd.onSetTileSubscriptions.length
           ? dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile)
           : tile;
