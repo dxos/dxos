@@ -27,7 +27,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
     },
     ready: async (plugins) => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      builder._setSendIntent(intentPlugin?.provides.intent.dispatch);
+      builder._setDispatch(intentPlugin?.provides.intent.dispatch);
 
       graphPlugins(plugins)
         .map((plugin) => plugin.provides.graph.withPlugins)

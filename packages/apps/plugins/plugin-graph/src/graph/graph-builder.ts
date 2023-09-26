@@ -17,7 +17,7 @@ export class GraphBuilder {
   private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
-  private _sendIntent?: DispatchIntent;
+  private _dispatch?: DispatchIntent;
 
   addNodeBuilder(builder: Graph.NodeBuilder): void {
     this._nodeBuilders.add(builder);
@@ -169,9 +169,9 @@ export class GraphBuilder {
       },
       invoke: async () => {
         if (Array.isArray(action.intent)) {
-          return this._sendIntent?.(...action.intent);
+          return this._dispatch?.(...action.intent);
         } else if (action.intent) {
-          return this._sendIntent?.(action.intent);
+          return this._dispatch?.(action.intent);
         }
       },
       addAction: (...partials) => {
@@ -201,7 +201,7 @@ export class GraphBuilder {
    * @internal
    */
   // TODO(burdon): Document.
-  // _setSendIntent(dispatch?: DispatchIntent) {
-  //   this._sendIntent = dispatch;
-  // }
+  _setDispatch(dispatch?: DispatchIntent) {
+    this._dispatch = dispatch;
+  }
 }
