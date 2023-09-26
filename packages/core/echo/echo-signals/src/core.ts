@@ -4,6 +4,6 @@
 
 import { signal } from '@preact/signals-core';
 
-import { constructRegisterSignalFactory } from './common';
+import { constructRegisterSignalApi } from './common';
 
-export const registerSignalFactory = constructRegisterSignalFactory(signal);
+export const registerSignalFactory = constructRegisterSignalApi(signal);

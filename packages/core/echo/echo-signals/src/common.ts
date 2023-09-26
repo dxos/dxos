@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { signal } from '@preact/signals-core';
+import { untracked, type signal, computed, effect, batch } from '@preact/signals-core';
 
-import { registerSignalFactory } from '@dxos/echo-schema';
+import { registerSignalApi } from '@dxos/echo-schema';
 
-export const constructRegisterSignalFactory = (constructSignal: typeof signal) => () => {
+export const constructRegisterSignalApi = (constructSignal: typeof signal) => () => {
   const signalFactory = () => {
     const signal = constructSignal({});
 
@@ -20,5 +20,11 @@ export const constructRegisterSignalFactory = (constructSignal: typeof signal) =
     };
   };
 
-  registerSignalFactory(signalFactory);
+  registerSignalApi({
+    create: signalFactory,
+    untracked,
+    computed,
+    effect,
+    batch,
+  });
 };

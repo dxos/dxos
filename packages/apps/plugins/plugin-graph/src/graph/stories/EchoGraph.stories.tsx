@@ -67,12 +67,8 @@ const objectNodeBuilder = (parent: Node) => {
 
   const space = parent.data;
   const query = space.db.query({ type: 'test' });
-  let previousObjects: Expando[] = [];
   return effect(() => {
-    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-    previousObjects = query.objects;
-
-    removedObjects.forEach((object) => parent.removeNode(object.id));
+    query.removed.forEach((object) => parent.removeNode(object.id));
     query.objects.forEach((expando) =>
       parent.addNode('object', { id: expando.id, label: expando.name, data: expando }),
     );
