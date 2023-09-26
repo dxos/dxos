@@ -21,6 +21,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",

@@ -11,14 +11,9 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
+import { createSignal } from './signal';
 
 export const subscribe = Symbol.for('dxos.echo-object.subscribe');
-
-type SignalFactory = () => { notifyRead(): void; notifyWrite(): void };
-let createSignal: SignalFactory | undefined;
-export const registerSignalFactory = (factory: SignalFactory) => {
-  createSignal = factory;
-};
 
 /**
  * Base class for all echo objects.

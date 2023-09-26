@@ -13,6 +13,7 @@ type StorybookToggleGroupProps = {
   type: ToggleGroupProps['type'];
 };
 
+// TODO(burdon): ToggleGroup.Item.
 const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
   return (
     <ToggleGroup {...props}>

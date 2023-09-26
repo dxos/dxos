@@ -20,6 +20,7 @@ const PluginContext = createContext<PluginContextValue>(defaultContext);
 /**
  * Get all plugins.
  */
+// TODO(burdon): Factor out.
 export const usePlugins = (): PluginContextValue => useContext(PluginContext);
 
 /**

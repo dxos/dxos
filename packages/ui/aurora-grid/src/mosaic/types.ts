@@ -52,8 +52,8 @@ export type MosaicState = {
   relations: Record<string, Record<string, Set<string>>>;
 };
 
-export type DelegatorProps<D = any> = PropsWithChildren<{
-  data: D;
+export type DelegatorProps<TData = any> = PropsWithChildren<{
+  data: TData;
   tile: Tile;
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
@@ -68,7 +68,7 @@ export type DelegatorProps<D = any> = PropsWithChildren<{
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
 
-export type Handler<E> = (event: E) => void;
+export type Handler<TEvent> = (event: TEvent) => void;
 
 export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: string };
 export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; index?: string };

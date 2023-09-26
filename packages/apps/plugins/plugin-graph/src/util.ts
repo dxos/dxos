@@ -4,10 +4,10 @@
 
 import { Plugin } from '@dxos/react-surface';
 
-import { Graph } from './graph';
+import { Node } from './graph';
 import { GraphProvides } from './types';
 
-export const isGraphNode = (data: unknown): data is Graph.Node =>
+export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' ? 'id' in data && 'label' in data : false;
 
 type GraphPlugin = Plugin<GraphProvides>;

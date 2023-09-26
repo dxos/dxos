@@ -9,7 +9,7 @@ import { getIndices } from '@tldraw/indices';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React, { forwardRef, Ref } from 'react';
 
-import { GraphStore, GraphContext } from '@braneframe/plugin-graph';
+import { GraphContext, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
@@ -45,7 +45,7 @@ const content = [...Array(4)].map(() => ({
   })),
 }));
 
-const graph = new GraphStore();
+const graph = new GraphBuilder().build();
 buildGraph(graph, content);
 
 const defaultIndices = getIndices(99);
@@ -59,7 +59,7 @@ const mosaicAcc: MosaicState = {
 const navTreeId = 'navTree';
 
 graph.traverse({
-  onVisitNode: (node) => {
+  visitor: (node) => {
     const level = getLevel(node, -1);
     const id = getDndId(navTreeId, node.id);
     mosaicAcc.tiles[id] = {
@@ -78,7 +78,7 @@ graph.traverse({
 });
 
 graph.traverse({
-  onVisitNode: (node) => {
+  visitor: (node) => {
     const id = getDndId(navTreeId, node.id);
     if (node.children && node.children.length) {
       node.children.forEach((child) => {
@@ -103,10 +103,10 @@ const treeViewState = deepSignal<TreeViewContextValue>({
   active: undefined,
   previous: undefined,
   get activeNode() {
-    return this.active && graph.find(this.active);
+    return this.active && graph.findNode(this.active);
   },
   get previousNode() {
-    return this.previous && graph.find(this.previous);
+    return this.previous && graph.findNode(this.previous);
   },
   appState: undefined,
 }) as RevertDeepSignal<TreeViewContextValue>;
@@ -123,7 +123,7 @@ export const Default = {
       Delegator={StorybookNavTreeItemDelegator}
       getData={(dndId) => {
         const [_, entityId] = parseDndId(dndId);
-        return graph.find(entityId);
+        return graph.findNode(entityId);
       }}
       copyTile={(id, _toId, mosaic) => ({ ...mosaic.tiles[id] })}
     >
