@@ -37,9 +37,7 @@ export class Query<T extends TypedObject = TypedObject> {
   private _removedCache: T[] | undefined = undefined;
   private _objectsSignal = signal?.create();
   private _removedSignal = signal?.create();
-
-  // Hold a reference to the listener to prevent it from being garbage collected.
-  private _weakListener: () => void;
+  private _event = new Event<Query<T>>();
 
   constructor(
     private readonly _objects: Map<string, EchoObject>,
@@ -50,23 +48,45 @@ export class Query<T extends TypedObject = TypedObject> {
     this._filters.push(filterDeleted(options?.deleted));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
 
-    // Create a weak listener that will not prevent the Query
-    this._weakListener = () => {
-      // TODO(wittjosiah): Reconcile with subscribe changed logic.
+    // Weak listener to allow queries to be garbage collected.
+    // TODO(dmaretskyi): Allow to specify a retainer.
+    this._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+  }
+
+  get objects(): T[] {
+    this._objectsSignal?.notifyRead();
+    return this._getObjects();
+  }
+
+  get removed(): T[] {
+    this._removedSignal?.notifyRead();
+    return this._getRemoved();
+  }
+
+  // Hold a reference to the listener to prevent it from being garbage collected.
+  private _onUpdate = (updated: Item[]) => {
+    const changed = updated.some((object) => {
+      const exists = this._objectsCache?.find((obj) => obj.id === object.id);
+      if (this._objects.has(object.id) || exists) {
+        const match = this._match(this._objects.get(object.id)! as T);
+        return match || (exists && !match);
+      } else {
+        return false;
+      }
+    });
+
+    if (changed) {
       this._objectsCache = undefined;
       this._removedCache = undefined;
       signal?.batch(() => {
         this._objectsSignal?.notifyWrite();
         this._removedSignal?.notifyWrite();
       });
-    };
-    // TODO(dmaretskyi): Allow to specify a retainer.
-    this._updateEvent.on(new Context(), this._weakListener, { weak: true });
-  }
+      this._event.emit(this);
+    }
+  };
 
-  get objects(): T[] {
-    this._objectsSignal?.notifyRead();
-
+  private _getObjects() {
     if (!this._objectsCache) {
       this._objectsCache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
     }
@@ -74,7 +94,7 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._objectsCache;
   }
 
-  get removed(): T[] {
+  private _getRemoved() {
     this._removedSignal?.notifyRead();
 
     if (!this._removedCache) {
@@ -90,23 +110,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
   // TODO(burdon): Option to trigger immediately.
   subscribe(callback: (query: Query<T>) => void): Subscription {
-    return this._updateEvent.on((updated) => {
-      const changed = updated.some((object) => {
-        const exists = this._objectsCache?.find((obj) => obj.id === object.id);
-        if (this._objects.has(object.id) || exists) {
-          const match = this._match(this._objects.get(object.id)! as T);
-          return match || (exists && !match);
-        } else {
-          return false;
-        }
-      });
-
-      if (changed) {
-        this._objectsCache = undefined;
-        this._removedCache = undefined;
-        callback(this);
-      }
-    });
+    return this._event.on(callback);
   }
 
   _match(object: T) {
