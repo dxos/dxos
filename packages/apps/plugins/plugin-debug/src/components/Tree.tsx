@@ -6,6 +6,8 @@ import React, { FC, HTMLAttributes, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
+// TODO(burdon): Copied form devtools.
+
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
     <div className='flex overflow-auto ml-2 border-l-2 border-blue-500'>

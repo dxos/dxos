@@ -8,6 +8,8 @@ import { FC } from 'react';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
+import { Plugin } from './Plugin';
+
 // eslint-disable-next-line unused-imports/no-unused-vars
 export interface Interface<T> {
   key: string;
@@ -24,7 +26,7 @@ export type PluginProps = {
   provides?: InterfaceDef<any>[];
 };
 
-export class Plugin {
+export class TestPlugin {
   readonly _interfaces = new Map<string, any>();
   constructor({ provides }: PluginProps) {
     provides?.forEach(({ key, impl }) => this._interfaces.set(key.key, impl));
@@ -33,7 +35,7 @@ export class Plugin {
   getInterface = <T>(key: Interface<T>): T | undefined => this._interfaces.get(key.key);
 }
 
-const getInterfaces = <T>(plugins: Plugin[], key: Interface<T>): T[] =>
+const getInterfaces = <T>(plugins: TestPlugin[], key: Interface<T>): T[] =>
   plugins.map((plugin) => plugin.getInterface(key)).filter(Boolean) as any;
 
 //
@@ -70,7 +72,7 @@ export const Section: Interface<Section> = { key: 'list' };
 // }
 //
 
-const plugin1 = new Plugin({
+const plugin1 = new TestPlugin({
   provides: [
     provide(Printable, {
       print: (data: any | undefined) => log(data),
@@ -85,7 +87,7 @@ const plugin1 = new Plugin({
   ],
 });
 
-const plugin2 = new Plugin({
+const plugin2 = new TestPlugin({
   provides: [
     provide(Printable, {
       print: (data: any) => log(data),
@@ -93,18 +95,18 @@ const plugin2 = new Plugin({
   ],
 });
 
-const plugin3 = new Plugin({});
+const plugin3 = new TestPlugin({});
 
-describe('Test plugins', () => {
+describe('Plugins', () => {
   const plugins = [plugin1, plugin2, plugin3];
 
-  test('test invocation', () => {
+  test('invocation', () => {
     // Invoke against all plugins that provide interface.
     expect(getInterfaces(plugins, Printable)).to.have.length(2);
     getInterfaces(plugins, Printable).forEach((i) => i.print({}));
   });
 
-  test('test symbols', () => {
+  test('symbols', () => {
     const s1 = Symbol.for('s1');
     const s2 = Symbol.for('s1');
     expect(s1).to.be.eq(s2);
@@ -113,6 +115,35 @@ describe('Test plugins', () => {
     map.set(s1, true);
     map.set(s2, false);
     expect(map.get(s1)).to.be.false;
+  });
+
+  test('filter', () => {
+    type Provides1 = {
+      test1: {};
+    };
+
+    type Provides2 = {
+      test2: {};
+    };
+
+    const p1: Plugin<Provides1> = {
+      meta: { id: 'example.com/plugin/plugin-1' },
+      provides: {
+        test1: {},
+      },
+    };
+
+    const p2: Plugin<Provides2> = {
+      meta: { id: 'example.com/plugin/plugin-2' },
+      provides: {
+        test2: {},
+      },
+    };
+
+    const plugins: Plugin[] = [p1, p2];
+
+    const matching = plugins.filter((plugin) => true);
+    expect(matching).to.have.length(2);
   });
 });
 

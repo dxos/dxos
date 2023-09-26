@@ -48,7 +48,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       }
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const graph = graphPlugin?.provides.graph;
+      const graph = graphPlugin?.provides.graph();
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
         dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {
@@ -66,10 +66,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       if (dndPlugin && dndPlugin.provides.dnd?.onMosaicChangeSubscriptions) {
         dndPlugin.provides.dnd.onMosaicChangeSubscriptions.push((event) => {
           const [_, stackId, entityId] = parseDndId(event.id);
-          const stack = graph?.find(stackId)?.data as StackModel | undefined;
+          const stack = graph?.findNode(stackId)?.data as StackModel | undefined;
           if (isStack(stack)) {
             if (event.type === 'copy') {
-              const sectionObject = graph?.find(entityId)?.data as TypedObject | undefined;
+              const sectionObject = graph?.findNode(entityId)?.data as TypedObject | undefined;
               if (stack && sectionObject) {
                 stack.sections.splice(stack.sections.length, 0, {
                   id: entityId,

@@ -6,7 +6,7 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { forwardRef, ForwardRefExoticComponent, RefAttributes } from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
 import { DelegatorProps, getDndId, parseDndId, useMosaic } from '@dxos/aurora-grid';
 import {
@@ -27,7 +27,7 @@ import { Surface } from '@dxos/react-surface';
 import { STACK_PLUGIN, StackModel } from '../types';
 import { isStack } from '../util';
 
-type StackSectionProps = DelegatorProps<Graph.Node<StackModel>>;
+type StackSectionProps = DelegatorProps<Node<StackModel>>;
 
 export const StackSection: ForwardRefExoticComponent<StackSectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
