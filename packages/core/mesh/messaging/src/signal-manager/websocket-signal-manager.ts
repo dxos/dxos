@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { RateLimitExceededError, trace } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
@@ -134,8 +134,12 @@ export class WebsocketSignalManager implements SignalManager {
 
     void this._forEachServer(async (server, serverName) => {
       void server.sendMessage({ author, recipient, payload }).catch((err) => {
-        log(`error sending to ${serverName}`, { err });
-        void this.checkServerFailure(serverName);
+        if (err instanceof RateLimitExceededError) {
+          log('WSS rate limit exceeded', { err });
+        } else {
+          log(`error sending to ${serverName}`, { err });
+          void this.checkServerFailure(serverName);
+        }
       });
     });
   }
