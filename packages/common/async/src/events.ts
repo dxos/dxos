@@ -321,6 +321,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   _removeListener(listener: EventListener<T>) {
     this._listeners.delete(listener);
+    listener.remove();
 
     if (this.listenerCount() === 0) {
       this._cleanupEffects();
