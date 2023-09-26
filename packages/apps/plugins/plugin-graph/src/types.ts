@@ -4,21 +4,21 @@
 
 import { Plugin } from '@dxos/react-surface';
 
-import type { Graph, GraphStore } from './graph';
+import type { Graph, NodeBuilder } from './graph';
 
 export type GraphContextValue = {
-  graph: GraphStore;
+  graph: Graph;
 };
 
-export type WithPlugins = (plugin: Plugin[]) => Graph.NodeBuilder;
+export type WithPlugins = (plugin: Plugin[]) => NodeBuilder;
 
 export type GraphProvides = {
   graph: {
-    nodes?: Graph.NodeBuilder;
+    nodes?: NodeBuilder;
     withPlugins?: WithPlugins;
   };
 };
 
 export type GraphPluginProvides = {
-  graph: GraphStore;
+  graph: () => Graph;
 };

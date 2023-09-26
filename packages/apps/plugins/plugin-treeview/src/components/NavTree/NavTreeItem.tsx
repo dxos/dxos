@@ -16,7 +16,7 @@ import React, {
 } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Graph, useGraph } from '@braneframe/plugin-graph';
+import { Action, Node, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Button,
@@ -51,7 +51,7 @@ import { sortActions } from '../../util';
 
 type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
 
-export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorProps<Graph.Node> }>(
+export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorProps<Node> }>(
   (
     {
       data: {
@@ -157,7 +157,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     // TODO(burdon): Factor out heuristic to group actions.
     const actionGroups =
       level === 1
-        ? actions.reduce<{ id: string; actions: Graph.Action[] }[]>((groups, action) => {
+        ? actions.reduce<{ id: string; actions: Action[] }[]>((groups, action) => {
             const id = action.id.split(/[/-]/).at(-1)!;
             let group = groups.find((group) => group.id === id);
             if (!group) {

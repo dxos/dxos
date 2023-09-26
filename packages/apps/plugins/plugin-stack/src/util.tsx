@@ -6,7 +6,7 @@ import { IconProps, StackSimple, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { Graph } from '@braneframe/plugin-graph';
+import type { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Stack as StackType } from '@braneframe/types';
 import { EchoObject, Space } from '@dxos/client/echo';
@@ -23,8 +23,8 @@ export const isStack = <T extends StackObject = GenericStackObject>(data: unknow
 
 export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
-export const stackToGraphNode = (parent: Graph.Node<Space>, object: StackType, index: string): Graph.Node => {
-  const [child] = parent.add({
+export const stackToGraphNode = (parent: Node<Space>, object: StackType, index: string): Node => {
+  const [child] = parent.addNode(STACK_PLUGIN, {
     id: object.id,
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <StackSimple {...props} />,

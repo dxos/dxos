@@ -103,8 +103,8 @@ const schemaPropMapper =
   });
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
-  const { plugins } = usePlugins();
   const [, forceUpdate] = useState({});
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
   // TODO(burdon): Not updated when object deleted.
