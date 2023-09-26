@@ -6,6 +6,7 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/aurora-theme';
+import { useDevices, useIdentity } from '@dxos/react-client/halo';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
@@ -13,7 +14,11 @@ import { useSections } from '../hooks';
 const Footer = () => {
   return (
     <div className='flex justify-center p-2'>
-      <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION ?? 'DEV'}</span>
+      <span className='text-xs text-gray-500'>
+        <div>Identity: {useIdentity()?.identityKey.truncate()}</div>
+        <div>Device: {useDevices()[0].deviceKey.truncate()}</div>
+        <div>Version: {process.env.PACKAGE_VERSION ?? 'DEV'}</div>
+      </span>
     </div>
   );
 };

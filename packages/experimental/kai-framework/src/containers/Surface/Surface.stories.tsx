@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { Circle, List, MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -14,8 +16,6 @@ import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations } from '@dxos/react-shell';
-
-import '@dxosTheme';
 
 // type Action = {
 //   type: 'select';

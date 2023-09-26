@@ -28,6 +28,7 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]
   );
 };
 
+// TODO(burdon): ListItem?
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },

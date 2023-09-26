@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
 import { getSize } from '@dxos/aurora-theme';
-
-import '@dxosTheme';
 
 import { TileContentProps } from '../components';
 import { TestData } from '../testing';

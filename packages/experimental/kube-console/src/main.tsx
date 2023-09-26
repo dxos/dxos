@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
 import { createRouter } from './routes';
-
-import '@dxosTheme';
 
 import 'virtual:fonts.css';
 import '../style.css';

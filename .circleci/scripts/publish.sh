@@ -4,16 +4,16 @@
 # https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
 
 APPS=(
-  ./packages/apps/composer-app
+  ./docs
+  ./packages/sdk/examples
+  ./packages/devtools/devtools
   ./packages/apps/halo-app
+  ./packages/apps/composer-app
   ./packages/apps/labs-app
   ./packages/apps/tasks
   ./packages/apps/todomvc
-  ./packages/devtools/devtools
   ./packages/experimental/kai
   ./packages/experimental/kube-console
-  ./packages/sdk/examples
-  ./docs
 )
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -54,6 +54,7 @@ for APP in "${APPS[@]}"; do
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
+    export REMOTE_SOURCE=https://halo.dxos.org/vault.html
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")
 

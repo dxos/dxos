@@ -218,7 +218,6 @@ const forceClientReset = async () => {
   await services.reset();
 
   // TODO(wittjosiah): Make this look nicer.
-  const message = document.createElement('div');
-  message.textContent = 'Client storage has been reset. Return to the app and reload.';
-  document.body.appendChild(message);
+  const element = document.getElementById('vault-reset-success');
+  element?.classList?.remove('hidden');
 };

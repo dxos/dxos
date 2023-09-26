@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
 import { JsonTree } from './JsonTree';
-import '@dxosTheme';
 
 export default {
   component: JsonTree,
