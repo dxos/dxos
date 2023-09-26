@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-grid",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "A datagrid component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

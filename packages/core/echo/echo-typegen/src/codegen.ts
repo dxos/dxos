@@ -190,7 +190,7 @@ export const createObjectClass = (type: pb.Type) => {
       return ${name}.type.createFilter(opts);
       }
 
-      constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOpts) {
+      constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOptions) {
         super({ ...initValues}, ${name}.type, opts);
       }
       ${fields}
