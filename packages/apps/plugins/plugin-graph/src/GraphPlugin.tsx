@@ -8,7 +8,7 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, GraphBuilder, GraphImpl } from './graph';
+import { Graph, GraphBuilder, NodeBuilder } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
@@ -19,7 +19,7 @@ import { graphPlugins } from './util';
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const builder = new GraphBuilder();
-  const state: { graph?: GraphImpl } = {}; // TODO(burdon): Use signal?
+  const state: { graph?: Graph } = {}; // TODO(burdon): Use signal?
 
   return {
     meta: {
@@ -30,14 +30,14 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       builder._setDispatch(intentPlugin?.provides.intent.dispatch);
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.withPlugins)
-        .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
-        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder(plugins)));
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
+        .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder(plugins)));
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.nodes)
-        .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
-        .forEach((nodeBuilder) => builder.addNodeBuilder(nodeBuilder));
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.nodes])
+        .filter((nodes): nodes is [string, NodeBuilder] => !!nodes[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder));
 
       state.graph = builder.build();
     },

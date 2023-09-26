@@ -6,19 +6,15 @@ import { Chat, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Space } from '@dxos/client/echo';
 
 import { THREAD_PLUGIN } from './types';
 
-export const objectToGraphNode = (
-  parent: Graph.Node<Space>,
-  object: ThreadType,
-  index: string,
-): Graph.Node<ThreadType> => {
-  const [child] = parent.addNode({
+export const objectToGraphNode = (parent: Node<Space>, object: ThreadType, index: string): Node<ThreadType> => {
+  const [child] = parent.addNode(THREAD_PLUGIN, {
     id: object.id,
     label: object.title ?? ['thread title placeholder', { ns: THREAD_PLUGIN }],
     icon: (props) => <Chat {...props} />,

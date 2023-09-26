@@ -5,24 +5,22 @@
 import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
-import { Graph } from './types';
-import NodeLabel = Graph.Label;
+import { Label, Node, TraversalOptions } from './types';
 
 /**
  * The Graph represents...
  */
-// TODO(burdon): Rename Graph (remove interface).
-export class GraphImpl {
+export class Graph {
   // TODO(burdon): Document.
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = deepSignal<{ [key: string]: string[] }>({});
 
-  constructor(private readonly _root: Graph.Node) {}
+  constructor(private readonly _root: Node) {}
 
   // TODO(burdon): Traverse.
   toJSON() {
-    const toLabel = (label: NodeLabel) => (Array.isArray(label) ? `${label[1].ns}[${label[0]}]` : label);
-    const toJSON = (node: Graph.Node): any => {
+    const toLabel = (label: Label) => (Array.isArray(label) ? `${label[1].ns}[${label[0]}]` : label);
+    const toJSON = (node: Node): any => {
       return {
         // TODO(burdon): Standardize ids on type/id/x/y (use slashes).
         id: node.id.slice(0, 16),
@@ -41,19 +39,31 @@ export class GraphImpl {
     return toJSON(this._root);
   }
 
-  get root(): Graph.Node {
+  /**
+   * The root node of the graph which is the entry point for all knowledge.
+   */
+  get root(): Node {
     return this._root;
   }
 
+  /**
+   * Get the path through the graph from the root to the node with the given id.
+   */
   getPath(id: string): string[] | undefined {
     return this._index[id];
   }
 
-  setPath(id: string, path: string[]) {
+  /**
+   * @internal
+   */
+  _setPath(id: string, path: string[]) {
     this._index[id] = path;
   }
 
-  findNode(id: string): Graph.Node | undefined {
+  /**
+   * Find the node with the given id in the graph.
+   */
+  findNode(id: string): Node | undefined {
     const path = this.getPath(id);
     if (!path) {
       return undefined;
@@ -65,7 +75,7 @@ export class GraphImpl {
   /**
    * Recursive breadth-first traversal.
    */
-  traverse({ node = this._root, direction = 'down', filter, visitor }: Graph.TraversalOptions, depth = 0): void {
+  traverse({ node = this._root, direction = 'down', filter, visitor }: TraversalOptions, depth = 0): void {
     if (!filter || filter(node)) {
       visitor?.(node);
     }

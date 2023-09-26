@@ -6,18 +6,14 @@ import { ShieldChevron, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { Graph } from '@braneframe/plugin-graph';
+import type { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Space, TypedObject } from '@dxos/client/echo';
 
 import { CHESS_PLUGIN } from './types';
 
-export const objectToGraphNode = (
-  parent: Graph.Node<Space>,
-  object: TypedObject,
-  index: string,
-): Graph.Node<TypedObject> => {
-  const [child] = parent.addNode({
+export const objectToGraphNode = (parent: Node<Space>, object: TypedObject, index: string): Node<TypedObject> => {
+  const [child] = parent.addNode(CHESS_PLUGIN, {
     id: object.id,
     label: object.title ?? ['game title placeholder', { ns: CHESS_PLUGIN }],
     icon: (props) => <ShieldChevron {...props} />,

@@ -9,7 +9,7 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { Node, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import {
@@ -287,7 +287,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
           // Shared spaces section.
-          const [groupNode] = parent.addNode({
+          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
@@ -296,7 +296,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
-              onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
+              onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
                 child.properties.index = setAppStateIndex(
                   child.id,
                   nextIndex,

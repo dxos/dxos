@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphImpl } from './graph';
-import { Graph } from './types';
+import { Graph } from './graph';
+import { NodeBuilder, Node, Action } from './types';
 
 /**
  * Create a test node builder that always adds nodes and actions to the specified depth.
@@ -16,13 +16,13 @@ import { Graph } from './types';
  */
 // TODO(burdon): Change to TestNodeBuilder class (see other builder/generator patterns in client/echo).
 export const createTestNodeBuilder = (id: string, depth = 1) => {
-  const nodes = new Map<string, Graph.Node>();
-  const nodeBuilder: Graph.NodeBuilder = (parent) => {
+  const nodes = new Map<string, Node>();
+  const nodeBuilder: NodeBuilder = (parent) => {
     if (checkDepth(parent) >= depth) {
       return;
     }
 
-    const [child] = parent.addNode({
+    const [child] = parent.addNode(id, {
       id: `${parent.id}-${id}`,
       label: `${parent.id}-${id}`,
       data: null,
@@ -39,13 +39,13 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
     nodes.set(child.id, child);
   };
 
-  const addNode = (parentId: string, node: Pick<Graph.Node, 'id' | 'label'> & Partial<Graph.Node>) => {
+  const addNode = (parentId: string, node: Pick<Node, 'id' | 'label'> & Partial<Node>) => {
     const parent = nodes.get(parentId);
     if (!parent) {
       return;
     }
 
-    const [child] = parent.addNode(node);
+    const [child] = parent.addNode(id, node);
     nodes.set(child.id, child);
     return child;
   };
@@ -59,7 +59,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
     return parent.removeNode(id);
   };
 
-  const addAction = (parentId: string, action: Pick<Graph.Action, 'id' | 'label'> & Partial<Graph.Action>) => {
+  const addAction = (parentId: string, action: Pick<Action, 'id' | 'label'> & Partial<Action>) => {
     const parent = nodes.get(parentId);
     if (!parent) {
       return;
@@ -102,7 +102,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  * Build a graph from a nested list of nodes.
  *
  * @param graph Graph to add nodes to.
- * @param nodes Nodes to add to the graph.
+ * @param nodes Nodes to add to the
  *
  * @example
  * const graph = new GraphStore();
@@ -129,11 +129,11 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  */
 
 // TODO(wittjosiah): Type nodes.
-export const buildGraph = (graph: GraphImpl, nodes: any[]) => {
+export const buildGraph = (graph: Graph, nodes: any[]) => {
   addNodes(graph.root, nodes);
 };
 
-const addNodes = (root: Graph.Node, nodes: any[]) => {
+const addNodes = (root: Node, nodes: any[]) => {
   nodes.forEach((node) => {
     const [child] = root.addNode(node);
     addNodes(child, node.children || []);
@@ -141,7 +141,7 @@ const addNodes = (root: Graph.Node, nodes: any[]) => {
   });
 };
 
-const checkDepth = (node: Graph.Node, depth = 0): number => {
+const checkDepth = (node: Node, depth = 0): number => {
   if (!node.parent) {
     return depth;
   }

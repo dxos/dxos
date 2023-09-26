@@ -6,7 +6,7 @@ import { Asterisk, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Space, TypedObject } from '@dxos/client/echo';
 
@@ -14,12 +14,8 @@ import { TEMPLATE_PLUGIN } from './types';
 
 // TODO(burdon): Anti-pattern to have util.ts?
 // TODO(burdon): Generic "object" var name?
-export const objectToGraphNode = (
-  parent: Graph.Node<Space>,
-  object: TypedObject,
-  index: string,
-): Graph.Node<TypedObject> => {
-  const [child] = parent.addNode({
+export const objectToGraphNode = (parent: Node<Space>, object: TypedObject, index: string): Node<TypedObject> => {
+  const [child] = parent.addNode(TEMPLATE_PLUGIN, {
     id: object.id,
     label: object.title ?? ['object title placeholder', { ns: TEMPLATE_PLUGIN }],
     icon: (props) => <Asterisk {...props} />,

@@ -2,63 +2,65 @@
 // Copyright 2023 DXOS.org
 //
 
+import { untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 
 import { DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
 
-import { GraphImpl } from './graph';
-import { Graph } from './types';
+import { Graph } from './graph';
+import { Action, Node, NodeBuilder } from './types';
 
 /**
  * The builder...
  */
 export class GraphBuilder {
-  private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
+  private readonly _nodeBuilders = new Map<string, NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
   private _dispatch?: DispatchIntent;
 
-  addNodeBuilder(builder: Graph.NodeBuilder): void {
-    this._nodeBuilders.add(builder);
-  }
-
-  removeNodeBuilder(builder: Graph.NodeBuilder): void {
-    this._nodeBuilders.delete(builder);
+  /**
+   * Register a node builder which will be called in order to construct the graph.
+   */
+  // TODO(wittjosiah): Make this chainable.
+  addNodeBuilder(id: string, builder: NodeBuilder): void {
+    this._nodeBuilders.set(id, builder);
   }
 
   /**
-   * Constructs a new Graph object.
+   * Remove a node builder from the graph builder.
+   */
+  removeNodeBuilder(id: string): void {
+    this._nodeBuilders.delete(id);
+  }
+
+  /**
+   * Construct the graph, starting by calling all registered node builders on the root node.
+   * Node builders will be filtered out as they are used such that they are only used once on any given path.
    * @param root
    * @param path
-   * @param ignoreBuilders
    */
-  // TODO(burdon): Document ignoreBuilders.
-  build(root?: Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): GraphImpl {
-    const graph: GraphImpl = new GraphImpl(root ?? this._createNode(() => graph, { id: 'root', label: 'Root' }));
-    return this._build(graph, graph.root, path, ignoreBuilders);
+  build(root?: Node, path: string[] = []): Graph {
+    const graph: Graph = new Graph(root ?? this._createNode(() => graph, { id: 'root', label: 'Root' }));
+    return this._build(graph, graph.root, path);
   }
 
   /**
    * Called recursively.
    */
-  private _build(
-    graph: GraphImpl,
-    node: Graph.Node,
-    path: string[] = [],
-    ignoreBuilders: Graph.NodeBuilder[] = [],
-  ): GraphImpl {
+  private _build(graph: Graph, node: Node, path: string[] = [], ignoreBuilders: string[] = []): Graph {
     // TODO(wittjosiah): Should this support multiple paths to the same node?
-    graph.setPath(node.id, path);
+    graph._setPath(node.id, path);
 
     // TODO(burdon): Document.
     const subscriptions = this._unsubscribe.get(node.id) ?? new EventSubscriptions();
     subscriptions.clear();
 
-    Array.from(this._nodeBuilders.values())
-      .filter((builder) => ignoreBuilders.findIndex((ignore) => ignore === builder) === -1)
-      .forEach((builder) => {
-        const unsubscribe = builder(this._filterBuilders(graph, node, path, [...ignoreBuilders, builder]));
+    Array.from(this._nodeBuilders.entries())
+      .filter(([id]) => ignoreBuilders.findIndex((ignore) => ignore === id) === -1)
+      .forEach(([_, builder]) => {
+        const unsubscribe = builder(node);
         unsubscribe && subscriptions.add(unsubscribe);
       });
 
@@ -67,40 +69,14 @@ export class GraphBuilder {
     return graph;
   }
 
-  /**
-   * Updates the Node's `addNode` method to filter out builders that have already been applied.
-   */
-  // TODO(burdon): Explain why this is needed.
-  private _filterBuilders(
-    graph: GraphImpl,
-    node: Graph.Node,
-    path: string[],
-    ignoreBuilders: Graph.NodeBuilder[],
-  ): Graph.Node {
-    const builderNode = deepSignal({
-      ...node,
-      addNode: (...partials) => {
-        return partials.map((partial) => {
-          const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode(() => graph, { ...partial, parent: builderNode }, childPath, ignoreBuilders);
-          builderNode.childrenMap[child.id] = child;
-          this._build(graph, child, childPath, ignoreBuilders);
-          return child;
-        });
-      },
-    }) as RevertDeepSignal<Graph.Node>;
-
-    return builderNode;
-  }
-
   private _createNode<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
-    getGraph: () => GraphImpl,
-    partial: Pick<Graph.Node, 'id' | 'label'> & Partial<Graph.Node<TData, TProperties>>,
+    getGraph: () => Graph,
+    partial: Pick<Node, 'id' | 'label'> & Partial<Node<TData, TProperties>>,
     path: string[] = [],
-    ignoreBuilders: Graph.NodeBuilder[] = [],
-  ): Graph.Node<TData, TProperties> {
+    ignoreBuilders: string[] = [],
+  ): Node<TData, TProperties> {
     // TODO(burdon): Document implications and rationale of deepSignal.
-    const node: Graph.Node<TData, TProperties> = deepSignal({
+    const node: Node<TData, TProperties> = deepSignal({
       parent: null,
       data: null as TData, // TODO(burdon): Allow null property?
       properties: {} as TProperties,
@@ -118,48 +94,61 @@ export class GraphBuilder {
       },
 
       addProperty: (key, value) => {
-        (node.properties as { [key: string]: any })[key] = value;
+        untracked(() => {
+          (node.properties as { [key: string]: any })[key] = value;
+        });
       },
       removeProperty: (key) => {
-        delete (node.properties as { [key: string]: any })[key];
+        untracked(() => {
+          delete (node.properties as { [key: string]: any })[key];
+        });
       },
 
-      addNode: (...partials) => {
-        return partials.map((partial) => {
-          const childPath = [...path, 'childrenMap', partial.id];
-          const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, ignoreBuilders);
-          node.childrenMap[child.id] = child;
-          this._build(getGraph(), child, childPath, ignoreBuilders);
-          return child;
+      addNode: (builder, ...partials) => {
+        return untracked(() => {
+          return partials.map((partial) => {
+            const builders = [...ignoreBuilders, builder];
+            const childPath = [...path, 'childrenMap', partial.id];
+            const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, builders);
+            node.childrenMap[child.id] = child;
+            this._build(getGraph(), child, childPath, builders);
+            return child;
+          });
         });
       },
       removeNode: (id) => {
-        const child = node.childrenMap[id];
-        delete node.childrenMap[id];
-        return child;
+        return untracked(() => {
+          const child = node.childrenMap[id];
+          delete node.childrenMap[id];
+          return child;
+        });
       },
 
       addAction: (...partials) => {
-        return partials.map((partial) => {
-          const action = this._createAction(partial);
-          node.actionsMap[action.id] = action;
-          return action;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const action = this._createAction(partial);
+            node.actionsMap[action.id] = action;
+            return action;
+          });
         });
       },
       removeAction: (id) => {
-        const action = node.actionsMap[id];
-        delete node.actionsMap[id];
-        return action;
+        return untracked(() => {
+          const action = node.actionsMap[id];
+          delete node.actionsMap[id];
+          return action;
+        });
       },
-    }) as RevertDeepSignal<Graph.Node<TData, TProperties>>;
+    }) as RevertDeepSignal<Node<TData, TProperties>>;
 
     return node;
   }
 
   private _createAction<TProperties extends { [key: string]: any } = { [key: string]: any }>(
-    partial: Pick<Graph.Action, 'id' | 'label'> & Partial<Graph.Action<TProperties>>,
-  ): Graph.Action<TProperties> {
-    const action: Graph.Action<TProperties> = deepSignal({
+    partial: Pick<Action, 'id' | 'label'> & Partial<Action<TProperties>>,
+  ): Action<TProperties> {
+    const action: Action<TProperties> = deepSignal({
       properties: {} as TProperties,
       actionsMap: {},
       ...partial,
@@ -175,24 +164,32 @@ export class GraphBuilder {
         }
       },
       addAction: (...partials) => {
-        return partials.map((partial) => {
-          const subAction = this._createAction(partial);
-          action.actionsMap[subAction.id] = subAction;
-          return subAction;
+        return untracked(() => {
+          return partials.map((partial) => {
+            const subAction = this._createAction(partial);
+            action.actionsMap[subAction.id] = subAction;
+            return subAction;
+          });
         });
       },
       removeAction: (id) => {
-        const subAction = action.actionsMap[id];
-        delete action.actionsMap[id];
-        return subAction;
+        return untracked(() => {
+          const subAction = action.actionsMap[id];
+          delete action.actionsMap[id];
+          return subAction;
+        });
       },
       addProperty: (key, value) => {
-        (action.properties as { [key: string]: any })[key] = value;
+        return untracked(() => {
+          (action.properties as { [key: string]: any })[key] = value;
+        });
       },
       removeProperty: (key) => {
-        delete (action.properties as { [key: string]: any })[key];
+        return untracked(() => {
+          delete (action.properties as { [key: string]: any })[key];
+        });
       },
-    }) as RevertDeepSignal<Graph.Action<TProperties>>;
+    }) as RevertDeepSignal<Action<TProperties>>;
 
     return action;
   }

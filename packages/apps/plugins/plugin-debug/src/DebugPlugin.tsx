@@ -87,7 +87,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
             const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
               debug
-                ? parent.addNode({
+                ? parent.addNode(DEBUG_PLUGIN, {
                     id: 'devtools',
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props) => <Bug {...props} />,
@@ -109,7 +109,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
           const unsubscribe = settings.values.$debug?.subscribe((debug) => {
             debug
-              ? parent.addNode({
+              ? parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
                   label: 'Debug',
                   icon: (props: IconProps) => <Bug {...props} />,
