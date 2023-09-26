@@ -20,6 +20,10 @@ import { AbstractPlugin } from '../plugin';
 export class Indexing extends AbstractPlugin {
   private readonly _ctx = new Context();
   private _index?: MiniSearch;
+
+  /**
+   * @internal
+   */
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
 
   private readonly _indexOptions = {
@@ -49,9 +53,9 @@ export class Indexing extends AbstractPlugin {
         const space = this._client.spaces.default;
 
         const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
+          log('received message', { message });
           await this._processMessage(message);
         });
-        log.info('Listening for indexing messages at default space.', { spaceKey: space.key.toHex() });
 
         this._ctx.onDispose(unsubscribe);
       })
@@ -122,7 +126,8 @@ export class Indexing extends AbstractPlugin {
   private async _processMessage(message: GossipMessage) {
     const request: SearchRequest = message.payload;
     if (request.query) {
-      this._search(request);
+      const response = this._search(request);
+      await this._client!.spaces.default.postMessage('dxos.agent.indexing-plugin', response);
     }
   }
 
@@ -145,12 +150,12 @@ export class Indexing extends AbstractPlugin {
   }
 }
 
-type SearchRequest = {
+export type SearchRequest = {
   query: string;
-  options?: {};
+  options?: { fuzzy?: boolean };
 };
 
-type SearchResponse = {
+export type SearchResponse = {
   results: {
     spaceKey: string;
     objectId: string;
