@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-types",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "Data types defined by Kai and experimental bots.",
   "homepage": "https://dxos.org",
