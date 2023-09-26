@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
