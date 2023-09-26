@@ -5,12 +5,11 @@
 import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import type { ClientPluginProvides } from '@braneframe/plugin-client';
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Timer } from '@dxos/async';
-import { SpaceProxy } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+import { getPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
@@ -20,7 +19,6 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
-  let graphPlugin: Plugin<GraphPluginProvides>;
 
   const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
@@ -34,9 +32,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
     meta: {
       id: DEBUG_PLUGIN,
     },
-    ready: async (plugins) => {
-      graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph')!;
-
+    ready: async () => {
       settings
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
@@ -70,43 +66,50 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        nodes: (parent) => {
-          if (parent.id === 'space:all-spaces') {
-            parent.addAction({
-              id: 'open-devtools',
-              label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-              icon: (props) => <Bug {...props} />,
-              intent: {
-                plugin: DEBUG_PLUGIN,
-                action: 'open-devtools',
-              },
-              properties: {
-                testId: 'spacePlugin.openDevtools',
-              },
-            });
-
-            const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
-              debug
-                ? parent.addNode(DEBUG_PLUGIN, {
-                    id: 'devtools',
-                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                    icon: (props) => <Bug {...props} />,
-                    data: 'devtools',
-                    properties: {
-                      persistenceClass: 'appState',
-                    },
-                  })
-                : parent.removeNode('devtools');
-            });
-
-            return () => unsubscribe?.();
-          } else if (!(parent.data instanceof SpaceProxy)) {
+        withPlugins: (plugins) => (parent) => {
+          if (parent.id !== 'root') {
             return;
           }
 
+          console.log();
+
+          parent.addAction({
+            id: 'open-devtools',
+            label: ['open devtools label', { ns: DEBUG_PLUGIN }],
+            icon: (props) => <Bug {...props} />,
+            intent: {
+              plugin: DEBUG_PLUGIN,
+              action: 'open-devtools',
+            },
+            properties: {
+              testId: 'spacePlugin.openDevtools',
+            },
+          });
+
+          const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+          clientPlugin.provides.client.spaces.subscribe((spaces) => {
+            console.log(spaces);
+          });
+
+          // const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
+          //   if (debug) {
+          //     parent.addNode(DEBUG_PLUGIN, {
+          //       id: 'devtools',
+          //       label: ['devtools label', { ns: DEBUG_PLUGIN }],
+          //       icon: (props) => <Bug {...props} />,
+          //       data: 'devtools',
+          //       properties: {
+          //         persistenceClass: 'appState',
+          //       },
+          //     });
+          //   } else {
+          //     parent.removeNode('devtools');
+          //   }
+          // });
+
           const nodeId = parent.id + '-debug';
           nodeIds.push(nodeId);
-
+          const graphPlugin = getPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
           const unsubscribe = settings.values.$debug?.subscribe((debug) => {
             debug
               ? parent.addNode(DEBUG_PLUGIN, {
@@ -127,12 +130,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
             case 'open-devtools': {
-              // TODO(burdon): Access config.
-              const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-              if (!clientPlugin) {
-                throw new Error('Client plugin not found');
-              }
-
+              const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
               if (vaultUrl) {

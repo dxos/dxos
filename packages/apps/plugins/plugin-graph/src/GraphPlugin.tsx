@@ -19,7 +19,7 @@ import { graphPlugins } from './util';
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const builder = new GraphBuilder();
-  const state: { graph?: Graph } = {}; // TODO(burdon): Use signal?
+  const state: { graph?: Graph } = {};
 
   return {
     meta: {
@@ -29,6 +29,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       builder._setDispatch(intentPlugin?.provides.intent.dispatch);
 
+      // TODO(burdon): Unify.
       graphPlugins(plugins)
         .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
         .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])
@@ -41,7 +42,6 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
 
       state.graph = builder.build();
     },
-    // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {
       context: ({ children }) => (
         <GraphContext.Provider value={{ graph: state.graph! }}>{children}</GraphContext.Provider>

@@ -28,7 +28,7 @@ export const getSpaceId = (spaceKey: PublicKeyLike) => {
     spaceKey = spaceKey.toHex();
   }
 
-  return `${SPACE_PLUGIN_SHORT_ID}:${spaceKey}`;
+  return `${SPACE_PLUGIN_SHORT_ID}/${spaceKey}`;
 };
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {

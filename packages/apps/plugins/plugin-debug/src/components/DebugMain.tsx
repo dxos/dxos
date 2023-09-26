@@ -71,6 +71,8 @@ export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: 
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
 
+  return null;
+
   const [view, setView] = useState<'diagnostics' | 'graph'>('diagnostics');
 
   const { connect } = useSpaceInvitation(space?.key);

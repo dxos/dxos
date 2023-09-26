@@ -12,6 +12,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
