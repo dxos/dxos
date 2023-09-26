@@ -99,14 +99,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   emit(data: T) {
     for (const listener of this._listeners) {
-      void (async () => {
-        try {
-          const callback = listener.derefCallback();
-          await callback?.(data);
-        } catch (err: any) {
-          listener.ctx.raise(err);
-        }
-      })();
+      void listener.trigger(data);
 
       if (listener.once) {
         this._listeners.delete(listener);
@@ -433,6 +426,15 @@ class EventListener<T> {
 
   derefCallback(): ((data: T) => void) | undefined {
     return this.weak ? (this.callback as WeakRef<(data: T) => void>).deref() : (this.callback as (data: T) => void);
+  }
+
+  async trigger(data: T) {
+    try {
+      const callback = this.derefCallback();
+      await callback?.(data);
+    } catch (err: any) {
+      this.ctx.raise(err);
+    }
   }
 
   remove() {
