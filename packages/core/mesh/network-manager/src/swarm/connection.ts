@@ -223,12 +223,7 @@ export class Connection {
   // TODO(nf): make abort cancel an existing close in progress.
   async abort(err?: Error) {
     log('aborting...', { err });
-
-    if (
-      this._state === ConnectionState.CLOSED ||
-      this._state === ConnectionState.ABORTING ||
-      this._state === ConnectionState.ABORTED
-    ) {
+    if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
       log(`abort ignored: already ${this._state}`, this.closeReason);
       return;
     }
@@ -269,7 +264,6 @@ export class Connection {
       this.closeReason = err?.message;
     }
     if (
-      this._state === ConnectionState.CLOSING ||
       this._state === ConnectionState.CLOSED ||
       this._state === ConnectionState.ABORTING ||
       this._state === ConnectionState.ABORTED
