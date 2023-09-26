@@ -34,10 +34,8 @@ export type Subscription = () => void;
 export class Query<T extends TypedObject = TypedObject> {
   private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined = undefined;
+  private _event = new Event<Query<T>>();
   private _signal = createSignal?.();
-
-  // Hold a reference to the listener to prevent it from being garbage collected.
-  private _weakListener: () => void;
 
   constructor(
     private readonly _objects: Map<string, EchoObject>,
@@ -48,18 +46,36 @@ export class Query<T extends TypedObject = TypedObject> {
     this._filters.push(filterDeleted(options?.deleted));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
 
-    // Create a weak listener that will not prevent the Query
-    this._weakListener = () => {
-      this._cache = undefined;
-      this._signal?.notifyWrite();
-    };
+    // Weak listener to allow queries to be garbage collected.
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._updateEvent.on(new Context(), this._weakListener, { weak: true });
+    this._updateEvent.on(new Context(), this._onUpdate, { weak: true });
   }
 
   get objects(): T[] {
     this._signal?.notifyRead();
+    return this._getObjects();
+  }
 
+  // Hold a reference to the listener to prevent it from being garbage collected.
+  private _onUpdate = (updated: Item[]) => {
+    const changed = updated.some((object) => {
+      const exists = this._cache?.find((obj) => obj.id === object.id);
+      if (this._objects.has(object.id) || exists) {
+        const match = this._match(this._objects.get(object.id)! as T);
+        return match || (exists && !match);
+      } else {
+        return false;
+      }
+    });
+
+    if (changed) {
+      this._cache = undefined;
+      this._signal?.notifyWrite();
+      this._event.emit(this);
+    }
+  };
+
+  private _getObjects() {
     if (!this._cache) {
       this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
     }
@@ -69,22 +85,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
   // TODO(burdon): Option to trigger immediately.
   subscribe(callback: (query: Query<T>) => void): Subscription {
-    return this._updateEvent.on((updated) => {
-      const changed = updated.some((object) => {
-        const exists = this._cache?.find((obj) => obj.id === object.id);
-        if (this._objects.has(object.id) || exists) {
-          const match = this._match(this._objects.get(object.id)! as T);
-          return match || (exists && !match);
-        } else {
-          return false;
-        }
-      });
-
-      if (changed) {
-        this._cache = undefined;
-        callback(this);
-      }
-    });
+    return this._event.on(callback);
   }
 
   _match(object: T) {
