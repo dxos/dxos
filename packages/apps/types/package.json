@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/types",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Protobuf definitions for Braneframe types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

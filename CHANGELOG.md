@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0](https://github.com/dxos/dxos/compare/v0.2.3...v0.3.0) (2023-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* force minor bump ([#4322](https://github.com/dxos/dxos/issues/4322))
+
+### Features
+
+* Add weak event listeners ([#4318](https://github.com/dxos/dxos/issues/4318)) ([e68de56](https://github.com/dxos/dxos/commit/e68de56aedfb6ea8a2a1edd166a10e897b96e20f))
+* Separate graph from graph builder. ([#4295](https://github.com/dxos/dxos/issues/4295)) ([f0c8b8e](https://github.com/dxos/dxos/commit/f0c8b8e7649428655f4282dc33bfd22fc70365bb))
+
+
+### Bug Fixes
+
+* connectivity cleanup ([#4277](https://github.com/dxos/dxos/issues/4277)) ([f91937b](https://github.com/dxos/dxos/commit/f91937b2f5e6b99dcf86753aa8cf280084c4e95c))
+* **examples:** demo scroll ([#4320](https://github.com/dxos/dxos/issues/4320)) ([22eeb4f](https://github.com/dxos/dxos/commit/22eeb4fdffa2e10af52161ecb973c55d539c9227))
+* force minor bump ([#4322](https://github.com/dxos/dxos/issues/4322)) ([cc5efc5](https://github.com/dxos/dxos/commit/cc5efc535b77ace055f08474d630788ec038fb03))
+
 ## [0.2.3](https://github.com/dxos/dxos/compare/v0.2.2...v0.2.3) (2023-09-25)
 
 
