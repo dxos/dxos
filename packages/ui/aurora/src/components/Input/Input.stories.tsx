@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import React from 'react';
 
-import '@dxosTheme';
 import { MessageValence } from '@dxos/aurora-types';
 
 import { Input } from './Input';
@@ -16,7 +17,7 @@ type StoryInputProps = Partial<{
   description: string;
   labelVisuallyHidden: boolean;
   descriptionVisuallyHidden: boolean;
-  type: 'default' | 'pin' | 'textarea' | 'checkbox';
+  type: 'default' | 'pin' | 'textarea' | 'checkbox' | 'switch';
   validationMessage: string;
   validationValence: MessageValence;
 }>;
@@ -38,6 +39,7 @@ const StoryInput = ({
       {type === 'pin' && <Input.PinInput {...props} />}
       {type === 'textarea' && <Input.TextArea {...props} />}
       {type === 'checkbox' && <Input.Checkbox {...props} />}
+      {type === 'switch' && <Input.Switch {...props} />}
       {type === 'default' && <Input.TextInput {...props} />}
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
@@ -180,6 +182,16 @@ export const Checkbox = {
   args: {
     label: 'This is a checkbox',
     type: 'checkbox',
+    description: 'It’s checked, indeterminate, or unchecked',
+    size: 5,
+    weight: 'bold',
+  },
+};
+
+export const Switch = {
+  args: {
+    label: 'This is a switch',
+    type: 'switch',
     description: 'It’s checked, indeterminate, or unchecked',
     size: 5,
     weight: 'bold',

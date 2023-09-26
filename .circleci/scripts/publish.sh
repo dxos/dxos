@@ -4,15 +4,16 @@
 # https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
 
 APPS=(
-  ./packages/apps/composer-app
+  ./docs
+  ./packages/sdk/examples
+  ./packages/devtools/devtools
   ./packages/apps/halo-app
+  ./packages/apps/composer-app
   ./packages/apps/labs-app
   ./packages/apps/tasks
   ./packages/apps/todomvc
-  ./packages/devtools/devtools
   ./packages/experimental/kai
   ./packages/experimental/kube-console
-  ./docs
 )
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -51,8 +52,9 @@ for APP in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  if [[ $BRANCH = "production" || ($BRANCH = "main" && $APP = "./docs") ]]; then
+  if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
+    export REMOTE_SOURCE=https://halo.dxos.org/vault.html
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
@@ -87,7 +89,7 @@ for APP in "${APPS[@]}"; do
       --verbose
   fi
 
-  if [[ $BRANCH = "production" || $BRANCH = "staging" || ($BRANCH = "main" && $APP = "./docs") ]]; then
+  if [[ $BRANCH = "production" || $BRANCH = "staging" ]]; then
     if [ $? -eq 0 ]; then
         notifySuccess $PACKAGE
     else

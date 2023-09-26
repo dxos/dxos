@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React, { PropsWithChildren, ReactNode } from 'react';
-
-import '@dxosTheme';
 
 import { Popover } from './Popover';
 import { Button } from '../Buttons';

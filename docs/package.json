@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@stackblitz/sdk": "^1.9.0",

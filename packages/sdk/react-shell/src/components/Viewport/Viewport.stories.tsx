@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import React from 'react';
 
 import { AlertDialog } from '@dxos/aurora';

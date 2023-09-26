@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-treeview",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,9 +17,7 @@
   "dependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dnd-kit/core": "^6.0.5",
-    "@dnd-kit/sortable": "^7.0.1",
-    "@dnd-kit/utilities": "^3.2.0",
+    "@dxos/async": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",

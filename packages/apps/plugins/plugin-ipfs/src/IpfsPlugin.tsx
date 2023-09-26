@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { SpaceProxy, TypedObject } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection } from './components';
 import translations from './translations';
@@ -17,6 +18,17 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
   return {
     meta: {
       id: IPFS_PLUGIN,
+    },
+    ready: async (plugins) => {
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+          if (isFile(node.data)) {
+            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+          }
+          return tile;
+        });
+      }
     },
     unload: async () => {
       adapter.clear();

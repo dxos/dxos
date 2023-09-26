@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "Functions SDK and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,7 +27,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "portfinder": "^1.0.32"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-test",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

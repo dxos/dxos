@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L48)
-Type: <code>"0.2.0"</code>
+Type: <code>"0.2.3"</code>
 
 The version of this client API.
 

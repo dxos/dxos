@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
+
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
@@ -10,8 +12,6 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { Sidecar, Section, SidecarStack } from './Sidecar';
 import { StackFrameRuntime } from './defs';
 import { TestFrameContainer } from '../../testing';
-
-import '@dxosTheme';
 
 const actions = ['summarize', 'translate', 'list people', 'convert to records', 'shorten', 'extend'];
 

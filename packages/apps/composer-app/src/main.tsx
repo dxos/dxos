@@ -45,13 +45,13 @@ createRoot(document.getElementById('root')!).render(
         TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
         IntentPlugin(),
         ThemePlugin({ appName: 'Composer' }),
-        DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
         PwaPlugin(),
         // Inside theme provider so that errors are styled.
         ErrorPlugin(),
         ClientPlugin(),
         GraphPlugin(),
+        DndPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),
         SplitViewPlugin({

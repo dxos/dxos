@@ -6,7 +6,7 @@ import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
 import { HeaderContext, RowData } from '@tanstack/react-table';
 import React, { FC, PropsWithChildren, useRef, useState } from 'react';
 
-import { Button, DensityProvider, Input, Popover, Select, useId } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Popover, Select, Separator, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -45,8 +45,13 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
   );
 };
 
+const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
+  <div role='none' className={mx('p-2', className)}>
+    {children}
+  </div>
+);
+
 export const ColumnPanel = <TData extends RowData, TValue>({
-  context,
   schemas,
   schema,
   column,
@@ -69,8 +74,6 @@ export const ColumnPanel = <TData extends RowData, TValue>({
   };
 
   const handleSave = () => {
-    console.log('!!!!!!!!!!!');
-
     // Check valid and unique.
     if (!prop.length || !prop.match(/^[a-zA-Z_].+/i) || schema.props.find((c) => c.id !== column.id && c.id === prop)) {
       propRef.current?.focus();
@@ -90,12 +93,6 @@ export const ColumnPanel = <TData extends RowData, TValue>({
     setOpen(false);
   };
 
-  const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
-    <div role='none' className={mx('p-2', className)}>
-      {children}
-    </div>
-  );
-
   return (
     <Popover.Root open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
@@ -107,7 +104,7 @@ export const ColumnPanel = <TData extends RowData, TValue>({
         <Popover.Content>
           <Popover.Viewport classNames='w-60'>
             <DensityProvider density='fine'>
-              <div className='flex flex-col space-y-1 divide-y'>
+              <div className='flex flex-col gap-1'>
                 <Section>
                   <Input.Root>
                     <Input.Label classNames='mbe-1'>Label</Input.Label>
@@ -207,6 +204,8 @@ export const ColumnPanel = <TData extends RowData, TValue>({
                     </Section>
                   </>
                 )}
+
+                <Separator classNames='mli-2' />
 
                 <Section className='space-b-1.5'>
                   {/* TODO(burdon): Style as DropdownMenuItem. */}
