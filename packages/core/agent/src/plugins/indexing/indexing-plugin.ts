@@ -5,7 +5,6 @@
 import MiniSearch from 'minisearch';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-import { scheduleTask } from '@dxos/async';
 import { PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -30,6 +29,8 @@ export class Indexing extends AbstractPlugin {
     fields: ['json'],
     idField: 'id',
   };
+
+  private readonly _indexedObjects = new Map<string, IndexDocument>();
 
   constructor(private readonly _indexPath?: string) {
     super();
@@ -61,10 +62,7 @@ export class Indexing extends AbstractPlugin {
       })
       .catch((error: Error) => log.catch(error));
 
-    // Index space asynchronously to not block the main thread.
-    scheduleTask(this._ctx, async () => {
-      this._indexSpaces();
-    });
+    this._indexSpaces().catch((error: Error) => log.catch(error));
   }
 
   async close(): Promise<void> {
@@ -82,25 +80,28 @@ export class Indexing extends AbstractPlugin {
     }
   }
 
-  private _indexSpaces() {
+  private async _indexSpaces() {
     if (!this._index) {
       this._index = new MiniSearch(this._indexOptions);
     }
-    const process = (spaces: Space[]) => {
-      spaces.forEach((space) => {
-        if (!this._spaceIndexes.has(space.key)) {
-          this._spaceIndexes.set(space.key, this._indexSpace(space));
-        }
-      });
-    };
+    const process = async (spaces: Space[]) =>
+      Promise.all(
+        spaces.map(async (space) => {
+          if (!this._spaceIndexes.has(space.key)) {
+            this._spaceIndexes.set(space.key, await this._indexSpace(space));
+          }
+        }),
+      );
 
     invariant(this._client, 'Client is undefined.');
+    await this._client.spaces.isReady.wait();
     const sub = this._client.spaces.subscribe(process);
-    process(this._client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
+    await process(this._client.spaces.get());
   }
 
-  private _indexSpace(space: Space): SpaceIndex {
+  private async _indexSpace(space: Space): Promise<SpaceIndex> {
+    await space.waitUntilReady();
     const query = space.db.query();
     return {
       space,
@@ -110,14 +111,13 @@ export class Indexing extends AbstractPlugin {
         query.objects.forEach((object) => {
           const document: IndexDocument = {
             id: `${space.key.toHex()}:${object.id}`,
-            json: object.toJSON(),
+            json: JSON.stringify(object.toJSON()),
           };
-          try {
-            this._index!.remove(document);
-          } catch (error) {
-            // Ignore.
+          if (this._indexedObjects.has(document.id)) {
+            this._index!.remove(this._indexedObjects.get(document.id)!);
           }
           this._index!.add(document);
+          this._indexedObjects.set(document.id, document);
         });
       }),
     };
@@ -142,7 +142,6 @@ export class Indexing extends AbstractPlugin {
           score: result.score,
           matches: Object.entries(result.match).map(([term, keys]) => ({
             term,
-            positions: keys.map((key: string) => ({ key })),
           })),
         };
       }),
@@ -160,7 +159,7 @@ export type SearchResponse = {
     spaceKey: string;
     objectId: string;
     score: number;
-    matches: { term: string; positions: { key: string }[] }[];
+    matches: { term: string; positions?: { key: string; start: number; length: number }[] }[];
   }[];
 };
 

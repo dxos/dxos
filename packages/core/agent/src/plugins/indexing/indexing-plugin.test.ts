@@ -153,6 +153,7 @@ describe('Indexing', () => {
     {
       // Create one space before indexing is initialized.
       const space = await client1.spaces.create({ name: 'first space' });
+      log.info('firstSpace', { key: space.key });
       await space.waitUntilReady();
       space.db.add(new Expando(documents[0]));
       await space.db.flush();
@@ -164,6 +165,7 @@ describe('Indexing', () => {
 
     {
       const space = await client1.spaces.create({ name: 'second space' });
+      log.info('secondSpace', { key: space.key });
       await space.waitUntilReady();
       space.db.add(new Expando(documents[1]));
       await space.db.flush();
@@ -184,8 +186,8 @@ describe('Indexing', () => {
 
     client2.spaces.default.listen('dxos.agent.indexing-plugin', (message) => {
       log.info('search results', { message });
-      // expect(message.payload.results).to.have.lengthOf(2);
-      // results.wake(message);
+      expect(message.payload.results).to.have.lengthOf(2);
+      results.wake(message);
     });
 
     // Send search request.
@@ -194,9 +196,7 @@ describe('Indexing', () => {
       options: { fuzzy: true },
     };
 
-    await sleep(1000);
-    await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', searchRequest);
-    await sleep(1000);
+    await sleep(3000);
     await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', searchRequest);
 
     await asyncTimeout(results.wait(), 1000);
