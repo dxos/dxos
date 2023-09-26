@@ -52,11 +52,11 @@ createRoot(document.getElementById('root')!).render(
         ClientPlugin(),
         GraphPlugin(),
         DndPlugin(),
-        TreeViewPlugin(),
-        UrlSyncPlugin(),
         SplitViewPlugin({
           showComplementarySidebar: false,
         }),
+        TreeViewPlugin(),
+        UrlSyncPlugin(),
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),
