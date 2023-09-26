@@ -6,10 +6,11 @@ import { Bug, IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import type { ClientPluginProvides } from '@braneframe/plugin-client';
+import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Timer } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
@@ -19,6 +20,7 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
+  let graphPlugin: Plugin<GraphPluginProvides>;
 
   const nodeIds: string[] = [];
   const isDebug = (data: unknown) =>
@@ -33,6 +35,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       id: DEBUG_PLUGIN,
     },
     ready: async (plugins) => {
+      graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph')!;
+
       settings
         .prop(settings.values.$debug!, 'debug', LocalStorageStore.bool)
         .prop(settings.values.$devtools!, 'devtools', LocalStorageStore.bool);
@@ -83,7 +87,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
             const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
               debug
-                ? parent.add({
+                ? parent.addNode(DEBUG_PLUGIN, {
                     id: 'devtools',
                     label: ['devtools label', { ns: DEBUG_PLUGIN }],
                     icon: (props) => <Bug {...props} />,
@@ -92,7 +96,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       persistenceClass: 'appState',
                     },
                   })
-                : parent.remove('devtools');
+                : parent.removeNode('devtools');
             });
 
             return () => unsubscribe?.();
@@ -105,13 +109,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
           const unsubscribe = settings.values.$debug?.subscribe((debug) => {
             debug
-              ? parent.add({
+              ? parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
                   label: 'Debug',
                   icon: (props: IconProps) => <Bug {...props} />,
-                  data: { id: nodeId, space: parent.data },
+                  data: { id: nodeId, graph: graphPlugin?.provides.graph(), space: parent.data },
                 })
-              : parent.remove(nodeId);
+              : parent.removeNode(nodeId);
           });
 
           return () => {
@@ -151,7 +155,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         switch (role) {
           case 'main':
             if (isDebug(data)) {
-              return DebugMain;
+              return DebugMain; // TODO(burdon): Convert to render for type safety.
             } else if (data === 'devtools') {
               return DevtoolsMain;
             }

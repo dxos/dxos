@@ -3,3 +3,4 @@
 //
 
 export * from './IntentPlugin';
+export * from './types';
