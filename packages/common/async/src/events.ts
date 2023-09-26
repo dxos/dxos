@@ -4,8 +4,6 @@
 
 import { Context } from '@dxos/context';
 
-import { runInContextAsync } from './task-scheduling';
-
 export type UnsubscribeCallback = () => void;
 
 export type Effect = () => UnsubscribeCallback | undefined;
@@ -38,6 +36,11 @@ export class EventSubscriptions {
     this._listeners.length = 0;
   }
 }
+
+export type ListenerOptions = {
+  weak?: boolean;
+  once?: boolean;
+};
 
 /**
  * An EventEmitter variant that does not do event multiplexing and respresents a single event.
@@ -82,8 +85,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return event;
   }
 
-  private readonly _listeners = new Map<(data: T) => void, (data: T) => void>();
-  private readonly _onceListeners = new Map<(data: T) => void, (data: T) => void>();
+  private readonly _listeners = new Set<EventListener<T>>();
   private readonly _effects = new Set<MaterializedEffect>();
 
   /**
@@ -96,13 +98,12 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param data param that will be passed to all listeners.
    */
   emit(data: T) {
-    for (const [_key, listener] of this._listeners) {
-      listener(data);
-    }
+    for (const listener of this._listeners) {
+      void listener.trigger(data);
 
-    for (const [_key, listener] of this._onceListeners) {
-      listener(data);
-      this._onceListeners.delete(_key);
+      if (listener.once) {
+        this._listeners.delete(listener);
+      }
     }
   }
 
@@ -114,38 +115,33 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @returns function that unsubscribes this event listener
    */
   on(callback: (data: T) => void): UnsubscribeCallback;
-  on(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
-  on(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+  on(ctx: Context, callback: (data: T) => void, options?: ListenerOptions): UnsubscribeCallback;
+  on(_ctx: any, _callback?: (data: T) => void, options?: ListenerOptions): UnsubscribeCallback {
     const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
+    const weak = !!options?.weak;
+    const once = !!options?.once;
 
-    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
+    const listener = new EventListener(this, callback, ctx, once, weak);
 
-    this._listeners.set(callback, runCallback);
+    this._addListener(listener);
 
-    if (this.listenerCount() === 1) {
-      this._runEffects();
-    }
-
-    const clearDispose = ctx.onDispose(() => this.off(callback));
     return () => {
-      clearDispose();
-      this.off(callback);
+      this._removeListener(listener);
     };
   }
 
   /**
-   * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
+   * Unsubscribe this callback from new events. Includes persistent and once-listeners.
    * NOTE: It is recommended to use `Event.on`'s return value instead.
    * If the callback is not subscribed this is no-op.
    *
    * @param callback
    */
   off(callback: (data: T) => void) {
-    this._listeners.delete(callback);
-    this._onceListeners.delete(callback);
-
-    if (this.listenerCount() === 0) {
-      this._cleanupEffects();
+    for (const listener of this._listeners) {
+      if (listener.derefCallback() === callback) {
+        this._removeListener(listener);
+      }
     }
   }
 
@@ -160,24 +156,12 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
     const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
 
-    if (this._listeners.has(callback)) {
-      return () => {
-        /* No-op. */
-      };
-    }
+    const listener = new EventListener(this, callback, ctx, true, false);
 
-    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
-
-    this._onceListeners.set(callback, runCallback);
-    if (this.listenerCount() === 1) {
-      this._runEffects();
-    }
+    this._addListener(listener);
 
     return () => {
-      this._onceListeners.delete(callback);
-      if (this.listenerCount() === 0) {
-        this._runEffects();
-      }
+      this._removeListener(listener);
     };
   }
 
@@ -233,7 +217,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * Returns the number of persistent listeners.
    */
   listenerCount() {
-    return this._listeners.size + this._onceListeners.size;
+    return this._listeners.size;
   }
 
   /**
@@ -317,6 +301,26 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     };
   }
 
+  private _addListener(listener: EventListener<T>) {
+    this._listeners.add(listener);
+
+    if (this.listenerCount() === 1) {
+      this._runEffects();
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _removeListener(listener: EventListener<T>) {
+    this._listeners.delete(listener);
+    listener.remove();
+
+    if (this.listenerCount() === 0) {
+      this._cleanupEffects();
+    }
+  }
+
   private _runEffects() {
     for (const handle of this._effects) {
       handle.cleanup = handle.effect();
@@ -388,3 +392,71 @@ export interface ReadOnlyEvent<T = void> {
    */
   discardParameter(): Event<void>;
 }
+
+class EventListener<T> {
+  public readonly callback: ((data: T) => void) | WeakRef<(data: T) => void>;
+
+  private readonly _clearDispose?: () => void = undefined;
+
+  constructor(
+    event: Event<T>,
+    listener: (data: T) => void,
+    public readonly ctx: Context,
+    public readonly once: boolean,
+    public readonly weak: boolean,
+  ) {
+    this._clearDispose = ctx.onDispose(() => {
+      event._removeListener(this);
+    });
+
+    if (weak) {
+      this.callback = new WeakRef(listener);
+      weakListeners().registry.register(
+        listener,
+        {
+          event: new WeakRef(event),
+          listener: this,
+        },
+        this,
+      );
+    } else {
+      this.callback = listener;
+    }
+  }
+
+  derefCallback(): ((data: T) => void) | undefined {
+    return this.weak ? (this.callback as WeakRef<(data: T) => void>).deref() : (this.callback as (data: T) => void);
+  }
+
+  async trigger(data: T) {
+    try {
+      const callback = this.derefCallback();
+      await callback?.(data);
+    } catch (err: any) {
+      this.ctx.raise(err);
+    }
+  }
+
+  remove() {
+    this._clearDispose?.();
+    weakListeners().registry.unregister(this);
+  }
+}
+
+type HeldValue = {
+  event: WeakRef<Event<any>>;
+  listener: EventListener<any>;
+};
+
+let weakListenersState: FinalizationRegistry<HeldValue> | null = null;
+
+type WeakListeners = {
+  registry: FinalizationRegistry<HeldValue>;
+};
+
+const weakListeners = (): WeakListeners => {
+  weakListenersState ??= new FinalizationRegistry(({ event, listener }) => {
+    event.deref()?._removeListener(listener);
+  });
+  return { registry: weakListenersState };
+};

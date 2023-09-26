@@ -3,14 +3,14 @@
 //
 
 import { SetTileHandler } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
+import { Action, Graph, Node } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
 import { getDndId, MosaicState } from '@dxos/aurora-grid';
 
 import { TREE_VIEW_PLUGIN } from './types';
 
-export const getLevel = (node: Graph.Node, level = 0): number => {
+export const getLevel = (node: Node, level = 0): number => {
   if (!node.parent) {
     return level;
   } else {
@@ -27,7 +27,7 @@ export const activeToUri = (active?: string) =>
   '/' + (active ? active.split(':').map(encodeURIComponent).join('/') : '');
 
 // TODO(wittjosiah): Move into node implementation?
-export const sortActions = (actions: Graph.Action[]): Graph.Action[] =>
+export const sortActions = (actions: Action[]): Action[] =>
   actions.sort((a, b) => {
     if (a.properties.disposition === b.properties.disposition) {
       return 0;
@@ -41,7 +41,7 @@ export const sortActions = (actions: Graph.Action[]): Graph.Action[] =>
   });
 
 // NOTE: This is the same as @tldraw/indices implementation but working on Graph.Node properties.
-export const sortByIndex = (a: Graph.Node, b: Graph.Node) => {
+export const sortByIndex = (a: Node, b: Node) => {
   if (a.properties.index < b.properties.index) {
     return -1;
   } else if (a.properties.index > b.properties.index) {
@@ -50,7 +50,7 @@ export const sortByIndex = (a: Graph.Node, b: Graph.Node) => {
   return 0;
 };
 
-export const getTreeItemLabel = (node: Graph.Node, t: TFunction) =>
+export const getTreeItemLabel = (node: Node, t: TFunction) =>
   node.properties?.preferFallbackTitle
     ? Array.isArray(node.properties.fallbackTitle)
       ? t(...(node.properties.fallbackTitle as [string, { ns: string }]))
@@ -59,7 +59,7 @@ export const getTreeItemLabel = (node: Graph.Node, t: TFunction) =>
     ? t(...node.label)
     : node.label;
 
-export const getPersistenceParent = (node: Graph.Node, persistenceClass: string): Graph.Node | null => {
+export const getPersistenceParent = (node: Node, persistenceClass: string): Node | null => {
   if (!node || !node.parent) {
     return null;
   }
@@ -93,7 +93,7 @@ export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTil
   const mosaic: MosaicState = { tiles: {}, relations: {} };
 
   graph.traverse({
-    onVisitNode: (node) => {
+    visitor: (node) => {
       const level = getLevel(node, -1);
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
       mosaic.tiles[id] = onSetTile(
@@ -122,7 +122,7 @@ export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTil
   });
 
   graph.traverse({
-    onVisitNode: (node) => {
+    visitor: (node) => {
       const id = getDndId(TREE_VIEW_PLUGIN, node.id);
       if (node.children && node.children.length) {
         node.children.forEach((child) => {

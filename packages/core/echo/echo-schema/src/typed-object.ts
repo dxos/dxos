@@ -66,7 +66,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   constructor(
     initialProps?: T,
     private readonly _schemaType?: EchoSchemaType,
-    private readonly _opts?: TypedObjectOpts,
+    private readonly _opts?: TypedObjectOptions,
   ) {
     super(DocumentModel);
 
@@ -515,7 +515,7 @@ export type ObjectMeta = {
  */
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
-export type TypedObjectOpts = {
+export type TypedObjectOptions = {
   readOnly?: boolean;
 };
 
@@ -529,7 +529,7 @@ type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
     _schemaType?: EchoSchemaType,
-    opts?: TypedObjectOpts,
+    opts?: TypedObjectOptions,
   ): TypedObject<T>;
 };
 

@@ -29,6 +29,7 @@ export type SimplePeerTransportParams = {
 export class SimplePeerTransport implements Transport {
   private readonly _peer: SimplePeer;
   private _closed = false;
+  private _piped = false;
 
   readonly closed = new Event();
   readonly connected = new Event();
@@ -54,13 +55,13 @@ export class SimplePeerTransport implements Transport {
     this._peer.on('connect', () => {
       log('connected');
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
+      this._piped = true;
       this.connected.emit();
     });
 
     this._peer.on('close', async () => {
       log('closed');
-      await this._disconnectStreams();
-      this.closed.emit();
+      await this.destroy();
     });
 
     this._peer.on('error', async (err) => {
@@ -123,8 +124,11 @@ export class SimplePeerTransport implements Transport {
 
   async destroy() {
     log('closing...');
+    if (this._closed) {
+      return;
+    }
     this._closed = true;
-    await this._disconnectStreams();
+    this._disconnectStreams();
     this._peer!.destroy();
     this.closed.emit();
     log('closed');
@@ -139,9 +143,11 @@ export class SimplePeerTransport implements Transport {
     this._peer.signal(signal.payload.data);
   }
 
-  private async _disconnectStreams() {
+  private _disconnectStreams() {
     // TODO(rzadp): Find a way of unpiping this?
-    this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
+    if (this._piped) {
+      this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
+    }
   }
 }
 

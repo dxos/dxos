@@ -6,7 +6,7 @@ import { Article, ArticleMedium } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
 import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
@@ -68,7 +68,7 @@ const getFallbackTitle = (document: Document) => {
   return document.content?.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
 
-export const documentToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
+export const documentToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
   const fallbackProps = document.title
     ? {}
     : (() => {
@@ -81,7 +81,7 @@ export const documentToGraphNode = (parent: Graph.Node<Space>, document: Documen
           : {};
       })();
 
-  const [child] = parent.add({
+  const [child] = parent.addNode(MARKDOWN_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) =>

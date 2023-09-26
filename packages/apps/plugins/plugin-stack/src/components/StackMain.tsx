@@ -35,7 +35,7 @@ export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorPr
 
 export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
-  const { sendIntent } = useIntent();
+  const { dispatch } = useIntent();
   const { mosaic } = useMosaic();
   const handleAdd = useCallback(
     (sectionObject: StackModel['sections'][0]['object']) => {
@@ -111,7 +111,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
                       id={id}
                       data-testid={testId}
                       onClick={async () => {
-                        const { object: nextSection } = await sendIntent(intent);
+                        const { object: nextSection } = await dispatch(intent);
                         handleAdd(nextSection);
                       }}
                     >

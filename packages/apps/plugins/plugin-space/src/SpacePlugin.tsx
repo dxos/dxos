@@ -9,7 +9,7 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
-import { Graph, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { Node, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import {
@@ -71,7 +71,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       settings.prop(settings.values.$showHidden!, 'showHidden', LocalStorageStore.bool);
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN); // TODO(burdon): Const vs string?
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, TREE_VIEW_PLUGIN);
       if (!clientPlugin || !treeViewPlugin) {
         return;
@@ -97,7 +97,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             history.replaceState({}, document.title, url.href);
           }
 
-          await intentPlugin?.provides.intent.sendIntent({
+          await intentPlugin?.provides.intent.dispatch({
             action: TreeViewAction.ACTIVATE,
             data: { id: getSpaceId(space.key) },
           });
@@ -111,20 +111,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const space = await new Promise<Space | undefined>((resolve) => {
-            graphPlugin?.provides.graph.traverse({
-              from: treeView.activeNode,
+          state.active = await new Promise<Space | undefined>((resolve) => {
+            graphPlugin?.provides.graph().traverse({
+              node: treeView.activeNode,
               direction: 'up',
-              onVisitNode: (node) => {
+              visitor: (node) => {
                 if (isSpace(node.data)) {
                   resolve(node.data);
                 }
               },
             });
+
             resolve(undefined);
           });
-
-          state.active = space;
         }),
       );
 
@@ -288,7 +287,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
 
           // Shared spaces section.
-          const [groupNode] = parent.add({
+          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
             id: getSpaceId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
@@ -297,7 +296,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
-              onRearrangeChild: (child: Graph.Node<Space>, nextIndex: string) => {
+              onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
                 child.properties.index = setAppStateIndex(
                   child.id,
                   nextIndex,
