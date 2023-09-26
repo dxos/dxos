@@ -3,6 +3,7 @@
 //
 
 import { Bug, IconProps } from '@phosphor-icons/react';
+import { batch } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -20,13 +21,9 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
 
-  const nodeIds: string[] = [];
+  const nodeIds = new Set<string>();
   const isDebug = (data: unknown) =>
-    data &&
-    typeof data === 'object' &&
-    'id' in data &&
-    typeof data.id === 'string' &&
-    nodeIds.some((nodeId) => nodeId === data.id);
+    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
 
   return {
     meta: {
@@ -71,58 +68,82 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             return;
           }
 
-          console.log();
+          const subscriptions: (() => void)[] = [];
 
-          parent.addAction({
-            id: 'open-devtools',
-            label: ['open devtools label', { ns: DEBUG_PLUGIN }],
-            icon: (props) => <Bug {...props} />,
-            intent: {
-              plugin: DEBUG_PLUGIN,
-              action: 'open-devtools',
-            },
-            properties: {
-              testId: 'spacePlugin.openDevtools',
-            },
-          });
+          // Devtools node.
+          subscriptions.push(
+            settings.values.$devtools!.subscribe((debug) => {
+              if (debug) {
+                parent.addNode(DEBUG_PLUGIN, {
+                  id: 'devtools',
+                  label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                  icon: (props) => <Bug {...props} />,
+                  data: 'devtools',
+                  properties: {
+                    persistenceClass: 'appState',
+                  },
+                });
+              } else {
+                parent.removeNode('devtools');
+              }
+            }),
+          );
 
-          const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-          clientPlugin.provides.client.spaces.subscribe((spaces) => {
-            console.log(spaces);
-          });
-
-          // const unsubscribe = settings.values.$devtools?.subscribe((debug) => {
-          //   if (debug) {
-          //     parent.addNode(DEBUG_PLUGIN, {
-          //       id: 'devtools',
-          //       label: ['devtools label', { ns: DEBUG_PLUGIN }],
-          //       icon: (props) => <Bug {...props} />,
-          //       data: 'devtools',
-          //       properties: {
-          //         persistenceClass: 'appState',
-          //       },
-          //     });
-          //   } else {
-          //     parent.removeNode('devtools');
-          //   }
-          // });
-
-          const nodeId = parent.id + '-debug';
-          nodeIds.push(nodeId);
           const graphPlugin = getPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-          const unsubscribe = settings.values.$debug?.subscribe((debug) => {
-            debug
-              ? parent.addNode(DEBUG_PLUGIN, {
+
+          // Root debug node.
+          subscriptions.push(
+            settings.values.$debug!.subscribe((debug) => {
+              const nodeId = parent.id + '_debug';
+              nodeIds.add(nodeId);
+              if (debug) {
+                const [root] = parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
                   label: 'Debug',
-                  icon: (props: IconProps) => <Bug {...props} />,
-                  data: { id: nodeId, graph: graphPlugin?.provides.graph(), space: parent.data },
-                })
-              : parent.removeNode(nodeId);
-          });
+                  data: { id: nodeId, graph: graphPlugin?.provides.graph() },
+                });
+
+                root.addAction({
+                  id: 'open-devtools',
+                  label: ['open devtools label', { ns: DEBUG_PLUGIN }],
+                  icon: (props) => <Bug {...props} />,
+                  intent: {
+                    plugin: DEBUG_PLUGIN,
+                    action: 'open-devtools',
+                  },
+                  properties: {
+                    testId: 'spacePlugin.openDevtools',
+                  },
+                });
+
+                const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+                subscriptions.push(
+                  // TODO(burdon): Remove if hidden.
+                  clientPlugin.provides.client.spaces.subscribe((spaces) => {
+                    batch(() => {
+                      spaces.forEach((space) => {
+                        const nodeId = parent.id + '_debug_' + space.key.toHex();
+                        if (!nodeIds.has(nodeId)) {
+                          nodeIds.add(nodeId);
+                          root.addNode(DEBUG_PLUGIN, {
+                            id: nodeId,
+                            label: space.key.truncate(),
+                            icon: (props: IconProps) => <Bug {...props} />,
+                            data: { id: nodeId, graph: graphPlugin?.provides.graph(), space },
+                          });
+                        }
+                      });
+                    });
+                  }).unsubscribe,
+                );
+              } else {
+                parent.removeNode(nodeId);
+              }
+            }),
+          );
 
           return () => {
-            unsubscribe?.();
+            subscriptions.forEach((unsubscribe) => unsubscribe());
           };
         },
       },
