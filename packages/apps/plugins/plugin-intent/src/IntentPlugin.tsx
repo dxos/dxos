@@ -34,6 +34,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           return plugin.provides.intent.resolver(intent, plugins);
         }
 
+        // TODO(burdon): Why reducer?
         return filterPlugins(plugins).reduce((acc, plugin) => {
           if (acc) {
             return acc;
