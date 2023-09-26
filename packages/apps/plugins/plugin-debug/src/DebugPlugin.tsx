@@ -52,7 +52,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         }
       };
 
-      // TODO(burdon): Check what is selected and chose content.
+      // TODO(burdon): Create editable list with context?
       const text = 'This is some scripted text that will be automatically inserted into the document.';
       const words = text.split(' ');
       let i = 0;
