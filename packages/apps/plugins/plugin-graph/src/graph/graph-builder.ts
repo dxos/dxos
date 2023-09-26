@@ -4,7 +4,7 @@
 
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 
-import { SendIntent } from '@braneframe/plugin-intent';
+import { DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
 
 import { GraphImpl } from './graph';
@@ -17,7 +17,7 @@ export class GraphBuilder {
   private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
-  private _sendIntent?: SendIntent;
+  private _sendIntent?: DispatchIntent;
 
   addNodeBuilder(builder: Graph.NodeBuilder): void {
     this._nodeBuilders.add(builder);
@@ -200,8 +200,9 @@ export class GraphBuilder {
   /**
    * @internal
    */
+  // TODO(burdon): Rename.
   // TODO(burdon): Document.
-  _setSendIntent(sendIntent?: SendIntent) {
-    this._sendIntent = sendIntent;
+  _setSendIntent(dispatch?: DispatchIntent) {
+    this._sendIntent = dispatch;
   }
 }

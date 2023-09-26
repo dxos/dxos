@@ -173,7 +173,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }),
         );
         if (document && intentPlugin) {
-          void intentPlugin.provides.intent.sendIntent({
+          void intentPlugin.provides.intent.dispatch({
             action: TreeViewAction.ACTIVATE,
             data: { id: document.id },
           });

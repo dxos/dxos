@@ -97,7 +97,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             history.replaceState({}, document.title, url.href);
           }
 
-          await intentPlugin?.provides.intent.sendIntent({
+          await intentPlugin?.provides.intent.dispatch({
             action: TreeViewAction.ACTIVATE,
             data: { id: getSpaceId(space.key) },
           });

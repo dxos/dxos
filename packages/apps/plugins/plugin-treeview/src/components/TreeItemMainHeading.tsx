@@ -13,10 +13,10 @@ import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ data: node }: { data: Graph.Node }) => {
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const { sendIntent } = useIntent();
+  const { dispatch } = useIntent();
 
   const handleActivate = (node: Graph.Node) => {
-    void sendIntent({
+    void dispatch({
       plugin: TREE_VIEW_PLUGIN,
       action: TreeViewAction.ACTIVATE,
       data: { id: node.id },
