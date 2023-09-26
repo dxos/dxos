@@ -200,9 +200,8 @@ export class GraphBuilder {
   /**
    * @internal
    */
-  // TODO(burdon): Rename.
   // TODO(burdon): Document.
-  _setSendIntent(dispatch?: DispatchIntent) {
-    this._sendIntent = dispatch;
-  }
+  // _setSendIntent(dispatch?: DispatchIntent) {
+  //   this._sendIntent = dispatch;
+  // }
 }
