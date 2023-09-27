@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { GraphProvides } from '@braneframe/plugin-graph';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { File as FileType } from '@braneframe/types';
 import { isTypedObject, TypedObject } from '@dxos/client/echo';
 

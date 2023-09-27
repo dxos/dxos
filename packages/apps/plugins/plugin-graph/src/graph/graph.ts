@@ -5,7 +5,30 @@
 import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
-import { Label, Node, TraversalOptions } from './types';
+import { Label } from './action';
+import { Node } from './node';
+
+export type TraversalOptions = {
+  /**
+   * The node to start traversing from. Defaults to the root node.
+   */
+  node?: Node;
+
+  /**
+   * The direction to traverse the graph. Defaults to 'down'.
+   */
+  direction?: 'up' | 'down';
+
+  /**
+   * A predicate to filter nodes which are passed to the `visitor` callback.
+   */
+  filter?: (node: Node) => boolean;
+
+  /**
+   * A callback which is called for each node visited during traversal.
+   */
+  visitor?: (node: Node) => void;
+};
 
 /**
  * The Graph represents...
@@ -17,12 +40,10 @@ export class Graph {
 
   constructor(private readonly _root: Node) {}
 
-  // TODO(burdon): Traverse.
   toJSON() {
     const toLabel = (label: Label) => (Array.isArray(label) ? `${label[1].ns}[${label[0]}]` : label);
     const toJSON = (node: Node): any => {
       return {
-        // TODO(burdon): Standardize ids on type/id/x/y (use slashes).
         id: node.id.slice(0, 16),
         label: toLabel(node.label),
         children: node.children.length ? node.children.map((node) => toJSON(node)) : undefined,

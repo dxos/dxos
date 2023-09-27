@@ -21,31 +21,6 @@ export const ClientPlugin = (
   registerSignalFactory();
   const client = new Client(options);
 
-  // Open devtools on keypress.
-  // TODO(burdon): Move to DebugPlugin and add key binding to action.
-  const onKeypress = async (event: KeyboardEvent) => {
-    // Cmd + Shift + X.
-    if (event.metaKey && event.shiftKey && event.key === 'x') {
-      event.preventDefault();
-
-      const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
-
-      // Check if we're serving devtools locally on the usual port.
-      let hasLocalDevtools = false;
-      try {
-        await fetch('http://localhost:5174/');
-        hasLocalDevtools = true;
-      } catch {}
-
-      const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-      const devtoolsApp = hasLocalDevtools
-        ? 'http://localhost:5174/'
-        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
-      window.open(devtoolsUrl, '_blank');
-    }
-  };
-
   return {
     meta: {
       id: CLIENT_PLUGIN,
@@ -57,6 +32,7 @@ export const ClientPlugin = (
       try {
         await client.initialize();
 
+        // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
@@ -73,8 +49,6 @@ export const ClientPlugin = (
       } catch (err) {
         error = err;
       }
-
-      document.addEventListener('keydown', onKeypress);
 
       // Debugging (e.g., for monolithic mode).
       if (options.debugIdentity) {
@@ -130,8 +104,6 @@ export const ClientPlugin = (
       };
     },
     unload: async () => {
-      document.removeEventListener('keydown', onKeypress);
-
       await client.destroy();
     },
   };
