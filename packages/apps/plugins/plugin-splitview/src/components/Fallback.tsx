@@ -7,10 +7,10 @@ import React from 'react';
 import { useTranslation } from '@dxos/aurora';
 import { errorText, mx } from '@dxos/aurora-theme';
 
-import { TREE_VIEW_PLUGIN } from '../types';
+import { SPLITVIEW_PLUGIN } from '../types';
 
 export const Fallback = () => {
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
+  const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
