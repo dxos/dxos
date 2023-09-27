@@ -4,6 +4,8 @@
 
 import { FC, PropsWithChildren, RefAttributes } from 'react';
 
+import { raise } from '@dxos/debug';
+
 /**
  * Props passed to a component by the `Surface` resolver.
  */
@@ -106,4 +108,8 @@ export const findPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> | undefi
   return plugins.find(
     (plugin) => plugin.meta.id === id || (typeof plugin.meta.shortId === 'string' && plugin.meta.shortId === id),
   ) as Plugin<T>;
+};
+
+export const getPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> => {
+  return findPlugin(plugins, id) ?? raise(new Error(`Plugin not found: ${id}`));
 };

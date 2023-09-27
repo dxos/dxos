@@ -25,7 +25,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
-    const { sendIntent } = useIntent();
+    const { dispatch } = useIntent();
 
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
     const disabled = !!node.properties?.disabled;
@@ -35,7 +35,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
 
     const handleSelect = async () => {
-      await sendIntent({
+      await dispatch({
         plugin: TREE_VIEW_PLUGIN,
         action: TreeViewAction.ACTIVATE,
         data: {
@@ -71,7 +71,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
               }
             }}
           >
-            <OpenTriggerIcon weight='fill' className={mx('shrink-0 text-[--icons-color]', getSize(2))} />
+            <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild>

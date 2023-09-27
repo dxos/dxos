@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.3.0](https://github.com/dxos/dxos/compare/v0.2.3...v0.3.0) (2023-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* force minor bump ([#4322](https://github.com/dxos/dxos/issues/4322))
+
+### Features
+
+* Add weak event listeners ([#4318](https://github.com/dxos/dxos/issues/4318)) ([e68de56](https://github.com/dxos/dxos/commit/e68de56aedfb6ea8a2a1edd166a10e897b96e20f))
+* Separate graph from graph builder. ([#4295](https://github.com/dxos/dxos/issues/4295)) ([f0c8b8e](https://github.com/dxos/dxos/commit/f0c8b8e7649428655f4282dc33bfd22fc70365bb))
+
+
+### Bug Fixes
+
+* connectivity cleanup ([#4277](https://github.com/dxos/dxos/issues/4277)) ([f91937b](https://github.com/dxos/dxos/commit/f91937b2f5e6b99dcf86753aa8cf280084c4e95c))
+* **examples:** demo scroll ([#4320](https://github.com/dxos/dxos/issues/4320)) ([22eeb4f](https://github.com/dxos/dxos/commit/22eeb4fdffa2e10af52161ecb973c55d539c9227))
+* force minor bump ([#4322](https://github.com/dxos/dxos/issues/4322)) ([cc5efc5](https://github.com/dxos/dxos/commit/cc5efc535b77ace055f08474d630788ec038fb03))
+
+## [0.2.3](https://github.com/dxos/dxos/compare/v0.2.2...v0.2.3) (2023-09-25)
+
+
+### Features
+
+* add identity to swarm panel in devtools ([#4289](https://github.com/dxos/dxos/issues/4289)) ([060c13d](https://github.com/dxos/dxos/commit/060c13d2fa52db965820b46a7b9ccfee50b35416))
+* show identity/device key in devtools footer ([#4307](https://github.com/dxos/dxos/issues/4307)) ([19efe7f](https://github.com/dxos/dxos/commit/19efe7f9e27c6818e2657f36d84a6f4f33c9195e))
+* Theme ([#4312](https://github.com/dxos/dxos/issues/4312)) ([450a215](https://github.com/dxos/dxos/commit/450a21566f302f5be90dbd88851c2f73eb5e016f))
+* Views and cards ([#4309](https://github.com/dxos/dxos/issues/4309)) ([93531f7](https://github.com/dxos/dxos/commit/93531f7a0223dc8f08d0b318feec895e20361ec6))
+
+
+### Bug Fixes
+
+* **labs-app:** ensure remote source config ([#4314](https://github.com/dxos/dxos/issues/4314)) ([c9a018f](https://github.com/dxos/dxos/commit/c9a018f2db3ca3fbb6ca7b9c6bacfea73011d8f4))
+* protobuf sync with kube repo ([#4306](https://github.com/dxos/dxos/issues/4306)) ([70ad57e](https://github.com/dxos/dxos/commit/70ad57e986cfea785bb105c9ed689ba8712e7879))
+* restore previous testbench defaults ([#4308](https://github.com/dxos/dxos/issues/4308)) ([1800537](https://github.com/dxos/dxos/commit/1800537b042f1c955bd933745697bb3678a24162))
+* skip old published versions ([#4315](https://github.com/dxos/dxos/issues/4315)) ([2d1ef8a](https://github.com/dxos/dxos/commit/2d1ef8a61a774d3afce6cba2cebe68e8c1284089))
+
 ## [0.2.1](https://github.com/dxos/dxos/compare/v0.2.0...v0.2.1) (2023-09-21)
 
 

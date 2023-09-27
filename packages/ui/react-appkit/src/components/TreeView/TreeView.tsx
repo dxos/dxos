@@ -122,7 +122,7 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
-              {sub && (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
+              {sub && (open ? <CaretDown className={getSize(5)} /> : <CaretRight className={getSize(5)} />)}
             </div>
             {Icon && (
               <div className='pr-1'>

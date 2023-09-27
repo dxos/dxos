@@ -9,7 +9,7 @@ import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { Graph, GraphPluginProvides } from '@braneframe/plugin-graph';
+import { Node, GraphPluginProvides } from '@braneframe/plugin-graph';
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
 import { TreeViewAction, TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
@@ -39,7 +39,7 @@ import {
 // TODO(buron): Rename package plugin-file (singular).
 
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
-  let onFilesUpdate: ((node?: Graph.Node<LocalEntity>) => void) | undefined;
+  let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
     current: undefined,
@@ -99,7 +99,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             const active = treeViewPlugin.provides.treeView.active;
             const path =
               active &&
-              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
+              graphPlugin.provides
+                .graph()
+                .getPath(active)
+                ?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
             const current =
               (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
@@ -138,7 +141,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             return;
           }
 
-          const [groupNode] = parent.add({
+          const [groupNode] = parent.addNode(FILES_PLUGIN, {
             id: 'all-files',
             label: ['plugin name', { ns: FILES_PLUGIN }],
             // TODO(burdon): Factor out palette constants.

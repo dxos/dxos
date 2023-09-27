@@ -8,7 +8,7 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, GraphStore } from './graph';
+import { Graph, GraphBuilder, NodeBuilder } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
@@ -18,7 +18,8 @@ import { graphPlugins } from './util';
  * This includes actions and annotation each other's nodes.
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
-  const graph = new GraphStore();
+  const builder = new GraphBuilder();
+  const state: { graph?: Graph } = {}; // TODO(burdon): Use signal?
 
   return {
     meta: {
@@ -26,23 +27,27 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
     },
     ready: async (plugins) => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      graph._setSendIntent(intentPlugin?.provides.intent.sendIntent);
+      builder._setDispatch(intentPlugin?.provides.intent.dispatch);
+
+      // TODO(burdon): Unify.
+      graphPlugins(plugins)
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
+        .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder(plugins)));
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.withPlugins)
-        .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
-        .forEach((builder) => graph.registerNodeBuilder(builder(plugins)));
+        .map((plugin) => [plugin.meta.id, plugin.provides.graph.nodes])
+        .filter((nodes): nodes is [string, NodeBuilder] => !!nodes[1])
+        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder));
 
-      graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.nodes)
-        .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
-        .forEach((builder) => graph.registerNodeBuilder(builder));
-
-      graph.construct();
+      state.graph = builder.build();
     },
+    // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {
-      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
-      graph,
+      context: ({ children }) => (
+        <GraphContext.Provider value={{ graph: state.graph! }}>{children}</GraphContext.Provider>
+      ),
+      graph: () => state.graph!,
     },
   };
 };

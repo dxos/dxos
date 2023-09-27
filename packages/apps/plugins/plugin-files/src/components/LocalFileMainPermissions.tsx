@@ -13,7 +13,7 @@ import { FILES_PLUGIN, LocalEntity } from '../types';
 export const LocalFileMainPermissions = ({ data }: { data: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useGraph();
-  const node = graph.find(data.id);
+  const node = graph.findNode(data.id);
   const action = node?.actionsMap['re-open'];
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

@@ -3,15 +3,14 @@
 //
 
 import { PencilSimpleLine, Trash } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
-import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
-import { defaultMap } from '@dxos/util';
+import { Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
@@ -19,24 +18,20 @@ export { getIndices } from '@tldraw/indices';
 
 export type GraphNodeAdapterOptions<T extends TypedObject> = {
   filter: Filter<T>;
-  adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node;
-  propertySubscriptions?: string[];
-  createGroup?: (parent: Graph.Node) => Graph.Node;
+  adapter: (parent: Node, object: T, index: string) => Node;
+  // TODO(burdon): ???
+  createGroup?: (parent: Node) => Node;
 };
 
+// TODO(burdon): Reconcile with GraphNodeBuilder.
 export class GraphNodeAdapter<T extends TypedObject> {
-  private readonly _queries = new Map<string, Query<T>>();
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
-  private readonly _previousObjects = new Map<string, T[]>();
   private readonly _filter: Filter<T>;
-  private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node;
-  private readonly _propertySubscriptions?: string[];
-  private readonly _createGroup?: (parent: Graph.Node) => Graph.Node;
-  private _group?: Graph.Node;
+  private readonly _adapter: (parent: Node, object: T, index: string) => Node;
+  private readonly _createGroup?: (parent: Node) => Node;
+  private _group?: Node;
 
-  constructor({ filter, adapter, propertySubscriptions, createGroup }: GraphNodeAdapterOptions<T>) {
+  constructor({ filter, adapter, createGroup }: GraphNodeAdapterOptions<T>) {
     this._filter = filter;
-    this._propertySubscriptions = propertySubscriptions;
     this._createGroup = createGroup;
 
     this._adapter = (parent, object, index) => {
@@ -62,101 +57,40 @@ export class GraphNodeAdapter<T extends TypedObject> {
         },
       });
 
-      return child;
+      return child!;
     };
   }
 
-  clear() {
-    this._queries.clear();
-    this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.clear();
-    this._previousObjects.clear();
-  }
+  clear() {}
 
-  createNodes(space: Space, parent: Graph.Node) {
+  createNodes(space: Space, parent: Node) {
+    // TODO(dmaretskyi): Turn into subscription.
     if (space.state.get() !== SpaceState.READY) {
       return;
     }
 
-    const query = defaultMap(
-      this._queries,
-      space.key.toHex(),
-      () => space.db.query<T>(this._filter as any), // TODO(burdon): Fix types.
-    );
-    this._previousObjects.set(space.key.toHex(), query.objects);
-
-    // TODO(burdon): Provided by graph?
-    const indices = getIndices(query.objects.length);
-
     const getObjectParent = () => (this._createGroup ? this._group : parent);
 
-    // Subscribe to query.
-    this._subscriptions.set(
-      space.key.toHex(),
-      query.subscribe(() => {
-        if (this._createGroup && query.objects.length > 0) {
-          this._group = this._createGroup(parent);
-        }
+    const query = space.db.query<T>(this._filter as any);
+    const indices = getIndices(query.objects.length);
+    let previousObjects: T[] = [];
+    const clear = effect(() => {
+      const objectParent = getObjectParent();
+      if (!objectParent) {
+        return;
+      }
 
-        const objectParent = getObjectParent();
-        if (objectParent) {
-          const previousObjects = this._previousObjects.get(space.key.toHex()) ?? [];
-          const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-          this._previousObjects.set(space.key.toHex(), query.objects);
-          removedObjects.forEach((object) => objectParent.remove(object.id));
-          query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
-        }
-      }),
-    );
+      const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+      previousObjects = query.objects;
+
+      removedObjects.forEach((object) => objectParent.removeNode(object.id));
+      query.objects.forEach((object, index) => this._adapter(objectParent, object, indices[index]));
+    });
 
     if (this._createGroup && query.objects.length > 0) {
       this._group = this._createGroup(parent);
     }
 
-    // Subscribe to all objects.
-    query.objects.forEach((object, index) => {
-      const id = `${space.key.toHex()}:${object.id}`;
-
-      this._subscriptions.set(
-        id,
-        object[subscribe](() => {
-          const objectParent = getObjectParent();
-          if (object.__deleted) {
-            this._subscriptions.get(id)?.();
-            this._subscriptions.delete(id);
-          } else if (objectParent) {
-            this._adapter(objectParent, object, indices[index]);
-          }
-        }),
-      );
-
-      this._propertySubscriptions?.forEach((property) => {
-        const id = `${space.key.toHex()}:${object.id}:${property}`;
-        return this._subscriptions.set(
-          id,
-          object[property][subscribe](() => {
-            const objectParent = getObjectParent();
-            if (object.__deleted) {
-              this._subscriptions.get(id)?.();
-              this._subscriptions.delete(id);
-            } else if (objectParent) {
-              this._adapter(objectParent, object, indices[index]);
-            }
-          }),
-        );
-      });
-
-      const objectParent = getObjectParent();
-      objectParent && this._adapter(objectParent, object, indices[index]);
-    });
-
-    return () => {
-      Array.from(this._subscriptions.keys())
-        .filter((key) => key.startsWith(space.key.toHex()))
-        .forEach((key) => {
-          this._subscriptions.get(key)?.();
-          this._subscriptions.delete(key);
-        });
-    };
+    return clear;
   }
 }

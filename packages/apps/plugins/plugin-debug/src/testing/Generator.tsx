@@ -136,17 +136,15 @@ export class Generator {
     log('created objects', { organizations: organizations.length, projects: projects.length, people: people.length });
   }
 
-  createObject({ type = DocumentType.type.name, createContent = false } = {}) {
+  createObject({ type = DocumentType.type.name } = {}) {
     log('creating object', { type });
     switch (type) {
       case DocumentType.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
-        const content = createContent
-          ? range(this._faker!.number.int({ min: 2, max: 8 }))
-              .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
-              .join('\n\n')
-          : '';
+        const content = range(this._faker!.number.int({ min: 2, max: 8 }))
+          .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
+          .join('\n\n');
 
         this._space.db.add(new DocumentType({ title, content: new Text(content) }));
         break;
