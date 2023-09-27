@@ -29,6 +29,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       builder._setDispatch(intentPlugin?.provides.intent.dispatch);
 
+      // TODO(burdon): Unify.
       graphPlugins(plugins)
         .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
         .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])

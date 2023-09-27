@@ -28,7 +28,11 @@ export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props
 
 export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), focusRing, ...etc);
-export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => mx(getSize(3.5), ...etc);
+
+export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => {
+  console.log('::::::::::', etc);
+  return mx(getSize(5), ...etc);
+};
 
 export const listTheme: Theme<ListStyleProps> = {
   root: listRoot,
