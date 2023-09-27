@@ -45,7 +45,7 @@ export type CardTile = TileSharedProps & {
   sortable?: false;
 };
 
-// TODO(burdon): Make generic?
+// TODO(burdon): Make generic to unbundle deps.
 export type Tile = TreeItemTile | StackTile | CardTile;
 
 export type TileProps = Tile;
