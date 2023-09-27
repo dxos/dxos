@@ -5,3 +5,4 @@
 export * from './dnd';
 export * from './mosaic';
 export * from './types';
+export * from './util';

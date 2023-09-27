@@ -13,8 +13,8 @@ import { Button } from '@dxos/aurora';
 import { dropRing, getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { Mosaic } from './Mosaic';
-import { getDndId, parseDndId } from '../dnd';
 import type { DelegatorProps, MosaicChangeHandler, MosaicState, StackTile } from '../types';
+import { getDndId, parseDndId } from '../util';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;

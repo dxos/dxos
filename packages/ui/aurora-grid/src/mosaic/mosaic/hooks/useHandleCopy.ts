@@ -7,12 +7,10 @@ import { batch } from '@preact/signals-core';
 import { getIndexAbove } from '@tldraw/indices';
 import { useCallback } from 'react';
 
-// TODO(burdon): Invert dependency on mosaic?
+import { useDnd } from '../../dnd';
 import { useMosaic } from '../../mosaic';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
-import { getSubtiles } from '../../util';
-import { useDnd } from '../DndContext';
-import { nextRearrangeIndex, managePreview } from '../util';
+import { getSubtiles, nextRearrangeIndex, managePreview } from '../../util';
 
 export const useHandleCopyDragStart = () => {
   const dnd = useDnd();

@@ -18,8 +18,10 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDeepSignal } from 'deepsignal/react';
 import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
 
-import { OverlayDropAnimation } from './types';
-import { Handler } from '../types';
+import { OverlayDropAnimation } from './drop-animations';
+
+// TODO(burdon): Rename EventHandler.
+export type Handler<TEvent> = (event: TEvent) => void;
 
 export type DndContextValue = {
   activeCopyClass: Set<string> | null;
@@ -53,18 +55,21 @@ const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);
 
 const useDnd = () => useContext(MosaicDndContext);
 
+/**
+ * Framework context that wraps an outer `dnd-kit/core` `DndContext`.
+ */
 const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   const contextValue = useDeepSignal<DndContextValue>(defaultContextValue);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      // Require the mouse to move by 10 pixels before activating
+      // Require the mouse to move by 10 pixels before activating.
       activationConstraint: {
         distance: 10,
       },
     }),
     useSensor(TouchSensor, {
-      // Press delay of 200ms, with tolerance of 5px of movement
+      // Press delay of 200ms, with tolerance of 5px of movement.
       activationConstraint: {
         delay: 200,
         tolerance: 5,
@@ -110,11 +115,11 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
     <MosaicDndContext.Provider value={contextValue}>
       <DndContext
+        sensors={sensors}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
-        sensors={sensors}
       >
         {children}
       </DndContext>

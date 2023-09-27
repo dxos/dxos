@@ -9,5 +9,3 @@ export * from '@dnd-kit/utilities';
 export * from './DndContext';
 
 export * from './drop-animations';
-export * from './hooks';
-export * from './util';

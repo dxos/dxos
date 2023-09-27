@@ -5,7 +5,7 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 
-import { Tile } from '../../types';
+import { Tile } from '../types';
 
 export const nextRearrangeIndex = (subtiles: Tile[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
   const overOrderIndex = subtiles.length > 0 ? subtiles.findIndex(({ id }) => id === overId) : -1;

@@ -5,8 +5,7 @@
 import { DragCancelEvent, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { DependencyList, useContext, useEffect } from 'react';
 
-import { Handler } from '../../types';
-import { MosaicDndContext } from '../DndContext';
+import { Handler, MosaicDndContext } from '../../dnd';
 
 export const useDragOver = (callback: Handler<DragOverEvent>, dependencies: DependencyList) => {
   const { dragOverSubscriptions } = useContext(MosaicDndContext);

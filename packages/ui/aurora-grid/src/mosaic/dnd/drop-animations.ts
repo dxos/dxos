@@ -4,7 +4,7 @@
 
 import { defaultDropAnimationSideEffects, DropAnimation } from '@dnd-kit/core';
 
-import { OverlayDropAnimation } from './types';
+export type OverlayDropAnimation = 'around' | 'away' | 'into';
 
 export const dropAnimations: Record<OverlayDropAnimation, DropAnimation> = {
   around: {

@@ -8,9 +8,6 @@ import React, { createContext, PropsWithChildren, useCallback, useContext } from
 import { List, useId } from '@dxos/aurora';
 
 import {
-  DndProvider,
-  dropAnimations,
-  useDnd as useMosaicDnd,
   useDragEnd,
   useDragOver,
   useDragStart,
@@ -21,7 +18,8 @@ import {
   useHandleMigrateDragOver,
   useHandleMigrateDragStart,
   useHandleRearrangeDragEnd,
-} from '../dnd';
+} from './hooks';
+import { DndProvider, dropAnimations, useDnd as useMosaicDnd } from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 import { MosaicRootProps } from '../types';

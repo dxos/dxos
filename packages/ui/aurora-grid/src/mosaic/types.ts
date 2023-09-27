@@ -6,6 +6,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
+import { Handler } from './dnd';
+
 export type TileVariant = 'stack' | 'card' | 'treeitem';
 
 type TileSharedProps = {
@@ -73,8 +75,6 @@ export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: strin
 export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; index?: string };
 export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
 export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
-
-export type Handler<TEvent> = (event: TEvent) => void;
 
 export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 
