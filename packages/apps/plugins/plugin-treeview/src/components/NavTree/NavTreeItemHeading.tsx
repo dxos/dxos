@@ -71,7 +71,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
               }
             }}
           >
-            <OpenTriggerIcon weight='fill' className={mx('shrink-0 text-[--icons-color]', getSize(2))} />
+            <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild>

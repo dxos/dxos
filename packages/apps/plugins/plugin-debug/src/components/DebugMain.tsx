@@ -9,22 +9,18 @@ import {
   FlagPennant,
   Gauge,
   Graph as GraphIcon,
+  Gear,
   HandPalm,
-  PaperPlaneRight,
   Play,
   Plus,
   PlusMinus,
   Timer,
   Toolbox,
-  Trash,
+  UserCirclePlus,
+  Warning,
 } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
-import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-// eslint-disable-next-line no-restricted-imports
-import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-// eslint-disable-next-line no-restricted-imports
-import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
+import React, { FC, PropsWithChildren, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Graph } from '@braneframe/plugin-graph';
 import { Button, DensityProvider, Input, Main, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/aurora';
@@ -34,9 +30,10 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { arrayToBuffer, safeParseInt } from '@dxos/util';
+import { safeParseInt } from '@dxos/util';
 
-import { Tree } from './Tree';
+import { Json, Tree } from './Tree';
+import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
@@ -44,39 +41,45 @@ export const DEFAULT_COUNT = 100;
 export const DEFAULT_PERIOD = 500;
 export const DEFAULT_JITTER = 50;
 
-/**
- * File download anchor.
- *
- * const download = useDownload();
- * const handleDownload = (data: string) => {
- *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
- * };
- */
-// TODO(burdon): Factor out.
-export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
-  return useMemo(
-    () => (data: Blob | string, filename: string) => {
-      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', filename);
-      element.setAttribute('target', 'download');
-      element.click();
-    },
-    [],
+export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
+  const config = useConfig();
+  return (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+      <div className='flex shrink-0 p-2 space-x-2'>
+        <DensityProvider density='fine'>{menu}</DensityProvider>
+      </div>
+      <div className='flex flex-col grow px-2 overflow-hidden'>
+        <div className='flex flex-col grow overflow-auto'>{children}</div>
+
+        {config.values?.runtime?.app?.build?.timestamp && (
+          <div className='p-2 text-sm font-mono'>
+            {config.values?.runtime?.app?.build?.version} (
+            {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
+              addSuffix: true,
+              includeSeconds: true,
+            })}
+            )
+          </div>
+        )}
+      </div>
+    </Main.Content>
   );
 };
 
 export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: { graph, space } }) => {
+  if (!space) {
+    return <DebugGlobal graph={graph} />;
+  }
+
+  return <DebugSpace space={space} />;
+};
+
+export const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
-  const style = themeMode === 'dark' ? styleDark : styleLight;
-
-  const [view, setView] = useState<'diagnostics' | 'graph'>('diagnostics');
-
-  const { connect } = useSpaceInvitation(space?.key);
+  const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
+  const [data, setData] = useState<any>({});
   const client = useClient();
   const config = useConfig();
-  const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
     const data = await client.diagnostics({ truncate: true });
     setData(data);
@@ -84,6 +87,73 @@ export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: 
   useEffect(() => {
     void handleRefresh();
   }, []);
+
+  const handleResetClient = async (force = false) => {
+    if (!force && !window.confirm('Reset storage?')) {
+      return;
+    }
+
+    // TODO(burdon): Throws exception.
+    await client.reset();
+    window.location.href = window.location.origin;
+  };
+
+  const handleOpenDevtools = () => {
+    const vaultUrl = config.values?.runtime?.client?.remoteSource;
+    if (vaultUrl) {
+      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
+    }
+  };
+
+  return (
+    <DebugPanel
+      menu={
+        <>
+          <ToggleGroup type='single' value={view}>
+            <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
+              <GraphIcon className={getSize(5)} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value={'diagnostics'} onClick={() => setView('diagnostics')} title={'Diagnostics'}>
+              <Gauge className={getSize(5)} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value={'config'} onClick={() => setView('config')} title={'Config'}>
+              <Gear className={getSize(5)} />
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <div className='grow' />
+          <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
+            <Warning className={mx(getSize(5), 'text-red-700')} />
+          </Button>
+          <Button onClick={handleOpenDevtools} title='Open Devtools'>
+            <Toolbox weight='duotone' className={mx(getSize(5), 'text-700')} />
+          </Button>
+        </>
+      }
+    >
+      {view === 'graph' && <Tree data={graph.toJSON()} />}
+      {view === 'config' && <Json theme={themeMode} data={data.diagnostics?.config} />}
+      {view === 'diagnostics' && <Json theme={themeMode} data={data} />}
+    </DebugPanel>
+  );
+};
+
+export const DebugSpace: FC<{ space: Space }> = ({ space }) => {
+  const { themeMode } = useThemeContext();
+  const { connect } = useSpaceInvitation(space?.key);
+  const client = useClient();
+  const [data, setData] = useState<any>({});
+  const handleRefresh = async () => {
+    const data = await client.diagnostics({ truncate: true });
+    setData(
+      data?.diagnostics?.spaces?.find(({ key }: any) => {
+        return space.key.toHex().startsWith(key);
+      }),
+    );
+  };
+  useEffect(() => {
+    void handleRefresh();
+  }, [space]);
 
   const download = useFileDownload();
   const handleCopy = async () => {
@@ -123,9 +193,12 @@ export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: 
     }
   };
 
-  const handleCreateObject = async (createContent: boolean) => {
-    // generator.createObject({ createContent });
-    generator.createTables();
+  const handleCreateObject = async (createTables: boolean) => {
+    if (createTables) {
+      generator.createTables();
+    } else {
+      generator.createObject();
+    }
   };
 
   const handleCreateInvitation = () => {
@@ -142,36 +215,19 @@ export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: 
     void navigator.clipboard.writeText(url);
   };
 
-  const handleResetClient = async () => {
-    await client.reset();
-    window.location.href = window.location.origin;
-  };
-
   const handleCreateEpoch = async () => {
     await space.internal.createEpoch();
     await handleRefresh();
   };
 
-  const handleOpenDevtools = () => {
-    const vaultUrl = config.values?.runtime?.client?.remoteSource;
-    if (vaultUrl) {
-      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
-    }
-  };
-
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <div className='flex shrink-0 p-2 space-x-2'>
-        <DensityProvider density='fine'>
-          <ToggleGroup type='single' value={view}>
-            <ToggleGroupItem value={'diagnostics'} onClick={() => setView('diagnostics')} title={'Diagnostics'}>
-              <Gauge className={getSize(5)} />
-            </ToggleGroupItem>
-            <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
-              <GraphIcon className={getSize(5)} />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
+    <DebugPanel
+      menu={
+        <>
+          <Button
+            onClick={(event) => handleCreateObject(event.shiftKey)}
+            title={'Create content; hold SHIFT to create tables.'}
+          >
             <Plus className={getSize(5)} />
           </Button>
           <div className='relative' title='mutation count'>
@@ -224,64 +280,18 @@ export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: 
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
-            <PaperPlaneRight className={getSize(5)} />
-          </Button>
-          <Button onClick={handleOpenDevtools} title='Open Dectools'>
-            <Toolbox weight='duotone' className={mx(getSize(5), 'text-red-700')} />
-          </Button>
           <Button onClick={handleCreateEpoch} title='Create epoch'>
-            <FlagPennant className={getSize(5)} />
+            <FlagPennant className={mx(getSize(5))} />
           </Button>
-          {/* TODO(burdon): Alert or shift key. */}
-          <Button onClick={handleResetClient} title='Reset client'>
-            <Trash className={getSize(5)} />
+          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
+            <UserCirclePlus className={mx(getSize(5), 'text-blue-500')} />
           </Button>
-        </DensityProvider>
-      </div>
-
-      <div className='flex flex-col grow px-2 overflow-hidden'>
-        <div className='flex flex-col grow overflow-auto'>
-          {view === 'diagnostics' && (
-            <SyntaxHighlighter language='json' style={style} className='w-full'>
-              {JSON.stringify(data, replacer, 2)}
-            </SyntaxHighlighter>
-          )}
-          {view === 'graph' && <Tree data={graph.toJSON()} />}
-        </div>
-
-        {config.values?.runtime?.app?.build?.timestamp && (
-          <div className='p-2 text-sm font-mono'>
-            {config.values?.runtime?.app?.build?.version} (
-            {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
-              addSuffix: true,
-              includeSeconds: true,
-            })}
-            )
-          </div>
-        )}
-      </div>
-    </Main.Content>
+        </>
+      }
+    >
+      <Json theme={themeMode} data={data} />
+    </DebugPanel>
   );
 };
 
 export default DebugMain;
-
-// TODO(burdon): Refactor from devtools.
-const replacer = (key: any, value: any) => {
-  if (typeof value === 'object') {
-    if (value instanceof Uint8Array) {
-      return arrayToBuffer(value).toString('hex');
-    }
-
-    if (value?.type === 'Buffer') {
-      return Buffer.from(value.data).toString('hex');
-    }
-
-    if (key === 'downloaded') {
-      return undefined;
-    }
-  }
-
-  return value;
-};
