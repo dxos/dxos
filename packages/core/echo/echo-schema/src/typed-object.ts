@@ -534,10 +534,6 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
  */
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
-export type TypedObjectOptions = {
-  readOnly?: boolean;
-};
-
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
