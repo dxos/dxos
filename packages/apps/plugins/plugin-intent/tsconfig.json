@@ -22,9 +22,6 @@
   "references": [
     {
       "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../plugin-graph"
     }
   ]
 }

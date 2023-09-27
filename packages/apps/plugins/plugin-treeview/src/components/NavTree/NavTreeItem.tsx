@@ -16,8 +16,7 @@ import React, {
 } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Action, Node, useGraph } from '@braneframe/plugin-graph';
-import { keyString } from '@braneframe/plugin-intent';
+import { Action, Node, useGraph, keyString } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Button,

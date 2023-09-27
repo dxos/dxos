@@ -913,6 +913,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -920,22 +921,26 @@ importers:
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
+      '@types/mousetrap': ^1.6.11
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
+      mousetrap: ^1.6.5
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/util': link:../../../common/util
       '@preact/signals-react': 1.3.6_react@18.2.0
       deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       lodash.get: 4.4.2
       lodash.set: 4.3.2
+      mousetrap: 1.6.5
     devDependencies:
       '@braneframe/plugin-intent': link:../plugin-intent
       '@dxos/aurora': link:../../../ui/aurora
@@ -945,6 +950,7 @@ importers:
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+      '@types/mousetrap': 1.6.12
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -953,21 +959,15 @@ importers:
 
   packages/apps/plugins/plugin-intent:
     specifiers:
-      '@braneframe/plugin-graph': workspace:*
       '@dxos/react-surface': workspace:*
-      '@types/mousetrap': ^1.6.11
       '@types/react': ^18.0.21
       deepsignal: ^1.3.6
-      mousetrap: ^1.6.5
       react: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
       deepsignal: 1.3.6
-      mousetrap: 1.6.5
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
-      '@types/mousetrap': 1.6.11
       '@types/react': 18.0.21
       react: 18.2.0
       vite: 4.3.9
@@ -18313,8 +18313,8 @@ packages:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
     dev: true
 
-  /@types/mousetrap/1.6.11:
-    resolution: {integrity: sha512-F0oAily9Q9QQpv9JKxKn0zMKfOo36KHCW7myYsmUyf2t0g+sBTbG3UleTPoguHdE1z3GLFr3p7/wiOio52QFjQ==}
+  /@types/mousetrap/1.6.12:
+    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms/0.7.31:

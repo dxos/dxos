@@ -56,12 +56,12 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
+
         // TODO(burdon): Required until integrated with theme.
         resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
@@ -74,7 +74,7 @@ export default defineConfig({
       manifest: {
         name: 'DXOS Labs',
         short_name: 'Labs',
-        description: 'DXOS Labs Application',
+        description: 'DXOS Labs',
         theme_color: '#ffffff',
         icons: [
           {

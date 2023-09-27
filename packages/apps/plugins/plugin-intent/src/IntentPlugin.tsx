@@ -3,7 +3,6 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
-import Mousetrap from 'mousetrap';
 import React from 'react';
 
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -36,16 +35,16 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           return plugin.provides.intent.resolver(intent, plugins);
         }
 
-        // TODO(burdon): Why reducer?
+        // Return resolved value from first plugin that handles the intent.
         return filterPlugins(plugins).reduce((acc, plugin) => {
           return acc ?? plugin.provides.intent.resolver(intent, plugins);
         }, undefined);
       };
 
       // Sequentially dispatch array of invents.
-      state.dispatch = async (...intents) => {
+      state.dispatch = async (intentOrArray) => {
         let result: any = null;
-        for (const intent of intents) {
+        for (const intent of Array.isArray(intentOrArray) ? intentOrArray : [intentOrArray]) {
           const data = intent.data ? { ...result, ...intent.data } : result;
           result = await dispatch({ ...intent, data });
         }
@@ -55,18 +54,6 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     provides: {
       intent: state,
       context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
-      // TODO(burdon): Circular dependency.
-      graph: {
-        nodes: (node) => {
-          node.actions.forEach((action) => {
-            if (action.keyBinding && action.intent) {
-              Mousetrap.bind(action.keyBinding, () => {
-                void state.dispatch(action.intent!);
-              });
-            }
-          });
-        },
-      },
     },
   };
 };

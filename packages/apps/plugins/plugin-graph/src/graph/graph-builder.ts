@@ -4,9 +4,11 @@
 
 import { untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import Mousetrap from 'mousetrap';
 
 import { DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 import { Action } from './action';
 import { Graph } from './graph';
@@ -19,7 +21,7 @@ export class GraphBuilder {
   private readonly _nodeBuilders = new Map<string, NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
-  constructor(private readonly _dispatch?: DispatchIntent) {}
+  constructor(private readonly _dispatch: DispatchIntent = async () => {}) {}
 
   /**
    * Register a node builder which will be called in order to construct the graph.
@@ -112,10 +114,8 @@ export class GraphBuilder {
             const childPath = [...path, 'childrenMap', partial.id];
             const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, builders);
             node.childrenMap[child.id] = child;
-            // TODO(burdon): Defer update to task exit.
-            setTimeout(() => {
-              this._build(getGraph(), child, childPath, builders);
-            });
+            // TOOD(burdon): Defer triggering recursive updates until task has completed.
+            this._build(getGraph(), child, childPath, builders);
             return child;
           });
         });
@@ -132,6 +132,13 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
+            if (action.keyBinding && action.intent) {
+              Mousetrap.bind(action.keyBinding, () => {
+                invariant(action.intent);
+                void this._dispatch(action.intent);
+              });
+            }
+
             node.actionsMap[action.id] = action;
             return action;
           });
@@ -140,6 +147,10 @@ export class GraphBuilder {
       removeAction: (id) => {
         return untracked(() => {
           const action = node.actionsMap[id];
+          if (action.keyBinding && action.intent) {
+            Mousetrap.unbind(action.keyBinding);
+          }
+
           delete node.actionsMap[id];
           return action;
         });
@@ -161,9 +172,7 @@ export class GraphBuilder {
         return Object.values(action.actionsMap);
       },
       invoke: async () => {
-        if (Array.isArray(action.intent)) {
-          return this._dispatch?.(...action.intent);
-        } else if (action.intent) {
+        if (action.intent) {
           return this._dispatch?.(action.intent);
         }
       },
