@@ -4,7 +4,9 @@
 
 import React, { FC, HTMLAttributes, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { ThemeMode } from '@dxos/aurora';
@@ -13,7 +15,6 @@ import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Copied form devtools.
 
-// TODO(burdon): Refactor from devtools.
 export const replacer = (key: any, value: any) => {
   if (typeof value === 'object') {
     if (value instanceof Uint8Array) {

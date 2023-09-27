@@ -512,6 +512,7 @@ importers:
       '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/devtools': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
@@ -568,6 +569,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/devtools': link:../../devtools/devtools
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/vault': link:../../sdk/vault
       '@sentry/vite-plugin': 0.7.2

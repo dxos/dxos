@@ -94,7 +94,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           // Root debug node.
           subscriptions.push(
             settings.values.$debug!.subscribe((debug) => {
-              const nodeId = parent.id + '_debug';
+              const nodeId = parent.id + '-debug';
               nodeIds.add(nodeId);
               if (debug) {
                 const [root] = parent.addNode(DEBUG_PLUGIN, {
@@ -122,7 +122,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   clientPlugin.provides.client.spaces.subscribe((spaces) => {
                     batch(() => {
                       spaces.forEach((space) => {
-                        const nodeId = parent.id + '_debug_' + space.key.toHex();
+                        const nodeId = parent.id + '-' + space.key.toHex();
                         if (!nodeIds.has(nodeId)) {
                           nodeIds.add(nodeId);
                           root.addNode(DEBUG_PLUGIN, {

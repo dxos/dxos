@@ -19,7 +19,7 @@ import { graphPlugins } from './util';
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const builder = new GraphBuilder();
-  const state: { graph?: Graph } = {};
+  const state: { graph?: Graph } = {}; // TODO(burdon): Use signal?
 
   return {
     meta: {
@@ -42,6 +42,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
 
       state.graph = builder.build();
     },
+    // TODO(burdon): Enable providers to be functions (avoid result object).
     provides: {
       context: ({ children }) => (
         <GraphContext.Provider value={{ graph: state.graph! }}>{children}</GraphContext.Provider>
