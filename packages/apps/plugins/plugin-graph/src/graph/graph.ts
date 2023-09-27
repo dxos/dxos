@@ -5,7 +5,30 @@
 import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
-import { Label, Node, TraversalOptions } from './types';
+import { Label } from './action';
+import { Node } from './node';
+
+export type TraversalOptions = {
+  /**
+   * The node to start traversing from. Defaults to the root node.
+   */
+  node?: Node;
+
+  /**
+   * The direction to traverse the graph. Defaults to 'down'.
+   */
+  direction?: 'up' | 'down';
+
+  /**
+   * A predicate to filter nodes which are passed to the `visitor` callback.
+   */
+  filter?: (node: Node) => boolean;
+
+  /**
+   * A callback which is called for each node visited during traversal.
+   */
+  visitor?: (node: Node) => void;
+};
 
 /**
  * The Graph represents...

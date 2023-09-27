@@ -4,6 +4,7 @@
 
 import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
 
+import type { GraphProvides } from '@braneframe/plugin-graph';
 import { Plugin } from '@dxos/react-surface';
 
 /**
@@ -49,7 +50,7 @@ export type IntentProvides = {
   };
 };
 
-export type IntentPluginProvides = {
+export type IntentPluginProvides = GraphProvides & {
   intent: {
     /**
      * Trigger one or more intents to be sent.

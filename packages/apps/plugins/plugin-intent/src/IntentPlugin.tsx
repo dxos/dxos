@@ -55,6 +55,11 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     },
     provides: {
       context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
+      graph: {
+        nodes: (node) => {
+          console.log(':::::::::::', node.id, node.actions.length);
+        },
+      },
       intent: state,
     },
   };
