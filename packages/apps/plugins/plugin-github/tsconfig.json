@@ -48,6 +48,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-dnd"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
@@ -64,9 +67,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

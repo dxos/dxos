@@ -17,7 +17,6 @@ import React, {
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Action, Node, useGraph, keyString } from '@braneframe/plugin-graph';
-import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Button,
   DensityProvider,
@@ -124,11 +123,8 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     const actions = sortActions(node.actions);
     const { t } = useTranslation(TREE_VIEW_PLUGIN);
     const { navigationSidebarOpen } = useSidebars();
-    // TODO(wittjosiah): Pass in as prop.
-    const { active: treeViewActive } = useTreeView();
-    // TODO(wittjosiah): Pass in as prop.
-    const { popoverAnchorId } = useSplitView();
     const { graph } = useGraph();
+    const { activeId, popoverAnchorId } = useTreeView();
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -138,16 +134,16 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = isOverlay || isPreview || rearranging || disabled;
-    const active = treeViewActive === node.id;
+    const active = activeId === node.id;
     const testId = node.properties?.['data-testid'];
 
     useEffect(() => {
       // TODO(wittjosiah): Factor out as callback so that this doesn't depend on graph context.
       // Excludes selected node from being opened by selection.
-      if (treeViewActive && graph.getPath(treeViewActive)?.slice(0, -2).includes(node.id)) {
+      if (activeId && graph.getPath(activeId)?.slice(0, -2).includes(node.id)) {
         setOpen(true);
       }
-    }, [graph, treeViewActive]);
+    }, [graph, activeId]);
 
     const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
     const isPopoverAnchor = popoverAnchorId === headingAnchorId;

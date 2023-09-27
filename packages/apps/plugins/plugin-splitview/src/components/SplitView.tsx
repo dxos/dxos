@@ -35,7 +35,7 @@ export const SplitView = (props: SplitViewProps) => {
       }}
     >
       <div role='none' className='sr-only'>
-        <Surface name='documentTitle' limit={1} />
+        <Surface name='documentTitle' role='document-title' limit={1} />
       </div>
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
@@ -47,7 +47,7 @@ export const SplitView = (props: SplitViewProps) => {
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar classNames='overflow-hidden'>
-          <Surface name='sidebar' />
+          <Surface name='sidebar' role='navigation' />
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
