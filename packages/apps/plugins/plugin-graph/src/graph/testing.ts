@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Action } from './action';
 import { Graph } from './graph';
-import { NodeBuilder, Node, Action } from './types';
+import { NodeBuilder, Node } from './node';
 
 /**
  * Create a test node builder that always adds nodes and actions to the specified depth.

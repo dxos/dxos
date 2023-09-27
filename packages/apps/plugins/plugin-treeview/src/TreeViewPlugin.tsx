@@ -6,9 +6,9 @@ import { batch, effect, untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
+import type { ClientPluginProvides } from '@braneframe/plugin-client';
 import { DndPluginProvides, SetTileHandler } from '@braneframe/plugin-dnd';
-import { GraphPluginProvides } from '@braneframe/plugin-graph';
+import type { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { MosaicChangeEvent, MosaicState, parseDndId } from '@dxos/aurora-grid';
