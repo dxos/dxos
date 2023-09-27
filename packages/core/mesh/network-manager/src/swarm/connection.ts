@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, scheduleTask, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -27,6 +27,11 @@ import { WireProtocol } from '../wire-protocol';
  * This value is increased exponentially.
  */
 const STARTING_SIGNALLING_DELAY = 10;
+
+/**
+ * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
+ */
+const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
 
 /**
  * Maximum delay between signal batches.
@@ -90,6 +95,7 @@ export enum ConnectionState {
  */
 export class Connection {
   private readonly _ctx = new Context();
+  private connectedTimeoutContext = new Context();
 
   private _state: ConnectionState = ConnectionState.CREATED;
   private _transport: Transport | undefined;
@@ -168,6 +174,15 @@ export class Connection {
       this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
+    scheduleTask(
+      this.connectedTimeoutContext,
+      async () => {
+        log.warn('timeout waiting for transport to connect, aborting');
+        await this.abort().catch((err) => this.errors.raise(err));
+      },
+      TRANSPORT_CONNECTION_TIMEOUT,
+    );
+
     invariant(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
@@ -175,8 +190,9 @@ export class Connection {
       sendSignal: async (signal) => this._sendSignal(signal),
     });
 
-    this._transport.connected.once(() => {
+    this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
+      await this.connectedTimeoutContext.dispose();
       this._callbacks?.onConnected?.();
     });
 
@@ -186,7 +202,7 @@ export class Connection {
       this.abort().catch((err) => this.errors.raise(err));
     });
 
-    this._transport.errors.handle((err) => {
+    this._transport.errors.handle(async (err) => {
       log('transport error:', { err });
       if (!this.closeReason) {
         this.closeReason = err?.message;
@@ -204,6 +220,7 @@ export class Connection {
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
+        await this.connectedTimeoutContext.dispose();
         this.errors.raise(err);
       }
     });
@@ -228,6 +245,7 @@ export class Connection {
       return;
     }
 
+    await this.connectedTimeoutContext.dispose();
     this._changeState(ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
@@ -262,6 +280,8 @@ export class Connection {
   async close(err?: Error) {
     if (!this.closeReason) {
       this.closeReason = err?.message;
+    } else {
+      this.closeReason += `; ${err?.message}`;
     }
     if (
       this._state === ConnectionState.CLOSED ||
@@ -273,6 +293,7 @@ export class Connection {
     const lastState = this._state;
     this._changeState(ConnectionState.CLOSING);
 
+    await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
     log('closing...', { peerId: this.ownId });
@@ -325,7 +346,8 @@ export class Connection {
         data: { signalBatch: { signals } },
       });
     } catch (err) {
-      if (err instanceof CancelledError) {
+      // TODO(nf): determine why instanceof doesn't work here
+      if (err instanceof CancelledError || (err instanceof Error && err.message?.includes('CANCELLED'))) {
         return;
       }
 

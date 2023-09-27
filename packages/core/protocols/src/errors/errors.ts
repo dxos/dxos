@@ -134,6 +134,14 @@ export class ConnectivityError extends BaseError {
 
 registerErrorMessageContext('CONNECTIVITY_ERROR', ConnectivityError);
 
+export class RateLimitExceededError extends BaseError {
+  constructor(message?: string, context?: any) {
+    super('RATE_LIMIT_EXCEEDED', message, context);
+  }
+}
+
+registerErrorMessageContext('RATE_LIMIT_EXCEEDED', RateLimitExceededError);
+
 // TODO(nf): Rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError {
   constructor(message?: string, innerError?: Error) {
