@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/labs-app",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "DXOS labs application.",
   "homepage": "https://dxos.org",
@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",

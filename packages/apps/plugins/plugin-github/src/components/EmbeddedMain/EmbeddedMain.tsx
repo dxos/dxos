@@ -65,13 +65,13 @@ const EmbeddedLayoutImpl = () => {
   }, [document]);
 
   const handleCreateSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.sendIntent({
+    void intentPlugin?.provides.intent.dispatch({
       action: SpaceAction.CREATE,
     });
   }, [intentPlugin]);
 
   const handleJoinSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.sendIntent({
+    void intentPlugin?.provides.intent.dispatch({
       action: SpaceAction.JOIN,
     });
   }, [intentPlugin]);

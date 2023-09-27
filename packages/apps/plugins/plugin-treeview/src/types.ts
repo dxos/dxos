@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Node } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { AppState } from '@braneframe/types';
@@ -17,8 +17,8 @@ export enum TreeViewAction {
 export type TreeViewContextValue = {
   active: string | undefined;
   previous: string | undefined;
-  activeNode: Graph.Node | undefined;
-  previousNode: Graph.Node | undefined;
+  activeNode: Node | undefined;
+  previousNode: Node | undefined;
   appState: AppState | undefined;
 };
 

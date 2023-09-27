@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-graph",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,10 +35,13 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-react": "^1.3.6",
     "deepsignal": "^1.3.6",
     "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2"
+    "lodash.set": "^4.3.2",
+    "mousetrap": "^1.6.5"
   },
   "devDependencies": {
     "@braneframe/plugin-intent": "workspace:*",
@@ -49,6 +52,7 @@
     "@tldraw/indices": "2.0.0-alpha.14",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
+    "@types/mousetrap": "^1.6.11",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",

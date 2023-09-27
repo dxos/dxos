@@ -32,7 +32,7 @@ export const SpacePresence = () => {
   //  If you intentionally want it to appear in the DOM as a custom attribute,
   //  spell it as lowercase `labelid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
   const handleShare = () => {
-    void intentPlugin!.provides.intent.sendIntent({
+    void intentPlugin!.provides.intent.dispatch({
       plugin: SPACE_PLUGIN,
       action: SpaceAction.SHARE,
       data: { spaceKey: space!.key.toHex() },

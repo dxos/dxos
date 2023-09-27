@@ -18,8 +18,8 @@ import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
 const EMPTY_ROW_ID = '__new';
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
-  const { plugins } = usePlugins();
   const [, forceUpdate] = useState({});
+  const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
   // TODO(burdon): Not updated when object deleted.

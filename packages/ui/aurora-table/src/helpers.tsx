@@ -288,10 +288,9 @@ export class ColumnBuilder<TData extends RowData> {
           );
         }
 
-        // TODO(burdon): Add &nbsp;
         return (
           <div
-            className={mx('grow w-full text-right font-mono empty:after:content-["-"] empty:opacity-0', className)}
+            className={mx('grow w-full text-right font-mono empty:after:content-[" "]', className)}
             onClick={handleEdit}
           >
             {value?.toLocaleString(undefined, {
