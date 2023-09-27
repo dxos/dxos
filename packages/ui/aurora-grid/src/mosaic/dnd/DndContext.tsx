@@ -22,31 +22,31 @@ import { OverlayDropAnimation } from './types';
 import { Handler } from '../types';
 
 export type DndContextValue = {
-  overlayDropAnimation: OverlayDropAnimation;
+  activeCopyClass: Set<string> | null;
   activeId: string | null;
   activeMigrationClass: string | null;
-  inhibitMigrationDestinationId: string | null;
-  migrationDestinationId: string | null;
-  activeCopyClass: Set<string> | null;
   copyDestinationId: string | null;
   dragOverSubscriptions: Handler<DragOverEvent>[];
   dragStartSubscriptions: Handler<DragStartEvent>[];
   dragEndSubscriptions: Handler<DragEndEvent>[];
   dragCancelSubscriptions: Handler<DragCancelEvent>[];
+  inhibitMigrationDestinationId: string | null;
+  migrationDestinationId: string | null;
+  overlayDropAnimation: OverlayDropAnimation;
 };
 
 const defaultContextValue: DndContextValue = {
-  overlayDropAnimation: 'around',
+  activeCopyClass: null,
   activeId: null,
   activeMigrationClass: null,
-  inhibitMigrationDestinationId: null,
-  migrationDestinationId: null,
-  activeCopyClass: null,
   copyDestinationId: null,
   dragOverSubscriptions: [],
   dragStartSubscriptions: [],
   dragEndSubscriptions: [],
   dragCancelSubscriptions: [],
+  inhibitMigrationDestinationId: null,
+  migrationDestinationId: null,
+  overlayDropAnimation: 'around',
 };
 
 const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);

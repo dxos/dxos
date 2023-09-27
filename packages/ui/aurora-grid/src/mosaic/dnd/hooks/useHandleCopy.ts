@@ -7,6 +7,7 @@ import { batch } from '@preact/signals-core';
 import { getIndexAbove } from '@tldraw/indices';
 import { useCallback } from 'react';
 
+// TODO(burdon): Invert dependency on mosaic?
 import { useMosaic } from '../../mosaic';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
 import { getSubtiles } from '../../util';

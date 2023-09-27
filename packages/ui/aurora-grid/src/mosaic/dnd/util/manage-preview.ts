@@ -37,14 +37,14 @@ export const managePreview = ({
 }: ManagePreviewArgs & Pick<DragOverEvent, 'active' | 'over'>) => {
   const prevDestinationId = operation === 'copy' ? dnd.copyDestinationId : dnd.migrationDestinationId;
   if (nextDestinationId) {
-    // There is a copy destination, so a preview tile needs to be there
+    // There is a copy destination, so a preview tile needs to be there.
     if (prevDestinationId) {
-      // There is a preview somewhere already
+      // There is a preview somewhere already.
       if (nextDestinationId === prevDestinationId) {
-        // Just update preview’s index in-situ
+        // Just update preview’s index in-situ.
         const previewId = getPreviewId(active.id, nextDestinationId);
         if (over?.id === previewId) {
-          // Do nothing
+          // Do nothing.
         } else {
           const index = nextCopyIndex(getSubtiles(mosaic.relations[prevDestinationId].child, mosaic.tiles), over?.id);
           if (mosaic.tiles[previewId].index !== index) {
@@ -52,7 +52,7 @@ export const managePreview = ({
           }
         }
       } else {
-        // Remove preview from old parent and add to new parent
+        // Remove preview from old parent and add to new parent.
         const prevPreviewId = getPreviewId(active.id, prevDestinationId);
         const nextPreviewId = getPreviewId(active.id, nextDestinationId);
         batch(() => {
@@ -67,7 +67,7 @@ export const managePreview = ({
         });
       }
     } else {
-      // Create the preview
+      // Create the preview.
       const previewId = getPreviewId(active.id, nextDestinationId);
       const previewTile = {
         ...copyTile(active.id.toString(), nextDestinationId, mosaic),
@@ -86,9 +86,9 @@ export const managePreview = ({
       });
     }
   } else {
-    // There is no copy destination, so if there is a preview tile it should be removed
+    // There is no copy destination, so if there is a preview tile it should be removed.
     if (prevDestinationId) {
-      // A preview tile was added to mosaic, remove it
+      // A preview tile was added to mosaic, remove it.
       batch(() => {
         const previewId = getPreviewId(active.id, prevDestinationId!);
         mosaic.relations[prevDestinationId!].child.delete(previewId);
@@ -96,6 +96,6 @@ export const managePreview = ({
         dnd[operation === 'copy' ? 'copyDestinationId' : 'migrationDestinationId'] = null;
       });
     }
-    // `else`: No action necessary
+    // `else`: No action necessary.
   }
 };

@@ -24,6 +24,7 @@ type MosaicStoryArgs = {
   root: string;
   onMosaicChange: MosaicChangeHandler;
 };
+
 type StorybookDataProps = { label: string; description: string };
 
 // REARRANGE
@@ -148,7 +149,6 @@ const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => 
 }, {});
 
 const copyIds = Object.keys(copyTiles);
-
 const copyRootId = copyIds[0];
 const copySectionIds = Object.keys(copyTiles).filter((id) => id !== copyRootId);
 const copyMosaicState = {

@@ -43,6 +43,7 @@ export type CardTile = TileSharedProps & {
   sortable?: false;
 };
 
+// TODO(burdon): Make generic?
 export type Tile = TreeItemTile | StackTile | CardTile;
 
 export type TileProps = Tile;
@@ -68,13 +69,12 @@ export type DelegatorProps<TData = any> = PropsWithChildren<{
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
 
-export type Handler<TEvent> = (event: TEvent) => void;
-
 export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: string };
 export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; index?: string };
 export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
-
 export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
+
+export type Handler<TEvent> = (event: TEvent) => void;
 
 export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
 
