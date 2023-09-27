@@ -3,4 +3,5 @@
 //
 
 export * from './DndPlugin';
+export * from './helpers';
 export * from './types';

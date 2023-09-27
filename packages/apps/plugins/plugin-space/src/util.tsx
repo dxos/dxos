@@ -7,8 +7,8 @@ import { batch } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
+import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { Node } from '@braneframe/plugin-graph';
-import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-treeview';
 import { AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';

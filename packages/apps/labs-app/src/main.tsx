@@ -30,7 +30,6 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import {
   auroraTheme,
   bindTheme,
@@ -98,8 +97,7 @@ const main = async () => {
           GraphPlugin(),
           DndPlugin(),
           TreeViewPlugin(),
-          UrlSyncPlugin(),
-          SplitViewPlugin(),
+          SplitViewPlugin({ showComplementarySidebar: true }),
           SpacePlugin(),
 
           // Composer

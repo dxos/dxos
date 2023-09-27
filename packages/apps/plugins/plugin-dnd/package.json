@@ -17,6 +17,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
     "deepsignal": "^1.3.6"
   },

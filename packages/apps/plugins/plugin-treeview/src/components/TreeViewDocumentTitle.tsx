@@ -3,13 +3,12 @@
 //
 import { useEffect } from 'react';
 
+import { Node } from '@braneframe/plugin-graph';
 import { useTranslation } from '@dxos/aurora';
 
-import { useTreeView } from '../TreeViewContext';
 import { getTreeItemLabel } from '../util';
 
-export const TreeViewDocumentTitle = () => {
-  const { activeNode } = useTreeView();
+export const TreeViewDocumentTitle = ({ data: activeNode }: { data: Node }) => {
   const { t } = useTranslation();
   useEffect(() => {
     document.title = activeNode ? getTreeItemLabel(activeNode, t) : t('current app name', { ns: 'appkit' });
