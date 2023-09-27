@@ -159,11 +159,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-url-sync/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },

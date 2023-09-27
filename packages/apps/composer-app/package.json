@@ -24,7 +24,6 @@
     "@braneframe/plugin-telemetry": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
-    "@braneframe/plugin-url-sync": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/config": "workspace:*",
