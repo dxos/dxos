@@ -23,12 +23,13 @@ export const isSpace = (data: unknown): data is Space =>
     ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabase
     : false;
 
-export const getSpaceId = (spaceKey: PublicKeyLike) => {
+// TODO(burdon): Factor out.
+export const createNodId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
     spaceKey = spaceKey.toHex();
   }
 
-  return `${SPACE_PLUGIN_SHORT_ID}:${spaceKey}`;
+  return `${SPACE_PLUGIN_SHORT_ID}-${spaceKey}`;
 };
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
@@ -53,7 +54,7 @@ export const spaceToGraphNode = ({
   appState?: AppState;
   defaultIndex?: string;
 }): Node<Space> => {
-  const id = getSpaceId(space.key);
+  const id = createNodId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;

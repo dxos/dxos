@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
