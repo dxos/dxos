@@ -8,8 +8,9 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import { DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
 
+import { Action } from './action';
 import { Graph } from './graph';
-import { Action, Node, NodeBuilder } from './types';
+import { Node, NodeBuilder } from './node';
 
 /**
  * The builder...
