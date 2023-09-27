@@ -154,10 +154,20 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             case 'open-devtools': {
               const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
-              const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
-              if (vaultUrl) {
-                window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
+              const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+
+              // Check if we're serving devtools locally on the usual port.
+              let devtoolsUrl = 'http://localhost:5174';
+              try {
+                // TODO(burdon): Test header to see if this is actually devtools.
+                await fetch(devtoolsUrl);
+              } catch {
+                // Match devtools to running app.
+                const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
+                devtoolsUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org`;
               }
+
+              window.open(`${devtoolsUrl}?target=${vaultUrl}`, '_blank');
               return true;
             }
           }
