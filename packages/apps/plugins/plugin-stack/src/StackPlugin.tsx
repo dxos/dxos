@@ -5,8 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { GraphPluginProvides } from '@braneframe/plugin-graph';
+import type { DndPluginProvides } from '@braneframe/plugin-dnd';
+import type { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';

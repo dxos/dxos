@@ -40,12 +40,10 @@ export class Graph {
 
   constructor(private readonly _root: Node) {}
 
-  // TODO(burdon): Traverse.
   toJSON() {
     const toLabel = (label: Label) => (Array.isArray(label) ? `${label[1].ns}[${label[0]}]` : label);
     const toJSON = (node: Node): any => {
       return {
-        // TODO(burdon): Standardize ids on type/id/x/y (use slashes).
         id: node.id.slice(0, 16),
         label: toLabel(node.label),
         children: node.children.length ? node.children.map((node) => toJSON(node)) : undefined,

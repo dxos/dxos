@@ -28,6 +28,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       id: 'dxos.org/plugin/intent',
     },
     ready: async (plugins) => {
+      // Dispatch intent to associated plugin.
       const dispatch = (intent: Intent) => {
         const plugin = intent.plugin && findPlugin<IntentProvides>(plugins, intent.plugin);
         if (plugin) {
@@ -36,14 +37,11 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
         // TODO(burdon): Why reducer?
         return filterPlugins(plugins).reduce((acc, plugin) => {
-          if (acc) {
-            return acc;
-          }
-
-          return plugin.provides.intent.resolver(intent, plugins);
-        }, null);
+          return acc ?? plugin.provides.intent.resolver(intent, plugins);
+        }, undefined);
       };
 
+      // Sequentially dispatch array of invents.
       state.dispatch = async (...intents) => {
         let result: any = null;
         for (const intent of intents) {
@@ -54,13 +52,20 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       };
     },
     provides: {
-      context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
-      graph: {
-        nodes: (node) => {
-          console.log(':::::::::::', node.id, node.actions.length);
-        },
-      },
       intent: state,
+      context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
+      // TODO(burdon): Circular dependency.
+      // graph: {
+      //   nodes: (node) => {
+      //     node.actions.forEach((action) => {
+      //       if (action.keyBinding && action.intent) {
+      //         Mousetrap.bind(action.keyBinding, () => {
+      //           void state.dispatch(action.intent!);
+      //         });
+      //       }
+      //     });
+      //   },
+      // },
     },
   };
 };

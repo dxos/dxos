@@ -103,8 +103,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   data: { id: nodeId, graph: graphPlugin?.provides.graph() },
                 });
 
-                // TODO(burdon): Intent plugin already called.
-                console.log('<<<');
                 root.addAction({
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
@@ -113,12 +111,11 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     plugin: DEBUG_PLUGIN,
                     action: 'open-devtools',
                   },
-                  keyBinding: 'shift+command+D',
+                  keyBinding: 'shift+command+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',
                   },
                 });
-                console.log('>>>');
 
                 const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
                 subscriptions.push(

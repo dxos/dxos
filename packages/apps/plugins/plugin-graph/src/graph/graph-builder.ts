@@ -19,7 +19,7 @@ export class GraphBuilder {
   private readonly _nodeBuilders = new Map<string, NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
-  private _dispatch?: DispatchIntent;
+  constructor(private readonly _dispatch?: DispatchIntent) {}
 
   /**
    * Register a node builder which will be called in order to construct the graph.
@@ -96,12 +96,12 @@ export class GraphBuilder {
 
       addProperty: (key, value) => {
         untracked(() => {
-          (node.properties as { [key: string]: any })[key] = value;
+          (node.properties as Record<string, any>)[key] = value;
         });
       },
       removeProperty: (key) => {
         untracked(() => {
-          delete (node.properties as { [key: string]: any })[key];
+          delete (node.properties as Record<string, any>)[key];
         });
       },
 
@@ -112,7 +112,10 @@ export class GraphBuilder {
             const childPath = [...path, 'childrenMap', partial.id];
             const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, builders);
             node.childrenMap[child.id] = child;
-            this._build(getGraph(), child, childPath, builders);
+            // TODO(burdon): Defer update to task exit.
+            setTimeout(() => {
+              this._build(getGraph(), child, childPath, builders);
+            });
             return child;
           });
         });
@@ -146,7 +149,7 @@ export class GraphBuilder {
     return node;
   }
 
-  private _createAction<TProperties extends { [key: string]: any } = { [key: string]: any }>(
+  private _createAction<TProperties extends Record<string, any> = Record<string, any>>(
     partial: Pick<Action, 'id' | 'label'> & Partial<Action<TProperties>>,
   ): Action<TProperties> {
     const action: Action<TProperties> = deepSignal({
@@ -182,24 +185,16 @@ export class GraphBuilder {
       },
       addProperty: (key, value) => {
         return untracked(() => {
-          (action.properties as { [key: string]: any })[key] = value;
+          (action.properties as Record<string, any>)[key] = value;
         });
       },
       removeProperty: (key) => {
         return untracked(() => {
-          delete (action.properties as { [key: string]: any })[key];
+          delete (action.properties as Record<string, any>)[key];
         });
       },
     }) as RevertDeepSignal<Action<TProperties>>;
 
     return action;
-  }
-
-  /**
-   * @internal
-   */
-  // TODO(burdon): Document.
-  _setDispatch(dispatch?: DispatchIntent) {
-    this._dispatch = dispatch;
   }
 }

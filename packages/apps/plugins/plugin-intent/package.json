@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@dxos/react-surface": "workspace:*",
+    "@types/mousetrap": "^1.6.11",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
     "vite": "^4.3.9"
