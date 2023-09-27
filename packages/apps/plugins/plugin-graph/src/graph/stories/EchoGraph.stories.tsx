@@ -18,7 +18,7 @@ import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
 import { GraphBuilder } from '../graph-builder';
-import { Node } from '../types';
+import { Node } from '../node';
 
 export default {
   title: 'Echo Graph',
