@@ -6,7 +6,7 @@ import type { IconProps } from '@phosphor-icons/react';
 import { FC } from 'react';
 
 // TODO(burdon): Consider making intents part of graph.
-//  (does it make sense to have trivially decomposed plugins that require each other)?
+//  (does it make sense to have trivially decomposed plugins that require each other)? Circular deps.
 import type { Intent } from '@braneframe/plugin-intent';
 
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
@@ -60,6 +60,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   /**
    * Actions of the node in default order.
    */
+  // TODO(burdon): Why get vs. prop?
   get actions(): Action[];
 
   invoke: () => Promise<any>;

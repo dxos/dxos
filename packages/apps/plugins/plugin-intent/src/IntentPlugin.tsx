@@ -3,6 +3,7 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
+import Mousetrap from 'mousetrap';
 import React from 'react';
 
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -55,17 +56,17 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       intent: state,
       context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
       // TODO(burdon): Circular dependency.
-      // graph: {
-      //   nodes: (node) => {
-      //     node.actions.forEach((action) => {
-      //       if (action.keyBinding && action.intent) {
-      //         Mousetrap.bind(action.keyBinding, () => {
-      //           void state.dispatch(action.intent!);
-      //         });
-      //       }
-      //     });
-      //   },
-      // },
+      graph: {
+        nodes: (node) => {
+          node.actions.forEach((action) => {
+            if (action.keyBinding && action.intent) {
+              Mousetrap.bind(action.keyBinding, () => {
+                void state.dispatch(action.intent!);
+              });
+            }
+          });
+        },
+      },
     },
   };
 };
