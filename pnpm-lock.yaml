@@ -916,8 +916,10 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/invariant': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
       '@preact/signals-react': ^1.3.6
       '@tldraw/indices': 2.0.0-alpha.14
@@ -947,7 +949,9 @@ importers:
       '@braneframe/plugin-intent': link:../plugin-intent
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': 4.4.7
