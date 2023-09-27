@@ -58,7 +58,7 @@ const useDnd = () => useContext(MosaicDndContext);
 /**
  * Framework context that wraps an outer `dnd-kit/core` `DndContext`.
  */
-const DndProvider = ({ children }: PropsWithChildren<{}>) => {
+const MosaicDndProvider = ({ children }: PropsWithChildren<{}>) => {
   const contextValue = useDeepSignal<DndContextValue>(defaultContextValue);
 
   const sensors = useSensors(
@@ -127,4 +127,4 @@ const DndProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export { DndProvider, MosaicDndContext, useDnd };
+export { MosaicDndProvider, MosaicDndContext, useDnd };

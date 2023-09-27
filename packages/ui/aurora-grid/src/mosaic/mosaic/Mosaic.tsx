@@ -19,7 +19,7 @@ import {
   useHandleMigrateDragStart,
   useHandleRearrangeDragEnd,
 } from './hooks';
-import { DndProvider, dropAnimations, useDnd as useMosaicDnd } from '../dnd';
+import { MosaicDndProvider, dropAnimations, useDnd as useMosaicDnd } from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
 import type { MosaicRootContextValue, MosaicContextValue } from '../types';
 import { MosaicRootProps } from '../types';
@@ -93,9 +93,9 @@ const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
 const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicContextValue>) => {
   return (
     <MosaicContext.Provider value={contextValue}>
-      <DndProvider>
+      <MosaicDndProvider>
         <MosaicProviderImpl>{children}</MosaicProviderImpl>
-      </DndProvider>
+      </MosaicDndProvider>
     </MosaicContext.Provider>
   );
 };
