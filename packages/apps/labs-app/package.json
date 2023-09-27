@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/labs-app",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "DXOS labs application.",
   "homepage": "https://dxos.org",
@@ -33,7 +33,6 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
-    "@braneframe/plugin-url-sync": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/aurora-table": "workspace:*",
@@ -48,6 +47,7 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",

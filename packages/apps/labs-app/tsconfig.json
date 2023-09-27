@@ -25,6 +25,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -122,9 +125,6 @@
     },
     {
       "path": "../plugins/plugin-treeview"
-    },
-    {
-      "path": "../plugins/plugin-url-sync"
     }
   ]
 }

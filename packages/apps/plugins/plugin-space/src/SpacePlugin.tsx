@@ -9,15 +9,10 @@ import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
+import { DND_PLUGIN, DndPluginProvides, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { Node, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { SplitViewProvides } from '@braneframe/plugin-splitview';
-import {
-  TREE_VIEW_PLUGIN,
-  TreeViewAction,
-  TreeViewPluginProvides,
-  setAppStateIndex,
-} from '@braneframe/plugin-treeview';
+import { SPLITVIEW_PLUGIN, SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
@@ -47,7 +42,7 @@ import {
   SpaceSettingsProps,
   SpaceState,
 } from './types';
-import { getSpaceId, isSpace, spaceToGraphNode } from './util';
+import { createNodId, isSpace, spaceToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -72,13 +67,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN); // TODO(burdon): Const vs string?
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, TREE_VIEW_PLUGIN);
-      if (!clientPlugin || !treeViewPlugin) {
+      const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, SPLITVIEW_PLUGIN);
+      if (!clientPlugin || !splitViewPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      const treeView = treeViewPlugin.provides.treeView;
+      const splitView = splitViewPlugin.provides.splitView;
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
@@ -98,8 +93,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           await intentPlugin?.provides.intent.dispatch({
-            action: TreeViewAction.ACTIVATE,
-            data: { id: getSpaceId(space.key) },
+            action: SplitViewAction.ACTIVATE,
+            data: { id: createNodId(space.key) },
           });
         });
       }
@@ -107,13 +102,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       // Calculate the active space based on the graph and active node.
       subscriptions.add(
         effect(async () => {
-          if (!treeView.activeNode) {
+          if (!splitView.activeNode) {
             return;
           }
 
           state.active = await new Promise<Space | undefined>((resolve) => {
             graphPlugin?.provides.graph().traverse({
-              node: treeView.activeNode,
+              node: splitView.activeNode,
               direction: 'up',
               visitor: (node) => {
                 if (isSpace(node.data)) {
@@ -133,12 +128,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const send = () => {
             const identity = client.halo.identity.get();
             const space = state.active;
-            if (identity && space && treeView.active) {
+            if (identity && space && splitView.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
                 spaceKey: space.key.toHex(),
-                added: [treeView.active],
-                removed: [treeView.previous],
+                added: [splitView.active],
+                removed: [splitView.previous],
               });
             }
           };
@@ -272,8 +267,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+          const dndPlugin = findPlugin<DndPluginProvides>(plugins, DND_PLUGIN);
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
           if (!clientPlugin) {
             return;
           }
@@ -288,7 +283,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           // Shared spaces section.
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
-            id: getSpaceId('all-spaces'),
+            id: createNodId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
               // TODO(burdon): Factor out palette constants.
@@ -300,14 +295,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 child.properties.index = setAppStateIndex(
                   child.id,
                   nextIndex,
-                  treeViewPlugin?.provides.treeView?.appState as AppState | undefined,
+                  dndPlugin?.provides.dnd?.appState as AppState | undefined,
                 );
               },
             },
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {
-            const appState = treeViewPlugin?.provides.treeView?.appState;
+            const appState = dndPlugin?.provides.dnd?.appState;
             client.spaces.default.key.equals(space.key)
               ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
               : spaceToGraphNode({
@@ -362,7 +357,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   action: SpaceAction.JOIN,
                 },
                 {
-                  action: TreeViewAction.ACTIVATE,
+                  action: SplitViewAction.ACTIVATE,
                 },
               ],
             },
@@ -384,7 +379,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const space = await clientPlugin.provides.client.spaces.create(intent.data);
-              return { space, id: getSpaceId(space.key) };
+              return { space, id: createNodId(space.key) };
             }
 
             case SpaceAction.JOIN: {
@@ -392,7 +387,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: getSpaceId(space.key) };
+              return space && { space, id: createNodId(space.key) };
             }
           }
 
@@ -413,11 +408,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME: {
-              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
+              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.popoverOpen = true;
                 splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${getSpaceId(
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${createNodId(
                   spaceKey,
                 )}`;
                 return true;
@@ -453,7 +448,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RESTORE: {
-              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
+              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.dialogOpen = true;
                 splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RestoreSpaceDialog', space];
@@ -480,7 +475,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME_OBJECT: {
-              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
+              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
               const object =
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               if (object && splitViewPlugin?.provides.splitView) {

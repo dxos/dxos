@@ -353,7 +353,6 @@ importers:
       '@braneframe/plugin-telemetry': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
-      '@braneframe/plugin-url-sync': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -389,7 +388,6 @@ importers:
       '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
-      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/config': link:../../sdk/config
@@ -506,12 +504,12 @@ importers:
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-thread': workspace:*
       '@braneframe/plugin-treeview': workspace:*
-      '@braneframe/plugin-url-sync': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/devtools': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
@@ -554,7 +552,6 @@ importers:
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-thread': link:../plugins/plugin-thread
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
-      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-table': link:../../ui/aurora-table
@@ -568,6 +565,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/devtools': link:../../devtools/devtools
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/vault': link:../../sdk/vault
       '@sentry/vite-plugin': 0.7.2
@@ -585,8 +583,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/chess-app': workspace:*
@@ -615,8 +613,8 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -630,6 +628,8 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
+      '@braneframe/plugin-dnd': workspace:*
+      '@braneframe/types': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
@@ -642,12 +642,14 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/types': link:../../types
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/echo-signals': link:../../../core/echo/echo-signals
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -683,6 +685,7 @@ importers:
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.6
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -712,6 +715,7 @@ importers:
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       '@faker-js/faker': 8.0.2
+      '@preact/signals-react': 1.3.6_react@18.2.0
       date-fns: 2.29.3
       lodash.get: 4.4.2
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
@@ -738,6 +742,7 @@ importers:
     specifiers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -750,6 +755,7 @@ importers:
       react-dom: ^18.2.0
       typescript: ^5.2.2
     dependencies:
+      '@braneframe/types': link:../../types
       '@dxos/aurora-grid': link:../../../ui/aurora-grid
       deepsignal: 1.3.6
     devDependencies:
@@ -799,8 +805,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -825,8 +831,8 @@ importers:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -840,13 +846,13 @@ importers:
   packages/apps/plugins/plugin-github:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -882,13 +888,13 @@ importers:
       octokit: 2.0.14
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -909,6 +915,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
@@ -918,22 +925,26 @@ importers:
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
+      '@types/mousetrap': ^1.6.11
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.6
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
+      mousetrap: ^1.6.5
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/util': link:../../../common/util
       '@preact/signals-react': 1.3.6_react@18.2.0
       deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       lodash.get: 4.4.2
       lodash.set: 4.3.2
+      mousetrap: 1.6.5
     devDependencies:
       '@braneframe/plugin-intent': link:../plugin-intent
       '@dxos/aurora': link:../../../ui/aurora
@@ -945,6 +956,7 @@ importers:
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+      '@types/mousetrap': 1.6.12
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -1025,7 +1037,6 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dnd-kit/core': ^6.0.5
       '@dnd-kit/modifiers': ^6.0.0
@@ -1068,7 +1079,6 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -1088,8 +1098,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
@@ -1119,8 +1129,8 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1140,8 +1150,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
@@ -1179,8 +1189,8 @@ importers:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1228,7 +1238,6 @@ importers:
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
@@ -1274,7 +1283,6 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -1291,6 +1299,7 @@ importers:
   packages/apps/plugins/plugin-space:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -1342,6 +1351,7 @@ importers:
       react-is: 18.2.0
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-splitview': link:../plugin-splitview
@@ -1368,6 +1378,7 @@ importers:
       '@dxos/local-storage': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.6
@@ -1377,7 +1388,8 @@ importers:
     dependencies:
       '@dxos/debug': link:../../../common/debug
       '@dxos/local-storage': link:../../../common/local-storage
-      deepsignal: 1.3.6
+      '@preact/signals-react': 1.3.6_react@18.2.0
+      deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1463,8 +1475,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-table': workspace:*
@@ -1497,8 +1509,8 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1514,7 +1526,7 @@ importers:
 
   packages/apps/plugins/plugin-telemetry:
     specifiers:
-      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@dxos/async': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
@@ -1535,7 +1547,7 @@ importers:
       '@dxos/util': link:../../../common/util
       localforage: 1.10.0
     devDependencies:
-      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       react: 18.2.0
@@ -1547,8 +1559,8 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
@@ -1571,8 +1583,8 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1618,7 +1630,6 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -1653,7 +1664,6 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -1668,11 +1678,9 @@ importers:
 
   packages/apps/plugins/plugin-treeview:
     specifiers:
-      '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
-      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/async': workspace:*
@@ -1697,7 +1705,6 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-grid': link:../../../ui/aurora-grid
@@ -1710,10 +1717,9 @@ importers:
       deepsignal: 1.3.6_v3hdjmaqfbtlolrjx6ejysmyqm
       lodash.get: 4.4.2
     devDependencies:
-      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
-      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -1725,22 +1731,6 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
-
-  packages/apps/plugins/plugin-url-sync:
-    specifiers:
-      '@braneframe/plugin-intent': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@types/react': ^18.0.21
-      react: ^18.2.0
-      vite: ^4.3.9
-    devDependencies:
-      '@braneframe/plugin-intent': link:../plugin-intent
-      '@braneframe/plugin-treeview': link:../plugin-treeview
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@types/react': 18.0.21
-      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/tasks:
@@ -5754,10 +5744,12 @@ importers:
 
   packages/sdk/react-surface:
     specifiers:
+      '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
     dependencies:
+      '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
     devDependencies:
       '@types/react': 18.0.21
@@ -18342,6 +18334,10 @@ packages:
 
   /@types/mocha/8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
+    dev: true
+
+  /@types/mousetrap/1.6.12:
+    resolution: {integrity: sha512-tzXGzMbvXt815z0Z7FE45wmRVRitMTaPgfVcdGhOS6LtEOWBZBokFJxEdatVA8cj+cQxvdFLmlMC4c12TNqv9A==}
     dev: true
 
   /@types/ms/0.7.31:
@@ -32476,6 +32472,10 @@ packages:
 
   /monaco-editor/0.25.2:
     resolution: {integrity: sha512-5iylzSJevCnzJn9UVsW8yOZ3yHjmAs4TfvH3zsbftKiFKmHG0xirGN6DK9Kk04VSWxYCZZAIafYJoNJJMAU1KA==}
+
+  /mousetrap/1.6.5:
+    resolution: {integrity: sha512-QNo4kEepaIBwiT8CDhP98umTetp+JNfQYBWvC1pc6/OAibuXtRcxZ58Qz8skvEHYvURne/7R8T5VoOI7rDsEUA==}
+    dev: false
 
   /mpegts.js/1.7.2:
     resolution: {integrity: sha512-qQ1ELBDC4IAqpULFuFzp3hoQeKwD5BCR3UM9Lk2+kj9jCWcXl19spF7PdzX0ZljghPHAj/VL2ajBbGyMWk2fgA==}

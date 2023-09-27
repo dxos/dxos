@@ -29,7 +29,7 @@ export type Intent = {
   data?: any;
 };
 
-export type DispatchIntent = (...intents: Intent[]) => Promise<any>;
+export type DispatchIntent = (intent: Intent | Intent[]) => Promise<any>;
 
 export type IntentContextType = {
   dispatch: DispatchIntent;

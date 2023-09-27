@@ -22,7 +22,6 @@ import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { Config, Defaults } from '@dxos/config';
 import { TypedObject } from '@dxos/echo-schema';
 import { PluginProvider } from '@dxos/react-surface';
@@ -52,11 +51,8 @@ createRoot(document.getElementById('root')!).render(
         ClientPlugin(),
         GraphPlugin(),
         DndPlugin(),
-        SplitViewPlugin({
-          showComplementarySidebar: false,
-        }),
+        SplitViewPlugin(),
         TreeViewPlugin(),
-        UrlSyncPlugin(),
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),

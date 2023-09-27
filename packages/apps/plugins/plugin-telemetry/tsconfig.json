@@ -42,7 +42,7 @@
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../plugin-treeview"
+      "path": "../plugin-splitview"
     }
   ]
 }

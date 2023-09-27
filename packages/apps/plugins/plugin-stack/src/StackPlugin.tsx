@@ -5,10 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { GraphPluginProvides } from '@braneframe/plugin-graph';
+import type { DndPluginProvides } from '@braneframe/plugin-dnd';
+import type { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
 import { getDndId, parseDndId } from '@dxos/aurora-grid';
 import { SpaceProxy, TypedObject } from '@dxos/client/echo';
@@ -117,7 +117,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
             properties: {

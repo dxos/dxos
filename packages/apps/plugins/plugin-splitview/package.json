@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-splitview",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "DXOS Surface plugin for a split view application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/local-storage": "workspace:*",
+    "@preact/signals-react": "^1.3.6",
     "deepsignal": "^1.3.6"
   },
   "devDependencies": {

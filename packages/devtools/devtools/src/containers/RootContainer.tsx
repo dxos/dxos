@@ -6,22 +6,10 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/aurora-theme';
-import { useDevices, useIdentity } from '@dxos/react-client/halo';
+import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
-
-const Footer = () => {
-  return (
-    <div className='flex justify-center p-2'>
-      <span className='text-xs text-gray-500'>
-        <div>Identity: {useIdentity()?.identityKey.truncate()}</div>
-        <div>Device: {useDevices()[0].deviceKey.truncate()}</div>
-        <div>Version: {process.env.PACKAGE_VERSION ?? 'DEV'}</div>
-      </span>
-    </div>
-  );
-};
 
 export const RootContainer = () => {
   const sections = useSections();
@@ -63,6 +51,31 @@ export const RootContainer = () => {
             <Outlet />
           </Suspense>
         </ErrorBoundary>
+      </div>
+    </div>
+  );
+};
+
+const Footer = () => {
+  const identity = useIdentity();
+  const devices = useDevices();
+  const device = devices.find(({ kind }) => kind === DeviceKind.CURRENT);
+
+  return (
+    <div className='flex p-2'>
+      <div className='flex flex-col w-full text-sm text-neutral-500'>
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='text-neutral-300 text-right'>Identity</div>
+          <div className='font-mono'>{identity?.identityKey.truncate()}</div>
+        </div>
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='text-neutral-300 text-right'>Device</div>
+          <div className='font-mono'>{device?.deviceKey.truncate()}</div>
+        </div>
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='text-neutral-300 text-right'>Version</div>
+          <div className='font-mono'>{process.env.PACKAGE_VERSION ?? 'DEV'}</div>
+        </div>
       </div>
     </div>
   );
