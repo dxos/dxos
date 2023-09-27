@@ -11,7 +11,7 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
-import { globalSignalApi as signal } from './signal';
+import { createSignal } from './signal';
 
 export const subscribe = Symbol.for('dxos.echo-object.subscribe');
 
@@ -55,7 +55,7 @@ export abstract class EchoObject<T extends Model = any> {
 
   private _callbacks = new Set<(value: any) => void>();
 
-  protected readonly _signal = signal?.create();
+  protected readonly _signal = createSignal?.();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;

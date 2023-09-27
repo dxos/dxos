@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 
 import { EchoObject } from './object';
-import { globalSignalApi as signal } from './signal';
+import { createSignal } from './signal';
 import { isTypedObject, TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
@@ -33,10 +33,8 @@ export type Subscription = () => void;
  */
 export class Query<T extends TypedObject = TypedObject> {
   private readonly _filters: Filter<any>[] = [];
-  private _objectsCache: T[] | undefined = undefined;
-  private _removedCache: T[] | undefined = undefined;
-  private _objectsSignal = signal?.create();
-  private _removedSignal = signal?.create();
+  private _cache: T[] | undefined = undefined;
+  private _signal = createSignal?.();
   private _event = new Event<Query<T>>();
 
   constructor(
@@ -54,19 +52,14 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 
   get objects(): T[] {
-    this._objectsSignal?.notifyRead();
+    this._signal?.notifyRead();
     return this._getObjects();
-  }
-
-  get removed(): T[] {
-    this._removedSignal?.notifyRead();
-    return this._getRemoved();
   }
 
   // Hold a reference to the listener to prevent it from being garbage collected.
   private _onUpdate = (updated: Item[]) => {
     const changed = updated.some((object) => {
-      const exists = this._objectsCache?.find((obj) => obj.id === object.id);
+      const exists = this._cache?.find((obj) => obj.id === object.id);
       if (this._objects.has(object.id) || exists) {
         const match = this._match(this._objects.get(object.id)! as T);
         return match || (exists && !match);
@@ -76,36 +69,18 @@ export class Query<T extends TypedObject = TypedObject> {
     });
 
     if (changed) {
-      this._objectsCache = undefined;
-      this._removedCache = undefined;
-      signal?.batch(() => {
-        this._objectsSignal?.notifyWrite();
-        this._removedSignal?.notifyWrite();
-      });
+      this._cache = undefined;
+      this._signal?.notifyWrite();
       this._event.emit(this);
     }
   };
 
   private _getObjects() {
-    if (!this._objectsCache) {
-      this._objectsCache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
+    if (!this._cache) {
+      this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
     }
 
-    return this._objectsCache;
-  }
-
-  private _getRemoved() {
-    this._removedSignal?.notifyRead();
-
-    if (!this._removedCache) {
-      // TODO(wittjosiah): Reconcile with this._match.
-      const filters = [filterDeleted(ShowDeletedOption.SHOW_DELETED_ONLY), ...this._filters.slice(1)];
-      this._removedCache = Array.from(this._objects.values()).filter(
-        (object): object is T => isTypedObject(object) && filters.every((filter) => match(object, filter)),
-      );
-    }
-
-    return this._removedCache;
+    return this._cache;
   }
 
   // TODO(burdon): Option to trigger immediately.
