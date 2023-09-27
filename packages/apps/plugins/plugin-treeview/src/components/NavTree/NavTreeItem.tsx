@@ -16,7 +16,7 @@ import React, {
 } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Action, Node, useGraph } from '@braneframe/plugin-graph';
+import { Action, Node, useGraph, keyString } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Button,
@@ -271,8 +271,17 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                                 disabled={action.properties.disabled}
                                 {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                               >
-                                {action.icon && <action.icon className={getSize(4)} />}
-                                <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                                {action.icon && (
+                                  <div className='shrink-0'>
+                                    <action.icon className={getSize(4)} />
+                                  </div>
+                                )}
+                                <div className='grow truncate'>
+                                  {Array.isArray(action.label) ? t(...action.label) : action.label}
+                                </div>
+                                {action.keyBinding && (
+                                  <div className='shrink-0 opacity-50'>{keyString(action.keyBinding)}</div>
+                                )}
                               </DropdownMenu.Item>
                             ))}
                             {i < actionGroups.length - 1 && <DropdownMenu.Separator />}

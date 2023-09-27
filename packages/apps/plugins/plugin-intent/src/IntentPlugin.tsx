@@ -28,25 +28,23 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       id: 'dxos.org/plugin/intent',
     },
     ready: async (plugins) => {
+      // Dispatch intent to associated plugin.
       const dispatch = (intent: Intent) => {
         const plugin = intent.plugin && findPlugin<IntentProvides>(plugins, intent.plugin);
         if (plugin) {
           return plugin.provides.intent.resolver(intent, plugins);
         }
 
-        // TODO(burdon): Why reducer?
+        // Return resolved value from first plugin that handles the intent.
         return filterPlugins(plugins).reduce((acc, plugin) => {
-          if (acc) {
-            return acc;
-          }
-
-          return plugin.provides.intent.resolver(intent, plugins);
-        }, null);
+          return acc ?? plugin.provides.intent.resolver(intent, plugins);
+        }, undefined);
       };
 
-      state.dispatch = async (...intents) => {
+      // Sequentially dispatch array of invents.
+      state.dispatch = async (intentOrArray) => {
         let result: any = null;
-        for (const intent of intents) {
+        for (const intent of Array.isArray(intentOrArray) ? intentOrArray : [intentOrArray]) {
           const data = intent.data ? { ...result, ...intent.data } : result;
           result = await dispatch({ ...intent, data });
         }
@@ -54,8 +52,8 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       };
     },
     provides: {
-      context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
       intent: state,
+      context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
     },
   };
 };
