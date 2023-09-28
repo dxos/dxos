@@ -118,7 +118,7 @@ const getSpaceName = (space: DataSpace): string => {
     const propertiesItem = space.dataPipeline.itemManager.items.find(
       (item) =>
         item.modelMeta?.type === DocumentModel.meta.type &&
-        (item.state as DocumentModelState)?.type === TYPE_PROPERTIES,
+        (item.state as DocumentModelState)?.type?.itemId === TYPE_PROPERTIES,
     );
 
     const state = propertiesItem?.state as DocumentModelState;

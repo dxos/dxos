@@ -17,7 +17,7 @@ import { Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
-import { ComposerDocument, schema } from '../../src/testing';
+import { ComposerDocument, schema$ as schema } from '../../src/testing';
 import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
 
 export default {

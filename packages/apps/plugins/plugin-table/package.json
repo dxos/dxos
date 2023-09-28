@@ -22,6 +22,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "deepsignal": "^1.3.6",
     "lodash.get": "^4.4.2"
   },
