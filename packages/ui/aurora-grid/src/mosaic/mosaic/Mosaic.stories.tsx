@@ -109,7 +109,6 @@ rearrangeMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'it
 
 // const onMosaicChange = (event: MosaicChangeEvent) => console.log('[on mosaic change]', event);
 
-// @ts-ignore
 export const Rearrange = {
   args: {},
   render: (props: Pick<MosaicStoryArgs, 'onMosaicChange'>) => {
@@ -176,7 +175,6 @@ const copyData = copyIds.reduce((acc: Record<string, StorybookDataProps>, id) =>
   return acc;
 }, rearrangeData);
 
-// @ts-ignore
 export const Copy = {
   args: {},
   render: (rootProps: Pick<MosaicStoryArgs, 'onMosaicChange'>) => {
@@ -214,7 +212,6 @@ export const Copy = {
   },
 };
 
-// @ts-ignore
 export default {
   component: Mosaic.Provider,
   argTypes: { onMosaicChange: { action: 'mosaic changed' } },

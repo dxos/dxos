@@ -6,7 +6,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef } from 'react';
 
-import { useMosaic, useMosaicDnd } from '../mosaic';
+import { useMosaicDnd } from '../dnd';
+import { useMosaic } from '../mosaic';
 import { CardTile } from '../types';
 
 const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {

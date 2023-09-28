@@ -3,11 +3,13 @@
 //
 
 import { DragEndEvent, DragOverlay } from '@dnd-kit/core';
-import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
+import React, { PropsWithChildren, useCallback } from 'react';
 
 import { List, useId } from '@dxos/aurora';
 
 import {
+  MosaicContext,
+  MosaicRootContext,
   useDragEnd,
   useDragOver,
   useDragStart,
@@ -18,11 +20,11 @@ import {
   useHandleMigrateDragOver,
   useHandleMigrateDragStart,
   useHandleRearrangeDragEnd,
+  useMosaic,
 } from './hooks';
-import { MosaicDndProvider, dropAnimations, useDnd as useMosaicDnd } from '../dnd';
+import { MosaicDndProvider, dropAnimations, useMosaicDnd } from '../dnd';
 import { Tile, Stack, Card, TreeItem } from '../tile';
-import type { MosaicRootContextValue, MosaicContextValue } from '../types';
-import { MosaicRootProps } from '../types';
+import type { MosaicRootProps, MosaicContextValue } from '../types';
 
 const MosaicOverlayTile = ({ id }: { id: string }) => {
   const {
@@ -47,20 +49,6 @@ const MosaicOverlay = () => {
     </DragOverlay>
   );
 };
-
-const defaultMosaicContextValue: MosaicContextValue = {
-  getData: () => ({}),
-  mosaic: { tiles: {}, relations: {} },
-  onMosaicChange: () => {},
-  copyTile: () => ({
-    id: 'never',
-    index: 'a0',
-    variant: 'card',
-  }),
-  Delegator: () => null,
-};
-
-const MosaicContext = createContext<MosaicContextValue>(defaultMosaicContextValue);
 
 const MosaicProviderImpl = ({ children }: PropsWithChildren<{}>) => {
   // Drag start: do both.
@@ -100,15 +88,6 @@ const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicC
   );
 };
 
-const defaultMosaicRootContextValue: MosaicRootContextValue = {
-  id: 'never',
-};
-
-const MosaicRootContext = createContext<MosaicRootContextValue>(defaultMosaicRootContextValue);
-
-const useMosaic = () => useContext(MosaicContext);
-const useMosaicRoot = () => useContext(MosaicRootContext);
-
 const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) => {
   const id = useId('mosaic', value.id);
   return <MosaicRootContext.Provider value={{ ...value, id }}>{children}</MosaicRootContext.Provider>;
@@ -123,5 +102,3 @@ export const Mosaic = {
   Card,
   TreeItem,
 };
-
-export { useMosaic, useMosaicRoot, useMosaicDnd };

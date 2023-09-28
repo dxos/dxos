@@ -7,13 +7,13 @@ import { batch } from '@preact/signals-core';
 import { getIndexAbove } from '@tldraw/indices';
 import { useCallback } from 'react';
 
-import { useDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
+import { useMosaic } from './useMosaic';
+import { useMosaicDnd } from '../../dnd';
 import { CopyTileAction, MosaicState, Tile } from '../../types';
 import { getSubtiles, nextRearrangeIndex, managePreview } from '../../util';
 
 export const useHandleCopyDragStart = () => {
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const deps = [dnd];
   return useCallback(({ active }: DragStartEvent) => {
     dnd.activeCopyClass = active?.data?.current?.copyClass ?? null;
@@ -26,7 +26,7 @@ export const useHandleCopyDragEnd = () => {
     onMosaicChange,
     copyTile,
   } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
   return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
     let result = previousResult;
@@ -92,7 +92,7 @@ const findCopyDestination = (
 
 export const useHandleCopyDragOver = () => {
   const { mosaic, copyTile } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const deps = [mosaic, dnd];
   return useCallback(({ active, over }: DragOverEvent) => {
     if (over?.id.toString().startsWith('preview--')) {

@@ -20,18 +20,17 @@ import React, { createContext, PropsWithChildren, useCallback, useContext } from
 
 import { OverlayDropAnimation } from './drop-animations';
 
-// TODO(burdon): Rename EventHandler.
-export type Handler<TEvent> = (event: TEvent) => void;
+export type EventHandler<TEvent> = (event: TEvent) => void;
 
 export type DndContextValue = {
   activeCopyClass: Set<string> | null;
   activeId: string | null;
   activeMigrationClass: string | null;
   copyDestinationId: string | null;
-  dragOverSubscriptions: Handler<DragOverEvent>[];
-  dragStartSubscriptions: Handler<DragStartEvent>[];
-  dragEndSubscriptions: Handler<DragEndEvent>[];
-  dragCancelSubscriptions: Handler<DragCancelEvent>[];
+  dragOverSubscriptions: EventHandler<DragOverEvent>[];
+  dragStartSubscriptions: EventHandler<DragStartEvent>[];
+  dragEndSubscriptions: EventHandler<DragEndEvent>[];
+  dragCancelSubscriptions: EventHandler<DragCancelEvent>[];
   inhibitMigrationDestinationId: string | null;
   migrationDestinationId: string | null;
   overlayDropAnimation: OverlayDropAnimation;
@@ -53,7 +52,7 @@ const defaultContextValue: DndContextValue = {
 
 const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);
 
-const useDnd = () => useContext(MosaicDndContext);
+const useMosaicDnd = () => useContext(MosaicDndContext);
 
 /**
  * Framework context that wraps an outer `dnd-kit/core` `DndContext`.
@@ -127,4 +126,4 @@ const MosaicDndProvider = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export { MosaicDndProvider, MosaicDndContext, useDnd };
+export { MosaicDndProvider, MosaicDndContext, useMosaicDnd };

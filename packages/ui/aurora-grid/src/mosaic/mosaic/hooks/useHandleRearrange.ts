@@ -5,8 +5,8 @@
 import { DragEndEvent } from '@dnd-kit/core';
 import { useCallback } from 'react';
 
-import { useDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
+import { useMosaic } from './useMosaic';
+import { useMosaicDnd } from '../../dnd';
 import { getSubtiles, nextRearrangeIndex } from '../../util';
 
 export const useHandleRearrangeDragEnd = () => {
@@ -14,7 +14,7 @@ export const useHandleRearrangeDragEnd = () => {
     mosaic: { tiles, relations },
     onMosaicChange,
   } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   return useCallback(
     ({ active, over }: DragEndEvent) => {
       if (active && over) {

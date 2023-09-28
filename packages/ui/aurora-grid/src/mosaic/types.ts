@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
-import { Handler } from './dnd';
+import { EventHandler } from './dnd';
 
 export type TileVariant = 'stack' | 'card' | 'treeitem';
 
@@ -76,7 +76,7 @@ export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; 
 export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
 export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
 
-export type MosaicChangeHandler = Handler<MosaicChangeEvent>;
+export type MosaicChangeHandler = EventHandler<MosaicChangeEvent>;
 
 export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => Tile;
 

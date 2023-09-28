@@ -9,7 +9,7 @@ import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef, Ref } from 'react';
 
 import { Tile } from './';
-import { useDnd } from '../dnd';
+import { useMosaicDnd } from '../dnd';
 import { useMosaic } from '../mosaic';
 import { DelegatorProps, StackTile } from '../types';
 
@@ -19,7 +19,7 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
     getData,
     Delegator,
   } = useMosaic();
-  const { migrationDestinationId, copyDestinationId } = useDnd();
+  const { migrationDestinationId, copyDestinationId } = useMosaicDnd();
   const subtileIds = relations[props.tile.id]?.child ?? new Set();
   const subtiles = Array.from(subtileIds)
     .map((id) => tiles[id])

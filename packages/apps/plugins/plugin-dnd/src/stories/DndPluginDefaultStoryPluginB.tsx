@@ -5,7 +5,7 @@
 import { deepSignal } from 'deepsignal/react';
 import React, { useContext, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDroppable } from '@dxos/aurora-grid';
+import { useMosaicDnd, useDragEnd, useDragOver, useDroppable } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -27,7 +27,7 @@ const DescribedStoryItem = ({ item, preview }: { item?: StoryItem; preview?: boo
 const DndPluginDefaultStoryPluginBDefault = () => {
   const { setNodeRef } = useDroppable({ id: droppableId });
   const { items: allItems } = useContext(DndPluginStoryPluginContext);
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const [preview, setPreview] = useState<StoryItem | null>(null);
   const [iter, setIter] = useState([]);
   useDragEnd(

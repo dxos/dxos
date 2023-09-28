@@ -11,7 +11,8 @@ import React, { forwardRef } from 'react';
 
 import { Tree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
 
-import { useMosaic, useMosaicDnd } from '../mosaic';
+import { useMosaicDnd } from '../dnd';
+import { useMosaic } from '../mosaic';
 import { TreeItemTile } from '../types';
 
 const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]>; level: number }) => {

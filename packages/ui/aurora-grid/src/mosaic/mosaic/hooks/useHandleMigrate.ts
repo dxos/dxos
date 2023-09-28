@@ -5,14 +5,14 @@
 import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { useCallback } from 'react';
 
-import { useDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
+import { useMosaic } from './useMosaic';
+import { useMosaicDnd } from '../../dnd';
 import { MosaicState, Tile } from '../../types';
 import { getSubtiles, nextRearrangeIndex } from '../../util';
 
 export const useHandleMigrateDragStart = () => {
   const { mosaic } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   return useCallback(
     ({ active }: DragStartEvent) => {
       const migrationClass = active?.data?.current?.migrationClass ?? null;
@@ -30,7 +30,7 @@ export const useHandleMigrateDragEnd = () => {
     mosaic: { tiles, relations },
     onMosaicChange,
   } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const deps = [tiles, relations, onMosaicChange, dnd];
   return useCallback(({ active, over }: DragEndEvent, previousResult: string | null = null) => {
     let result = previousResult;
@@ -91,7 +91,7 @@ const findMigrationDestination = (
 
 export const useHandleMigrateDragOver = () => {
   const { mosaic } = useMosaic();
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   return useCallback(
     ({ over }: DragOverEvent) => {
       if (dnd.activeMigrationClass && over?.data?.current) {
