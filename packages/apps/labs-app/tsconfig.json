@@ -127,9 +127,6 @@
       "path": "../plugins/plugin-treeview"
     },
     {
-      "path": "../plugins/plugin-url-sync"
-    },
-    {
       "path": "../types"
     }
   ]

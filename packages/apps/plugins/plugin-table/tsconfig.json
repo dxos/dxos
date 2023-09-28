@@ -69,10 +69,10 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-theme"
+      "path": "../plugin-splitview"
     },
     {
-      "path": "../plugin-treeview"
+      "path": "../plugin-theme"
     }
   ]
 }

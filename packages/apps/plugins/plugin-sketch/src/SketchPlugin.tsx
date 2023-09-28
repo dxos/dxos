@@ -7,7 +7,7 @@ import React from 'react';
 
 import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
@@ -62,7 +62,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
             properties: {

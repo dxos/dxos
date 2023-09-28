@@ -48,9 +48,6 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-dnd"
     },
     {
@@ -58,9 +55,6 @@
     },
     {
       "path": "../plugin-intent"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

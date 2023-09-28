@@ -5,29 +5,32 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
-import type { ClientPluginProvides } from '@braneframe/plugin-client';
-import { useSplitView } from '@braneframe/plugin-splitview';
+import { Graph } from '@braneframe/plugin-graph';
+import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { Mosaic } from '@dxos/aurora-grid';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { useConfig } from '@dxos/react-client';
+import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { usePlugin } from '@dxos/react-surface';
 
 import { HaloButton } from './HaloButton';
 import { NavTreeRoot } from './NavTree';
 import { VersionInfo } from './VersionInfo';
+import { TreeViewContext } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
 
-export const TreeViewContainer = () => {
+export const TreeViewContainer = ({
+  data: { graph, activeId, popoverAnchorId },
+}: {
+  data: { graph: Graph; activeId?: string; popoverAnchorId?: string };
+}) => {
+  const client = useClient();
   const config = useConfig();
-  const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
-
   const identity = useIdentity();
 
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
-  const splitView = useSplitView();
+  const { dispatch } = useIntent();
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -42,7 +45,7 @@ export const TreeViewContainer = () => {
                 <HaloButton
                   size={6}
                   identityKey={identity?.identityKey.toHex()}
-                  onClick={() => clientPlugin?.provides.client.shell.shareIdentity()}
+                  onClick={() => client.shell.shareIdentity()}
                 />
                 <div className='grow'></div>
                 <Tooltip.Root>
@@ -52,8 +55,10 @@ export const TreeViewContainer = () => {
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
-                        splitView.dialogOpen = true;
-                        splitView.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
+                        dispatch({
+                          action: 'dxos.org/plugin/splitview/action/open-dialog',
+                          data: { content: 'dxos.org/plugin/splitview/ProfileSettings' },
+                        });
                       }}
                     >
                       <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
@@ -74,7 +79,10 @@ export const TreeViewContainer = () => {
                       classNames='lg:hidden pli-2 pointer-fine:pli-1'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
-                        splitView.sidebarOpen = false;
+                        dispatch({
+                          action: 'dxos.org/plugin/splitview/action/toggle-sidebar',
+                          data: { state: false },
+                        });
                       }}
                     >
                       <span className='sr-only'>{t('close sidebar label', { ns: 'os' })}</span>
@@ -93,9 +101,13 @@ export const TreeViewContainer = () => {
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>
-            <Mosaic.Root id={TREE_VIEW_PLUGIN}>
-              <NavTreeRoot />
-            </Mosaic.Root>
+            {/* TODO(wittjosiah): Ideally could pass these into items somehow. */}
+            {/*  The context approach doesn't work great because the context isn't available when dragging. */}
+            <TreeViewContext.Provider value={{ activeId, popoverAnchorId }}>
+              <Mosaic.Root id={TREE_VIEW_PLUGIN}>
+                <NavTreeRoot />
+              </Mosaic.Root>
+            </TreeViewContext.Provider>
           </div>
           <VersionInfo config={config} />
         </div>

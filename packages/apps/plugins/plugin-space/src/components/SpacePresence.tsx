@@ -6,7 +6,7 @@ import { Users } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useSpace } from '@dxos/react-client/echo';
@@ -18,7 +18,7 @@ import { SPACE_PLUGIN, SpaceAction, SpacePluginProvides, ObjectViewer } from '..
 export const SpacePresence = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
-  const treeviewPlugin = usePlugin<TreeViewPluginProvides>('dxos.org/plugin/treeview');
+  const splitViewPlugin = usePlugin<SplitViewPluginProvides>('dxos.org/plugin/splitview');
   const space = spacePlugin?.provides.space.active;
   const defaultSpace = useSpace();
   const identity = useIdentity();
@@ -46,7 +46,7 @@ export const SpacePresence = () => {
   const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
     return (
       space.key.equals(viewer.spaceKey) &&
-      treeviewPlugin?.provides.treeView.active === viewer.objectId &&
+      splitViewPlugin?.provides.splitView.active === viewer.objectId &&
       Date.now() - viewer.lastSeen < 30_000
     );
   });

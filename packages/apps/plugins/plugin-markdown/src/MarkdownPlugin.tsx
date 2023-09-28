@@ -12,7 +12,7 @@ import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { Node } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -176,7 +176,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({
-            action: TreeViewAction.ACTIVATE,
+            action: SplitViewAction.ACTIVATE,
             data: { id: document.id },
           });
         }
@@ -224,7 +224,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 data: { spaceKey: space.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
           });

@@ -6,9 +6,9 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Table as TableType } from '@braneframe/types';
 import { SpaceProxy, Expando, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { Table as TableType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';
@@ -57,7 +57,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
             properties: {
