@@ -13,7 +13,15 @@ import { GraphContext, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import { DelegatorProps, getDndId, Mosaic, MosaicRootProps, MosaicState, parseDndId } from '@dxos/aurora-grid';
+import {
+  DelegatorProps,
+  getDndId,
+  Mosaic,
+  MosaicRootProps,
+  MosaicState,
+  parseDndId,
+  TreeItemTileProps,
+} from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
@@ -45,12 +53,15 @@ const content = [...Array(4)].map(() => ({
   })),
 }));
 
+// TODO(burdon): Move file global variables into object.
+
 const graph = new GraphBuilder().build();
 buildGraph(graph, content);
 
 const defaultIndices = getIndices(99);
 let defaultIndicesCursor = 0;
 
+// TODO(burdon): Name?
 const mosaicAcc: MosaicState = {
   tiles: {},
   relations: {},
@@ -71,7 +82,7 @@ graph.traverse({
       level,
       acceptMigrationClass: new Set([`level-${level + 1}`]),
       migrationClass: `level-${level}`,
-    };
+    } as TreeItemTileProps;
     mosaicAcc.relations[id] = { child: new Set(), parent: new Set() };
     defaultIndicesCursor += 1;
   },
@@ -120,12 +131,12 @@ export const Default = {
     <Mosaic.Provider
       {...args}
       mosaic={mosaicState}
-      Delegator={StorybookNavTreeItemDelegator}
       getData={(dndId) => {
         const [_, entityId] = parseDndId(dndId);
         return graph.findNode(entityId);
       }}
       copyTile={(id, _toId, mosaic) => ({ ...mosaic.tiles[id] })}
+      Delegator={StorybookNavTreeItemDelegator}
     >
       <Mosaic.Root id={navTreeId}>
         <NavTreeRoot />

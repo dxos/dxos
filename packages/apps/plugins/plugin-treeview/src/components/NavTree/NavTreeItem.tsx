@@ -29,7 +29,7 @@ import {
   useSidebars,
   useTranslation,
 } from '@dxos/aurora';
-import { DelegatorProps } from '@dxos/aurora-grid';
+import { DelegatorProps, TreeItemTileProps } from '@dxos/aurora-grid';
 import {
   dropRing,
   focusRing,
@@ -79,7 +79,7 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
         return (
           <NavTreeItem
             node={data}
-            level={tile.level}
+            level={(tile as TreeItemTileProps).level} // TODO(burdon): Avoid cast.
             draggableAttributes={dragHandleAttributes}
             draggableListeners={dragHandleListeners}
             style={style}

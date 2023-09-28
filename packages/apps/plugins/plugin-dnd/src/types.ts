@@ -6,13 +6,13 @@ import { DeepSignal } from 'deepsignal';
 
 import { Node } from '@braneframe/plugin-graph';
 import { ListItemRootProps } from '@dxos/aurora';
-import { useSortable, DraggableAttributes, MosaicChangeHandler, MosaicState, Tile } from '@dxos/aurora-grid';
+import { useSortable, DraggableAttributes, MosaicChangeHandler, MosaicState, TileProps } from '@dxos/aurora-grid';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
-export type SetTileHandler = (tile: Tile, node: Node) => Tile;
+export type SetTileHandler = (tile: TileProps, node: Node) => TileProps;
 
-export type CopyTileHandler = (tile: Tile, id: string, toId: string, mosaic: MosaicState) => Tile;
+export type CopyTileHandler = (tile: TileProps, id: string, toId: string, mosaic: MosaicState) => TileProps;
 
 export type DndStore = DeepSignal<{
   mosaic: MosaicState;

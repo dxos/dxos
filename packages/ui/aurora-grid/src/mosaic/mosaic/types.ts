@@ -9,9 +9,9 @@ import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from '
 import { EventHandler } from '../dnd';
 import { TileProps } from '../mosaic';
 
-export type DelegatorProps<TData = any> = PropsWithChildren<{
+export type DelegatorProps<TData = any, TTile extends TileProps = TileProps> = PropsWithChildren<{
   data: TData;
-  tile: TileProps;
+  tile: TTile;
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
   style?: ComponentPropsWithoutRef<'div'>['style'];
