@@ -6,8 +6,9 @@ import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+// import { ShowDeletedOption } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { TypedObject, useQuery } from '@dxos/react-client/echo';
+import { ShowDeletedOption, TypedObject, useQuery } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { SpaceSelector } from '../../../containers';
@@ -40,8 +41,7 @@ const columns: TableColumnDef<TypedObject, any>[] = [
 export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
-  // TODO(burdon): Filter deleted.
-  const items = useQuery(space);
+  const items = useQuery(space, {}, { deleted: ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
 
   return (
