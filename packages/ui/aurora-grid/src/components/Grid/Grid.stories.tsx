@@ -74,7 +74,7 @@ const positions = [
 
 const cards: GridCard[] = data.map(({ id, title, body, media }) => ({
   id,
-  position: positions.find((position) => position.id === id).position,
+  position: positions.find((position) => position.id === id)?.position,
   card: <TestCard title={title} body={body} media={media} />,
 }));
 

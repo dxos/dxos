@@ -25,7 +25,7 @@ type MosaicStoryArgs = {
   onMosaicChange: MosaicChangeHandler;
 };
 
-type StorybookDataProps = { label: string; description: string };
+type TestDataProps = { label: string; description: string };
 
 //
 // REARRANGE
@@ -59,7 +59,7 @@ const rearrangeMosaicState = {
   },
 };
 const rearrangeMosaic = deepSignal<MosaicState>(rearrangeMosaicState);
-const rearrangeData = rearrangeIds.reduce((acc: Record<string, StorybookDataProps>, id) => {
+const rearrangeData = rearrangeIds.reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
@@ -131,7 +131,7 @@ const copyMosaic = deepSignal<MosaicState>({
   tiles: { ...copyMosaicState.tiles, ...rearrangeMosaicState.tiles },
   relations: { ...copyMosaicState.relations, ...rearrangeMosaicState.relations },
 });
-const copyData = copyIds.reduce((acc: Record<string, StorybookDataProps>, id) => {
+const copyData = copyIds.reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
@@ -237,7 +237,7 @@ const migrateMosaicState = [...Array(1)].reduce(
   { tiles: {}, relations: {} },
 );
 const migrateMosaic = deepSignal(migrateMosaicState);
-const migrateData = Object.keys(migrateMosaicState.tiles).reduce((acc: Record<string, StorybookDataProps>, id) => {
+const migrateData = Object.keys(migrateMosaicState.tiles).reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
@@ -278,7 +278,7 @@ export const Migrate = {
 // Main
 //
 
-const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
+const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<TestDataProps>>(
   (
     { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
     forwardedRef,
