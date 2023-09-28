@@ -36,6 +36,7 @@ const columns: TableColumnDef<TypedObject, any>[] = [
   helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
   helper.accessor((item) => item.toJSON()['@model'], { id: 'model' }),
   helper.accessor((item) => item.__typename, { id: 'type' }),
+  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), { id: 'deleted' }),
 ];
 
 export const ObjectsPanel = () => {
