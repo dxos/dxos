@@ -148,9 +148,9 @@ describe('Database', () => {
       '@id': obj.id,
       '@type': undefined,
       '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       title: 'Test title',
       description: 'Test description',
-      meta: { keys: [] },
     });
   });
 
@@ -240,12 +240,12 @@ describe('Database', () => {
       '@id': task.id,
       '@type': undefined,
       '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
         '@id': task.assignee.id,
       },
-      meta: { keys: [] },
     });
   });
 
@@ -253,19 +253,19 @@ describe('Database', () => {
     const { db } = await createDatabase();
 
     const obj = new TypedObject();
-    expect(Array.from(obj.meta.keys)).toEqual([]);
-    obj.meta.keys = [{ id: 'test-key', source: 'test' }];
-    expect(Array.from(obj.meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+    expect(Array.from(obj.__meta.keys)).toEqual([]);
+    obj.__meta.keys = [{ id: 'test-key', source: 'test' }];
+    expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
 
     db.add(obj);
     await db.flush();
 
-    expect(Array.from(obj.meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
+    expect(Array.from(obj.__meta.keys)).toEqual([{ id: 'test-key', source: 'test' }]);
     expect(obj[data]).toEqual({
       '@id': obj.id,
       '@type': undefined,
       '@model': 'dxos.org/model/document',
-      meta: {
+      '@meta': {
         keys: [{ id: 'test-key', source: 'test' }],
       },
     });

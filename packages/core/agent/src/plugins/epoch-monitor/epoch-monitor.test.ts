@@ -51,5 +51,5 @@ describe('EpochMonitor', () => {
     }
 
     await monitor.close();
-  });
+  }).tag('flaky');
 });

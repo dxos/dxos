@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
-import { EchoArray } from '@dxos/echo-schema';
-import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { EchoArray } from '..';
+import { createDatabase } from '../testing';
 
 // TODO(burdon): Test with/without saving to database.
 
@@ -34,7 +34,7 @@ describe('ordered-set', () => {
     root.subTasks = [new Task(), new Task(), new Task()];
     expect(root.subTasks.length).to.eq(3);
 
-    const {db} = await createDatabase();
+    const { db } = await createDatabase();
     db.add(root);
     await db.flush();
   });
@@ -45,7 +45,7 @@ describe('ordered-set', () => {
     root.subTasks.splice(0, 2, new Task());
     expect(root.subTasks).to.have.length(2);
 
-    const {db} = await createDatabase();
+    const { db } = await createDatabase();
     db.add(root);
     await db.flush();
   });
@@ -54,7 +54,7 @@ describe('ordered-set', () => {
     const root = new Container();
     const plain: Container.Record = { title: 'test', contacts: [new Contact({ name: 'Mykola' })] };
     root.records.push(plain);
-    const {db} = await createDatabase();
+    const { db } = await createDatabase();
     db.add(root);
     await db.flush();
 
@@ -65,7 +65,7 @@ describe('ordered-set', () => {
   });
 
   test('reset array', async () => {
-    const {db} = await createDatabase();
+    const { db } = await createDatabase();
     const root = db.add(new Container());
     await db.flush();
     root.records.push({ title: 'one' });
