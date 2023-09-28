@@ -58,11 +58,12 @@ export const managePreview = ({
         batch(() => {
           mosaic.relations[prevDestinationId!].child.delete(prevPreviewId);
           mosaic.relations[nextDestinationId].child.add(nextPreviewId);
-          mosaic.tiles[nextPreviewId] = {
+          const nextTile = {
             ...mosaic.tiles[prevPreviewId],
             id: nextPreviewId,
           };
           delete mosaic.tiles[prevPreviewId];
+          mosaic.tiles[nextPreviewId] = nextTile;
           dnd[operation === 'copy' ? 'copyDestinationId' : 'migrationDestinationId'] = nextDestinationId;
         });
       }
@@ -70,7 +71,7 @@ export const managePreview = ({
       // Create the preview.
       const previewId = getPreviewId(active.id, nextDestinationId);
       const previewTile = {
-        ...copyTile(active.id.toString(), nextDestinationId, mosaic),
+        ...copyTile(active.id.toString(), nextDestinationId, mosaic, operation),
         id: previewId,
         index: '',
         isPreview: true,
@@ -92,6 +93,7 @@ export const managePreview = ({
       batch(() => {
         const previewId = getPreviewId(active.id, prevDestinationId!);
         mosaic.relations[prevDestinationId!].child.delete(previewId);
+        delete mosaic.relations[previewId];
         delete mosaic.tiles[previewId];
         dnd[operation === 'copy' ? 'copyDestinationId' : 'migrationDestinationId'] = null;
       });

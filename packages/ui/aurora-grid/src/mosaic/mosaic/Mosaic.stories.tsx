@@ -41,46 +41,7 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
   };
   return acc;
 }, {});
-
 const rearrangeIds = Object.keys(rearrangeTiles);
-
-const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
-  (
-    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
-    forwardedRef,
-  ) => {
-    const { label, description } = data;
-    return tile.variant === 'card' ? (
-      <div
-        role='group'
-        className={mx(
-          groupSurface,
-          surfaceElevation({ elevation: 'group' }),
-          'rounded relative',
-          isPreview ? 'opacity-50' : isActive && 'opacity-0',
-        )}
-        style={style}
-        ref={forwardedRef}
-      >
-        <Button
-          variant='ghost'
-          classNames='is-full justify-start pli-2 gap-1'
-          {...dragHandleAttributes}
-          {...dragHandleListeners}
-        >
-          <DotsSixVertical className={getSize(4)} />
-          <h2 className='text-lg font-system-medium'>{label}</h2>
-        </Button>
-        <p className='pis-7 pie-4 pbe-2'>{description}</p>
-      </div>
-    ) : (
-      <div role='group' className={mx('p-2 m-2 space-b-2 rounded-xl', isCopyDestination && dropRing)}>
-        {children}
-      </div>
-    );
-  },
-);
-
 const rearrangeRootId = rearrangeIds[0];
 const rearrangeSectionIds = Object.keys(rearrangeTiles).filter((id) => id !== rearrangeRootId);
 const rearrangeMosaicState = {
@@ -105,7 +66,7 @@ const rearrangeData = rearrangeIds.reduce((acc: Record<string, StorybookDataProp
   return acc;
 }, {});
 
-rearrangeMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
+// rearrangeMosaic.$tiles?.subscribe((items) => console.log('[mosaic.stories]', 'items update', Object.keys(items)));
 
 // const onMosaicChange = (event: MosaicChangeEvent) => console.log('[on mosaic change]', event);
 
@@ -115,7 +76,7 @@ export const Rearrange = {
     return (
       <Mosaic.Provider
         {...props}
-        Delegator={RearrangeDelegator as FC<DelegatorProps>}
+        Delegator={StorybookDelegator as FC<DelegatorProps>}
         getData={(dndId) => {
           const [_, entityId] = parseDndId(dndId);
           return rearrangeData[entityId];
@@ -180,7 +141,7 @@ export const Copy = {
   render: (rootProps: Pick<MosaicStoryArgs, 'onMosaicChange'>) => {
     return (
       <Mosaic.Provider
-        Delegator={RearrangeDelegator as FC<DelegatorProps>}
+        Delegator={StorybookDelegator as FC<DelegatorProps>}
         copyTile={(id, toId, mosaic) => {
           const [_, cardId] = parseDndId(id);
           const [stackId] = parseDndId(toId);
@@ -212,6 +173,151 @@ export const Copy = {
   },
 };
 
+// MIGRATE
+
+const migrateMosaicId = 'Migrate';
+const migrateMosaicRootId = getDndId(migrateMosaicId, faker.string.uuid());
+const migrateMosaicState = [...Array(1)].reduce(
+  (acc: MosaicState, _, i) => {
+    const iid = migrateMosaicRootId;
+    const index = `a${i}`;
+    acc.tiles[iid] = { id: iid, variant: 'kanban', index, sortable: true };
+
+    const stacksMosaic = [...Array(4)].reduce(
+      (acc: MosaicState & { stackIds: string[] }, _, j) => {
+        const jid = getDndId(migrateMosaicId, faker.string.uuid());
+        const index = `a${j}`;
+        acc.tiles[jid] = {
+          id: jid,
+          variant: 'stack',
+          index,
+          sortable: true,
+          acceptMigrationClass: new Set(['kanban-card']),
+        };
+
+        const cardsMosaic = [...Array(4)].reduce(
+          (acc: MosaicState, _, k) => {
+            const kid = getDndId(migrateMosaicId, faker.string.uuid());
+            const index = `a${k}`;
+            acc.tiles[kid] = { id: kid, variant: 'card', index, migrationClass: 'kanban-card' };
+            acc.relations[kid] = { parent: new Set([jid]), child: new Set() };
+            return acc;
+          },
+          { tiles: {}, relations: {} },
+        );
+
+        return {
+          tiles: { ...acc.tiles, ...cardsMosaic.tiles },
+          relations: {
+            [jid]: { parent: new Set([iid]), child: new Set(Object.keys(cardsMosaic.tiles)) },
+            ...acc.relations,
+            ...cardsMosaic.relations,
+          },
+          stackIds: [...acc.stackIds, jid],
+        };
+      },
+      { tiles: {}, relations: {}, stackIds: [] },
+    );
+
+    return {
+      tiles: { ...acc.tiles, ...stacksMosaic.tiles },
+      relations: {
+        [iid]: { child: new Set(stacksMosaic.stackIds), parent: new Set() },
+        ...acc.relations,
+        ...stacksMosaic.relations,
+      },
+    };
+  },
+  { tiles: {}, relations: {} },
+);
+const migrateMosaic = deepSignal(migrateMosaicState);
+const migrateData = Object.keys(migrateMosaicState.tiles).reduce((acc: Record<string, StorybookDataProps>, id) => {
+  const [_, entityId] = parseDndId(id);
+  acc[entityId] = {
+    label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+    description: fake('{{commerce.productDescription}}'),
+  };
+  return acc;
+}, {});
+
+export const Migrate = {
+  args: {},
+  render: (rootProps: Pick<MosaicStoryArgs, 'onMosaicChange'>) => {
+    return (
+      <Mosaic.Provider
+        Delegator={StorybookDelegator as FC<DelegatorProps>}
+        copyTile={(id, toId, mosaic) => {
+          const [_, cardId] = parseDndId(id);
+          const [stackId] = parseDndId(toId);
+          const nextId = getDndId(stackId, cardId);
+          return { ...mosaic.tiles[id], id: nextId, copyClass: new Set([stackId]) };
+        }}
+        getData={(dndId) => {
+          const [_, entityId] = parseDndId(dndId);
+          return migrateData[entityId];
+        }}
+        mosaic={migrateMosaic}
+        {...rootProps}
+      >
+        <Mosaic.Root id={migrateMosaicId}>
+          <Mosaic.Tile {...migrateMosaic.tiles[migrateMosaicRootId]} />
+        </Mosaic.Root>
+        <Mosaic.Overlay />
+      </Mosaic.Provider>
+    );
+  },
+};
+
+const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
+  (
+    { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
+    forwardedRef,
+  ) => {
+    const { label, description } = data;
+    switch (tile.variant) {
+      case 'card':
+        return (
+          <div
+            role='group'
+            className={mx(
+              groupSurface,
+              surfaceElevation({ elevation: 'group' }),
+              'rounded relative',
+              isPreview ? 'opacity-50' : isActive && 'opacity-0',
+            )}
+            style={style}
+            ref={forwardedRef}
+          >
+            <Button
+              variant='ghost'
+              classNames='is-full justify-start pli-2 gap-1'
+              {...dragHandleAttributes}
+              {...dragHandleListeners}
+            >
+              <DotsSixVertical className={getSize(4)} />
+              <h2 className='text-lg font-system-medium'>{label}</h2>
+            </Button>
+            <p className='pis-7 pie-4 pbe-2'>{description}</p>
+          </div>
+        );
+      case 'kanban':
+        return (
+          <div role='group' className='fixed inset-0 flex' ref={forwardedRef}>
+            {children}
+          </div>
+        );
+      case 'stack':
+      default:
+        return (
+          <div role='none' className='min-is-0 flex-1 overflow-y-auto'>
+            <div role='group' className={mx('p-2 m-2 space-b-2 rounded-xl', isCopyDestination && dropRing)}>
+              {children}
+            </div>
+          </div>
+        );
+    }
+  },
+);
 export default {
   component: Mosaic.Provider,
   argTypes: { onMosaicChange: { action: 'mosaic changed' } },

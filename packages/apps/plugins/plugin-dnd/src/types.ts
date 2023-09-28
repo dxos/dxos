@@ -12,7 +12,13 @@ export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
 export type SetTileHandler = (tile: TileProps, node: Node) => TileProps;
 
-export type CopyTileHandler = (tile: TileProps, id: string, toId: string, mosaic: MosaicState) => TileProps;
+export type CopyTileHandler = (
+  tile: TileProps,
+  id: string,
+  toId: string,
+  mosaic: MosaicState,
+  operation: 'copy' | 'migrate',
+) => TileProps;
 
 export type DndStore = DeepSignal<{
   mosaic: MosaicState;

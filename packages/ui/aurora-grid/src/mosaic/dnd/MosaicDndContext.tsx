@@ -3,6 +3,8 @@
 //
 
 import {
+  closestCorners,
+  CollisionDetection,
   DndContext,
   DragCancelEvent,
   DragEndEvent,
@@ -10,6 +12,7 @@ import {
   DragStartEvent,
   KeyboardSensor,
   MouseSensor,
+  pointerWithin,
   TouchSensor,
   useSensor,
   useSensors,
@@ -53,6 +56,14 @@ const defaultContextValue: DndContextValue = {
 const MosaicDndContext = createContext<DndContextValue>(defaultContextValue);
 
 const useMosaicDnd = () => useContext(MosaicDndContext);
+
+const dndCollisionComposition: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  return closestCorners(args);
+};
 
 /**
  * Framework context that wraps an outer `dnd-kit/core` `DndContext`.
@@ -115,6 +126,7 @@ const MosaicDndProvider = ({ children }: PropsWithChildren<{}>) => {
     <MosaicDndContext.Provider value={contextValue}>
       <DndContext
         sensors={sensors}
+        collisionDetection={dndCollisionComposition}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}

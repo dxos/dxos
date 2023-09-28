@@ -4,7 +4,16 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, CardTileProps, Stack, StackTileProps, TreeItem, TreeItemTileProps } from './variants';
+import {
+  Card,
+  CardTileProps,
+  Kanban,
+  KanbanTileProps,
+  Stack,
+  StackTileProps,
+  TreeItem,
+  TreeItemTileProps,
+} from './variants';
 import { TileProps } from '../mosaic';
 
 /**
@@ -20,6 +29,8 @@ export const Tile = forwardRef<HTMLDivElement, TileProps>((props, forwardedRef) 
       return <Card {...(props as CardTileProps)} ref={forwardedRef} />;
     case 'stack':
       return <Stack {...(props as StackTileProps)} ref={forwardedRef} />;
+    case 'kanban':
+      return <Kanban {...(props as KanbanTileProps)} ref={forwardedRef} />;
     default:
       return null;
   }

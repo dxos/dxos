@@ -51,4 +51,6 @@ export type MosaicState = {
   relations: Record<string, Record<string, Set<string>>>;
 };
 
-export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => TileProps;
+export type Operation = 'copy' | 'migrate';
+
+export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState, operation: Operation) => TileProps;
