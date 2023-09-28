@@ -132,6 +132,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
 // TODO(wittjosiah): Type nodes.
 export const buildGraph = (graph: Graph, nodes: any[]) => {
   addNodes(graph.root, nodes);
+  return graph;
 };
 
 const addNodes = (root: Node, nodes: any[]) => {

@@ -69,6 +69,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
       },
       { [rootTile.id]: rootTile },
     );
+
     const relations = Object.keys(tiles).reduce((acc: MosaicState['relations'], id) => {
       acc[id] = { child: new Set(), parent: new Set() };
       if (id === rootTile.id) {
@@ -82,6 +83,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
       }
       return acc;
     }, {});
+
     mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
     mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
   }, [stack, stack.sections]);

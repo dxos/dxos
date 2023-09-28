@@ -10,6 +10,7 @@ import { List, useId } from '@dxos/aurora';
 import {
   MosaicContext,
   MosaicRootContext,
+  MosaicRootContextValue,
   useDragEnd,
   useDragOver,
   useDragStart,
@@ -22,7 +23,7 @@ import {
   useHandleRearrangeDragEnd,
   useMosaic,
 } from './hooks';
-import type { MosaicRootProps, MosaicContextValue } from './types';
+import type { MosaicContextValue } from './hooks';
 import { MosaicDndProvider, dropAnimations, useMosaicDnd } from '../dnd';
 import { Tile } from '../tile';
 
@@ -88,7 +89,7 @@ const MosaicProvider = ({ children, ...contextValue }: PropsWithChildren<MosaicC
   );
 };
 
-const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootProps>) => {
+const MosaicRoot = ({ children, ...value }: PropsWithChildren<MosaicRootContextValue>) => {
   const id = useId('mosaic', value.id);
   return <MosaicRootContext.Provider value={{ ...value, id }}>{children}</MosaicRootContext.Provider>;
 };

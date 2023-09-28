@@ -3,15 +3,18 @@
 //
 
 import { useSortable } from '@dnd-kit/sortable';
-import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
 import { EventHandler } from '../dnd';
 import { TileProps } from '../mosaic';
 
-export type DelegatorProps<TData = any, TTile extends TileProps = TileProps> = PropsWithChildren<{
+//
+// Delegator
+//
+
+export type DelegatorProps<TData = any> = PropsWithChildren<{
   data: TData;
-  tile: TTile;
+  tile: TileProps;
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
   style?: ComponentPropsWithoutRef<'div'>['style'];
@@ -25,30 +28,27 @@ export type DelegatorProps<TData = any, TTile extends TileProps = TileProps> = P
 
 export type Delegator = FC<DelegatorProps & RefAttributes<HTMLElement>>;
 
+//
+// Events
+//
+
 export type MosaicRearrangeEvent = { type: 'rearrange'; id: string; index: string };
 export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; toId: string; index?: string };
 export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
 export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
 
+export type MosaicChangeHandler = EventHandler<MosaicChangeEvent>;
+
+//
+// Global state
+//
+
 export type MosaicState = {
+  // Map of all draggable tiles.
   tiles: Record<string, TileProps>;
+
+  // Relationships between tiles (i.e., hierarchy).
   relations: Record<string, Record<string, Set<string>>>;
 };
 
-export type MosaicChangeHandler = EventHandler<MosaicChangeEvent>;
-
 export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => TileProps;
-
-export type MosaicContextValue = {
-  getData: (dndId: string) => any;
-  mosaic: DeepSignal<MosaicState>;
-  onMosaicChange?: MosaicChangeHandler;
-  copyTile: CopyTileAction;
-  Delegator: Delegator;
-};
-
-export type MosaicRootContextValue = {
-  id: string;
-};
-
-export type MosaicRootProps = Omit<MosaicRootContextValue, 'id'> & Partial<Pick<MosaicRootContextValue, 'id'>>;

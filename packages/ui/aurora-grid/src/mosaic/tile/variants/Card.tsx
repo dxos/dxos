@@ -16,6 +16,9 @@ export type CardTileProps = TileProps & {
   sortable?: false;
 };
 
+/**
+ * Basic tile that contains a component.
+ */
 const Card = forwardRef<HTMLDivElement, CardTileProps>((tile, forwardedRef) => {
   const { getData, Delegator } = useMosaic();
   const { activeId } = useMosaicDnd();

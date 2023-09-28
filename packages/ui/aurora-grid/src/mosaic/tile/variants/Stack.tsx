@@ -19,6 +19,9 @@ export type StackTileProps = TileProps & {
   sortable: true;
 };
 
+/**
+ * Sortable container.
+ */
 const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((props, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
@@ -51,11 +54,15 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
   );
 });
 
+/**
+ * Stack that can be contained within a sortable container.
+ */
 const StackSortableImpl = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: tile.id,
     data: tile,
   });
+
   const ref = useComposedRefs(setNodeRef, forwardedRef);
   return (
     <StackImpl
@@ -71,15 +78,22 @@ const StackSortableImpl = forwardRef<HTMLDivElement, StackTileProps>((tile, forw
   );
 });
 
+/**
+ * Stack that can receive dropped components.
+ */
 const StackDroppableImpl = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const { setNodeRef } = useDroppable({
     id: tile.id,
     data: tile,
   });
+
   const ref = useComposedRefs(setNodeRef, forwardedRef);
   return <StackImpl tile={tile} ref={ref as Ref<HTMLDivElement>} />;
 });
 
+/**
+ * Stack variants.
+ */
 const Stack = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },

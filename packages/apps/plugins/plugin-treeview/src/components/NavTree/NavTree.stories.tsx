@@ -13,15 +13,7 @@ import { GraphContext, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import {
-  DelegatorProps,
-  getDndId,
-  Mosaic,
-  MosaicRootProps,
-  MosaicState,
-  parseDndId,
-  TreeItemTileProps,
-} from '@dxos/aurora-grid';
+import { DelegatorProps, getDndId, Mosaic, MosaicState, parseDndId, TreeItemTileProps } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
@@ -37,11 +29,10 @@ export default {
   argTypes: { onMosaicChange: { action: 'mosaic changed' } },
 };
 
-const content = [...Array(4)].map(() => ({
-  id: faker.string.uuid(),
-  label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
-  description: fake('{{commerce.productDescription}}'),
-  children: [...Array(4)].map(() => ({
+// TODO(burdon): Move file global variables into object.
+
+const createGraph = () => {
+  const content = [...Array(4)].map(() => ({
     id: faker.string.uuid(),
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
@@ -49,59 +40,67 @@ const content = [...Array(4)].map(() => ({
       id: faker.string.uuid(),
       label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
       description: fake('{{commerce.productDescription}}'),
+      children: [...Array(4)].map(() => ({
+        id: faker.string.uuid(),
+        label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
+        description: fake('{{commerce.productDescription}}'),
+      })),
     })),
-  })),
-}));
+  }));
 
-// TODO(burdon): Move file global variables into object.
+  return buildGraph(new GraphBuilder().build(), content);
+};
 
-const graph = new GraphBuilder().build();
-buildGraph(graph, content);
+const graph = createGraph();
 
 const defaultIndices = getIndices(99);
-let defaultIndicesCursor = 0;
-
-// TODO(burdon): Name?
-const mosaicAcc: MosaicState = {
-  tiles: {},
-  relations: {},
-};
 
 const navTreeId = 'navTree';
 
-graph.traverse({
-  visitor: (node) => {
-    const level = getLevel(node, -1);
-    const id = getDndId(navTreeId, node.id);
-    mosaicAcc.tiles[id] = {
-      id,
-      index: defaultIndices[defaultIndicesCursor],
-      variant: 'treeitem',
-      sortable: true,
-      expanded: false,
-      level,
-      acceptMigrationClass: new Set([`level-${level + 1}`]),
-      migrationClass: `level-${level}`,
-    } as TreeItemTileProps;
-    mosaicAcc.relations[id] = { child: new Set(), parent: new Set() };
-    defaultIndicesCursor += 1;
-  },
-});
+const createState = () => {
+  let defaultIndicesCursor = 0;
 
-graph.traverse({
-  visitor: (node) => {
-    const id = getDndId(navTreeId, node.id);
-    if (node.children && node.children.length) {
-      node.children.forEach((child) => {
-        const childId = getDndId(navTreeId, child.id);
-        mosaicAcc.relations[id].child.add(childId);
-        mosaicAcc.relations[childId].parent.add(id);
-      });
-    }
-  },
-});
+  const mosaicStateValue: MosaicState = {
+    tiles: {},
+    relations: {},
+  };
 
-const mosaicState = deepSignal<MosaicState>(mosaicAcc);
+  graph.traverse({
+    visitor: (node) => {
+      const level = getLevel(node, -1);
+      const id = getDndId(navTreeId, node.id);
+      mosaicStateValue.tiles[id] = {
+        id,
+        index: defaultIndices[defaultIndicesCursor],
+        variant: 'treeitem',
+        sortable: true,
+        expanded: false,
+        level,
+        acceptMigrationClass: new Set([`level-${level + 1}`]),
+        migrationClass: `level-${level}`,
+      } as TreeItemTileProps;
+      mosaicStateValue.relations[id] = { child: new Set(), parent: new Set() };
+      defaultIndicesCursor += 1;
+    },
+  });
+
+  graph.traverse({
+    visitor: (node) => {
+      const id = getDndId(navTreeId, node.id);
+      if (node.children && node.children.length) {
+        node.children.forEach((child) => {
+          const childId = getDndId(navTreeId, child.id);
+          mosaicStateValue.relations[id].child.add(childId);
+          mosaicStateValue.relations[childId].parent.add(id);
+        });
+      }
+    },
+  });
+
+  return mosaicStateValue;
+};
+
+const mosaicState = deepSignal<MosaicState>(createState());
 
 const splitViewState = deepSignal<SplitViewState>({
   sidebarOpen: true,
@@ -127,9 +126,8 @@ const StorybookNavTreeItemDelegator = forwardRef<HTMLElement, DelegatorProps>((p
 ));
 
 export const Default = {
-  render: (args: MosaicRootProps) => (
+  render: () => (
     <Mosaic.Provider
-      {...args}
       mosaic={mosaicState}
       getData={(dndId) => {
         const [_, entityId] = parseDndId(dndId);

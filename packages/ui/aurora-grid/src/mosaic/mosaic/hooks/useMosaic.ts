@@ -2,9 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DeepSignal } from 'deepsignal';
 import { Context, createContext, useContext } from 'react';
 
-import { MosaicContextValue } from '../types';
+import { CopyTileAction, Delegator, MosaicChangeHandler, MosaicState } from '../types';
+
+export type MosaicContextValue = {
+  getData: (dndId: string) => any;
+  mosaic: DeepSignal<MosaicState>;
+  onMosaicChange?: MosaicChangeHandler;
+  copyTile: CopyTileAction;
+  Delegator: Delegator;
+};
 
 const defaultMosaicContextValue: MosaicContextValue = {
   getData: () => ({}),

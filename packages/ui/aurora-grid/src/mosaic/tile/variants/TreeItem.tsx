@@ -18,6 +18,7 @@ export type TreeItemTileProps = TileProps & {
   // Overrides
   variant: 'treeitem';
   sortable: true;
+
   // Special flags
   level: number;
   expanded?: boolean;
@@ -37,6 +38,10 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTilePr
   );
 };
 
+/**
+ *
+ */
+// TODO(burdon): Move out of mosaic lib?
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemTileProps>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
