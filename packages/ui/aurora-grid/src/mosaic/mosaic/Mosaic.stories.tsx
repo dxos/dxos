@@ -41,7 +41,6 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
   };
   return acc;
 }, {});
-
 const rearrangeIds = Object.keys(rearrangeTiles);
 
 const RearrangeDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
