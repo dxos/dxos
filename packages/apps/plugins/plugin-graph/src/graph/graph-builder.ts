@@ -26,16 +26,17 @@ export class GraphBuilder {
   /**
    * Register a node builder which will be called in order to construct the graph.
    */
-  // TODO(wittjosiah): Make this chainable.
-  addNodeBuilder(id: string, builder: NodeBuilder): void {
+  addNodeBuilder(id: string, builder: NodeBuilder): GraphBuilder {
     this._nodeBuilders.set(id, builder);
+    return this;
   }
 
   /**
    * Remove a node builder from the graph builder.
    */
-  removeNodeBuilder(id: string): void {
+  removeNodeBuilder(id: string): GraphBuilder {
     this._nodeBuilders.delete(id);
+    return this;
   }
 
   /**

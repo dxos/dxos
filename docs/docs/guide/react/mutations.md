@@ -1,6 +1,6 @@
 ---
 title: Mutations
-order: 5
+order: 4
 ---
 
 Mutating objects in [ECHO](../platform/) is as simple as directly manipulating them like normal JavaScript objects.
