@@ -21,6 +21,7 @@ export const isCardTile = (tile: TileProps): tile is CardTileProps => tile.varia
 /**
  * Basic tile that contains a component.
  */
+// TODO(burdon): Rename Cell?
 const Card = forwardRef<HTMLDivElement, CardTileProps>((tile, forwardedRef) => {
   const { getData, Delegator } = useMosaic();
   const { activeId } = useMosaicDnd();

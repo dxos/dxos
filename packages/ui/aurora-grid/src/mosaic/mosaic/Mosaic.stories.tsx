@@ -27,7 +27,9 @@ type MosaicStoryArgs = {
 
 type StorybookDataProps = { label: string; description: string };
 
+//
 // REARRANGE
+//
 
 const rearrangeMosaicId = faker.string.uuid();
 const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => {
@@ -95,7 +97,9 @@ export const Rearrange = {
   },
 };
 
+//
 // COPY
+//
 
 const copyMosaicId = faker.string.uuid();
 const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => {
@@ -173,7 +177,9 @@ export const Copy = {
   },
 };
 
+//
 // MIGRATE
+//
 
 const migrateMosaicId = 'Migrate';
 const migrateMosaicRootId = getDndId(migrateMosaicId, faker.string.uuid());
@@ -268,6 +274,10 @@ export const Migrate = {
   },
 };
 
+//
+// Main
+//
+
 const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDataProps>>(
   (
     { data, tile, dragHandleAttributes, dragHandleListeners, style, children, isActive, isCopyDestination, isPreview },
@@ -300,12 +310,14 @@ const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDa
             <p className='pis-7 pie-4 pbe-2'>{description}</p>
           </div>
         );
+
       case 'kanban':
         return (
           <div role='group' className='fixed inset-0 flex' ref={forwardedRef}>
             {children}
           </div>
         );
+
       case 'stack':
       default:
         return (
@@ -318,6 +330,7 @@ const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<StorybookDa
     }
   },
 );
+
 export default {
   component: Mosaic.Provider,
   argTypes: { onMosaicChange: { action: 'mosaic changed' } },
