@@ -18,6 +18,8 @@ export type KanbanTileProps = TileProps & {
   sortable: true;
 };
 
+export const isKanbanTile = (tile: TileProps): tile is KanbanTileProps => tile.variant === 'kanban';
+
 const KanbanImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((props, forwardedRef) => {
   const {
     mosaic: { tiles, relations },

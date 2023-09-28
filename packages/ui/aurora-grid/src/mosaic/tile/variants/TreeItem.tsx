@@ -24,6 +24,8 @@ export type TreeItemTileProps = TileProps & {
   expanded?: boolean;
 };
 
+export const isTreeItemTile = (tile: TileProps): tile is TreeItemTileProps => tile.variant === 'treeitem';
+
 const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTileProps[]>; level: number }) => {
   return (
     <AuroraTreeItem.Body asChild>
@@ -59,8 +61,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemTileProps>((tile, for
   const isMigrationDestination = migrationDestinationId === tile.id;
 
   const subtileIds = relations[tile.id]?.child ?? new Set();
-  const subtiles: DeepSignal<TreeItemTileProps[]> = Array.from(subtileIds)
-    .map((id) => tiles[id] as TreeItemTileProps)
+  const subtiles = Array.from(subtileIds)
+    .map((id) => tiles[id])
+    .filter(isTreeItemTile)
     .sort(sortByIndex);
 
   return (
