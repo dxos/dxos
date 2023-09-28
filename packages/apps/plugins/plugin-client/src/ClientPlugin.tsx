@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { EchoSchema } from '@dxos/client/echo';
 import { AppState } from '@braneframe/types';
+import { EchoSchema } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
