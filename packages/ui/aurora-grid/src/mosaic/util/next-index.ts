@@ -5,9 +5,13 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 
-import { Tile } from '../types';
+import { TileVariantInstances } from '../tile';
 
-export const nextRearrangeIndex = (subtiles: Tile[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
+export const nextRearrangeIndex = (
+  subtiles: TileVariantInstances[],
+  activeId: UniqueIdentifier,
+  overId?: UniqueIdentifier,
+) => {
   const overOrderIndex = subtiles.length > 0 ? subtiles.findIndex(({ id }) => id === overId) : -1;
   if (overOrderIndex >= 0) {
     const activeOrderIndex = subtiles.findIndex(({ id }) => id === activeId);
@@ -21,7 +25,7 @@ export const nextRearrangeIndex = (subtiles: Tile[], activeId: UniqueIdentifier,
   }
 };
 
-export const nextCopyIndex = (subtiles: Tile[], overId?: UniqueIdentifier) => {
+export const nextCopyIndex = (subtiles: TileVariantInstances[], overId?: UniqueIdentifier) => {
   const overOrderIndex = subtiles.length > 0 ? subtiles.findIndex(({ id }) => id === overId) : -1;
   const previewOrderIndex = subtiles.findIndex(({ id }) => id.startsWith('preview--'));
   if (overOrderIndex >= 0) {

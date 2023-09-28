@@ -97,6 +97,8 @@ export const Mosaic = {
   Provider: MosaicProvider,
   Root: MosaicRoot,
   Overlay: MosaicOverlay,
+
+  // TODO(burdon): Remove.
   Tile,
   Stack,
   Card,

@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -8,10 +9,17 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef, Ref } from 'react';
 
-import { Tile } from './';
-import { useMosaicDnd } from '../dnd';
-import { useMosaic } from '../mosaic';
-import { DelegatorProps, StackTile } from '../types';
+import { useMosaicDnd } from '../../dnd';
+import { useMosaic } from '../../mosaic';
+import { DelegatorProps } from '../../types';
+import { Tile } from '../Tile';
+import { TileSharedProps } from '../types';
+
+export type StackTile = TileSharedProps & {
+  // Overrides
+  variant: 'stack';
+  sortable: true;
+};
 
 const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((props, forwardedRef) => {
   const {

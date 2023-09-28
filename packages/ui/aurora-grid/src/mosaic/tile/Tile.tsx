@@ -4,15 +4,15 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card } from './Card';
-import { Stack } from './Stack';
-import { TreeItem } from './TreeItem';
-import { TileProps } from '../types';
+import { Card, CardTile, Stack, StackTile, TreeItem, TreeItemTile } from './variants';
+
+// TODO(burdon): Make generic to unbundle deps.
+export type TileVariantInstances = CardTile | StackTile | TreeItemTile;
 
 /**
- * Draggable component.
+ *
  */
-const Tile = forwardRef<HTMLDivElement, TileProps>((props: TileProps, forwardedRef) => {
+const Tile = forwardRef<HTMLDivElement, TileVariantInstances>((props, forwardedRef) => {
   switch (props.variant) {
     case 'treeitem': // TODO(burdon): item?
       return <TreeItem {...props} ref={forwardedRef} />;

@@ -7,57 +7,16 @@ import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
 import { EventHandler } from './dnd';
-
-export type TileVariant = 'stack' | 'card' | 'treeitem';
-
-type TileSharedProps = {
-  // Primary props
-  id: string;
-  index: string;
-  variant: TileVariant;
-  migrationClass?: string;
-  acceptMigrationClass?: Set<string>;
-  copyClass?: Set<string>;
-  acceptCopyClass?: string;
-  sortable?: boolean;
-  // Secondary props
-  isPreview?: boolean;
-};
-
-export type TreeItemTile = TileSharedProps & {
-  // Overrides
-  variant: 'treeitem';
-  sortable: true;
-  // Special flags
-  level: number;
-  expanded?: boolean;
-};
-
-export type StackTile = TileSharedProps & {
-  // Overrides
-  variant: 'stack';
-  sortable: true;
-};
-
-export type CardTile = TileSharedProps & {
-  // Overrides
-  variant: 'card';
-  sortable?: false;
-};
-
-// TODO(burdon): Make generic to unbundle deps.
-export type Tile = TreeItemTile | StackTile | CardTile;
-
-export type TileProps = Tile;
+import { TileVariantInstances } from './tile';
 
 export type MosaicState = {
-  tiles: Record<string, Tile>;
+  tiles: Record<string, TileVariantInstances>;
   relations: Record<string, Record<string, Set<string>>>;
 };
 
 export type DelegatorProps<TData = any> = PropsWithChildren<{
   data: TData;
-  tile: Tile;
+  tile: TileVariantInstances;
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
   style?: ComponentPropsWithoutRef<'div'>['style'];
@@ -78,7 +37,7 @@ export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | Mosa
 
 export type MosaicChangeHandler = EventHandler<MosaicChangeEvent>;
 
-export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => Tile;
+export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => TileVariantInstances;
 
 export type MosaicContextValue = {
   getData: (dndId: string) => any;

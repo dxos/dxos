@@ -7,7 +7,8 @@ import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';
 import { useMosaicDnd } from '../../dnd';
-import { MosaicState, Tile } from '../../types';
+import { TileVariantInstances } from '../../tile';
+import { MosaicState } from '../../types';
 import { getSubtiles, nextRearrangeIndex } from '../../util';
 
 export const useHandleMigrateDragStart = () => {
@@ -18,7 +19,7 @@ export const useHandleMigrateDragStart = () => {
       const migrationClass = active?.data?.current?.migrationClass ?? null;
       dnd.activeMigrationClass = active?.data?.current?.migrationClass ?? null;
       dnd.inhibitMigrationDestinationId = migrationClass
-        ? findMigrationDestination(active.data.current as Tile, migrationClass, mosaic)
+        ? findMigrationDestination(active.data.current as TileVariantInstances, migrationClass, mosaic)
         : null;
     },
     [dnd, mosaic],
@@ -69,8 +70,26 @@ export const useHandleMigrateDragEnd = () => {
   }, deps);
 };
 
+export const useHandleMigrateDragOver = () => {
+  const { mosaic } = useMosaic();
+  const dnd = useMosaicDnd();
+  return useCallback(
+    ({ over }: DragOverEvent) => {
+      if (dnd.activeMigrationClass && over?.data?.current) {
+        const overTile = over?.data?.current as TileVariantInstances | undefined;
+        const migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
+        dnd.migrationDestinationId =
+          migrationDestinationId === dnd.inhibitMigrationDestinationId ? null : migrationDestinationId;
+      } else {
+        dnd.migrationDestinationId = null;
+      }
+    },
+    [mosaic, dnd],
+  );
+};
+
 const findMigrationDestination = (
-  tile: Tile | undefined,
+  tile: TileVariantInstances | undefined,
   migrationClass: string,
   mosaic: MosaicState,
 ): string | null => {
@@ -87,22 +106,4 @@ const findMigrationDestination = (
       mosaic,
     );
   }
-};
-
-export const useHandleMigrateDragOver = () => {
-  const { mosaic } = useMosaic();
-  const dnd = useMosaicDnd();
-  return useCallback(
-    ({ over }: DragOverEvent) => {
-      if (dnd.activeMigrationClass && over?.data?.current) {
-        const overTile = over?.data?.current as Tile | undefined;
-        const migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
-        dnd.migrationDestinationId =
-          migrationDestinationId === dnd.inhibitMigrationDestinationId ? null : migrationDestinationId;
-      } else {
-        dnd.migrationDestinationId = null;
-      }
-    },
-    [mosaic, dnd],
-  );
 };

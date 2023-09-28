@@ -11,9 +11,18 @@ import React, { forwardRef } from 'react';
 
 import { Tree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
 
-import { useMosaicDnd } from '../dnd';
-import { useMosaic } from '../mosaic';
-import { TreeItemTile } from '../types';
+import { TileSharedProps } from './../types';
+import { useMosaicDnd } from '../../dnd';
+import { useMosaic } from '../../mosaic';
+
+export type TreeItemTile = TileSharedProps & {
+  // Overrides
+  variant: 'treeitem';
+  sortable: true;
+  // Special flags
+  level: number;
+  expanded?: boolean;
+};
 
 const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]>; level: number }) => {
   return (
@@ -29,7 +38,6 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]
   );
 };
 
-// TODO(burdon): ListItem?
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },

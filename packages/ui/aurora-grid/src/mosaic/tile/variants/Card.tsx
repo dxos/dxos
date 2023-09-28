@@ -1,14 +1,21 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef } from 'react';
 
-import { useMosaicDnd } from '../dnd';
-import { useMosaic } from '../mosaic';
-import { CardTile } from '../types';
+import { useMosaicDnd } from '../../dnd';
+import { useMosaic } from '../../mosaic';
+import { TileSharedProps } from '../types';
+
+export type CardTile = TileSharedProps & {
+  // Overrides
+  variant: 'card';
+  sortable?: false;
+};
 
 const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
   const { getData, Delegator } = useMosaic();
