@@ -34,9 +34,9 @@ const textFilter = (text?: string) => {
 const { helper, builder } = createColumnBuilder<TypedObject>();
 const columns: TableColumnDef<TypedObject, any>[] = [
   helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
-  helper.accessor((item) => item.toJSON()['@model'], { id: 'model' }),
-  helper.accessor((item) => item.__typename, { id: 'type' }),
-  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), { id: 'deleted' }),
+  helper.accessor((item) => item.toJSON()['@model'], { id: 'model', size: 220 }),
+  helper.accessor((item) => item.__typename, { id: 'type', size: 220 }),
+  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), { id: 'deleted', size: 80 }),
 ];
 
 export const ObjectsPanel = () => {
@@ -54,7 +54,11 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<TypedObject> columns={columns} data={items.filter(textFilter(filter))} />
+      <MasterDetailTable<TypedObject>
+        columns={columns}
+        data={items.filter(textFilter(filter))}
+        widths={['w-auto', 'w-auto']}
+      />
     </PanelContainer>
   );
 };
