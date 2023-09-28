@@ -43,6 +43,7 @@ export abstract class Model<TState = any, TMutation = any> {
     return this._itemId;
   }
 
+  // TODO(burdon): Change to immutable.
   get readOnly(): boolean {
     return this._mutationWriter === undefined;
   }

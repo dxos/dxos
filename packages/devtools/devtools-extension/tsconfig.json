@@ -38,9 +38,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/kai-framework"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

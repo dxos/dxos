@@ -7,7 +7,6 @@ import * as pb from 'protobufjs';
 import { plate } from '@dxos/plate';
 import { getFullNestedTypeName, getRelativeName, stringifyFullyQualifiedName, isType } from '@dxos/protobuf-compiler';
 
-const importPackage = '@dxos/echo-schema';
 const importNamespace = 'dxos_echo_schema';
 
 const reservedTypeNames = [importNamespace];
@@ -18,7 +17,8 @@ const reservedFieldNames = ['id', '__typename', '__deleted', 'meta'];
 const injectedTypes = [
   '.dxos.schema.Text',
   '.dxos.schema.Expando',
-  '.dxos.schema.TypedObject'
+  '.dxos.schema.TypedObject',
+  '.dxos.schema.Schema'
 ];
 
 /**
@@ -116,20 +116,24 @@ const getStartingNamespace = (ns: pb.NamespaceBase): pb.NamespaceBase => {
   return ns;
 };
 
+export type CodegenOptions = {
+  schemaPackage: string;
+};
+
 /**
  * Generate type definitions.
  */
-export const generate = (root: pb.NamespaceBase): string => {
+export const generate = (root: pb.NamespaceBase, options: CodegenOptions): string => {
   const startNamespace = getStartingNamespace(root);
 
   const declarations = startNamespace.nestedArray.flatMap((nested) => Array.from(emitDeclarations(nested)));
 
   return plate`
-  import * as ${importNamespace} from '${importPackage}';
+  import * as ${importNamespace} from '${options.schemaPackage}';
 
   ${createSchema(root)}
 
-  export const schema = ${importNamespace}.EchoSchema.fromJson(schemaJson);
+  export const schema$ = ${importNamespace}.EchoSchema.fromJson(schemaJson);
 
   ${declarations}
   `;
@@ -137,7 +141,8 @@ export const generate = (root: pb.NamespaceBase): string => {
 
 function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
   if (ns instanceof pb.Type) {
-    if (injectedTypes.includes(ns.fullName)) {
+    // NOTE: Hack to allow schema.proto to compile.
+    if (injectedTypes.includes(ns.fullName) && ns.fieldsArray.length === 1) {
       return;
     }
 
@@ -184,19 +189,19 @@ export const createObjectClass = (type: pb.Type) => {
     export type ${name}Props = {\n${initializer}\n};
 
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
-      static readonly type = schema.getType('${fullName}');
+      static readonly type = schema$.getType('${fullName}');
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
       }
-
+  
       constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOptions) {
-        super({ ...initValues}, ${name}.type, opts);
+        super({ ...initValues}, { schema: ${name}.type, ...opts });
       }
       ${fields}
     }
 
-    schema.registerPrototype(${name});
+    schema$.registerPrototype(${name});
   `;
 };
 

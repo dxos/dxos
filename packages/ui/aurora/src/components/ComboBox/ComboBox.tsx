@@ -64,7 +64,7 @@ const ComboBoxRoot = ({
     items,
     itemToString: (selectedItem) => selectedItem?.label ?? '',
     onInputValueChange: ({ inputValue }) => onInputChange?.(inputValue),
-    selectedItem: value,
+    selectedItem: value ?? null,
     onSelectedItemChange: ({ selectedItem }) => onChange?.(selectedItem === null ? undefined : selectedItem),
   });
 

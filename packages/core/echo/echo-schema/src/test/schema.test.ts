@@ -7,11 +7,15 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task } from './proto';
+import { immutable } from '../defs';
+import { Schema } from '../proto';
+import { createDatabase } from '../testing';
+import { Expando } from '../typed-object';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
 
-describe('schema', () => {
+describe('static schema', () => {
   test('keys', () => {
     const contact = new Contact({ name: 'Test User' });
     expect(contact.id).to.exist;
@@ -39,17 +43,21 @@ describe('schema', () => {
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
     expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact.id } });
-    expect(JSON.stringify(task1)).to.equal(
-      JSON.stringify({
-        '@id': task1.id,
-        '@type': task1.__typename,
-        '@model': 'dxos.org/model/document',
-        subTasks: [],
-        description: { '@id': task1.description.id },
-        title: 'Task 1',
-        assignee: { '@id': contact.id },
-        meta: { keys: [] },
-      }),
+    expect(JSON.stringify(task1, null, 4)).to.equal(
+      JSON.stringify(
+        {
+          '@id': task1.id,
+          '@type': task1.__typename,
+          '@model': 'dxos.org/model/document',
+          '@meta': { keys: [] },
+          subTasks: [],
+          description: { '@id': task1.description.id },
+          title: 'Task 1',
+          assignee: { '@id': contact.id },
+        },
+        null,
+        4,
+      ),
     );
   });
 
@@ -62,6 +70,7 @@ describe('schema', () => {
       '@id': contact.id,
       '@type': contact.__typename,
       '@model': 'dxos.org/model/document',
+      '@meta': { keys: [] },
       name: 'User 1',
       tasks: [
         {
@@ -71,7 +80,6 @@ describe('schema', () => {
           '@id': contact.tasks[1].id,
         },
       ],
-      meta: { keys: [] },
     });
   });
 
@@ -111,4 +119,37 @@ describe('schema', () => {
     const container = new Container({ records: [{ type: Container.Record.Type.PERSONAL }] });
     expect(container.records[0].type).to.eq(Container.Record.Type.PERSONAL);
   });
+});
+
+test('runtime schema', async () => {
+  const { db: database } = await createDatabase();
+
+  const orgSchema = new Schema({
+    typename: 'example.Org',
+    props: [
+      {
+        id: 'name',
+        type: Schema.PropType.STRING,
+      },
+      {
+        id: 'website',
+        type: Schema.PropType.STRING,
+      },
+    ],
+  });
+  database.add(orgSchema);
+
+  const org = new Expando(
+    {
+      name: 'DXOS',
+      website: 'dxos.org',
+    },
+    { schema: orgSchema },
+  );
+  database.add(org);
+
+  expect(org.name).to.eq('DXOS');
+  expect(org.website).to.eq('dxos.org');
+  expect(org.__schema).to.eq(orgSchema);
+  expect(org.__schema?.[immutable]).to.eq(false);
 });
