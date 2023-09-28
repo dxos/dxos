@@ -10,7 +10,7 @@ import React, { FC, forwardRef, Ref, useCallback, useEffect } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { Mosaic, DelegatorProps, MosaicState, getDndId, Tile, useMosaic } from '@dxos/aurora-grid';
+import { Mosaic, DelegatorProps, MosaicState, getDndId, useMosaic, TileProps } from '@dxos/aurora-grid';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 
 import { FileUpload } from './FileUpload';
@@ -48,7 +48,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
     [stack, stack.sections],
   );
 
-  const rootTile: Tile = {
+  const rootTile: TileProps = {
     id: getDndId(STACK_PLUGIN, stack.id),
     sortable: true,
     acceptCopyClass: 'stack-section',
