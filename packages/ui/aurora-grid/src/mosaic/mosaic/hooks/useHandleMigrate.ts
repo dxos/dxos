@@ -3,13 +3,14 @@
 //
 
 import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { batch } from '@preact/signals-core';
 import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';
 import { useMosaicDnd } from '../../dnd';
 import { TileProps } from '../tile';
 import { MosaicState } from '../types';
-import { getSubtiles, nextRearrangeIndex } from '../util';
+import { getSubtiles, managePreview, nextRearrangeIndex } from '../util';
 
 export const useHandleMigrateDragStart = () => {
   const { mosaic } = useMosaic();
@@ -19,7 +20,7 @@ export const useHandleMigrateDragStart = () => {
       const migrationClass = active?.data?.current?.migrationClass ?? null;
       dnd.activeMigrationClass = active?.data?.current?.migrationClass ?? null;
       dnd.inhibitMigrationDestinationId = migrationClass
-        ? findMigrationDestination(active.data.current as TileProps, migrationClass, mosaic)
+        ? findMigrationDestination(active.data.current as TileProps, migrationClass, null, mosaic)
         : null;
     },
     [dnd, mosaic],
@@ -40,17 +41,22 @@ export const useHandleMigrateDragEnd = () => {
       // remove active tile id from parent’s child relations
       const parentIds = Array.from(relations[activeId]?.parent ?? []);
       parentIds.forEach((id) => relations[id].child?.delete(activeId!));
-      // update active tile’s index
-      const index = nextRearrangeIndex(
-        getSubtiles(relations[dnd.migrationDestinationId].child, tiles),
-        activeId,
-        over?.id,
-      );
-      tiles[activeId].index = index ?? tiles[activeId].index;
-      // update active tile’s parent relation
-      relations[activeId].parent = new Set([dnd.migrationDestinationId]);
-      // add active tile to new parent’s child relations
-      relations[dnd.migrationDestinationId].child.add(activeId);
+      // get active tile’s index via the preview card, if present
+      const subtiles = getSubtiles(relations[dnd.migrationDestinationId].child, tiles);
+      const previewTile = subtiles.find(({ id }) => id.startsWith('preview--'));
+      const index =
+        previewTile?.index ??
+        nextRearrangeIndex(getSubtiles(relations[dnd.migrationDestinationId].child, tiles), activeId, over?.id);
+      // make deepsignal state changes
+      batch(() => {
+        previewTile && relations[dnd.migrationDestinationId!].child.delete(previewTile.id);
+        tiles[activeId].index = index ?? tiles[activeId].index;
+        // update active tile’s parent relation
+        relations[activeId!].parent = new Set([dnd.migrationDestinationId!]);
+        // add active tile to new parent’s child relations
+        relations[dnd.migrationDestinationId!].child.add(activeId);
+        previewTile && delete tiles[previewTile.id];
+      });
       // fire onMosaicChange
       onMosaicChange?.({
         type: 'migrate',
@@ -60,7 +66,7 @@ export const useHandleMigrateDragEnd = () => {
         ...(index && { index }),
       });
       // update animation
-      dnd.overlayDropAnimation = 'into';
+      dnd.overlayDropAnimation = 'around';
       // return result
       result = dnd.migrationDestinationId;
     }
@@ -71,15 +77,28 @@ export const useHandleMigrateDragEnd = () => {
 };
 
 export const useHandleMigrateDragOver = () => {
-  const { mosaic } = useMosaic();
+  const { mosaic, copyTile } = useMosaic();
   const dnd = useMosaicDnd();
   return useCallback(
-    ({ over }: DragOverEvent) => {
+    ({ active, over }: DragOverEvent) => {
+      if (over?.id.toString().startsWith('preview--')) {
+        return;
+      }
+
       if (dnd.activeMigrationClass && over?.data?.current) {
         const overTile = over?.data?.current as TileProps | undefined;
-        const migrationDestinationId = findMigrationDestination(overTile, dnd.activeMigrationClass, mosaic) ?? null;
-        dnd.migrationDestinationId =
-          migrationDestinationId === dnd.inhibitMigrationDestinationId ? null : migrationDestinationId;
+        const nextDestinationId =
+          findMigrationDestination(overTile, dnd.activeMigrationClass, dnd.inhibitMigrationDestinationId, mosaic) ??
+          null;
+        managePreview({
+          operation: 'migrate',
+          active,
+          over,
+          mosaic,
+          copyTile,
+          dnd,
+          nextDestinationId,
+        });
       } else {
         dnd.migrationDestinationId = null;
       }
@@ -91,18 +110,20 @@ export const useHandleMigrateDragOver = () => {
 const findMigrationDestination = (
   tile: TileProps | undefined,
   migrationClass: string,
+  inhibitMigrationId: string | null,
   mosaic: MosaicState,
 ): string | null => {
   if (!tile) {
     return null;
   } else if (tile.acceptMigrationClass?.has(migrationClass)) {
-    return tile.id;
+    return tile.id === inhibitMigrationId ? null : tile.id;
   } else if ((mosaic.relations[tile.id]?.parent?.size ?? 0) < 1) {
     return null;
   } else {
     return findMigrationDestination(
       mosaic.tiles[Array.from(mosaic.relations[tile.id].parent)[0]],
       migrationClass,
+      inhibitMigrationId,
       mosaic,
     );
   }

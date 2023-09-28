@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, CardTileProps, Stack, StackTileProps, TreeItem, TreeItemTileProps } from './variants';
+import { Card, Kanban, Stack, TreeItem, isCardTile, isKanbanTile, isStackTile, isTreeItemTile } from './variants';
 import { TileProps } from '../mosaic';
 
 /**
@@ -13,14 +13,15 @@ import { TileProps } from '../mosaic';
  */
 // TODO(burdon): Factory?
 export const Tile = forwardRef<HTMLDivElement, TileProps>((props, forwardedRef) => {
-  switch (props.variant) {
-    case 'treeitem':
-      return <TreeItem {...(props as TreeItemTileProps)} ref={forwardedRef} />;
-    case 'card':
-      return <Card {...(props as CardTileProps)} ref={forwardedRef} />;
-    case 'stack':
-      return <Stack {...(props as StackTileProps)} ref={forwardedRef} />;
-    default:
-      return null;
+  if (isTreeItemTile(props)) {
+    return <TreeItem {...props} ref={forwardedRef} />;
+  } else if (isCardTile(props)) {
+    return <Card {...props} ref={forwardedRef} />;
+  } else if (isStackTile(props)) {
+    return <Stack {...props} ref={forwardedRef} />;
+  } else if (isKanbanTile(props)) {
+    return <Kanban {...props} ref={forwardedRef} />;
+  } else {
+    return null;
   }
 });

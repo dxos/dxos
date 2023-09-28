@@ -16,6 +16,8 @@ export type CardTileProps = TileProps & {
   sortable?: false;
 };
 
+export const isCardTile = (tile: TileProps): tile is CardTileProps => tile.variant === 'card';
+
 /**
  * Basic tile that contains a component.
  */

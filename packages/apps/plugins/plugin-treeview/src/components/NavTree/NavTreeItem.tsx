@@ -29,7 +29,7 @@ import {
   useSidebars,
   useTranslation,
 } from '@dxos/aurora';
-import { DelegatorProps, TreeItemTileProps } from '@dxos/aurora-grid';
+import { DelegatorProps, isStackTile, isTreeItemTile } from '@dxos/aurora-grid';
 import {
   dropRing,
   focusRing,
@@ -64,35 +64,36 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
         isActive,
         isOverlay,
         isMigrationDestination,
+        isPreview,
       },
     },
     forwardedRef,
   ) => {
-    switch (tile.variant) {
-      case 'stack':
-        return (
-          <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
-            {children}
-          </Tree.Root>
-        );
-      case 'treeitem':
-        return (
-          <NavTreeItem
-            node={data}
-            level={(tile as TreeItemTileProps).level} // TODO(burdon): Avoid cast.
-            draggableAttributes={dragHandleAttributes}
-            draggableListeners={dragHandleListeners}
-            style={style}
-            rearranging={isActive}
-            isOverlay={isOverlay}
-            {...(isMigrationDestination && { migrating: 'into' })}
-            ref={forwardedRef}
-          >
-            {children}
-          </NavTreeItem>
-        );
-      default:
-        return null;
+    if (isStackTile(tile)) {
+      return (
+        <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
+          {children}
+        </Tree.Root>
+      );
+    } else if (isTreeItemTile(tile)) {
+      return (
+        <NavTreeItem
+          node={data}
+          level={tile.level}
+          draggableAttributes={dragHandleAttributes}
+          draggableListeners={dragHandleListeners}
+          style={style}
+          rearranging={isActive}
+          isOverlay={isOverlay}
+          isPreview={isPreview}
+          {...(isMigrationDestination && { migrating: 'into' })}
+          ref={forwardedRef}
+        >
+          {children}
+        </NavTreeItem>
+      );
+    } else {
+      return null;
     }
   },
 );
@@ -179,6 +180,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             'rounded block',
             hoverableFocusedKeyboardControls,
             'transition-opacity',
+            isPreview ? 'opacity-50' : rearranging && 'opacity-0',
             (rearranging || isPreview) && 'opacity-0',
             focusRing,
             migrating === 'into' && dropRing,

@@ -19,6 +19,8 @@ export type StackTileProps = TileProps & {
   sortable: true;
 };
 
+export const isStackTile = (tile: TileProps): tile is StackTileProps => tile.variant === 'stack';
+
 /**
  * Sortable container.
  */
