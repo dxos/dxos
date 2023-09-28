@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
-// import { ShowDeletedOption } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ShowDeletedOption, TypedObject, useQuery } from '@dxos/react-client/echo';
 
