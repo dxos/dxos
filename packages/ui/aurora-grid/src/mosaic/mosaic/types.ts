@@ -6,17 +6,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { DeepSignal } from 'deepsignal';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
-import { EventHandler } from './dnd';
-import { TileVariantInstances } from './tile';
-
-export type MosaicState = {
-  tiles: Record<string, TileVariantInstances>;
-  relations: Record<string, Record<string, Set<string>>>;
-};
+import { EventHandler } from '../dnd';
+import { TileProps } from '../mosaic';
 
 export type DelegatorProps<TData = any> = PropsWithChildren<{
   data: TData;
-  tile: TileVariantInstances;
+  tile: TileProps;
   dragHandleAttributes?: ReturnType<typeof useSortable>['attributes'];
   dragHandleListeners?: ReturnType<typeof useSortable>['listeners'];
   style?: ComponentPropsWithoutRef<'div'>['style'];
@@ -35,9 +30,14 @@ export type MosaicMigrateEvent = { type: 'migrate'; id: string; fromId: string; 
 export type MosaicCopyEvent = { type: 'copy'; id: string; toId: string; index?: string };
 export type MosaicChangeEvent = MosaicRearrangeEvent | MosaicMigrateEvent | MosaicCopyEvent;
 
+export type MosaicState = {
+  tiles: Record<string, TileProps>;
+  relations: Record<string, Record<string, Set<string>>>;
+};
+
 export type MosaicChangeHandler = EventHandler<MosaicChangeEvent>;
 
-export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => TileVariantInstances;
+export type CopyTileAction = (id: string, toId: string, mosaic: MosaicState) => TileProps;
 
 export type MosaicContextValue = {
   getData: (dndId: string) => any;

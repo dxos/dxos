@@ -4,25 +4,21 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, CardTile, Stack, StackTile, TreeItem, TreeItemTile } from './variants';
-
-// TODO(burdon): Make generic to unbundle deps.
-export type TileVariantInstances = CardTile | StackTile | TreeItemTile;
+import { Card, CardTileProps, Stack, StackTileProps, TreeItem, TreeItemTileProps } from './variants';
+import { TileProps } from '../mosaic';
 
 /**
  *
  */
-const Tile = forwardRef<HTMLDivElement, TileVariantInstances>((props, forwardedRef) => {
+export const Tile = forwardRef<HTMLDivElement, TileProps>((props, forwardedRef) => {
   switch (props.variant) {
     case 'treeitem': // TODO(burdon): item?
-      return <TreeItem {...props} ref={forwardedRef} />;
+      return <TreeItem {...(props as TreeItemTileProps)} ref={forwardedRef} />;
     case 'card':
-      return <Card {...props} ref={forwardedRef} />;
+      return <Card {...(props as CardTileProps)} ref={forwardedRef} />;
     case 'stack': // TODO(burdon): section?
-      return <Stack {...props} ref={forwardedRef} />;
+      return <Stack {...(props as StackTileProps)} ref={forwardedRef} />;
     default:
       return null;
   }
 });
-
-export { Tile, Stack, Card, TreeItem };

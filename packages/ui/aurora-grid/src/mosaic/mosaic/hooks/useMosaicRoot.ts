@@ -4,7 +4,7 @@
 
 import { Context, createContext, useContext } from 'react';
 
-import { MosaicRootContextValue } from '../../types';
+import { MosaicRootContextValue } from '../types';
 
 const defaultMosaicRootContextValue: MosaicRootContextValue = {
   id: 'never',

@@ -10,12 +10,10 @@ import { sortByIndex } from '@tldraw/indices';
 import React, { forwardRef, Ref } from 'react';
 
 import { useMosaicDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
-import { DelegatorProps } from '../../types';
+import { useMosaic, TileProps, DelegatorProps } from '../../mosaic';
 import { Tile } from '../Tile';
-import { TileSharedProps } from '../types';
 
-export type StackTile = TileSharedProps & {
+export type StackTileProps = TileProps & {
   // Overrides
   variant: 'stack';
   sortable: true;
@@ -53,7 +51,7 @@ const StackImpl = forwardRef<HTMLDivElement, Omit<DelegatorProps, 'data'>>((prop
   );
 });
 
-const StackSortableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
+const StackSortableImpl = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: tile.id,
     data: tile,
@@ -73,7 +71,7 @@ const StackSortableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwarded
   );
 });
 
-const StackDroppableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
+const StackDroppableImpl = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const { setNodeRef } = useDroppable({
     id: tile.id,
     data: tile,
@@ -82,7 +80,7 @@ const StackDroppableImpl = forwardRef<HTMLDivElement, StackTile>((tile, forwarde
   return <StackImpl tile={tile} ref={ref as Ref<HTMLDivElement>} />;
 });
 
-const Stack = forwardRef<HTMLDivElement, StackTile>((tile, forwardedRef) => {
+const Stack = forwardRef<HTMLDivElement, StackTileProps>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
   } = useMosaic();

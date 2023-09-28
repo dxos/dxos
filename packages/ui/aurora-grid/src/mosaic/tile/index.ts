@@ -3,5 +3,3 @@
 //
 
 export * from './Tile';
-export * from './types';
-export * from './variants';

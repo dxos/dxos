@@ -9,9 +9,9 @@ import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';
 import { useMosaicDnd } from '../../dnd';
-import { TileVariantInstances } from '../../tile';
-import { CopyTileAction, MosaicState } from '../../types';
-import { getSubtiles, nextRearrangeIndex, managePreview } from '../../util';
+import { TileProps } from '../tile';
+import { CopyTileAction, MosaicState } from '../types';
+import { getSubtiles, nextRearrangeIndex, managePreview } from '../util';
 
 export const useHandleCopyDragStart = () => {
   const dnd = useMosaicDnd();
@@ -67,7 +67,7 @@ export const useHandleCopyDragEnd = () => {
 };
 
 const findCopyDestination = (
-  tile: TileVariantInstances | undefined,
+  tile: TileProps | undefined,
   copyClass: Set<string>,
   mosaic: MosaicState,
   activeId: string,
@@ -100,7 +100,7 @@ export const useHandleCopyDragOver = () => {
       return;
     }
     if (dnd.activeCopyClass && over?.data?.current) {
-      const overTile = over?.data?.current as TileVariantInstances | undefined;
+      const overTile = over?.data?.current as TileProps | undefined;
       const nextDestinationId =
         findCopyDestination(overTile, dnd.activeCopyClass, mosaic, active.id.toString(), copyTile) ?? null;
       managePreview({ operation: 'copy', active, over, mosaic, copyTile, dnd, nextDestinationId });

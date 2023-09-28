@@ -8,16 +8,15 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef } from 'react';
 
 import { useMosaicDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
-import { TileSharedProps } from '../types';
+import { useMosaic, TileProps } from '../../mosaic';
 
-export type CardTile = TileSharedProps & {
+export type CardTileProps = TileProps & {
   // Overrides
   variant: 'card';
   sortable?: false;
 };
 
-const Card = forwardRef<HTMLDivElement, CardTile>((tile, forwardedRef) => {
+const Card = forwardRef<HTMLDivElement, CardTileProps>((tile, forwardedRef) => {
   const { getData, Delegator } = useMosaic();
   const { activeId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform } = useSortable({

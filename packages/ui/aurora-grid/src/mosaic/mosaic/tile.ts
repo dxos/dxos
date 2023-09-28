@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export type TileVariant = 'stack' | 'card' | 'treeitem';
+// TODO(burdon): Make generic.
+type TileVariant = 'stack' | 'card' | 'treeitem';
 
-export type TileSharedProps = {
+export type TileProps = {
   // Primary props
   id: string;
   index: string;

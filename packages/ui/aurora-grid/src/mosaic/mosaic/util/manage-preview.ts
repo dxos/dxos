@@ -9,7 +9,7 @@ import { DeepSignal } from 'deepsignal';
 import { getDndId, parseDndId } from './dnd-id';
 import { getSubtiles } from './get-subtiles';
 import { nextCopyIndex } from './next-index';
-import { DndContextValue } from '../dnd';
+import { DndContextValue } from '../../dnd';
 import { CopyTileAction, MosaicState } from '../types';
 
 export type ManagePreviewArgs = {

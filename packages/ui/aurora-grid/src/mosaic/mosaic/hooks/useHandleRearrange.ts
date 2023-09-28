@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';
 import { useMosaicDnd } from '../../dnd';
-import { getSubtiles, nextRearrangeIndex } from '../../util';
+import { getSubtiles, nextRearrangeIndex } from '../util';
 
 export const useHandleRearrangeDragEnd = () => {
   const {

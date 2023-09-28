@@ -22,9 +22,9 @@ import {
   useHandleRearrangeDragEnd,
   useMosaic,
 } from './hooks';
+import type { MosaicRootProps, MosaicContextValue } from './types';
 import { MosaicDndProvider, dropAnimations, useMosaicDnd } from '../dnd';
-import { Tile, Stack, Card, TreeItem } from '../tile';
-import type { MosaicRootProps, MosaicContextValue } from '../types';
+import { Tile } from '../tile';
 
 const MosaicOverlayTile = ({ id }: { id: string }) => {
   const {
@@ -97,10 +97,5 @@ export const Mosaic = {
   Provider: MosaicProvider,
   Root: MosaicRoot,
   Overlay: MosaicOverlay,
-
-  // TODO(burdon): Remove.
   Tile,
-  Stack,
-  Card,
-  TreeItem,
 };

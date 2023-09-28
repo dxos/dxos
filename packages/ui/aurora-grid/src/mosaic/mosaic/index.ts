@@ -3,5 +3,7 @@
 //
 
 export * from './hooks';
+export * from './tile';
+export * from './types';
 
 export * from './Mosaic';

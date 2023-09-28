@@ -13,9 +13,8 @@ import { Button } from '@dxos/aurora';
 import { dropRing, getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
 import { Mosaic } from './Mosaic';
-import type { StackTile } from '../tile';
-import type { DelegatorProps, MosaicChangeHandler, MosaicState } from '../types';
-import { getDndId, parseDndId } from '../util';
+import type { DelegatorProps, MosaicChangeHandler, MosaicState } from './types';
+import { getDndId, parseDndId } from './util';
 
 faker.seed(1234);
 const fake = faker.helpers.fake;
@@ -127,7 +126,7 @@ export const Rearrange = {
         })}
       >
         <Mosaic.Root id={rearrangeMosaicId}>
-          <Mosaic.Tile {...(rearrangeMosaic.tiles[rearrangeRootId] as StackTile)} />
+          <Mosaic.Tile {...rearrangeMosaic.tiles[rearrangeRootId]} />
         </Mosaic.Root>
         <Mosaic.Overlay />
       </Mosaic.Provider>
@@ -198,12 +197,12 @@ export const Copy = {
         <div className='fixed inset-0 flex'>
           <div className='min-is-0 flex-1 overflow-y-auto'>
             <Mosaic.Root id={rearrangeMosaicId}>
-              <Mosaic.Tile {...(copyMosaic.tiles[rearrangeRootId] as StackTile)} />
+              <Mosaic.Tile {...copyMosaic.tiles[rearrangeRootId]} />
             </Mosaic.Root>
           </div>
           <div className='min-is-0 flex-1 overflow-y-auto'>
             <Mosaic.Root id={copyMosaicId}>
-              <Mosaic.Tile {...(copyMosaic.tiles[copyRootId] as StackTile)} />
+              <Mosaic.Tile {...copyMosaic.tiles[copyRootId]} />
             </Mosaic.Root>
           </div>
         </div>

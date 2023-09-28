@@ -11,11 +11,10 @@ import React, { forwardRef } from 'react';
 
 import { Tree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
 
-import { TileSharedProps } from './../types';
 import { useMosaicDnd } from '../../dnd';
-import { useMosaic } from '../../mosaic';
+import { TileProps, useMosaic } from '../../mosaic';
 
-export type TreeItemTile = TileSharedProps & {
+export type TreeItemTileProps = TileProps & {
   // Overrides
   variant: 'treeitem';
   sortable: true;
@@ -24,7 +23,7 @@ export type TreeItemTile = TileSharedProps & {
   expanded?: boolean;
 };
 
-const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]>; level: number }) => {
+const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTileProps[]>; level: number }) => {
   return (
     <AuroraTreeItem.Body asChild>
       <Tree.Branch>
@@ -38,7 +37,7 @@ const TreeItemBody = ({ subtiles, level }: { subtiles: DeepSignal<TreeItemTile[]
   );
 };
 
-export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwardedRef) => {
+export const TreeItem = forwardRef<HTMLDivElement, TreeItemTileProps>((tile, forwardedRef) => {
   const {
     mosaic: { tiles, relations },
     getData,
@@ -55,8 +54,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemTile>((tile, forwarde
   const isMigrationDestination = migrationDestinationId === tile.id;
 
   const subtileIds = relations[tile.id]?.child ?? new Set();
-  const subtiles: DeepSignal<TreeItemTile[]> = Array.from(subtileIds)
-    .map((id) => tiles[id] as TreeItemTile)
+  const subtiles: DeepSignal<TreeItemTileProps[]> = Array.from(subtileIds)
+    .map((id) => tiles[id] as TreeItemTileProps)
     .sort(sortByIndex);
 
   return (

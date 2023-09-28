@@ -4,7 +4,7 @@
 
 import { Context, createContext, useContext } from 'react';
 
-import { MosaicContextValue } from '../../types';
+import { MosaicContextValue } from '../types';
 
 const defaultMosaicContextValue: MosaicContextValue = {
   getData: () => ({}),
