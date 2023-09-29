@@ -30,6 +30,7 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
+import { schema$ } from '@braneframe/types';
 import {
   auroraTheme,
   bindTheme,
@@ -85,7 +86,7 @@ const main = async () => {
           // TODO(burdon): Document ordering requirements and normalize with composer-app.
           // TODO(burdon): Normalize namespace across apps.
           TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
-          ClientPlugin({ config, services, debugIdentity: debug }),
+          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
           IntentPlugin(),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
 

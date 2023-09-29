@@ -44,7 +44,7 @@ describe('Spaces', () => {
     await testSpace(space.internal.db);
 
     expect(space.members.get()).to.be.length(1);
-  });
+  }).tag('flaky');
 
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();

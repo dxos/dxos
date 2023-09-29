@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { AppState } from '@braneframe/types';
+import { EchoSchema } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -14,7 +15,7 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
@@ -31,6 +32,10 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
+        if (options.schema) {
+          client.addSchema(options.schema);
+        }
+
         await client.initialize();
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?

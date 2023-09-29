@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-// TODO(burdon): Change to "example" namespace?
+// TODO(burdon): Change to "example" namespace? 
 package dxos.docs;
 
 message Task {
