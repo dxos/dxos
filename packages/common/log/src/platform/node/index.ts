@@ -19,7 +19,7 @@ export const loadOptions = (filepath?: string): LogOptions | undefined => {
         return yaml.load(text) as LogOptions;
       }
     } catch (err) {
-      console.warn(`Invalid log file: ${fullpath}`);
+      console.warn(`Invalid log file: ${filepath}`);
     }
   }
 };
