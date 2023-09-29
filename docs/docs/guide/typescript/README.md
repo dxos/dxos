@@ -34,4 +34,4 @@ main();
 
 An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](typescript/config.html).
 
-To begin manipulating data, we must [create an identity](typescript/identity.html), and [join or create a space](typescript/spaces.html).
+To begin manipulating data, we must [create an identity](typescript/identity), and [join or create a space](typescript/spaces).
