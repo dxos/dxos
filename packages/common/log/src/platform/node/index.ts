@@ -13,10 +13,9 @@ import { LogOptions } from '../../config';
  */
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
   if (filepath) {
-    const fullpath = path.join(process.cwd(), filepath);
     // console.log(`Log file: ${fullpath}`);
     try {
-      const text = fs.readFileSync(fullpath, 'utf-8');
+      const text = fs.readFileSync(filepath, 'utf-8');
       if (text) {
         return yaml.load(text) as LogOptions;
       }
