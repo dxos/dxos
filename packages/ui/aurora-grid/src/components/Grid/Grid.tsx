@@ -4,7 +4,8 @@
 
 import '@dxosTheme';
 
-import React, { FC, createContext, useState, useContext, useMemo, ReactNode } from 'react';
+import React, { FC, createContext, useState, useContext, useMemo, ReactNode, useEffect } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/aurora-theme';
 
@@ -33,7 +34,7 @@ const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) =
 });
 
 // TODO(burdon): Delegate.
-type GridCard = {
+type GridItem = {
   id: string;
   position?: Position;
   card: ReactNode;
@@ -62,16 +63,15 @@ const useGrid = () => {
 /**
  *
  */
-const GridContainer: FC<{ cards: GridCard[]; size: { x: number; y: number }; center?: Position }> = ({
-  cards,
-  size = { x: 16, y: 16 },
-  center = { x: 0, y: 0 },
+const GridContainer: FC<{ items: GridItem[]; size: { x: number; y: number }; center?: Position }> = ({
+  items,
+  size = { x: 8, y: 8 },
 }) => {
+  const { cellBounds } = useGrid();
+
   return (
     <GridContext.Provider value={defaultGrid}>
-      <div className='grow overflow-auto'>
-        <GridPanel cards={cards} size={size} />
-      </div>
+      <GridPanel items={items} size={size} margin={cellBounds.width} />
     </GridContext.Provider>
   );
 };
@@ -79,7 +79,15 @@ const GridContainer: FC<{ cards: GridCard[]; size: { x: number; y: number }; cen
 /**
  *
  */
-const GridPanel: FC<{ cards: GridCard[]; size: { x: number; y: number } }> = ({ cards, size }) => {
+const GridPanel: FC<{
+  items: GridItem[];
+  size: { x: number; y: number };
+  margin?: number;
+  onSelect?: (id: string) => void;
+}> = ({ items, size, margin = 0, onSelect }) => {
+  // TODO(burdon): React has detected a change in the order of Hooks.
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+
   const { cellBounds, padding } = useGrid();
   const { matrix, bounds } = useMemo(
     () => ({
@@ -89,18 +97,43 @@ const GridPanel: FC<{ cards: GridCard[]; size: { x: number; y: number } }> = ({ 
     [cellBounds, size],
   );
 
+  const setCenter = (id: string) => {
+    const item = items.find((item) => item.id === id);
+    if (item && width && height) {
+      const pos = getPosition(item.position!, cellBounds);
+      const top = pos.top - height / 2 + cellBounds.height / 2 + margin;
+      const left = pos.left - width / 2 + cellBounds.width / 2 + margin;
+      containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
+    }
+  };
+
+  const [selected, setSelected] = useState<string>();
+  const handleSelect = (id: string) => {
+    setSelected(id);
+    setCenter(id);
+  };
+
+  useEffect(() => {
+    if (selected) {
+      setCenter(selected);
+    }
+  }, [selected, width, height]);
+
   return (
-    <div className='block relative' style={{ ...bounds }}>
-      {matrix.map((row) => row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} />))}
-      {cards.map(({ id, position, card }) => (
-        <div
-          key={id}
-          style={getBounds(position ?? { x: 0, y: 0 }, cellBounds, padding)}
-          className='absolute overflow-hidden'
-        >
-          {card}
-        </div>
-      ))}
+    <div ref={containerRef} className='grow overflow-auto bg-neutral-300'>
+      <div className='block relative' style={{ ...bounds, margin }}>
+        {matrix.map((row) => row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} />))}
+        {items.map(({ id, position, card }) => (
+          <div
+            key={id}
+            className='absolute overflow-hidden'
+            style={getBounds(position ?? { x: 0, y: 0 }, cellBounds, padding)}
+            onDoubleClick={() => handleSelect(id)}
+          >
+            {card}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -118,11 +151,11 @@ const Cell: FC<{ position: Position }> = ({ position }) => {
     <div
       style={{ ...bounds }}
       className={mx(
-        'absolute flex justify-center items-center grow border select-none',
-        'bg-neutral-50 border-neutral-100 opacity-50',
+        'absolute flex justify-center items-center grow select-none cursor-pointer',
+        'bg-neutral-100 border border-neutral-125',
       )}
     >
-      <div className='font-mono text-sm text-neutral-200'>{JSON.stringify(position)}</div>
+      <div className='font-mono text-sm text-neutral-200 hidden'>{JSON.stringify(position)}</div>
     </div>
   );
 };
@@ -131,4 +164,4 @@ export const Grid = {
   Root: GridContainer,
 };
 
-export type { GridCard };
+export type { GridItem };

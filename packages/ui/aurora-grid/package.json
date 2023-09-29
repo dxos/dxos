@@ -32,7 +32,8 @@
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@tldraw/indices": "2.0.0-alpha.14",
     "deepsignal": "^1.3.6",
-    "lodash.defaultsdeep": "^4.6.1"
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",

@@ -11,7 +11,7 @@ import React, { FC } from 'react';
 import { Card, DensityProvider } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Grid, GridCard } from './Grid';
+import { Grid, GridItem } from './Grid';
 
 const TestCard: FC<{ title?: string; body?: string; media?: string }> = ({ title, body, media }) => {
   if (!title && !body) {
@@ -53,7 +53,15 @@ const data = [
   },
   {
     id: 'item-3',
+    media: 'https://images.unsplash.com/photo-1431274172761-fca41d930114',
+  },
+  {
+    id: 'item-4',
     media: 'https://images.unsplash.com/photo-1564221710304-0b37c8b9d729',
+  },
+  {
+    id: 'item-5',
+    media: 'https://images.unsplash.com/photo-1605425183435-25b7e99104a4',
   },
 ];
 
@@ -68,11 +76,19 @@ const positions = [
   },
   {
     id: 'item-3',
-    position: { x: 3, y: 2 },
+    position: { x: 4, y: 1 },
+  },
+  {
+    id: 'item-4',
+    position: { x: 2, y: 3 },
+  },
+  {
+    id: 'item-5',
+    position: { x: 3, y: 7 },
   },
 ];
 
-const cards: GridCard[] = data.map(({ id, title, body, media }) => ({
+const items: GridItem[] = data.map(({ id, title, body, media }) => ({
   id,
   position: positions.find((position) => position.id === id)?.position,
   card: <TestCard title={title} body={body} media={media} />,
@@ -80,7 +96,7 @@ const cards: GridCard[] = data.map(({ id, title, body, media }) => ({
 
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer> => {
   return (Story) => (
-    <div className={mx('flex fixed inset-4 overflow-hidden', className)}>
+    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
       <DensityProvider density='fine'>
         <Story />
       </DensityProvider>
@@ -98,6 +114,6 @@ export default {
 
 export const Default = {
   args: {
-    cards,
+    items,
   },
 };
