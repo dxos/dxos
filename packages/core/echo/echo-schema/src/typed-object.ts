@@ -320,7 +320,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   private _properties(key?: string, meta?: boolean) {
-    const state = meta ? this._getState().meta : this._getState();
+    const state = meta ? this._getState().meta : this._getState().data;
 
     const value = key ? get(state, key) : state;
 
