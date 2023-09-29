@@ -106,6 +106,7 @@ const main = async () => {
           GithubPlugin(),
           MarkdownPlugin(),
           StackPlugin(),
+          SketchPlugin(),
 
           // Labs
           ChessPlugin(),
@@ -114,7 +115,6 @@ const main = async () => {
           IpfsPlugin(),
           KanbanPlugin(),
           MapPlugin(),
-          SketchPlugin(),
           ThreadPlugin(),
         ]}
       />
