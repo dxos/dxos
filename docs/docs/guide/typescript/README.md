@@ -32,6 +32,6 @@ const main = async () => {
 main();
 ```
 
-An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](config).
+An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](typescript/config).
 
-To begin manipulating data, we must [create an identity](identity), and [join or create a space](spaces).
+To begin manipulating data, we must [create an identity](typescript/identity), and [join or create a space](typescript/spaces).
