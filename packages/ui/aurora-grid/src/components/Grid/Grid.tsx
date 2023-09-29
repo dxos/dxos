@@ -10,9 +10,8 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-// TODO(burdon): Context.
-// TODO(burdon): Click to center.
-// TODO(burdon): Scale container.
+type Bounds = { width: number; height: number };
+type Position = { x: number; y: number };
 
 const createMatrix = <TValue,>(rangeX: number, rangeY: number, value: (position: Position) => TValue): TValue[][] => {
   const matrix: TValue[][] = [];
@@ -23,9 +22,6 @@ const createMatrix = <TValue,>(rangeX: number, rangeY: number, value: (position:
   return matrix;
 };
 
-type Bounds = { width: number; height: number };
-type Position = { x: number; y: number };
-
 const getPosition = ({ x, y }: Position, { width, height }: Bounds) => ({ left: x * width, top: y * height });
 const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) => ({
   left: x * width + padding,
@@ -34,11 +30,12 @@ const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) =
   height: height - padding * 2,
 });
 
-// TODO(burdon): Delegate.
-type GridItem = {
-  id: string;
-  position?: Position;
-  card: ReactNode;
+const getCellWidth = (
+  defaultWidth: number,
+  screenWidth: number,
+  options: { min: number; max: number } = { min: 260, max: 400 },
+) => {
+  return screenWidth > options.min && screenWidth < options.max ? screenWidth : defaultWidth;
 };
 
 //
@@ -61,10 +58,18 @@ const useGrid = () => {
   return useContext(GridContext);
 };
 
+// TODO(burdon): Scale container.
+
+type GridItem = {
+  id: string;
+  position?: Position;
+  card: ReactNode; // TODO(burdon): Delegate.
+};
+
 /**
- *
+ * Root container.
  */
-const GridContainer: FC<{ items: GridItem[]; size: { x: number; y: number }; center?: Position }> = ({
+const GridRoot: FC<{ items: GridItem[]; size: { x: number; y: number }; center?: Position }> = ({
   items,
   size = { x: 8, y: 8 },
 }) => {
@@ -75,18 +80,8 @@ const GridContainer: FC<{ items: GridItem[]; size: { x: number; y: number }; cen
   );
 };
 
-const getCellWidth = (defaultWidth: number, screenWidth: number) => {
-  const min = 240;
-  const max = 400;
-  if (screenWidth > min && screenWidth < max) {
-    return screenWidth;
-  }
-
-  return defaultWidth;
-};
-
 /**
- *
+ * Grid content.
  */
 const GridPanel: FC<{
   items: GridItem[];
@@ -130,7 +125,7 @@ const GridPanel: FC<{
   const [selected, setSelected] = useState<string>();
   const handleSelect = (id: string) => {
     setSelected(id);
-    setCenter(id);
+    setCenter(id, true);
     onSelect?.(id);
   };
 
@@ -146,14 +141,14 @@ const GridPanel: FC<{
           y: (contentRef.current!.offsetHeight + margin * 2 - height) / 2,
         };
 
-        containerRef.current!.scrollTo({ top: center.y, left: center.x, behavior: 'smooth' });
+        containerRef.current!.scrollTo({ top: center.y, left: center.x });
       }
     }
   }, [selected, width, height]);
 
   return (
     <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-300'>
-      <div ref={contentRef} className='block relative' style={{ ...bounds, margin }}>
+      <div ref={contentRef} className='group block relative' style={{ ...bounds, margin }}>
         {matrix.map((row) =>
           row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} cellBounds={cellBounds} />),
         )}
@@ -174,7 +169,7 @@ const GridPanel: FC<{
 };
 
 /**
- *
+ * Grid cell.
  */
 const Cell: FC<{ position: Position; cellBounds: Bounds }> = ({ position, cellBounds }) => {
   const bounds = {
@@ -187,7 +182,7 @@ const Cell: FC<{ position: Position; cellBounds: Bounds }> = ({ position, cellBo
       style={{ ...bounds }}
       className={mx(
         'absolute flex justify-center items-center grow select-none cursor-pointer snap-center',
-        'bg-neutral-100 border border-neutral-125',
+        'bg-neutral-100 group-hover:border border-neutral-125',
       )}
     >
       <div className='font-mono text-sm text-neutral-200 hidden'>{JSON.stringify(position)}</div>
@@ -196,7 +191,7 @@ const Cell: FC<{ position: Position; cellBounds: Bounds }> = ({ position, cellBo
 };
 
 export const Grid = {
-  Root: GridContainer,
+  Root: GridRoot,
 };
 
 export type { GridItem };
