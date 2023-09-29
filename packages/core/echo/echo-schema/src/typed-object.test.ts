@@ -41,6 +41,11 @@ describe('TypedObject', () => {
     expect(obj3.__meta.keys[0].source).to.equal('dxos.org');
   });
 
+  test('keys', () => {
+    const obj = new Expando({ title: 'hello world', priority: 1 });
+    expect(Object.keys(obj)).to.deep.equal(['title', 'priority']);
+  });
+
   describe('meta', () => {
     test('meta keys', () => {
       const obj = new TypedObject();
