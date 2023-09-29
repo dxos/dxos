@@ -232,14 +232,22 @@ source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 
 ## Storybook
 
+Start a storybook dev server for any project:
+
+```bash
+pnpm nx run project:storybook
 ```
-Cannot GET /` when running 'pnpm run storybook'
+
+If you see the following error:
+
+```
+Cannot GET /` when running 'pnpm nx run project:storybook'
 ```
 
 Solution:
 
 ```bash
-pnpm run storybook --no-manager-cache
+pnpm nx run project:storybook --no-manager-cache
 ```
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
