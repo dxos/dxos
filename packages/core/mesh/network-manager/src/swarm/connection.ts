@@ -255,7 +255,7 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      log('aborting protocol... ', { proto: this._protocol });
+      log('aborting protocol... ');
       await this._protocol.abort();
     } catch (err: any) {
       log.catch(err);
