@@ -7,8 +7,8 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { Schema as SchemaType, Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
+import { Table as TableType } from '@braneframe/types';
+import { SpaceProxy, Expando, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';

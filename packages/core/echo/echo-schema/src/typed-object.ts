@@ -5,14 +5,15 @@
 import get from 'lodash.get';
 import { inspect, InspectOptionsStylized } from 'node:util';
 
-import { DocumentModel, MutationBuilder, OrderedArray, Reference } from '@dxos/document-model';
+import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, readOnly, schema } from './defs';
+import { base, data, proxy, immutable, schema, meta } from './defs';
 import { EchoObject } from './object';
+import type { Schema } from './proto'; // NOTE: Keep as type-import.
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
@@ -26,10 +27,10 @@ const isValidKey = (key: string | symbol) =>
     key === 'toString' ||
     key === 'toJSON' ||
     key === 'id' ||
-    key === '__deleted' ||
-    key === '__typename' ||
-    key === 'meta' ||
-    key === 'setMeta'
+    key === '__meta' ||
+    key === '__schema' ||
+    key === '__typename' || // TODO(burdon): Reconcile with schema name.
+    key === '__deleted'
   );
 
 export const isTypedObject = (object: unknown): object is TypedObject =>
@@ -49,12 +50,37 @@ export const DEFAULT_VISITORS: ConvertVisitors = {
  */
 type NoInfer<T> = [T][T extends any ? 0 : never];
 
+//
+// TypedObject
+// Generic base class for strongly-typed schema-generated classes.
+//
+
+// TODO(dmaretskyi): Document.
+export type ForeignKey = {
+  source?: string;
+  id?: string;
+};
+
+// TODO(dmaretskyi): Document.
+export type ObjectMeta = {
+  keys: ForeignKey[];
+  index?: string;
+};
+
+export type TypedObjectOptions = {
+  // TODO(burdon): Reconcile.
+  schema?: EchoSchemaType | Schema;
+  meta?: ObjectMeta;
+  immutable?: boolean;
+};
+
 /**
  * Base class for generated document types and dynamic objects.
  *
  * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
+// TODO(burdon): Extract interface.
 class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -62,80 +88,117 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  // TODO(burdon): Remove undefined keys.
-  constructor(
-    initialProps?: T,
-    private readonly _schemaType?: EchoSchemaType,
-    private readonly _opts?: TypedObjectOptions,
-  ) {
+  // TODO(burdon): Reconcile types.
+  private readonly _schema?: EchoSchemaType | Schema = undefined;
+  private readonly _immutable;
+
+  constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
-    // TODO(burdon): Strip keys.
-    // stripKeys(initialProps);
+    this._schema = opts?.schema;
+    this._immutable = opts?.immutable ?? false;
 
     // Assign initial meta fields.
-    this._mutate(new MutationBuilder().set('keys', OrderedArray.fromValues([])).build(true));
+    this._updateMeta({ keys: [], ...opts?.meta });
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
-    if (this._schemaType) {
+    if (this._schema instanceof EchoSchemaType) {
       // Set type.
-      this._mutate({ type: this._schemaType.name });
+      this._mutate({ typeRef: Reference.fromLegacyTypeName(this._schema.name) });
 
-      for (const field of this._schemaType.fields) {
+      for (const field of this._schema.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
         } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
           this._set(field.name, new Text());
         }
       }
+    } else if (isRuntimeSchema(this._schema)) {
+      this._mutate({ typeRef: new Reference(this._schema!.id) });
     }
 
     if (initialProps) {
       for (const field in initialProps) {
         const value = initialProps[field];
-        this._set(field, value);
+        if (value !== undefined) {
+          this._set(field, value);
+        }
       }
     }
 
     return this._createProxy(this);
   }
 
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect_: (value: any, options?: InspectOptionsStylized) => string,
+  ) {
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
+  }
+
+  // get [devtoolsFormatter](): DevtoolsFormatter {
+  //   return {
+  //     header: () => [
+  //       'span',
+  //       {},
+  //       ['span', {}, `${this[Symbol.toStringTag]}(`],
+  //       ['span', {}, this.id],
+  //       ['span', {}, ')']
+  //     ],
+  //     hasBody: () => true,
+  //     body: () => {
+  //       const json = this.toJSON();
+  //       return null
+  //     }
+  //   };
+  // }
+
   get [Symbol.toStringTag]() {
-    return this[base]?._schemaType?.name ?? 'TypedObject';
-  }
-
-  /**
-   * Fully qualified name of the object type for objects created from the schema.
-   * @example "example.kai.Task"
-   */
-  get __typename(): string | undefined {
-    return this[base]?._schemaType?.name ?? this[base]._model?.type ?? undefined;
-  }
-
-  get meta(): ObjectMeta {
-    return this[base]._createProxy({}, undefined, true);
-  }
-
-  set meta(value: Partial<ObjectMeta>) {
-    this.setMeta(value);
+    if (this.__schema instanceof EchoSchemaType) {
+      return this.__schema.name ?? 'TypedObject';
+    } else {
+      return 'TypedObject';
+    }
   }
 
   /**
    * Returns the schema type descriptor for the object.
    */
-  // TODO(burdon): Method on TypedObject vs EchoObject?
-  get [schema](): EchoSchemaType | undefined {
-    return this[base]?._schemaType;
+  get [schema](): EchoSchemaType | Schema | undefined {
+    return this[base]._schema;
+  }
+
+  get [meta](): ObjectMeta {
+    return this[base]._createProxy({}, undefined, true);
+  }
+
+  get [data](): any {
+    return this[base]._convert({
+      onRef: (id, obj) => obj ?? { '@id': id },
+    });
+  }
+
+  get [immutable](): boolean {
+    return !!this[base]?._immutable;
+  }
+
+  get __schema(): EchoSchemaType | Schema | undefined {
+    return this[base]._schema;
   }
 
   /**
-   * Returns boolean. If `true`, read only access is activated.
+   * Fully qualified name of the object type for objects created from the schema.
    */
-  get [readOnly](): boolean {
-    return !!this[base]?._opts?.readOnly;
+  // TODO(burdon): Reconcile schema type.
+  get __typename(): string | undefined {
+    return this[base]._schema instanceof EchoSchemaType ? this[base]._schema!.name : undefined;
   }
 
-  /** Deletion. */
+  get __meta(): ObjectMeta {
+    return this[meta];
+  }
+
   get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
   }
@@ -148,12 +211,6 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     return this[base]._convert();
   }
 
-  get [data]() {
-    return this[base]._convert({
-      onRef: (id, obj?) => obj ?? { '@id': id },
-    });
-  }
-
   /**
    * Convenience method to set meta fields.
    *
@@ -162,12 +219,13 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * space.db.add(new Expando().setMeta({ keys: [{ source: 'example.com' }] }));
    * ```
    */
-  setMeta(meta: Partial<ObjectMeta>): this {
+  private _updateMeta(meta: Partial<ObjectMeta>): this {
     this[base]._inBatch(() => {
       for (const key in meta) {
-        this.meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
+        this.__meta[key as keyof ObjectMeta] = meta[key as keyof ObjectMeta] as any;
       }
     });
+
     return this;
   }
 
@@ -210,41 +268,19 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
-      '@type': this.__typename,
+      '@type': this.__typename ?? (isRuntimeSchema(this._schema) ? { '@id': this._schema!.id } : undefined),
+      // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
+      '@meta': this._transform(this._getState().meta, visitors),
+      ...(this.__deleted ? { '@deleted': this.__deleted } : {}),
       ...this._transform(this._model?.toObject(), visitors),
-      meta: this._transform(this._getState().meta, visitors),
     };
   }
 
-  [inspect.custom](
-    depth: number,
-    options: InspectOptionsStylized,
-    inspect_: (value: any, options?: InspectOptionsStylized) => string,
-  ) {
-    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
-  }
-
-  // get [devtoolsFormatter](): DevtoolsFormatter {
-  //   return {
-  //     header: () => [
-  //       'span',
-  //       {},
-  //       ['span', {}, `${this[Symbol.toStringTag]}(`],
-  //       ['span', {}, this.id],
-  //       ['span', {}, ')']
-  //     ],
-  //     hasBody: () => true,
-  //     body: () => {
-  //       const json = this.toJSON();
-  //       return null
-  //     }
-  //   };
-  // }
-
   /**
    * @internal
-   * @param meta Get from `meta` key-space.
+   * @param key
+   * @param meta If true then get from `meta` key-space.
    */
   private _get(key: string, meta?: boolean): any {
     this._signal?.notifyRead();
@@ -252,8 +288,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
-    if (!type && this._schemaType) {
-      const field = this._schemaType.fields.find((field) => field.name === key);
+    if (!type && this._schema instanceof EchoSchemaType) {
+      const field = this._schema.fields.find((field) => field.name === key);
       if (field?.type.kind === 'array') {
         type = 'array';
       }
@@ -371,8 +407,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
      */
     return new Proxy(object, {
       ownKeys: (target) => {
-        if (this._schemaType && !parent && !meta) {
-          return target._schemaType?.fields.map(({ name }: EchoSchemaField) => name) ?? [];
+        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
+          return this._schema.fields.map(({ name }: EchoSchemaField) => name) ?? [];
         } else {
           return this._properties(parent, meta);
         }
@@ -391,8 +427,8 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
           return false;
         }
 
-        if (this._schemaType && !parent && !meta) {
-          return !!this._schemaType?.fields.find(({ name }: EchoSchemaField) => name === property);
+        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
+          return !!this._schema?.fields.find(({ name }: EchoSchemaField) => name === property);
         } else {
           return this._properties(parent, meta).includes(property);
         }
@@ -437,7 +473,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
       },
 
       set: (target, property, value, receiver) => {
-        if (this._opts?.readOnly) {
+        if (this[base]._immutable && !parent && !meta) {
           log.warn('Read only access');
           return false;
         }
@@ -493,61 +529,30 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
 // Set stringified name for constructor.
 Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 
-//
-// TypedObject
-// Generic base class for strongly-typed schema-generated classes.
-//
-
-export type ForeignKey = {
-  source?: string;
-  id?: string;
-};
-
-// TODO(dmaretskyi): Document.
-export type ObjectMeta = {
-  keys: ForeignKey[];
-  index?: string;
-  schema?: Expando;
-};
-
 /**
  * Base class for generated document types and expando objects.
  */
 export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
-export type TypedObjectOptions = {
-  readOnly?: boolean;
-};
-
 type TypedObjectConstructor = {
-  /**
-   * Create a new document.
-   * @param initialProps Initial properties.
-   * @param _schemaType Schema type for generated types.
-   * @param opts
-   */
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
-    _schemaType?: EchoSchemaType,
     opts?: TypedObjectOptions,
   ): TypedObject<T>;
 };
 
 export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
 
-//
-// Expando
-// Schema-less expandable object.
-//
-
+/**
+ *
+ */
 type ExpandoConstructor = {
-  /**
-   * Create a new document.
-   * @param initialProps Initial properties.
-   */
-  new (initialProps?: Record<string, any>): Expando;
+  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
+
+const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
+  !!schema && !!(schema as any)[base];
