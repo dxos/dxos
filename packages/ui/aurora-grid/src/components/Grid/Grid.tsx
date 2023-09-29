@@ -4,9 +4,10 @@
 
 import '@dxosTheme';
 
-import React, { FC, createContext, useState, useContext, useMemo, ReactNode, useEffect } from 'react';
+import React, { FC, createContext, useState, useContext, useMemo, ReactNode, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Context.
@@ -45,12 +46,12 @@ type GridItem = {
 //
 
 type GridContextType = {
-  cellBounds: Bounds;
+  defaultCellBounds: Bounds;
   padding?: number;
 };
 
 const defaultGrid: GridContextType = {
-  cellBounds: { width: 300, height: 300 },
+  defaultCellBounds: { width: 300, height: 300 },
   padding: 8,
 };
 
@@ -67,13 +68,21 @@ const GridContainer: FC<{ items: GridItem[]; size: { x: number; y: number }; cen
   items,
   size = { x: 8, y: 8 },
 }) => {
-  const { cellBounds } = useGrid();
-
   return (
     <GridContext.Provider value={defaultGrid}>
-      <GridPanel items={items} size={size} margin={cellBounds.width} />
+      <GridPanel items={items} size={size} />
     </GridContext.Provider>
   );
+};
+
+const getCellWidth = (defaultWidth: number, screenWidth: number) => {
+  const min = 240;
+  const max = 400;
+  if (screenWidth > min && screenWidth < max) {
+    return screenWidth;
+  }
+
+  return defaultWidth;
 };
 
 /**
@@ -82,27 +91,38 @@ const GridContainer: FC<{ items: GridItem[]; size: { x: number; y: number }; cen
 const GridPanel: FC<{
   items: GridItem[];
   size: { x: number; y: number };
-  margin?: number;
+  square?: boolean;
   onSelect?: (id: string) => void;
-}> = ({ items, size, margin = 0, onSelect }) => {
-  // TODO(burdon): React has detected a change in the order of Hooks.
+}> = ({ items, size, square = true, onSelect }) => {
+  // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const { cellBounds, padding } = useGrid();
-  const { matrix, bounds } = useMemo(
-    () => ({
+  const { defaultCellBounds, padding } = useGrid();
+  const { matrix, bounds, cellBounds } = useMemo(() => {
+    // Change default cell bounds to screen width if mobile.
+    const cellWidth = getCellWidth(defaultCellBounds.width, width ?? 0);
+    const cellBounds = {
+      width: cellWidth,
+      height: square ? cellWidth : defaultCellBounds.height,
+    };
+
+    return {
       matrix: createMatrix(size.x, size.y, ({ x, y }) => ({ x, y })),
       bounds: { width: size.x * cellBounds.width, height: size.y * cellBounds.height },
-    }),
-    [cellBounds, size],
-  );
+      cellBounds,
+    };
+  }, [defaultCellBounds, size, width]);
+
+  const [isNotMobile] = useMediaQuery('md');
+  const margin = isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
 
   const setCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
       const pos = getPosition(item.position!, cellBounds);
-      const top = pos.top - height / 2 + cellBounds.height / 2 + margin;
-      const left = pos.left - width / 2 + cellBounds.width / 2 + margin;
+      const top = pos.top + margin - (height - cellBounds.height) / 2;
+      const left = pos.left + margin - (width - cellBounds.width) / 2;
       containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
     }
   };
@@ -111,18 +131,33 @@ const GridPanel: FC<{
   const handleSelect = (id: string) => {
     setSelected(id);
     setCenter(id);
+    onSelect?.(id);
   };
 
   useEffect(() => {
     if (selected) {
+      // Center on selected.
       setCenter(selected);
+    } else {
+      // Center on screen.
+      if (width && height && isNotMobile) {
+        const center = {
+          x: (contentRef.current!.offsetWidth + margin * 2 - width) / 2,
+          y: (contentRef.current!.offsetHeight + margin * 2 - height) / 2,
+        };
+
+        containerRef.current!.scrollTo({ top: center.y, left: center.x, behavior: 'smooth' });
+      }
     }
   }, [selected, width, height]);
 
   return (
-    <div ref={containerRef} className='grow overflow-auto bg-neutral-300'>
-      <div className='block relative' style={{ ...bounds, margin }}>
-        {matrix.map((row) => row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} />))}
+    <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-300'>
+      <div ref={contentRef} className='block relative' style={{ ...bounds, margin }}>
+        {matrix.map((row) =>
+          row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} cellBounds={cellBounds} />),
+        )}
+
         {items.map(({ id, position, card }) => (
           <div
             key={id}
@@ -141,17 +176,17 @@ const GridPanel: FC<{
 /**
  *
  */
-const Cell: FC<{ position: Position }> = ({ position }) => {
-  const { cellBounds } = useGrid();
-  const [bounds] = useState({
+const Cell: FC<{ position: Position; cellBounds: Bounds }> = ({ position, cellBounds }) => {
+  const bounds = {
     ...getPosition(position, cellBounds),
     ...cellBounds,
-  });
+  };
+
   return (
     <div
       style={{ ...bounds }}
       className={mx(
-        'absolute flex justify-center items-center grow select-none cursor-pointer',
+        'absolute flex justify-center items-center grow select-none cursor-pointer snap-center',
         'bg-neutral-100 border border-neutral-125',
       )}
     >
