@@ -3,7 +3,7 @@
 //
 
 import { Event, ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel } from '@dxos/document-model';
+import { DocumentModel, DocumentModelState } from '@dxos/document-model';
 import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -13,6 +13,7 @@ import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { base, db } from './defs';
 import { EchoObject } from './object';
+import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
 import { DatabaseRouter } from './router';
 import { Text } from './text-object';
@@ -242,17 +243,23 @@ export class EchoDatabase {
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.modelType === DocumentModel.meta.type) {
-      const type = item.state['@type'];
-      if (!type) {
+      const state = item.state as DocumentModelState;
+      if (!state.type) {
         return new TypedObject();
       }
 
-      const Proto = this._router.schema?.getPrototype(type);
-      if (!Proto) {
-        log.warn('Unknown schema type', { type });
-        return new TypedObject(); // TODO(burdon): Expando?
-      } else {
-        return new Proto();
+      if (state.type.protocol === 'protobuf') {
+        const type = state.type.itemId;
+        const Proto = this._router.schema?.getPrototype(type);
+        if (!Proto) {
+          log.warn('Unknown schema type', { type: state.type?.encode() });
+          return new TypedObject(); // TODO(burdon): Expando?
+        } else {
+          return new Proto();
+        }
+      } else if (state.type.protocol === undefined) {
+        const schema = this.getObjectById(state.type.itemId);
+        return new TypedObject(undefined, { schema: schema as Schema | undefined });
       }
     } else if (item.modelType === TextModel.meta.type) {
       return new Text();
