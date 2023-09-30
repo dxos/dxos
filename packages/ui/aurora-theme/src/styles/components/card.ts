@@ -21,7 +21,7 @@ export type CardStyleProps = Partial<{
 
 export const cardRoot: ComponentFunction<CardStyleProps> = ({ grow, square, rounded = true }, ...etc) =>
   mx(
-    'flex flex-col group overflow-hidden',
+    'flex flex-col group/card overflow-hidden',
     grow && 'h-full',
     defaults.width,
     inputSurface,
@@ -48,7 +48,7 @@ export const cardDragHandle: ComponentFunction<CardStyleProps & { position?: 'le
     density === 'fine' ? getSize(8) : getSize(10),
     position === 'left' && 'absolute top-1 left-1',
     position === 'right' && 'absolute top-1 right-1',
-    position && 'text-black group-hover:bg-white group-hover:bg-opacity-80',
+    position && 'text-black group-hover/card:bg-white group-hover/card:bg-opacity-80',
     ...etc,
   );
 
@@ -65,7 +65,7 @@ export const cardMenu: ComponentFunction<CardStyleProps & { position?: 'left' | 
     density === 'fine' ? getSize(8) : getSize(10),
     position === 'left' && 'absolute top-1 left-1',
     position === 'right' && 'absolute top-1 right-1',
-    position && 'text-black group-hover:bg-white group-hover:bg-opacity-80',
+    position && 'text-black group-hover/card:bg-white group-hover/card:bg-opacity-80',
     ...etc,
   );
 

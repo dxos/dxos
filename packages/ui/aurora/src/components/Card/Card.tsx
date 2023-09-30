@@ -95,7 +95,11 @@ type CardMediaProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { src?:
 // TODO(burdon): Option to set to 50% of height of card.
 export const CardMedia: FC<CardMediaProps> = ({ src, contain, classNames, ...props }) => {
   const { tx } = useThemeContext();
-  return <img {...props} className={tx('card.media', 'card', { contain }, classNames)} src={src} />;
+  return (
+    <div className='flex grow overflow-hidden'>
+      <img {...props} className={tx('card.media', 'card', { contain }, classNames)} src={src} />
+    </div>
+  );
 };
 
 export const Card = {

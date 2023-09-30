@@ -141,6 +141,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return null;
             }
           case 'mosaic-delegator':
+            // TODO(burdon): Need stronger typing (vs. 'tile' in)?
             if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
               const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
               return mosaicId === STACK_PLUGIN || mosaicId === STACK_PLUGIN_PREVIEW_SECTION

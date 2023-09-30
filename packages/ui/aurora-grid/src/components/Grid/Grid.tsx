@@ -3,15 +3,28 @@
 //
 
 import '@dxosTheme';
-
-import React, { FC, createContext, useState, useContext, useMemo, ReactNode, useEffect, useRef } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import React, {
+  FC,
+  createContext,
+  useState,
+  useContext,
+  useMemo,
+  useEffect,
+  useRef,
+  RefAttributes,
+  ForwardRefExoticComponent,
+} from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-type Bounds = { width: number; height: number };
-type Position = { x: number; y: number };
+export type Bounds = { width: number; height: number };
+
+export type Position = { x: number; y: number };
 
 const createMatrix = <TValue,>(rangeX: number, rangeY: number, value: (position: Position) => TValue): TValue[][] => {
   const matrix: TValue[][] = [];
@@ -22,7 +35,10 @@ const createMatrix = <TValue,>(rangeX: number, rangeY: number, value: (position:
   return matrix;
 };
 
+// TODO(burdon): Set center point on container (via translation?)
+
 const getPosition = ({ x, y }: Position, { width, height }: Bounds) => ({ left: x * width, top: y * height });
+
 const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) => ({
   left: x * width + padding,
   top: y * height + padding,
@@ -44,12 +60,12 @@ const getCellWidth = (
 
 type GridContextType = {
   defaultCellBounds: Bounds;
-  padding?: number;
+  spacing?: number;
 };
 
 const defaultGrid: GridContextType = {
   defaultCellBounds: { width: 300, height: 300 },
-  padding: 8,
+  spacing: 8,
 };
 
 const GridContext = createContext<GridContextType>(defaultGrid);
@@ -60,22 +76,19 @@ const useGrid = () => {
 
 // TODO(burdon): Scale container.
 
-type GridItem = {
-  id: string;
-  position?: Position;
-  card: ReactNode; // TODO(burdon): Delegate.
-};
-
 /**
  * Root container.
  */
-const GridRoot: FC<{ items: GridItem[]; size: { x: number; y: number }; center?: Position }> = ({
+// TODO(burdon): Type.
+const GridRoot: FC<{ items: GridItem<any>[]; size: { x: number; y: number }; center?: Position }> = ({
   items,
   size = { x: 8, y: 8 },
 }) => {
   return (
     <GridContext.Provider value={defaultGrid}>
-      <GridPanel items={items} size={size} />
+      <SortableContext items={items.map((item) => item.id)}>
+        <GridLayout items={items} size={size} />
+      </SortableContext>
     </GridContext.Provider>
   );
 };
@@ -83,8 +96,8 @@ const GridRoot: FC<{ items: GridItem[]; size: { x: number; y: number }; center?:
 /**
  * Grid content.
  */
-const GridPanel: FC<{
-  items: GridItem[];
+const GridLayout: FC<{
+  items: GridItem<any>[];
   size: { x: number; y: number };
   square?: boolean;
   onSelect?: (id: string) => void;
@@ -93,7 +106,7 @@ const GridPanel: FC<{
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { defaultCellBounds, padding } = useGrid();
+  const { defaultCellBounds, spacing } = useGrid();
   const { matrix, bounds, cellBounds } = useMemo(() => {
     // Change default cell bounds to screen width if mobile.
     const cellWidth = getCellWidth(defaultCellBounds.width, width ?? 0);
@@ -109,6 +122,7 @@ const GridPanel: FC<{
     };
   }, [defaultCellBounds, size, width]);
 
+  // No margin if mobile.
   const [isNotMobile] = useMediaQuery('md');
   const margin = isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
 
@@ -125,7 +139,7 @@ const GridPanel: FC<{
   const [selected, setSelected] = useState<string>();
   const handleSelect = (id: string) => {
     setSelected(id);
-    setCenter(id, true);
+    setCenter(id);
     onSelect?.(id);
   };
 
@@ -147,45 +161,99 @@ const GridPanel: FC<{
   }, [selected, width, height]);
 
   return (
-    <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-300'>
-      <div ref={contentRef} className='group block relative' style={{ ...bounds, margin }}>
-        {matrix.map((row) =>
-          row.map(({ x, y }) => <Cell key={`${x}-${y}`} position={{ x, y }} cellBounds={cellBounds} />),
-        )}
+    <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600'>
+      <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin }}>
+        <div className='__group'>
+          {matrix.map((row) =>
+            row.map(({ x, y }) => (
+              <Cell key={`${x}-${y}`} position={{ x, y }} bounds={getBounds({ x, y }, cellBounds, spacing)} />
+            )),
+          )}
+        </div>
 
-        {items.map(({ id, position, card }) => (
-          <div
-            key={id}
-            className='absolute overflow-hidden'
-            style={getBounds(position ?? { x: 0, y: 0 }, cellBounds, padding)}
-            onDoubleClick={() => handleSelect(id)}
-          >
-            {card}
-          </div>
-        ))}
+        {/* TODO(burdon): onDoubleClick={() => handleSelect(id)} */}
+        <div>
+          {items.map(({ id, data, position, Component }) => (
+            <Wrapper
+              key={id}
+              id={id}
+              data={data}
+              position={position}
+              Component={Component}
+              bounds={getBounds(position ?? { x: 0, y: 0 }, cellBounds, spacing)}
+              onSelect={() => handleSelect(id)}
+            />
+          ))}
+        </div>
       </div>
     </div>
+  );
+};
+
+export type DraggableProps<T> = {
+  id: string;
+  data: T;
+  draggableStyle: any;
+  draggableProps: any;
+  onSelect?: () => void;
+};
+
+type GridItem<T> = {
+  id: string;
+  data: T;
+  position?: Position; // TODO(burdon): Generalize.
+  Component: ForwardRefExoticComponent<DraggableProps<T> & RefAttributes<HTMLDivElement> & { onSelect?: () => void }>;
+};
+
+const Wrapper: FC<GridItem<any> & { bounds: Bounds; onSelect: () => void }> = ({
+  id,
+  data,
+  Component,
+  bounds,
+  onSelect,
+}) => {
+  const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({ id, data });
+
+  return (
+    <Component
+      ref={setNodeRef}
+      id={id}
+      data={data}
+      draggableStyle={{
+        position: 'absolute',
+        zIndex: isDragging ? 100 : undefined, // TODO(burdon): Const.
+        transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
+        ...bounds,
+      }}
+      draggableProps={{ ...attributes, ...listeners }}
+      onSelect={onSelect}
+    />
   );
 };
 
 /**
  * Grid cell.
  */
-const Cell: FC<{ position: Position; cellBounds: Bounds }> = ({ position, cellBounds }) => {
-  const bounds = {
-    ...getPosition(position, cellBounds),
-    ...cellBounds,
-  };
+const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) => {
+  // TODO(burdon): Global ids.
+  // TODO(burdon): Do we need to use the hook here? (Performance).
+  const { setNodeRef, isOver } = useDroppable({ id: `grid-drop-${position.x}-${position.y}`, data: position });
 
+  // TODO(burdon): Create button.
   return (
     <div
+      ref={setNodeRef}
       style={{ ...bounds }}
-      className={mx(
-        'absolute flex justify-center items-center grow select-none cursor-pointer snap-center',
-        'bg-neutral-100 group-hover:border border-neutral-125',
-      )}
+      className='absolute flex justify-center items-center grow select-none cursor-pointer snap-x'
     >
-      <div className='font-mono text-sm text-neutral-200 hidden'>{JSON.stringify(position)}</div>
+      <div
+        className={mx(
+          'flex w-full h-full box-border border-dashed group-hover:border border-neutral-600 rounded',
+          isOver && 'bg-neutral-600 border-neutral-700',
+        )}
+      >
+        <div className='font-mono text-sm text-red-700 hidden'>{JSON.stringify(position)}</div>
+      </div>
     </div>
   );
 };

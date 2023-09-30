@@ -4,41 +4,24 @@
 
 import '@dxosTheme';
 
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
-import React, { FC } from 'react';
+import React, { forwardRef, useState } from 'react';
 
 import { Card, DensityProvider } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Grid, GridItem } from './Grid';
+import { DraggableProps, Grid, GridItem, Position } from './Grid';
 
-const TestCard: FC<{ title?: string; body?: string; media?: string }> = ({ title, body, media }) => {
-  if (!title && !body) {
-    return (
-      <Card.Root grow noPadding>
-        <Card.Header floating>
-          <Card.DragHandle position='left' />
-        </Card.Header>
-        <Card.Media src={media} />
-      </Card.Root>
-    );
-  } else {
-    return (
-      <Card.Root grow>
-        <Card.Header>
-          <Card.DragHandle />
-          <Card.Title title={title} />
-          <Card.Menu />
-        </Card.Header>
-        <Card.Body classNames='line-clamp-3'>{body}</Card.Body>
-        <Card.Media src={media} />
-      </Card.Root>
-    );
-  }
-};
+faker.seed(3);
 
-const data = [
+type TestCardProps = { id: string; title?: string; body?: string; media?: string };
+
+const size = { x: 5, y: 5 };
+
+const testItems: TestCardProps[] = [
   {
     id: 'item-1',
     title: '香港是',
@@ -65,34 +48,27 @@ const data = [
   },
 ];
 
-const positions = [
-  {
-    id: 'item-1',
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: 'item-2',
-    position: { x: 1, y: 0 },
-  },
-  {
-    id: 'item-3',
-    position: { x: 4, y: 1 },
-  },
-  {
-    id: 'item-4',
-    position: { x: 2, y: 3 },
-  },
-  {
-    id: 'item-5',
-    position: { x: 3, y: 7 },
-  },
-];
-
-const items: GridItem[] = data.map(({ id, title, body, media }) => ({
-  id,
-  position: positions.find((position) => position.id === id)?.position,
-  card: <TestCard title={title} body={body} media={media} />,
+const testPositions = testItems.map((item) => ({
+  id: item.id,
+  position: { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) },
 }));
+
+const TestCard = forwardRef<HTMLDivElement, DraggableProps<TestCardProps>>(
+  ({ draggableStyle, draggableProps, data: { title, body, media }, onSelect }, forwardRef) => {
+    const full = !title && !body;
+    return (
+      <Card.Root ref={forwardRef} style={draggableStyle} grow noPadding={full} onDoubleClick={() => onSelect?.()}>
+        <Card.Header floating={full}>
+          <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
+          {title && <Card.Title title={title} />}
+          <Card.Menu position={full ? 'right' : undefined} />
+        </Card.Header>
+        {body && <Card.Body classNames='line-clamp-3'>{body}</Card.Body>}
+        {media && <Card.Media src={media} />}
+      </Card.Root>
+    );
+  },
+);
 
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer> => {
   return (Story) => (
@@ -112,8 +88,34 @@ export default {
   },
 };
 
-export const Default = {
-  args: {
-    items,
-  },
+export const Default = () => {
+  const [items, setItems] = useState<GridItem<TestCardProps>[]>(() =>
+    testItems.map(({ id, title, body, media }) => ({
+      id,
+      data: { id, title, body, media },
+      position: testPositions.find((position) => position.id === id)?.position,
+      Component: TestCard, // TODO(burdon): Factor out delegator.
+    })),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setItems((items) =>
+      items.map((item) => {
+        if (item.id === event.active.id) {
+          return {
+            ...item,
+            position: event.over?.data.current as Position,
+          };
+        }
+
+        return item;
+      }),
+    );
+  };
+
+  return (
+    <DndContext onDragEnd={handleDragEnd}>
+      <Grid.Root items={items} size={size} />
+    </DndContext>
+  );
 };
