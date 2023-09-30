@@ -6,53 +6,14 @@ import '@dxosTheme';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, {
-  FC,
-  createContext,
-  useState,
-  useContext,
-  useMemo,
-  useEffect,
-  useRef,
-  RefAttributes,
-  ForwardRefExoticComponent,
-} from 'react';
+import React, { FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-export type Bounds = { width: number; height: number };
-
-export type Position = { x: number; y: number };
-
-const createMatrix = <TValue,>(rangeX: number, rangeY: number, value: (position: Position) => TValue): TValue[][] => {
-  const matrix: TValue[][] = [];
-  for (let x = 0; x < rangeX; x++) {
-    matrix.push(Array.from({ length: rangeY }, (_, y) => value({ x, y })));
-  }
-
-  return matrix;
-};
-
-// TODO(burdon): Set center point on container (via translation?)
-
-const getPosition = ({ x, y }: Position, { width, height }: Bounds) => ({ left: x * width, top: y * height });
-
-const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) => ({
-  left: x * width + padding,
-  top: y * height + padding,
-  width: width - padding * 2,
-  height: height - padding * 2,
-});
-
-const getCellWidth = (
-  defaultWidth: number,
-  screenWidth: number,
-  options: { min: number; max: number } = { min: 260, max: 400 },
-) => {
-  return screenWidth > options.min && screenWidth < options.max ? screenWidth : defaultWidth;
-};
+import { Bounds, calculateCellWidth, createMatrix, getBounds, getPosition, Position } from './util';
+import { DraggableItem, DraggableProps } from '../dnd';
 
 //
 // Context.
@@ -76,18 +37,23 @@ const useGrid = () => {
 
 // TODO(burdon): Scale container.
 
+type GridItem<T> = DraggableItem<T, Position>;
+
+type GridRootProps = {
+  items: GridItem<any>[];
+  size: { x: number; y: number };
+  center?: Position;
+  margin?: boolean;
+};
+
 /**
- * Root container.
+ * Root component.
  */
-// TODO(burdon): Type.
-const GridRoot: FC<{ items: GridItem<any>[]; size: { x: number; y: number }; center?: Position }> = ({
-  items,
-  size = { x: 8, y: 8 },
-}) => {
+const GridRoot = ({ items, size = { x: 8, y: 8 }, margin }: GridRootProps) => {
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext items={items.map((item) => item.id)}>
-        <GridLayout items={items} size={size} />
+        <GridLayout items={items} size={size} margin={margin} />
       </SortableContext>
     </GridContext.Provider>
   );
@@ -96,12 +62,15 @@ const GridRoot: FC<{ items: GridItem<any>[]; size: { x: number; y: number }; cen
 /**
  * Grid content.
  */
+// TODO(burdon): Make generic?
 const GridLayout: FC<{
   items: GridItem<any>[];
   size: { x: number; y: number };
   square?: boolean;
+  margin?: boolean;
   onSelect?: (id: string) => void;
-}> = ({ items, size, square = true, onSelect }) => {
+}> = ({ items, size, square = true, margin, onSelect }) => {
+  // TODO(burdon): Performance is poor.
   // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const contentRef = useRef<HTMLDivElement>(null);
@@ -109,7 +78,7 @@ const GridLayout: FC<{
   const { defaultCellBounds, spacing } = useGrid();
   const { matrix, bounds, cellBounds } = useMemo(() => {
     // Change default cell bounds to screen width if mobile.
-    const cellWidth = getCellWidth(defaultCellBounds.width, width ?? 0);
+    const cellWidth = calculateCellWidth(defaultCellBounds.width, width ?? 0);
     const cellBounds = {
       width: cellWidth,
       height: square ? cellWidth : defaultCellBounds.height,
@@ -124,14 +93,14 @@ const GridLayout: FC<{
 
   // No margin if mobile.
   const [isNotMobile] = useMediaQuery('md');
-  const margin = isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
+  const marginSize = margin && !isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
 
   const setCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
       const pos = getPosition(item.position!, cellBounds);
-      const top = pos.top + margin - (height - cellBounds.height) / 2;
-      const left = pos.left + margin - (width - cellBounds.width) / 2;
+      const top = pos.top + marginSize - (height - cellBounds.height) / 2;
+      const left = pos.left + marginSize - (width - cellBounds.width) / 2;
       containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
     }
   };
@@ -151,8 +120,8 @@ const GridLayout: FC<{
       // Center on screen.
       if (width && height && isNotMobile) {
         const center = {
-          x: (contentRef.current!.offsetWidth + margin * 2 - width) / 2,
-          y: (contentRef.current!.offsetHeight + margin * 2 - height) / 2,
+          x: (contentRef.current!.offsetWidth + marginSize * 2 - width) / 2,
+          y: (contentRef.current!.offsetHeight + marginSize * 2 - height) / 2,
         };
 
         containerRef.current!.scrollTo({ top: center.y, left: center.x });
@@ -160,10 +129,11 @@ const GridLayout: FC<{
     }
   }, [selected, width, height]);
 
+  // TODO(burdon): Set center point on container (via translation?)
   return (
     <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600'>
-      <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin }}>
-        <div className='__group'>
+      <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
+        <div>
           {matrix.map((row) =>
             row.map(({ x, y }) => (
               <Cell key={`${x}-${y}`} position={{ x, y }} bounds={getBounds({ x, y }, cellBounds, spacing)} />
@@ -174,7 +144,7 @@ const GridLayout: FC<{
         {/* TODO(burdon): onDoubleClick={() => handleSelect(id)} */}
         <div>
           {items.map(({ id, data, position, Component }) => (
-            <Wrapper
+            <Tile
               key={id}
               id={id}
               data={data}
@@ -190,22 +160,7 @@ const GridLayout: FC<{
   );
 };
 
-export type DraggableProps<T> = {
-  id: string;
-  data: T;
-  draggableStyle: any;
-  draggableProps: any;
-  onSelect?: () => void;
-};
-
-type GridItem<T> = {
-  id: string;
-  data: T;
-  position?: Position; // TODO(burdon): Generalize.
-  Component: ForwardRefExoticComponent<DraggableProps<T> & RefAttributes<HTMLDivElement> & { onSelect?: () => void }>;
-};
-
-const Wrapper: FC<GridItem<any> & { bounds: Bounds; onSelect: () => void }> = ({
+const Tile: FC<GridItem<any> & { bounds: Bounds; onSelect: () => void }> = ({
   id,
   data,
   Component,
@@ -219,6 +174,7 @@ const Wrapper: FC<GridItem<any> & { bounds: Bounds; onSelect: () => void }> = ({
       ref={setNodeRef}
       id={id}
       data={data}
+      isDragging={isDragging}
       draggableStyle={{
         position: 'absolute',
         zIndex: isDragging ? 100 : undefined, // TODO(burdon): Const.
@@ -235,7 +191,7 @@ const Wrapper: FC<GridItem<any> & { bounds: Bounds; onSelect: () => void }> = ({
  * Grid cell.
  */
 const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) => {
-  // TODO(burdon): Global ids.
+  // TODO(burdon): Global ids based on container.
   // TODO(burdon): Do we need to use the hook here? (Performance).
   const { setNodeRef, isOver } = useDroppable({ id: `grid-drop-${position.x}-${position.y}`, data: position });
 
@@ -244,7 +200,7 @@ const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) 
     <div
       ref={setNodeRef}
       style={{ ...bounds }}
-      className='absolute flex justify-center items-center grow select-none cursor-pointer snap-x'
+      className='absolute flex justify-center items-center grow select-none cursor-pointer'
     >
       <div
         className={mx(
@@ -262,4 +218,4 @@ export const Grid = {
   Root: GridRoot,
 };
 
-export type { GridItem };
+export type { DraggableProps, GridRootProps, GridItem };

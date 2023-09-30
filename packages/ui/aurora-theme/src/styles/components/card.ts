@@ -76,7 +76,7 @@ export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> 
   ...etc
 ) =>
   mx(
-    'flex flex-col shrink-0 my-2',
+    'shrink-0 my-2',
     !noPadding && 'px-4',
     // TODO(burdon): Create density-specific constants.
     gutter && (density === 'fine' ? 'pl-0 ml-[32px]' : 'pl-0 ml-[40px]'),
