@@ -7,11 +7,11 @@ import React, { forwardRef } from 'react';
 import { Card } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { DraggableProps } from '../dnd';
+import { MosaicTileProps } from '../../dnd';
 
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
-export const SimpleCard = forwardRef<HTMLDivElement, DraggableProps<SimpleCardProps>>(
+export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
   ({ className, draggableStyle, draggableProps, data: { title, body, image }, onSelect }, forwardRef) => {
     const full = !title && !body;
     return (

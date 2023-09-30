@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
@@ -7,7 +11,8 @@ const turbosnap = require('vite-plugin-turbosnap');
 module.exports = {
   stories: [
     '../src/**/*.stories.mdx',
-    '../src/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/components/**/*.stories.@(js|jsx|ts|tsx)'
+    // '../src/**/*.stories.@(js|jsx|ts|tsx)' // TODO(burdon): Temp.
   ],
   addons: [
     '@storybook/addon-links',

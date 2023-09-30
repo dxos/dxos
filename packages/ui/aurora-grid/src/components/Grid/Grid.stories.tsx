@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Grid, GridItem } from './Grid';
+import { Grid, GridDataItem } from './Grid';
 import { Position } from './util';
-import { SimpleCard, SimpleCardProps, createItem, FullscreenDecorator } from '../testing';
+import { MosaicContextProvider, MosaicMoveEvent } from '../../dnd';
+import { SimpleCard, SimpleCardProps, createItem, FullscreenDecorator, TestItem } from '../testing';
 
 faker.seed(3);
 
@@ -30,7 +30,7 @@ export default {
 };
 
 export const Default = () => {
-  const [items, setItems] = useState<GridItem<SimpleCardProps>[]>(() =>
+  const [items, setItems] = useState<GridDataItem<SimpleCardProps>[]>(() =>
     testItems.map((data) => ({
       id: data.id,
       data,
@@ -39,13 +39,13 @@ export const Default = () => {
     })),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleMove = ({ active, over }: MosaicMoveEvent<TestItem, Position>) => {
     setItems((items) =>
       items.map((item) => {
-        if (item.id === event.active.id) {
+        if (item.id === active.id) {
           return {
             ...item,
-            position: event.over?.data.current as Position,
+            position: over?.position as Position,
           };
         }
 
@@ -55,8 +55,8 @@ export const Default = () => {
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <Grid.Root items={items} size={size} />
-    </DndContext>
+    <MosaicContextProvider Component={SimpleCard} onMove={handleMove}>
+      <Grid.Root id='test' items={items} size={size} render={SimpleCard} />
+    </MosaicContextProvider>
   );
 };

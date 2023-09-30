@@ -32,6 +32,7 @@ type TestDataProps = { label: string; description: string };
 //
 
 const rearrangeMosaicId = faker.string.uuid();
+
 const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => {
   const id = getDndId(rearrangeMosaicId, faker.string.uuid());
   acc[id] = {
@@ -43,9 +44,13 @@ const rearrangeTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index
   };
   return acc;
 }, {});
+
 const rearrangeIds = Object.keys(rearrangeTiles);
+
 const rearrangeRootId = rearrangeIds[0];
+
 const rearrangeSectionIds = Object.keys(rearrangeTiles).filter((id) => id !== rearrangeRootId);
+
 const rearrangeMosaicState = {
   tiles: rearrangeTiles,
   relations: {
@@ -58,7 +63,9 @@ const rearrangeMosaicState = {
     }, {}),
   },
 };
+
 const rearrangeMosaic = deepSignal<MosaicState>(rearrangeMosaicState);
+
 const rearrangeData = rearrangeIds.reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
@@ -102,6 +109,7 @@ export const Rearrange = {
 //
 
 const copyMosaicId = faker.string.uuid();
+
 const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => {
   const id = getDndId(copyMosaicId, faker.string.uuid());
   acc[id] = {
@@ -113,8 +121,11 @@ const copyTiles = [...Array(4)].reduce((acc: MosaicState['tiles'], _, index) => 
 }, {});
 
 const copyIds = Object.keys(copyTiles);
+
 const copyRootId = copyIds[0];
+
 const copySectionIds = Object.keys(copyTiles).filter((id) => id !== copyRootId);
+
 const copyMosaicState = {
   tiles: copyTiles,
   relations: {
@@ -127,10 +138,12 @@ const copyMosaicState = {
     }, {}),
   },
 };
+
 const copyMosaic = deepSignal<MosaicState>({
   tiles: { ...copyMosaicState.tiles, ...rearrangeMosaicState.tiles },
   relations: { ...copyMosaicState.relations, ...rearrangeMosaicState.relations },
 });
+
 const copyData = copyIds.reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
@@ -182,7 +195,9 @@ export const Copy = {
 //
 
 const migrateMosaicId = 'Migrate';
+
 const migrateMosaicRootId = getDndId(migrateMosaicId, faker.string.uuid());
+
 const migrateMosaicState = [...Array(1)].reduce(
   (acc: MosaicState, _, i) => {
     const iid = migrateMosaicRootId;
@@ -236,7 +251,9 @@ const migrateMosaicState = [...Array(1)].reduce(
   },
   { tiles: {}, relations: {} },
 );
+
 const migrateMosaic = deepSignal(migrateMosaicState);
+
 const migrateData = Object.keys(migrateMosaicState.tiles).reduce((acc: Record<string, TestDataProps>, id) => {
   const [_, entityId] = parseDndId(id);
   acc[entityId] = {
@@ -252,17 +269,17 @@ export const Migrate = {
     return (
       <Mosaic.Provider
         Delegator={StorybookDelegator as FC<DelegatorProps>}
+        mosaic={migrateMosaic}
+        getData={(dndId) => {
+          const [_, entityId] = parseDndId(dndId);
+          return migrateData[entityId];
+        }}
         copyTile={(id, toId, mosaic) => {
           const [_, cardId] = parseDndId(id);
           const [stackId] = parseDndId(toId);
           const nextId = getDndId(stackId, cardId);
           return { ...mosaic.tiles[id], id: nextId, copyClass: new Set([stackId]) };
         }}
-        getData={(dndId) => {
-          const [_, entityId] = parseDndId(dndId);
-          return migrateData[entityId];
-        }}
-        mosaic={migrateMosaic}
         {...rootProps}
       >
         <Mosaic.Root id={migrateMosaicId}>

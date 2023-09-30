@@ -4,19 +4,16 @@
 
 import '@dxosTheme';
 
-import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren, useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { Stack, StackItem } from './Stack';
+import { Stack, StackDataItem } from './Stack';
+import { MosaicMoveEvent, MosaicContextProvider } from '../../dnd';
 import { createItem, FullscreenDecorator, SimpleCard, SimpleCardProps, TestItem } from '../testing';
 
 faker.seed(3);
-
-const testItems = Array.from({ length: 5 }).map(() => createItem(['document', 'image']));
 
 export default {
   component: Card,
@@ -27,39 +24,59 @@ export default {
 };
 
 export const Default: FC<PropsWithChildren> = ({ children }) => {
-  const [items, setItems] = useState<StackItem<SimpleCardProps>[]>(() =>
-    testItems.map((item) => ({ id: item.id, data: item, Component: SimpleCard })),
-  );
+  const [rows, setRows] = useState<{ id: string; items: StackDataItem<SimpleCardProps>[] }[]>(() => {
+    return Array.from({ length: 3 }).map((_, i) => ({
+      id: `stack-column-${i}`,
+      items: Array.from({ length: 5 })
+        .map(() => createItem(['document', 'image']))
+        .map((item) => ({ id: item.id, data: item, Component: SimpleCard })),
+    }));
+  });
 
-  const handleDelete = (id: string) => {
-    setItems((cards) => cards.filter((card) => card.id !== id));
-  };
+  // const handleDelete = (id: string) => {
+  //   setItems1((cards) => cards.filter((card) => card.id !== id));
+  // };
 
-  const [activeItem, setActiveItem] = useState<TestItem>();
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveItem(undefined);
-    const { active, over } = event;
+  const handleMove = ({ active, over }: MosaicMoveEvent<TestItem, number>) => {
+    console.log(active, over);
     if (active.id !== over?.id) {
-      setItems((cards) => {
-        const oldIndex = cards.findIndex((card) => card.id === active.id);
-        const newIndex = cards.findIndex((card) => card.id === over?.id);
-        return arrayMove(cards, oldIndex, newIndex);
-      });
+      setRows((rows) =>
+        rows.map((row) => {
+          const items = [...row.items];
+          if (row.id === active.parent) {
+            const activeIndex = row.items.findIndex((item) => item.id === active.id);
+            if (activeIndex !== -1) {
+              items.splice(activeIndex, 1);
+            }
+          }
+
+          if (row.id === over.parent) {
+            const overIndex = row.items.findIndex((item) => item.id === over.id);
+            if (overIndex !== -1) {
+              items.splice(overIndex, 0, active);
+            }
+          }
+
+          return { ...row, items };
+        }),
+      );
     }
   };
 
   // TODO(burdon): Select/delete.
+  // TODO(burdon): Provide handles for DnD rather than wrapping it?
+  // TODO(burdon): Secondary stack?
   return (
-    <DndContext
-      onDragEnd={handleDragEnd}
-      onDragStart={(event) => setActiveItem(event.active.data.current as TestItem)}
-      onDragCancel={(event) => setActiveItem(undefined)}
-    >
-      <div className='flex w-[300px] overflow-hidden'>
-        <Stack.Root items={items} />
+    <MosaicContextProvider Component={SimpleCard} onMove={handleMove}>
+      <div className='flex grow overflow-y-hidden overflow-x-auto'>
+        <div className='flex'>
+          {rows.map(({ id, items }) => (
+            <div key={id} className='flex w-[300px] overflow-hidden'>
+              <Stack.Root id={id} items={items} render={SimpleCard} />
+            </div>
+          ))}
+        </div>
       </div>
-
-      <DragOverlay>{activeItem && <SimpleCard id={activeItem.id} data={activeItem} />}</DragOverlay>
-    </DndContext>
+    </MosaicContextProvider>
   );
 };

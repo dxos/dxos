@@ -27,7 +27,7 @@ const Card = forwardRef<HTMLDivElement, CardTileProps>((tile, forwardedRef) => {
   const { activeId } = useMosaicDnd();
   const { attributes, listeners, setNodeRef, transform } = useSortable({
     id: tile.id,
-    data: tile,
+    data: tile, // TODO(burdon): Note this is polluted with "sortable" by dnd.
   });
 
   const isActive = activeId === tile.id;
