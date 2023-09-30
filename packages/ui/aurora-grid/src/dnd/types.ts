@@ -9,24 +9,31 @@ import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react'
 // - Tile: component that is rendered within the layout and is draggable.
 // - Item: datum represented by a Tile.
 
+export type DataItem = { id: string };
+
 /**
  * Item passed to mosaic container.
  */
 // TODO(burdon): Must we wrap the underlying ECHO query?
 export type MosaicDataItem<TData, TPosition> = {
-  // TODO(burdon): Remove.
-  parent?: string;
-
-  id: string;
+  id: string; // TODO(burdon): Remove.
   data: TData;
-  position?: TPosition; // TODO(burdon): Generalize to function? E.g., sort.
+
+  // TODO(burdon): Generalize to function? E.g., sort.
+  position?: TPosition;
 
   // Component: MosaicTile<TData>;
 };
 
-export type MosaicMoveEvent<TData, TPosition> = {
-  active: MosaicDataItem<TData, TPosition>;
-  over: MosaicDataItem<TData, TPosition>;
+export type MosaicDraggedItem<TData> = {
+  item: MosaicDataItem<TData, unknown>;
+  // TODO: rename to container
+  parent: string;
+};
+
+export type MosaicMoveEvent = {
+  active: MosaicDraggedItem<unknown>;
+  over: MosaicDraggedItem<unknown>;
 };
 
 /**
@@ -38,6 +45,7 @@ export type MosaicTileProps<T> = Pick<HTMLAttributes<HTMLDivElement>, 'className
   isDragging?: boolean;
   draggableStyle?: any;
   draggableProps?: any;
+  debug?: boolean;
 
   // TODO(burdon): Generalize events.
   onSelect?: () => void;

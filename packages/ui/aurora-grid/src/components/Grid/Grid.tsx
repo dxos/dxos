@@ -13,7 +13,7 @@ import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 import { Bounds, calculateCellWidth, createMatrix, getBounds, getPosition, Position } from './util';
-import { MosaicDataItem, MosaicTileComponent, MosaicTileProps } from '../../dnd';
+import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent, MosaicTileProps } from '../../dnd';
 
 //
 // Context.
@@ -42,7 +42,7 @@ type GridDataItem<T> = MosaicDataItem<T, Position>;
 type GridRootProps<TData> = {
   id: string;
   items: GridDataItem<TData>[];
-  render: MosaicTileComponent<TData>;
+  Component: MosaicTileComponent<TData>;
   size: { x: number; y: number };
   center?: Position;
   margin?: boolean;
@@ -51,11 +51,11 @@ type GridRootProps<TData> = {
 /**
  * Root component.
  */
-const GridRoot = ({ id, items, render, size = { x: 8, y: 8 }, margin }: GridRootProps<any>) => {
+const GridRoot = ({ id, items, Component, size = { x: 8, y: 8 }, margin }: GridRootProps<unknown>) => {
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext id={id} items={items.map((item) => item.id)}>
-        <GridLayout items={items} Component={render} size={size} margin={margin} />
+        <GridLayout id={id} items={items} Component={Component} size={size} margin={margin} />
       </SortableContext>
     </GridContext.Provider>
   );
@@ -66,13 +66,14 @@ const GridRoot = ({ id, items, render, size = { x: 8, y: 8 }, margin }: GridRoot
  */
 // TODO(burdon): Make generic?
 const GridLayout: FC<{
-  items: GridDataItem<any>[];
-  Component: MosaicTileComponent<any>; // TODO(burdon): Name?
+  id: string;
+  items: GridDataItem<unknown>[];
+  Component: MosaicTileComponent<unknown>; // TODO(burdon): Name?
   size: { x: number; y: number };
   square?: boolean;
   margin?: boolean;
   onSelect?: (id: string) => void;
-}> = ({ items, Component, size, square = true, margin, onSelect }) => {
+}> = ({ id, items, Component, size, square = true, margin, onSelect }) => {
   // TODO(burdon): Performance is poor.
   // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
@@ -151,6 +152,7 @@ const GridLayout: FC<{
               key={id}
               id={id}
               data={data}
+              parent={id}
               position={position}
               Component={Component}
               bounds={getBounds(position ?? { x: 0, y: 0 }, cellBounds, spacing)}
@@ -163,17 +165,17 @@ const GridLayout: FC<{
   );
 };
 
-const Tile: FC<GridDataItem<any> & { Component: MosaicTileComponent<any>; bounds: Bounds; onSelect: () => void }> = ({
-  parent,
-  id,
-  data,
-  Component,
-  bounds,
-  onSelect,
-}) => {
+const Tile: FC<
+  GridDataItem<unknown> & {
+    parent: string;
+    Component: MosaicTileComponent<unknown>;
+    bounds: Bounds;
+    onSelect: () => void;
+  }
+> = ({ parent, id, data, Component, bounds, onSelect }) => {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
     id,
-    data: { id, data, parent } satisfies MosaicDataItem<unknown, number>,
+    data: { item: { id, data }, parent } satisfies MosaicDraggedItem,
   });
 
   return (

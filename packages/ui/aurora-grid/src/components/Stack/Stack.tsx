@@ -4,31 +4,31 @@
 
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Position } from 'packages/ui/aurora-grid/src/components/Grid/util';
 import React, { FC } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { MosaicDataItem, MosaicTileComponent } from '../../dnd';
+import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent, useGhost } from '../../dnd';
 
 type StackDataItem<T> = MosaicDataItem<T, number>;
 
 type StackRootProps<TData> = {
   id: string; // TODO(burdon): Combine with items.
-  items: StackDataItem<any>[];
-  render: MosaicTileComponent<TData>;
+  items: StackDataItem<TData>[];
+  Component: MosaicTileComponent<any>;
 };
 
-const StackRoot = ({ id, items, render }: StackRootProps<any>) => {
-  // TODO(burdon): Order items.
-  // const ghost = useGhost(id);
+const StackRoot = ({ id, items, Component }: StackRootProps<unknown>) => {
+  const ghost = useGhost(id);
+  const visibleItems = ghost ? [ghost, ...items] : items;
 
   return (
-    <SortableContext id={id} items={items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+    <SortableContext id={id} items={visibleItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
       <div className='flex flex-col overflow-y-scroll'>
+        <pre className='font-mono text-xs overflow-hidden'>{JSON.stringify({ id, items: visibleItems.length })}</pre>
         <div className='flex flex-col m-4 gap-4'>
-          {items.map((item) => (
-            <Tile key={item.id} parent={id} id={item.id} data={item.data} Component={render} />
+          {visibleItems.map((item) => (
+            <Tile key={item.id} parent={id} id={item.id} data={item.data} Component={Component} />
           ))}
         </div>
       </div>
@@ -36,16 +36,12 @@ const StackRoot = ({ id, items, render }: StackRootProps<any>) => {
   );
 };
 
-const Tile: FC<StackDataItem<any> & { Component: MosaicTileComponent<any>; onSelect?: () => void }> = ({
-  parent,
-  id,
-  data,
-  Component,
-  onSelect,
-}) => {
+const Tile: FC<
+  StackDataItem<unknown> & { parent: string; Component: MosaicTileComponent<unknown>; onSelect?: () => void }
+> = ({ parent, id, data, Component, onSelect }) => {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id,
-    data: { id, data, parent } satisfies MosaicDataItem<unknown, Position>,
+    data: { item: { id, data }, parent } satisfies MosaicDraggedItem<unknown>,
   });
 
   return (

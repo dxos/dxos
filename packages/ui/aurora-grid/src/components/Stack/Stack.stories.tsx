@@ -11,7 +11,7 @@ import { Card } from '@dxos/aurora';
 
 import { Stack, StackDataItem } from './Stack';
 import { MosaicMoveEvent, MosaicContextProvider } from '../../dnd';
-import { createItem, FullscreenDecorator, SimpleCard, SimpleCardProps, TestItem } from '../testing';
+import { createItem, FullscreenDecorator, SimpleCard, SimpleCardProps } from '../testing';
 
 faker.seed(3);
 
@@ -27,8 +27,8 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   const [rows, setRows] = useState<{ id: string; items: StackDataItem<SimpleCardProps>[] }[]>(() => {
     return Array.from({ length: 3 }).map((_, i) => ({
       id: `stack-column-${i}`,
-      items: Array.from({ length: 5 })
-        .map(() => createItem(['document', 'image']))
+      items: Array.from({ length: 5 - i })
+        .map(() => createItem(['document']))
         .map((item) => ({ id: item.id, data: item, Component: SimpleCard })),
     }));
   });
@@ -37,23 +37,27 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
-  const handleMove = ({ active, over }: MosaicMoveEvent<TestItem, number>) => {
+  const handleMove = ({ active, over }: MosaicMoveEvent) => {
     console.log(active, over);
-    if (active.id !== over?.id) {
+    if (active.item.id !== over?.item.id) {
       setRows((rows) =>
         rows.map((row) => {
           const items = [...row.items];
           if (row.id === active.parent) {
-            const activeIndex = row.items.findIndex((item) => item.id === active.id);
+            const activeIndex = row.items.findIndex((item) => item.id === active.item.id);
             if (activeIndex !== -1) {
               items.splice(activeIndex, 1);
+            } else {
+              console.warn('NO active index', { active, row });
             }
           }
 
           if (row.id === over.parent) {
-            const overIndex = row.items.findIndex((item) => item.id === over.id);
+            const overIndex = row.items.findIndex((item) => item.id === over.item.id);
             if (overIndex !== -1) {
-              items.splice(overIndex, 0, active);
+              items.splice(overIndex + 1, 0, active.item as any);
+            } else {
+              console.warn('NO over index');
             }
           }
 
@@ -72,7 +76,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
         <div className='flex'>
           {rows.map(({ id, items }) => (
             <div key={id} className='flex w-[300px] overflow-hidden'>
-              <Stack.Root id={id} items={items} render={SimpleCard} />
+              <Stack.Root id={id} items={items} Component={SimpleCard} />
             </div>
           ))}
         </div>

@@ -18,7 +18,7 @@ export const testItemFactory: Record<string, () => TestItem> = {
     type: 'document',
     id: faker.string.uuid(),
     title: faker.lorem.sentence(3),
-    body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+    // body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
 
   image: () => ({
