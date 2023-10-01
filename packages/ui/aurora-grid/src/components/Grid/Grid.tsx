@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -21,6 +22,7 @@ import {
   MosaicTileComponent,
   useMosaicContainer,
 } from '../../dnd';
+import { Debug } from '../Debug';
 
 //
 // Context.
@@ -64,6 +66,7 @@ const GridRoot = ({
   layout = {},
   size = { x: 8, y: 8 },
   margin,
+  debug,
   Component = DefaultComponent,
   onMoveItem,
 }: GridRootProps) => {
@@ -72,7 +75,15 @@ const GridRoot = ({
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext id={id} items={items.map((item) => item.id)}>
-        <GridLayout id={id} items={items} layout={layout} Component={Component} size={size} margin={margin} />
+        <GridLayout
+          id={id}
+          items={items}
+          layout={layout}
+          Component={Component}
+          size={size}
+          margin={margin}
+          debug={debug}
+        />
       </SortableContext>
     </GridContext.Provider>
   );
@@ -89,9 +100,10 @@ const GridLayout: FC<{
   size: { x: number; y: number };
   square?: boolean;
   margin?: boolean;
+  debug?: boolean;
   Component: MosaicTileComponent<any>;
   onSelect?: (id: string) => void;
-}> = ({ id, items, layout, size, square = true, margin, Component, onSelect }) => {
+}> = ({ id, items, layout, size, square = true, margin, debug, Component, onSelect }) => {
   // TODO(burdon): Performance is poor.
   // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
@@ -186,6 +198,7 @@ const GridLayout: FC<{
           })}
         </div>
       </div>
+      {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Grid, GridLayout } from './Grid';
 import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
-import { SimpleCard, createItem, FullscreenDecorator } from '../testing';
+import { createItem, FullscreenDecorator, ComplexCard } from '../testing';
 
 faker.seed(3);
 
@@ -43,7 +43,7 @@ export const Default = () => {
         layout={layout}
         size={size}
         debug
-        Component={SimpleCard}
+        Component={ComplexCard}
         onMoveItem={handleMove}
       />
     </MosaicContextProvider>

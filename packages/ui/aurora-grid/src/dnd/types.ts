@@ -18,6 +18,7 @@ export type MosaicDraggedItem = {
 };
 
 export type MosaicMoveEvent = {
+  container: string;
   active: MosaicDraggedItem;
   over: MosaicDraggedItem;
 };

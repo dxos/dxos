@@ -14,7 +14,7 @@ import { Grid, GridLayout } from '../Grid';
 import { Stack } from '../Stack';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../testing';
 
-faker.seed(3);
+faker.seed(10);
 
 export default {
   component: Card,
@@ -31,10 +31,17 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   const [stackItems, setStackItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 5 }).map(() => createItem(['document', 'image'])),
   );
-  const handleMoveStackItem = ({ active, over }: MosaicMoveEvent) => {
+  const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent) => {
+    // console.log('handleMoveStackItem', active.position);
     setStackItems((items) => {
-      items.splice(active.position, 1);
-      items.splice(over.position, 0, active.item);
+      // TODO(burdon): Make sure each column is a container.
+      if (active.container === container) {
+        items.splice(active.position, 1);
+      }
+
+      if (over.container === container) {
+        items.splice(over.position, 0, active.item);
+      }
       return [...items];
     });
   };
@@ -42,21 +49,35 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //
   // Grid
   //
+  const size = { x: 4, y: 3 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 2 }).map(() => createItem(['document', 'image'])),
+    Array.from({ length: 6 }).map(() => createItem(['document', 'image'])),
   );
   const [layout, setLayout] = useState<GridLayout>(() =>
     gridItems.reduce<GridLayout>((map, item, i) => {
-      map[item.id] = { x: i, y: 0 };
+      map[item.id] = {
+        x: faker.number.int({ min: 0, max: size.x - 1 }),
+        y: faker.number.int({ min: 0, max: size.y - 1 }),
+      };
       return map;
     }, {}),
   );
-  const handleMoveGridItem = ({ active, over }: MosaicMoveEvent) => {
-    if (gridItems.findIndex((item) => item.id === active.item.id) === -1) {
-      setGridItems((items) => [active.item, ...items]);
-    }
+  const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent) => {
+    // console.log('handleMoveGridItem', active, over);
+    if (over.container !== container) {
+      // TODO(burdon): Get id from event.
+      setGridItems((items) => items.filter((item) => item.id !== active.item.id));
+    } else {
+      setGridItems((items) => {
+        if (items.findIndex((item) => item.id === active.item.id) === -1) {
+          return [active.item, ...items];
+        } else {
+          return items;
+        }
+      });
 
-    setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
+      setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
+    }
   };
 
   return (
@@ -73,7 +94,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
               layout={layout}
               Component={ComplexCard}
               onMoveItem={handleMoveGridItem}
-              size={{ x: 3, y: 3 }}
+              size={size}
               debug
             />
           </div>

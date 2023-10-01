@@ -37,6 +37,8 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
   },
 );
 
+SimpleCard.displayName = 'SimpleCard';
+
 export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
   (
     { className, isActive, draggableStyle, draggableProps, data: { id, title, body, image }, onSelect, debug = true },
@@ -68,3 +70,5 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
     );
   },
 );
+
+ComplexCard.displayName = 'ComplexCard';

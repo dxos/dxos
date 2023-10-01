@@ -6,11 +6,13 @@ import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, 
 import React, { createContext, useContext, FC, PropsWithChildren, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+import { mx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileComponent } from './types';
 import { Debug } from '../components/Debug';
+import { ComplexCard } from '../components/testing';
 
 export type MosaicContextType = {
   delegators: Map<string, MosaicContainerProps<any>>;
@@ -42,39 +44,41 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
   const handleDragStart = (event: DragStartEvent) => {
+    // console.log('start', event.active?.data.current);
     setActiveItem(event.active.data.current as MosaicDraggedItem);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { over } = event;
-    setOverItem(over?.data.current as MosaicDraggedItem);
-
-    console.log('##', over?.data.current);
+    // console.log('over', event.over?.data.current);
+    if (event.over?.data.current) {
+      setOverItem(event.over?.data.current as MosaicDraggedItem);
+    }
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
+    // console.log('cancel');
     setActiveItem(undefined);
     setOverItem(undefined);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // console.log('end');
     if (
       activeItem &&
       overItem &&
       (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
     ) {
-      console.log(activeItem, overItem);
-
       const activeContainer = delegators.get(activeItem.container);
       if (activeContainer) {
+        activeContainer.onMoveItem?.({
+          container: activeContainer.id,
+          active: activeItem,
+          over: overItem,
+        });
         const overContainer = delegators.get(overItem.container);
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onMoveItem?.({
-            active: activeItem,
-            over: overItem,
-          });
-        } else {
-          activeContainer.onMoveItem?.({
+            container: overContainer.id,
             active: activeItem,
             over: overItem,
           });
@@ -86,8 +90,9 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     setOverItem(undefined);
   };
 
+  // TODO(burdon): Stops dragging if change overlay while dragging.
   const { Component: OverlayComponent = DefaultComponent } =
-    (activeItem?.container ? delegators.get(/* overItem?.container ?? */ activeItem.container) : undefined) ??
+    (activeItem?.container ? delegators.get(overItem?.container ?? activeItem.container) : undefined) ??
     delegators.get(DEFAULT_COMPONENT_ID)!;
 
   return (
@@ -98,29 +103,40 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        {debug && (
-          <Debug
-            position='bottom-left'
-            data={{
-              active: {
-                id: activeItem?.item.id,
-                container: activeItem?.container,
-              },
-              over: {
-                id: overItem?.item?.id,
-                container: overItem?.container,
-              },
-            }}
-          />
-        )}
-
         {/* Active dragging element. */}
         {createPortal(
-          <DragOverlay>{activeItem && <OverlayComponent data={activeItem.item} isActive={true} />}</DragOverlay>,
+          <DragOverlay>
+            {activeItem && (
+              <OverlayComponent
+                data={activeItem.item}
+                isActive={true}
+                // TODO(burdon): Hack to set height when changing from stack.
+                className={mx(OverlayComponent === ComplexCard && 'min-h-[264px]')}
+              />
+            )}
+          </DragOverlay>,
           document.body,
         )}
 
         {children}
+
+        {debug &&
+          createPortal(
+            <Debug
+              position='bottom-left'
+              data={{
+                active: {
+                  id: activeItem?.item.id,
+                  container: activeItem?.container,
+                },
+                over: {
+                  id: overItem?.item?.id,
+                  container: overItem?.container,
+                },
+              }}
+            />,
+            document.body,
+          )}
       </DndContext>
     </MosaicContext.Provider>
   );

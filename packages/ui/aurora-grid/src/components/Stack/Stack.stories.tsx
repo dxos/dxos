@@ -35,15 +35,14 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
-  // TODO(burdon): Call-out/generalize.
-  const handleMove = ({ active, over }: MosaicMoveEvent) => {
+  const handleMove = ({ container, active, over }: MosaicMoveEvent) => {
     setColumns((columns) =>
       columns.map((column) => {
         const items = [...column.items];
-        if (active.container === column.id) {
+        if (active.container === column.id && column.id === container) {
           items.splice(active.position, 1);
         }
-        if (over.container === column.id) {
+        if (over.container === column.id && column.id === container) {
           items.splice(over.position, 0, active.item);
         }
         return { ...column, items };

@@ -21,3 +21,5 @@ export const DefaultComponent = forwardRef<HTMLDivElement, MosaicTileProps<Mosai
     );
   },
 );
+
+DefaultComponent.displayName = 'DefaultComponent';
