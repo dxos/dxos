@@ -36,15 +36,15 @@ export const Default = () => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
-  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent) => {
+  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setColumns((columns) =>
       columns.map((column) => {
         const items = [...column.items];
         if (active.container === column.id && column.id === container) {
-          items.splice(active.position, 1);
+          items.splice(active.position!, 1);
         }
         if (over.container === column.id && column.id === container) {
-          items.splice(over.position, 0, active.item);
+          items.splice(over.position!, 0, active.item);
         }
         return { ...column, items };
       }),

@@ -12,6 +12,7 @@ import { Card } from '@dxos/aurora';
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 import { Grid, GridLayout } from '../Grid';
+import { Position } from '../Grid/util';
 import { Stack } from '../Stack';
 
 faker.seed(8);
@@ -35,14 +36,14 @@ export const Default = () => {
     Array.from({ length: 10 }).map(() => createItem(types)),
   );
 
-  const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent) => {
+  const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     // console.log('handleMoveStackItem', active.position);
     setStackItems((items) => {
       if (active.container === container) {
-        items.splice(active.position, 1);
+        items.splice(active.position!, 1);
       }
       if (over.container === container) {
-        items.splice(over.position, 0, active.item);
+        items.splice(over.position!, 0, active.item);
       }
       return [...items];
     });
@@ -65,7 +66,7 @@ export const Default = () => {
     }, {}),
   );
 
-  const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent) => {
+  const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent<Position>) => {
     // console.log('handleMoveGridItem', active, over);
     if (over.container !== container) {
       setGridItems((items) => items.filter((item) => item.id !== active.item.id));
@@ -78,7 +79,7 @@ export const Default = () => {
         }
       });
 
-      setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
+      setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
     }
   };
 

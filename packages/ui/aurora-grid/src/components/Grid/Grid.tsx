@@ -47,7 +47,7 @@ const useGrid = () => {
 
 type GridLayout = { [id: string]: Position };
 
-type GridRootProps = MosaicContainerProps<any> & {
+type GridRootProps = MosaicContainerProps<any, Position> & {
   items?: MosaicDataItem[];
   layout?: GridLayout;
   size?: { x: number; y: number };
@@ -91,7 +91,7 @@ const GridRoot = ({
  * Grid content.
  */
 const GridLayout: FC<
-  MosaicContainerProps<any> & {
+  MosaicContainerProps<any, Position> & {
     id: string;
     items: MosaicDataItem[];
     layout: GridLayout;

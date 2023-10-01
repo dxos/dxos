@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { FC, PropsWithChildren, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
@@ -23,19 +23,19 @@ export default {
   },
 };
 
-export const Default: FC<PropsWithChildren> = ({ children }) => {
+export const Default = () => {
   const [items, setItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 10 }).map(() => createItem(['document'])),
   );
 
-  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent) => {
+  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     // console.log('handleMoveStackItem', active.position);
     setItems((items) => {
       if (active.container === container) {
-        items.splice(active.position, 1);
+        items.splice(active.position!, 1);
       }
       if (over.container === container) {
-        items.splice(over.position, 0, active.item);
+        items.splice(over.position!, 0, active.item);
       }
       return [...items];
     });

@@ -19,7 +19,7 @@ import {
 } from '../../dnd';
 import { Debug } from '../Debug';
 
-type StackRootProps = MosaicContainerProps<any> & {
+type StackRootProps = MosaicContainerProps<any, number> & {
   items?: MosaicDataItem[];
   debug?: boolean;
 };

@@ -13,7 +13,7 @@ import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileComp
 import { Debug } from '../components/Debug';
 
 export type MosaicContextType = {
-  delegators: Map<string, MosaicContainerProps<any>>;
+  containers: Map<string, MosaicContainerProps<any, any>>;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
 };
@@ -35,7 +35,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   debug,
   children,
 }) => {
-  const [delegators] = useState(
+  const [containers] = useState(
     new Map<string, MosaicContainerProps<any>>([[DEFAULT_COMPONENT_ID, { id: DEFAULT_COMPONENT_ID, Component }]]),
   );
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
@@ -60,14 +60,14 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
       overItem &&
       (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
     ) {
-      const activeContainer = delegators.get(activeItem.container);
+      const activeContainer = containers.get(activeItem.container);
       if (activeContainer) {
         activeContainer.onMoveItem?.({
           container: activeContainer.id,
           active: activeItem,
           over: overItem,
         });
-        const overContainer = delegators.get(overItem.container);
+        const overContainer = containers.get(overItem.container);
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onMoveItem?.({
             container: overContainer.id,
@@ -83,12 +83,12 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   };
 
   const container =
-    (activeItem?.container ? delegators.get(overItem?.container ?? activeItem.container) : undefined) ??
-    delegators.get(DEFAULT_COMPONENT_ID)!;
+    (activeItem?.container ? containers.get(overItem?.container ?? activeItem.container) : undefined) ??
+    containers.get(DEFAULT_COMPONENT_ID)!;
   const { Component: OverlayComponent = DefaultComponent } = container;
 
   return (
-    <MosaicContext.Provider value={{ delegators, activeItem, overItem }}>
+    <MosaicContext.Provider value={{ containers, activeItem, overItem }}>
       <DndContext
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -152,12 +152,14 @@ export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataI
  * Register a container?
  */
 // TODO(burdon): Support passing in more context to event handlers.
-export const useMosaicContainer = (container: MosaicContainerProps<any>) => {
+export const useMosaicContainer = <TData extends MosaicDataItem, TPosition>(
+  container: MosaicContainerProps<TData, TPosition>,
+) => {
   const mosaic = useMosaic();
   useEffect(() => {
-    mosaic.delegators.set(container.id, container);
+    mosaic.containers.set(container.id, container);
     return () => {
-      mosaic.delegators.delete(container.id);
+      mosaic.containers.delete(container.id);
     };
   }, []);
 };

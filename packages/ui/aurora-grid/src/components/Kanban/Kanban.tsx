@@ -21,7 +21,7 @@ type KanbanColumn = {
 type KanbanRootProps = {
   id: string;
   columns: KanbanColumn[];
-  onMoveItem: MosaicContainerProps<any>['onMoveItem'];
+  onMoveItem: MosaicContainerProps<any, number>['onMoveItem'];
 };
 
 const KanbanRoot = ({ id, columns, onMoveItem }: KanbanRootProps) => {
@@ -63,7 +63,7 @@ type ColumnProps = {
   id: string;
   title: string;
   items: MosaicDataItem[];
-  onMoveItem: MosaicContainerProps<any>['onMoveItem'];
+  onMoveItem: MosaicContainerProps<any, number>['onMoveItem'];
 };
 
 export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(

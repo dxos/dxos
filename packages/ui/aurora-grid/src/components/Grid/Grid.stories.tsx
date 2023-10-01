@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
 import { Grid, GridLayout } from './Grid';
+import { Position } from './util';
 import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
 import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
@@ -31,8 +32,8 @@ export default {
 export const Default = () => {
   const [items] = useState<MosaicDataItem[]>(testItems);
   const [layout, setLayout] = useState<GridLayout>(testLayout);
-  const handleMoveItem = ({ active, over }: MosaicMoveEvent) => {
-    setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
+  const handleMoveItem = ({ active, over }: MosaicMoveEvent<Position>) => {
+    setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
   };
 
   return (

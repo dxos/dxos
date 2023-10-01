@@ -8,16 +8,16 @@ export type Dimension = { width: number; height: number };
 
 export type MosaicDataItem = { id: string };
 
-export type MosaicDraggedItem = {
+export type MosaicDraggedItem<TPosition = unknown> = {
   container: string;
   item: MosaicDataItem;
-  position?: any; // Index or layout-specific positional information (stored separately from the item).
+  position?: TPosition; // Index or layout-specific positional information (stored separately from the item).
 };
 
-export type MosaicMoveEvent = {
+export type MosaicMoveEvent<TPosition = unknown> = {
   container: string;
-  active: MosaicDraggedItem;
-  over: MosaicDraggedItem;
+  active: MosaicDraggedItem<TPosition>;
+  over: MosaicDraggedItem<TPosition>;
 };
 
 /**
@@ -46,11 +46,11 @@ export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExotic
 /**
  * Tile container.
  */
-export type MosaicContainerProps<TData extends MosaicDataItem> = {
+export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unknown> = {
   id: string;
   Component?: MosaicTileComponent<TData>;
   getOverlayStyle?: () => CSSProperties;
 
   // TODO(burdon): Handle copy, delete, etc.
-  onMoveItem?: (event: MosaicMoveEvent) => void;
+  onMoveItem?: (event: MosaicMoveEvent<TPosition>) => void;
 };
