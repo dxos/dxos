@@ -32,7 +32,7 @@ export const Default = () => {
   // Stack
   //
   const [stackItems, setStackItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 5 }).map(() => createItem(types)),
+    Array.from({ length: 10 }).map(() => createItem(types)),
   );
 
   const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent) => {
@@ -86,7 +86,7 @@ export const Default = () => {
     <MosaicContextProvider debug={debug}>
       <div className='flex grow overflow-hidden'>
         <div className='flex gap-4 divide-x overflow-hidden'>
-          <div className='flex shrink-0 w-[300px] overflow-hidden'>
+          <div className='flex shrink-0 w-[300px] mr-2 overflow-hidden'>
             <Stack.Root
               id='stack'
               items={stackItems}
@@ -95,14 +95,14 @@ export const Default = () => {
               debug={debug}
             />
           </div>
-          <div className='flex grow overflow-hidden ml-2'>
+          <div className='flex grow overflow-hidden'>
             <Grid.Root
               id='grid'
               items={gridItems}
               layout={layout}
+              size={size}
               Component={ComplexCard}
               onMoveItem={handleMoveGridItem}
-              size={size}
               debug={debug}
             />
           </div>
