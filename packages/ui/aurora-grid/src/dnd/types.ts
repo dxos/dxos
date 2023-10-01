@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bounds } from 'packages/ui/aurora-grid/src/components/Grid/util';
 import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-// Definitions:
-// - Mosaic: container that manages the layout of a set of tiles (e.g., Stack, Grid, Tree, Table).
-// - Tile: component that is rendered within the layout and is draggable.
-// - Item: datum represented by a Tile.
+export type Bounds = { width: number; height: number };
+
+export type Position = { x: number; y: number };
 
 export type MosaicDataItem = { id: string };
 

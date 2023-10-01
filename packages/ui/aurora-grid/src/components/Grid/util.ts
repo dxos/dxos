@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export type Bounds = { width: number; height: number };
-
-export type Position = { x: number; y: number };
+import { Bounds, Position } from '../../dnd';
 
 export const createMatrix = <TValue>(
   rangeX: number,

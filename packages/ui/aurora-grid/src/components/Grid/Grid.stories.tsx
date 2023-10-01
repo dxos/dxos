@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Grid, GridLayout } from './Grid';
 import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
-import { createItem, FullscreenDecorator, ComplexCard } from '../testing';
+import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
 faker.seed(3);
 

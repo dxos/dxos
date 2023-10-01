@@ -13,13 +13,15 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Bounds, calculateCellWidth, createMatrix, getBounds, getPosition, Position } from './util';
+import { calculateCellWidth, createMatrix, getBounds, getPosition } from './util';
 import {
+  Bounds,
   DefaultComponent,
   MosaicContainerProps,
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
+  Position,
   useMosaicContainer,
 } from '../../dnd';
 import { Debug } from '../Debug';

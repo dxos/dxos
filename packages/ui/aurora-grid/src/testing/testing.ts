@@ -4,7 +4,7 @@
 
 import { faker } from '@faker-js/faker';
 
-// TODO(burdon): Standardize with aurora/testing.
+// TODO(burdon): Factor out with aurora/testing.
 
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
@@ -82,9 +82,8 @@ export const testItemFactory: Record<string, () => TestItem> = {
 };
 
 // https://unsplash.com
-// TODO(burdon): Use https://picsum.photos/
+// TODO(burdon): Use https://picsum.photos?
 export const testImages = [
-  // 'https://images.unsplash.com/photo-1554629947-334ff61d85dc',
   '/images/image-1.png',
   '/images/image-2.png',
   '/images/image-3.png',

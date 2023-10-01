@@ -11,7 +11,7 @@ import { Card } from '@dxos/aurora';
 
 import { Stack } from './Stack';
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
-import { createItem, FullscreenDecorator, SimpleCard } from '../testing';
+import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
@@ -50,9 +50,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
     );
   };
 
-  // TODO(burdon): Select/delete.
-  // TODO(burdon): Provide hooks for DnD rather than wrapping it?
-  // TODO(burdon): Secondary inner stack?
+  // TODO(burdon): Draggable stacks.
   return (
     <MosaicContextProvider debug>
       <div className='flex grow overflow-y-hidden overflow-x-auto'>

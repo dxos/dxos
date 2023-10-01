@@ -10,9 +10,9 @@ import React, { useState } from 'react';
 import { Card } from '@dxos/aurora';
 
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
+import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 import { Grid, GridLayout } from '../Grid';
 import { Stack } from '../Stack';
-import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../testing';
 
 faker.seed(8);
 
