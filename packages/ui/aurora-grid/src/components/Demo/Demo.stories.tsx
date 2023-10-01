@@ -29,15 +29,33 @@ const types = ['document', 'image'];
 
 export const Default = () => {
   //
-  // Stack
+  // Stacks
   //
-  const [stackItems, setStackItems] = useState<MosaicDataItem[]>(() =>
+
+  const [stackItems1, setStackItems1] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 10 }).map(() => createItem(types)),
   );
 
-  const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
+  const handleMoveStackItem1 = ({ container, active, over }: MosaicMoveEvent<number>) => {
     // console.log('handleMoveStackItem', active.position);
-    setStackItems((items) => {
+    setStackItems1((items) => {
+      if (active.container === container) {
+        items.splice(active.position!, 1);
+      }
+      if (over.container === container) {
+        items.splice(over.position!, 0, active.item);
+      }
+      return [...items];
+    });
+  };
+
+  const [stackItems2, setStackItems2] = useState<MosaicDataItem[]>(() =>
+    Array.from({ length: 5 }).map(() => createItem(types)),
+  );
+
+  const handleMoveStackItem2 = ({ container, active, over }: MosaicMoveEvent<number>) => {
+    // console.log('handleMoveStackItem', active.position);
+    setStackItems2((items) => {
       if (active.container === container) {
         items.splice(active.position!, 1);
       }
@@ -51,7 +69,8 @@ export const Default = () => {
   //
   // Grid
   //
-  const size = { x: 6, y: 3 };
+
+  const size = { x: 5, y: 4 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 6 }).map(() => createItem(types)),
   );
@@ -85,13 +104,13 @@ export const Default = () => {
   return (
     <MosaicContextProvider debug={debug}>
       <div className='flex grow overflow-hidden'>
-        <div className='flex gap-4 divide-x overflow-hidden'>
-          <div className='flex shrink-0 w-[300px] mr-2 overflow-hidden'>
+        <div className='flex grow overflow-hidden'>
+          <div className='flex shrink-0 w-[300px] overflow-hidden'>
             <Stack.Root
               id='stack'
-              items={stackItems}
+              items={stackItems1}
               Component={SimpleCard}
-              onMoveItem={handleMoveStackItem}
+              onMoveItem={handleMoveStackItem1}
               debug={debug}
             />
           </div>
@@ -103,6 +122,16 @@ export const Default = () => {
               size={size}
               Component={ComplexCard}
               onMoveItem={handleMoveGridItem}
+              debug={debug}
+              className='p-4'
+            />
+          </div>
+          <div className='flex shrink-0 w-[300px] overflow-hidden'>
+            <Stack.Root
+              id='stack2'
+              items={stackItems2}
+              Component={SimpleCard}
+              onMoveItem={handleMoveStackItem2}
               debug={debug}
             />
           </div>

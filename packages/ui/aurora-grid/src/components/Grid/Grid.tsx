@@ -67,6 +67,7 @@ const GridRoot = ({
   margin,
   debug,
   Component = DefaultComponent,
+  className,
   onMoveItem,
 }: GridRootProps) => {
   return (
@@ -77,6 +78,7 @@ const GridRoot = ({
           items={items}
           layout={layout}
           Component={Component}
+          className={className}
           size={size}
           margin={margin}
           debug={debug}
@@ -101,7 +103,7 @@ const GridLayout: FC<
     debug?: boolean;
     onSelect?: (id: string) => void;
   }
-> = ({ id, items, layout, size, square = true, margin, debug, Component, onMoveItem, onSelect }) => {
+> = ({ id, items, layout, size, square = true, margin, debug, Component, className, onMoveItem, onSelect }) => {
   useMosaicContainer({
     id,
     Component,
@@ -168,7 +170,10 @@ const GridLayout: FC<
 
   // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
   return (
-    <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600'>
+    <div
+      ref={containerRef}
+      className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+    >
       <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
         <div>
           {matrix.map((row) =>

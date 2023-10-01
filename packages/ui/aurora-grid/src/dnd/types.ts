@@ -46,7 +46,10 @@ export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExotic
 /**
  * Tile container.
  */
-export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unknown> = {
+export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unknown> = Pick<
+  HTMLAttributes<HTMLDivElement>,
+  'className'
+> & {
   id: string;
   Component?: MosaicTileComponent<TData>;
   getOverlayStyle?: () => CSSProperties;
