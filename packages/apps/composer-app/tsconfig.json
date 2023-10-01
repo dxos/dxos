@@ -92,6 +92,9 @@
     },
     {
       "path": "../plugins/plugin-treeview"
+    },
+    {
+      "path": "../types"
     }
   ]
 }
