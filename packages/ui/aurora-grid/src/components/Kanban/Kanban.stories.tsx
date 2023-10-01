@@ -3,14 +3,15 @@
 //
 
 import '@dxosTheme';
-
+import { horizontalListSortingStrategy, useSortable, SortableContext } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import React, { FC, PropsWithChildren, useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem, MosaicContainerProps } from '../../dnd';
-import { ComplexCard, createItem, FullscreenDecorator } from '../../testing';
+import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 import { Stack } from '../Stack';
 
 faker.seed(3);
@@ -50,14 +51,15 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
     );
   };
 
-  // TODO(burdon): Draggable stacks.
   return (
     <MosaicContextProvider debug>
       <div className='flex grow overflow-y-hidden overflow-x-auto'>
         <div className='flex'>
-          {columns.map(({ id, items }) => (
-            <Column key={id} id={id} items={items} onMoveItem={handleMoveItem} />
-          ))}
+          <SortableContext id='kanban' items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
+            {columns.map(({ id, items }) => (
+              <Column key={id} id={id} items={items} onMoveItem={handleMoveItem} />
+            ))}
+          </SortableContext>
         </div>
       </div>
     </MosaicContextProvider>
@@ -69,10 +71,26 @@ const Column: FC<{ id: string; items: MosaicDataItem[]; onMoveItem: MosaicContai
   items,
   onMoveItem,
 }) => {
+  const { setNodeRef, attributes, listeners, transform } = useSortable({ id, data: { item: { id } } });
+
   return (
-    <div className='flex flex-col w-[300px] overflow-hidden'>
-      <div className='flex shrink-0 h-[40px] ring'>{id}</div>
-      <Stack.Root id={id} items={items} Component={ComplexCard} onMoveItem={onMoveItem} debug />
+    <div className='flex flex-col w-[300px] snap-center overflow-hidden'>
+      <Card.Root
+        ref={setNodeRef}
+        classNames='shrink-0 m-4 bg-blue-100'
+        style={{
+          transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
+        }}
+      >
+        <Card.Header>
+          <Card.DragHandle {...attributes} {...listeners} />
+          <Card.Title title={id} />
+          <Card.Menu />
+        </Card.Header>
+      </Card.Root>
+
+      {/* TODO(burdon): Variant with Simple/Complex cards. */}
+      <Stack.Root id={id} items={items} Component={SimpleCard} onMoveItem={onMoveItem} debug />
     </div>
   );
 };

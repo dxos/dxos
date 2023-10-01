@@ -115,7 +115,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
               position='bottom-left'
               data={{
                 active: {
-                  id: activeItem?.item.id,
+                  id: activeItem?.item?.id,
                   container: activeItem?.container,
                 },
                 over: {
