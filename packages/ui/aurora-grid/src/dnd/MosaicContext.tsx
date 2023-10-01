@@ -99,7 +99,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         {createPortal(
           <DragOverlay>
             {activeItem && (
-              <div style={{ ...container.getBounds?.() }} className='ring ring-black'>
+              <div style={{ ...container.getOverlayStyle?.() }} className='ring ring-neutral-500'>
                 <OverlayComponent data={activeItem.item} isActive={true} />
               </div>
             )}

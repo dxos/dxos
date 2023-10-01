@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bounds, Position } from '../../dnd';
+import { Dimension } from '../../dnd';
 
 export const createMatrix = <TValue>(
   rangeX: number,
@@ -17,9 +17,16 @@ export const createMatrix = <TValue>(
   return matrix;
 };
 
-export const getPosition = ({ x, y }: Position, { width, height }: Bounds) => ({ left: x * width, top: y * height });
+export type Position = { x: number; y: number };
 
-export const getBounds = ({ x, y }: Position, { width, height }: Bounds, padding = 0) => ({
+export type Bounds = { left: number; top: number; width: number; height: number };
+
+export const getDimension = ({ width, height }: Dimension, padding = 0): Dimension => ({
+  width: width - padding * 2,
+  height: height - padding * 2,
+});
+
+export const getBounds = ({ x, y }: Position, { width, height }: Dimension, padding = 0): Bounds => ({
   left: x * width + padding,
   top: y * height + padding,
   width: width - padding * 2,

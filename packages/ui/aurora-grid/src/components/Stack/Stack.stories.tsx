@@ -24,30 +24,21 @@ export default {
 };
 
 export const Default: FC<PropsWithChildren> = ({ children }) => {
-  const [columns, setColumns] = useState<{ id: string; items: MosaicDataItem[] }[]>(() => {
-    return Array.from({ length: 3 }).map((_, i) => ({
-      id: `stack-column-${i}`,
-      items: Array.from({ length: 5 - i }).map(() => createItem(['document'])),
-    }));
-  });
+  const [items, setItems] = useState<MosaicDataItem[]>(() =>
+    Array.from({ length: 10 }).map(() => createItem(['document'])),
+  );
 
-  // const handleDelete = (id: string) => {
-  //   setItems1((cards) => cards.filter((card) => card.id !== id));
-  // };
-
-  const handleMove = ({ container, active, over }: MosaicMoveEvent) => {
-    setColumns((columns) =>
-      columns.map((column) => {
-        const items = [...column.items];
-        if (active.container === column.id && column.id === container) {
-          items.splice(active.position, 1);
-        }
-        if (over.container === column.id && column.id === container) {
-          items.splice(over.position, 0, active.item);
-        }
-        return { ...column, items };
-      }),
-    );
+  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent) => {
+    // console.log('handleMoveStackItem', active.position);
+    setItems((items) => {
+      if (active.container === container) {
+        items.splice(active.position, 1);
+      }
+      if (over.container === container) {
+        items.splice(over.position, 0, active.item);
+      }
+      return [...items];
+    });
   };
 
   // TODO(burdon): Draggable stacks.
@@ -55,11 +46,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
     <MosaicContextProvider debug>
       <div className='flex grow overflow-y-hidden overflow-x-auto'>
         <div className='flex'>
-          {columns.map(({ id, items }) => (
-            <div key={id} className='flex w-[300px] overflow-hidden'>
-              <Stack.Root id={id} items={items} Component={SimpleCard} onMoveItem={handleMove} debug />
-            </div>
-          ))}
+          <Stack.Root id={'stack'} items={items} Component={SimpleCard} onMoveItem={handleMoveItem} debug />
         </div>
       </div>
     </MosaicContextProvider>

@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
+import { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-export type Bounds = { width: number; height: number };
-
-export type Position = { x: number; y: number };
+export type Dimension = { width: number; height: number };
 
 export type MosaicDataItem = { id: string };
 
@@ -51,7 +49,7 @@ export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExotic
 export type MosaicContainerProps<TData extends MosaicDataItem> = {
   id: string;
   Component?: MosaicTileComponent<TData>;
-  getBounds?: () => Bounds;
+  getOverlayStyle?: () => CSSProperties;
 
   // TODO(burdon): Handle copy, delete, etc.
   onMoveItem?: (event: MosaicMoveEvent) => void;

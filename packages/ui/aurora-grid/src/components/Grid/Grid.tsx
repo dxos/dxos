@@ -13,15 +13,14 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { calculateCellWidth, createMatrix, getBounds, getPosition } from './util';
+import { calculateCellWidth, createMatrix, getBounds, getDimension, Position } from './util';
 import {
-  Bounds,
+  Dimension,
   DefaultComponent,
   MosaicContainerProps,
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
-  Position,
   useMosaicContainer,
 } from '../../dnd';
 import { Debug } from '../Debug';
@@ -31,7 +30,7 @@ import { Debug } from '../Debug';
 //
 
 type GridContextType = {
-  defaultCellBounds: Bounds;
+  defaultCellBounds: Dimension;
   spacing?: number;
 };
 
@@ -103,7 +102,12 @@ const GridLayout: FC<
     onSelect?: (id: string) => void;
   }
 > = ({ id, items, layout, size, square = true, margin, debug, Component, onMoveItem, onSelect }) => {
-  useMosaicContainer({ id, Component, onMoveItem, getBounds: () => getBounds({ x: 0, y: 0 }, cellBounds, spacing) });
+  useMosaicContainer({
+    id,
+    Component,
+    onMoveItem,
+    getOverlayStyle: () => getDimension(cellBounds, spacing),
+  });
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -130,7 +134,7 @@ const GridLayout: FC<
   const setCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
-      const pos = getPosition(layout[item.id], cellBounds);
+      const pos = getBounds(layout[item.id], cellBounds);
       const top = pos.top + marginSize - (height - cellBounds.height) / 2;
       const left = pos.left + marginSize - (width - cellBounds.width) / 2;
       containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
@@ -207,7 +211,7 @@ const Tile: FC<{
   item: MosaicDataItem;
   Component: MosaicTileComponent<any>;
   position: Position;
-  bounds: Bounds;
+  bounds: Dimension;
   onSelect: () => void;
 }> = ({ container, item, Component, position, bounds, onSelect }) => {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
@@ -239,7 +243,7 @@ const Tile: FC<{
 /**
  * Grid cell.
  */
-const Cell: FC<{ container: string; position: Position; bounds: Bounds }> = ({ container, position, bounds }) => {
+const Cell: FC<{ container: string; position: Position; bounds: Dimension }> = ({ container, position, bounds }) => {
   // TODO(burdon): Local handler.
   // TODO(burdon): Global ids based on container.
   const { setNodeRef, isOver } = useDroppable({

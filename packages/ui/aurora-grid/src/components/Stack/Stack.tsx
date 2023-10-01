@@ -31,13 +31,13 @@ const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent
   return (
     <SortableContext id={id} items={sortedItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
       <div className='flex flex-col overflow-y-scroll'>
-        {debug && <Debug data={{ id, items: sortedItems.length }} />}
         <div className='flex flex-col m-4 gap-4'>
           {sortedItems.map((item, i) => (
             <Tile key={item.id} container={id} item={item} Component={Component} index={i} />
           ))}
           {/* TODO(burdon): Placeholder at end. */}
         </div>
+        {debug && <Debug data={{ id, items: sortedItems.length }} />}
       </div>
     </SortableContext>
   );

@@ -13,7 +13,7 @@ import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
 faker.seed(3);
 
-const size = { x: 3, y: 3 };
+const size = { x: 8, y: 8 };
 const testItems = Array.from({ length: 5 }).map(() => createItem(['document', 'image']));
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
   map[item.id] = { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) };
@@ -31,7 +31,7 @@ export default {
 export const Default = () => {
   const [items] = useState<MosaicDataItem[]>(testItems);
   const [layout, setLayout] = useState<GridLayout>(testLayout);
-  const handleMove = ({ active, over }: MosaicMoveEvent) => {
+  const handleMoveItem = ({ active, over }: MosaicMoveEvent) => {
     setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
   };
 
@@ -44,7 +44,7 @@ export const Default = () => {
         size={size}
         debug
         Component={ComplexCard}
-        onMoveItem={handleMove}
+        onMoveItem={handleMoveItem}
       />
     </MosaicContextProvider>
   );
