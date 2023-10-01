@@ -11,10 +11,10 @@ import { Grid, GridLayout } from './Grid';
 import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
 import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
-faker.seed(3);
+faker.seed(99);
 
 const size = { x: 8, y: 8 };
-const testItems = Array.from({ length: 5 }).map(() => createItem(['document', 'image']));
+const testItems = Array.from({ length: 8 }).map(() => createItem(['document', 'image']));
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
   map[item.id] = { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) };
   return map;

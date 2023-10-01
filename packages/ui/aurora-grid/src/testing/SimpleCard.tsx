@@ -12,7 +12,7 @@ import { MosaicTileProps } from '../dnd';
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
 export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
-  ({ className, draggableStyle, draggableProps, data: { id, title }, onSelect, debug }, forwardRef) => {
+  ({ className, draggableStyle, draggableProps, data: { id, title }, debug }, forwardRef) => {
     const full = !title;
     return (
       <Card.Root
@@ -20,7 +20,6 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
         style={draggableStyle}
         grow
         noPadding={full}
-        onDoubleClick={() => onSelect?.()}
         classNames={mx(className, 'snap-center')}
       >
         <Card.Header floating={full}>

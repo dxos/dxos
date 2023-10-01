@@ -33,7 +33,7 @@ const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent
       <div className='flex flex-col overflow-y-scroll'>
         <div className='flex flex-col m-4 gap-4'>
           {sortedItems.map((item, i) => (
-            <Tile key={item.id} container={id} item={item} Component={Component} index={i} />
+            <StackTile key={item.id} container={id} item={item} Component={Component} index={i} />
           ))}
           {/* TODO(burdon): Placeholder at end. */}
         </div>
@@ -43,13 +43,13 @@ const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent
   );
 };
 
-const Tile: FC<{
+const StackTile: FC<{
   container: string;
   item: MosaicDataItem;
   Component: MosaicTileComponent<any>;
   index: number;
   onSelect?: () => void;
-}> = ({ item, container, Component, index, onSelect }) => {
+}> = ({ container, item, Component, index, onSelect }) => {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
@@ -58,13 +58,13 @@ const Tile: FC<{
   return (
     <Component
       ref={setNodeRef}
-      data={item}
       isDragging={isDragging}
       draggableStyle={{
         transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
       }}
       draggableProps={{ ...attributes, ...listeners }}
       className={mx(isDragging && 'opacity-30')}
+      data={item}
       onSelect={onSelect}
     />
   );

@@ -188,7 +188,7 @@ const GridLayout: FC<
           {items.map((item) => {
             const position = layout[item.id] ?? { x: 0, y: 0 };
             return (
-              <Tile
+              <GridTile
                 key={item.id}
                 item={item}
                 container={id}
@@ -206,7 +206,7 @@ const GridLayout: FC<
   );
 };
 
-const Tile: FC<{
+const GridTile: FC<{
   container: string;
   item: MosaicDataItem;
   Component: MosaicTileComponent<any>;
