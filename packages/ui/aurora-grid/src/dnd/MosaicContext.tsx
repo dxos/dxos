@@ -3,30 +3,41 @@
 //
 
 import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import React, { createContext, useContext, FC, PropsWithChildren, useState } from 'react';
+import React, { createContext, useContext, FC, PropsWithChildren, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { MosaicTileComponent, MosaicMoveEvent, MosaicDraggedItem, MosaicDataItem } from './types';
+import { raise } from '@dxos/debug';
+
+import { DefaultComponent } from './DefaultComponent';
+import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileComponent } from './types';
 import { Debug } from '../components/Debug';
 
 export type MosaicContextType = {
-  Component: MosaicTileComponent<any>;
+  delegators: Map<string, MosaicContainerProps<any>>;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
 };
 
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
 
+const DEFAULT_COMPONENT_ID = '__default';
+
 export type MosaicContextProviderProps = PropsWithChildren & {
-  Component: MosaicTileComponent<any>;
-  onMove: (event: MosaicMoveEvent) => void;
+  Component?: MosaicTileComponent<any>;
   debug?: boolean;
 };
 
 /**
  * Root provider.
  */
-export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Component, debug, onMove, children }) => {
+export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
+  Component = DefaultComponent,
+  debug,
+  children,
+}) => {
+  const [delegators] = useState(
+    new Map<string, MosaicContainerProps<any>>([[DEFAULT_COMPONENT_ID, { id: DEFAULT_COMPONENT_ID, Component }]]),
+  );
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
@@ -37,6 +48,8 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
   const handleDragOver = (event: DragOverEvent) => {
     const { over } = event;
     setOverItem(over?.data.current as MosaicDraggedItem);
+
+    console.log('##', over?.data.current);
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
@@ -50,18 +63,35 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
       overItem &&
       (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
     ) {
-      onMove({
-        active: activeItem,
-        over: overItem,
-      });
+      console.log(activeItem, overItem);
+
+      const activeContainer = delegators.get(activeItem.container);
+      if (activeContainer) {
+        const overContainer = delegators.get(overItem.container);
+        if (overContainer && overContainer !== activeContainer) {
+          overContainer?.onMoveItem?.({
+            active: activeItem,
+            over: overItem,
+          });
+        } else {
+          activeContainer.onMoveItem?.({
+            active: activeItem,
+            over: overItem,
+          });
+        }
+      }
     }
 
     setActiveItem(undefined);
     setOverItem(undefined);
   };
 
+  const { Component: OverlayComponent = DefaultComponent } =
+    (activeItem?.container ? delegators.get(/* overItem?.container ?? */ activeItem.container) : undefined) ??
+    delegators.get(DEFAULT_COMPONENT_ID)!;
+
   return (
-    <MosaicContext.Provider value={{ activeItem, overItem, Component }}>
+    <MosaicContext.Provider value={{ delegators, activeItem, overItem }}>
       <DndContext
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -84,11 +114,9 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
           />
         )}
 
-        {/* Dragging element. */}
+        {/* Active dragging element. */}
         {createPortal(
-          <DragOverlay>
-            {activeItem && <Component id={activeItem.item.id} data={activeItem.item} isActive={true} />}
-          </DragOverlay>,
+          <DragOverlay>{activeItem && <OverlayComponent data={activeItem.item} isActive={true} />}</DragOverlay>,
           document.body,
         )}
 
@@ -98,15 +126,11 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
   );
 };
 
-export const useMosaic = () => {
-  return useContext(MosaicContext);
-};
-
 /**
  * Returns a patched collection of items including a placeholder if items that could drop,
  * and removing any item that is currently being dragged out..
  */
-// TODO(burdon): Sorted
+// TODO(burdon): Rename?
 export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataItem[] => {
   const { activeItem, overItem } = useContext(MosaicContext)!;
   if (activeItem && activeItem.container !== id && overItem?.container === id) {
@@ -116,4 +140,17 @@ export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataI
     return items.filter((item) => item.id !== activeItem.item.id);
   }
   return items;
+};
+
+/**
+ * Register a container?
+ */
+export const useMosaicContainer = (container: MosaicContainerProps<any>) => {
+  const mosaic = useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+  useEffect(() => {
+    mosaic.delegators.set(container.id, container);
+    return () => {
+      mosaic.delegators.delete(container.id);
+    };
+  }, []);
 };

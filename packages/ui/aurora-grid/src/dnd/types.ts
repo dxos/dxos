@@ -11,24 +11,10 @@ import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react'
 
 export type MosaicDataItem = { id: string };
 
-/**
- * Item passed to mosaic container.
- */
-// TODO(burdon): Must we wrap the underlying ECHO query?
-// export type MosaicDataItem<TData, TPosition> = {
-//   id: string; // TODO(burdon): Remove.
-//   data: TData;
-//
-//   // TODO(burdon): Generalize to function? E.g., sort.
-//   position?: TPosition;
-//
-//   // Component: MosaicTile<TData>;
-// };
-
 export type MosaicDraggedItem = {
   container: string;
   item: MosaicDataItem;
-  position?: any;
+  position?: any; // Index or layout-specific positional information (stored separately from the item).
 };
 
 export type MosaicMoveEvent = {
@@ -39,32 +25,33 @@ export type MosaicMoveEvent = {
 /**
  * props passed to mosaic tile.
  */
-export type MosaicTileProps<T> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
-  id: string;
-  data: T;
+export type MosaicTileProps<TData extends MosaicDataItem> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
+  data: TData;
+
   isActive?: boolean;
   isDragging?: boolean;
   draggableStyle?: any;
   draggableProps?: any;
   debug?: boolean;
 
-  // TODO(burdon): Generalize events.
+  // TODO(burdon): Generalize events (or use intents?)
   onSelect?: () => void;
 };
 
 /**
  * Tile component.
  */
-export type MosaicTileComponent<TData> = ForwardRefExoticComponent<
+export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExoticComponent<
   RefAttributes<HTMLDivElement> & MosaicTileProps<TData>
 >;
 
 /**
  * Tile container.
  */
-// TODO(burdon): Context for container to wrap.
-export type MosaicTileContainer<TData> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> & {
-    render: MosaicTileComponent<TData>;
-  }
->;
+export type MosaicContainerProps<TData extends MosaicDataItem> = {
+  id: string;
+  Component?: MosaicTileComponent<TData>;
+
+  // TODO(burdon): Rename drag events.
+  onMoveItem?: (event: MosaicMoveEvent) => void;
+};

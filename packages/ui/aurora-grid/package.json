@@ -25,6 +25,7 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/util": "workspace:*",

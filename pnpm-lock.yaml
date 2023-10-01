@@ -6056,6 +6056,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/util': workspace:*
@@ -6084,6 +6085,7 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/aurora-types': link:../aurora-types
+      '@dxos/debug': link:../../common/debug
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/util': link:../../common/util

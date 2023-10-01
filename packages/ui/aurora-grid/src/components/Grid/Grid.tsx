@@ -13,7 +13,14 @@ import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 import { Bounds, calculateCellWidth, createMatrix, getBounds, getPosition, Position } from './util';
-import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent } from '../../dnd';
+import {
+  DefaultComponent,
+  MosaicContainerProps,
+  MosaicDataItem,
+  MosaicDraggedItem,
+  MosaicTileComponent,
+  useMosaicContainer,
+} from '../../dnd';
 
 //
 // Context.
@@ -39,12 +46,10 @@ const useGrid = () => {
 
 type GridLayout = { [id: string]: Position };
 
-type GridRootProps = {
-  id: string;
-  items: MosaicDataItem[];
-  layout: GridLayout;
-  Component: MosaicTileComponent<any>;
-  size: { x: number; y: number };
+type GridRootProps = MosaicContainerProps<any> & {
+  items?: MosaicDataItem[];
+  layout?: GridLayout;
+  size?: { x: number; y: number };
   center?: Position;
   margin?: boolean;
   debug?: boolean;
@@ -53,7 +58,17 @@ type GridRootProps = {
 /**
  * Root component.
  */
-const GridRoot = ({ id, items, layout, Component, size = { x: 8, y: 8 }, margin }: GridRootProps) => {
+const GridRoot = ({
+  id,
+  items = [],
+  layout = {},
+  size = { x: 8, y: 8 },
+  margin,
+  Component = DefaultComponent,
+  onMoveItem,
+}: GridRootProps) => {
+  useMosaicContainer({ id, Component, onMoveItem });
+
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext id={id} items={items.map((item) => item.id)}>
@@ -71,12 +86,12 @@ const GridLayout: FC<{
   id: string;
   items: MosaicDataItem[];
   layout: GridLayout;
-  Component: MosaicTileComponent<unknown>; // TODO(burdon): Name?
   size: { x: number; y: number };
   square?: boolean;
   margin?: boolean;
+  Component: MosaicTileComponent<any>;
   onSelect?: (id: string) => void;
-}> = ({ id, items, layout, Component, size, square = true, margin, onSelect }) => {
+}> = ({ id, items, layout, size, square = true, margin, Component, onSelect }) => {
   // TODO(burdon): Performance is poor.
   // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
@@ -143,7 +158,12 @@ const GridLayout: FC<{
         <div>
           {matrix.map((row) =>
             row.map(({ x, y }) => (
-              <Cell key={`${x}-${y}`} position={{ x, y }} bounds={getBounds({ x, y }, cellBounds, spacing)} />
+              <Cell
+                key={`${x}-${y}`}
+                container={id}
+                position={{ x, y }}
+                bounds={getBounds({ x, y }, cellBounds, spacing)}
+              />
             )),
           )}
         </div>
@@ -173,7 +193,7 @@ const GridLayout: FC<{
 const Tile: FC<{
   container: string;
   item: MosaicDataItem;
-  Component: MosaicTileComponent<unknown>;
+  Component: MosaicTileComponent<any>;
   position: Position;
   bounds: Bounds;
   onSelect: () => void;
@@ -186,7 +206,6 @@ const Tile: FC<{
   return (
     <Component
       ref={setNodeRef}
-      id={item.id}
       data={item}
       isDragging={isDragging}
       draggableStyle={{
@@ -204,11 +223,14 @@ const Tile: FC<{
 /**
  * Grid cell.
  */
-const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) => {
+const Cell: FC<{ container: string; position: Position; bounds: Bounds }> = ({ container, position, bounds }) => {
   // TODO(burdon): Local handler.
   // TODO(burdon): Global ids based on container.
   // TODO(burdon): Do we need to use the hook here? (Performance).
-  const { setNodeRef, isOver } = useDroppable({ id: `grid-drop-${position.x}-${position.y}`, data: { position } });
+  const { setNodeRef, isOver } = useDroppable({
+    id: `grid-drop-${position.x}-${position.y}`,
+    data: { container, position },
+  });
 
   // TODO(burdon): Create button.
   return (
@@ -219,7 +241,7 @@ const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) 
     >
       <div
         className={mx(
-          'flex w-full h-full box-border border-dashed group-hover:border border-neutral-600 rounded',
+          'flex w-full h-full box-border border-dashed __group-hover:border border border-neutral-600 rounded',
           isOver && 'bg-neutral-600 border-neutral-700',
         )}
       >

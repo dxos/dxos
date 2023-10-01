@@ -55,12 +55,12 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   // TODO(burdon): Provide hooks for DnD rather than wrapping it?
   // TODO(burdon): Secondary inner stack?
   return (
-    <MosaicContextProvider Component={SimpleCard} onMove={handleMove} debug>
+    <MosaicContextProvider debug>
       <div className='flex grow overflow-y-hidden overflow-x-auto'>
         <div className='flex'>
           {columns.map(({ id, items }) => (
             <div key={id} className='flex w-[300px] overflow-hidden'>
-              <Stack.Root id={id} items={items} Component={SimpleCard} debug />
+              <Stack.Root id={id} items={items} Component={SimpleCard} onMoveItem={handleMove} debug />
             </div>
           ))}
         </div>

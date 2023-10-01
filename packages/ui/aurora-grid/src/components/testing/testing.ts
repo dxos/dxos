@@ -18,13 +18,13 @@ export const testItemFactory: Record<string, () => TestItem> = {
     type: 'document',
     id: faker.string.uuid(),
     title: faker.lorem.sentence(3),
-    // body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+    body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
 
   image: () => ({
     type: 'image',
     id: faker.string.uuid(),
-    // title: faker.datatype.boolean() ? faker.lorem.sentence(3) : undefined,
+    title: faker.lorem.sentence(3),
     image: faker.helpers.arrayElement(testImages),
     body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
   }),

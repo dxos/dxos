@@ -13,6 +13,32 @@ export type SimpleCardProps = { id: string; title?: string; body?: string; image
 
 export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
   (
+    { className, isActive, draggableStyle, draggableProps, data: { id, title }, onSelect, debug = true },
+    forwardRef,
+  ) => {
+    const full = !title;
+    return (
+      <Card.Root
+        ref={forwardRef}
+        style={draggableStyle}
+        grow
+        noPadding={full}
+        onDoubleClick={() => onSelect?.()}
+        classNames={mx(className, 'snap-center', isActive && 'ring')}
+      >
+        <Card.Header floating={full}>
+          <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
+          {title && <Card.Title title={title} />}
+          <Card.Menu position={full ? 'right' : undefined} />
+        </Card.Header>
+        {debug && <Card.Body classNames='truncate text-xs text-neutral-400'>{id}</Card.Body>}
+      </Card.Root>
+    );
+  },
+);
+
+export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
+  (
     { className, isActive, draggableStyle, draggableProps, data: { id, title, body, image }, onSelect, debug = true },
     forwardRef,
   ) => {
@@ -37,7 +63,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
             {body}
           </Card.Body>
         )}
-        {debug && <Card.Body classNames='text-xs text-neutral-400'>{id}</Card.Body>}
+        {debug && <Card.Body classNames='truncate text-xs text-neutral-400'>{id}</Card.Body>}
       </Card.Root>
     );
   },

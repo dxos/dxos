@@ -8,17 +8,24 @@ import React, { FC } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent, useSortedItems } from '../../dnd';
+import {
+  DefaultComponent,
+  MosaicContainerProps,
+  MosaicDataItem,
+  MosaicDraggedItem,
+  MosaicTileComponent,
+  useMosaicContainer,
+  useSortedItems,
+} from '../../dnd';
 import { Debug } from '../Debug';
 
-type StackRootProps = {
-  id: string;
-  items: MosaicDataItem[];
-  Component: MosaicTileComponent<any>;
+type StackRootProps = MosaicContainerProps<any> & {
+  items?: MosaicDataItem[];
   debug?: boolean;
 };
 
-const StackRoot = ({ id, items, Component, debug = false }: StackRootProps) => {
+const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent, onMoveItem }: StackRootProps) => {
+  useMosaicContainer({ id, Component, onMoveItem });
   const sortedItems = useSortedItems(id, items);
 
   return (
@@ -38,7 +45,7 @@ const StackRoot = ({ id, items, Component, debug = false }: StackRootProps) => {
 const Tile: FC<{
   container: string;
   item: MosaicDataItem;
-  Component: MosaicTileComponent<unknown>;
+  Component: MosaicTileComponent<any>;
   index: number;
   onSelect?: () => void;
 }> = ({ item, container, Component, index, onSelect }) => {
@@ -50,7 +57,6 @@ const Tile: FC<{
   return (
     <Component
       ref={setNodeRef}
-      id={item.id}
       data={item}
       isDragging={isDragging}
       draggableStyle={{

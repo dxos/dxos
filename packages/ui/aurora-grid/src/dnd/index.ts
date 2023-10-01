@@ -3,4 +3,6 @@
 //
 
 export * from './types';
+
+export * from './DefaultComponent';
 export * from './MosaicContext';

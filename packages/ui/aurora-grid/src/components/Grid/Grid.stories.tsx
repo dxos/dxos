@@ -36,8 +36,16 @@ export const Default = () => {
   };
 
   return (
-    <MosaicContextProvider Component={SimpleCard} onMove={handleMove} debug>
-      <Grid.Root id='test' items={items} layout={layout} size={size} Component={SimpleCard} debug />
+    <MosaicContextProvider debug>
+      <Grid.Root
+        id='test'
+        items={items}
+        layout={layout}
+        size={size}
+        debug
+        Component={SimpleCard}
+        onMoveItem={handleMove}
+      />
     </MosaicContextProvider>
   );
 };
