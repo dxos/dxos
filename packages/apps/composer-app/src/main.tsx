@@ -47,19 +47,20 @@ const main = async () => {
           </div>
         }
         plugins={[
+          // TODO(burdon): Normalize namespace across apps.
           TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
           ThemePlugin({ appName: 'Composer' }),
 
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
 
-          // Inside theme provider so that errors are styled.
+          // Core framework.
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
           ClientPlugin({ config, services, schema: schema$ }),
 
-          // Core UX
+          // Core UX.
           DndPlugin(),
           SplitViewPlugin(),
           TreeViewPlugin(),
@@ -67,7 +68,7 @@ const main = async () => {
           // TODO(burdon): Remove need to come after SplitView.
           SpacePlugin(),
 
-          // Apps
+          // Apps.
           MarkdownPlugin(),
           StackPlugin(),
           FilesPlugin(),

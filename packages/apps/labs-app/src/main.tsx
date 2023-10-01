@@ -90,13 +90,13 @@ const main = async () => {
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
 
-          // Core.
+          // Core framework.
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
           ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
 
-          // Core UX
+          // Core UX.
           DndPlugin(),
           TreeViewPlugin(),
           SplitViewPlugin({ showComplementarySidebar: true }),
@@ -104,14 +104,14 @@ const main = async () => {
           // TODO(burdon): Remove need to come after SplitView.
           SpacePlugin(),
 
-          // Composer Apps
+          // Composer Apps.
           FilesPlugin(),
           GithubPlugin(),
           MarkdownPlugin(),
           SketchPlugin(),
           StackPlugin(),
 
-          // Labs Apps
+          // Labs Apps.
           ChessPlugin(),
           DebugPlugin(),
           IpfsPlugin(),
