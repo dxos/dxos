@@ -7,8 +7,6 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Card } from '@dxos/aurora';
-
 import { Stack } from './Stack';
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
 import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
@@ -16,7 +14,7 @@ import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  component: Card,
+  component: Stack,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

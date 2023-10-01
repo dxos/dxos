@@ -7,8 +7,6 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Card } from '@dxos/aurora';
-
 import { Kanban, KanbanColumn } from './Kanban';
 import { MosaicContextProvider, MosaicMoveEvent } from '../../dnd';
 import { createItem, FullscreenDecorator } from '../../testing';
@@ -16,7 +14,7 @@ import { createItem, FullscreenDecorator } from '../../testing';
 faker.seed(3);
 
 export default {
-  component: Card,
+  component: Kanban,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

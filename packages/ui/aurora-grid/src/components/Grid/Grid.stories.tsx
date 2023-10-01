@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
 import { Grid, GridLayout } from './Grid';
-import { Position } from './util';
+import { Position } from './layout';
 import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
 import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
@@ -22,7 +22,7 @@ const testLayout = testItems.reduce<GridLayout>((map, item) => {
 }, {});
 
 export default {
-  component: Grid.Root,
+  component: Grid,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

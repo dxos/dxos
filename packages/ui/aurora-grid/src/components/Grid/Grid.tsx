@@ -13,7 +13,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { calculateCellWidth, createMatrix, getBounds, getDimension, Position } from './util';
+import { calculateCellWidth, createMatrix, getBounds, getDimension, Position } from './layout';
 import {
   Dimension,
   DefaultComponent,
