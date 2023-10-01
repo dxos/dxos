@@ -33,7 +33,7 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
-    "@braneframe/plugin-url-sync": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/aurora-table": "workspace:*",

@@ -34,8 +34,8 @@ export type Subscription = () => void;
 export class Query<T extends TypedObject = TypedObject> {
   private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined = undefined;
-  private _event = new Event<Query<T>>();
   private _signal = createSignal?.();
+  private _event = new Event<Query<T>>();
 
   constructor(
     private readonly _objects: Map<string, EchoObject>,

@@ -2,30 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
+import { deepSignal, RevertDeepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { Node, useGraph } from '@braneframe/plugin-graph';
 import { Mosaic, parseDndId, TileProps } from '@dxos/aurora-grid';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN, DndPluginProvides, DndStore } from './types';
-
-const dnd: DndStore = deepSignal({
-  mosaic: {
-    tiles: {},
-    relations: {},
-  },
-  onMosaicChangeSubscriptions: [],
-  onSetTileSubscriptions: [],
-  onCopyTileSubscriptions: [],
-});
+import { DND_PLUGIN, DndPluginProvides, DndProvides, DndStore } from './types';
 
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
+  const dnd = deepSignal<DndStore>({
+    mosaic: {
+      tiles: {},
+      relations: {},
+    },
+    onMosaicChangeSubscriptions: [],
+    onSetTileSubscriptions: [],
+    onCopyTileSubscriptions: [],
+  });
+
   return {
     meta: {
       id: DND_PLUGIN,
+    },
+    ready: async (plugins) => {
+      const persistorPlugin = (plugins as Plugin<DndProvides>[]).find(
+        (plugin) => typeof plugin.provides.dnd?.appState === 'function',
+      );
+
+      if (persistorPlugin) {
+        dnd.appState = persistorPlugin.provides.dnd.appState();
+      }
     },
     provides: {
       components: {
@@ -58,7 +67,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
           </Mosaic.Provider>
         );
       },
-      dnd,
+      dnd: dnd as RevertDeepSignal<DndStore>,
       onSetTile: (tile: TileProps, node: Node): TileProps => {
         return dnd.onSetTileSubscriptions.length
           ? dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile)

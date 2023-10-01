@@ -130,15 +130,15 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  */
 
 // TODO(wittjosiah): Type nodes.
-export const buildGraph = (graph: Graph, nodes: any[]) => {
-  addNodes(graph.root, nodes);
+export const buildGraph = (graph: Graph, id: string, nodes: any[]) => {
+  addNodes(graph.root, id, nodes);
   return graph;
 };
 
-const addNodes = (root: Node, nodes: any[]) => {
+const addNodes = (root: Node, id: string, nodes: any[]) => {
   nodes.forEach((node) => {
-    const [child] = root.addNode(node);
-    addNodes(child, node.children || []);
+    const [child] = root.addNode(id, node);
+    addNodes(child, id, node.children || []);
     node.actions?.forEach((action: any) => child.addAction(action));
   });
 };

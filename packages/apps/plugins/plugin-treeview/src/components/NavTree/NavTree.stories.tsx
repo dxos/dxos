@@ -6,19 +6,17 @@ import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 import { getIndices } from '@tldraw/indices';
-import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { deepSignal } from 'deepsignal/react';
 import React, { forwardRef, Ref } from 'react';
 
 import { GraphContext, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
-import { SplitViewContext, SplitViewState } from '@braneframe/plugin-splitview';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
 import { DelegatorProps, getDndId, Mosaic, MosaicState, parseDndId, TreeItemTileProps } from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';
 import { TreeViewContext } from '../../TreeViewContext';
-import { TreeViewContextValue } from '../../types';
 import { getLevel } from '../../util';
 
 faker.seed(1234);
@@ -48,7 +46,7 @@ const createGraph = () => {
     })),
   }));
 
-  return buildGraph(new GraphBuilder().build(), content);
+  return buildGraph(new GraphBuilder().build(), 'tree', content);
 };
 
 const graph = createGraph();
@@ -102,25 +100,6 @@ const createState = () => {
 
 const mosaicState = deepSignal<MosaicState>(createState());
 
-const splitViewState = deepSignal<SplitViewState>({
-  sidebarOpen: true,
-  complementarySidebarOpen: true,
-  dialogContent: 'never',
-  dialogOpen: false,
-});
-
-const treeViewState = deepSignal<TreeViewContextValue>({
-  active: undefined,
-  previous: undefined,
-  get activeNode() {
-    return this.active && graph.findNode(this.active);
-  },
-  get previousNode() {
-    return this.previous && graph.findNode(this.previous);
-  },
-  appState: undefined,
-}) as RevertDeepSignal<TreeViewContextValue>;
-
 const StorybookNavTreeItemDelegator = forwardRef<HTMLElement, DelegatorProps>((props, forwardedRef) => (
   <NavTreeItemDelegator data={props} ref={forwardedRef as Ref<HTMLOListElement>} />
 ));
@@ -145,15 +124,13 @@ export const Default = {
     (Story: any) => (
       <Tooltip.Provider>
         <GraphContext.Provider value={{ graph }}>
-          <SplitViewContext.Provider value={splitViewState}>
-            <TreeViewContext.Provider value={treeViewState}>
-              <DensityProvider density='fine'>
-                <div role='none' className='p-2'>
-                  <Story />
-                </div>
-              </DensityProvider>
-            </TreeViewContext.Provider>
-          </SplitViewContext.Provider>
+          <TreeViewContext.Provider value={{}}>
+            <DensityProvider density='fine'>
+              <div role='none' className='p-2'>
+                <Story />
+              </div>
+            </DensityProvider>
+          </TreeViewContext.Provider>
         </GraphContext.Provider>
       </Tooltip.Provider>
     ),

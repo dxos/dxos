@@ -115,7 +115,7 @@ export class SpaceProxy implements Space {
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
 
-    this._cachedProperties = new Properties({}, { readOnly: true });
+    this._cachedProperties = new Properties({}, { immutable: true });
     if (this._data.cache?.properties) {
       setStateFromSnapshot(this._cachedProperties, this._data.cache.properties);
     }

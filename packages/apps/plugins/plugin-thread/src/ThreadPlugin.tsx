@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -54,7 +54,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
             properties: {

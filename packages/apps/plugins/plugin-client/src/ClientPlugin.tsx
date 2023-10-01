@@ -4,6 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { AppState } from '@braneframe/types';
+import { EchoSchema } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -13,7 +15,7 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
@@ -30,6 +32,10 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
+        if (options.schema) {
+          client.addSchema(options.schema);
+        }
+
         await client.initialize();
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
@@ -77,6 +83,20 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
+        // TODO(wittjosiah): Is there a better place for this?
+        dnd: {
+          appState: () => {
+            const defaultSpace = client.spaces.default;
+            const appStates = defaultSpace.db.query(AppState.filter()).objects;
+            if (appStates.length < 1) {
+              const appState = new AppState();
+              defaultSpace.db.add(appState);
+              return appState;
+            } else {
+              return (appStates as AppState[])[0];
+            }
+          },
+        },
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
 

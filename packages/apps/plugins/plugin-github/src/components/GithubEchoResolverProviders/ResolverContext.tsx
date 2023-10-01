@@ -72,7 +72,7 @@ const DocumentResolverProviderImpl = ({
   const defaultDisplayName = displayName(source, id);
 
   const documents = useQuery(space, (obj) => {
-    const keys = obj.meta?.keys;
+    const keys = obj.__meta?.keys;
     return keys?.find((key: any) => key.source === source && key.id === id);
   });
 
@@ -83,12 +83,15 @@ const DocumentResolverProviderImpl = ({
       }
 
       if (event.data.type === 'initial-data') {
-        const nextDocument = new Document({
-          content: new Text(event.data.content),
-          title: defaultDisplayName,
-        }).setMeta({
-          keys: [{ source, id }],
-        });
+        const nextDocument = new Document(
+          {
+            content: new Text(event.data.content),
+            title: defaultDisplayName,
+          },
+          {
+            meta: { keys: [{ source, id }] },
+          },
+        );
         space.db.add(nextDocument);
         setDocument(nextDocument);
       }

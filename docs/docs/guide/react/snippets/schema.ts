@@ -5,11 +5,12 @@
 import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client/echo';
 
 export const schema = EchoSchema.fromJson(
-  '{ "protobuf generated json here": true }'
+  '{ "protobuf generated json here": true }',
 );
 
 export class Task extends TypedObject {
-  static readonly type: ReturnType<typeof schema.getType> = schema.getType('example.tasks.Task');
+  static readonly type: ReturnType<typeof schema.getType> =
+    schema.getType('example.tasks.Task');
 
   static filter(opts?: {
     title?: string;
@@ -19,7 +20,7 @@ export class Task extends TypedObject {
   }
 
   constructor(opts?: { title?: string; completed?: boolean }) {
-    super({ ...opts, '@type': Task.type.name }, Task.type);
+    super({ ...opts, '@type': Task.type.name }, { schema: Task.type });
   }
 
   declare title: string;
