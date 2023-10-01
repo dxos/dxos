@@ -58,6 +58,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
+          // TODO(burdon): Broken if services are not provided.
           ClientPlugin({ config, services, schema: schema$ }),
 
           // Core UX.
