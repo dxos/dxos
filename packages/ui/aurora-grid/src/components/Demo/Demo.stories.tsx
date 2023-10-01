@@ -11,8 +11,7 @@ import { Card } from '@dxos/aurora';
 
 import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
-import { Grid, GridLayout } from '../Grid';
-import { Position } from '../Grid/util';
+import { Grid, GridLayout, Position } from '../Grid';
 import { Stack } from '../Stack';
 
 faker.seed(8);

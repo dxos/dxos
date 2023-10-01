@@ -18,7 +18,9 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 
 - Extends `dnd-kit` without obfuscation or wrapping;
   for example, mosaic provides additional hooks in the same manner as `dnd-kit`'s own useSortable`.
-- Containers define their own data model and __assemble__ Radix-style Aurora components.
+- Mosaics consist of containers and pure components that can be laid out and rearranged by the user
+- Aurora components are pure tailwind-styled Radix components that expose small parts (List, ListItem, ListItem.Header, etc.)
+- Mosaic Containers define their own data model and __assemble__ Radix-style Aurora components.
 - Containers implement specific layouts of Tiles, which may reuse common components, such as Aurora Cards.
 - Container Models facilitate pure React components, but are easily mapped to data structures (e.g., `Graph`)
-  and ECHO data sets without the need to wrap/map the underlying reactive objects.
+  and `ECHO` data sets without the need to wrap/map the underlying __reactive__ objects (e.g., via `signals`).
