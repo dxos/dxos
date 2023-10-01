@@ -54,6 +54,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     setOverItem(undefined);
   };
 
+  // TODO(burdon): Handle copy vs. move.
   const handleDragEnd = (event: DragEndEvent) => {
     if (
       activeItem &&
@@ -67,6 +68,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
           active: activeItem,
           over: overItem,
         });
+
         const overContainer = containers.get(overItem.container);
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onMoveItem?.({
