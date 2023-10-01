@@ -25,14 +25,17 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { schema$ } from '@braneframe/types';
 import { ProgressBar } from '@dxos/aurora';
+import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
-import { TypedObject } from '@dxos/echo-schema';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { PluginProvider } from '@dxos/react-surface';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
+(globalThis as any)[EchoDatabase.name] = EchoDatabase;
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 const main = async () => {
   const config = new Config(Envs(), Local(), Defaults());
