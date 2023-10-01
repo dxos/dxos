@@ -83,38 +83,41 @@ const main = async () => {
     <StrictMode>
       <PluginProvider
         plugins={[
-          // TODO(burdon): Document ordering requirements and normalize with composer-app.
           // TODO(burdon): Normalize namespace across apps.
           TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
-          IntentPlugin(),
           ThemePlugin({ appName: 'Labs', tx: labsTx }),
 
           // Outside of error boundary so that updates are not blocked by errors.
           PwaPlugin(),
-          ErrorPlugin(),
 
-          // Inside theme provider so that errors are styled.
+          // Core framework.
+          ErrorPlugin(),
+          IntentPlugin(),
           GraphPlugin(),
+          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
+
+          // Core UX.
           DndPlugin(),
           TreeViewPlugin(),
           SplitViewPlugin({ showComplementarySidebar: true }),
+
+          // TODO(burdon): Remove need to come after SplitView.
           SpacePlugin(),
 
-          // Composer
+          // Composer Apps.
           FilesPlugin(),
           GithubPlugin(),
           MarkdownPlugin(),
-          StackPlugin(),
           SketchPlugin(),
+          StackPlugin(),
 
-          // Labs
+          // Labs Apps.
           ChessPlugin(),
           DebugPlugin(),
-          TablePlugin(),
           IpfsPlugin(),
           KanbanPlugin(),
           MapPlugin(),
+          TablePlugin(),
           ThreadPlugin(),
         ]}
       />

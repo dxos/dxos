@@ -54,6 +54,9 @@
     },
     "test": {
       "executor": "@dxos/test:run",
+      "dependsOn": [
+        "prebuild"
+      ],
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-schema",
         "forceExit": true,
