@@ -55,7 +55,7 @@ export const TreeViewContainer = ({
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
-                        dispatch({
+                        void dispatch({
                           action: 'dxos.org/plugin/splitview/action/open-dialog',
                           data: { content: 'dxos.org/plugin/splitview/ProfileSettings' },
                         });
@@ -79,7 +79,7 @@ export const TreeViewContainer = ({
                       classNames='lg:hidden pli-2 pointer-fine:pli-1'
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
-                        dispatch({
+                        void dispatch({
                           action: 'dxos.org/plugin/splitview/action/toggle-sidebar',
                           data: { state: false },
                         });
