@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { FC, PropsWithChildren, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
@@ -14,7 +14,7 @@ import { Grid, GridLayout } from '../Grid';
 import { Stack } from '../Stack';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../testing';
 
-faker.seed(10);
+faker.seed(8);
 
 export default {
   component: Card,
@@ -24,23 +24,23 @@ export default {
   },
 };
 
+const debug = false;
 const types = ['document', 'image'];
 
-export const Default: FC<PropsWithChildren> = ({ children }) => {
+export const Default = () => {
   //
   // Stack
   //
   const [stackItems, setStackItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 5 }).map(() => createItem(types)),
   );
+
   const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent) => {
     // console.log('handleMoveStackItem', active.position);
     setStackItems((items) => {
-      // TODO(burdon): Make sure each column is a container.
       if (active.container === container) {
         items.splice(active.position, 1);
       }
-
       if (over.container === container) {
         items.splice(over.position, 0, active.item);
       }
@@ -51,7 +51,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //
   // Grid
   //
-  const size = { x: 4, y: 3 };
+  const size = { x: 6, y: 3 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 6 }).map(() => createItem(types)),
   );
@@ -64,10 +64,10 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
       return map;
     }, {}),
   );
+
   const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent) => {
     // console.log('handleMoveGridItem', active, over);
     if (over.container !== container) {
-      // TODO(burdon): Get id from event.
       setGridItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {
       setGridItems((items) => {
@@ -83,13 +83,19 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   };
 
   return (
-    <MosaicContextProvider debug>
-      <div className='flex grow overflow-y-hidden overflow-x-auto'>
-        <div className='flex gap-4 divide-x'>
-          <div className='flex w-[300px] overflow-hidden'>
-            <Stack.Root id='stack' items={stackItems} Component={SimpleCard} onMoveItem={handleMoveStackItem} debug />
+    <MosaicContextProvider debug={debug}>
+      <div className='flex grow overflow-hidden'>
+        <div className='flex gap-4 divide-x overflow-hidden'>
+          <div className='flex shrink-0 w-[300px] overflow-hidden'>
+            <Stack.Root
+              id='stack'
+              items={stackItems}
+              Component={SimpleCard}
+              onMoveItem={handleMoveStackItem}
+              debug={debug}
+            />
           </div>
-          <div className='flex grow'>
+          <div className='flex grow overflow-hidden ml-2'>
             <Grid.Root
               id='grid'
               items={gridItems}
@@ -97,7 +103,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
               Component={ComplexCard}
               onMoveItem={handleMoveGridItem}
               size={size}
-              debug
+              debug={debug}
             />
           </div>
         </div>

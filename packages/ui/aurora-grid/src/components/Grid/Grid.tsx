@@ -142,20 +142,21 @@ const GridLayout: FC<
     onSelect?.(id);
   };
 
+  // const moveToCenter = () => {
+  //   if (width && height && isNotMobile) {
+  //     const center = {
+  //       x: (contentRef.current!.offsetWidth + marginSize * 2 - width) / 2,
+  //       y: (contentRef.current!.offsetHeight + marginSize * 2 - height) / 2,
+  //     };
+  //
+  //     containerRef.current!.scrollTo({ top: center.y, left: center.x });
+  //   }
+  // };
+
   useEffect(() => {
     if (selected) {
       // Center on selected.
       setCenter(selected);
-    } else {
-      // Center on screen.
-      if (width && height && isNotMobile) {
-        const center = {
-          x: (contentRef.current!.offsetWidth + marginSize * 2 - width) / 2,
-          y: (contentRef.current!.offsetHeight + marginSize * 2 - height) / 2,
-        };
-
-        containerRef.current!.scrollTo({ top: center.y, left: center.x });
-      }
     }
   }, [selected, width, height]);
 

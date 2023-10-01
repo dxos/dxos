@@ -85,10 +85,10 @@ export const testItemFactory: Record<string, () => TestItem> = {
 // TODO(burdon): Use https://picsum.photos/
 export const testImages = [
   // 'https://images.unsplash.com/photo-1554629947-334ff61d85dc',
-  'https://images.unsplash.com/photo-1616394158624-a2ba9cfe2994',
-  'https://images.unsplash.com/photo-1507941097613-9f2157b69235',
-  'https://images.unsplash.com/photo-1431274172761-fca41d930114',
-  'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
-  'https://images.unsplash.com/photo-1564221710304-0b37c8b9d729',
-  'https://images.unsplash.com/photo-1605425183435-25b7e99104a4',
+  '/images/image-1.png',
+  '/images/image-2.png',
+  '/images/image-3.png',
+  '/images/image-4.png',
+  '/images/image-5.png',
+  '/images/image-6.png',
 ];

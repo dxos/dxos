@@ -55,6 +55,6 @@ export type MosaicContainerProps<TData extends MosaicDataItem> = {
   Component?: MosaicTileComponent<TData>;
   getBounds?: () => Bounds;
 
-  // TODO(burdon): Rename drag events.
+  // TODO(burdon): Handle copy, delete, etc.
   onMoveItem?: (event: MosaicMoveEvent) => void;
 };

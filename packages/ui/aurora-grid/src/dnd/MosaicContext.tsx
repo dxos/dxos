@@ -42,25 +42,19 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
   const handleDragStart = (event: DragStartEvent) => {
-    // console.log('start', event.active?.data.current);
     setActiveItem(event.active.data.current as MosaicDraggedItem);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    // console.log('over', event.over?.data.current);
-    if (event.over?.data.current) {
-      setOverItem(event.over?.data.current as MosaicDraggedItem);
-    }
+    setOverItem(event.over?.data.current as MosaicDraggedItem);
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
-    // console.log('cancel');
     setActiveItem(undefined);
     setOverItem(undefined);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // console.log('end');
     if (
       activeItem &&
       overItem &&
@@ -105,7 +99,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         {createPortal(
           <DragOverlay>
             {activeItem && (
-              <div style={{ ...container.getBounds?.() }} className='ring'>
+              <div style={{ ...container.getBounds?.() }} className='ring ring-black'>
                 <OverlayComponent data={activeItem.item} isActive={true} />
               </div>
             )}
@@ -137,13 +131,14 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   );
 };
 
+const useMosaic = () => useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+
 /**
  * Returns a patched collection of items including a placeholder if items that could drop,
  * and removing any item that is currently being dragged out..
  */
-// TODO(burdon): Rename?
 export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataItem[] => {
-  const { activeItem, overItem } = useContext(MosaicContext)!;
+  const { activeItem, overItem } = useMosaic();
   if (activeItem && activeItem.container !== id && overItem?.container === id) {
     return [activeItem.item, ...items];
   }
@@ -156,8 +151,9 @@ export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataI
 /**
  * Register a container?
  */
+// TODO(burdon): Support passing in more context to event handlers.
 export const useMosaicContainer = (container: MosaicContainerProps<any>) => {
-  const mosaic = useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+  const mosaic = useMosaic();
   useEffect(() => {
     mosaic.delegators.set(container.id, container);
     return () => {
