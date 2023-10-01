@@ -6,6 +6,7 @@ import React from 'react';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
 //  - The Tree (like Stack, Grid) is a high level container that assembles Radix style Aurora components from a model.
+//  - Models in general should be easily mapped from the Graph and/or ECHO queries.
 
 type TreeRootProps = {
   id: string;
@@ -15,10 +16,12 @@ const TreeRoot = ({ id }: TreeRootProps) => {
   return <div />;
 };
 
+// TODO(burdon): Draggable item.
 const TreeTile = () => {
   return <div />;
 };
 
+// TODO(burdon): Pure component that is used by the mosaic overlay.
 const TreeItem = () => {
   return <div />;
 };
