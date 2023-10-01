@@ -44,8 +44,6 @@ const useGrid = () => {
   return useContext(GridContext);
 };
 
-// TODO(burdon): Scale container.
-
 type GridLayout = { [id: string]: Position };
 
 type GridRootProps = MosaicContainerProps<any> & {
@@ -70,8 +68,6 @@ const GridRoot = ({
   Component = DefaultComponent,
   onMoveItem,
 }: GridRootProps) => {
-  useMosaicContainer({ id, Component, onMoveItem });
-
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext id={id} items={items.map((item) => item.id)}>
@@ -83,6 +79,7 @@ const GridRoot = ({
           size={size}
           margin={margin}
           debug={debug}
+          onMoveItem={onMoveItem}
         />
       </SortableContext>
     </GridContext.Provider>
@@ -92,20 +89,19 @@ const GridRoot = ({
 /**
  * Grid content.
  */
-// TODO(burdon): Make generic?
-const GridLayout: FC<{
-  id: string;
-  items: MosaicDataItem[];
-  layout: GridLayout;
-  size: { x: number; y: number };
-  square?: boolean;
-  margin?: boolean;
-  debug?: boolean;
-  Component: MosaicTileComponent<any>;
-  onSelect?: (id: string) => void;
-}> = ({ id, items, layout, size, square = true, margin, debug, Component, onSelect }) => {
-  // TODO(burdon): Performance is poor.
-  // TODO(burdon): BUG: React has detected a change in the order of Hooks.
+const GridLayout: FC<
+  MosaicContainerProps<any> & {
+    id: string;
+    items: MosaicDataItem[];
+    layout: GridLayout;
+    size: { x: number; y: number };
+    square?: boolean;
+    margin?: boolean;
+    debug?: boolean;
+    onSelect?: (id: string) => void;
+  }
+> = ({ id, items, layout, size, square = true, margin, debug, Component, onMoveItem, onSelect }) => {
+  useMosaicContainer({ id, Component, onMoveItem, getBounds: () => getBounds({ x: 0, y: 0 }, cellBounds, spacing) });
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -163,7 +159,7 @@ const GridLayout: FC<{
     }
   }, [selected, width, height]);
 
-  // TODO(burdon): Set center point on container (via translation?)
+  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
   return (
     <div ref={containerRef} className='grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600'>
       <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
@@ -189,7 +185,7 @@ const GridLayout: FC<{
                 key={item.id}
                 item={item}
                 container={id}
-                Component={Component}
+                Component={Component!}
                 position={position}
                 bounds={getBounds(position, cellBounds, spacing)}
                 onSelect={() => handleSelect(id)}
@@ -216,6 +212,10 @@ const Tile: FC<{
     data: { container, item, position } satisfies MosaicDraggedItem,
   });
 
+  if (isDragging) {
+    return null;
+  }
+
   return (
     <Component
       ref={setNodeRef}
@@ -239,13 +239,12 @@ const Tile: FC<{
 const Cell: FC<{ container: string; position: Position; bounds: Bounds }> = ({ container, position, bounds }) => {
   // TODO(burdon): Local handler.
   // TODO(burdon): Global ids based on container.
-  // TODO(burdon): Do we need to use the hook here? (Performance).
   const { setNodeRef, isOver } = useDroppable({
     id: `grid-drop-${position.x}-${position.y}`,
     data: { container, position },
   });
 
-  // TODO(burdon): Create button.
+  // TODO(burdon): Make pluggable (e.g., to include create button).
   return (
     <div
       ref={setNodeRef}

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Bounds } from 'packages/ui/aurora-grid/src/components/Grid/util';
 import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
 // Definitions:
@@ -52,6 +53,7 @@ export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExotic
 export type MosaicContainerProps<TData extends MosaicDataItem> = {
   id: string;
   Component?: MosaicTileComponent<TData>;
+  getBounds?: () => Bounds;
 
   // TODO(burdon): Rename drag events.
   onMoveItem?: (event: MosaicMoveEvent) => void;

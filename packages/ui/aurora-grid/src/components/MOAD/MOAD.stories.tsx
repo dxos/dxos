@@ -24,12 +24,14 @@ export default {
   },
 };
 
+const types = ['document', 'image'];
+
 export const Default: FC<PropsWithChildren> = ({ children }) => {
   //
   // Stack
   //
   const [stackItems, setStackItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 5 }).map(() => createItem(['document', 'image'])),
+    Array.from({ length: 5 }).map(() => createItem(types)),
   );
   const handleMoveStackItem = ({ container, active, over }: MosaicMoveEvent) => {
     // console.log('handleMoveStackItem', active.position);
@@ -51,7 +53,7 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //
   const size = { x: 4, y: 3 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 6 }).map(() => createItem(['document', 'image'])),
+    Array.from({ length: 6 }).map(() => createItem(types)),
   );
   const [layout, setLayout] = useState<GridLayout>(() =>
     gridItems.reduce<GridLayout>((map, item, i) => {

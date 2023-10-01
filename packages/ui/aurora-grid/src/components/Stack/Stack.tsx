@@ -36,6 +36,7 @@ const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent
           {sortedItems.map((item, i) => (
             <Tile key={item.id} container={id} item={item} Component={Component} index={i} />
           ))}
+          {/* TODO(burdon): Placeholder at end. */}
         </div>
       </div>
     </SortableContext>

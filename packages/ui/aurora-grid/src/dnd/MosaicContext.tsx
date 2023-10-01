@@ -6,13 +6,11 @@ import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, 
 import React, { createContext, useContext, FC, PropsWithChildren, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { mx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileComponent } from './types';
 import { Debug } from '../components/Debug';
-import { ComplexCard } from '../components/testing';
 
 export type MosaicContextType = {
   delegators: Map<string, MosaicContainerProps<any>>;
@@ -90,10 +88,10 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     setOverItem(undefined);
   };
 
-  // TODO(burdon): Stops dragging if change overlay while dragging.
-  const { Component: OverlayComponent = DefaultComponent } =
+  const container =
     (activeItem?.container ? delegators.get(overItem?.container ?? activeItem.container) : undefined) ??
     delegators.get(DEFAULT_COMPONENT_ID)!;
+  const { Component: OverlayComponent = DefaultComponent } = container;
 
   return (
     <MosaicContext.Provider value={{ delegators, activeItem, overItem }}>
@@ -107,12 +105,9 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         {createPortal(
           <DragOverlay>
             {activeItem && (
-              <OverlayComponent
-                data={activeItem.item}
-                isActive={true}
-                // TODO(burdon): Hack to set height when changing from stack.
-                className={mx(OverlayComponent === ComplexCard && 'min-h-[264px]')}
-              />
+              <div style={{ ...container.getBounds?.() }} className='ring'>
+                <OverlayComponent data={activeItem.item} isActive={true} />
+              </div>
             )}
           </DragOverlay>,
           document.body,

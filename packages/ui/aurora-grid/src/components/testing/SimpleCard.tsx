@@ -24,7 +24,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
         grow
         noPadding={full}
         onDoubleClick={() => onSelect?.()}
-        classNames={mx(className, 'snap-center', isActive && 'ring')}
+        classNames={mx(className, 'snap-center')}
       >
         <Card.Header floating={full}>
           <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
@@ -52,7 +52,7 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
         grow
         noPadding={full}
         onDoubleClick={() => onSelect?.()}
-        classNames={mx(className, 'snap-center', isActive && 'ring')}
+        classNames={mx(className, 'snap-center')}
       >
         <Card.Header floating={full}>
           <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
@@ -61,7 +61,7 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
         </Card.Header>
         {image && <Card.Media src={image} />}
         {title && body && (
-          <Card.Body gutter classNames='line-clamp-3'>
+          <Card.Body gutter classNames='line-clamp-3 text-sm'>
             {body}
           </Card.Body>
         )}
