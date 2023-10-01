@@ -13,7 +13,7 @@ import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 import { Bounds, calculateCellWidth, createMatrix, getBounds, getPosition, Position } from './util';
-import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent, MosaicTileProps } from '../../dnd';
+import { MosaicDataItem, MosaicDraggedItem, MosaicTileComponent } from '../../dnd';
 
 //
 // Context.
@@ -25,7 +25,7 @@ type GridContextType = {
 };
 
 const defaultGrid: GridContextType = {
-  defaultCellBounds: { width: 300, height: 300 },
+  defaultCellBounds: { width: 280, height: 280 },
   spacing: 8,
 };
 
@@ -37,25 +37,27 @@ const useGrid = () => {
 
 // TODO(burdon): Scale container.
 
-type GridDataItem<T> = MosaicDataItem<T, Position>;
+type GridLayout = { [id: string]: Position };
 
-type GridRootProps<TData> = {
+type GridRootProps = {
   id: string;
-  items: GridDataItem<TData>[];
-  Component: MosaicTileComponent<TData>;
+  items: MosaicDataItem[];
+  layout: GridLayout;
+  Component: MosaicTileComponent<any>;
   size: { x: number; y: number };
   center?: Position;
   margin?: boolean;
+  debug?: boolean;
 };
 
 /**
  * Root component.
  */
-const GridRoot = ({ id, items, Component, size = { x: 8, y: 8 }, margin }: GridRootProps<unknown>) => {
+const GridRoot = ({ id, items, layout, Component, size = { x: 8, y: 8 }, margin }: GridRootProps) => {
   return (
     <GridContext.Provider value={defaultGrid}>
       <SortableContext id={id} items={items.map((item) => item.id)}>
-        <GridLayout id={id} items={items} Component={Component} size={size} margin={margin} />
+        <GridLayout id={id} items={items} layout={layout} Component={Component} size={size} margin={margin} />
       </SortableContext>
     </GridContext.Provider>
   );
@@ -67,13 +69,14 @@ const GridRoot = ({ id, items, Component, size = { x: 8, y: 8 }, margin }: GridR
 // TODO(burdon): Make generic?
 const GridLayout: FC<{
   id: string;
-  items: GridDataItem<unknown>[];
+  items: MosaicDataItem[];
+  layout: GridLayout;
   Component: MosaicTileComponent<unknown>; // TODO(burdon): Name?
   size: { x: number; y: number };
   square?: boolean;
   margin?: boolean;
   onSelect?: (id: string) => void;
-}> = ({ id, items, Component, size, square = true, margin, onSelect }) => {
+}> = ({ id, items, layout, Component, size, square = true, margin, onSelect }) => {
   // TODO(burdon): Performance is poor.
   // TODO(burdon): BUG: React has detected a change in the order of Hooks.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
@@ -102,7 +105,7 @@ const GridLayout: FC<{
   const setCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
-      const pos = getPosition(item.position!, cellBounds);
+      const pos = getPosition(layout[item.id], cellBounds);
       const top = pos.top + marginSize - (height - cellBounds.height) / 2;
       const left = pos.left + marginSize - (width - cellBounds.width) / 2;
       containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
@@ -147,42 +150,44 @@ const GridLayout: FC<{
 
         {/* TODO(burdon): onDoubleClick={() => handleSelect(id)} */}
         <div>
-          {items.map(({ id, data, position }) => (
-            <Tile
-              key={id}
-              id={id}
-              data={data}
-              parent={id}
-              position={position}
-              Component={Component}
-              bounds={getBounds(position ?? { x: 0, y: 0 }, cellBounds, spacing)}
-              onSelect={() => handleSelect(id)}
-            />
-          ))}
+          {items.map((item) => {
+            const position = layout[item.id] ?? { x: 0, y: 0 };
+            return (
+              <Tile
+                key={item.id}
+                item={item}
+                container={id}
+                Component={Component}
+                position={position}
+                bounds={getBounds(position, cellBounds, spacing)}
+                onSelect={() => handleSelect(id)}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-const Tile: FC<
-  GridDataItem<unknown> & {
-    parent: string;
-    Component: MosaicTileComponent<unknown>;
-    bounds: Bounds;
-    onSelect: () => void;
-  }
-> = ({ parent, id, data, Component, bounds, onSelect }) => {
+const Tile: FC<{
+  container: string;
+  item: MosaicDataItem;
+  Component: MosaicTileComponent<unknown>;
+  position: Position;
+  bounds: Bounds;
+  onSelect: () => void;
+}> = ({ container, item, Component, position, bounds, onSelect }) => {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
-    id,
-    data: { item: { id, data }, parent } satisfies MosaicDraggedItem,
+    id: item.id,
+    data: { container, item, position } satisfies MosaicDraggedItem,
   });
 
   return (
     <Component
       ref={setNodeRef}
-      id={id}
-      data={data}
+      id={item.id}
+      data={item}
       isDragging={isDragging}
       draggableStyle={{
         position: 'absolute',
@@ -200,6 +205,7 @@ const Tile: FC<
  * Grid cell.
  */
 const Cell: FC<{ position: Position; bounds: Bounds }> = ({ position, bounds }) => {
+  // TODO(burdon): Local handler.
   // TODO(burdon): Global ids based on container.
   // TODO(burdon): Do we need to use the hook here? (Performance).
   const { setNodeRef, isOver } = useDroppable({ id: `grid-drop-${position.x}-${position.y}`, data: { position } });
@@ -227,4 +233,4 @@ export const Grid = {
   Root: GridRoot,
 };
 
-export type { MosaicTileProps, GridRootProps, GridDataItem };
+export type { GridRootProps, GridLayout };

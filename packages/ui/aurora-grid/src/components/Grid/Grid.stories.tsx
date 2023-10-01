@@ -7,19 +7,18 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Grid, GridDataItem } from './Grid';
-import { Position } from './util';
-import { MosaicContextProvider, MosaicMoveEvent } from '../../dnd';
-import { SimpleCard, SimpleCardProps, createItem, FullscreenDecorator, TestItem } from '../testing';
+import { Grid, GridLayout } from './Grid';
+import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent } from '../../dnd';
+import { SimpleCard, createItem, FullscreenDecorator } from '../testing';
 
 faker.seed(3);
 
 const size = { x: 3, y: 3 };
 const testItems = Array.from({ length: 5 }).map(() => createItem(['document', 'image']));
-const testPositions = testItems.map((item) => ({
-  id: item.id,
-  position: { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) },
-}));
+const testLayout = testItems.reduce<GridLayout>((map, item) => {
+  map[item.id] = { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) };
+  return map;
+}, {});
 
 export default {
   component: Grid.Root,
@@ -30,33 +29,15 @@ export default {
 };
 
 export const Default = () => {
-  const [items, setItems] = useState<GridDataItem<SimpleCardProps>[]>(() =>
-    testItems.map((data) => ({
-      id: data.id,
-      data,
-      position: testPositions.find((position) => position.id === data.id)?.position,
-      Component: SimpleCard, // TODO(burdon): Factor out delegator.
-    })),
-  );
-
-  const handleMove = ({ active, over }: MosaicMoveEvent<TestItem, Position>) => {
-    setItems((items) =>
-      items.map((item) => {
-        if (item.id === active.id) {
-          return {
-            ...item,
-            position: over?.position as Position,
-          };
-        }
-
-        return item;
-      }),
-    );
+  const [items] = useState<MosaicDataItem[]>(testItems);
+  const [layout, setLayout] = useState<GridLayout>(testLayout);
+  const handleMove = ({ active, over }: MosaicMoveEvent) => {
+    setLayout((layout) => ({ ...layout, [active.item.id]: over.position }));
   };
 
   return (
-    <MosaicContextProvider Component={SimpleCard} onMove={handleMove}>
-      <Grid.Root id='test' items={items} size={size} render={SimpleCard} />
+    <MosaicContextProvider Component={SimpleCard} onMove={handleMove} debug>
+      <Grid.Root id='test' items={items} layout={layout} size={size} Component={SimpleCard} debug />
     </MosaicContextProvider>
   );
 };

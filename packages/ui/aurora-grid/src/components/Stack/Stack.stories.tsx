@@ -9,9 +9,9 @@ import React, { FC, PropsWithChildren, useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { Stack, StackDataItem } from './Stack';
-import { MosaicMoveEvent, MosaicContextProvider } from '../../dnd';
-import { createItem, FullscreenDecorator, SimpleCard, SimpleCardProps } from '../testing';
+import { Stack } from './Stack';
+import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
+import { createItem, FullscreenDecorator, SimpleCard } from '../testing';
 
 faker.seed(3);
 
@@ -24,12 +24,10 @@ export default {
 };
 
 export const Default: FC<PropsWithChildren> = ({ children }) => {
-  const [rows, setRows] = useState<{ id: string; items: StackDataItem<SimpleCardProps>[] }[]>(() => {
+  const [columns, setColumns] = useState<{ id: string; items: MosaicDataItem[] }[]>(() => {
     return Array.from({ length: 3 }).map((_, i) => ({
       id: `stack-column-${i}`,
-      items: Array.from({ length: 5 - i })
-        .map(() => createItem(['document']))
-        .map((item) => ({ id: item.id, data: item, Component: SimpleCard })),
+      items: Array.from({ length: 5 - i }).map(() => createItem(['document'])),
     }));
   });
 
@@ -37,46 +35,32 @@ export const Default: FC<PropsWithChildren> = ({ children }) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
+  // TODO(burdon): Call-out/generalize.
   const handleMove = ({ active, over }: MosaicMoveEvent) => {
-    console.log(active, over);
-    if (active.item.id !== over?.item.id) {
-      setRows((rows) =>
-        rows.map((row) => {
-          const items = [...row.items];
-          if (row.id === active.parent) {
-            const activeIndex = row.items.findIndex((item) => item.id === active.item.id);
-            if (activeIndex !== -1) {
-              items.splice(activeIndex, 1);
-            } else {
-              console.warn('NO active index', { active, row });
-            }
-          }
-
-          if (row.id === over.parent) {
-            const overIndex = row.items.findIndex((item) => item.id === over.item.id);
-            if (overIndex !== -1) {
-              items.splice(overIndex + 1, 0, active.item as any);
-            } else {
-              console.warn('NO over index');
-            }
-          }
-
-          return { ...row, items };
-        }),
-      );
-    }
+    setColumns((columns) =>
+      columns.map((column) => {
+        const items = [...column.items];
+        if (active.container === column.id) {
+          items.splice(active.position, 1);
+        }
+        if (over.container === column.id) {
+          items.splice(over.position, 0, active.item);
+        }
+        return { ...column, items };
+      }),
+    );
   };
 
   // TODO(burdon): Select/delete.
-  // TODO(burdon): Provide handles for DnD rather than wrapping it?
-  // TODO(burdon): Secondary stack?
+  // TODO(burdon): Provide hooks for DnD rather than wrapping it?
+  // TODO(burdon): Secondary inner stack?
   return (
-    <MosaicContextProvider Component={SimpleCard} onMove={handleMove}>
+    <MosaicContextProvider Component={SimpleCard} onMove={handleMove} debug>
       <div className='flex grow overflow-y-hidden overflow-x-auto'>
         <div className='flex'>
-          {rows.map(({ id, items }) => (
+          {columns.map(({ id, items }) => (
             <div key={id} className='flex w-[300px] overflow-hidden'>
-              <Stack.Root id={id} items={items} Component={SimpleCard} />
+              <Stack.Root id={id} items={items} Component={SimpleCard} debug />
             </div>
           ))}
         </div>

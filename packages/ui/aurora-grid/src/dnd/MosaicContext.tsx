@@ -6,7 +6,8 @@ import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, 
 import React, { createContext, useContext, FC, PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { MosaicTileComponent, MosaicMoveEvent, MosaicDraggedItem } from './types';
+import { MosaicTileComponent, MosaicMoveEvent, MosaicDraggedItem, MosaicDataItem } from './types';
+import { Debug } from '../components/Debug';
 
 export type MosaicContextType = {
   Component: MosaicTileComponent<any>;
@@ -19,12 +20,13 @@ export const MosaicContext = createContext<MosaicContextType | undefined>(undefi
 export type MosaicContextProviderProps = PropsWithChildren & {
   Component: MosaicTileComponent<any>;
   onMove: (event: MosaicMoveEvent) => void;
+  debug?: boolean;
 };
 
 /**
  * Root provider.
  */
-export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Component, onMove, children }) => {
+export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Component, debug, onMove, children }) => {
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
@@ -43,11 +45,14 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over?.id && active.id !== over?.id) {
+    if (
+      activeItem &&
+      overItem &&
+      (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
+    ) {
       onMove({
-        active: active.data.current as MosaicDraggedItem,
-        over: over.data.current as MosaicDraggedItem,
+        active: activeItem,
+        over: overItem,
       });
     }
 
@@ -63,27 +68,30 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({ Componen
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <pre className='font-mono text-xs overflow-hidden absolute left-0 bottom-0'>
-          {JSON.stringify(
-            {
+        {debug && (
+          <Debug
+            position='bottom-left'
+            data={{
               active: {
                 id: activeItem?.item.id,
-                parent: activeItem?.parent,
+                container: activeItem?.container,
               },
               over: {
-                id: overItem?.item.id,
-                parent: overItem?.parent,
+                id: overItem?.item?.id,
+                container: overItem?.container,
               },
-            },
-            undefined,
-            2,
-          )}
-        </pre>
+            }}
+          />
+        )}
+
         {/* Dragging element. */}
         {createPortal(
-          <DragOverlay>{activeItem && <Component id={activeItem.item.id} data={activeItem.item.data} />}</DragOverlay>,
+          <DragOverlay>
+            {activeItem && <Component id={activeItem.item.id} data={activeItem.item} isActive={true} />}
+          </DragOverlay>,
           document.body,
         )}
+
         {children}
       </DndContext>
     </MosaicContext.Provider>
@@ -94,7 +102,18 @@ export const useMosaic = () => {
   return useContext(MosaicContext);
 };
 
-export const useGhost = (id: string) => {
+/**
+ * Returns a patched collection of items including a placeholder if items that could drop,
+ * and removing any item that is currently being dragged out..
+ */
+// TODO(burdon): Sorted
+export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataItem[] => {
   const { activeItem, overItem } = useContext(MosaicContext)!;
-  return activeItem?.parent !== id && overItem?.parent === id ? activeItem?.item : undefined;
+  if (activeItem && activeItem.container !== id && overItem?.container === id) {
+    return [activeItem.item, ...items];
+  }
+  if (activeItem && activeItem.container === id && overItem?.container !== activeItem.container) {
+    return items.filter((item) => item.id !== activeItem.item.id);
+  }
+  return items;
 };
