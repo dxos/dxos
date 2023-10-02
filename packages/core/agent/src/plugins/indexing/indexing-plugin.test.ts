@@ -11,6 +11,7 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
+import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -144,7 +145,7 @@ describe('Indexing', () => {
     {
       const searchRequest: SearchRequest = {
         query: 'bar',
-        options: { fuzzy: true },
+        type: SearchRequest.Type.FUZZY,
       };
 
       await sleep(500);
