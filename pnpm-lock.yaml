@@ -2590,14 +2590,10 @@ importers:
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@types/express': ^4.17.17
-      '@types/flexsearch': ^0.7.4
-      '@types/lunr': ^2.3.5
       '@types/node': ^18.11.9
       date-fns: ^2.29.3
       express: ^4.17.1
-      flexsearch: 0.7.21
       isomorphic-ws: ^4.0.1
-      lunr: ^2.3.9
       minisearch: ^3.0.2
       nodemon: ^2.0.22
       ts-node: 10.9.1
@@ -2622,15 +2618,11 @@ importers:
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
       date-fns: 2.29.3
       express: 4.18.2
-      flexsearch: 0.7.21
       isomorphic-ws: 4.0.1_ws@7.5.9
-      lunr: 2.3.9
       minisearch: 3.3.0
       ws: 7.5.9
     devDependencies:
       '@types/express': 4.17.17
-      '@types/flexsearch': 0.7.4
-      '@types/lunr': 2.3.5
       '@types/node': 18.11.9
       nodemon: 2.0.22
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_sxkixsbzgfj5nygwm6be4klchu
@@ -17121,10 +17113,6 @@ packages:
     resolution: {integrity: sha512-frsJrz2t/CeGifcu/6uRo4b+SzAwT4NYCVPu1GN8IB9XTzrpPkGuV0tmh9mN+/L0PklAlsC3u5Fxt0ju00LXIw==}
     dev: true
 
-  /@types/flexsearch/0.7.4:
-    resolution: {integrity: sha512-R5ZZmhxOBquntySny8dWYLDGdPJlX9K6p6vcj1w5NWGQ33X4V8MEtdQXK5KFFR1j6o0RhbPMdLSVg5XULVn3oA==}
-    dev: true
-
   /@types/fs-ext/2.0.0:
     resolution: {integrity: sha512-v+rZ57B796XFBS4gbkYnmsmGdh8zDdcyFFtA+GqNdeD75MlS97m+hknE/JixwlxbpvPwUqoYraf3ePC6r+ByXw==}
     dependencies:
@@ -17410,10 +17398,6 @@ packages:
   /@types/lru-cache/5.1.1:
     resolution: {integrity: sha512-ssE3Vlrys7sdIzs5LOxCzTVMsU7i9oa/IaW92wF32JFb3CVczqOkru2xspuKczHEbG3nvmPY7IFqVmGGHdNbYw==}
     dev: false
-
-  /@types/lunr/2.3.5:
-    resolution: {integrity: sha512-C4xYh7A4FRKg70AWJCe27oJYVPhUlEY5MQ4dKbRR7G6Xsb2HiqO672yWHRvWxl8/h7IuISvwDjv88ECHUEsV2A==}
-    dev: true
 
   /@types/markdown-it-container/2.0.5:
     resolution: {integrity: sha512-8v5jIC5gcCUv+JcD0DExwNBkoKC0kLB4acensF0NoNlTIcXmQxF3RDjzAdIW82sXSoR+n772ePguxIWlq2ELvA==}
@@ -25233,10 +25217,6 @@ packages:
   /flatted/3.2.7:
     resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
 
-  /flexsearch/0.7.21:
-    resolution: {integrity: sha512-W7cHV7Hrwjid6lWmy0IhsWDFQboWSng25U3VVywpHOTJnnAZNPScog67G+cVpeX9f7yDD21ih0WDrMMT+JoaYg==}
-    dev: false
-
   /flow-parser/0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
     engines: {node: '>=0.4.0'}
@@ -29922,6 +29902,7 @@ packages:
 
   /lunr/2.3.9:
     resolution: {integrity: sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==}
+    dev: true
 
   /lz-string/1.4.4:
     resolution: {integrity: sha512-0ckx7ZHRPqb0oUm8zNr+90mtf9DQB60H1wMCjBtfi62Kl3a7JbHob6gA2bC+xRvZoOL+1hzUK8jeuEIQE8svEQ==}
