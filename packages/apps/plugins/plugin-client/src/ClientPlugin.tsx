@@ -4,6 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { AppState } from '@braneframe/types';
+import { EchoSchema } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -13,38 +15,13 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
   registerSignalFactory();
   const client = new Client(options);
-
-  // Open devtools on keypress.
-  // TODO(burdon): Move to DebugPlugin and add key binding to action.
-  const onKeypress = async (event: KeyboardEvent) => {
-    // Cmd + Shift + X.
-    if (event.metaKey && event.shiftKey && event.key === 'x') {
-      event.preventDefault();
-
-      const vault = options.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
-
-      // Check if we're serving devtools locally on the usual port.
-      let hasLocalDevtools = false;
-      try {
-        await fetch('http://localhost:5174/');
-        hasLocalDevtools = true;
-      } catch {}
-
-      const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-      const devtoolsApp = hasLocalDevtools
-        ? 'http://localhost:5174/'
-        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
-      window.open(devtoolsUrl, '_blank');
-    }
-  };
 
   return {
     meta: {
@@ -55,8 +32,13 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
+        if (options.schema) {
+          client.addSchema(options.schema);
+        }
+
         await client.initialize();
 
+        // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
@@ -73,8 +55,6 @@ export const ClientPlugin = (
       } catch (err) {
         error = err;
       }
-
-      document.addEventListener('keydown', onKeypress);
 
       // Debugging (e.g., for monolithic mode).
       if (options.debugIdentity) {
@@ -103,6 +83,20 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
+        // TODO(wittjosiah): Is there a better place for this?
+        dnd: {
+          appState: () => {
+            const defaultSpace = client.spaces.default;
+            const appStates = defaultSpace.db.query(AppState.filter()).objects;
+            if (appStates.length < 1) {
+              const appState = new AppState();
+              defaultSpace.db.add(appState);
+              return appState;
+            } else {
+              return (appStates as AppState[])[0];
+            }
+          },
+        },
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
 
@@ -130,8 +124,6 @@ export const ClientPlugin = (
       };
     },
     unload: async () => {
-      document.removeEventListener('keydown', onKeypress);
-
       await client.destroy();
     },
   };

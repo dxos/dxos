@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { GraphProvides } from '@braneframe/plugin-graph';
+import type { IntentProvides } from '@braneframe/plugin-intent';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { PublicKey } from '@dxos/react-client';
 import { Space } from '@dxos/react-client/echo';
 

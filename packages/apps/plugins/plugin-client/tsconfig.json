@@ -37,6 +37,12 @@
     },
     {
       "path": "../../../sdk/react-surface"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-dnd"
     }
   ]
 }

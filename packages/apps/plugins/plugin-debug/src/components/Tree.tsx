@@ -3,10 +3,44 @@
 //
 
 import React, { FC, HTMLAttributes, useState } from 'react';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
+import { ThemeMode } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
+import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Copied form devtools.
+
+export const replacer = (key: any, value: any) => {
+  if (typeof value === 'object') {
+    if (value instanceof Uint8Array) {
+      return arrayToBuffer(value).toString('hex');
+    }
+
+    if (value?.type === 'Buffer') {
+      return Buffer.from(value.data).toString('hex');
+    }
+
+    if (key === 'downloaded') {
+      return undefined;
+    }
+  }
+
+  return value;
+};
+
+export const Json: FC<{ data?: object; theme: ThemeMode }> = ({ data, theme }) => {
+  const style = theme === 'dark' ? styleDark : styleLight;
+  return (
+    <SyntaxHighlighter language='json' style={style} className='w-full'>
+      {JSON.stringify(data, replacer, 2)}
+    </SyntaxHighlighter>
+  );
+};
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (

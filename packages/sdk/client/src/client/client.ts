@@ -5,21 +5,22 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { ClientServicesProvider, schema$, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
+import { DatabaseRouter, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
-import { GetDiagnosticsRequest, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
+import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import type { SpaceList } from '../echo';
+import type { EchoSchema, SpaceList } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
@@ -61,6 +62,8 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
+  private readonly _schemaRegistry = new DatabaseRouter();
+
   /**
    * Unique id of the Client, local to the current peer.
    */
@@ -84,6 +87,9 @@ export class Client {
       const prefix = options.config?.get('runtime.client.log.prefix');
       log.config({ filter, prefix });
     }
+
+    this.addSchema(schemaBuiltin);
+    this.addSchema(schema$);
   }
 
   [inspect.custom]() {
@@ -204,6 +210,7 @@ export class Client {
     const spaces = new SpaceList(
       this._services,
       modelFactory,
+      this._schemaRegistry,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -299,5 +306,9 @@ export class Client {
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
+  }
+
+  addSchema(schema: EchoSchema) {
+    this._schemaRegistry.addSchema(schema);
   }
 }

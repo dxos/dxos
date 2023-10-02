@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-space",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
@@ -52,6 +53,7 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

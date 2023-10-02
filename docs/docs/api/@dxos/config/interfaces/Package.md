@@ -4,23 +4,25 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [license]()
+### [bin]()
 Type: <code>string</code>
 
 Options:
   - proto3_optional = true
 
-### [modules]()
-Type: <code>[Module](/api/@dxos/config/interfaces/Module)[]</code>
+### [channel]()
+Type: <code>string</code>
 
+Options:
+  - proto3_optional = true
 
+### [config]()
+Type: <code>string</code>
 
-### [repos]()
-Type: <code>[Repo](/api/@dxos/config/interfaces/Repo)[]</code>
+Options:
+  - proto3_optional = true
 
-
-
-    
+### [package]()
 Type: <code>string</code>
 
 Options:

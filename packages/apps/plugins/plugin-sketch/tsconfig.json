@@ -58,9 +58,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

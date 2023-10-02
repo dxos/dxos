@@ -11,7 +11,7 @@ import React from 'react';
 
 import { Node, GraphPluginProvides } from '@braneframe/plugin-graph';
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
-import { TreeViewAction, TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { SplitViewAction, SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
@@ -91,12 +91,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         );
       }
 
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
+      const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      if (treeViewPlugin && graphPlugin) {
+      if (splitViewPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = treeViewPlugin.provides.treeView.active;
+            const active = splitViewPlugin.provides.splitView.active;
             const path =
               active &&
               graphPlugin.provides
@@ -157,7 +157,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 plugin: FILES_PLUGIN,
                 action: LocalFilesAction.OPEN_FILE,
               },
-              { action: TreeViewAction.ACTIVATE },
+              { action: SplitViewAction.ACTIVATE },
             ],
           });
 
@@ -171,7 +171,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   plugin: FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_DIRECTORY,
                 },
-                { action: TreeViewAction.ACTIVATE },
+                { action: SplitViewAction.ACTIVATE },
               ],
             });
           }

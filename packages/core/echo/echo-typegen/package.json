@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,9 +13,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "node -r ts-node/register ./src/main.ts ./test/proto/test.proto ./test/proto/gen/test.ts"
-  },
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -26,7 +23,6 @@
   "devDependencies": {
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.70",

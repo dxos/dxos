@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { GraphProvides } from '@braneframe/plugin-graph';
+import type { IntentProvides } from '@braneframe/plugin-intent';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Game } from '@dxos/chess-app';
 import { isTypedObject, TypedObject } from '@dxos/client/echo';
 

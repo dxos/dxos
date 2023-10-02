@@ -4,12 +4,15 @@
 
 import { untracked } from '@preact/signals-react';
 import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import Mousetrap from 'mousetrap';
 
 import { DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
+import { Action } from './action';
 import { Graph } from './graph';
-import { Action, Node, NodeBuilder } from './types';
+import { Node, NodeBuilder } from './node';
 
 /**
  * The builder...
@@ -18,21 +21,22 @@ export class GraphBuilder {
   private readonly _nodeBuilders = new Map<string, NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
 
-  private _dispatch?: DispatchIntent;
+  constructor(private readonly _dispatch: DispatchIntent = async () => {}) {}
 
   /**
    * Register a node builder which will be called in order to construct the graph.
    */
-  // TODO(wittjosiah): Make this chainable.
-  addNodeBuilder(id: string, builder: NodeBuilder): void {
+  addNodeBuilder(id: string, builder: NodeBuilder): GraphBuilder {
     this._nodeBuilders.set(id, builder);
+    return this;
   }
 
   /**
    * Remove a node builder from the graph builder.
    */
-  removeNodeBuilder(id: string): void {
+  removeNodeBuilder(id: string): GraphBuilder {
     this._nodeBuilders.delete(id);
+    return this;
   }
 
   /**
@@ -95,12 +99,12 @@ export class GraphBuilder {
 
       addProperty: (key, value) => {
         untracked(() => {
-          (node.properties as { [key: string]: any })[key] = value;
+          (node.properties as Record<string, any>)[key] = value;
         });
       },
       removeProperty: (key) => {
         untracked(() => {
-          delete (node.properties as { [key: string]: any })[key];
+          delete (node.properties as Record<string, any>)[key];
         });
       },
 
@@ -111,6 +115,7 @@ export class GraphBuilder {
             const childPath = [...path, 'childrenMap', partial.id];
             const child = this._createNode(getGraph, { ...partial, parent: node }, childPath, builders);
             node.childrenMap[child.id] = child;
+            // TOOD(burdon): Defer triggering recursive updates until task has completed.
             this._build(getGraph(), child, childPath, builders);
             return child;
           });
@@ -128,6 +133,13 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
+            if (action.keyBinding && action.intent) {
+              Mousetrap.bind(action.keyBinding, () => {
+                invariant(action.intent);
+                void this._dispatch(action.intent);
+              });
+            }
+
             node.actionsMap[action.id] = action;
             return action;
           });
@@ -136,6 +148,10 @@ export class GraphBuilder {
       removeAction: (id) => {
         return untracked(() => {
           const action = node.actionsMap[id];
+          if (action.keyBinding && action.intent) {
+            Mousetrap.unbind(action.keyBinding);
+          }
+
           delete node.actionsMap[id];
           return action;
         });
@@ -145,7 +161,7 @@ export class GraphBuilder {
     return node;
   }
 
-  private _createAction<TProperties extends { [key: string]: any } = { [key: string]: any }>(
+  private _createAction<TProperties extends Record<string, any> = Record<string, any>>(
     partial: Pick<Action, 'id' | 'label'> & Partial<Action<TProperties>>,
   ): Action<TProperties> {
     const action: Action<TProperties> = deepSignal({
@@ -157,9 +173,7 @@ export class GraphBuilder {
         return Object.values(action.actionsMap);
       },
       invoke: async () => {
-        if (Array.isArray(action.intent)) {
-          return this._dispatch?.(...action.intent);
-        } else if (action.intent) {
+        if (action.intent) {
           return this._dispatch?.(action.intent);
         }
       },
@@ -181,24 +195,16 @@ export class GraphBuilder {
       },
       addProperty: (key, value) => {
         return untracked(() => {
-          (action.properties as { [key: string]: any })[key] = value;
+          (action.properties as Record<string, any>)[key] = value;
         });
       },
       removeProperty: (key) => {
         return untracked(() => {
-          delete (action.properties as { [key: string]: any })[key];
+          delete (action.properties as Record<string, any>)[key];
         });
       },
     }) as RevertDeepSignal<Action<TProperties>>;
 
     return action;
-  }
-
-  /**
-   * @internal
-   */
-  // TODO(burdon): Document.
-  _setDispatch(dispatch?: DispatchIntent) {
-    this._dispatch = dispatch;
   }
 }

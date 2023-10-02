@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Game } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -49,7 +49,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
             properties: {
