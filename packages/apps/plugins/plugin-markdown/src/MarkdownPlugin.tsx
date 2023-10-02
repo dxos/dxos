@@ -29,7 +29,7 @@ import {
   SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
-import { INITIAL_CONTENT } from './initialContent';
+import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
@@ -170,7 +170,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }),
+          new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({
