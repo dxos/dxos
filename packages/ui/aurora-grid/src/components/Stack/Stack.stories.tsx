@@ -8,8 +8,8 @@ import { faker } from '@faker-js/faker';
 import React, { FC, useState } from 'react';
 
 import { Stack } from './Stack';
-import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem, MosaicTileComponent } from '../../dnd';
-import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
+import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent, MosaicTileComponent } from '../../dnd';
+import { createItem, ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
