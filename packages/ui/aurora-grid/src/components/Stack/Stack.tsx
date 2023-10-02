@@ -4,53 +4,55 @@
 
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
 import {
   DefaultComponent,
   MosaicContainerProps,
+  MosaicContainerProvider,
   MosaicDataItem,
   MosaicDraggedItem,
-  MosaicTileComponent,
-  useMosaicContainer,
-  useSortedItems,
+  useContainer,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
 type StackRootProps = MosaicContainerProps<any, number> & {
-  items?: MosaicDataItem[];
+  items?: string[];
   debug?: boolean;
 };
 
-const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent, onMoveItem }: StackRootProps) => {
-  useMosaicContainer({ id, Component, onMoveItem });
-  const sortedItems = useSortedItems(id, items);
-
+const StackRoot = ({
+  id,
+  items = [],
+  debug = false,
+  Component = DefaultComponent,
+  onMoveItem,
+  children,
+}: PropsWithChildren<StackRootProps>) => {
   // TODO(burdon): Remove styles.
   return (
-    <SortableContext id={id} items={sortedItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-      <div className='flex flex-col overflow-y-scroll'>
-        <div className='flex flex-col m-2 gap-4'>
-          {sortedItems.map((item, i) => (
-            <StackTile key={item.id} container={id} item={item} Component={Component} index={i} />
-          ))}
-          {/* TODO(burdon): Placeholder at end. */}
+    <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+      <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+        <div className='flex flex-col overflow-y-scroll'>
+          <div className='flex flex-col m-2 gap-4'>
+            {children}
+            {/* TODO(burdon): Placeholder at end. */}
+          </div>
+          {debug && <Debug data={{ id, items: items.length }} />}
         </div>
-        {debug && <Debug data={{ id, items: sortedItems.length }} />}
-      </div>
+      </MosaicContainerProvider>
     </SortableContext>
   );
 };
 
 const StackTile: FC<{
-  container: string;
   item: MosaicDataItem;
-  Component: MosaicTileComponent<any>;
   index: number;
   onSelect?: () => void;
-}> = ({ container, item, Component, index, onSelect }) => {
+}> = ({ item, index, onSelect }) => {
+  const { id: container, Component } = useContainer();
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
@@ -73,6 +75,7 @@ const StackTile: FC<{
 
 export const Stack = {
   Root: StackRoot,
+  Tile: StackTile,
 };
 
 export type { StackRootProps };

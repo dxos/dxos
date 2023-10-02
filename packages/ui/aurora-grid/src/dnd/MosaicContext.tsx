@@ -114,7 +114,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         {debug &&
           createPortal(
             <Debug
-              position='bottom-left'
+              position='bottom-right'
               data={{
                 active: {
                   id: activeItem?.item?.id,
@@ -150,13 +150,24 @@ export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataI
   return items;
 };
 
-/**
- * Register a container?
- */
+type MosaicContainerContextType<TData extends MosaicDataItem, TPosition = unknown> = Required<
+  Pick<MosaicContainerProps<TData, TPosition>, 'id' | 'Component'>
+> &
+  Omit<MosaicContainerProps<TData, TPosition>, 'id' | 'Component'>;
+
+const MosaicContainerContext = createContext<MosaicContainerContextType<any, any>>({
+  id: 'never',
+  Component: DefaultComponent,
+  onMoveItem: () => {},
+});
+
+export const useContainer = () => useContext(MosaicContainerContext);
+
 // TODO(burdon): Support passing in more context to event handlers.
-export const useMosaicContainer = <TData extends MosaicDataItem, TPosition>(
-  container: MosaicContainerProps<TData, TPosition>,
-) => {
+export const MosaicContainerProvider: FC<PropsWithChildren<{ container: MosaicContainerContextType<any, any> }>> = ({
+  children,
+  container,
+}) => {
   const mosaic = useMosaic();
   useEffect(() => {
     mosaic.containers.set(container.id, container);
@@ -164,4 +175,6 @@ export const useMosaicContainer = <TData extends MosaicDataItem, TPosition>(
       mosaic.containers.delete(container.id);
     };
   }, []);
+
+  return <MosaicContainerContext.Provider value={container}>{children}</MosaicContainerContext.Provider>;
 };

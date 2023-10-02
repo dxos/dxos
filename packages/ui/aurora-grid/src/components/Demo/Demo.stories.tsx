@@ -9,8 +9,8 @@ import React, { useState } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
-import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
+import { MosaicMoveEvent, MosaicDataItem, useSortedItems } from '../../dnd';
+import { ComplexCard, createItem, FullscreenDecorator, MosaicDecorator, SimpleCard } from '../../testing';
 import { Grid, GridLayout, Position } from '../Grid';
 import { Stack } from '../Stack';
 
@@ -27,88 +27,96 @@ export default {
 const debug = false;
 const types = ['document', 'image'];
 
-export const Default = () => {
-  //
-  // Stacks
-  //
+export const Default = {
+  render: () => {
+    //
+    // Stacks
+    //
 
-  const [stackItems1, setStackItems1] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 10 }).map(() => createItem(types)),
-  );
+    const [stackItems1, setStackItems1] = useState<MosaicDataItem[]>(() =>
+      Array.from({ length: 10 }).map(() => createItem(types)),
+    );
 
-  const handleMoveStackItem1 = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    setStackItems1((items) => {
-      if (active.container === container) {
-        items.splice(active.position!, 1);
-      }
-      if (over.container === container) {
-        items.splice(over.position!, 0, active.item);
-      }
-      return [...items];
-    });
-  };
+    const sortedStackItems1 = useSortedItems('stack-1', stackItems1);
 
-  const [stackItems2, setStackItems2] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 5 }).map(() => createItem(types)),
-  );
-
-  const handleMoveStackItem2 = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    setStackItems2((items) => {
-      if (active.container === container) {
-        items.splice(active.position!, 1);
-      }
-      if (over.container === container) {
-        items.splice(over.position!, 0, active.item);
-      }
-      return [...items];
-    });
-  };
-
-  //
-  // Grid
-  //
-
-  const size = { x: 4, y: 4 };
-  const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 6 }).map(() => createItem(types)),
-  );
-  const [layout, setLayout] = useState<GridLayout>(() =>
-    gridItems.reduce<GridLayout>((map, item, i) => {
-      map[item.id] = {
-        x: faker.number.int({ min: 0, max: size.x - 1 }),
-        y: faker.number.int({ min: 0, max: size.y - 1 }),
-      };
-      return map;
-    }, {}),
-  );
-
-  const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent<Position>) => {
-    if (over.container !== container) {
-      setGridItems((items) => items.filter((item) => item.id !== active.item.id));
-    } else {
-      setGridItems((items) => {
-        if (items.findIndex((item) => item.id === active.item.id) === -1) {
-          return [active.item, ...items];
-        } else {
-          return items;
+    const handleMoveStackItem1 = ({ container, active, over }: MosaicMoveEvent<number>) => {
+      setStackItems1((items) => {
+        if (active.container === container) {
+          items.splice(active.position!, 1);
         }
+        if (over.container === container) {
+          items.splice(over.position!, 0, active.item);
+        }
+        return [...items];
       });
+    };
 
-      setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
-    }
-  };
+    const [stackItems2, setStackItems2] = useState<MosaicDataItem[]>(() =>
+      Array.from({ length: 5 }).map(() => createItem(types)),
+    );
 
-  return (
-    <MosaicContextProvider debug={debug}>
+    const sortedStackItems2 = useSortedItems('stack-2', stackItems2);
+
+    const handleMoveStackItem2 = ({ container, active, over }: MosaicMoveEvent<number>) => {
+      setStackItems2((items) => {
+        if (active.container === container) {
+          items.splice(active.position!, 1);
+        }
+        if (over.container === container) {
+          items.splice(over.position!, 0, active.item);
+        }
+        return [...items];
+      });
+    };
+
+    //
+    // Grid
+    //
+
+    const size = { x: 4, y: 4 };
+    const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
+      Array.from({ length: 6 }).map(() => createItem(types)),
+    );
+    const [layout, setLayout] = useState<GridLayout>(() =>
+      gridItems.reduce<GridLayout>((map, item, i) => {
+        map[item.id] = {
+          x: faker.number.int({ min: 0, max: size.x - 1 }),
+          y: faker.number.int({ min: 0, max: size.y - 1 }),
+        };
+        return map;
+      }, {}),
+    );
+
+    const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent<Position>) => {
+      if (over.container !== container) {
+        setGridItems((items) => items.filter((item) => item.id !== active.item.id));
+      } else {
+        setGridItems((items) => {
+          if (items.findIndex((item) => item.id === active.item.id) === -1) {
+            return [active.item, ...items];
+          } else {
+            return items;
+          }
+        });
+
+        setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
+      }
+    };
+
+    return (
       <div className='flex grow overflow-hidden'>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
           <Stack.Root
             id='stack-1'
-            items={stackItems1}
+            items={sortedStackItems1.map(({ id }) => id)}
             Component={SimpleCard}
             onMoveItem={handleMoveStackItem1}
             debug={debug}
-          />
+          >
+            {sortedStackItems1.map((item, i) => (
+              <Stack.Tile key={item.id} item={item} index={i} />
+            ))}
+          </Stack.Root>
         </div>
         <div className='flex grow overflow-hidden'>
           <Grid.Root
@@ -125,13 +133,18 @@ export const Default = () => {
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
           <Stack.Root
             id='stack-2'
-            items={stackItems2}
+            items={sortedStackItems2.map(({ id }) => id)}
             Component={ComplexCard}
             onMoveItem={handleMoveStackItem2}
             debug={debug}
-          />
+          >
+            {sortedStackItems2.map((item, i) => (
+              <Stack.Tile key={item.id} item={item} index={i} />
+            ))}
+          </Stack.Root>
         </div>
       </div>
-    </MosaicContextProvider>
-  );
+    );
+  },
+  decorators: [MosaicDecorator],
 };

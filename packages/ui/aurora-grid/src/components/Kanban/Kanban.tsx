@@ -8,7 +8,7 @@ import React, { FC, forwardRef } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileProps } from '../../dnd';
+import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileProps, useSortedItems } from '../../dnd';
 import { SimpleCard } from '../../testing';
 import { Stack } from '../Stack';
 
@@ -68,6 +68,8 @@ type ColumnProps = {
 
 export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(
   ({ draggableStyle, draggableProps, data: { id, title, items, onMoveItem } }, forwardRef) => {
+    const sortedItems = useSortedItems(id, items);
+
     return (
       <div className='flex flex-col w-[300px] snap-center overflow-hidden'>
         <Card.Root ref={forwardRef} classNames='shrink-0 m-4 bg-blue-100' style={draggableStyle}>
@@ -79,7 +81,17 @@ export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(
         </Card.Root>
 
         {/* TODO(burdon): Variant with Simple/Complex cards. */}
-        <Stack.Root id={id} items={items} Component={SimpleCard} onMoveItem={onMoveItem} debug />
+        <Stack.Root
+          id={id}
+          items={sortedItems.map(({ id }) => id)}
+          Component={SimpleCard}
+          onMoveItem={onMoveItem}
+          debug
+        >
+          {sortedItems.map((item, i) => (
+            <Stack.Tile key={item.id} item={item} index={i} />
+          ))}
+        </Stack.Root>
       </div>
     );
   },

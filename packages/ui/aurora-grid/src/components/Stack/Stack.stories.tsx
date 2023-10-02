@@ -8,8 +8,8 @@ import { faker } from '@faker-js/faker';
 import React, { FC, useState } from 'react';
 
 import { Stack } from './Stack';
-import { MosaicContextProvider, MosaicDataItem, MosaicMoveEvent, MosaicTileComponent } from '../../dnd';
-import { createItem, ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { MosaicDataItem, MosaicMoveEvent, MosaicTileComponent, useSortedItems } from '../../dnd';
+import { createItem, ComplexCard, FullscreenDecorator, SimpleCard, MosaicDecorator } from '../../testing';
 
 faker.seed(3);
 
@@ -27,20 +27,31 @@ const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[] }> 
     });
   };
 
+  const sortedItems = useSortedItems('stack', items);
+
   // TODO(burdon): Cards change shape when dragged inside stacks.
 
   return (
-    <MosaicContextProvider debug>
-      <div className='flex overflow-hidden w-[300px]'>
-        <Stack.Root id={'stack'} items={items} Component={Component} onMoveItem={handleMoveItem} debug />
-      </div>
-    </MosaicContextProvider>
+    <div className='flex overflow-hidden w-[300px]'>
+      <Stack.Root
+        id={'stack'}
+        items={items.map(({ id }) => id)}
+        Component={Component}
+        onMoveItem={handleMoveItem}
+        debug
+      >
+        {sortedItems.map((item, i) => (
+          // TODO(wittjosiah): Don't use array indexing.
+          <Stack.Tile key={item.id} item={item} index={i} />
+        ))}
+      </Stack.Root>
+    </div>
   );
 };
 
 export default {
   component: StackStory,
-  decorators: [FullscreenDecorator()],
+  decorators: [FullscreenDecorator(), MosaicDecorator],
   parameters: {
     layout: 'fullscreen',
   },

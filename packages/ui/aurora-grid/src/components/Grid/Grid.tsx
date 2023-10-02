@@ -21,7 +21,7 @@ import {
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
-  useMosaicContainer,
+  MosaicContainerProvider,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -104,14 +104,19 @@ const GridLayout: FC<
     debug?: boolean;
     onSelect?: (id: string) => void;
   }
-> = ({ id, items, layout, size, square = true, margin, debug, Component, className, onMoveItem, onSelect }) => {
-  useMosaicContainer({
-    id,
-    Component,
-    onMoveItem,
-    getOverlayStyle: () => getDimension(cellBounds, spacing),
-  });
-
+> = ({
+  id,
+  items,
+  layout,
+  size,
+  square = true,
+  margin,
+  debug,
+  Component = DefaultComponent,
+  className,
+  onMoveItem,
+  onSelect,
+}) => {
   const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const { matrix, bounds, cellBounds } = useMemo(() => {
@@ -171,45 +176,49 @@ const GridLayout: FC<
   }, [selected, width, height]);
 
   return (
-    <div
-      ref={containerRef}
-      className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+    <MosaicContainerProvider
+      container={{ id, Component, onMoveItem, getOverlayStyle: () => getDimension(cellBounds, spacing) }}
     >
-      <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
-        <div>
-          {matrix.map((row) =>
-            row.map(({ x, y }) => (
-              <GridCell
-                key={`${x}-${y}`}
-                container={id}
-                position={{ x, y }}
-                bounds={getBounds({ x, y }, cellBounds, spacing)}
-              />
-            )),
-          )}
+      <div
+        ref={containerRef}
+        className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+      >
+        <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
+          <div>
+            {matrix.map((row) =>
+              row.map(({ x, y }) => (
+                <GridCell
+                  key={`${x}-${y}`}
+                  container={id}
+                  position={{ x, y }}
+                  bounds={getBounds({ x, y }, cellBounds, spacing)}
+                />
+              )),
+            )}
+          </div>
+
+          {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
+          <div>
+            {items.map((item) => {
+              const position = layout[item.id] ?? { x: 0, y: 0 };
+              return (
+                <GridTile
+                  key={item.id}
+                  item={item}
+                  container={id}
+                  Component={Component!}
+                  position={position}
+                  bounds={getBounds(position, cellBounds, spacing)}
+                  onSelect={() => handleSelect(id)}
+                />
+              );
+            })}
+          </div>
         </div>
 
-        {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
-        <div>
-          {items.map((item) => {
-            const position = layout[item.id] ?? { x: 0, y: 0 };
-            return (
-              <GridTile
-                key={item.id}
-                item={item}
-                container={id}
-                Component={Component!}
-                position={position}
-                bounds={getBounds(position, cellBounds, spacing)}
-                onSelect={() => handleSelect(id)}
-              />
-            );
-          })}
-        </div>
+        {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
       </div>
-
-      {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
-    </div>
+    </MosaicContainerProvider>
   );
 };
 
