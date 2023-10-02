@@ -2,7 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React, { FC, PropsWithChildren } from 'react';
 
@@ -20,7 +25,10 @@ import {
 type StackRootProps = MosaicContainerProps<any, number> & {
   items?: string[];
   debug?: boolean;
+  direction?: Direction;
 };
+
+export type Direction = 'horizontal' | 'vertical';
 
 const StackRoot = ({
   id,
@@ -28,10 +36,13 @@ const StackRoot = ({
   Component = DefaultComponent,
   onMoveItem,
   children,
+  direction = 'vertical',
 }: PropsWithChildren<StackRootProps>) => {
+  const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
+
   return (
     <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
-      <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+      <SortableContext id={id} items={items} strategy={strategy}>
         {children}
         {/* TODO(burdon): Component for placeholder at end. */}
       </SortableContext>

@@ -7,7 +7,9 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { FC, useState } from 'react';
 
-import { Stack } from './Stack';
+import { mx } from '@dxos/aurora-theme';
+
+import { Direction, Stack } from './Stack';
 import { MosaicDataItem, MosaicMoveEvent, MosaicTileComponent, useSortedItems } from '../../dnd';
 import { createItem, ComplexCard, FullscreenDecorator, SimpleCard, MosaicDecorator } from '../../testing';
 import { Debug } from '../Debug';
@@ -19,8 +21,9 @@ const StackStory: FC<{
   Component: MosaicTileComponent<any>;
   types?: string[];
   count?: number;
+  direction?: Direction;
   debug?: boolean;
-}> = ({ id = 'stack', Component, types, debug }) => {
+}> = ({ id = 'stack', Component, types, direction, debug }) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 3 }).map(() => createItem(types)));
   const sortedItems = useSortedItems({ container: id, items });
 
@@ -37,18 +40,20 @@ const StackStory: FC<{
   };
 
   // TODO(burdon): Cards change shape when dragged inside stacks.
+  // TODO(wittjosiah): Cleanup horizontal styles.
 
   return (
-    <div className='flex overflow-hidden w-[300px]'>
+    <div className={mx('flex overflow-hidden', direction !== 'horizontal' && 'w-[300px]')}>
       <Stack.Root
         id={id}
         items={items.map(({ id }) => id)}
         Component={Component}
         onMoveItem={handleMoveItem}
         debug={debug}
+        direction={direction}
       >
-        <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col __m-2 gap-4'>
+        <div className={mx('flex', direction === 'horizontal' ? 'overflow-x-scroll' : 'flex-col overflow-y-scroll')}>
+          <div className={mx('flex __m-2 gap-4', direction !== 'horizontal' && 'flex-col')}>
             {sortedItems.map((item, i) => (
               // TODO(wittjosiah): Don't use array indexing.
               <Stack.Tile key={item.id} item={item} index={i} />
@@ -72,6 +77,14 @@ export default {
 export const Default = {
   args: {
     Component: SimpleCard,
+    debug: true,
+  },
+};
+
+export const Horizontal = {
+  args: {
+    Component: SimpleCard,
+    direction: 'horizontal',
     debug: true,
   },
 };
