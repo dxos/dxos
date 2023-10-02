@@ -8,7 +8,14 @@ import React, { FC, forwardRef } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileProps, useSortedItems } from '../../dnd';
+import {
+  MosaicContainerProps,
+  MosaicContainerProvider,
+  MosaicDataItem,
+  MosaicDraggedItem,
+  MosaicTileProps,
+  useSortedItems,
+} from '../../dnd';
 import { SimpleCard } from '../../testing';
 import { Debug } from '../Debug';
 import { Stack } from '../Stack';
@@ -27,15 +34,17 @@ type KanbanRootProps = {
 
 const KanbanRoot = ({ id, columns, onMoveItem }: KanbanRootProps) => {
   return (
-    <SortableContext id={id} items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
-      <div className='flex grow overflow-y-hidden overflow-x-auto'>
-        <div className='flex'>
-          {columns.map(({ id, title, items }, index) => (
-            <ColumnTile key={id} container={id} item={{ id, title, items, onMoveItem }} index={index} />
-          ))}
+    <MosaicContainerProvider container={{ id, Component: Column, onMoveItem }}>
+      <SortableContext id={id} items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
+        <div className='flex grow overflow-y-hidden overflow-x-auto'>
+          <div className='flex'>
+            {columns.map((column, index) => (
+              <ColumnTile key={column.id} container={id} item={{ ...column, onMoveItem }} index={index} />
+            ))}
+          </div>
         </div>
-      </div>
-    </SortableContext>
+      </SortableContext>
+    </MosaicContainerProvider>
   );
 };
 
@@ -55,6 +64,7 @@ const ColumnTile: FC<{ container: string; item: ColumnProps; index: number }> = 
         transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
       }}
       draggableProps={{ ...attributes, ...listeners }}
+      container={container}
       data={item}
     />
   );
@@ -68,7 +78,8 @@ type ColumnProps = {
 };
 
 export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(
-  ({ draggableStyle, draggableProps, data: { id, title, items, onMoveItem } }, forwardRef) => {
+  ({ draggableStyle, draggableProps, data: { id, title, items, onMoveItem }, container }, forwardRef) => {
+    // TODO(burdon): Should specify container (item id might exist in other containers).
     const sortedItems = useSortedItems(id, items);
 
     return (
@@ -89,7 +100,7 @@ export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(
                 <Stack.Tile key={item.id} item={item} index={i} />
               ))}
             </div>
-            <Debug data={{ id, items: sortedItems.length }} />
+            <Debug data={{ container, id, items: sortedItems.length }} />
           </div>
         </Stack.Root>
       </div>

@@ -60,6 +60,7 @@ const StackTile: FC<{
       }}
       draggableProps={{ ...attributes, ...listeners }}
       className={mx(isDragging && 'opacity-30')}
+      container={container}
       data={item}
       onSelect={onSelect}
     />
@@ -68,7 +69,7 @@ const StackTile: FC<{
 
 export const Stack = {
   Root: StackRoot,
-  Tile: StackTile,
+  Tile: StackTile, // TODO(burdon): Don't expose (if truly generic then move and rename).
 };
 
 export type { StackRootProps };

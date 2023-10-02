@@ -6,6 +6,7 @@ import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, 
 import React, { createContext, useContext, FC, PropsWithChildren, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DensityProvider } from '@dxos/aurora';
 import { raise } from '@dxos/debug';
 
 import { DefaultComponent } from './DefaultComponent';
@@ -43,6 +44,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveItem(event.active.data.current as MosaicDraggedItem);
+    console.log(event);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -102,7 +104,10 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
           <DragOverlay>
             {activeItem && (
               <div style={{ ...container.getOverlayStyle?.() }}>
-                <OverlayComponent data={activeItem.item} isActive={true} />
+                {/* TODO(burdon): Configure. */}
+                <DensityProvider density='fine'>
+                  <OverlayComponent data={activeItem.item} container={activeItem.container} isActive={true} />
+                </DensityProvider>
               </div>
             )}
           </DragOverlay>,

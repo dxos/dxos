@@ -24,6 +24,7 @@ export type MosaicMoveEvent<TPosition = unknown> = {
  * props passed to mosaic tile.
  */
 export type MosaicTileProps<TData extends MosaicDataItem> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
+  container: string;
   data: TData;
 
   isActive?: boolean;

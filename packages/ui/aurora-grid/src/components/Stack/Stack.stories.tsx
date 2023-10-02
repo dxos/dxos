@@ -14,8 +14,12 @@ import { Debug } from '../Debug';
 
 faker.seed(3);
 
-const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[] }> = ({ Component, types }) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 10 }).map(() => createItem(types)));
+const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[]; debug?: boolean }> = ({
+  Component,
+  types,
+  debug,
+}) => {
+  const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 3 }).map(() => createItem(types)));
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
       if (active.container === container) {
@@ -28,27 +32,28 @@ const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[] }> 
     });
   };
 
-  const sortedItems = useSortedItems('stack', items);
+  const container = 'stack';
+  const sortedItems = useSortedItems(container, items);
 
   // TODO(burdon): Cards change shape when dragged inside stacks.
 
   return (
     <div className='flex overflow-hidden w-[300px]'>
       <Stack.Root
-        id={'stack'}
+        id={container}
         items={items.map(({ id }) => id)}
         Component={Component}
         onMoveItem={handleMoveItem}
-        debug
+        debug={debug}
       >
         <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col m-2 gap-4'>
+          <div className='flex flex-col __m-2 gap-4'>
             {sortedItems.map((item, i) => (
               // TODO(wittjosiah): Don't use array indexing.
               <Stack.Tile key={item.id} item={item} index={i} />
             ))}
           </div>
-          <Debug data={{ id: 'stack', items: sortedItems.length }} />
+          {debug && <Debug data={{ id: 'stack', items: sortedItems.length }} />}
         </div>
       </Stack.Root>
     </div>
@@ -66,6 +71,7 @@ export default {
 export const Default = {
   args: {
     Component: SimpleCard,
+    debug: true,
   },
 };
 
@@ -73,5 +79,6 @@ export const Complex = {
   args: {
     Component: ComplexCard,
     types: ['document', 'image'],
+    debug: true,
   },
 };

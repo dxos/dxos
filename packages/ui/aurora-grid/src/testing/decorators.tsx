@@ -21,8 +21,14 @@ export const FullscreenDecorator = (className?: string): DecoratorFunction<React
   );
 };
 
-export const MosaicDecorator: DecoratorFunction<ReactRenderer> = (Story) => (
-  <MosaicContextProvider debug>
-    <Story />
-  </MosaicContextProvider>
-);
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove?
+export const MosaicDecorator: DecoratorFunction<ReactRenderer> = (Story, { args }) => {
+  return (
+    <MosaicContextProvider debug={args.debug}>
+      <Story />
+    </MosaicContextProvider>
+  );
+};
