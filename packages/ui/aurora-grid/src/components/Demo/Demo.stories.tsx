@@ -130,7 +130,7 @@ export const Default = () => {
             <Stack.Root
               id='stack2'
               items={stackItems2}
-              Component={SimpleCard}
+              Component={ComplexCard}
               onMoveItem={handleMoveStackItem2}
               debug={debug}
             />
