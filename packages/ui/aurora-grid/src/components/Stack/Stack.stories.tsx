@@ -10,6 +10,7 @@ import React, { FC, useState } from 'react';
 import { Stack } from './Stack';
 import { MosaicDataItem, MosaicMoveEvent, MosaicTileComponent, useSortedItems } from '../../dnd';
 import { createItem, ComplexCard, FullscreenDecorator, SimpleCard, MosaicDecorator } from '../../testing';
+import { Debug } from '../Debug';
 
 faker.seed(3);
 
@@ -40,10 +41,15 @@ const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[] }> 
         onMoveItem={handleMoveItem}
         debug
       >
-        {sortedItems.map((item, i) => (
-          // TODO(wittjosiah): Don't use array indexing.
-          <Stack.Tile key={item.id} item={item} index={i} />
-        ))}
+        <div className='flex flex-col overflow-y-scroll'>
+          <div className='flex flex-col m-2 gap-4'>
+            {sortedItems.map((item, i) => (
+              // TODO(wittjosiah): Don't use array indexing.
+              <Stack.Tile key={item.id} item={item} index={i} />
+            ))}
+          </div>
+          <Debug data={{ id: 'stack', items: sortedItems.length }} />
+        </div>
       </Stack.Root>
     </div>
   );

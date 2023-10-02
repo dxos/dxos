@@ -16,7 +16,6 @@ import {
   MosaicDraggedItem,
   useContainer,
 } from '../../dnd';
-import { Debug } from '../Debug';
 
 type StackRootProps = MosaicContainerProps<any, number> & {
   items?: string[];
@@ -31,17 +30,11 @@ const StackRoot = ({
   onMoveItem,
   children,
 }: PropsWithChildren<StackRootProps>) => {
-  // TODO(burdon): Remove styles.
   return (
     <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
       <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
-        <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col m-2 gap-4'>
-            {children}
-            {/* TODO(burdon): Placeholder at end. */}
-          </div>
-          {debug && <Debug data={{ id, items: items.length }} />}
-        </div>
+        {children}
+        {/* TODO(burdon): Component for placeholder at end. */}
       </MosaicContainerProvider>
     </SortableContext>
   );

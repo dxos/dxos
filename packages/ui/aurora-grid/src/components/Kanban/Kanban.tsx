@@ -10,6 +10,7 @@ import { Card } from '@dxos/aurora';
 
 import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileProps, useSortedItems } from '../../dnd';
 import { SimpleCard } from '../../testing';
+import { Debug } from '../Debug';
 import { Stack } from '../Stack';
 
 type KanbanColumn = {
@@ -81,16 +82,15 @@ export const Column = forwardRef<HTMLDivElement, MosaicTileProps<ColumnProps>>(
         </Card.Root>
 
         {/* TODO(burdon): Variant with Simple/Complex cards. */}
-        <Stack.Root
-          id={id}
-          items={sortedItems.map(({ id }) => id)}
-          Component={SimpleCard}
-          onMoveItem={onMoveItem}
-          debug
-        >
-          {sortedItems.map((item, i) => (
-            <Stack.Tile key={item.id} item={item} index={i} />
-          ))}
+        <Stack.Root id={id} items={sortedItems.map(({ id }) => id)} Component={SimpleCard} onMoveItem={onMoveItem}>
+          <div className='flex flex-col overflow-y-scroll'>
+            <div className='flex flex-col m-2 gap-4'>
+              {sortedItems.map((item, i) => (
+                <Stack.Tile key={item.id} item={item} index={i} />
+              ))}
+            </div>
+            <Debug data={{ id, items: sortedItems.length }} />
+          </div>
         </Stack.Root>
       </div>
     );
