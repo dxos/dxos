@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
@@ -27,7 +28,13 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"

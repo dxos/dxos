@@ -14,7 +14,7 @@ import { Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
-export { getIndices } from '@tldraw/indices';
+export { getIndices } from '@tldraw/indices'; // TODO(burdon): Wrap?
 
 export type GraphNodeAdapterOptions<T extends TypedObject> = {
   filter: Filter<T>;

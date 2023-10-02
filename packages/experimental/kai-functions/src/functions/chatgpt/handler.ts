@@ -48,7 +48,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
       const block = thread.blocks[thread.blocks.length - 1];
 
       // TODO(burdon): Use to distinguish generated messages.
-      if (!block.meta) {
+      if (!block.__meta) {
         const model = new ChatModel({
           // TODO(burdon): Normalize env.
           orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(config, 'openai.com/org_id')!,
@@ -59,7 +59,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           thread: thread?.id.slice(0, 8),
           block: block.id.slice(0, 8),
           messages: block.messages.length,
-          meta: block.meta, // TODO(burdon): Use to distinguish generated messages.
+          meta: block.__meta, // TODO(burdon): Use to distinguish generated messages.
         });
 
         // TODO(burdon): Pass in history.
@@ -85,12 +85,17 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           }
 
           const response = space.db.add(
-            new Thread.Block({
-              identityKey,
-              messages,
-            }).setMeta({
-              keys: [{ source: 'openai.com' }],
-            }),
+            new Thread.Block(
+              {
+                identityKey,
+                messages,
+              },
+              {
+                meta: {
+                  keys: [{ source: 'openai.com' }],
+                },
+              },
+            ),
           );
 
           thread.blocks.push(response);

@@ -8,7 +8,7 @@ import { Node } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Breadcrumb, Button, useTranslation } from '@dxos/aurora';
 
-import { TREE_VIEW_PLUGIN, TreeViewAction } from '../types';
+import { TREE_VIEW_PLUGIN } from '../types';
 import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ data: node }: { data: Node }) => {
@@ -17,8 +17,8 @@ export const TreeItemMainHeading = ({ data: node }: { data: Node }) => {
 
   const handleActivate = (node: Node) => {
     void dispatch({
-      plugin: TREE_VIEW_PLUGIN,
-      action: TreeViewAction.ACTIVATE,
+      // TODO(wittjosiah): What's a good pattern for more generic actions?
+      action: 'dxos.org/plugin/splitview/action/activate',
       data: { id: node.id },
     });
   };

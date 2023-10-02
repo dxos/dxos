@@ -5,9 +5,9 @@
 import { TLStore } from '@tldraw/tlschema';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
-import { StackProvides } from '@braneframe/plugin-stack';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { IntentProvides } from '@braneframe/plugin-intent';
+import type { StackProvides } from '@braneframe/plugin-stack';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Sketch as SketchType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client/echo';
 

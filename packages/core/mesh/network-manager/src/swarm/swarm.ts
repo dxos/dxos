@@ -144,7 +144,7 @@ export class Swarm {
 
     await this._ctx.dispose();
     await this._topology.destroy();
-    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
+    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key, 'swarm destroyed')));
     log('destroyed');
   }
 
@@ -186,8 +186,10 @@ export class Swarm {
         peer.advertizing = false;
         if (peer.connection?.state !== ConnectionState.CONNECTED) {
           // Destroy peer only if there is no p2p-connection established
-          void this._destroyPeer(peer.id).catch((err) => log.catch(err));
+          void this._destroyPeer(peer.id, 'peer left').catch((err) => log.catch(err));
         }
+      } else {
+        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer });
       }
     }
 
@@ -240,7 +242,7 @@ export class Swarm {
   @synchronized
   async goOffline() {
     await this._ctx.dispose();
-    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId)));
+    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId, 'goOffline')));
   }
 
   // For debug purposes
@@ -269,7 +271,7 @@ export class Swarm {
           },
           onDisconnected: async () => {
             if (!peer!.advertizing) {
-              await this._destroyPeer(peer!.id);
+              await this._destroyPeer(peer!.id, 'peer disconnected');
             }
 
             this.disconnected.emit(peerId);
@@ -279,7 +281,8 @@ export class Swarm {
             // If the peer rejected our connection remove it from the set of candidates.
             // TODO(dmaretskyi): Set flag instead.
             if (this._peers.has(peerId)) {
-              void this._destroyPeer(peerId);
+              log('peer rejected connection', { peerId });
+              void this._destroyPeer(peerId, 'peer rejected connection');
             }
           },
           onAccepted: () => {
@@ -299,9 +302,9 @@ export class Swarm {
     return peer;
   }
 
-  private async _destroyPeer(peerId: PublicKey) {
+  private async _destroyPeer(peerId: PublicKey, reason?: string) {
     invariant(this._peers.has(peerId));
-    await this._peers.get(peerId)!.destroy();
+    await this._peers.get(peerId)!.destroy(new Error(reason));
     this._peers.delete(peerId);
   }
 

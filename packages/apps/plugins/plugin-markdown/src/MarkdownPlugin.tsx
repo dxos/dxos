@@ -12,7 +12,7 @@ import { DndPluginProvides } from '@braneframe/plugin-dnd';
 import { Node } from '@braneframe/plugin-graph';
 import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -29,6 +29,7 @@ import {
   SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
+import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
@@ -50,29 +51,28 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
 
-// TODO(wittjosiah): Expand message & translate.
-const INITIAL_CONTENT = '# Welcome to Composer!\n\nComposer is a collaborative peer-to-peer application.';
-
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+
+  // TODO(burdon): Document.
   const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
     current: { editor: null },
   };
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
+
   let adapter: GraphNodeAdapter<Document> | undefined;
 
-  const EditorMainStandalone = ({
-    data: { composer, properties },
-  }: {
+  // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
+  const EditorMainStandalone: FC<{
     data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
-  }) => {
+  }> = ({ data: { composer, properties } }) => {
     const onChange: NonNullable<MarkdownComposerProps['onChange']> = useCallback(
       (content) => state.onChange.forEach((onChange) => onChange(content)),
       [state.onChange],
@@ -90,6 +90,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
+  // TODO(burdon): Is `data` expected to be a Document (TypedObject) or MarkdownProperties?
   const MarkdownMain: FC<{ data: Document }> = ({ data }) => {
     const identity = useIdentity();
     const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
@@ -130,7 +131,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
     const space = spacePlugin?.provides.space.active;
-
     const textModel = useTextModel({
       identity,
       space,
@@ -170,11 +170,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }),
+          new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({
-            action: TreeViewAction.ACTIVATE,
+            action: SplitViewAction.ACTIVATE,
             data: { id: document.id },
           });
         }
@@ -222,7 +222,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 data: { spaceKey: space.key.toHex() },
               },
               {
-                action: TreeViewAction.ACTIVATE,
+                action: SplitViewAction.ACTIVATE,
               },
             ],
           });

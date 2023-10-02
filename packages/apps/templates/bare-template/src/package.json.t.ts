@@ -71,6 +71,21 @@ export namespace Features {
       'workbox-window': '^6.5.4',
     },
   });
+
+  export const proto = ({ depVersion }: Context): Partial<PackageJson> => ({
+    scripts: {
+      'gen-schema': 'dxtype src/proto/schema.proto src/proto/gen/schema.ts',
+      prebuild: 'npm run gen-schema',
+      serve: 'npm run prebuild && vite',
+      preview: 'npm run prebuild && vite preview',
+    },
+    dependencies: {
+      '@dxos/echo-schema': depVersion,
+    },
+    devDependencies: {
+      '@dxos/echo-typegen': depVersion,
+    },
+  });
 }
 
 export const base = ({ name, monorepo, version, depVersion }: Context): Partial<PackageJson> => {
@@ -110,7 +125,7 @@ export default template.define
   })
   .text({
     content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
-      const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
+      const { react, monorepo, pwa, storybook, dxosUi, tailwind, proto } = input;
       const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
       const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
       const version = monorepo ? packageVersion : '0.1.0';
@@ -129,6 +144,7 @@ export default template.define
         dxosUi && Features.dxosUi(context),
         tailwind && Features.tailwind(),
         storybook && Features.storybook(),
+        proto && Features.proto(context),
         slotPackageJson?.() ?? {},
       ].filter(Boolean);
 

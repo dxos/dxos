@@ -55,23 +55,13 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-chess/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-debug/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-map/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-sketch/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-space/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-table/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-template/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-thread/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
+
         // TODO(burdon): Required until integrated with theme.
         resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
       ],
-      extensions: [osThemeExtension],
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
@@ -84,7 +74,7 @@ export default defineConfig({
       manifest: {
         name: 'DXOS Labs',
         short_name: 'Labs',
-        description: 'DXOS Labs Application',
+        description: 'DXOS Labs',
         theme_color: '#ffffff',
         icons: [
           {

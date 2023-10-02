@@ -17,7 +17,7 @@ import {
   treeItemText,
 } from './navtree-fragments';
 import { SharedTreeItemHeadingProps } from './props';
-import { TREE_VIEW_PLUGIN, TreeViewAction } from '../../types';
+import { TREE_VIEW_PLUGIN } from '../../types';
 import { getTreeItemLabel } from '../../util';
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
@@ -36,8 +36,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
 
     const handleSelect = async () => {
       await dispatch({
-        plugin: TREE_VIEW_PLUGIN,
-        action: TreeViewAction.ACTIVATE,
+        action: 'dxos.org/plugin/splitview/action/activate',
         data: {
           id: node.id,
         },
@@ -71,7 +70,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
               }
             }}
           >
-            <OpenTriggerIcon weight='fill' className={mx('shrink-0 text-[--icons-color]', getSize(2))} />
+            <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
         <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild>

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
-import { TypedObject, useQuery } from '@dxos/react-client/echo';
+import { ShowDeletedOption, TypedObject, useQuery } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { SpaceSelector } from '../../../containers';
@@ -33,15 +33,15 @@ const textFilter = (text?: string) => {
 const { helper, builder } = createColumnBuilder<TypedObject>();
 const columns: TableColumnDef<TypedObject, any>[] = [
   helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
-  helper.accessor((item) => item.toJSON()['@model'], { id: 'model' }),
-  helper.accessor((item) => item.__typename, { id: 'type' }),
+  helper.accessor((item) => item.toJSON()['@model'], { id: 'model', size: 220 }),
+  helper.accessor((item) => item.__typename, { id: 'type', size: 220 }),
+  helper.accessor((item) => (item.__deleted ? 'deleted' : ''), { id: 'deleted', size: 80 }),
 ];
 
 export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
-  // TODO(burdon): Filter deleted.
-  const items = useQuery(space);
+  const items = useQuery(space, {}, { deleted: ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
 
   return (
@@ -53,7 +53,11 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<TypedObject> columns={columns} data={items.filter(textFilter(filter))} />
+      <MasterDetailTable<TypedObject>
+        columns={columns}
+        data={items.filter(textFilter(filter))}
+        widths={['w-auto min-w-[30%]', 'w-auto']}
+      />
     </PanelContainer>
   );
 };
