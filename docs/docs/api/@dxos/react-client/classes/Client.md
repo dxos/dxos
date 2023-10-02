@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.3.0"</code>
+Type: <code>"0.3.1"</code>
 
 The version of this client API.
 
@@ -76,6 +76,18 @@ Returns: <code>string</code>
 Arguments: none
 
 
+
+
+### [addSchema(schema)]()
+
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`schema`: <code>EchoSchema</code>
 
 
 ### [destroy()]()
