@@ -14,7 +14,7 @@ import { Expando } from '@dxos/echo-schema';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Indexing, SearchRequest } from './indexing-plugin';
+import { Indexing } from './indexing-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 

@@ -11,6 +11,7 @@ import { Context } from '@dxos/context';
 import { Query, Subscription, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { SearchRequest, SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
@@ -140,7 +141,7 @@ export class Indexing extends AbstractPlugin {
 
   private _search(request: SearchRequest): SearchResponse {
     invariant(this._index);
-    const results = this._index!.search(request.query, request.options);
+    const results = this._index!.search(request.query, { fuzzy: request.type === SearchRequest.Type.FUZZY });
     return {
       results: results.map((result) => {
         return {
@@ -155,20 +156,6 @@ export class Indexing extends AbstractPlugin {
     };
   }
 }
-
-export type SearchRequest = {
-  query: string;
-  options?: { fuzzy?: boolean };
-};
-
-export type SearchResponse = {
-  results: {
-    spaceKey: string;
-    objectId: string;
-    score: number;
-    matches: { term: string; positions?: { key: string; start: number; length: number }[] }[];
-  }[];
-};
 
 type IndexDocument = {
   id: string;
