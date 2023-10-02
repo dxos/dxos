@@ -29,6 +29,7 @@ import {
   SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
+import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
@@ -49,9 +50,6 @@ import {
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Document.name] = Document;
-
-// TODO(wittjosiah): Expand message & translate.
-const INITIAL_CONTENT = '# Welcome to Composer!\n\nComposer is a collaborative peer-to-peer application.';
 
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.type.name === data.__typename;
@@ -172,7 +170,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: 'Getting Started', content: new Text(INITIAL_CONTENT) }),
+          new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({

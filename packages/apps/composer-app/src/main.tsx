@@ -24,44 +24,64 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { schema$ } from '@braneframe/types';
-import { Config, Defaults } from '@dxos/config';
-import { TypedObject } from '@dxos/echo-schema';
+import { ProgressBar } from '@dxos/aurora';
+import { SpaceProxy } from '@dxos/client/echo';
+import { createClientServices } from '@dxos/client/services';
+import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { PluginProvider } from '@dxos/react-surface';
-
-import { ProgressBar } from './components/ProgressBar/ProgressBar';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
+(globalThis as any)[EchoDatabase.name] = EchoDatabase;
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <PluginProvider
-      fallback={
-        <div className='flex h-screen justify-center items-center'>
-          <ProgressBar indeterminate />
-        </div>
-      }
-      plugins={[
-        TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
-        IntentPlugin(),
-        ThemePlugin({ appName: 'Composer' }),
-        // Outside of error boundary so that updates are not blocked by errors.
-        PwaPlugin(),
-        // Inside theme provider so that errors are styled.
-        ErrorPlugin(),
-        ClientPlugin({ schema: schema$ }),
-        GraphPlugin(),
-        DndPlugin(),
-        SplitViewPlugin(),
-        TreeViewPlugin(),
-        SpacePlugin(),
-        MarkdownPlugin(),
-        StackPlugin(),
-        GithubPlugin(),
-        FilesPlugin(),
-        SketchPlugin(),
-      ]}
-    />
-  </StrictMode>,
-);
+const main = async () => {
+  const config = new Config(Envs(), Local(), Defaults());
+  const services = await createClientServices(config);
+
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <PluginProvider
+        fallback={
+          <div className='flex h-screen justify-center items-center'>
+            <ProgressBar indeterminate />
+          </div>
+        }
+        plugins={[
+          // TODO(burdon): Normalize namespace across apps.
+          TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
+          ThemePlugin({ appName: 'Composer' }),
+
+          // Outside of error boundary so that updates are not blocked by errors.
+          PwaPlugin(),
+
+          // Core framework.
+          ErrorPlugin(),
+          IntentPlugin(),
+          GraphPlugin(),
+          // TODO(burdon): Broken if services are not provided.
+          ClientPlugin({ config, services, schema: schema$ }),
+
+          // Core UX.
+          DndPlugin(),
+          SplitViewPlugin(),
+          TreeViewPlugin(),
+
+          // TODO(burdon): Remove need to come after SplitView.
+          SpacePlugin(),
+
+          // Apps.
+          MarkdownPlugin(),
+          StackPlugin(),
+          FilesPlugin(),
+          GithubPlugin(),
+          SketchPlugin(),
+        ]}
+      />
+    </StrictMode>,
+  );
+};
+
+void main();
