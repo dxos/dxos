@@ -37,7 +37,7 @@ export const Default = {
       Array.from({ length: 10 }).map(() => createItem(types)),
     );
 
-    const sortedStackItems1 = useSortedItems('stack-1', stackItems1);
+    const sortedStackItems1 = useSortedItems({ container: 'stack-1', items: stackItems1 });
 
     const handleMoveStackItem1 = ({ container, active, over }: MosaicMoveEvent<number>) => {
       setStackItems1((items) => {
@@ -55,7 +55,7 @@ export const Default = {
       Array.from({ length: 5 }).map(() => createItem(types)),
     );
 
-    const sortedStackItems2 = useSortedItems('stack-2', stackItems2);
+    const sortedStackItems2 = useSortedItems({ container: 'stack-2', items: stackItems2 });
 
     const handleMoveStackItem2 = ({ container, active, over }: MosaicMoveEvent<number>) => {
       setStackItems2((items) => {

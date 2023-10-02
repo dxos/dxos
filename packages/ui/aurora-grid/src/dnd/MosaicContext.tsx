@@ -14,7 +14,7 @@ import { MosaicContainerProps, MosaicDataItem, MosaicDraggedItem, MosaicTileComp
 import { Debug } from '../components/Debug';
 
 export type MosaicContextType = {
-  containers: Map<string, MosaicContainerProps<any, any>>;
+  setContainer: (id: string, container?: MosaicContainerProps<any>) => void;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
 };
@@ -36,15 +36,26 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   debug,
   children,
 }) => {
-  const [containers] = useState(
+  const [containers, setContainers] = useState(
     new Map<string, MosaicContainerProps<any>>([[DEFAULT_COMPONENT_ID, { id: DEFAULT_COMPONENT_ID, Component }]]),
   );
+  const handleSetContainer = (id: string, container?: MosaicContainerProps<any>) => {
+    setContainers((containers) => {
+      const copy = new Map(containers);
+      if (container) {
+        copy.set(id, container);
+      } else {
+        copy.delete(id);
+      }
+      return copy;
+    });
+  };
+
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveItem(event.active.data.current as MosaicDraggedItem);
-    console.log(event);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -92,7 +103,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const { Component: OverlayComponent = DefaultComponent } = container;
 
   return (
-    <MosaicContext.Provider value={{ containers, activeItem, overItem }}>
+    <MosaicContext.Provider value={{ setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -121,6 +132,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
             <Debug
               position='bottom-right'
               data={{
+                containers: Array.from(containers.keys()).map((id) => id),
                 active: {
                   id: activeItem?.item?.id,
                   container: activeItem?.container,
@@ -144,14 +156,31 @@ const useMosaic = () => useContext(MosaicContext) ?? raise(new Error('Missing Mo
  * Returns a patched collection of items including a placeholder if items that could drop,
  * and removing any item that is currently being dragged out..
  */
-export const useSortedItems = (id: string, items: MosaicDataItem[]): MosaicDataItem[] => {
+export const useSortedItems = <T extends MosaicDataItem>({
+  container,
+  items,
+  allows,
+}: {
+  container: string;
+  items: T[];
+  allows?: (activeItem: MosaicDraggedItem) => boolean;
+}): T[] => {
   const { activeItem, overItem } = useMosaic();
-  if (activeItem && activeItem.container !== id && overItem?.container === id) {
-    return [activeItem.item, ...items];
+  if (
+    activeItem &&
+    activeItem.item.id !== container &&
+    activeItem.container !== container &&
+    overItem?.container === container &&
+    (!allows || allows(activeItem))
+  ) {
+    // TODO(burdon): Can we check the type? Default action for `allows`?
+    return [activeItem.item as T, ...items];
   }
-  if (activeItem && activeItem.container === id && overItem?.container !== activeItem.container) {
+
+  if (activeItem && activeItem.container === container && overItem?.container !== activeItem.container) {
     return items.filter((item) => item.id !== activeItem.item.id);
   }
+
   return items;
 };
 
@@ -163,10 +192,19 @@ type MosaicContainerContextType<TData extends MosaicDataItem, TPosition = unknow
 const MosaicContainerContext = createContext<MosaicContainerContextType<any, any>>({
   id: 'never',
   Component: DefaultComponent,
-  onMoveItem: () => {},
+  onMoveItem: (event) => {
+    console.log('onMoveItem', event);
+  },
 });
 
 export const useContainer = () => useContext(MosaicContainerContext);
+
+// TODO(burdon): Combine with SortableContext?
+//
+//  <MosaicContextProvider>
+//    useSortedItems()
+//    <SortableContext>
+//      useSortable()
 
 // TODO(burdon): Support passing in more context to event handlers.
 export const MosaicContainerProvider: FC<PropsWithChildren<{ container: MosaicContainerContextType<any, any> }>> = ({
@@ -175,9 +213,11 @@ export const MosaicContainerProvider: FC<PropsWithChildren<{ container: MosaicCo
 }) => {
   const mosaic = useMosaic();
   useEffect(() => {
-    mosaic.containers.set(container.id, container);
+    mosaic.setContainer(container.id, container);
     return () => {
-      mosaic.containers.delete(container.id);
+      // TODO(burdon): The overlay unregisters the container after the tile has re-rendered (removing it).
+      //  Reference count?
+      // mosaic.setContainer(container.id);
     };
   }, []);
 

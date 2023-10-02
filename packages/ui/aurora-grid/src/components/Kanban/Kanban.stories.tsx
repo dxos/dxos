@@ -7,6 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
+import { arrayMove } from '@dxos/util';
+
 import { Kanban, KanbanColumn } from './Kanban';
 import { MosaicContextProvider, MosaicMoveEvent } from '../../dnd';
 import { createItem, FullscreenDecorator } from '../../testing';
@@ -35,18 +37,26 @@ export const Default = () => {
   // };
 
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    setColumns((columns) =>
-      columns.map((column) => {
-        const items = [...column.items];
-        if (active.container === column.id && column.id === container) {
-          items.splice(active.position!, 1);
-        }
-        if (over.container === column.id && column.id === container) {
-          items.splice(over.position!, 0, active.item);
-        }
-        return { ...column, items };
-      }),
-    );
+    if (container === 'kanban') {
+      setColumns((columns) => {
+        const activeIndex = columns.findIndex((column) => column.id === active.item.id);
+        const overIndex = columns.findIndex((column) => column.id === over.item.id);
+        return [...arrayMove(columns, activeIndex, overIndex)];
+      });
+    } else {
+      setColumns((columns) =>
+        columns.map((column) => {
+          const items = [...column.items];
+          if (active.container === column.id && column.id === container) {
+            items.splice(active.position!, 1);
+          }
+          if (over.container === column.id && column.id === container) {
+            items.splice(over.position!, 0, active.item);
+          }
+          return { ...column, items };
+        }),
+      );
+    }
   };
 
   return (

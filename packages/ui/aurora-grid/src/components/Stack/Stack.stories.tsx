@@ -14,12 +14,16 @@ import { Debug } from '../Debug';
 
 faker.seed(3);
 
-const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[]; debug?: boolean }> = ({
-  Component,
-  types,
-  debug,
-}) => {
+const StackStory: FC<{
+  id: string;
+  Component: MosaicTileComponent<any>;
+  types?: string[];
+  count?: number;
+  debug?: boolean;
+}> = ({ id = 'stack', Component, types, debug }) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 3 }).map(() => createItem(types)));
+  const sortedItems = useSortedItems({ container: id, items });
+
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
       if (active.container === container) {
@@ -32,15 +36,12 @@ const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[]; de
     });
   };
 
-  const container = 'stack';
-  const sortedItems = useSortedItems(container, items);
-
   // TODO(burdon): Cards change shape when dragged inside stacks.
 
   return (
     <div className='flex overflow-hidden w-[300px]'>
       <Stack.Root
-        id={container}
+        id={id}
         items={items.map(({ id }) => id)}
         Component={Component}
         onMoveItem={handleMoveItem}

@@ -243,6 +243,7 @@ const GridTile: FC<{
     <Component
       ref={setNodeRef}
       data={item}
+      container={container}
       isDragging={isDragging}
       draggableStyle={{
         position: 'absolute',
@@ -266,7 +267,7 @@ const GridCell: FC<{ container: string; position: Position; bounds: Dimension }>
   bounds,
 }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: `${container}-cell-${position.x}-${position.y}`,
+    id: `${container}/cell/${position.x}-${position.y}`,
     data: { container, position },
   });
 

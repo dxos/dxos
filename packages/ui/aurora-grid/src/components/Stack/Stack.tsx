@@ -25,26 +25,26 @@ type StackRootProps = MosaicContainerProps<any, number> & {
 const StackRoot = ({
   id,
   items = [],
-  debug = false,
   Component = DefaultComponent,
   onMoveItem,
   children,
 }: PropsWithChildren<StackRootProps>) => {
   return (
-    <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
-      <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+    <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+      <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
         {children}
         {/* TODO(burdon): Component for placeholder at end. */}
-      </MosaicContainerProvider>
-    </SortableContext>
+      </SortableContext>
+    </MosaicContainerProvider>
   );
 };
 
 const StackTile: FC<{
   item: MosaicDataItem;
   index: number;
+  debug?: boolean;
   onSelect?: () => void;
-}> = ({ item, index, onSelect }) => {
+}> = ({ item, index, debug, onSelect }) => {
   const { id: container, Component } = useContainer();
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id: item.id,
@@ -54,15 +54,16 @@ const StackTile: FC<{
   return (
     <Component
       ref={setNodeRef}
+      data={item}
+      container={container}
       isDragging={isDragging}
       draggableStyle={{
         transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
       }}
       draggableProps={{ ...attributes, ...listeners }}
       className={mx(isDragging && 'opacity-30')}
-      container={container}
-      data={item}
       onSelect={onSelect}
+      debug={debug}
     />
   );
 };

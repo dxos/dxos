@@ -55,13 +55,14 @@ const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: numb
       {/* TODO(wittjosiah): This is Stack.Tile. */}
       <Component
         ref={setNodeRef}
+        data={item}
+        container={container}
         isDragging={isDragging}
         draggableStyle={{
           transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
         }}
         draggableProps={{ ...attributes, ...listeners }}
         className={mx(isDragging && 'opacity-30')}
-        data={item}
         onSelect={onSelect}
       />
     </AuroraTreeItem.Root>
@@ -94,7 +95,7 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 
 const TreeBranch = ({ id, items }: { id: string; items: TreeData[] }) => {
   const { Component, onMoveItem } = useContainer();
-  const sortedItems = useSortedItems(id, items);
+  const sortedItems = useSortedItems({ container: id, items });
   return (
     <AuroraTreeItem.Body>
       {/* TODO(wittjosiah): This is Stack.Root. */}

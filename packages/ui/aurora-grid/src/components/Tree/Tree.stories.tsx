@@ -59,7 +59,7 @@ export default {
 
 export const Default = {
   render: () => {
-    const sortedItems = useSortedItems('tree', testItems);
+    const sortedItems = useSortedItems({ container: 'tree', items: testItems });
 
     return (
       <Tree.Root id='tree' items={sortedItems.map(({ id }) => id)} onMoveItem={console.log}>

@@ -2,24 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Card } from '@dxos/aurora';
 
 import { MosaicDataItem, MosaicTileProps } from './types';
 
 export const DefaultComponent = forwardRef<HTMLDivElement, MosaicTileProps<MosaicDataItem>>(
   ({ draggableStyle, draggableProps, data: { id }, container }, forwardRef) => {
     return (
-      <div ref={forwardRef} style={draggableStyle} className='flex ring bg-white font-mono text-xs'>
-        <div {...draggableProps}>
-          <DotsSixVertical className={mx(getSize(5))} />
-        </div>
-        <div>
-          {container}:{id}
-        </div>
-      </div>
+      <Card.Root ref={forwardRef} style={draggableStyle}>
+        <Card.Header>
+          <Card.DragHandle {...draggableProps} />
+          <Card.Title title={`${container}/${id}`} classNames='truncate font-mono text-xs' />
+        </Card.Header>
+      </Card.Root>
     );
   },
 );
