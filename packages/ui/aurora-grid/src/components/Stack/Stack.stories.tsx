@@ -5,29 +5,17 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 
 import { Stack } from './Stack';
-import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem } from '../../dnd';
-import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
+import { MosaicMoveEvent, MosaicContextProvider, MosaicDataItem, MosaicTileComponent } from '../../dnd';
+import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
-export default {
-  component: Stack,
-  decorators: [FullscreenDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export const Default = () => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 10 }).map(() => createItem(['document'])),
-  );
-
+const StackStory: FC<{ Component: MosaicTileComponent<any>; types?: string[] }> = ({ Component, types }) => {
+  const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 10 }).map(() => createItem(types)));
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    // console.log('handleMoveStackItem', active.position);
     setItems((items) => {
       if (active.container === container) {
         items.splice(active.position!, 1);
@@ -39,14 +27,34 @@ export const Default = () => {
     });
   };
 
-  // TODO(burdon): Draggable stacks.
+  // TODO(burdon): Cards change shape when dragged inside stacks.
+
   return (
     <MosaicContextProvider debug>
-      <div className='flex grow overflow-y-hidden overflow-x-auto'>
-        <div className='flex'>
-          <Stack.Root id={'stack'} items={items} Component={SimpleCard} onMoveItem={handleMoveItem} debug />
-        </div>
+      <div className='flex overflow-hidden w-[300px]'>
+        <Stack.Root id={'stack'} items={items} Component={Component} onMoveItem={handleMoveItem} debug />
       </div>
     </MosaicContextProvider>
   );
+};
+
+export default {
+  component: StackStory,
+  decorators: [FullscreenDecorator()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export const Default = {
+  args: {
+    Component: SimpleCard,
+  },
+};
+
+export const Complex = {
+  args: {
+    Component: ComplexCard,
+    types: ['document', 'image'],
+  },
 };

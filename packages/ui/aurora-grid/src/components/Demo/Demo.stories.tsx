@@ -37,7 +37,6 @@ export const Default = () => {
   );
 
   const handleMoveStackItem1 = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    // console.log('handleMoveStackItem', active.position);
     setStackItems1((items) => {
       if (active.container === container) {
         items.splice(active.position!, 1);
@@ -54,7 +53,6 @@ export const Default = () => {
   );
 
   const handleMoveStackItem2 = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    // console.log('handleMoveStackItem', active.position);
     setStackItems2((items) => {
       if (active.container === container) {
         items.splice(active.position!, 1);
@@ -85,7 +83,6 @@ export const Default = () => {
   );
 
   const handleMoveGridItem = ({ container, active, over }: MosaicMoveEvent<Position>) => {
-    // console.log('handleMoveGridItem', active, over);
     if (over.container !== container) {
       setGridItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {
@@ -104,37 +101,35 @@ export const Default = () => {
   return (
     <MosaicContextProvider debug={debug}>
       <div className='flex grow overflow-hidden'>
+        <div className='flex shrink-0 w-[280px] overflow-hidden'>
+          <Stack.Root
+            id='stack-1'
+            items={stackItems1}
+            Component={SimpleCard}
+            onMoveItem={handleMoveStackItem1}
+            debug={debug}
+          />
+        </div>
         <div className='flex grow overflow-hidden'>
-          <div className='flex shrink-0 w-[280px] overflow-hidden'>
-            <Stack.Root
-              id='stack'
-              items={stackItems1}
-              Component={SimpleCard}
-              onMoveItem={handleMoveStackItem1}
-              debug={debug}
-            />
-          </div>
-          <div className='flex grow overflow-hidden'>
-            <Grid.Root
-              id='grid'
-              items={gridItems}
-              layout={layout}
-              size={size}
-              Component={ComplexCard}
-              onMoveItem={handleMoveGridItem}
-              debug={debug}
-              className='p-4'
-            />
-          </div>
-          <div className='flex shrink-0 w-[280px] overflow-hidden'>
-            <Stack.Root
-              id='stack2'
-              items={stackItems2}
-              Component={ComplexCard}
-              onMoveItem={handleMoveStackItem2}
-              debug={debug}
-            />
-          </div>
+          <Grid.Root
+            id='grid'
+            items={gridItems}
+            layout={layout}
+            size={size}
+            Component={ComplexCard}
+            onMoveItem={handleMoveGridItem}
+            debug={debug}
+            className='p-4'
+          />
+        </div>
+        <div className='flex shrink-0 w-[280px] overflow-hidden'>
+          <Stack.Root
+            id='stack-2'
+            items={stackItems2}
+            Component={ComplexCard}
+            onMoveItem={handleMoveStackItem2}
+            debug={debug}
+          />
         </div>
       </div>
     </MosaicContextProvider>
