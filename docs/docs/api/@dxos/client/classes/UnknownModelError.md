@@ -1,5 +1,5 @@
 # Class `UnknownModelError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:70]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:73]()</sub>
 
 
 Database errors.
