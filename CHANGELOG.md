@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.1](https://github.com/dxos/dxos/compare/v0.3.0...v0.3.1) (2023-10-02)
+
+
+### Features
+
+* Add key bindings ([#4325](https://github.com/dxos/dxos/issues/4325)) ([b9bb100](https://github.com/dxos/dxos/commit/b9bb10041c4d0bdb87387aa680b19a55f19da941))
+* Debug plugin ([#4324](https://github.com/dxos/dxos/issues/4324)) ([ab5a780](https://github.com/dxos/dxos/commit/ab5a78088aac368a18e0e50706b0600c7cd816f8))
+* ECHO schema ([#4333](https://github.com/dxos/dxos/issues/4333)) ([44a669a](https://github.com/dxos/dxos/commit/44a669a073e4e035995b0af90823d486f07afaf6))
+* expanded initial message in markdown plugin ([#4366](https://github.com/dxos/dxos/issues/4366)) ([2d5b138](https://github.com/dxos/dxos/commit/2d5b1382524d1d8e78b7b96a876bbba14e9b0b5e))
+* promote sketch to Composer ([#4358](https://github.com/dxos/dxos/issues/4358)) ([48d35cc](https://github.com/dxos/dxos/commit/48d35ccf233a565f6f1c64c40cb450c18f0923fc))
+* show deleted objects in Objects list in Dev Tools ([#4345](https://github.com/dxos/dxos/issues/4345)) ([320687f](https://github.com/dxos/dxos/commit/320687f9086829293702a24a5c3aa728d1bee497))
+
+
+### Bug Fixes
+
+* client schema for composer ([#4362](https://github.com/dxos/dxos/issues/4362)) ([3c1c830](https://github.com/dxos/dxos/commit/3c1c830c8c804c8df50606433791dfce51380220))
+* **client:** improve default space errors ([#4341](https://github.com/dxos/dxos/issues/4341)) ([0fddbd4](https://github.com/dxos/dxos/commit/0fddbd4b6f55d89ef04f64aa2557501ccb92aead))
+* connectivity issues ([#4305](https://github.com/dxos/dxos/issues/4305)) ([5e68e9d](https://github.com/dxos/dxos/commit/5e68e9dce06aecad614afd2943eff6d8ac4238a4))
+* inclusion of scripts for proto in templates ([#4370](https://github.com/dxos/dxos/issues/4370)) ([6fd382b](https://github.com/dxos/dxos/commit/6fd382bbdb707c369b417457429c53117cf6e661))
+* logging ([#4361](https://github.com/dxos/dxos/issues/4361)) ([8e630ac](https://github.com/dxos/dxos/commit/8e630ac0906589c7ca04d57258a1f356a5a082c9))
+* Object.keys on Expandos ([#4360](https://github.com/dxos/dxos/issues/4360)) ([65e00d7](https://github.com/dxos/dxos/commit/65e00d7a3ebc4a3056f7204ae42100946601a379))
+* **plugin-telemetry:** avoid fetch to local KUBE ([#4340](https://github.com/dxos/dxos/issues/4340)) ([6ca5432](https://github.com/dxos/dxos/commit/6ca5432ee9dcbb15e9bbb90d436a3e464ed62fe2))
+
 ## [0.3.0](https://github.com/dxos/dxos/compare/v0.2.3...v0.3.0) (2023-09-26)
 
 

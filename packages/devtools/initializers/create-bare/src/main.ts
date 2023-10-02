@@ -30,7 +30,16 @@ void (async () => {
     interactive,
     input: interactive
       ? { monorepo }
-      : { name, createFolder: false, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false },
+      : {
+          name,
+          createFolder: false,
+          dxosUi: true,
+          tailwind: true,
+          react: true,
+          monorepo,
+          storybook: false,
+          proto: false,
+        },
   });
   await result.apply();
 })();

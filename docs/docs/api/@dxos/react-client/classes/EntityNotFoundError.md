@@ -1,5 +1,5 @@
 # Class `EntityNotFoundError`
-<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:67]()</sub>
+<sub>Declared in [packages/core/protocols/dist/esm/src/errors/errors.d.ts:70]()</sub>
 
 
 Database errors.
