@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { useClient } from '@dxos/react-client';
 import { usePlugin } from '@dxos/react-surface';
 
@@ -18,7 +18,7 @@ export type UseTelemetryOptions = {
  * Hooks up navigation and click events to telemetry.
  */
 export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
-  const treeViewPlugin = usePlugin<TreeViewPluginProvides>('dxos.org/plugin/treeview');
+  const splitViewPlugin = usePlugin<SplitViewPluginProvides>('dxos.org/plugin/splitview');
   const client = useClient();
 
   useEffect(() => {
@@ -44,5 +44,5 @@ export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
         properties: BASE_TELEMETRY_PROPERTIES,
       });
     });
-  }, [treeViewPlugin?.provides.treeView.active]);
+  }, [splitViewPlugin?.provides.splitView.active]);
 };

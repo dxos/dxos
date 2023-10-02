@@ -5,7 +5,7 @@
 import { Context, createContext } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
+import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TimerCallback, TimerOptions } from '@dxos/async';
 

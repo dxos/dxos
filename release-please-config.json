@@ -159,11 +159,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-url-sync/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
@@ -499,47 +494,12 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kai-bots/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kai-frames/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kai-framework/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kai-functions/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/kai-sandbox/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/kodama/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/kube-console/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -73,6 +73,9 @@
       "path": "../plugins/plugin-pwa"
     },
     {
+      "path": "../plugins/plugin-sketch"
+    },
+    {
       "path": "../plugins/plugin-space"
     },
     {
@@ -91,7 +94,7 @@
       "path": "../plugins/plugin-treeview"
     },
     {
-      "path": "../plugins/plugin-url-sync"
+      "path": "../types"
     }
   ]
 }

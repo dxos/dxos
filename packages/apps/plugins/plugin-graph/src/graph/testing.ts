@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Action } from './action';
 import { Graph } from './graph';
-import { NodeBuilder, Node, Action } from './types';
+import { NodeBuilder, Node } from './node';
 
 /**
  * Create a test node builder that always adds nodes and actions to the specified depth.
@@ -129,14 +130,14 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
  */
 
 // TODO(wittjosiah): Type nodes.
-export const buildGraph = (graph: Graph, nodes: any[]) => {
-  addNodes(graph.root, nodes);
+export const buildGraph = (graph: Graph, id: string, nodes: any[]) => {
+  addNodes(graph.root, id, nodes);
 };
 
-const addNodes = (root: Node, nodes: any[]) => {
+const addNodes = (root: Node, id: string, nodes: any[]) => {
   nodes.forEach((node) => {
-    const [child] = root.addNode(node);
-    addNodes(child, node.children || []);
+    const [child] = root.addNode(id, node);
+    addNodes(child, id, node.children || []);
     node.actions?.forEach((action: any) => child.addAction(action));
   });
 };

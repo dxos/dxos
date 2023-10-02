@@ -100,7 +100,7 @@ const EmbeddedLayoutImpl = () => {
     text: document ? document.content : undefined,
   });
 
-  const docGhId = useDocGhId(document?.meta?.keys ?? []);
+  const docGhId = useDocGhId(document?.__meta?.keys ?? []);
   const name = space && getSpaceDisplayName(space);
 
   return (

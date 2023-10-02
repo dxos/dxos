@@ -31,8 +31,8 @@ describe('Serializer', () => {
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
         '@model': 'dxos.org/model/document',
+        '@meta': { keys: [] },
         title: 'Test',
-        meta: { keys: [] },
       });
     }
 

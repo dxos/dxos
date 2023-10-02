@@ -6,12 +6,12 @@ import { GithubLogo } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
+import { DndPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { Node, GraphProvides } from '@braneframe/plugin-graph';
 import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { TreeViewPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-treeview';
-import { AppState, Document } from '@braneframe/types';
+import { Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -39,7 +39,7 @@ export type GithubPluginProvides = TranslationsProvides &
     settings: GithubSettingsProps;
   };
 
-const filter = (obj: Document) => obj.meta?.keys?.find((key) => key?.source?.includes('github'));
+const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   let adapter: GraphNodeAdapter<Document> | undefined;
@@ -53,8 +53,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
 
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-      const appState = treeViewPlugin?.provides.treeView?.appState as AppState | undefined;
+      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      const appState = dndPlugin?.provides.dnd.appState;
       const defaultIndices = getIndices(plugins.length);
 
       const createGroup = (parent: Node) => {

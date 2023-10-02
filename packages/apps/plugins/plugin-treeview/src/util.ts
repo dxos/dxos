@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SetTileHandler } from '@braneframe/plugin-dnd';
+import { getAppStateIndex, SetTileHandler } from '@braneframe/plugin-dnd';
 import { Action, Graph, Node } from '@braneframe/plugin-graph';
 import { AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
@@ -17,14 +17,6 @@ export const getLevel = (node: Node, level = 0): number => {
     return getLevel(node.parent, level + 1);
   }
 };
-
-export const uriToActive = (uri: string) => {
-  const [_, ...nodeId] = uri.split('/');
-  return nodeId ? nodeId.join(':') : undefined;
-};
-
-export const activeToUri = (active?: string) =>
-  '/' + (active ? active.split(':').map(encodeURIComponent).join('/') : '');
 
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: Action[]): Action[] =>
@@ -50,6 +42,7 @@ export const sortByIndex = (a: Node, b: Node) => {
   return 0;
 };
 
+// TODO(wittjosiah): Why fallbackTitle?
 export const getTreeItemLabel = (node: Node, t: TFunction) =>
   node.properties?.preferFallbackTitle
     ? Array.isArray(node.properties.fallbackTitle)
@@ -69,24 +62,6 @@ export const getPersistenceParent = (node: Node, persistenceClass: string): Node
   } else {
     return getPersistenceParent(node.parent, persistenceClass);
   }
-};
-
-export const getAppStateIndex = (id: string, appState?: AppState): string | undefined => {
-  return appState?.indices?.find(({ ref }) => ref === id)?.value;
-};
-
-export const setAppStateIndex = (id: string, value: string, appState?: AppState): string => {
-  const entryIndex = appState?.indices?.findIndex(({ ref }) => ref === id);
-  if (typeof entryIndex !== 'undefined' && entryIndex > -1) {
-    appState!.indices = [
-      ...appState!.indices.slice(0, entryIndex),
-      { ref: id, value },
-      ...appState!.indices.slice(entryIndex + 1, appState!.indices.length),
-    ];
-  } else if (appState) {
-    appState.indices.push({ ref: id, value });
-  }
-  return value;
 };
 
 export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTile: SetTileHandler) => {

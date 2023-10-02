@@ -94,6 +94,9 @@ const defaults = <TData extends RowData, TValue>(
   return stripUndefinedValues(defaultsDeep({}, options, ...sources));
 };
 
+/**
+ * Lazy cell selector (click to activate).
+ */
 const CellSelector = <TData extends RowData>({
   model,
   value: _value,
@@ -116,20 +119,14 @@ const CellSelector = <TData extends RowData>({
     const text = _value ? model.getText(_value) : undefined;
     return (
       // TODO(burdon): Hack to prevent div from collapsing.
-      <div className={mx('w-full', !text && 'opacity-0')} onClick={() => setEdit(true)}>
+      <div className={mx('w-full px-2', !text && 'opacity-0')} onClick={() => setEdit(true)}>
         {text ?? '-'}
       </div>
     );
   }
 
   return (
-    <ComboBox.Root
-      classNames='-mx-2'
-      items={items}
-      value={value}
-      onChange={(value) => onUpdate(value?.data)}
-      onInputChange={handleUpdate}
-    >
+    <ComboBox.Root items={items} value={value} onChange={(value) => onUpdate(value?.data)} onInputChange={handleUpdate}>
       <ComboBox.Input />
       <ComboBox.Content>
         {items.map((item) => (
@@ -223,7 +220,7 @@ export class ColumnBuilder<TData extends RowData> {
                   ref={inputRef}
                   variant='subdued'
                   placeholder={placeholder ? 'Add row...' : undefined}
-                  classNames={['w-full border-none bg-transparent focus:bg-white', className]} // TODO(burdon): Move color to theme.
+                  classNames={'px-2'}
                   value={(value as string) ?? ''}
                   onBlur={() => handleSave(false)}
                   onChange={(event) => setValue(event.target.value)}
@@ -279,6 +276,7 @@ export class ColumnBuilder<TData extends RowData> {
                 <Input.TextInput
                   autoFocus
                   value={text}
+                  classNames={'px-2'}
                   onBlur={handleSave}
                   onChange={(event) => setText(event.target.value)}
                   onKeyDown={(event) =>
@@ -290,10 +288,9 @@ export class ColumnBuilder<TData extends RowData> {
           );
         }
 
-        // TODO(burdon): Add &nbsp;
         return (
           <div
-            className={mx('grow w-full text-right font-mono empty:after:content-["-"] empty:opacity-0', className)}
+            className={mx('grow w-full text-right font-mono empty:after:content-[" "]', className)}
             onClick={handleEdit}
           >
             {value?.toLocaleString(undefined, {

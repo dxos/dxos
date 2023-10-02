@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
-import { Document as DocumentType, Schema as SchemaType, Table as TableType } from '@braneframe/types';
-import { Space, Text } from '@dxos/client/echo';
+import { Document as DocumentType, Table as TableType } from '@braneframe/types';
+import { Schema as SchemaType, Space, Text } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -55,11 +55,13 @@ export class Generator {
 
     const organizations = this._faker!.helpers.uniqueArray(faker.company.name, options.organizations).map(
       (name: string) => {
-        const obj = new Expando({
-          name,
-          website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.meta.schema = org;
+        const obj = new Expando(
+          {
+            name,
+            website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+          },
+          { schema: org },
+        );
         return this._space.db.add(obj);
       },
     );
@@ -86,11 +88,13 @@ export class Generator {
 
     const projects = this._faker!.helpers.uniqueArray(faker.commerce.productName, options.projects).map(
       (name: string) => {
-        const obj = new Expando({
-          name,
-          repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-        });
-        obj.meta.schema = project;
+        const obj = new Expando(
+          {
+            name,
+            repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+          },
+          { schema: project },
+        );
         return this._space.db.add(obj);
       },
     );
@@ -109,7 +113,6 @@ export class Generator {
           id: 'org',
           type: SchemaType.PropType.REF,
           ref: org,
-          refProp: 'name',
         },
       ],
     });
@@ -118,35 +121,48 @@ export class Generator {
       new TableType({
         title: 'People',
         schema: person,
+        props: [
+          {
+            id: 'name',
+          },
+          {
+            id: 'email',
+          },
+          {
+            id: 'org',
+            label: 'Organization',
+            refProp: 'name',
+          },
+        ],
       }),
     );
 
     const people = this._faker!.helpers.uniqueArray(faker.person.fullName, options.people).map((name: string) => {
-      const obj = new Expando({
-        name,
-        email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
-        org: this._faker!.datatype.boolean({ probability: 0.3 })
-          ? this._faker!.helpers.arrayElement(organizations)
-          : undefined,
-      });
-      obj.meta.schema = person;
+      const obj = new Expando(
+        {
+          name,
+          email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
+          org: this._faker!.datatype.boolean({ probability: 0.3 })
+            ? this._faker!.helpers.arrayElement(organizations)
+            : undefined,
+        },
+        { schema: person },
+      );
       return this._space.db.add(obj);
     });
 
     log('created objects', { organizations: organizations.length, projects: projects.length, people: people.length });
   }
 
-  createObject({ type = DocumentType.type.name, createContent = false } = {}) {
+  createObject({ type = DocumentType.type.name } = {}) {
     log('creating object', { type });
     switch (type) {
       case DocumentType.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
-        const content = createContent
-          ? range(this._faker!.number.int({ min: 2, max: 8 }))
-              .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
-              .join('\n\n')
-          : '';
+        const content = range(this._faker!.number.int({ min: 2, max: 8 }))
+          .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
+          .join('\n\n');
 
         this._space.db.add(new DocumentType({ title, content: new Text(content) }));
         break;
