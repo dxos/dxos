@@ -28,10 +28,11 @@ const StackRoot = ({ id, items = [], debug = false, Component = DefaultComponent
   useMosaicContainer({ id, Component, onMoveItem });
   const sortedItems = useSortedItems(id, items);
 
+  // TODO(burdon): Remove styles.
   return (
     <SortableContext id={id} items={sortedItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
       <div className='flex flex-col overflow-y-scroll'>
-        <div className='flex flex-col m-4 gap-4'>
+        <div className='flex flex-col m-2 gap-4'>
           {sortedItems.map((item, i) => (
             <StackTile key={item.id} container={id} item={item} Component={Component} index={i} />
           ))}

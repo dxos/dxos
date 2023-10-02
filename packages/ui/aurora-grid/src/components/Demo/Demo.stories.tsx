@@ -14,7 +14,7 @@ import { ComplexCard, createItem, FullscreenDecorator, SimpleCard } from '../../
 import { Grid, GridLayout, Position } from '../Grid';
 import { Stack } from '../Stack';
 
-faker.seed(8);
+faker.seed(5);
 
 export default {
   component: Card,
@@ -70,7 +70,7 @@ export const Default = () => {
   // Grid
   //
 
-  const size = { x: 5, y: 4 };
+  const size = { x: 4, y: 4 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 6 }).map(() => createItem(types)),
   );
@@ -105,7 +105,7 @@ export const Default = () => {
     <MosaicContextProvider debug={debug}>
       <div className='flex grow overflow-hidden'>
         <div className='flex grow overflow-hidden'>
-          <div className='flex shrink-0 w-[300px] overflow-hidden'>
+          <div className='flex shrink-0 w-[280px] overflow-hidden'>
             <Stack.Root
               id='stack'
               items={stackItems1}
@@ -126,7 +126,7 @@ export const Default = () => {
               className='p-4'
             />
           </div>
-          <div className='flex shrink-0 w-[300px] overflow-hidden'>
+          <div className='flex shrink-0 w-[280px] overflow-hidden'>
             <Stack.Root
               id='stack2'
               items={stackItems2}

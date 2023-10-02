@@ -21,16 +21,21 @@ export type Position = { x: number; y: number };
 
 export type Bounds = { left: number; top: number; width: number; height: number };
 
-export const getDimension = ({ width, height }: Dimension, padding = 0): Dimension => ({
-  width: width - padding * 2,
-  height: height - padding * 2,
+export const getDimension = ({ width, height }: Dimension, spacing = 0): Dimension => ({
+  width: width - spacing * 2,
+  height: height - spacing * 2,
 });
 
-export const getBounds = ({ x, y }: Position, { width, height }: Dimension, padding = 0): Bounds => ({
-  left: x * width + padding,
-  top: y * height + padding,
-  width: width - padding * 2,
-  height: height - padding * 2,
+export const getBounds = ({ x, y }: Position, { width, height }: Dimension, spacing = 0): Bounds => ({
+  left: x * width + spacing * 2,
+  top: y * height + spacing * 2,
+  width: width - spacing * 2,
+  height: height - spacing * 2,
+});
+
+export const getPanelBounds = ({ x, y }: Position, { width, height }: Dimension, spacing = 0): Dimension => ({
+  width: x * width + spacing * 2,
+  height: y * height + spacing * 2,
 });
 
 export const calculateCellWidth = (

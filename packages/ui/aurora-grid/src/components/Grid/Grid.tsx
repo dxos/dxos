@@ -13,7 +13,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useMediaQuery } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { calculateCellWidth, createMatrix, getBounds, getDimension, Position } from './layout';
+import { calculateCellWidth, createMatrix, getBounds, getDimension, getPanelBounds, Position } from './layout';
 import {
   Dimension,
   DefaultComponent,
@@ -39,6 +39,7 @@ const defaultGrid: GridContextType = {
   spacing: 8,
 };
 
+// TODO(burdon): Context isn't used and could be removed.
 const GridContext = createContext<GridContextType>(defaultGrid);
 
 const useGrid = () => {
@@ -110,10 +111,9 @@ const GridLayout: FC<
     onMoveItem,
     getOverlayStyle: () => getDimension(cellBounds, spacing),
   });
-  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-  const contentRef = useRef<HTMLDivElement>(null);
 
-  const { defaultCellBounds, spacing } = useGrid();
+  const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const { matrix, bounds, cellBounds } = useMemo(() => {
     // Change default cell bounds to screen width if mobile.
     const cellWidth = calculateCellWidth(defaultCellBounds.width, width ?? 0);
@@ -124,7 +124,7 @@ const GridLayout: FC<
 
     return {
       matrix: createMatrix(size.x, size.y, ({ x, y }) => ({ x, y })),
-      bounds: { width: size.x * cellBounds.width, height: size.y * cellBounds.height },
+      bounds: getPanelBounds(size, cellBounds, spacing),
       cellBounds,
     };
   }, [defaultCellBounds, size, width]);
@@ -150,6 +150,9 @@ const GridLayout: FC<
     onSelect?.(id);
   };
 
+  // TODO(burdon): Expose controlled selection.
+  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
+  const contentRef = useRef<HTMLDivElement>(null);
   // const moveToCenter = () => {
   //   if (width && height && isNotMobile) {
   //     const center = {
@@ -163,12 +166,10 @@ const GridLayout: FC<
 
   useEffect(() => {
     if (selected) {
-      // Center on selected.
       setCenter(selected);
     }
   }, [selected, width, height]);
 
-  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
   return (
     <div
       ref={containerRef}
@@ -178,7 +179,7 @@ const GridLayout: FC<
         <div>
           {matrix.map((row) =>
             row.map(({ x, y }) => (
-              <Cell
+              <GridCell
                 key={`${x}-${y}`}
                 container={id}
                 position={{ x, y }}
@@ -188,7 +189,7 @@ const GridLayout: FC<
           )}
         </div>
 
-        {/* TODO(burdon): onDoubleClick={() => handleSelect(id)} */}
+        {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
         <div>
           {items.map((item) => {
             const position = layout[item.id] ?? { x: 0, y: 0 };
@@ -206,6 +207,7 @@ const GridLayout: FC<
           })}
         </div>
       </div>
+
       {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
     </div>
   );
@@ -248,15 +250,17 @@ const GridTile: FC<{
 /**
  * Grid cell.
  */
-const Cell: FC<{ container: string; position: Position; bounds: Dimension }> = ({ container, position, bounds }) => {
-  // TODO(burdon): Local handler.
-  // TODO(burdon): Global ids based on container.
+// TODO(burdon): Make Cell pluggable (e.g., to include create button).
+const GridCell: FC<{ container: string; position: Position; bounds: Dimension }> = ({
+  container,
+  position,
+  bounds,
+}) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: `grid-drop-${position.x}-${position.y}`,
+    id: `${container}-cell-${position.x}-${position.y}`,
     data: { container, position },
   });
 
-  // TODO(burdon): Make pluggable (e.g., to include create button).
   return (
     <div
       ref={setNodeRef}
@@ -264,9 +268,11 @@ const Cell: FC<{ container: string; position: Position; bounds: Dimension }> = (
       className='absolute flex justify-center items-center grow select-none cursor-pointer'
     >
       <div
+        // TODO(burdon): Show grid borders while dragging (or if grid is focused?)
         className={mx(
-          'flex w-full h-full box-border border-dashed __group-hover:border border border-neutral-600 rounded',
-          isOver && 'bg-neutral-600 border-neutral-700',
+          'flex w-full h-full box-border border-dashed group-hover:border-4 border-neutral-600/50 rounded-lg',
+          'transition ease-in-out duration-200 bg-neutral-500',
+          isOver && 'bg-neutral-600',
         )}
       >
         <div className='font-mono text-sm text-red-700 hidden'>{JSON.stringify(position)}</div>
@@ -277,6 +283,7 @@ const Cell: FC<{ container: string; position: Position; bounds: Dimension }> = (
 
 export const Grid = {
   Root: GridRoot,
+  Cell: GridCell,
 };
 
 export type { GridRootProps, GridLayout };
