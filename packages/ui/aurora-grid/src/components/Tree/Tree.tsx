@@ -25,7 +25,7 @@ import {
 //  - See: https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--basic-setup
 
 type TreeRootProps = MosaicContainerProps<any, number> & {
-  items?: MosaicDataItem[];
+  items?: string[];
 };
 
 const TreeRoot = ({ id, items = [], Component = TreeItem, onMoveItem, children }: PropsWithChildren<TreeRootProps>) => {
