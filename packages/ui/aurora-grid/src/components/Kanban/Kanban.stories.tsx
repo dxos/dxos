@@ -24,7 +24,7 @@ const KanbanStory: FC<{
 }> = ({ id = 'kanban', Component = DefaultComponent, types = ['document'], count = 3, debug = false }) => {
   const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
     return Array.from({ length: count }).map((_, i) => ({
-      id: `${id}/column/${i}`,
+      id: `column-${i}`,
       title: `Column ${i}`,
       items: Array.from({ length: i === count - 1 ? 0 : 5 - i }).map(() => createItem(types)),
     }));
@@ -38,41 +38,40 @@ const KanbanStory: FC<{
   // TODO(burdon): Buggy dragging empty column.
 
   const handleMoveColumn = ({ active, over }: MosaicMoveEvent<number>) => {
-    setColumns((columns) => {
-      const activeIndex = columns.findIndex((column) => column.id === active.item.id);
-      const overIndex = columns.findIndex((column) => column.id === over.item.id);
-      return [...arrayMove(columns, activeIndex, overIndex)];
-    });
-  };
-
-  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    setColumns((columns) =>
-      columns.map((column) => {
-        const items = [...column.items];
-        if (active.container === column.id && column.id === container) {
-          items.splice(active.position!, 1);
-        }
-        if (over.container === column.id && column.id === container) {
-          items.splice(over.position!, 0, active.item as TestItem);
-        }
-        return { ...column, items };
-      }),
-    );
+    if (active.container === id) {
+      // Reorder columns.
+      setColumns((columns) => {
+        const activeIndex = columns.findIndex((column) => column.id === active.item.id);
+        const overIndex = columns.findIndex((column) => column.id === over.item.id);
+        return [...arrayMove(columns, activeIndex, overIndex)];
+      });
+    } else if (active.container.startsWith(`${id}/column`) && over.container.startsWith(`${id}/column`)) {
+      // Move card within column.
+      setColumns((columns) =>
+        columns.map((column) => {
+          const items = [...column.items];
+          if (active.container.split('/').at(-1) === column.id) {
+            items.splice(active.position!, 1);
+          }
+          if (over.container.split('/').at(-1) === column.id) {
+            items.splice(over.position!, 0, active.item as TestItem);
+          }
+          return { ...column, items };
+        }),
+      );
+    }
   };
 
   return (
     <MosaicContextProvider debug={debug}>
-      <Kanban.Root id={id} columns={columns} Component={Component} onDrop={handleMoveColumn}>
-        {columns.map((column, index) => (
-          <Kanban.Column
-            key={column.id}
-            column={column}
-            Component={Component}
-            onDrop={handleMoveItem}
-            index={index}
-            debug={debug}
-          />
-        ))}
+      <Kanban.Root id={id} debug={debug} columns={columns} Component={Component} onDrop={handleMoveColumn}>
+        <div className='flex grow overflow-y-hidden overflow-x-auto'>
+          <div className='flex gap-4'>
+            {columns.map((column, index) => (
+              <Kanban.Column key={column.id} column={column} index={index} />
+            ))}
+          </div>
+        </div>
       </Kanban.Root>
     </MosaicContextProvider>
   );

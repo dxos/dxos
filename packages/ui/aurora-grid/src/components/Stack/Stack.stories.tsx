@@ -45,24 +45,19 @@ const StackStory: FC<{
 
   return (
     <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
-      <Stack.Root
-        id={id}
-        items={items.map(({ id }) => id)}
-        Component={Component}
-        onDrop={handleMoveItem}
-        debug={debug}
-        direction={direction}
-      >
-        <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
-          <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
-            {sortedItems.map((item, i) => (
-              // TODO(wittjosiah): Don't use array indexing.
-              //  (burdon): Why? This assumes the caller has sorted the items.
-              <Stack.Tile key={item.id} item={item} index={i} />
-            ))}
+      <Stack.Root id={id} Component={Component} onDrop={handleMoveItem} debug={debug}>
+        <Stack.Viewport id={id} items={items.map(({ id }) => id)} direction={direction}>
+          <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
+            <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
+              {sortedItems.map((item, i) => (
+                // TODO(wittjosiah): Don't use array indexing.
+                //  (burdon): Why? This assumes the caller has sorted the items.
+                <Stack.Tile key={item.id} item={item} index={i} />
+              ))}
+            </div>
+            {debug && <Debug data={{ id: 'stack', items: sortedItems.length }} />}
           </div>
-          {debug && <Debug data={{ id: 'stack', items: sortedItems.length }} />}
-        </div>
+        </Stack.Viewport>
       </Stack.Root>
     </div>
   );

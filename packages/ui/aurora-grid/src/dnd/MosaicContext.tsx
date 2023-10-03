@@ -115,7 +115,8 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
       overItem &&
       (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
     ) {
-      const activeContainer = containers.get(activeItem.container);
+      // TODO(wittjosiah): This is a hack to get the container id, if this is a pattern make it a utility function.
+      const activeContainer = containers.get(activeItem.container.split('/')[0]);
       if (activeContainer) {
         activeContainer.onDrop?.({
           container: activeContainer.id,
@@ -123,7 +124,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
           over: overItem,
         });
 
-        const overContainer = containers.get(overItem.container);
+        const overContainer = containers.get(overItem.container.split('/')[0]);
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onDrop?.({
             container: overContainer.id,
@@ -144,12 +145,13 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   let OverlayComponent: MosaicTileComponent<any> | undefined;
   if (activeItem) {
     if (overItem) {
-      container = containers.get(overItem.container);
+      container = containers.get(overItem.container.split('/')[0]);
+      // TODO(wittjosiah): Default to true if isDroppable is undefined.
       OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
     }
 
     if (!OverlayComponent) {
-      container = containers.get(activeItem.container);
+      container = containers.get(activeItem.container.split('/')[0]);
       OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
     }
   }
@@ -158,7 +160,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     const { transform } = props;
     if (activeItem) {
       const container = containers.get(activeItem.container);
-      return container?.modifier?.(props) ?? transform;
+      return container?.modifier?.(activeItem, props) ?? transform;
     } else {
       return transform;
     }

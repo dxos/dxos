@@ -2,8 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { horizontalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
-import React, { forwardRef, PropsWithChildren } from 'react';
+import {
+  defaultAnimateLayoutChanges,
+  horizontalListSortingStrategy,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import React, { FC, forwardRef, PropsWithChildren } from 'react';
 
 import { Card } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
@@ -21,7 +27,6 @@ import {
   getTransformCSS,
 } from '../../dnd';
 import { Debug } from '../Debug';
-import { Stack } from '../Stack';
 
 // Example:
 // https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/presets-sortable-multiple-containers--basic-setup
@@ -37,35 +42,50 @@ type KanbanRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData,
   columns: KanbanColumn<TData>[];
 };
 
-// TODO(burdon): Make generic (and forwardRef).
-const KanbanRoot = forwardRef<HTMLDivElement, PropsWithChildren<KanbanRootProps<any>>>(
-  ({ id, columns, Component = DefaultComponent, onDrop, children }, forwardRef) => {
-    return (
-      <MosaicContainer
-        container={{
-          id,
-          // TODO(burdon): Type (because of ref?)
-          // TODO(burdon): Figure out how to pass to column?
-          Component: ((props) => (
-            <KanbanColumnComponent {...props} Component={Component} />
-          )) as MosaicTileComponent<any>,
-          modifier: ({ transform }) => ({ ...transform, y: 0 }),
-          isDroppable: (item) => item.container === id,
-          onDrop,
-        }}
-      >
-        {/* TODO(burdon): Restrict to horizontal axis: requires nesting contexts. */}
-        {/* <DndContext modifiers={[restrictToHorizontalAxis]}> */}
-        <SortableContext id={id} items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
-          <div ref={forwardRef} className='flex grow overflow-y-hidden overflow-x-auto'>
-            <div className='flex gap-4'>{children}</div>
-          </div>
-        </SortableContext>
-        {/* </DndContext> */}
+// TODO(burdon): Make generic.
+const KanbanRoot = ({
+  id,
+  debug,
+  columns,
+  Component = DefaultComponent,
+  onDrop,
+  children,
+}: PropsWithChildren<KanbanRootProps<any>>) => {
+  return (
+    <MosaicContainer
+      container={{
+        id,
+        debug,
+        Component: OverlayComponent(id, Component),
+        modifier: (item, { transform }) => (item.container === id ? { ...transform, y: 0 } : transform),
+        isDroppable: (item) => item.container.split('/')[0] === id,
+        onDrop,
+      }}
+    >
+      {/* TODO(burdon): Restrict to horizontal axis: requires nesting contexts. */}
+      {/* <DndContext modifiers={[restrictToHorizontalAxis]}> */}
+      <SortableContext id={id} items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
+        {children}
+      </SortableContext>
+      {/* </DndContext> */}
+    </MosaicContainer>
+  );
+};
+
+const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
+  forwardRef((props, ref) => {
+    // if (props.isActive) {
+    //   console.log('OverlayComponent', props);
+    // }
+    return props.container === id ? (
+      // TODO(wittjosiah): Why does it need to be this id for reordering to work?
+      <MosaicContainer container={{ id: props.data.id, Component }}>
+        <KanbanColumnComponent {...props} ref={ref} />
       </MosaicContainer>
+    ) : (
+      <Component {...props} ref={ref} />
     );
-  },
-);
+  });
 
 type KanbanColumnItem = {
   id: string;
@@ -76,13 +96,10 @@ type KanbanColumnItem = {
 type KanbanColumnProps = {
   column: KanbanColumnItem;
   index: number;
-  debug?: boolean;
-  Component?: MosaicTileComponent<any>;
-  onDrop?: MosaicContainerProps<any, number>['onDrop'];
 };
 
-const KanbanColumn = ({ column, index, debug, Component, onDrop }: KanbanColumnProps) => {
-  const { id } = useContainer();
+const KanbanColumn = ({ column, index }: KanbanColumnProps) => {
+  const { id, debug } = useContainer();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: column.id,
     data: { container: id, item: column, position: index } satisfies MosaicDraggedItem,
@@ -98,10 +115,9 @@ const KanbanColumn = ({ column, index, debug, Component, onDrop }: KanbanColumnP
       }}
       draggableProps={{ ...attributes, ...listeners }}
       container={id}
+      position={index}
       data={column}
       debug={debug}
-      Component={Component}
-      onDrop={onDrop}
     />
   );
 };
@@ -112,21 +128,10 @@ type KanbanColumnComponentProps = MosaicTileProps<KanbanColumnItem> & {
 };
 
 const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentProps>(
-  (
-    {
-      container,
-      data: { id, title, items },
-      isDragging,
-      draggableStyle,
-      draggableProps,
-      debug,
-      Component = DefaultComponent,
-      onDrop,
-    },
-    forwardRef,
-  ) => {
+  ({ container, data: { id, title, items }, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+    const column = `${container}/column/${id}`;
     const sortedItems = useSortedItems({
-      container: id,
+      container: column,
       items,
       // TODO(burdon): Use this to prevent drop.
       // isDroppable: container.isDroppable,
@@ -150,20 +155,53 @@ const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentPr
           </Card.Header>
         </Card.Root>
 
-        <Stack.Root id={id} items={sortedItems.map(({ id }) => id)} Component={Component} onDrop={onDrop}>
+        <SortableContext id={id} items={sortedItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
           <div className='flex flex-col grow overflow-y-scroll'>
             <div className='flex flex-col m-2 my-3 space-y-3'>
               {sortedItems.map((item, i) => (
-                <Stack.Tile key={item.id} item={item} index={i} />
+                <KanbanTile key={item.id} item={item} column={column} index={i} />
               ))}
             </div>
           </div>
           {debug && <Debug data={{ container, id, items: sortedItems.length }} />}
-        </Stack.Root>
+        </SortableContext>
       </div>
     );
   },
 );
+
+const KanbanTile: FC<{
+  item: MosaicDataItem;
+  column: string;
+  index: number;
+  debug?: boolean;
+  onSelect?: () => void;
+}> = ({ item, column, index, debug, onSelect }) => {
+  const { Component = DefaultComponent } = useContainer();
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    data: { container: column, item, position: index } satisfies MosaicDraggedItem,
+    animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
+  });
+
+  return (
+    <Component
+      ref={setNodeRef}
+      data={item}
+      container={column}
+      position={index}
+      isDragging={isDragging}
+      draggableStyle={{
+        transform: getTransformCSS(transform),
+        transition,
+      }}
+      draggableProps={{ ...attributes, ...listeners }}
+      className={mx(isDragging && 'opacity-0')}
+      onSelect={onSelect}
+      debug={debug}
+    />
+  );
+};
 
 export const Kanban = {
   Root: KanbanRoot,

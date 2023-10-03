@@ -36,8 +36,8 @@ export type MosaicTileProps<TData extends MosaicDataItem, TPosition = unknown> =
   MosaicTileOverlayProps & {
     container: string;
     data: TData;
-    position: TPosition;
 
+    position?: TPosition;
     isActive?: boolean;
     isDragging?: boolean;
     draggableStyle?: any;

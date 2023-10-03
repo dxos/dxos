@@ -25,27 +25,26 @@ import {
 
 export type Direction = 'horizontal' | 'vertical';
 
-type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number> & {
-  items?: TData[];
+type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number>;
+
+// TODO(burdon): Make generic (and forwardRef).
+const StackRoot = ({ id, Component = DefaultComponent, onDrop, children }: PropsWithChildren<StackRootProps<any>>) => {
+  return <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>{children}</MosaicContainer>;
+};
+
+type StackViewportProps = {
+  id: string;
+  items?: string[];
   direction?: Direction;
 };
 
-// TODO(burdon): Make generic (and forwardRef).
-const StackRoot = ({
-  id,
-  items = [],
-  Component = DefaultComponent,
-  onDrop,
-  children,
-  direction = 'vertical',
-}: PropsWithChildren<StackRootProps<any>>) => {
+const StackViewport = ({ children, id, items = [], direction = 'vertical' }: PropsWithChildren<StackViewportProps>) => {
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
+
   return (
-    <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>
-      <SortableContext id={id} items={items} strategy={strategy}>
-        {children}
-      </SortableContext>
-    </MosaicContainer>
+    <SortableContext id={id} items={items} strategy={strategy}>
+      {children}
+    </SortableContext>
   );
 };
 
@@ -67,6 +66,7 @@ const StackTile: FC<{
       ref={setNodeRef}
       data={item}
       container={container}
+      position={index}
       isDragging={isDragging}
       draggableStyle={{
         transform: getTransformCSS(transform),
@@ -82,6 +82,7 @@ const StackTile: FC<{
 
 export const Stack = {
   Root: StackRoot,
+  Viewport: StackViewport,
   Tile: StackTile,
 };
 

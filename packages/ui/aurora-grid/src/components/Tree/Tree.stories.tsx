@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { Tree, TreeData, TreePosition } from './Tree';
+import { Tree, TreeData } from './Tree';
 import { MosaicMoveEvent, useSortedItems } from '../../dnd';
 import { FullscreenDecorator, MosaicDecorator, createItem } from '../../testing';
 
@@ -18,12 +18,10 @@ const id = 'tree';
 const count = 5;
 
 const testItems1 = Array.from({ length: count }).map((_, i) => ({
-  id: `${id}/column/${i}`,
-  title: `Column ${i}`,
-  level: 0,
+  id: `branch-${i}`,
+  title: `Branch ${i}`,
   items: Array.from({ length: i === count - 1 ? 0 : 5 - i }).map(() => ({
     ...createItem(['document']),
-    level: 1,
     items: [],
   })),
 }));
@@ -69,27 +67,27 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
   const sortedItems = useSortedItems({
     container: 'tree',
     items,
-    isDroppable: (active) => (active.position as TreePosition)?.level === 0,
+    // isDroppable: (active) => (active.position as TreePosition)?.level === 0,
   });
 
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
-    ({ container, active, over }: MosaicMoveEvent<TreePosition>) => {
-      if (container === 'tree') {
+    ({ active, over }: MosaicMoveEvent<number>) => {
+      if (active.container === 'tree') {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
           const overIndex = items.findIndex((item) => item.id === over.item.id);
           return [...arrayMove(items, activeIndex, overIndex)];
         });
-      } else {
+      } else if (active.container.startsWith('tree/branch') && over.container.startsWith('tree/branch')) {
         setItems((items) =>
           items.map((item) => {
             const children = [...item.items];
-            if (active.container === container && container === item.id) {
-              children.splice(active.position!.index, 1);
+            if (active.container.split('/').at(-1) === item.id) {
+              children.splice(active.position!, 1);
             }
-            if (over.container === container && container === item.id) {
-              children.splice(over.position!.index, 0, active.item as TreeData);
+            if (over.container.split('/').at(-1) === item.id) {
+              children.splice(over.position!, 0, active.item as TreeData);
             }
             return { ...item, items: children };
           }),
@@ -103,7 +101,7 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
     <Tree.Root id={id} items={sortedItems.map(({ id }) => id)} onDrop={handleDrop}>
       <div className='flex flex-col'>
         {sortedItems.map((item, i) => (
-          <Tree.Tile key={item.id} item={item} level={0} index={i} />
+          <Tree.Tile key={item.id} item={item} index={i} />
         ))}
       </div>
     </Tree.Root>

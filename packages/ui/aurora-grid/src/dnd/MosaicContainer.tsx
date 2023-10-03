@@ -36,7 +36,7 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
   Component?: MosaicTileComponent<TData>;
 
   // https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
-  modifier?: Modifier;
+  modifier?: (activeItem: MosaicDraggedItem, ...modifierArgs: Parameters<Modifier>) => ReturnType<Modifier>;
 
   // Overrides for the default overlay.
   getOverlayStyle?: () => CSSProperties;

@@ -223,6 +223,7 @@ const GridTile: FC<{
       ref={setNodeRef}
       data={item}
       container={container}
+      position={position}
       isDragging={isDragging}
       draggableStyle={{
         position: 'absolute',
