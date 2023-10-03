@@ -45,8 +45,23 @@ const KanbanStory: FC<{
         const overIndex = columns.findIndex((column) => column.id === over.item.id);
         return [...arrayMove(columns, activeIndex, overIndex)];
       });
+    } else if (active.container.startsWith(`${id}/column`) && over.container === id) {
+      // Move card into empty column.
+      setColumns((columns) =>
+        columns.map((column) => {
+          const items = [...column.items];
+          if (active.container.split('/').at(-1) === column.id) {
+            items.splice(active.position!, 1);
+          }
+          // TODO(wittjosiah): Is it okay to use item id here?
+          if (over.item.id === column.id) {
+            items.push(active.item as TestItem);
+          }
+          return { ...column, items };
+        }),
+      );
     } else if (active.container.startsWith(`${id}/column`) && over.container.startsWith(`${id}/column`)) {
-      // Move card within column.
+      // Move card within or between columns.
       setColumns((columns) =>
         columns.map((column) => {
           const items = [...column.items];
