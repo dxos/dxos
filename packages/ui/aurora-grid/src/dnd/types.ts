@@ -29,10 +29,14 @@ export type MosaicTileOverlayProps = {
 /**
  * props passed to mosaic tile.
  */
-export type MosaicTileProps<TData extends MosaicDataItem> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> &
+export type MosaicTileProps<TData extends MosaicDataItem, TPosition = unknown> = Pick<
+  HTMLAttributes<HTMLDivElement>,
+  'className'
+> &
   MosaicTileOverlayProps & {
     container: string;
     data: TData;
+    position: TPosition;
 
     isActive?: boolean;
     isDragging?: boolean;

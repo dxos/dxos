@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { Tree, TreeData } from './Tree';
+import { Tree, TreeData, TreePosition } from './Tree';
 import { MosaicMoveEvent, useSortedItems } from '../../dnd';
 import { FullscreenDecorator, MosaicDecorator, createItem } from '../../testing';
 
@@ -69,12 +69,12 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
   const sortedItems = useSortedItems({
     container: 'tree',
     items,
-    isDroppable: (active) => (active.item as TreeData).level === 0,
+    isDroppable: (active) => (active.position as TreePosition)?.level === 0,
   });
 
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
-    ({ container, active, over }: MosaicMoveEvent<number>) => {
+    ({ container, active, over }: MosaicMoveEvent<TreePosition>) => {
       if (container === 'tree') {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
@@ -86,10 +86,10 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
           items.map((item) => {
             const children = [...item.items];
             if (active.container === container && container === item.id) {
-              children.splice(active.position!, 1);
+              children.splice(active.position!.index, 1);
             }
             if (over.container === container && container === item.id) {
-              children.splice(over.position!, 0, active.item as TreeData);
+              children.splice(over.position!.index, 0, active.item as TreeData);
             }
             return { ...item, items: children };
           }),
@@ -103,7 +103,7 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
     <Tree.Root id={id} items={sortedItems.map(({ id }) => id)} onDrop={handleDrop}>
       <div className='flex flex-col'>
         {sortedItems.map((item, i) => (
-          <Tree.Tile key={item.id} item={item} index={i} />
+          <Tree.Tile key={item.id} item={item} level={0} index={i} />
         ))}
       </div>
     </Tree.Root>

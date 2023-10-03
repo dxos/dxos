@@ -14,7 +14,7 @@ import { MosaicMoveEvent, MosaicDataItem, useSortedItems } from '../../dnd';
 import { ComplexCard, createItem, FullscreenDecorator, MosaicDecorator } from '../../testing';
 import { Grid, GridLayout, Position } from '../Grid';
 import { Stack } from '../Stack';
-import { Tree, TreeData } from '../Tree';
+import { Tree, TreeData, TreePosition } from '../Tree';
 
 faker.seed(5);
 
@@ -39,18 +39,16 @@ export const WithTree = {
     const [treeItems, setTreeItems] = useState<TreeData[]>(() =>
       Array.from({ length: 4 }).map(() => ({
         ...createItem(types),
-        level: 0,
         items: Array.from({ length: 3 }).map(() => ({
           ...createItem(types),
-          level: 1,
           items: [],
         })),
       })),
     );
 
-    const sortedTreeItems = useSortedItems({ container: 'tree', items: treeItems });
+    const sortedTreeItems = useSortedItems({ container: 'tree', items: treeItems, isDroppable: () => false });
 
-    const handleMoveTreeItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
+    const handleMoveTreeItem = ({ container, active, over }: MosaicMoveEvent<TreePosition>) => {
       if (container === 'tree') {
         setTreeItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
@@ -62,10 +60,10 @@ export const WithTree = {
           items.map((item) => {
             const children = [...item.items];
             if (active.container === container && container === item.id) {
-              children.splice(active.position!, 1);
+              children.splice(active.position!.index, 1);
             }
             if (over.container === container && container === item.id) {
-              children.splice(over.position!, 0, active.item as TreeData);
+              children.splice(over.position!.index, 0, active.item as TreeData);
             }
             return { ...item, items: children };
           }),
@@ -132,10 +130,10 @@ export const WithTree = {
     return (
       <div className='flex grow overflow-hidden'>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <Tree.Root id='stack-1' items={sortedTreeItems.map(({ id }) => id)} onDrop={handleMoveTreeItem} debug={debug}>
+          <Tree.Root id='tree' items={sortedTreeItems.map(({ id }) => id)} onDrop={handleMoveTreeItem} debug={debug}>
             <div className='flex flex-col'>
               {sortedTreeItems.map((item, i) => (
-                <Tree.Tile key={item.id} item={item} index={i} />
+                <Tree.Tile key={item.id} item={item} level={0} index={i} />
               ))}
             </div>
           </Tree.Root>

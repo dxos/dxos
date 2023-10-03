@@ -23,7 +23,7 @@ import {
 // - Models in general should be easily mapped from the Graph and/or ECHO queries.
 // - See: https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--basic-setup
 
-type TreeRootProps = MosaicContainerProps<any, number> & {
+type TreeRootProps = MosaicContainerProps<any, TreePosition> & {
   items?: string[];
 };
 
@@ -42,11 +42,21 @@ const TreeRoot = ({ id, items = [], Component = TreeItem, onDrop, children }: Pr
 };
 
 // TODO(burdon): Draggable item.
-const TreeTile = ({ item, index, onSelect }: { item: TreeData; index: number; onSelect?: () => void }) => {
+const TreeTile = ({
+  item,
+  level,
+  index,
+  onSelect,
+}: {
+  item: TreeData;
+  level: number;
+  index: number;
+  onSelect?: () => void;
+}) => {
   const { id: container, Component = TreeItem } = useContainer();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
-    data: { container, item, position: index } satisfies MosaicDraggedItem,
+    data: { container, item, position: { level, index } } satisfies MosaicDraggedItem,
   });
 
   return (
@@ -56,6 +66,7 @@ const TreeTile = ({ item, index, onSelect }: { item: TreeData; index: number; on
         ref={setNodeRef}
         data={item}
         container={container}
+        position={{ level, index }}
         isDragging={isDragging}
         draggableStyle={{
           transform: getTransformCSS(transform),
@@ -72,15 +83,19 @@ const TreeTile = ({ item, index, onSelect }: { item: TreeData; index: number; on
 export type TreeData = {
   id: string;
   title?: string;
-  level: number;
   items: TreeData[];
+};
+
+export type TreePosition = {
+  index: number;
+  level: number;
 };
 
 /**
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ draggableStyle, draggableProps, data, isActive, isDragging, className }, forwardedRef) => {
+  ({ draggableStyle, draggableProps, data, position, isActive, isDragging, className }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
@@ -90,8 +105,7 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       >
         {data.title ?? data.id}
         {!isActive && !isDragging && data.items && (
-          // TODO(wittjosiah): Better way to get next level?
-          <TreeBranch id={data.id} level={data.items[0]?.level} items={data.items} />
+          <TreeBranch id={data.id} level={(position as TreePosition).level + 1} items={data.items} />
         )}
       </div>
     );
@@ -103,7 +117,7 @@ const TreeBranch = ({ id, level, items }: { id: string; level: number; items: Tr
   const sortedItems = useSortedItems({
     container: id,
     items,
-    isDroppable: (active) => (active.item as TreeData).level === level,
+    isDroppable: (active) => (active.position as TreePosition)?.level === level,
   });
 
   return (
@@ -113,7 +127,7 @@ const TreeBranch = ({ id, level, items }: { id: string; level: number; items: Tr
         <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>
           {sortedItems.map((child, i) => (
             <AuroraTree.Branch key={child.id}>
-              <TreeTile item={child} index={i} />
+              <TreeTile item={child} level={level} index={i} />
             </AuroraTree.Branch>
           ))}
         </MosaicContainer>
