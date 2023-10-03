@@ -62,7 +62,7 @@ export const Default = {
     const sortedItems = useSortedItems({ container: 'tree', items: testItems });
 
     return (
-      <Tree.Root id='tree' items={sortedItems.map(({ id }) => id)} onMoveItem={console.log}>
+      <Tree.Root id='tree' items={sortedItems.map(({ id }) => id)} onDrop={console.log}>
         <div className='flex flex-col'>
           {sortedItems.map((item, i) => (
             <Tree.Tile key={item.id} item={item} index={i} />

@@ -39,15 +39,14 @@ export const CardHeader: FC<CardHeaderProps> = ({ floating, classNames, children
 };
 
 type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  padding?: boolean;
   center?: boolean;
   title?: string;
 };
 
-export const CardTitle: FC<CardTitleProps> = ({ padding, center, title, classNames, ...props }) => {
+export const CardTitle: FC<CardTitleProps> = ({ center, title, classNames, ...props }) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('card.title', 'card', { padding, center }, classNames)}>
+    <div {...props} className={tx('card.title', 'card', { center }, classNames)}>
       {title}
     </div>
   );

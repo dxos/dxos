@@ -5,8 +5,6 @@
 import '@dxosTheme';
 
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { SortableContext } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import React, { FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -23,6 +21,7 @@ import {
   MosaicContainer,
   useContainer,
   DefaultComponent,
+  getTransform,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -75,7 +74,7 @@ const GridRoot = ({
   debug,
   Component = DefaultComponent,
   className,
-  onMoveItem,
+  onDrop,
   onSelect,
 }: GridRootProps) => {
   const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
@@ -136,6 +135,8 @@ const GridRoot = ({
     }
   }, [selected, width, height]);
 
+  const { setNodeRef } = useDroppable({ id });
+
   return (
     // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).
     <GridContext.Provider value={defaultGrid}>
@@ -146,11 +147,10 @@ const GridRoot = ({
           isDroppable: () => true,
           getOverlayStyle: () => getDimension(cellBounds, spacing),
           getOverlayProps: () => ({ grow: true }),
-          onMoveItem,
+          onDrop,
         }}
       >
-        {/* TODO(burdon): Don't use sortable? */}
-        <SortableContext id={id} items={items.map((item) => item.id)}>
+        <div ref={setNodeRef}>
           <div
             ref={containerRef}
             className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
@@ -194,7 +194,7 @@ const GridRoot = ({
 
             {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
           </div>
-        </SortableContext>
+        </div>
       </MosaicContainer>
     </GridContext.Provider>
   );
@@ -203,7 +203,7 @@ const GridRoot = ({
 const GridTile: FC<{
   container: string;
   item: MosaicDataItem;
-  Component: MosaicTileComponent<any, Position>;
+  Component: MosaicTileComponent<any>;
   position: Position;
   bounds: Dimension;
   onSelect: () => void;
@@ -227,7 +227,7 @@ const GridTile: FC<{
       draggableStyle={{
         position: 'absolute',
         zIndex: isDragging ? 100 : undefined, // TODO(burdon): Const.
-        transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
+        transform: getTransform(transform),
         ...bounds,
       }}
       draggableProps={{ ...attributes, ...listeners }}

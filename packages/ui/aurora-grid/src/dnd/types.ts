@@ -29,10 +29,7 @@ export type MosaicTileOverlayProps = {
 /**
  * props passed to mosaic tile.
  */
-export type MosaicTileProps<TData extends MosaicDataItem, TPosition = unknown> = Pick<
-  HTMLAttributes<HTMLDivElement>,
-  'className'
-> &
+export type MosaicTileProps<TData extends MosaicDataItem> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> &
   MosaicTileOverlayProps & {
     container: string;
     data: TData;
@@ -42,14 +39,13 @@ export type MosaicTileProps<TData extends MosaicDataItem, TPosition = unknown> =
     draggableStyle?: any;
     draggableProps?: any;
 
-    // TODO(burdon): Generalize events (or use intents?)
+    // TODO(burdon): Generalize tile events (or use intents?)
     onSelect?: () => void;
-    onMoveItem?: (event: MosaicMoveEvent<TPosition>) => void;
   };
 
 /**
  * Mosaic Tile component.
  */
-export type MosaicTileComponent<TData extends MosaicDataItem, TPosition> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> & MosaicTileProps<TData, TPosition>
+export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExoticComponent<
+  RefAttributes<HTMLDivElement> & MosaicTileProps<TData>
 >;

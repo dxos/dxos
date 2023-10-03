@@ -117,7 +117,7 @@ const ReadonlyCardStory = () => {
 
         <Card.Root>
           <Card.Header>
-            <Card.Title padding title={faker.lorem.sentence(3)} />
+            <Card.Title title={faker.lorem.sentence(3)} />
           </Card.Header>
         </Card.Root>
 

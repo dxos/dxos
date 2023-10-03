@@ -45,7 +45,7 @@ export const Default = () => {
         size={size}
         debug
         Component={ComplexCard}
-        onMoveItem={handleMoveItem}
+        onDrop={handleMoveItem}
       />
     </MosaicContextProvider>
   );

@@ -110,7 +110,7 @@ export const Default = {
             id='stack-1'
             items={sortedStackItems1.map(({ id }) => id)}
             Component={SimpleCard}
-            onMoveItem={handleMoveStackItem1}
+            onDrop={handleMoveStackItem1}
             debug={debug}
           >
             <div className='flex flex-col overflow-y-scroll'>
@@ -129,7 +129,7 @@ export const Default = {
             layout={layout}
             size={size}
             Component={ComplexCard}
-            onMoveItem={handleMoveGridItem}
+            onDrop={handleMoveGridItem}
             debug={debug}
             className='p-4'
           />
@@ -139,7 +139,7 @@ export const Default = {
             id='stack-2'
             items={sortedStackItems2.map(({ id }) => id)}
             Component={ComplexCard}
-            onMoveItem={handleMoveStackItem2}
+            onDrop={handleMoveStackItem2}
             debug={debug}
           >
             <div className='flex flex-col overflow-y-scroll bg-black p-1'>

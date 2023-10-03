@@ -34,10 +34,8 @@ export const cardRoot: ComponentFunction<CardStyleProps> = ({ grow, square, roun
 export const cardHeader: ComponentFunction<CardStyleProps & { floating?: boolean }> = ({ floating }, ...etc) =>
   mx(floating ? 'relative' : 'flex w-full shrink-0 justify-between overflow-hidden items-center py-1', ...etc);
 
-export const cardTitle: ComponentFunction<CardStyleProps & { center?: boolean; padding?: boolean }> = (
-  { center, padding },
-  ...etc
-) => mx('grow overflow-hidden truncate', padding && 'mx-4', center && 'text-center', ...etc);
+export const cardTitle: ComponentFunction<CardStyleProps & { center?: boolean }> = ({ center }, ...etc) =>
+  mx('grow overflow-hidden truncate first:pl-4 last:pr-4', center && 'text-center', ...etc);
 
 export const cardDragHandle: ComponentFunction<CardStyleProps & { position?: 'left' | 'right' }> = (
   { density, position },
@@ -85,7 +83,7 @@ export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> 
 
 export const cardMedia: ComponentFunction<CardStyleProps & { contain?: boolean }> = ({ contain }, ...etc) =>
   mx(
-    'w-full h-full',
+    'grow max-h-[256px]',
     // Hide broken image links (e.g., if offline).
     "before:content-[' '] before:block before:w-full before:h-full before:border-0",
     contain ? 'object-contain' : 'object-cover',

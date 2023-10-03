@@ -8,7 +8,7 @@ import { Card } from '@dxos/aurora';
 
 import { MosaicDataItem, MosaicTileProps } from './types';
 
-export const DefaultComponent = forwardRef<HTMLDivElement, MosaicTileProps<MosaicDataItem, any>>(
+export const DefaultComponent = forwardRef<HTMLDivElement, MosaicTileProps<MosaicDataItem>>(
   ({ draggableStyle, draggableProps, data: { id }, container }, forwardRef) => {
     return (
       <Card.Root ref={forwardRef} style={draggableStyle}>

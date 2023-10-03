@@ -5216,6 +5216,7 @@ importers:
   packages/ui/aurora-grid:
     specifiers:
       '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
@@ -5245,6 +5246,7 @@ importers:
       vite-plugin-turbosnap: ^1.0.2
     dependencies:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/aurora': link:../aurora

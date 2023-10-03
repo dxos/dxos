@@ -12,7 +12,7 @@ import { MosaicTileProps } from '../dnd';
 
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
-export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps, any>>(
+export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
   ({ className, draggableStyle, draggableProps, data: { id, title }, container, grow, debug }, forwardRef) => {
     const full = !title;
     return (
@@ -40,7 +40,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
 
 SimpleCard.displayName = 'SimpleCard';
 
-export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps, any>>(
+export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
   (
     { className, draggableStyle, draggableProps, data: { id, title, body, image }, container, onSelect, grow, debug },
     forwardRef,

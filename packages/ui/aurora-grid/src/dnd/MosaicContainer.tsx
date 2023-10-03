@@ -5,11 +5,11 @@
 import React, {
   createContext,
   useContext,
-  FC,
-  PropsWithChildren,
   useEffect,
-  HTMLAttributes,
   CSSProperties,
+  FC,
+  HTMLAttributes,
+  PropsWithChildren,
 } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -32,14 +32,14 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
   debug?: boolean;
 
   // Default component used to render tiles.
-  Component?: MosaicTileComponent<TData, TPosition>;
+  Component?: MosaicTileComponent<TData>;
 
   // Overrides for the default overlay.
   getOverlayStyle?: () => CSSProperties;
   getOverlayProps?: () => MosaicTileOverlayProps;
 
   // TODO(burdon): Handle copy, delete, etc.
-  onMoveItem?: (event: MosaicMoveEvent<TPosition>) => void;
+  onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
 
   // Custom properties.
   custom?: TCustom;

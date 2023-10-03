@@ -17,7 +17,7 @@ faker.seed(3);
 
 const KanbanStory: FC<{
   id?: string;
-  Component: MosaicTileComponent<any, any>;
+  Component: MosaicTileComponent<any>;
   types?: string[];
   count?: number;
   debug?: boolean;
@@ -42,6 +42,8 @@ const KanbanStory: FC<{
     });
   };
 
+  // TODO(burdon): Bug if drag off the kanban (not to another column).
+
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setColumns((columns) =>
       columns.map((column) => {
@@ -59,9 +61,16 @@ const KanbanStory: FC<{
 
   return (
     <MosaicContextProvider debug={debug}>
-      <Kanban.Root id={id} columns={columns} Component={Component} onMoveItem={handleMoveColumn}>
+      <Kanban.Root id={id} columns={columns} Component={Component} onDrop={handleMoveColumn}>
         {columns.map((column, index) => (
-          <Kanban.Column key={column.id} column={column} onMoveItem={handleMoveItem} index={index} debug={debug} />
+          <Kanban.Column
+            key={column.id}
+            column={column}
+            Component={Component}
+            onDrop={handleMoveItem}
+            index={index}
+            debug={debug}
+          />
         ))}
       </Kanban.Root>
     </MosaicContextProvider>

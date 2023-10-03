@@ -2,7 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragCancelEvent,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  KeyboardSensor,
+  MouseSensor,
+  pointerWithin,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import pick from 'lodash.pick';
 import React, { createContext, useContext, FC, PropsWithChildren, useState, Component } from 'react';
 import { createPortal } from 'react-dom';
@@ -26,7 +40,7 @@ export const MosaicContext = createContext<MosaicContextType | undefined>(undefi
 const DEFAULT_COMPONENT_ID = '__default';
 
 export type MosaicContextProviderProps = PropsWithChildren & {
-  Component?: MosaicTileComponent<any, any>;
+  Component?: MosaicTileComponent<any>;
   debug?: boolean;
 };
 
@@ -78,7 +92,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     ) {
       const activeContainer = containers.get(activeItem.container);
       if (activeContainer) {
-        activeContainer.onMoveItem?.({
+        activeContainer.onDrop?.({
           container: activeContainer.id,
           active: activeItem,
           over: overItem,
@@ -86,7 +100,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
 
         const overContainer = containers.get(overItem.container);
         if (overContainer && overContainer !== activeContainer) {
-          overContainer?.onMoveItem?.({
+          overContainer?.onDrop?.({
             container: overContainer.id,
             active: activeItem,
             over: overItem,
@@ -102,7 +116,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   // TODO(burdon): Factor out DragOverlay.
   // Get the overlay component from the over container, otherwise default to the original.
   let container: MosaicContainerProps<any> | undefined;
-  let OverlayComponent: MosaicTileComponent<any, any> | undefined;
+  let OverlayComponent: MosaicTileComponent<any> | undefined;
   if (activeItem) {
     if (overItem) {
       container = containers.get(overItem.container);
@@ -115,9 +129,28 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     }
   }
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   return (
     <MosaicContext.Provider value={{ setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
+        collisionDetection={pointerWithin}
+        sensors={sensors}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}

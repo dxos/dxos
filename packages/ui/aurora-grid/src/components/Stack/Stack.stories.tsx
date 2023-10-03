@@ -18,7 +18,7 @@ faker.seed(3);
 
 const StackStory: FC<{
   id: string;
-  Component: MosaicTileComponent<any, number>;
+  Component: MosaicTileComponent<any>;
   types?: string[];
   count?: number;
   direction?: Direction;
@@ -49,7 +49,7 @@ const StackStory: FC<{
         id={id}
         items={items.map(({ id }) => id)}
         Component={Component}
-        onMoveItem={handleMoveItem}
+        onDrop={handleMoveItem}
         debug={debug}
         direction={direction}
       >

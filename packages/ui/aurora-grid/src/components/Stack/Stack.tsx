@@ -8,13 +8,13 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import React, { FC, PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
 import {
   DefaultComponent,
+  getTransform,
   MosaicContainer,
   MosaicContainerProps,
   MosaicDataItem,
@@ -34,13 +34,13 @@ const StackRoot = ({
   id,
   items = [],
   Component = DefaultComponent,
-  onMoveItem,
+  onDrop,
   children,
   direction = 'vertical',
 }: PropsWithChildren<StackRootProps<any>>) => {
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
   return (
-    <MosaicContainer container={{ id, Component, isDroppable: () => true, onMoveItem }}>
+    <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>
       <SortableContext id={id} items={items} strategy={strategy}>
         {children}
       </SortableContext>
@@ -67,7 +67,7 @@ const StackTile: FC<{
       container={container}
       isDragging={isDragging}
       draggableStyle={{
-        transform: transform ? CSS.Transform.toString(Object.assign(transform, { scaleY: 1 })) : undefined,
+        transform: getTransform(transform),
       }}
       draggableProps={{ ...attributes, ...listeners }}
       className={mx(isDragging && 'opacity-30')}
