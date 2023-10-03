@@ -8,10 +8,17 @@ import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { platform } from 'node:os';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
+import {
+  AgentIsNotStartedByCLIError,
+  AgentWaitTimeoutError,
+  Daemon,
+  PhoenixDaemon,
+  LaunchctlDaemon,
+} from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -357,7 +364,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile, { config: this.flags.config });
         }
-      });
+      }, false);
     }
   }
 
@@ -441,8 +448,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Convenience function to wrap starting the agent.
    */
-  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new PhoenixDaemon(DX_RUNTIME);
+  async execWithDaemon<T>(
+    callback: (daemon: Daemon) => Promise<T | undefined>,
+    system: boolean,
+  ): Promise<T | undefined> {
+    let daemon: Daemon;
+    if (system) {
+      if (platform() === 'darwin') {
+        daemon = new LaunchctlDaemon(DX_RUNTIME);
+      } else {
+        throw new Error(`System daemon not implemented for ${platform()} yet.`);
+      }
+    } else {
+      daemon = new PhoenixDaemon(DX_RUNTIME);
+    }
+
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();
