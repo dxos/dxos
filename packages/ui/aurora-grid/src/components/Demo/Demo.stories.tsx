@@ -113,8 +113,8 @@ export const Default = {
             onDrop={handleMoveStackItem1}
             debug={debug}
           >
-            <div className='flex flex-col overflow-y-scroll'>
-              <div className='flex flex-col gap-4'>
+            <div className='flex flex-col overflow-y-scroll p-2'>
+              <div className='flex flex-col gap-2'>
                 {sortedStackItems1.map((item, i) => (
                   <Stack.Tile key={item.id} item={item} index={i} />
                 ))}
