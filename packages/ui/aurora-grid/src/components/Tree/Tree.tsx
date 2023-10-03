@@ -11,7 +11,7 @@ import { mx } from '@dxos/aurora-theme';
 
 import {
   MosaicContainerProps,
-  MosaicContainerProvider,
+  MosaicContainer,
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
@@ -20,23 +20,23 @@ import {
 } from '../../dnd';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
-//  - The Tree (like Stack, Grid) is a high level container that assembles Radix style Aurora components from a model.
-//  - Models in general should be easily mapped from the Graph and/or ECHO queries.
-//  - See: https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--basic-setup
+// - The Tree (like Stack, Grid) is a high level container that assembles Radix style Aurora components from a model.
+// - Models in general should be easily mapped from the Graph and/or ECHO queries.
+// - See: https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--basic-setup
 
 type TreeRootProps = MosaicContainerProps<any, number> & {
   items?: string[];
 };
 
-const TreeRoot = ({ id, items = [], Component = TreeItem, onMoveItem, children }: PropsWithChildren<TreeRootProps>) => {
+const TreeRoot = ({ id, items = [], Component, onMoveItem, children }: PropsWithChildren<TreeRootProps>) => {
   return (
     <AuroraTree.Root>
       {/* TODO(wittjosiah): This is Stack.Root. */}
       <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
-        <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+        <MosaicContainer container={{ id, Component, isDroppable: () => true, onMoveItem }}>
           {children}
           {/* TODO(burdon): Component for placeholder at end. */}
-        </MosaicContainerProvider>
+        </MosaicContainer>
       </SortableContext>
     </AuroraTree.Root>
   );
@@ -44,7 +44,7 @@ const TreeRoot = ({ id, items = [], Component = TreeItem, onMoveItem, children }
 
 // TODO(burdon): Draggable item.
 const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: number; onSelect?: () => void }) => {
-  const { id: container, Component } = useContainer();
+  const { id: container, Component = TreeItem } = useContainer();
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
@@ -77,7 +77,7 @@ type TreeData = {
 /**
  * Pure component that is used by the mosaic overlay.
  */
-const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
+const TreeItem: MosaicTileComponent<TreeData, number> = forwardRef(
   ({ draggableStyle, draggableProps, data, isActive, isDragging, className }, forwardedRef) => {
     return (
       <div
@@ -100,13 +100,13 @@ const TreeBranch = ({ id, items }: { id: string; items: TreeData[] }) => {
     <AuroraTreeItem.Body>
       {/* TODO(wittjosiah): This is Stack.Root. */}
       <SortableContext id={id} items={sortedItems} strategy={verticalListSortingStrategy}>
-        <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+        <MosaicContainer container={{ id, Component, isDroppable: () => true, onMoveItem }}>
           {sortedItems.map((child, i) => (
             <AuroraTree.Branch key={child.id}>
               <TreeTile item={child} index={i} />
             </AuroraTree.Branch>
           ))}
-        </MosaicContainerProvider>
+        </MosaicContainer>
       </SortableContext>
     </AuroraTreeItem.Body>
   );

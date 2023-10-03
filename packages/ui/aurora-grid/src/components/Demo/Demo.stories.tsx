@@ -113,9 +113,13 @@ export const Default = {
             onMoveItem={handleMoveStackItem1}
             debug={debug}
           >
-            {sortedStackItems1.map((item, i) => (
-              <Stack.Tile key={item.id} item={item} index={i} />
-            ))}
+            <div className='flex flex-col overflow-y-scroll'>
+              <div className='flex flex-col gap-4'>
+                {sortedStackItems1.map((item, i) => (
+                  <Stack.Tile key={item.id} item={item} index={i} />
+                ))}
+              </div>
+            </div>
           </Stack.Root>
         </div>
         <div className='flex grow overflow-hidden'>
@@ -138,9 +142,13 @@ export const Default = {
             onMoveItem={handleMoveStackItem2}
             debug={debug}
           >
-            {sortedStackItems2.map((item, i) => (
-              <Stack.Tile key={item.id} item={item} index={i} />
-            ))}
+            <div className='flex flex-col overflow-y-scroll bg-black p-1'>
+              <div className='flex flex-col gap-1'>
+                {sortedStackItems2.map((item, i) => (
+                  <Stack.Tile key={item.id} item={item} index={i} />
+                ))}
+              </div>
+            </div>
           </Stack.Root>
         </div>
       </div>

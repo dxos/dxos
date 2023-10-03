@@ -16,12 +16,13 @@ import { mx } from '@dxos/aurora-theme';
 import { calculateCellWidth, createMatrix, getBounds, getDimension, getPanelBounds, Position } from './layout';
 import {
   Dimension,
-  DefaultComponent,
   MosaicContainerProps,
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
-  MosaicContainerProvider,
+  MosaicContainer,
+  useContainer,
+  DefaultComponent,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -54,69 +55,29 @@ type GridRootProps = MosaicContainerProps<any, Position> & {
   size?: { x: number; y: number };
   center?: Position;
   margin?: boolean;
-  debug?: boolean;
+  square?: boolean;
+
+  // TODO(burdon): Generalize (and pass item).
+  onSelect?: (id: string) => void;
 };
 
 /**
- * Root component.
+ * Grid content.
  */
+// TODO(burdon): Make generic (and forwardRef).
 const GridRoot = ({
   id,
   items = [],
   layout = {},
   size = { x: 8, y: 8 },
   margin,
-  debug,
-  Component = DefaultComponent,
-  className,
-  onMoveItem,
-}: GridRootProps) => {
-  return (
-    <GridContext.Provider value={defaultGrid}>
-      <SortableContext id={id} items={items.map((item) => item.id)}>
-        <GridLayout
-          id={id}
-          items={items}
-          layout={layout}
-          Component={Component}
-          className={className}
-          size={size}
-          margin={margin}
-          debug={debug}
-          onMoveItem={onMoveItem}
-        />
-      </SortableContext>
-    </GridContext.Provider>
-  );
-};
-
-/**
- * Grid content.
- */
-const GridLayout: FC<
-  MosaicContainerProps<any, Position> & {
-    id: string;
-    items: MosaicDataItem[];
-    layout: GridLayout;
-    size: { x: number; y: number };
-    square?: boolean;
-    margin?: boolean;
-    debug?: boolean;
-    onSelect?: (id: string) => void;
-  }
-> = ({
-  id,
-  items,
-  layout,
-  size,
   square = true,
-  margin,
   debug,
   Component = DefaultComponent,
   className,
   onMoveItem,
   onSelect,
-}) => {
+}: GridRootProps) => {
   const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const { matrix, bounds, cellBounds } = useMemo(() => {
@@ -176,60 +137,78 @@ const GridLayout: FC<
   }, [selected, width, height]);
 
   return (
-    <MosaicContainerProvider
-      container={{ id, Component, onMoveItem, getOverlayStyle: () => getDimension(cellBounds, spacing) }}
-    >
-      <div
-        ref={containerRef}
-        className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+    // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).
+    <GridContext.Provider value={defaultGrid}>
+      <MosaicContainer
+        container={{
+          id,
+          Component,
+          isDroppable: () => true,
+          getOverlayStyle: () => getDimension(cellBounds, spacing),
+          getOverlayProps: () => ({ grow: true }),
+          onMoveItem,
+        }}
       >
-        <div ref={contentRef} className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
-          <div>
-            {matrix.map((row) =>
-              row.map(({ x, y }) => (
-                <GridCell
-                  key={`${x}-${y}`}
-                  container={id}
-                  position={{ x, y }}
-                  bounds={getBounds({ x, y }, cellBounds, spacing)}
-                />
-              )),
-            )}
-          </div>
+        {/* TODO(burdon): Don't use sortable? */}
+        <SortableContext id={id} items={items.map((item) => item.id)}>
+          <div
+            ref={containerRef}
+            className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+          >
+            <div
+              ref={contentRef}
+              className='group block relative bg-neutral-500'
+              style={{ ...bounds, margin: marginSize }}
+            >
+              <div>
+                {matrix.map((row) =>
+                  row.map(({ x, y }) => (
+                    <GridCell
+                      key={`${x}-${y}`}
+                      container={id}
+                      position={{ x, y }}
+                      bounds={getBounds({ x, y }, cellBounds, spacing)}
+                    />
+                  )),
+                )}
+              </div>
 
-          {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
-          <div>
-            {items.map((item) => {
-              const position = layout[item.id] ?? { x: 0, y: 0 };
-              return (
-                <GridTile
-                  key={item.id}
-                  item={item}
-                  container={id}
-                  Component={Component!}
-                  position={position}
-                  bounds={getBounds(position, cellBounds, spacing)}
-                  onSelect={() => handleSelect(id)}
-                />
-              );
-            })}
-          </div>
-        </div>
+              {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
+              <div>
+                {items.map((item) => {
+                  const position = layout[item.id] ?? { x: 0, y: 0 };
+                  return (
+                    <GridTile
+                      key={item.id}
+                      item={item}
+                      container={id}
+                      Component={Component}
+                      position={position}
+                      bounds={getBounds(position, cellBounds, spacing)}
+                      onSelect={() => handleSelect(id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
-        {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
-      </div>
-    </MosaicContainerProvider>
+            {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
+          </div>
+        </SortableContext>
+      </MosaicContainer>
+    </GridContext.Provider>
   );
 };
 
 const GridTile: FC<{
   container: string;
   item: MosaicDataItem;
-  Component: MosaicTileComponent<any>;
+  Component: MosaicTileComponent<any, Position>;
   position: Position;
   bounds: Dimension;
   onSelect: () => void;
 }> = ({ container, item, Component, position, bounds, onSelect }) => {
+  const { debug } = useContainer();
   const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
     id: item.id,
     data: { container, item, position } satisfies MosaicDraggedItem,
@@ -252,6 +231,8 @@ const GridTile: FC<{
         ...bounds,
       }}
       draggableProps={{ ...attributes, ...listeners }}
+      grow={true}
+      debug={debug}
       onSelect={onSelect}
     />
   );

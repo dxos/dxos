@@ -3,6 +3,7 @@
 Mosaic is a drag-and-drop layout system for building responsive, multi-column layouts. 
 It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 
+
 ## Taxonomy
 
 | Item      | Description                                                                                                          |
@@ -14,6 +15,7 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 | Component | A pure React component that is rendered within the layout via the container's Tile or the root Mosaic's Overlay.     |
 | Item      | A datum represented by a Tile.                                                                                       |
 
+
 ## Design principles
 
 - Extends `dnd-kit` without obfuscation or wrapping;
@@ -24,3 +26,16 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 - Containers implement specific layouts of Tiles, which may reuse common components, such as Aurora Cards.
 - Container Models facilitate pure React components, but are easily mapped to data structures (e.g., `Graph`)
   and `ECHO` data sets without the need to wrap/map the underlying __reactive__ objects (e.g., via `signals`).
+
+
+## Issues
+
+- Reactivity: tile props (e.g., label); position (e.g., index, grid position).
+- Standardize generics (when to use any, unknown, provide default, etc.)
+- Standardize events (e.g., onSelect).
+- Standardize Mosaic Root components (e.g., make generic).
+  - https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref#58473012
+- Radix-style components and theming (forwardRefs).
+- Compatibility (demos to test this?)
+- Focus (e.g., show grid while dragging in grid).
+- Mobile

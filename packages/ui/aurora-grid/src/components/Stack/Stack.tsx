@@ -10,32 +10,31 @@ import { mx } from '@dxos/aurora-theme';
 
 import {
   DefaultComponent,
+  MosaicContainer,
   MosaicContainerProps,
-  MosaicContainerProvider,
   MosaicDataItem,
   MosaicDraggedItem,
   useContainer,
 } from '../../dnd';
 
-type StackRootProps = MosaicContainerProps<any, number> & {
-  items?: string[];
-  debug?: boolean;
+type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number> & {
+  items?: TData[];
 };
 
+// TODO(burdon): Make generic (and forwardRef).
 const StackRoot = ({
   id,
   items = [],
   Component = DefaultComponent,
   onMoveItem,
   children,
-}: PropsWithChildren<StackRootProps>) => {
+}: PropsWithChildren<StackRootProps<any>>) => {
   return (
-    <MosaicContainerProvider container={{ id, Component, onMoveItem }}>
+    <MosaicContainer container={{ id, Component, isDroppable: () => true, onMoveItem }}>
       <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
         {children}
-        {/* TODO(burdon): Component for placeholder at end. */}
       </SortableContext>
-    </MosaicContainerProvider>
+    </MosaicContainer>
   );
 };
 
@@ -45,7 +44,7 @@ const StackTile: FC<{
   debug?: boolean;
   onSelect?: () => void;
 }> = ({ item, index, debug, onSelect }) => {
-  const { id: container, Component } = useContainer();
+  const { id: container, Component = DefaultComponent } = useContainer();
   const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,

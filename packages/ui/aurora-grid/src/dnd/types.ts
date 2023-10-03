@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
+import { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
 export type Dimension = { width: number; height: number };
 
 export type MosaicDataItem = { id: string };
 
+// TODO(burdon): Any point making this generic?
 export type MosaicDraggedItem<TPosition = unknown> = {
   container: string;
   item: MosaicDataItem;
@@ -20,41 +21,35 @@ export type MosaicMoveEvent<TPosition = unknown> = {
   over: MosaicDraggedItem<TPosition>;
 };
 
+export type MosaicTileOverlayProps = {
+  grow?: boolean;
+  debug?: boolean;
+};
+
 /**
  * props passed to mosaic tile.
  */
-export type MosaicTileProps<TData extends MosaicDataItem> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
-  container: string;
-  data: TData;
-
-  isActive?: boolean;
-  isDragging?: boolean;
-  draggableStyle?: any;
-  draggableProps?: any;
-  debug?: boolean;
-
-  // TODO(burdon): Generalize events (or use intents?)
-  onSelect?: () => void;
-};
-
-/**
- * Tile component.
- */
-export type MosaicTileComponent<TData extends MosaicDataItem> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> & MosaicTileProps<TData>
->;
-
-/**
- * Tile container.
- */
-export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unknown> = Pick<
+export type MosaicTileProps<TData extends MosaicDataItem, TPosition = unknown> = Pick<
   HTMLAttributes<HTMLDivElement>,
   'className'
-> & {
-  id: string;
-  Component?: MosaicTileComponent<TData>;
-  getOverlayStyle?: () => CSSProperties;
+> &
+  MosaicTileOverlayProps & {
+    container: string;
+    data: TData;
 
-  // TODO(burdon): Handle copy, delete, etc.
-  onMoveItem?: (event: MosaicMoveEvent<TPosition>) => void;
-};
+    isActive?: boolean;
+    isDragging?: boolean;
+    draggableStyle?: any;
+    draggableProps?: any;
+
+    // TODO(burdon): Generalize events (or use intents?)
+    onSelect?: () => void;
+    onMoveItem?: (event: MosaicMoveEvent<TPosition>) => void;
+  };
+
+/**
+ * Mosaic Tile component.
+ */
+export type MosaicTileComponent<TData extends MosaicDataItem, TPosition> = ForwardRefExoticComponent<
+  RefAttributes<HTMLDivElement> & MosaicTileProps<TData, TPosition>
+>;

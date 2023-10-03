@@ -5,4 +5,5 @@
 export * from './types';
 
 export * from './DefaultComponent';
+export * from './MosaicContainer';
 export * from './MosaicContext';

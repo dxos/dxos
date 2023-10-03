@@ -7,21 +7,21 @@ import React, { forwardRef } from 'react';
 import { Card } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Debug } from '../components/Debug';
+import { Debug } from '../components';
 import { MosaicTileProps } from '../dnd';
 
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
-export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
-  ({ className, draggableStyle, draggableProps, data: { id, title }, container, debug }, forwardRef) => {
+export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps, any>>(
+  ({ className, draggableStyle, draggableProps, data: { id, title }, container, grow, debug }, forwardRef) => {
     const full = !title;
     return (
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        grow
         noPadding={full}
         classNames={mx(className, 'snap-center')}
+        grow={grow}
       >
         <Card.Header floating={full}>
           <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
@@ -40,9 +40,9 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
 
 SimpleCard.displayName = 'SimpleCard';
 
-export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
+export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps, any>>(
   (
-    { className, draggableStyle, draggableProps, data: { id, title, body, image }, container, onSelect, debug },
+    { className, draggableStyle, draggableProps, data: { id, title, body, image }, container, onSelect, grow, debug },
     forwardRef,
   ) => {
     const full = !title;
@@ -50,10 +50,10 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        grow
         noPadding={full}
-        onDoubleClick={() => onSelect?.()}
         classNames={mx(className, 'snap-center')}
+        grow={grow}
+        onDoubleClick={() => onSelect?.()}
       >
         <Card.Header floating={full}>
           <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />

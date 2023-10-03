@@ -5,30 +5,28 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 
 import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn } from './Kanban';
-import { MosaicContextProvider, MosaicMoveEvent } from '../../dnd';
-import { createItem, FullscreenDecorator } from '../../testing';
+import { DefaultComponent, MosaicContextProvider, MosaicMoveEvent, MosaicTileComponent } from '../../dnd';
+import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } from '../../testing';
 
 faker.seed(3);
 
-export default {
-  component: Kanban,
-  decorators: [FullscreenDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export const Default = () => {
-  const [columns, setColumns] = useState<KanbanColumn[]>(() => {
-    return Array.from({ length: 3 }).map((_, i) => ({
-      id: `stack-column-${i}`,
+const KanbanStory: FC<{
+  id?: string;
+  Component: MosaicTileComponent<any, any>;
+  types?: string[];
+  count?: number;
+  debug?: boolean;
+}> = ({ id = 'kanban', Component = DefaultComponent, types = ['document'], count = 3, debug = false }) => {
+  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
+    return Array.from({ length: count }).map((_, i) => ({
+      id: `${id}/column/${i}`,
       title: `Column ${i}`,
-      items: Array.from({ length: 5 - i }).map(() => createItem(['document', 'image'])),
+      items: Array.from({ length: 5 - i }).map(() => createItem(types)),
     }));
   });
 
@@ -36,32 +34,61 @@ export const Default = () => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
+  const handleMoveColumn = ({ active, over }: MosaicMoveEvent<number>) => {
+    setColumns((columns) => {
+      const activeIndex = columns.findIndex((column) => column.id === active.item.id);
+      const overIndex = columns.findIndex((column) => column.id === over.item.id);
+      return [...arrayMove(columns, activeIndex, overIndex)];
+    });
+  };
+
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
-    if (container === 'kanban') {
-      setColumns((columns) => {
-        const activeIndex = columns.findIndex((column) => column.id === active.item.id);
-        const overIndex = columns.findIndex((column) => column.id === over.item.id);
-        return [...arrayMove(columns, activeIndex, overIndex)];
-      });
-    } else {
-      setColumns((columns) =>
-        columns.map((column) => {
-          const items = [...column.items];
-          if (active.container === column.id && column.id === container) {
-            items.splice(active.position!, 1);
-          }
-          if (over.container === column.id && column.id === container) {
-            items.splice(over.position!, 0, active.item);
-          }
-          return { ...column, items };
-        }),
-      );
-    }
+    setColumns((columns) =>
+      columns.map((column) => {
+        const items = [...column.items];
+        if (active.container === column.id && column.id === container) {
+          items.splice(active.position!, 1);
+        }
+        if (over.container === column.id && column.id === container) {
+          items.splice(over.position!, 0, active.item as TestItem);
+        }
+        return { ...column, items };
+      }),
+    );
   };
 
   return (
-    <MosaicContextProvider debug>
-      <Kanban.Root id='kanban' columns={columns} onMoveItem={handleMoveItem} />
+    <MosaicContextProvider debug={debug}>
+      <Kanban.Root id={id} columns={columns} Component={Component} onMoveItem={handleMoveColumn}>
+        {columns.map((column, index) => (
+          <Kanban.Column key={column.id} column={column} onMoveItem={handleMoveItem} index={index} debug={debug} />
+        ))}
+      </Kanban.Root>
     </MosaicContextProvider>
   );
+};
+
+export default {
+  component: KanbanStory,
+  decorators: [FullscreenDecorator()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export const Default = {
+  args: {
+    Component: SimpleCard,
+    count: 3,
+    debug: true,
+  },
+};
+
+export const Complex = {
+  args: {
+    Component: ComplexCard,
+    types: ['document', 'image'],
+    count: 4,
+    debug: true,
+  },
 };

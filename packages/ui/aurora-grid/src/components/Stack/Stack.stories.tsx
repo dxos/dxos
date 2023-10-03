@@ -16,12 +16,14 @@ faker.seed(3);
 
 const StackStory: FC<{
   id: string;
-  Component: MosaicTileComponent<any>;
+  Component: MosaicTileComponent<any, number>;
   types?: string[];
   count?: number;
   debug?: boolean;
-}> = ({ id = 'stack', Component, types, debug }) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 3 }).map(() => createItem(types)));
+}> = ({ id = 'stack', Component, types, count = 3, debug }) => {
+  const [items, setItems] = useState<MosaicDataItem[]>(() =>
+    Array.from({ length: count }).map(() => createItem(types)),
+  );
   const sortedItems = useSortedItems({ container: id, items });
 
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
@@ -48,9 +50,10 @@ const StackStory: FC<{
         debug={debug}
       >
         <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col __m-2 gap-4'>
+          <div className='flex flex-col gap-4'>
             {sortedItems.map((item, i) => (
               // TODO(wittjosiah): Don't use array indexing.
+              //  (burdon): Why? This assumes the caller has sorted the items.
               <Stack.Tile key={item.id} item={item} index={i} />
             ))}
           </div>
@@ -72,6 +75,7 @@ export default {
 export const Default = {
   args: {
     Component: SimpleCard,
+    count: 10,
     debug: true,
   },
 };
@@ -80,6 +84,7 @@ export const Complex = {
   args: {
     Component: ComplexCard,
     types: ['document', 'image'],
+    count: 3,
     debug: true,
   },
 };
