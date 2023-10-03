@@ -2,7 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React, { FC, PropsWithChildren } from 'react';
 
@@ -19,7 +24,10 @@ import {
 
 type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number> & {
   items?: TData[];
+  direction?: Direction;
 };
+
+export type Direction = 'horizontal' | 'vertical';
 
 // TODO(burdon): Make generic (and forwardRef).
 const StackRoot = ({
@@ -28,10 +36,12 @@ const StackRoot = ({
   Component = DefaultComponent,
   onMoveItem,
   children,
+  direction = 'vertical',
 }: PropsWithChildren<StackRootProps<any>>) => {
+  const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
   return (
     <MosaicContainer container={{ id, Component, isDroppable: () => true, onMoveItem }}>
-      <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+      <SortableContext id={id} items={items} strategy={strategy}>
         {children}
       </SortableContext>
     </MosaicContainer>
@@ -69,7 +79,7 @@ const StackTile: FC<{
 
 export const Stack = {
   Root: StackRoot,
-  Tile: StackTile, // TODO(burdon): Don't expose (if truly generic then move and rename).
+  Tile: StackTile,
 };
 
 export type { StackRootProps };

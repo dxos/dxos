@@ -7,7 +7,9 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { FC, useState } from 'react';
 
-import { Stack } from './Stack';
+import { mx } from '@dxos/aurora-theme';
+
+import { Direction, Stack } from './Stack';
 import { MosaicDataItem, MosaicMoveEvent, MosaicTileComponent, useSortedItems } from '../../dnd';
 import { createItem, ComplexCard, FullscreenDecorator, SimpleCard, MosaicDecorator } from '../../testing';
 import { Debug } from '../Debug';
@@ -19,8 +21,9 @@ const StackStory: FC<{
   Component: MosaicTileComponent<any, number>;
   types?: string[];
   count?: number;
+  direction?: Direction;
   debug?: boolean;
-}> = ({ id = 'stack', Component, types, count = 3, debug }) => {
+}> = ({ id = 'stack', Component, types, count = 3, direction, debug }) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: count }).map(() => createItem(types)),
   );
@@ -38,16 +41,17 @@ const StackStory: FC<{
     });
   };
 
-  // TODO(burdon): Cards change shape when dragged inside stacks.
+  // TODO(wittjosiah): Cleanup horizontal styles.
 
   return (
-    <div className='flex overflow-hidden w-[300px]'>
+    <div className={mx('flex overflow-hidden', direction !== 'horizontal' && 'w-[300px]')}>
       <Stack.Root
         id={id}
         items={items.map(({ id }) => id)}
         Component={Component}
         onMoveItem={handleMoveItem}
         debug={debug}
+        direction={direction}
       >
         <div className='flex flex-col overflow-y-scroll'>
           <div className='flex flex-col gap-4'>
@@ -76,6 +80,14 @@ export const Default = {
   args: {
     Component: SimpleCard,
     count: 10,
+    debug: true,
+  },
+};
+
+export const Horizontal = {
+  args: {
+    Component: SimpleCard,
+    direction: 'horizontal',
     debug: true,
   },
 };
