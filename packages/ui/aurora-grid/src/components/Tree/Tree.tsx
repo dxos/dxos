@@ -11,7 +11,6 @@ import { mx } from '@dxos/aurora-theme';
 import {
   MosaicContainerProps,
   MosaicContainer,
-  MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
   useContainer,
@@ -28,7 +27,7 @@ type TreeRootProps = MosaicContainerProps<any, number> & {
   items?: string[];
 };
 
-const TreeRoot = ({ id, items = [], Component, onDrop, children }: PropsWithChildren<TreeRootProps>) => {
+const TreeRoot = ({ id, items = [], Component = TreeItem, onDrop, children }: PropsWithChildren<TreeRootProps>) => {
   return (
     <AuroraTree.Root>
       {/* TODO(wittjosiah): This is Stack.Root. */}
@@ -43,7 +42,7 @@ const TreeRoot = ({ id, items = [], Component, onDrop, children }: PropsWithChil
 };
 
 // TODO(burdon): Draggable item.
-const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: number; onSelect?: () => void }) => {
+const TreeTile = ({ item, index, onSelect }: { item: TreeData; index: number; onSelect?: () => void }) => {
   const { id: container, Component = TreeItem } = useContainer();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -70,9 +69,11 @@ const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: numb
   );
 };
 
-type TreeData = {
+export type TreeData = {
   id: string;
-  children?: TreeData[];
+  title?: string;
+  level: number;
+  items: TreeData[];
 };
 
 /**
@@ -87,16 +88,24 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
         className={mx('flex flex-col m-2 p-2 ring bg-white font-mono text-xs', className)}
         {...draggableProps}
       >
-        {data.id}
-        {!isActive && !isDragging && data.children && <TreeBranch id={data.id} items={data.children} />}
+        {data.title ?? data.id}
+        {!isActive && !isDragging && data.items && (
+          // TODO(wittjosiah): Better way to get next level?
+          <TreeBranch id={data.id} level={data.items[0]?.level} items={data.items} />
+        )}
       </div>
     );
   },
 );
 
-const TreeBranch = ({ id, items }: { id: string; items: TreeData[] }) => {
+const TreeBranch = ({ id, level, items }: { id: string; level: number; items: TreeData[] }) => {
   const { Component, onDrop } = useContainer();
-  const sortedItems = useSortedItems({ container: id, items });
+  const sortedItems = useSortedItems({
+    container: id,
+    items,
+    isDroppable: (active) => (active.item as TreeData).level === level,
+  });
+
   return (
     <AuroraTreeItem.Body>
       {/* TODO(wittjosiah): This is Stack.Root. */}
