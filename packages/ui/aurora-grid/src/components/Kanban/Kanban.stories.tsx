@@ -26,13 +26,16 @@ const KanbanStory: FC<{
     return Array.from({ length: count }).map((_, i) => ({
       id: `${id}/column/${i}`,
       title: `Column ${i}`,
-      items: Array.from({ length: 5 - i }).map(() => createItem(types)),
+      items: Array.from({ length: i === count - 1 ? 0 : 5 - i }).map(() => createItem(types)),
     }));
   });
 
   // const handleDelete = (id: string) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
+
+  // TODO(burdon): Handle dragging off kanban and into empty column.
+  // TODO(burdon): Buggy dragging empty column.
 
   const handleMoveColumn = ({ active, over }: MosaicMoveEvent<number>) => {
     setColumns((columns) => {
@@ -41,8 +44,6 @@ const KanbanStory: FC<{
       return [...arrayMove(columns, activeIndex, overIndex)];
     });
   };
-
-  // TODO(burdon): Bug if drag off the kanban (not to another column).
 
   const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setColumns((columns) =>

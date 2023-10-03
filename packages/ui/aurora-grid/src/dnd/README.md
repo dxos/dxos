@@ -33,8 +33,7 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 - isDroppable logic (subscriptions)? (e.g., prevent kanban column from accepting entire column.)
 - Nested contexts (e.g., to set modifiers at different levels).
 - Reactivity: tile props (e.g., label); position (e.g., index, grid position).
-- Animation and flickering.
-
+- 
 - Standardize generics (when to use any, unknown, provide default, etc.)
 - Standardize events (e.g., onSelect).
 - Standardize Mosaic Root components (e.g., make generic).

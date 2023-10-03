@@ -49,6 +49,7 @@ const KanbanRoot = forwardRef<HTMLDivElement, PropsWithChildren<KanbanRootProps<
           Component: ((props) => (
             <KanbanColumnComponent {...props} Component={Component} />
           )) as MosaicTileComponent<any>,
+          modifier: ({ transform }) => ({ ...transform, y: 0 }),
           isDroppable: (item) => item.container === id,
           onDrop,
         }}

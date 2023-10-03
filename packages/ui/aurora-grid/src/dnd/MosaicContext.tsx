@@ -6,11 +6,14 @@ import {
   DndContext,
   DragCancelEvent,
   DragEndEvent,
+  DragMoveEvent,
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
+  Modifier,
   MouseSensor,
+  rectIntersection,
   TouchSensor,
   useSensor,
   useSensors,
@@ -51,6 +54,23 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   debug,
   children,
 }) => {
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   const [containers, setContainers] = useState(
     new Map<string, MosaicContainerProps<any>>([[DEFAULT_COMPONENT_ID, { id: DEFAULT_COMPONENT_ID, Component }]]),
   );
@@ -69,9 +89,15 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
 
+  //
+  // Events
+  //
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'container', 'item', 'position'));
   };
+
+  const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
     setOverItem(pick(event.over?.data.current as MosaicDraggedItem, 'container', 'item', 'position'));
@@ -128,28 +154,26 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     }
   }
 
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const containerModifier: Modifier = (props) => {
+    const { transform } = props;
+    if (activeItem) {
+      const container = containers.get(activeItem.container);
+      return container?.modifier?.(props) ?? transform;
+    } else {
+      return transform;
+    }
+  };
 
   return (
     <MosaicContext.Provider value={{ setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
+        collisionDetection={rectIntersection}
+        modifiers={[containerModifier]}
         sensors={sensors}
+        // TODO(burdon): Confirm or cancel.
+        cancelDrop={(event) => false}
         onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
         onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}

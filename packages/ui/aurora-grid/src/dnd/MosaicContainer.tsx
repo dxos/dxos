@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Modifier } from '@dnd-kit/core';
 import React, {
   createContext,
   useContext,
@@ -34,6 +35,9 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
   // Default component used to render tiles.
   Component?: MosaicTileComponent<TData>;
 
+  // https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
+  modifier?: Modifier;
+
   // Overrides for the default overlay.
   getOverlayStyle?: () => CSSProperties;
   getOverlayProps?: () => MosaicTileOverlayProps;
@@ -48,13 +52,6 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
 type MosaicContainerContextType = MosaicContainerProps<any>;
 
 const MosaicContainerContext = createContext<MosaicContainerContextType | undefined>(undefined);
-
-// TODO(burdon): Combine with SortableContext?
-//
-//  <MosaicContainer>
-//    useSortedItems()
-//    <SortableContext>
-//      useSortable()
 
 /**
  * Container for a collection of tiles.
@@ -82,8 +79,8 @@ export const useContainer = () =>
   useContext(MosaicContainerContext) ?? raise(new Error('Missing MosaicContainerContext'));
 
 /**
- * Returns a patched collection of items including a placeholder if items that could drop,
- * and removing any item that is currently being dragged out..
+ * Returns a spliced collection of items including a placeholder if items that could drop,
+ * and removing any item that is currently being dragged out.
  */
 export const useSortedItems = <T extends MosaicDataItem>({
   container,
