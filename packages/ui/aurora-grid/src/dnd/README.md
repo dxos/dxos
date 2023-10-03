@@ -31,13 +31,15 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 ## Issues
 
 - isDroppable logic (subscriptions)? (e.g., prevent kanban column from accepting entire column.)
-- Nested contexts.
+- Nested contexts (e.g., to set modifiers at different levels).
 - Reactivity: tile props (e.g., label); position (e.g., index, grid position).
+- Animation and flickering.
+
 - Standardize generics (when to use any, unknown, provide default, etc.)
 - Standardize events (e.g., onSelect).
 - Standardize Mosaic Root components (e.g., make generic).
   - https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref#58473012
 - Radix-style components and theming (forwardRefs).
-- Compatibility (demos to test this?)
+
 - Focus (e.g., show grid while dragging in grid).
 - Mobile

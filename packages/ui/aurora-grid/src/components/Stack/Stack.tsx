@@ -7,6 +7,7 @@ import {
   horizontalListSortingStrategy,
   useSortable,
   verticalListSortingStrategy,
+  defaultAnimateLayoutChanges,
 } from '@dnd-kit/sortable';
 import React, { FC, PropsWithChildren } from 'react';
 
@@ -14,7 +15,7 @@ import { mx } from '@dxos/aurora-theme';
 
 import {
   DefaultComponent,
-  getTransform,
+  getTransformCSS,
   MosaicContainer,
   MosaicContainerProps,
   MosaicDataItem,
@@ -22,12 +23,12 @@ import {
   useContainer,
 } from '../../dnd';
 
+export type Direction = 'horizontal' | 'vertical';
+
 type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number> & {
   items?: TData[];
   direction?: Direction;
 };
-
-export type Direction = 'horizontal' | 'vertical';
 
 // TODO(burdon): Make generic (and forwardRef).
 const StackRoot = ({
@@ -55,9 +56,10 @@ const StackTile: FC<{
   onSelect?: () => void;
 }> = ({ item, index, debug, onSelect }) => {
   const { id: container, Component = DefaultComponent } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
+    animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
 
   return (
@@ -67,10 +69,11 @@ const StackTile: FC<{
       container={container}
       isDragging={isDragging}
       draggableStyle={{
-        transform: getTransform(transform),
+        transform: getTransformCSS(transform),
+        transition,
       }}
       draggableProps={{ ...attributes, ...listeners }}
-      className={mx(isDragging && 'opacity-30')}
+      className={mx(isDragging && 'opacity-0')}
       onSelect={onSelect}
       debug={debug}
     />

@@ -18,7 +18,7 @@ import {
   useSortedItems,
   DefaultComponent,
   MosaicTileComponent,
-  getTransform,
+  getTransformCSS,
 } from '../../dnd';
 import { Debug } from '../Debug';
 import { Stack } from '../Stack';
@@ -82,7 +82,7 @@ type KanbanColumnProps = {
 
 const KanbanColumn = ({ column, index, debug, Component, onDrop }: KanbanColumnProps) => {
   const { id } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: column.id,
     data: { container: id, item: column, position: index } satisfies MosaicDraggedItem,
   });
@@ -92,7 +92,8 @@ const KanbanColumn = ({ column, index, debug, Component, onDrop }: KanbanColumnP
       ref={setNodeRef}
       isDragging={isDragging}
       draggableStyle={{
-        transform: getTransform(transform),
+        transform: getTransformCSS(transform),
+        transition,
       }}
       draggableProps={{ ...attributes, ...listeners }}
       container={id}
@@ -137,7 +138,7 @@ const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentPr
     return (
       <div
         ref={forwardRef}
-        className={mx(groupSurface, 'flex flex-col w-[300px] snap-center overflow-hidden', isDragging && 'opacity-30')}
+        className={mx(groupSurface, 'flex flex-col w-[300px] snap-center overflow-hidden', isDragging && 'opacity-0')}
         style={draggableStyle}
       >
         <Card.Root classNames='shrink-0 bg-blue-100'>

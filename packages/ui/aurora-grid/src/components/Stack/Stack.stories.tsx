@@ -23,7 +23,7 @@ const StackStory: FC<{
   count?: number;
   direction?: Direction;
   debug?: boolean;
-}> = ({ id = 'stack', Component, types, count = 3, direction, debug }) => {
+}> = ({ id = 'stack', Component, types, count = 3, direction = 'vertical', debug }) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: count }).map(() => createItem(types)),
   );
@@ -44,7 +44,7 @@ const StackStory: FC<{
   // TODO(wittjosiah): Cleanup horizontal styles.
 
   return (
-    <div className={mx('flex overflow-hidden', direction !== 'horizontal' && 'w-[300px]')}>
+    <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
       <Stack.Root
         id={id}
         items={items.map(({ id }) => id)}
@@ -53,8 +53,8 @@ const StackStory: FC<{
         debug={debug}
         direction={direction}
       >
-        <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col gap-4'>
+        <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
+          <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
             {sortedItems.map((item, i) => (
               // TODO(wittjosiah): Don't use array indexing.
               //  (burdon): Why? This assumes the caller has sorted the items.
@@ -88,6 +88,7 @@ export const Horizontal = {
   args: {
     Component: SimpleCard,
     direction: 'horizontal',
+    count: 3,
     debug: true,
   },
 };

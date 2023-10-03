@@ -11,7 +11,6 @@ import {
   DragStartEvent,
   KeyboardSensor,
   MouseSensor,
-  pointerWithin,
   TouchSensor,
   useSensor,
   useSensors,
@@ -149,7 +148,6 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   return (
     <MosaicContext.Provider value={{ setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
-        collisionDetection={pointerWithin}
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}

@@ -21,7 +21,7 @@ import {
   MosaicContainer,
   useContainer,
   DefaultComponent,
-  getTransform,
+  getTransformCSS,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -227,7 +227,7 @@ const GridTile: FC<{
       draggableStyle={{
         position: 'absolute',
         zIndex: isDragging ? 100 : undefined, // TODO(burdon): Const.
-        transform: getTransform(transform),
+        transform: getTransformCSS(transform),
         ...bounds,
       }}
       draggableProps={{ ...attributes, ...listeners }}

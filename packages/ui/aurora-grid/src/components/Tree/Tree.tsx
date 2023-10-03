@@ -16,7 +16,7 @@ import {
   MosaicTileComponent,
   useContainer,
   useSortedItems,
-  getTransform,
+  getTransformCSS,
 } from '../../dnd';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -45,7 +45,7 @@ const TreeRoot = ({ id, items = [], Component, onDrop, children }: PropsWithChil
 // TODO(burdon): Draggable item.
 const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: number; onSelect?: () => void }) => {
   const { id: container, Component = TreeItem } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, isDragging } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
   });
@@ -59,10 +59,11 @@ const TreeTile = ({ item, index, onSelect }: { item: MosaicDataItem; index: numb
         container={container}
         isDragging={isDragging}
         draggableStyle={{
-          transform: getTransform(transform),
+          transform: getTransformCSS(transform),
+          transition,
         }}
         draggableProps={{ ...attributes, ...listeners }}
-        className={mx(isDragging && 'opacity-30')}
+        className={mx(isDragging && 'opacity-0')}
         onSelect={onSelect}
       />
     </AuroraTreeItem.Root>
