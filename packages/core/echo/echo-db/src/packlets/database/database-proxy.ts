@@ -408,6 +408,9 @@ export class DatabaseProxy {
    * Waits for any pending batches to complete.
    */
   async flush({ timeout }: { timeout?: number } = {}) {
+    if (this._currentBatch) {
+      this.commitBatch();
+    }
     const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {
       await asyncTimeout(promise, timeout);
