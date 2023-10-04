@@ -32,7 +32,7 @@ export default {
 export const Default = () => {
   const [items] = useState<MosaicDataItem[]>(testItems);
   const [layout, setLayout] = useState<GridLayout>(testLayout);
-  const handleMoveItem = ({ active, over }: MosaicMoveEvent<Position>) => {
+  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
     setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
   };
 
@@ -45,7 +45,7 @@ export const Default = () => {
         size={size}
         debug
         Component={ComplexCard}
-        onDrop={handleMoveItem}
+        onDrop={handleDrop}
       />
     </MosaicContextProvider>
   );

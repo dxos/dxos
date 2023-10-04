@@ -11,6 +11,7 @@ import { mx } from '@dxos/aurora-theme';
 import {
   MosaicContainerProps,
   MosaicContainer,
+  MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileComponent,
   useContainer,
@@ -23,8 +24,8 @@ import {
 // - Models in general should be easily mapped from the Graph and/or ECHO queries.
 // - See: https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/examples-tree-sortable--basic-setup
 
-type TreeRootProps = MosaicContainerProps<any, number> & {
-  items?: string[]; // TODO(burdon): Change to TData.
+type TreeRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number> & {
+  items?: TData[];
 };
 
 const TreeRoot = ({
@@ -34,14 +35,13 @@ const TreeRoot = ({
   Component = TreeItem,
   onDrop,
   children,
-}: PropsWithChildren<TreeRootProps>) => {
+}: PropsWithChildren<TreeRootProps<any>>) => {
   return (
     <AuroraTree.Root>
       {/* TODO(wittjosiah): This is Stack.Root. */}
       <MosaicContainer container={{ id, debug, Component, isDroppable: () => true, onDrop }}>
-        <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+        <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           {children}
-          {/* TODO(burdon): Component for placeholder at end. */}
         </SortableContext>
       </MosaicContainer>
     </AuroraTree.Root>

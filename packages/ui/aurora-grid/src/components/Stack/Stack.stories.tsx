@@ -29,7 +29,7 @@ const StackStory: FC<{
   );
   const sortedItems = useSortedItems({ container: id, items });
 
-  const handleMoveItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
       if (active.container === container) {
         items.splice(active.position!, 1);
@@ -43,7 +43,7 @@ const StackStory: FC<{
 
   return (
     <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
-      <Stack.Root id={id} Component={Component} onDrop={handleMoveItem} debug={debug}>
+      <Stack.Root id={id} Component={Component} onDrop={handleDrop} debug={debug}>
         <Stack.Viewport items={items} direction={direction}>
           <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
             <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>

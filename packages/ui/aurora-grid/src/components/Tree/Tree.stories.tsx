@@ -14,7 +14,7 @@ import { FullscreenDecorator, MosaicDecorator, createItem } from '../../testing'
 
 faker.seed(3);
 
-const id = 'tree';
+const id = 'tree'; // TODO(burdon): Use consistently.
 const count = 5;
 
 const testItems1 = Array.from({ length: count }).map((_, i) => ({
@@ -100,8 +100,8 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
   return (
     <Tree.Root id={id} items={sortedItems.map(({ id }) => id)} onDrop={handleDrop}>
       <div className='flex flex-col'>
-        {sortedItems.map((item, i) => (
-          <Tree.Tile key={item.id} item={item} index={i} />
+        {sortedItems.map((item, index) => (
+          <Tree.Tile key={item.id} item={item} index={index} />
         ))}
       </div>
     </Tree.Root>
