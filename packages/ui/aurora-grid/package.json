@@ -39,7 +39,8 @@
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",

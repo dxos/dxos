@@ -29,10 +29,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../aurora"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../aurora-theme"
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../aurora"
     },
     {
       "path": "../aurora-theme"
