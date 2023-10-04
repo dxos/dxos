@@ -28,6 +28,7 @@ import { raise } from '@dxos/debug';
 
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicContainerProps } from './MosaicContainer';
+import { Path } from './path';
 import { MosaicDraggedItem, MosaicTileComponent } from './types';
 import { Debug } from '../components';
 
@@ -100,7 +101,13 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
-    setOverItem(pick(event.over?.data.current as MosaicDraggedItem, 'container', 'item', 'position'));
+    if (!event.over) {
+      setOverItem(undefined);
+      return;
+    }
+
+    const overItem = pick(event.over.data.current as MosaicDraggedItem, 'container', 'item', 'position');
+    setOverItem(overItem);
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
@@ -116,7 +123,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
       (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
     ) {
       // TODO(wittjosiah): This is a hack to get the container id, if this is a pattern make it a utility function.
-      const activeContainer = containers.get(activeItem.container.split('/')[0]);
+      const activeContainer = containers.get(Path.first(activeItem.container));
       if (activeContainer) {
         activeContainer.onDrop?.({
           container: activeContainer.id,
@@ -124,7 +131,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
           over: overItem,
         });
 
-        const overContainer = containers.get(overItem.container.split('/')[0]);
+        const overContainer = containers.get(Path.first(overItem.container));
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onDrop?.({
             container: overContainer.id,
@@ -145,13 +152,13 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   let OverlayComponent: MosaicTileComponent<any> | undefined;
   if (activeItem) {
     if (overItem) {
-      container = containers.get(overItem.container.split('/')[0]);
+      container = containers.get(Path.first(overItem.container));
       // TODO(wittjosiah): Default to true if isDroppable is undefined.
       OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
     }
 
     if (!OverlayComponent) {
-      container = containers.get(activeItem.container.split('/')[0]);
+      container = containers.get(Path.first(activeItem.container));
       OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
     }
   }
