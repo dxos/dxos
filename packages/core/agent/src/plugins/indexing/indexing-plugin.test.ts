@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
 import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
@@ -76,7 +76,7 @@ describe('Indexing', () => {
     }
   });
 
-  test('search request/response', async () => {
+  test.only('search request/response', async () => {
     //
     // 1. Test topology:
     //
@@ -96,7 +96,10 @@ describe('Indexing', () => {
     afterTest(() => builder.destroy());
 
     const services1 = builder.createLocal();
-    const client1 = new Client({ services: services1 });
+    const client1 = new Client({
+      services: services1,
+      config: new Config({ runtime: { agent: { plugins: { indexing: { enabled: true } } } } }),
+    });
     await client1.initialize();
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });

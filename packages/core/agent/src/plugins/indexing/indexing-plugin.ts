@@ -12,18 +12,23 @@ import { Query, Subscription, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SearchRequest, SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
+type Options = Required<Runtime.Agent.Plugins.Indexing>;
+
+const DEFAULT_OPTIONS: Options = {
+  enabled: false,
+};
+
 export class Indexing extends AbstractPlugin {
   private readonly _ctx = new Context();
+  private _options?: Options = undefined;
   private _index?: MiniSearch;
 
-  /**
-   * @internal
-   */
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
 
   private readonly _indexOptions = {
@@ -47,7 +52,17 @@ export class Indexing extends AbstractPlugin {
   }
 
   async open(): Promise<void> {
-    log.info('Opening indexing plugin...');
+    log('Opening indexing plugin...');
+
+    invariant(this._client);
+    const config = this._client.config.values.runtime?.agent?.plugins?.indexing;
+    if (!config || config.enabled === false) {
+      log.info('indexing disabled from config');
+      return;
+    }
+
+    this._options = { ...DEFAULT_OPTIONS, ...config };
+
     this._client!.spaces.isReady.wait()
       .then(async () => {
         invariant(this._client, 'Client is undefined.');
@@ -68,6 +83,8 @@ export class Indexing extends AbstractPlugin {
 
   async close(): Promise<void> {
     this._saveIndex();
+    this._spaceIndexes.clear();
+    this._indexedObjects.clear();
     void this._ctx.dispose();
   }
 
@@ -126,6 +143,8 @@ export class Indexing extends AbstractPlugin {
         processObjects(query.objects);
       }),
     };
+
+    this._ctx.onDispose(() => spaceIndex.subscription());
 
     processObjects(query.objects);
     return spaceIndex;
