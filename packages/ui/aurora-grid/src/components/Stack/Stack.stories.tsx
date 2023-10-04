@@ -44,7 +44,7 @@ const StackStory: FC<{
   return (
     <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
       <Stack.Root id={id} Component={Component} onDrop={handleMoveItem} debug={debug}>
-        <Stack.Viewport id={id} items={items} direction={direction}>
+        <Stack.Viewport items={items} direction={direction}>
           <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
             <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (

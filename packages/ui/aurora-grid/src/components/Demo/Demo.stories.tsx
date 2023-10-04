@@ -106,20 +106,16 @@ export const Default = {
     return (
       <div className='flex grow overflow-hidden'>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <Stack.Root
-            id='stack-1'
-            items={sortedStackItems1.map(({ id }) => id)}
-            Component={SimpleCard}
-            onDrop={handleMoveStackItem1}
-            debug={debug}
-          >
-            <div className='flex flex-col overflow-y-scroll p-2'>
-              <div className='flex flex-col gap-2'>
-                {sortedStackItems1.map((item, i) => (
-                  <Stack.Tile key={item.id} item={item} index={i} />
-                ))}
+          <Stack.Root id='stack-1' Component={SimpleCard} onDrop={handleMoveStackItem1} debug={debug}>
+            <Stack.Viewport items={stackItems1}>
+              <div className='flex flex-col overflow-y-scroll p-2'>
+                <div className='flex flex-col gap-2'>
+                  {sortedStackItems1.map((item, i) => (
+                    <Stack.Tile key={item.id} item={item} index={i} />
+                  ))}
+                </div>
               </div>
-            </div>
+            </Stack.Viewport>
           </Stack.Root>
         </div>
         <div className='flex grow overflow-hidden'>
@@ -135,20 +131,16 @@ export const Default = {
           />
         </div>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <Stack.Root
-            id='stack-2'
-            items={sortedStackItems2.map(({ id }) => id)}
-            Component={ComplexCard}
-            onDrop={handleMoveStackItem2}
-            debug={debug}
-          >
-            <div className='flex flex-col overflow-y-scroll bg-black p-1'>
-              <div className='flex flex-col gap-1'>
-                {sortedStackItems2.map((item, i) => (
-                  <Stack.Tile key={item.id} item={item} index={i} />
-                ))}
+          <Stack.Root id='stack-2' Component={ComplexCard} onDrop={handleMoveStackItem2} debug={debug}>
+            <Stack.Viewport items={stackItems2}>
+              <div className='flex flex-col overflow-y-scroll bg-black p-1'>
+                <div className='flex flex-col gap-1'>
+                  {sortedStackItems2.map((item, i) => (
+                    <Stack.Tile key={item.id} item={item} index={i} />
+                  ))}
+                </div>
               </div>
-            </div>
+            </Stack.Viewport>
           </Stack.Root>
         </div>
       </div>

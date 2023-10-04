@@ -14,7 +14,7 @@ import { MosaicMoveEvent, MosaicDataItem, useSortedItems } from '../../dnd';
 import { ComplexCard, createItem, FullscreenDecorator, MosaicDecorator } from '../../testing';
 import { Grid, GridLayout, Position } from '../Grid';
 import { Stack } from '../Stack';
-import { Tree, TreeData, TreePosition } from '../Tree';
+import { Tree, TreeData } from '../Tree';
 
 faker.seed(5);
 
@@ -48,7 +48,7 @@ export const WithTree = {
 
     const sortedTreeItems = useSortedItems({ container: 'tree', items: treeItems, isDroppable: () => false });
 
-    const handleMoveTreeItem = ({ container, active, over }: MosaicMoveEvent<TreePosition>) => {
+    const handleMoveTreeItem = ({ container, active, over }: MosaicMoveEvent<number>) => {
       if (container === 'tree') {
         setTreeItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
@@ -60,10 +60,10 @@ export const WithTree = {
           items.map((item) => {
             const children = [...item.items];
             if (active.container === container && container === item.id) {
-              children.splice(active.position!.index, 1);
+              children.splice(active.position!, 1);
             }
             if (over.container === container && container === item.id) {
-              children.splice(over.position!.index, 0, active.item as TreeData);
+              children.splice(over.position!, 0, active.item as TreeData);
             }
             return { ...item, items: children };
           }),
@@ -133,7 +133,7 @@ export const WithTree = {
           <Tree.Root id='tree' items={sortedTreeItems.map(({ id }) => id)} onDrop={handleMoveTreeItem} debug={debug}>
             <div className='flex flex-col'>
               {sortedTreeItems.map((item, i) => (
-                <Tree.Tile key={item.id} item={item} level={0} index={i} />
+                <Tree.Tile key={item.id} item={item} index={i} />
               ))}
             </div>
           </Tree.Root>
@@ -151,20 +151,16 @@ export const WithTree = {
           />
         </div>
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <Stack.Root
-            id='stack-2'
-            items={sortedStackItems.map(({ id }) => id)}
-            Component={ComplexCard}
-            onDrop={handleMoveStackItem}
-            debug={debug}
-          >
-            <div className='flex flex-col overflow-y-scroll bg-black p-1'>
-              <div className='flex flex-col gap-1'>
-                {sortedStackItems.map((item, i) => (
-                  <Stack.Tile key={item.id} item={item} index={i} />
-                ))}
+          <Stack.Root id='stack-2' Component={ComplexCard} onDrop={handleMoveStackItem} debug={debug}>
+            <Stack.Viewport items={stackItems}>
+              <div className='flex flex-col overflow-y-scroll bg-black p-1'>
+                <div className='flex flex-col gap-1'>
+                  {sortedStackItems.map((item, i) => (
+                    <Stack.Tile key={item.id} item={item} index={i} />
+                  ))}
+                </div>
               </div>
-            </div>
+            </Stack.Viewport>
           </Stack.Root>
         </div>
       </div>

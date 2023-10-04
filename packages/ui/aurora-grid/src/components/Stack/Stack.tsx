@@ -32,13 +32,17 @@ const StackRoot = ({ id, Component = DefaultComponent, onDrop, children }: Props
   return <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>{children}</MosaicContainer>;
 };
 
-type StackViewportProps = {
-  id: string;
-  items?: MosaicDataItem[];
+type StackViewportProps<TData extends MosaicDataItem> = {
+  items?: TData[];
   direction?: Direction;
 };
 
-const StackViewport = ({ children, id, items = [], direction = 'vertical' }: PropsWithChildren<StackViewportProps>) => {
+const StackViewport = ({
+  children,
+  items = [],
+  direction = 'vertical',
+}: PropsWithChildren<StackViewportProps<any>>) => {
+  const { id } = useContainer();
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
 
   return (
