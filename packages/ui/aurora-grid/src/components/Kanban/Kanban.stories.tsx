@@ -55,6 +55,7 @@ const KanbanStory: FC<{
         columns.map((column) => {
           const items = [...column.items];
           if (Path.last(active.container) === column.id) {
+            // Remove card from current postion.
             invariant(active.position !== undefined);
             items.splice(active.position, 1);
           }
