@@ -35,8 +35,8 @@ export class TestBuilder {
     return peer;
   }
 
-  async createSignalServer(num: number, outFolder: string, signalArguments: string[]) {
-    const server = await runSignal(num, outFolder, signalArguments);
+  async createSignalServer(num: number, outFolder: string, signalArguments: string[], onError?: (err: any) => void) {
+    const server = await runSignal(num, outFolder, signalArguments, onError);
     await server.waitUntilStarted();
     this._servers.set(server.url(), server);
     return server;

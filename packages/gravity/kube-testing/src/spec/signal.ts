@@ -44,6 +44,7 @@ export type SignalAgentConfig = {
 
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
+  onError?: (err: Error) => void;
 
   defaultSpec(): SignalTestSpec {
     return {
@@ -69,7 +70,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     await Promise.all(
-      range(spec.servers).map((num) => this.builder.createSignalServer(num, outDir, spec.signalArguments)),
+      range(spec.servers).map((num) =>
+        this.builder.createSignalServer(num, outDir, spec.signalArguments, (err) => {
+          log.error('error in signal server', { err });
+          this.onError?.(err);
+        }),
+      ),
     );
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
