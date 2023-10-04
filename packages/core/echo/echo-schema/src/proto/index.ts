@@ -8,3 +8,5 @@ import { dxos } from './gen/schema';
 export import Schema = dxos.schema.Schema;
 
 export { schema$ as schemaBuiltin } from './gen/schema';
+
+// TODO(mykola): break cache
