@@ -150,7 +150,7 @@ const GridRoot = ({
       }}
     >
       <GridContext.Provider value={defaultGrid}>
-        <div ref={setNodeRef} className={mx('overflow-auto', className)}>
+        <div ref={setNodeRef} className={mx('flex grow overflow-auto', className)}>
           <div
             ref={containerRef}
             className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}
