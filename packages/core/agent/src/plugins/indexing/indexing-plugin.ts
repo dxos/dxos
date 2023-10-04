@@ -83,6 +83,8 @@ export class Indexing extends AbstractPlugin {
 
   async close(): Promise<void> {
     this._saveIndex();
+    this._spaceIndexes.clear();
+    this._indexedObjects.clear();
     void this._ctx.dispose();
   }
 
@@ -141,6 +143,8 @@ export class Indexing extends AbstractPlugin {
         processObjects(query.objects);
       }),
     };
+
+    this._ctx.onDispose(() => spaceIndex.subscription());
 
     processObjects(query.objects);
     return spaceIndex;
