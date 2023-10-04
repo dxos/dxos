@@ -20,11 +20,12 @@ import {
   MosaicDataItem,
   MosaicDraggedItem,
   MosaicTileProps,
+  Path,
+  getTransformCSS,
   useContainer,
   useSortedItems,
   DefaultComponent,
   MosaicTileComponent,
-  getTransformCSS,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -57,17 +58,15 @@ const KanbanRoot = ({
         id,
         debug,
         Component: OverlayComponent(id, Component),
+        // Restrict to x-axis.
         modifier: (item, { transform }) => (item.container === id ? { ...transform, y: 0 } : transform),
-        isDroppable: (item) => item.container.split('/')[0] === id,
+        isDroppable: (item) => Path.hasRoot(item.container, id),
         onDrop,
       }}
     >
-      {/* TODO(burdon): Restrict to horizontal axis: requires nesting contexts. */}
-      {/* <DndContext modifiers={[restrictToHorizontalAxis]}> */}
       <SortableContext id={id} items={columns.map(({ id }) => id)} strategy={horizontalListSortingStrategy}>
         {children}
       </SortableContext>
-      {/* </DndContext> */}
     </MosaicContainer>
   );
 };
@@ -78,7 +77,7 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
     //   console.log('OverlayComponent', props);
     // }
     return props.container === id ? (
-      // TODO(wittjosiah): Why does it need to be this id for reordering to work?
+      // TODO(wittjosiah): Why does it need to be the data id for reordering to work?
       <MosaicContainer container={{ id: props.data.id, Component }}>
         <KanbanColumnComponent {...props} ref={ref} />
       </MosaicContainer>
@@ -127,9 +126,10 @@ type KanbanColumnComponentProps = MosaicTileProps<KanbanColumnItem> & {
   onDrop?: MosaicContainerProps<any, number>['onDrop'];
 };
 
+// TODO(burdon): Separate into Radix-style components.
 const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentProps>(
   ({ container, data: { id, title, items }, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
-    const column = `${container}/column/${id}`;
+    const column = Path.create(container, 'column', id);
     const sortedItems = useSortedItems({
       container: column,
       items,
@@ -206,6 +206,7 @@ const KanbanTile: FC<{
 export const Kanban = {
   Root: KanbanRoot,
   Column: KanbanColumn,
+  Tile: KanbanTile,
 };
 
 export type { KanbanColumn, KanbanRootProps };

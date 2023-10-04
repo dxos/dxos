@@ -7,10 +7,17 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { FC, useState } from 'react';
 
-import { arrayMove } from '@dxos/util';
+import { invariant } from '@dxos/invariant';
 
 import { Kanban, KanbanColumn } from './Kanban';
-import { DefaultComponent, MosaicContextProvider, MosaicMoveEvent, MosaicTileComponent } from '../../dnd';
+import {
+  DefaultComponent,
+  MosaicContextProvider,
+  MosaicMoveEvent,
+  MosaicTileComponent,
+  Path,
+  swapItems,
+} from '../../dnd';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } from '../../testing';
 
 faker.seed(3);
@@ -34,43 +41,33 @@ const KanbanStory: FC<{
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
-  // TODO(burdon): Handle dragging off kanban and into empty column.
-  // TODO(burdon): Buggy dragging empty column.
-
-  const handleMoveColumn = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
+    // Reorder columns.
+    // TODO(burdon): Buggy dragging empty column.
     if (active.container === id) {
-      // Reorder columns.
-      setColumns((columns) => {
-        const activeIndex = columns.findIndex((column) => column.id === active.item.id);
-        const overIndex = columns.findIndex((column) => column.id === over.item.id);
-        return [...arrayMove(columns, activeIndex, overIndex)];
-      });
-    } else if (active.container.startsWith(`${id}/column`) && over.container === id) {
-      // Move card into empty column.
-      setColumns((columns) =>
+      return setColumns((columns) => [...swapItems(columns, active.item, over.item)]);
+    }
+
+    // TODO(burdon): Handle dragging from other components.
+    const columnsPath = Path.create(id, 'column');
+    if (Path.hasDescendent(columnsPath, active.container)) {
+      return setColumns((columns) =>
         columns.map((column) => {
           const items = [...column.items];
-          if (active.container.split('/').at(-1) === column.id) {
-            items.splice(active.position!, 1);
+          if (Path.last(active.container) === column.id) {
+            invariant(active.position !== undefined);
+            items.splice(active.position, 1);
           }
-          // TODO(wittjosiah): Is it okay to use item id here?
-          if (over.item.id === column.id) {
+
+          if (over.container === id && over.item.id === column.id) {
+            // Move card into empty column.
             items.push(active.item as TestItem);
+          } else if (Path.hasDescendent(columnsPath, over.container) && Path.last(over.container) === column.id) {
+            // Move card within or between columns.
+            invariant(over.position !== undefined);
+            items.splice(over.position, 0, active.item as TestItem);
           }
-          return { ...column, items };
-        }),
-      );
-    } else if (active.container.startsWith(`${id}/column`) && over.container.startsWith(`${id}/column`)) {
-      // Move card within or between columns.
-      setColumns((columns) =>
-        columns.map((column) => {
-          const items = [...column.items];
-          if (active.container.split('/').at(-1) === column.id) {
-            items.splice(active.position!, 1);
-          }
-          if (over.container.split('/').at(-1) === column.id) {
-            items.splice(over.position!, 0, active.item as TestItem);
-          }
+
           return { ...column, items };
         }),
       );
@@ -79,7 +76,7 @@ const KanbanStory: FC<{
 
   return (
     <MosaicContextProvider debug={debug}>
-      <Kanban.Root id={id} debug={debug} columns={columns} Component={Component} onDrop={handleMoveColumn}>
+      <Kanban.Root id={id} debug={debug} columns={columns} Component={Component} onDrop={handleDrop}>
         <div className='flex grow overflow-y-hidden overflow-x-auto'>
           <div className='flex gap-4'>
             {columns.map((column, index) => (

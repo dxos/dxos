@@ -34,7 +34,7 @@ const StackRoot = ({ id, Component = DefaultComponent, onDrop, children }: Props
 
 type StackViewportProps = {
   id: string;
-  items?: string[];
+  items?: MosaicDataItem[];
   direction?: Direction;
 };
 
@@ -42,7 +42,7 @@ const StackViewport = ({ children, id, items = [], direction = 'vertical' }: Pro
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
 
   return (
-    <SortableContext id={id} items={items} strategy={strategy}>
+    <SortableContext id={id} items={items.map((item) => item.id)} strategy={strategy}>
       {children}
     </SortableContext>
   );
