@@ -36,51 +36,52 @@ const Story = ({
   const [kanban] = useQuery(space, { type: 'kanban' });
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
 
-  const columns: KanbanColumn<TypedObject>[] = kanban.order.map((status: string) => {
-    const columnOrder = kanban.columnOrder[status] ?? [];
+  const property = kanban.columnBy;
+  const columns: KanbanColumn<TypedObject>[] = kanban.order.map((value: string) => {
+    const columnOrder = kanban.columnOrder[value] ?? [];
     const items =
       columnOrder.length > 0 ? columnOrder.map((id: string) => objects.find((object) => object.id === id)) : objects;
     return {
-      id: status,
-      title: status,
-      items: items.filter((object: TypedObject) => object.status === status),
+      id: value,
+      title: value,
+      items: items.filter((object: TypedObject) => object[property] === value),
     };
   });
 
   const handleDrop = ({ active, over }: any) => {
     // Reorder columns.
     if (active.container === container) {
-      const fromIndex = kanban.order.findIndex((status: string) => status === active.item.id);
-      const toIndex = kanban.order.findIndex((status: string) => status === over.item.id);
+      const fromIndex = kanban.order.findIndex((value: string) => value === active.item.id);
+      const toIndex = kanban.order.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.order, fromIndex, toIndex);
       return;
     }
 
     const columnsPath = Path.create(container, 'column');
     if (Path.hasDescendent(columnsPath, active.container)) {
-      const activeStatus = Path.last(active.container);
-      const overStatus = Path.last(over.container);
-      invariant(activeStatus);
-      invariant(overStatus);
+      const activeProperty = Path.last(active.container);
+      const overProperty = Path.last(over.container);
+      invariant(activeProperty);
+      invariant(overProperty);
 
-      // Update status.
-      active.item.status = overStatus;
+      // Update property.
+      active.item[property] = overProperty;
 
       // Update active column order.
       const activeOrder =
-        kanban.columnOrder[activeStatus] ??
-        columns.find((column) => column.id === activeStatus)?.items.map((item) => item.id) ??
+        kanban.columnOrder[activeProperty] ??
+        columns.find((column) => column.id === activeProperty)?.items.map((item) => item.id) ??
         [];
       activeOrder.length > 0 && activeOrder.splice(active.position, 1);
-      kanban.columnOrder[activeStatus] = activeOrder;
+      kanban.columnOrder[activeProperty] = activeOrder;
 
       // Update over column order.
       const overOrder =
-        kanban.columnOrder[overStatus] ??
-        columns.find((column) => column.id === overStatus)?.items.map((item) => item.id) ??
+        kanban.columnOrder[overProperty] ??
+        columns.find((column) => column.id === overProperty)?.items.map((item) => item.id) ??
         [];
       overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
-      kanban.columnOrder[overStatus] = overOrder;
+      kanban.columnOrder[overProperty] = overOrder;
     }
   };
 
