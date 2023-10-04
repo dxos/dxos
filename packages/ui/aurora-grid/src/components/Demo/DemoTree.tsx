@@ -34,7 +34,8 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
 
   return (
     <Tree.Root id={id} items={sortedItems} onDrop={handleDrop} className={className} debug={debug}>
-      <div className='flex flex-col'>
+      {/* TODO(burdon): Remove div. */}
+      <div className='flex flex-col overflow-hidden'>
         {sortedItems.map((item, index) => (
           <Tree.Tile key={item.id} item={item} index={index} />
         ))}

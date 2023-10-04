@@ -99,11 +99,12 @@ const TreeStory = ({ initialItems }: { initialItems: TreeData[] }) => {
 
   return (
     <Tree.Root id={id} items={sortedItems.map(({ id }) => id)} onDrop={handleDrop}>
-      <div className='flex flex-col'>
-        {sortedItems.map((item, index) => (
+      {/* TODO(burdon): Remove div. */}
+      {sortedItems.map((item, index) => (
+        <div className='flex flex-col overflow-hidden'>
           <Tree.Tile key={item.id} item={item} index={index} />
-        ))}
-      </div>
+        </div>
+      ))}
     </Tree.Root>
   );
 };

@@ -5,7 +5,7 @@
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { PropsWithChildren, forwardRef } from 'react';
 
-import { Tree as AuroraTree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
+import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 import {
@@ -37,14 +37,14 @@ const TreeRoot = ({
   children,
 }: PropsWithChildren<TreeRootProps<any>>) => {
   return (
-    <AuroraTree.Root>
+    <TreeComponent.Root classNames={'flex overflow-hidden'}>
       {/* TODO(wittjosiah): This is Stack.Root. */}
       <MosaicContainer container={{ id, debug, Component, isDroppable: () => true, onDrop }}>
         <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
       </MosaicContainer>
-    </AuroraTree.Root>
+    </TreeComponent.Root>
   );
 };
 
@@ -60,13 +60,11 @@ export type TreeData = {
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
   ({ container, draggableStyle, draggableProps, data, position, isActive, isDragging, className }, forwardedRef) => {
     return (
-      <div
-        ref={forwardedRef}
-        style={draggableStyle}
-        className={mx('flex flex-col m-2 p-2 ring bg-white font-mono text-xs', className)}
-        {...draggableProps}
-      >
-        {data.title ?? data.id}
+      <div ref={forwardedRef} style={draggableStyle} className={mx('flex flex-col', className)}>
+        <Card.Header>
+          <Card.DragHandle {...draggableProps} />
+          <Card.Title title={data.title ?? `${container}/${data.id}`} classNames='truncate' />
+        </Card.Header>
         {!isActive && !isDragging && data.items && <TreeBranch container={container} id={data.id} items={data.items} />}
       </div>
     );
@@ -85,15 +83,15 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
   });
 
   return (
-    <AuroraTreeItem.Body>
+    <TreeItemComponent.Body className='pis-4'>
       <SortableContext id={id} items={sortedItems} strategy={verticalListSortingStrategy}>
         {sortedItems.map((child, i) => (
-          <AuroraTree.Branch key={child.id}>
+          <TreeComponent.Branch key={child.id}>
             <TreeTile item={child} parent={parent} index={i} />
-          </AuroraTree.Branch>
+          </TreeComponent.Branch>
         ))}
       </SortableContext>
-    </AuroraTreeItem.Body>
+    </TreeItemComponent.Body>
   );
 };
 
@@ -116,8 +114,8 @@ const TreeTile = ({
   });
 
   return (
-    <AuroraTreeItem.Root collapsible defaultOpen>
-      {/* TODO(wittjosiah): This is Stack.Tile. */}
+    <TreeItemComponent.Root collapsible defaultOpen>
+      {/* TODO(burdon): Should this be a tile? */}
       <Component
         ref={setNodeRef}
         data={item}
@@ -132,7 +130,7 @@ const TreeTile = ({
         className={mx(isDragging && 'opacity-0')}
         onSelect={onSelect}
       />
-    </AuroraTreeItem.Root>
+    </TreeItemComponent.Root>
   );
 };
 
