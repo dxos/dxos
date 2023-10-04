@@ -21,7 +21,6 @@ export const DemoStack: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivEleme
   className,
 }) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 10 }).map(() => createItem(types)));
-
   const sortedItems = useSortedItems({ container: id, items });
 
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
@@ -38,7 +37,7 @@ export const DemoStack: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivEleme
 
   return (
     <Stack.Root id={id} Component={Component} onDrop={handleDrop} debug={debug}>
-      <Stack.Viewport items={items}>
+      <Stack.Viewport items={sortedItems}>
         <div className={mx('flex flex-col overflow-y-scroll', className)}>
           <div className='flex flex-col gap-2'>
             {sortedItems.map((item, i) => (

@@ -139,21 +139,21 @@ const GridRoot = ({
 
   return (
     // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).
-    <GridContext.Provider value={defaultGrid}>
-      <MosaicContainer
-        container={{
-          id,
-          Component,
-          isDroppable: () => true,
-          getOverlayStyle: () => getDimension(cellBounds, spacing),
-          getOverlayProps: () => ({ grow: true }),
-          onDrop,
-        }}
-      >
-        <div ref={setNodeRef}>
+    <MosaicContainer
+      container={{
+        id,
+        Component,
+        isDroppable: () => true,
+        getOverlayStyle: () => getDimension(cellBounds, spacing),
+        getOverlayProps: () => ({ grow: true }),
+        onDrop,
+      }}
+    >
+      <GridContext.Provider value={defaultGrid}>
+        <div ref={setNodeRef} className={mx('overflow-auto', className)}>
           <div
             ref={containerRef}
-            className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600', className)}
+            className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}
           >
             <div
               ref={contentRef}
@@ -195,8 +195,8 @@ const GridRoot = ({
             {debug && <Debug data={{ items: items?.length }} position='bottom-right' />}
           </div>
         </div>
-      </MosaicContainer>
-    </GridContext.Provider>
+      </GridContext.Provider>
+    </MosaicContainer>
   );
 };
 

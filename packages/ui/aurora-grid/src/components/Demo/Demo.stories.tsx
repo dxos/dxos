@@ -33,10 +33,10 @@ export const Default = () => (
       <DemoStack id='stack-1' Component={SimpleCard} types={types} debug={debug} className='p-2' />
     </div>
     <div className='flex grow overflow-hidden'>
-      <DemoGrid id='grid-1' Component={ComplexCard} types={types} debug={debug} className='p-4' />
+      <DemoGrid id='grid-1' Component={ComplexCard} types={types} debug={debug} className='p-4 bg-black' />
     </div>
     <div className='flex shrink-0 w-[280px] overflow-hidden'>
-      <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-1 bg-black' />
+      <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-2 bg-black' />
     </div>
   </div>
 );
@@ -47,10 +47,10 @@ export const Tree = () => (
       <DemoTree id='tree-1' types={types} debug={debug} />
     </div>
     <div className='flex grow overflow-hidden'>
-      <DemoGrid id='grid-1' Component={ComplexCard} types={types} debug={debug} className='p-4' />
+      <DemoGrid id='grid-1' Component={ComplexCard} types={types} debug={debug} className='p-4 bg-black' />
     </div>
     <div className='flex shrink-0 w-[280px] overflow-hidden'>
-      <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-1 bg-black' />
+      <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-2 bg-black' />
     </div>
   </div>
 );
