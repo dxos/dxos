@@ -90,6 +90,7 @@ export type ReplicationAgentConfig = {
  */
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
   signalBuilder = new SignalTestBuilder();
+  onError?: (err: Error) => void;
 
   defaultSpec(): ReplicationTestSpec {
     return {
@@ -114,7 +115,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
     }
 
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const swarmTopicsIds = range(spec.swarmsPerAgent).map(() => PublicKey.random());
     const feedsBySwarm = new Map<number, Map<PublicKey, FeedConfig[]>>();

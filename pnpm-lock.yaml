@@ -4500,18 +4500,18 @@ importers:
       '@faker-js/faker': 8.0.2
       chartjs-node-canvas: 4.1.6_chart.js@3.9.1
       danfojs-node: 1.1.2_seedrandom@3.0.5
+      js-yaml: 4.1.0
       redis: 4.6.6
       seedrandom: 3.0.5
+      yargs: 16.2.0
     devDependencies:
       '@types/js-yaml': 4.0.5
       '@types/node': 18.11.9
       '@types/seedrandom': 3.0.5
       '@types/yargs': 16.0.4
       chart.js: 3.9.1
-      js-yaml: 4.1.0
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_sxkixsbzgfj5nygwm6be4klchu
       typescript: 5.2.2
-      yargs: 16.2.0
 
   packages/gravity/proto-guard:
     specifiers:
