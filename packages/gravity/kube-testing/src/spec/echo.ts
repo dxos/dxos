@@ -66,6 +66,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   client!: Client;
   space!: Space;
   spaceKey?: PublicKey;
+  onError?: (err: Error) => void;
 
   defaultSpec(): EchoTestSpec {
     return {
@@ -87,7 +88,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({
