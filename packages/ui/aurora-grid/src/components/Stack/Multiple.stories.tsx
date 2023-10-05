@@ -40,8 +40,6 @@ const StackStory: FC<Args> = ({
   );
   const sortedItems = useSortedItems({ container: id, items });
 
-  // console.log({ id, items, sortedItems });
-
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
       if (active.container === container && (behavior !== 'copy' || over.container === container)) {
@@ -101,6 +99,7 @@ export const Move = {
   },
 };
 
+// TODO(wittjosiah): Not working.
 export const Copy = {
   args: {
     Component: SimpleCard,
