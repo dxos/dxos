@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
@@ -41,23 +41,20 @@ const graph = createGraph();
 
 const TreeStory = ({ id = 'tree', debug }: { id: string; debug: boolean }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
-  const handleDrop = useCallback(
-    ({ active, over }: MosaicMoveEvent<number>) => {
-      // Moving within the tree.
-      if (Path.hasDescendent(id, active.container) && Path.hasDescendent(id, over.container)) {
-        const activeNode = graph.findNode(active.item.id);
-        const activeParent = activeNode?.parent;
-        const overNode = graph.findNode(over.item.id);
-        const overParent = overNode?.parent;
+  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
+    // Moving within the tree.
+    if (Path.hasDescendent(id, active.container) && Path.hasDescendent(id, over.container)) {
+      const activeNode = graph.findNode(active.item.id);
+      const activeParent = activeNode?.parent;
+      const overNode = graph.findNode(over.item.id);
+      const overParent = overNode?.parent;
 
-        if (activeNode && activeParent && overParent) {
-          activeParent.removeNode(active.item.id);
-          overParent.addNode('tree', { ...activeNode });
-        }
+      if (activeNode && activeParent && overParent) {
+        activeParent.removeNode(active.item.id);
+        overParent.addNode('tree', { ...activeNode });
       }
-    },
-    [graph],
-  );
+    }
+  };
 
   return (
     <Tree.Root id={id} items={graph.root.children} onDrop={handleDrop} debug={debug}>
