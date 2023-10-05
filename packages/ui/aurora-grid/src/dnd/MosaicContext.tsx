@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import pick from 'lodash.pick';
-import React, { createContext, useContext, FC, PropsWithChildren, useState, Component } from 'react';
+import React, { createContext, useContext, FC, PropsWithChildren, useState, Component, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DensityProvider } from '@dxos/aurora';
@@ -42,18 +42,23 @@ export const MosaicContext = createContext<MosaicContextType | undefined>(undefi
 
 const DEFAULT_COMPONENT_ID = '__default';
 
-export type MosaicContextProviderProps = PropsWithChildren & {
-  Component?: MosaicTileComponent<any>;
+type MosaicContextProviderOptions = {
+  overlayDelay?: number;
   debug?: boolean;
 };
+
+type MosaicContextProviderProps = PropsWithChildren &
+  MosaicContextProviderOptions & {
+    Component?: MosaicTileComponent<any>;
+  };
 
 /**
  * Root provider.
  */
 export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   Component = DefaultComponent,
-  debug,
   children,
+  ...options
 }) => {
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -146,24 +151,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     setOverItem(undefined);
   };
 
-  // TODO(burdon): Factor out DragOverlay.
-  // Get the overlay component from the over container, otherwise default to the original.
-  let container: MosaicContainerProps<any> | undefined;
-  let OverlayComponent: MosaicTileComponent<any> | undefined;
-  if (activeItem) {
-    if (overItem) {
-      container = containers.get(Path.first(overItem.container));
-      // TODO(wittjosiah): Default to true if isDroppable is undefined.
-      OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
-    }
-
-    if (!OverlayComponent) {
-      container = containers.get(Path.first(activeItem.container));
-      OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
-    }
-  }
-
-  const containerModifier: Modifier = (props) => {
+  const containerContextModifier: Modifier = (props) => {
     const { transform } = props;
     if (activeItem) {
       const container = containers.get(activeItem.container);
@@ -177,9 +165,9 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     <MosaicContext.Provider value={{ setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
         collisionDetection={rectIntersection}
-        modifiers={[containerModifier]}
+        modifiers={[containerContextModifier]}
         sensors={sensors}
-        // TODO(burdon): Confirm or cancel.
+        // TODO(burdon): Allow container to veto drop.
         cancelDrop={(event) => false}
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
@@ -187,46 +175,18 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        {/* Active dragging element. */}
         {createPortal(
           <DragOverlay>
-            {activeItem && container && OverlayComponent && (
-              <div style={{ ...container.getOverlayStyle?.() }}>
-                <OverlayErrorBoundary>
-                  {/* TODO(burdon): Configure density via getOverlayProps. */}
-                  <DensityProvider density='fine'>
-                    <OverlayComponent
-                      {...container.getOverlayProps?.()}
-                      data={activeItem.item}
-                      container={activeItem.container}
-                      isActive={true}
-                    />
-                  </DensityProvider>
-                </OverlayErrorBoundary>
-              </div>
-            )}
+            <MosaicDragOverlay containers={containers} activeItem={activeItem} overItem={overItem} options={options} />
           </DragOverlay>,
           document.body,
         )}
 
         {children}
 
-        {debug &&
+        {options.debug &&
           createPortal(
-            <Debug
-              position='bottom-right'
-              data={{
-                containers: Array.from(containers.keys()).map((id) => id),
-                active: {
-                  id: activeItem?.item?.id,
-                  container: activeItem?.container,
-                },
-                over: {
-                  id: overItem?.item?.id,
-                  container: overItem?.container,
-                },
-              }}
-            />,
+            <MosaicDebug containers={containers} activeItem={activeItem} overItem={overItem} />,
             document.body,
           )}
       </DndContext>
@@ -235,6 +195,84 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
 };
 
 export const useMosaic = () => useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+
+const MosaicDebug: FC<{
+  containers: Map<string, MosaicContainerProps<any>>;
+  activeItem?: MosaicDraggedItem;
+  overItem?: MosaicDraggedItem;
+}> = ({ containers, activeItem, overItem }) => {
+  return (
+    <Debug
+      position='bottom-right'
+      data={{
+        containers: Array.from(containers.keys()).map((id) => id),
+        active: {
+          id: activeItem?.item?.id,
+          container: activeItem?.container,
+        },
+        over: {
+          id: overItem?.item?.id,
+          container: overItem?.container,
+        },
+      }}
+    />
+  );
+};
+
+const MosaicDragOverlay: FC<{
+  containers: Map<string, MosaicContainerProps<any>>;
+  activeItem?: MosaicDraggedItem;
+  overItem?: MosaicDraggedItem;
+  options: MosaicContextProviderOptions;
+}> = ({ containers, activeItem, overItem, options: { debug, overlayDelay = 200 } }) => {
+  // Get the overlay component from the over container, otherwise default to the original.
+  const [{ container, OverlayComponent }, setContainer] = useState<{
+    container?: MosaicContainerProps<any> | undefined;
+    OverlayComponent?: MosaicTileComponent<any> | undefined;
+  }>({});
+
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    if (activeItem) {
+      let container: MosaicContainerProps<any> | undefined;
+      let OverlayComponent: MosaicTileComponent<any> | undefined;
+      if (overItem?.container) {
+        container = containers.get(Path.first(overItem.container));
+        // TODO(wittjosiah): Default to true if isDroppable is undefined?
+        OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
+      }
+
+      if (!OverlayComponent) {
+        container = containers.get(Path.first(activeItem.container));
+        OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
+      }
+
+      // Prevent jitter when transitioning across containers.
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setContainer({ container, OverlayComponent }), timer.current ? overlayDelay : 0);
+    }
+  }, [activeItem, overItem]);
+  if (!activeItem?.container || !container || !OverlayComponent) {
+    return null;
+  }
+
+  return (
+    <div style={{ ...container.getOverlayStyle?.() }}>
+      <OverlayErrorBoundary>
+        {/* TODO(burdon): Configure density via getOverlayProps. */}
+        <DensityProvider density='fine'>
+          <OverlayComponent
+            {...container.getOverlayProps?.()}
+            data={activeItem.item}
+            container={activeItem.container}
+            isActive={true}
+          />
+          {debug && <span className='m-2 p-1 bg-white text-xs'>{container.id}</span>}
+        </DensityProvider>
+      </OverlayErrorBoundary>
+    </div>
+  );
+};
 
 class OverlayErrorBoundary extends Component<PropsWithChildren> {
   static getDerivedStateFromError(error: Error) {

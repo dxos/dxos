@@ -6,22 +6,24 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 
 ## Taxonomy
 
-| Item      | Description                                                                                                          |
-|:----------|:---------------------------------------------------------------------------------------------------------------------|
-| Mosaic    | Root container and context that routes events between Containers.                                                    |
-| Overlay   | A DOM portal managed by the Mosaic context that renders a Container's Component while dragging.                      |
-| Container | A complex React component that manages the layout of a collection of tiles (e.g., Grid, Kanban, Stack, Table, Tree). |
-| Tile      | A Draggable wrapper managed by its parent container.                                                                 |
-| Component | A pure React component that is rendered within the layout via the container's Tile or the root Mosaic's Overlay.     |
-| Item      | A datum represented by a Tile.                                                                                       |
+| Item               | Description                                                                                                          |
+|:-------------------|:---------------------------------------------------------------------------------------------------------------------|
+| Mosaic.Provider    | A Root container and React context that routes events between Containers.                                            |
+| Mosaic.Overlay     | A DOM portal managed by the Mosaic context that renders a Container's Component while dragging.                      |
+| Mosaic.Container   | A complex React component that manages the layout of a collection of tiles (e.g., Grid, Kanban, Stack, Table, Tree). |
+| Mosaic.Tile        | A Draggable wrapper managed by its parent container.                                                                 |
+| Component          | A pure React component that is rendered within the layout via the container's Tile or the root Mosaic's Overlay.     |
+| Item               | A datum represented by a Tile.                                                                                       |
 
 
 Hierarchy:
+
  - Components
  - Mosaics (DND)
  - Views (schema)
  - Plugins
 
+Naming:
 
 ```ts
 // Platform
