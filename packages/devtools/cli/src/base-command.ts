@@ -8,7 +8,6 @@ import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { platform } from 'node:os';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -17,7 +16,7 @@ import {
   AgentWaitTimeoutError,
   Daemon,
   PhoenixDaemon,
-  LaunchctlDaemon,
+  SystemDaemon,
 } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
@@ -452,16 +451,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     callback: (daemon: Daemon) => Promise<T | undefined>,
     system: boolean,
   ): Promise<T | undefined> {
-    let daemon: Daemon;
-    if (system) {
-      if (platform() === 'darwin') {
-        daemon = new LaunchctlDaemon(DX_RUNTIME);
-      } else {
-        throw new Error(`System daemon not implemented for ${platform()} yet.`);
-      }
-    } else {
-      daemon = new PhoenixDaemon(DX_RUNTIME);
-    }
+    const daemon = system
+      ? new SystemDaemon(DX_RUNTIME)
+      : new PhoenixDaemon(DX_RUNTIME);
 
     await daemon.connect();
     const value = await callback(daemon);
