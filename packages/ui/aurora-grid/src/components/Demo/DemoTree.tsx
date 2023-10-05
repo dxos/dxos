@@ -27,7 +27,7 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
     })),
   );
 
-  const sortedItems = useSortedItems({ container: id, items, isDroppable: () => false });
+  const sortedItems = useSortedItems({ container: id, items });
 
   // TODO(burdon): Implement.
   const handleDrop = useCallback(({ active, over }: MosaicMoveEvent<number>) => {}, [items]);

@@ -58,9 +58,13 @@ export type TreeData = {
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ container, draggableStyle, draggableProps, data, position, isActive, isDragging, className }, forwardedRef) => {
+  ({ container, draggableStyle, draggableProps, data, isActive, isDragging, className }, forwardedRef) => {
     return (
-      <div ref={forwardedRef} style={draggableStyle} className={mx('flex flex-col', className)}>
+      <div
+        ref={forwardedRef}
+        style={draggableStyle}
+        className={mx('flex flex-col bg-white', isActive && 'shadow rounded', className)}
+      >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={data.title ?? `${container}/${data.id}`} classNames='truncate' />
@@ -76,10 +80,10 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
   const sortedItems = useSortedItems({
     container: parent,
     items,
-    isDroppable: (active) => {
-      // TODO(wittjosiah): This should be configurable.
-      return active.container !== container;
-    },
+    // isDroppable: (active) => {
+    // TODO(wittjosiah): This should be configurable.
+    // return active.container !== container;
+    // },
   });
 
   return (
