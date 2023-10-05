@@ -19,7 +19,7 @@ export const DemoGrid: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
   Component,
   className,
 }) => {
-  const size = { x: 6, y: 6 };
+  const size = { x: 4, y: 6 };
   const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: 6 }).map(() => createItem(types)),
   );

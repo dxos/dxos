@@ -32,7 +32,7 @@ import { Debug } from '../Debug';
 // Example:
 // https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/presets-sortable-multiple-containers--basic-setup
 
-// TODO(burdon): Is Kanban too specific? E.g., vs. ColumnBoard?
+// TODO(burdon): Factor out common components.
 
 type KanbanColumn<TData extends MosaicDataItem> = MosaicDataItem & {
   title: string;
