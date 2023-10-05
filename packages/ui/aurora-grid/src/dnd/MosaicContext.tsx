@@ -101,13 +101,16 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
-    if (!event.over) {
+    const activeContainer = activeItem && containers.get(Path.first(activeItem.container));
+    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'container', 'item', 'position');
+    const overContainer = overItem && containers.get(Path.first(overItem.container));
+    if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOverItem(undefined);
       return;
     }
 
-    const overItem = pick(event.over.data.current as MosaicDraggedItem, 'container', 'item', 'position');
-    setOverItem(overItem);
+    const isDroppable = overContainer.isDroppable ?? (() => true);
+    setOverItem(isDroppable({ active: activeItem, over: overItem }) ? overItem : undefined);
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
@@ -153,13 +156,12 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   if (activeItem) {
     if (overItem) {
       container = containers.get(Path.first(overItem.container));
-      // TODO(wittjosiah): Default to true if isDroppable is undefined.
-      OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
+      OverlayComponent = container?.Component;
     }
 
     if (!OverlayComponent) {
       container = containers.get(Path.first(activeItem.container));
-      OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
+      OverlayComponent = container?.Component ?? DefaultComponent;
     }
   }
 

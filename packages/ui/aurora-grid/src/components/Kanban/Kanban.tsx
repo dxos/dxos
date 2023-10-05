@@ -60,7 +60,8 @@ const KanbanRoot = ({
         Component: OverlayComponent(id, Component),
         // Restrict to x-axis.
         modifier: (item, { transform }) => (item.container === id ? { ...transform, y: 0 } : transform),
-        isDroppable: (item) => Path.hasRoot(item.container, id),
+        // TODO(wittjosiah): Allow container to modifier the over based on active.
+        isDroppable: ({ active, over }) => Path.hasRoot(active.container, id),
         onDrop,
       }}
     >
@@ -130,21 +131,16 @@ type KanbanColumnComponentProps = MosaicTileProps<KanbanColumnItem> & {
 const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentProps>(
   ({ container, data: { id, title, items }, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
     const column = Path.create(container, 'column', id);
-    const sortedItems = useSortedItems({
-      container: column,
-      items,
-      // TODO(burdon): Use this to prevent drop.
-      // isDroppable: container.isDroppable,
-      isDroppable: (active) => {
-        // Don't allow columns to be dragged into columns.
-        return active.container !== container;
-      },
-    });
+    const sortedItems = useSortedItems({ container: column, items });
 
     return (
       <div
         ref={forwardRef}
-        className={mx(groupSurface, 'flex flex-col w-[300px] snap-center overflow-hidden', isDragging && 'opacity-0')}
+        className={mx(
+          groupSurface,
+          'flex flex-col w-[300px] snap-center overflow-hidden min-h-[50vh]',
+          isDragging && 'opacity-0',
+        )}
         style={draggableStyle}
       >
         <Card.Root classNames='shrink-0 bg-blue-100'>
