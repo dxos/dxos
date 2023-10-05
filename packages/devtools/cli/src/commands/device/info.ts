@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
+import chalk from 'chalk';
+
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { printDevices } from '../../util';
 
 export default class Info extends BaseCommand<typeof Info> {
   static override enableJsonFlag = true;
@@ -23,9 +23,8 @@ export default class Info extends BaseCommand<typeof Info> {
         return;
       }
 
-      if (!this.flags.json) {
-        printDevices([device], this.flags);
-      }
+      this.log(chalk`{magenta Device label:}`, device.profile?.displayName);
+      this.log(chalk`{magenta Device key:}`, device.deviceKey.toHex());
 
       return device;
     });
