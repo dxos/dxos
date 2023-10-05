@@ -127,7 +127,9 @@ describe('database (unit)', () => {
     const id = PublicKey.random().toHex();
     peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
     await peer.confirm();
-    await peer.proxy.flush();
+    const flushPromise = peer.proxy.flush();
+    await peer.confirm();
+    await flushPromise;
   }).timeout(100);
 
   describe('DocumentModel', () => {

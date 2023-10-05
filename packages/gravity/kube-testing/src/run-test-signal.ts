@@ -24,7 +24,12 @@ const BIN_PATH = './cmds/signal-test/main.go';
   }
 }
 
-export const runSignal = async (num: number, outFolder: string, signalArguments: string[]) => {
+export const runSignal = async (
+  num: number,
+  outFolder: string,
+  signalArguments: string[],
+  onError?: (err: any) => void,
+) => {
   const runner = new SignalServerRunner({
     binCommand: `go run ${BIN_PATH}`,
     signalArguments,
@@ -36,6 +41,7 @@ export const runSignal = async (num: number, outFolder: string, signalArguments:
       SIGNAL_PROTOCOL_VERSION: new Date().getTime().toString(),
     },
     shell: true,
+    onError,
   });
   await runner.waitUntilStarted();
   return runner;
