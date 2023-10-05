@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { FC, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
@@ -38,6 +38,7 @@ const StackStory: FC<Args> = ({
   const [items, setItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: count }).map(() => createItem(types)),
   );
+  const itemsRef = useRef(items);
   const sortedItems = useSortedItems({ container: id, items });
 
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
@@ -48,13 +49,17 @@ const StackStory: FC<Args> = ({
       if (over.container === container) {
         items.splice(over.position!, 0, active.item);
       }
-      return [...items];
+      const i = [...items];
+      itemsRef.current = i;
+      return i;
     });
   };
 
   const handleDroppable = ({ active, over }: MosaicMoveEvent<number>) => {
     return (
-      (items.findIndex((item) => item.id === active.item.id) === -1 || active.container === over.container) &&
+      // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
+      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 ||
+        active.container === over.container) &&
       (active.container === id || behavior !== 'disallow')
     );
   };

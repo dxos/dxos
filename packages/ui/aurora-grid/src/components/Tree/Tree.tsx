@@ -17,6 +17,7 @@ import {
   useContainer,
   useSortedItems,
   getTransformCSS,
+  useMosaic,
 } from '../../dnd';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -91,7 +92,11 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <SortableContext id={id} items={sortedItems} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        id={id}
+        items={sortedItems.map(({ id }) => `${parent}/${id}`)}
+        strategy={verticalListSortingStrategy}
+      >
         {sortedItems.map((child, i) => (
           <TreeComponent.Branch key={child.id}>
             <TreeTile item={child} parent={parent} index={i} />
@@ -114,11 +119,21 @@ const TreeTile = ({
   parent?: string;
   onSelect?: () => void;
 }) => {
-  const { id: container, Component = TreeItem } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: item.id,
-    data: { container: parent ?? container, item, position: index } satisfies MosaicDraggedItem,
+  const { activeItem, overItem } = useMosaic();
+  const { id, Component = TreeItem } = useContainer();
+  const container = parent ?? id;
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging: isDraggingLocal,
+  } = useSortable({
+    id: `${container}/${item.id}`,
+    data: { container, item, position: index } satisfies MosaicDraggedItem,
   });
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
 
   return (
     <TreeItemComponent.Root collapsible defaultOpen>
@@ -126,7 +141,7 @@ const TreeTile = ({
       <Component
         ref={setNodeRef}
         data={item}
-        container={parent ?? container}
+        container={container}
         position={index}
         isDragging={isDragging}
         draggableStyle={{
@@ -134,7 +149,7 @@ const TreeTile = ({
           transition,
         }}
         draggableProps={{ ...attributes, ...listeners }}
-        className={mx(isDragging && 'opacity-0')}
+        className={mx(isDragging && 'opacity-50')}
         onSelect={onSelect}
       />
     </TreeItemComponent.Root>

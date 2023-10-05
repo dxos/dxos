@@ -106,8 +106,14 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
   const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
-    const activeContainer = activeItem && containers.get(Path.first(activeItem.container));
     const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'container', 'item', 'position');
+    // If the over item is the same as the active item, do nothing.
+    // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
+    if (overItem?.item?.id === activeItem?.item.id) {
+      return;
+    }
+
+    const activeContainer = activeItem && containers.get(Path.first(activeItem.container));
     const overContainer = overItem?.container && containers.get(Path.first(overItem.container));
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOverItem(undefined);
@@ -115,9 +121,10 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
     }
 
     const isDroppable = overContainer.isDroppable ?? (() => true);
-    setOverItem(
-      isDroppable({ container: activeItem.container, active: activeItem, over: overItem }) ? overItem : undefined,
-    );
+    const item = isDroppable({ container: overItem.container, active: activeItem, over: overItem })
+      ? overItem
+      : undefined;
+    setOverItem(item);
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
@@ -143,7 +150,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
 
         const overContainer = containers.get(Path.first(overItem?.container));
         if (overContainer && overContainer !== activeContainer) {
-          overContainer?.onDrop?.({
+          overContainer.onDrop?.({
             container: overContainer.id,
             active: activeItem,
             over: overItem,
