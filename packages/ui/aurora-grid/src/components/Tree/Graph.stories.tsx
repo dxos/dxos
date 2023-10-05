@@ -9,6 +9,7 @@ import React, { useCallback } from 'react';
 
 import { GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { getDebugName } from '@dxos/util';
 
 import { Tree, TreeData } from './Tree';
 import { MosaicMoveEvent, Path } from '../../dnd';
@@ -43,19 +44,22 @@ const TreeStory = ({ id = 'tree', debug }: { id: string; debug: boolean }) => {
   // TODO(wittjosiah): This is buggy, partly because the graph is not intended to be used as a primary data source.
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      console.log({ active, over });
+      console.log({ active, over, a: getDebugName(active.item), o: getDebugName(over.item) });
+
+      // TODO(wittjosiah): Bug where dropping at the top over sortable causes node to disappear.
+      //   Seems like somehow the active and over item are the same item despite having different containers.
+      //   Potentially this is from it being "over" it's own ghost?
 
       // Moving within the tree.
       if (Path.hasDescendent(id, active.container) && Path.hasDescendent(id, over.container)) {
         const activeNode = graph.findNode(active.item.id);
+        const activeParent = activeNode?.parent;
         const overNode = graph.findNode(over.item.id);
+        const overParent = overNode?.parent;
 
-        if (activeNode && overNode) {
-          const overParent = overNode.parent;
-          overParent?.addNode('tree', activeNode);
-
-          const activeParent = activeNode.parent;
-          activeParent?.removeNode(active.item.id);
+        if (activeNode && activeParent && overParent) {
+          overParent.addNode('tree', { ...activeNode });
+          activeParent.removeNode(active.item.id);
         }
       }
     },
