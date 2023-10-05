@@ -4,23 +4,28 @@
 
 import '@dxosTheme';
 import { useDroppable } from '@dnd-kit/core';
-import React, { PropsWithChildren, useEffect } from 'react';
+import React, { PropsWithChildren } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { Grid, SVG, SVGContextProvider, useSvgContext } from '@dxos/gem-core';
+import { mx } from '@dxos/aurora-theme';
 
 import { DefaultComponent, MosaicContainer, MosaicContainerProps, useContainer } from '../../dnd';
 import { Position } from '../Grid';
 
 type CanvasRootProps = PropsWithChildren<MosaicContainerProps<any, Position>>;
 
-const CanvasRoot = ({ id, children }: CanvasRootProps) => {
+const CanvasRoot = ({ id, children, className }: CanvasRootProps) => {
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+
   const handleDrop = () => {
     console.log('Canvas drop');
   };
 
   return (
     <MosaicContainer container={{ id, onDrop: handleDrop, Component: DefaultComponent }}>
-      <SVGContextProvider>{children}</SVGContextProvider>
+      <div ref={containerRef} className={mx('flex grow overflow-auto', className)}>
+        {children}
+      </div>
     </MosaicContainer>
   );
 };
@@ -28,16 +33,16 @@ const CanvasRoot = ({ id, children }: CanvasRootProps) => {
 const CanvasViewport = () => {
   const { id } = useContainer();
   const { setNodeRef } = useDroppable({ id, data: { container: id } });
-  const { ref } = useSvgContext();
-  useEffect(() => {
-    console.log(ref);
-  }, [ref]);
+  // const { ref } = useSvgContext();
+  // useEffect(() => {
+  //   console.log(ref);
+  // }, [ref]);
 
   return (
     <div ref={setNodeRef} className='flex grow'>
-      <SVG>
-        <Grid />
-      </SVG>
+      {/* <SVG> */}
+      {/*  <Grid /> */}
+      {/* </SVG> */}
     </div>
   );
 };

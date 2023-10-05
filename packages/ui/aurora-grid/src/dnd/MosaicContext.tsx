@@ -256,14 +256,16 @@ const MosaicDragOverlay: FC<{
       let container: MosaicContainerProps<any> | undefined;
       let OverlayComponent: MosaicTileComponent<any> | undefined;
       if (overItem?.container) {
-        container = containers.get(Path.first(overItem.container));
+        // container = containers.get(Path.first(overItem.container));
         // TODO(wittjosiah): Default to true if isDroppable is undefined?
-        OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
+        // OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : undefined;
+        OverlayComponent = container?.Component;
       }
 
       if (!OverlayComponent) {
-        container = containers.get(Path.first(activeItem.container));
-        OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
+        // container = containers.get(Path.first(activeItem.container));
+        // OverlayComponent = container?.isDroppable?.(activeItem) ? container.Component : DefaultComponent;
+        OverlayComponent = container?.Component ?? DefaultComponent;
       }
 
       // Prevent jitter when transitioning across containers.
