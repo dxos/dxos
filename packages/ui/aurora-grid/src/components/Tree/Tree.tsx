@@ -33,13 +33,22 @@ const TreeRoot = ({
   debug,
   items = [],
   Component = TreeItem,
+  isDroppable,
   onDrop,
   children,
 }: PropsWithChildren<TreeRootProps<any>>) => {
   return (
-    <TreeComponent.Root classNames={'flex overflow-hidden'}>
+    <TreeComponent.Root classNames='flex flex-col'>
       {/* TODO(wittjosiah): This is Stack.Root. */}
-      <MosaicContainer container={{ id, debug, Component, isDroppable: () => true, onDrop }}>
+      <MosaicContainer
+        container={{
+          id,
+          debug,
+          Component,
+          isDroppable,
+          onDrop,
+        }}
+      >
         <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
@@ -50,8 +59,8 @@ const TreeRoot = ({
 
 export type TreeData = {
   id: string;
-  title?: string;
-  items: TreeData[];
+  label?: string;
+  children: TreeData[];
 };
 
 /**
@@ -63,9 +72,11 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       <div ref={forwardedRef} style={draggableStyle} className={mx('flex flex-col', className)}>
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
-          <Card.Title title={data.title ?? `${container}/${data.id}`} classNames='truncate' />
+          <Card.Title title={data.label ?? `${container}/${data.id}`} classNames='truncate' />
         </Card.Header>
-        {!isActive && !isDragging && data.items && <TreeBranch container={container} id={data.id} items={data.items} />}
+        {!isActive && !isDragging && data.children && (
+          <TreeBranch container={container} id={data.id} items={data.children} />
+        )}
       </div>
     );
   },
@@ -76,10 +87,6 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
   const sortedItems = useSortedItems({
     container: parent,
     items,
-    isDroppable: (active) => {
-      // TODO(wittjosiah): This should be configurable.
-      return active.container !== container;
-    },
   });
 
   return (

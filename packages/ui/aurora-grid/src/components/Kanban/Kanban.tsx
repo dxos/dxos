@@ -60,8 +60,7 @@ const KanbanRoot = ({
         Component: OverlayComponent(id, Component),
         // Restrict to x-axis.
         modifier: (item, { transform }) => (item.container === id ? { ...transform, y: 0 } : transform),
-        // TODO(wittjosiah): Allow container to modifier the over based on active.
-        isDroppable: ({ active, over }) => Path.hasRoot(active.container, id),
+        isDroppable: ({ active }) => Path.hasRoot(active.container, id),
         onDrop,
       }}
     >
