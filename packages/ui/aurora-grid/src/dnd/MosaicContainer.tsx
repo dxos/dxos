@@ -44,7 +44,7 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
   // TODO(burdon): Handle copy, delete, etc.
   onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
   // TODO(wittjosiah): Generalize to onOver?
-  isDroppable?: (props: { active: MosaicDraggedItem; over?: MosaicDraggedItem }) => boolean;
+  isDroppable?: (event: MosaicMoveEvent<TPosition>) => boolean;
 
   // Custom properties.
   custom?: TCustom;
