@@ -21,6 +21,7 @@ import {
   MosaicDataItem,
   MosaicDraggedItem,
   useContainer,
+  useMosaic,
 } from '../../dnd';
 
 export type Direction = 'horizontal' | 'vertical';
@@ -64,12 +65,21 @@ const StackTile: FC<{
   debug?: boolean;
   onSelect?: () => void;
 }> = ({ item, index, debug, onSelect }) => {
+  const { activeItem, overItem } = useMosaic();
   const { id: container, Component = DefaultComponent } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging: isDraggingLocal,
+  } = useSortable({
     id: `${container}/${item.id}`,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
 
   return (
     <Component
