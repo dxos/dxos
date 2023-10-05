@@ -152,7 +152,7 @@ describe('identity/identity-manager', () => {
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
 
-  test.only('set device profile', async () => {
+  test('set device profile', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await setupPeer({ signalContext });
