@@ -100,7 +100,6 @@ export const Move = {
   },
 };
 
-// TODO(wittjosiah): Not working.
 export const Copy = {
   args: {
     Component: SimpleCard,
