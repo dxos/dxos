@@ -5,8 +5,8 @@
 import { exec } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { unlink, writeFile, mkdir } from 'node:fs/promises';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 import util from 'node:util';
 
 import { Runner, type StartOptions } from './runner';

@@ -4,8 +4,8 @@
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import path from 'node:path';
 import { platform } from 'node:os';
+import path from 'node:path';
 
 import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';

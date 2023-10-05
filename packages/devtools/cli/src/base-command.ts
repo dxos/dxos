@@ -11,13 +11,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import {
-  AgentIsNotStartedByCLIError,
-  AgentWaitTimeoutError,
-  Daemon,
-  PhoenixDaemon,
-  SystemDaemon,
-} from '@dxos/agent';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -451,9 +445,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     callback: (daemon: Daemon) => Promise<T | undefined>,
     system: boolean,
   ): Promise<T | undefined> {
-    const daemon = system
-      ? new SystemDaemon(DX_RUNTIME)
-      : new PhoenixDaemon(DX_RUNTIME);
+    const daemon = system ? new SystemDaemon(DX_RUNTIME) : new PhoenixDaemon(DX_RUNTIME);
 
     await daemon.connect();
     const value = await callback(daemon);
