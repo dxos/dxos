@@ -3,12 +3,7 @@
 //
 
 import { CaptureConsole } from '@sentry/integrations';
-import {
-  init as naturalInit,
-  addBreadcrumb as naturalAddBreadcrumb,
-  captureException as naturalCaptureException,
-  setTag,
-} from '@sentry/node';
+import { init as naturalInit, setTag } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
 import { log } from '@dxos/log';
