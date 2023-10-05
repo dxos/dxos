@@ -18,8 +18,8 @@ npm install -g @dxos/cli@main
 # Running an Agent
 Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
 
-## Start agent with LaunchD (macOS users)
-1. Install DXOS CLI with steps in [Installation](#Instalation)  section.
+## Install agent as a `launchd` service (macOS users)
+1. Install DXOS CLI with steps in [Installation](#Instalation) section.
 2. Replace `??NODE_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `dirname $(which node)`
 3. Replace `??DX_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `which dx`
 4. Copy `./init-templates/org.dxos.agent.plist` -> `~/Library/LaunchAgents/org.dxos.agent.plist`
@@ -28,6 +28,14 @@ Agent is a name for DXOS Client which is run by CLI in the background in the dae
 ### Stop agent started by LaunchD
 1. Run `launchctl unload -w ~/Library/LaunchAgents/org.dxos.agent.plist`
 2. Remove `~/Library/LaunchAgents/org.dxos.agent.plist`
+
+## Install agent as a `systemd` service (Linux users)
+1. Install DXOS CLI with steps in [Installation](#Instalation) section.
+1. Copy `./init-templates/dxos-agent.service` and `./init-templates/pre-dxos-agent.service` -> `~/.config/systemd/user/`
+1. Run `systemctl --user daemon-reload` to make the systemd daemon aware of the service
+1. Run `systemctl --user enable dxos-agent` to enable the service to start automatically
+1. Optionally, run `sudo loginctl enable-linger {USERNAME}` to enable the service to start without user login (replace `{USERNAME}` with the name of the user that will run the service)
+1. Run `systemctl --user start dxos-agent` to start the service
 
 ## Start agent with CLI (not very reliable)
 Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.
