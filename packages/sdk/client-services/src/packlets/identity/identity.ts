@@ -75,7 +75,7 @@ export class Identity {
   }
 
   // TODO(burdon): Expose state object?
-  get authorizedDeviceKeys(): ComplexMap<PublicKey, ProfileDocument | undefined> {
+  get authorizedDeviceKeys(): ComplexMap<PublicKey, ProfileDocument> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 

@@ -23,7 +23,7 @@ export type DeviceStateMachineParams = {
  */
 export class DeviceStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
-  public readonly authorizedDeviceKeys = new ComplexMap<PublicKey, ProfileDocument | undefined>(PublicKey.hash);
+  public readonly authorizedDeviceKeys = new ComplexMap<PublicKey, ProfileDocument>(PublicKey.hash);
 
   public readonly deviceChainReady = new Trigger();
 
@@ -49,7 +49,7 @@ export class DeviceStateMachine implements CredentialProcessor {
       case 'dxos.halo.credentials.AuthorizedDevice': {
         invariant(!this.authorizedDeviceKeys.has(assertion.deviceKey), 'Device already added.');
         // TODO(dmaretskyi): Extra validation for the credential?
-        this.authorizedDeviceKeys.set(assertion.deviceKey, undefined);
+        this.authorizedDeviceKeys.set(assertion.deviceKey, {});
         log('added device', {
           localDeviceKey: this._params.deviceKey,
           deviceKey: assertion.deviceKey,
