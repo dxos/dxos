@@ -136,7 +136,7 @@ export const MosaicContextProvider: FC<MosaicContextProviderProps> = ({
           over: overItem,
         });
 
-        const overContainer = containers.get(Path.first(overItem.container));
+        const overContainer = containers.get(Path.first(overItem?.container));
         if (overContainer && overContainer !== activeContainer) {
           overContainer?.onDrop?.({
             container: overContainer.id,

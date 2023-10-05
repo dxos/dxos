@@ -32,6 +32,9 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../experimental/gem-core"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
