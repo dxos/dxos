@@ -105,6 +105,7 @@ export class HaloProxy implements Halo {
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
+      // TODO(nf): make the telemetry subscribe to identity changes to set the Sentry user/tags rather than relying on tracing to set them
       data.identity &&
         log.trace('dxos.halo.identity', {
           identityKey: data.identity.identityKey,
@@ -118,6 +119,12 @@ export class HaloProxy implements Halo {
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
+        // TODO(nf): make the telemetry subscribe to device changes to set the Sentry user/tags rather than relying on tracing to set them
+
+        log.trace('dxos.halo.device', {
+          deviceKey: data.devices.find((device) => device.kind === DeviceKind.CURRENT)?.deviceKey,
+          // TODO(nf): add device displayName
+        });
       }
     });
 

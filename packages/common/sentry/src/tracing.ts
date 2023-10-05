@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { setUser, getCurrentHub } from '@sentry/browser';
+import { setUser, setTag, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
 import { runInContext, scheduleMicroTask, Trigger } from '@dxos/async';
@@ -76,6 +76,11 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
       setUser({
         id: humanize(context.identityKey),
       });
+      setTag('identityKey', context.identityKey.truncate());
+    }
+
+    if (message === 'dxos.halo.device' && context?.deviceKey) {
+      setTag('deviceKey', context.deviceKey.truncate());
     }
 
     if (REPORT_SPANS && context?.span) {
