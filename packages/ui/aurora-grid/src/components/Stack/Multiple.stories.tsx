@@ -52,8 +52,11 @@ const StackStory: FC<Args> = ({
     });
   };
 
-  const handleDroppable = ({ active }: MosaicMoveEvent<number>) => {
-    return active.container === id || behavior !== 'disallow';
+  const handleDroppable = ({ active, over }: MosaicMoveEvent<number>) => {
+    return (
+      (items.findIndex((item) => item.id === active.item.id) === -1 || active.container === over.container) &&
+      (active.container === id || behavior !== 'disallow')
+    );
   };
 
   return (
