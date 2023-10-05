@@ -63,7 +63,7 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
         {image && <Card.Media src={image} />}
         {title && body && (
           <Card.Body gutter classNames='line-clamp-3 text-sm'>
-            {body}
+            {body + '\nxx'}
           </Card.Body>
         )}
         {debug && (

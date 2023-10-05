@@ -10,7 +10,7 @@ import { Schema as SchemaType, Space } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-export const Status = ['TODO', 'DOING', 'DONE'];
+export const Status = ['pending', 'active', 'done'];
 
 export class Generator {
   private _faker!: Faker;
