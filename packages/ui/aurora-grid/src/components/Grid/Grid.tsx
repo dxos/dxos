@@ -22,6 +22,7 @@ import {
   useContainer,
   DefaultComponent,
   getTransformCSS,
+  Path,
 } from '../../dnd';
 import { Debug } from '../Debug';
 
@@ -249,7 +250,7 @@ const GridCell: FC<{ container: string; position: Position; bounds: Dimension }>
   bounds,
 }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: `${container}/cell/${position.x}-${position.y}`,
+    id: Path.create(container, 'cell', `${position.x}-${position.y}`),
     data: { container, position },
   });
 
