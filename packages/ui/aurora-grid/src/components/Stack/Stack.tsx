@@ -28,8 +28,14 @@ export type Direction = 'horizontal' | 'vertical';
 type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number>;
 
 // TODO(burdon): Make generic (and forwardRef).
-const StackRoot = ({ id, Component = DefaultComponent, onDrop, children }: PropsWithChildren<StackRootProps<any>>) => {
-  return <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>{children}</MosaicContainer>;
+const StackRoot = ({
+  id,
+  Component = DefaultComponent,
+  onDrop,
+  isDroppable,
+  children,
+}: PropsWithChildren<StackRootProps<any>>) => {
+  return <MosaicContainer container={{ id, Component, isDroppable, onDrop }}>{children}</MosaicContainer>;
 };
 
 type StackViewportProps<TData extends MosaicDataItem> = {
@@ -77,7 +83,7 @@ const StackTile: FC<{
         transition,
       }}
       draggableProps={{ ...attributes, ...listeners }}
-      className={mx(isDragging && 'opacity-0')}
+      className={mx(isDragging && 'opacity-50')}
       onSelect={onSelect}
       debug={debug}
     />
