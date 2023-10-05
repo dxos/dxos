@@ -24,9 +24,10 @@ export class DevicesServiceImpl implements DevicesService {
           next({ devices: [] });
         } else {
           next({
-            devices: Array.from(deviceKeys.values()).map((key) => ({
+            devices: Array.from(deviceKeys.entries()).map(([key, profile]) => ({
               deviceKey: key,
               kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+              profile,
             })),
           });
         }
