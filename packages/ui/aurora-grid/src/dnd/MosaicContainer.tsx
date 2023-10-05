@@ -29,7 +29,6 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
   'className'
 > & {
   id: string;
-  isDroppable?: (item: MosaicDraggedItem) => boolean;
   debug?: boolean;
 
   // Default component used to render tiles.
@@ -44,6 +43,8 @@ export type MosaicContainerProps<TData extends MosaicDataItem, TPosition = unkno
 
   // TODO(burdon): Handle copy, delete, etc.
   onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
+  // TODO(wittjosiah): Generalize to onOver?
+  isDroppable?: (props: { active: MosaicDraggedItem; over?: MosaicDraggedItem }) => boolean;
 
   // Custom properties.
   custom?: TCustom;
@@ -85,19 +86,16 @@ export const useContainer = () =>
 export const useSortedItems = <T extends MosaicDataItem>({
   container,
   items,
-  isDroppable,
 }: {
   container: string;
   items: T[];
-  isDroppable?: (activeItem: MosaicDraggedItem) => boolean;
 }): T[] => {
   const { activeItem, overItem } = useMosaic();
   if (
     activeItem &&
     activeItem.item.id !== container &&
     activeItem.container !== container &&
-    overItem?.container === container &&
-    (!isDroppable || isDroppable(activeItem))
+    overItem?.container === container
   ) {
     // TODO(burdon): Can we check the type? Default action for `allows`?
     return [activeItem.item as T, ...items];
