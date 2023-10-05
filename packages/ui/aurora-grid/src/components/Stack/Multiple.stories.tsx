@@ -66,8 +66,6 @@ const StackStory: FC<Args> = ({
           <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
             <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (
-                // TODO(wittjosiah): Don't use array indexing.
-                //  (burdon): Why? This assumes the caller has sorted the items.
                 <Stack.Tile key={item.id} item={item} index={i} debug />
               ))}
             </div>

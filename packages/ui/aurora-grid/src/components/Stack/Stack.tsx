@@ -52,7 +52,7 @@ const StackViewport = ({
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
 
   return (
-    <SortableContext id={id} items={items.map((item) => item.id)} strategy={strategy}>
+    <SortableContext id={id} items={items.map((item) => `${id}/${item.id}`)} strategy={strategy}>
       {children}
     </SortableContext>
   );
@@ -66,7 +66,7 @@ const StackTile: FC<{
 }> = ({ item, index, debug, onSelect }) => {
   const { id: container, Component = DefaultComponent } = useContainer();
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: item.id,
+    id: `${container}/${item.id}`,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
