@@ -6,5 +6,4 @@ export * from './hooks';
 export * from './types';
 export * from './util';
 
-export * from './DefaultComponent';
 export * from './Mosaic';

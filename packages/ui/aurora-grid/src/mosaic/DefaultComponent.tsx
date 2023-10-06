@@ -6,10 +6,11 @@ import React, { forwardRef } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { MosaicDataItem, MosaicTileProps } from './types';
+import { MosaicTileComponent } from './Tile';
+import { MosaicDataItem } from './types';
 
-export const DefaultComponent = forwardRef<HTMLDivElement, MosaicTileProps<MosaicDataItem>>(
-  ({ draggableStyle, draggableProps, data: { id }, container }, forwardRef) => {
+export const DefaultComponent: MosaicTileComponent<MosaicDataItem> = forwardRef(
+  ({ draggableStyle, draggableProps, item: { id }, container }, forwardRef) => {
     return (
       <Card.Root ref={forwardRef} style={draggableStyle}>
         <Card.Header>

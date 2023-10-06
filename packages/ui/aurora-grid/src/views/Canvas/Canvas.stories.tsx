@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Canvas } from './Canvas';
-import { MosaicContextProvider } from '../../mosaic';
+import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator } from '../../testing';
 
 faker.seed(99);
@@ -23,10 +23,11 @@ export default {
 
 export const Default = () => {
   return (
-    <MosaicContextProvider debug>
+    <Mosaic.Root debug>
+      <Mosaic.DragOverlay />
       <Canvas.Root id='canvas'>
         <Canvas.Viewport />
       </Canvas.Root>
-    </MosaicContextProvider>
+    </Mosaic.Root>
   );
 };
