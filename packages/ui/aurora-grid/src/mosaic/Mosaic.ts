@@ -25,8 +25,8 @@ export const Mosaic = {
   Sortable: MosaicSortable,
   DraggableTile,
   SortableTile,
+  // TODO(wittjosiah): Consider factoring out or using inline styles instead depending on aurora theme/tailwind.
   DefaultComponent,
-  // TODO(wittjosiah): Factor out to testing.
   Debug,
 } as {
   Root: FC<MosaicRootProps>;
