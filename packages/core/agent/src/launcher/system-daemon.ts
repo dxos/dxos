@@ -45,8 +45,6 @@ export class SystemDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-    // TODO(egorgripasov): Better compatibility with Phoenix daemon.
-    // Support of existing locks?
     return (await isLocked(lockFilePath(profile))) || this._runner.isRunning(profile);
   }
 
@@ -78,7 +76,7 @@ export class SystemDaemon implements Daemon {
       const logFile = path.join(logDir, 'daemon.log');
       const errFile = path.join(logDir, 'err.log');
 
-      await this._runner.start({ profile, errFile, logFile });
+      await this._runner.start({ profile, errFile, logFile, daemonOptions: options });
 
       try {
         await waitForAgentToStart(profile);
@@ -93,7 +91,7 @@ export class SystemDaemon implements Daemon {
   }
 
   async stop(profile: string, { force = false }: StopOptions = {}): Promise<ProcessInfo | undefined> {
-    if (await this.isRunning(profile)) {
+    if (await this._runner.isRunning(profile)) {
       log('stopping...', { profile });
 
       await this._runner.stop(profile, force);

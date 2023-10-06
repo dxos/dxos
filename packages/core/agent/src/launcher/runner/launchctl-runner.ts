@@ -9,24 +9,34 @@ import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
 
-import { Runner, type StartOptions } from './runner';
+import { Runner, type RunnerStartOptions } from './runner';
 
 const execPromise = util.promisify(exec);
 
 export class LaunchctlRunner implements Runner {
-  async start({ profile, logFile, errFile }: StartOptions): Promise<void> {
+  async start({ profile, logFile, errFile, daemonOptions }: RunnerStartOptions): Promise<void> {
     try {
       const service = this._getServiceName(profile);
       const plistPath = await this._getPlistPath(service);
 
-      // TODO(egorgripasov): Pass options to the agent start command.
+      const options = [''];
+      if (daemonOptions?.metrics) {
+        options.push('<string>--metrics</string>');
+      }
+      if (daemonOptions?.ws) {
+        options.push(`<string>--ws=${daemonOptions.ws}</string>`);
+      }
+      if (daemonOptions?.config) {
+        options.push(`<string>--config=${daemonOptions.config}</string>`);
+      }
+
       const plistContent = plistTemplate
-        .replace('{{PROFILE}}', profile)
-        // TODO(egorgripasov): Make it work for standalone installation.
         .replace('{{DX_PATH}}', process.argv[1])
         .replace('{{NODE_PATH}}', path.dirname(process.execPath))
         .replace('{{ERROR_LOG}}', errFile)
-        .replace('{{OUT_LOG}}', logFile);
+        .replace('{{OUT_LOG}}', logFile)
+        .replace('{{OPTIONS}}', options.length > 1 ? options.join('\n') : '')
+        .replaceAll('{{PROFILE}}', profile);
 
       // Write the plist content to the file.
       await writeFile(plistPath, plistContent, 'utf-8');
@@ -94,6 +104,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
       <string>agent</string>
       <string>start</string>
       <string>--foreground</string>
+      <string>--profile={{PROFILE}}</string>{{OPTIONS}}
     </array>
     <key>RunAtLoad</key>
     <true/>
