@@ -182,6 +182,13 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
+  async updateDevice(profile: ProfileDocument): Promise<Device> {
+    invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
+    // NOTE: Event that device changed will be fired by devicesStream subscription.
+    const device = await this._serviceProvider.services.DevicesService.updateDevice(profile);
+    return device;
+  }
+
   /**
    * Get Halo credentials for the current user.
    */
