@@ -24,6 +24,12 @@ export default {
   },
 };
 
+// TODO(burdon): Compute this?
+const columnValues: { [property: string]: any[] } = {
+  status: ['unknown', ...Status],
+  priority: ['unknown', ...Priority],
+};
+
 const Story = ({
   container = 'projects',
   debug,
@@ -36,12 +42,6 @@ const Story = ({
   const space = useSpace(spaceKey);
   const [kanban] = useQuery(space, { type: 'kanban' });
 
-  // TODO(burdon): Compute this?
-  const columnValues: { [property: string]: any[] } = {
-    status: Status,
-    priority: Priority,
-  };
-
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
   const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
     const objectPosition = kanban.objectPosition[value] ?? [];
@@ -49,6 +49,8 @@ const Story = ({
       objectPosition.length > 0
         ? objectPosition.map((id: string) => objects.find((object) => object.id === id))
         : objects;
+
+    // TODO(burdon): Special case for 'unknown' values?
     return {
       id: value,
       title: value,
@@ -145,7 +147,7 @@ export const ECHO = {
             title: 'Projects',
             schema: project,
             columnProp: 'status',
-            columnValues: Status,
+            columnValues: columnValues.status,
             objectPosition: {},
           }),
         );
