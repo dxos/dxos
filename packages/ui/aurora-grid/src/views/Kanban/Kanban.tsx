@@ -73,24 +73,27 @@ export const Kanban = ({
 
 const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
   forwardRef((props, ref) => {
-    return props.container === id ? (
-      // TODO(wittjosiah): Why does it need to be the data id for reordering to work?
-      <Mosaic.Container {...{ id: props.item.id, Component }}>
-        <KanbanColumnComponent {...props} ref={ref} />
-      </Mosaic.Container>
-    ) : (
-      <Component {...props} ref={ref} />
-    );
+    if (props.container === id && props.isActive) {
+      return (
+        // TODO(wittjosiah): Why does it need to be the data id for reordering to work?
+        <Mosaic.Container {...{ id: props.item.id, Component }}>
+          <KanbanColumnComponent {...props} ref={ref} />
+        </Mosaic.Container>
+      );
+    }
+
+    return props.container === id ? <KanbanColumnComponent {...props} ref={ref} /> : <Component {...props} ref={ref} />;
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
-  ({ container, item: { id, title, children }, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+  ({ container, position, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+    const { id, title, children } = item;
     const { Component } = useContainer();
     const column = Path.create(container, 'column', id);
     const sortedItems = useSortedItems({ container: column, items: children });
 
     // TODO(burdon): Rename "container" property to "path".
-    const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column } });
+    const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column, item, position } });
 
     return (
       <div

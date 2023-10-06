@@ -21,6 +21,8 @@ export default {
   title: 'Demo',
 };
 
+// TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.
+//   The bug didn't exist before the cleanup refactor so seems likely it's a side effect of that.
 export const GraphEcho = {
   render: ({ spaceKey }: { spaceKey: PublicKey }) => (
     <Mosaic.Root debug={debug}>

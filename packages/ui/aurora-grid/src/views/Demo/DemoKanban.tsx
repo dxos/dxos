@@ -29,12 +29,12 @@ export const EchoKanban = ({
   const property = kanban.columnBy;
   const columns: KanbanColumn<TypedObject>[] = kanban.order.map((value: string) => {
     const columnOrder = kanban.columnOrder[value] ?? [];
-    const items =
+    const children =
       columnOrder.length > 0 ? columnOrder.map((id: string) => objects.find((object) => object.id === id)) : objects;
     return {
       id: value,
       title: value,
-      items: items.filter((object: TypedObject) => object[property] === value),
+      children: children.filter((object: TypedObject) => object[property] === value),
     };
   });
 
