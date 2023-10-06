@@ -212,6 +212,26 @@ export class IdentityManager {
     return profile;
   }
 
+  async updateDevice({ deviceKey, profile }: { deviceKey: PublicKey; profile: ProfileDocument }) {
+    invariant(this._identity, 'Identity not initialized.');
+
+    invariant(this._identity.authorizedDeviceKeys.has(deviceKey), 'Device not authorized.');
+
+    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+      subject: this._identity.identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.DeviceProfile',
+        deviceKey,
+        profile,
+      },
+    });
+
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    this.stateUpdate.emit();
+    return profile;
+  }
+
   private async _constructIdentity(identityRecord: IdentityRecord) {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
