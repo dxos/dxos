@@ -100,12 +100,12 @@ const Story = ({
       // Update active column order.
       const activeOrder = getOrder(kanban, activeProperty);
       activeOrder.length > 0 && activeOrder.splice(active.position, 1);
-      kanban.objectPosition[activeProperty] = activeOrder;
+      kanban.objectPosition[activeProperty] = activeOrder; // TODO(burdon): Create object if empty?
 
       // Update over column order.
       const overOrder = getOrder(kanban, overProperty);
       overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
-      kanban.objectPosition[overProperty] = overOrder;
+      kanban.objectPosition[overProperty] = overOrder; // TODO(burdon): Create object if empty?
     }
   };
 
