@@ -3,7 +3,7 @@
 //
 
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
-import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
+import { Item, MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
@@ -97,13 +97,13 @@ export abstract class EchoObject<T extends Model = any> {
    * Called before object is bound to database.
    * `_database` is guaranteed to be set.
    */
-  _beforeBind(): void {}
+  _beforeBind(): void { }
 
   /**
    * @internal
    * Called after object is bound to database.
    */
-  protected _afterBind(): void {}
+  protected _afterBind(): void { }
 
   /**
    * @internal
