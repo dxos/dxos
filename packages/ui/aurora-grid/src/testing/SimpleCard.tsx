@@ -7,14 +7,13 @@ import React, { forwardRef } from 'react';
 import { Card } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Debug } from '../components';
-import { MosaicTileProps } from '../dnd';
+import { Mosaic, MosaicTileComponent } from '../mosaic';
 
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
-export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
+export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, draggableStyle, draggableProps, data: { id, title }, container, position, grow, debug },
+    { className, isDragging, draggableStyle, draggableProps, item: { id, title }, container, position, grow, debug },
     forwardRef,
   ) => {
     const full = !title;
@@ -23,7 +22,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
         ref={forwardRef}
         style={draggableStyle}
         noPadding={full}
-        classNames={mx(className, 'snap-center')}
+        classNames={mx(className, 'snap-center', isDragging && 'opacity-50')}
         grow={grow}
       >
         <Card.Header floating={full}>
@@ -33,7 +32,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
         </Card.Header>
         {debug && (
           <Card.Body>
-            <Debug data={{ container, id, position }} />
+            <Mosaic.Debug data={{ container, id, position }} />
           </Card.Body>
         )}
       </Card.Root>
@@ -43,9 +42,19 @@ export const SimpleCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardP
 
 SimpleCard.displayName = 'SimpleCard';
 
-export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCardProps>>(
+export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, draggableStyle, draggableProps, data: { id, title, body, image }, container, onSelect, grow, debug },
+    {
+      className,
+      isDragging,
+      draggableStyle,
+      draggableProps,
+      item: { id, title, body, image },
+      container,
+      onSelect,
+      grow,
+      debug,
+    },
     forwardRef,
   ) => {
     const full = !title;
@@ -54,7 +63,7 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
         ref={forwardRef}
         style={draggableStyle}
         noPadding={full}
-        classNames={mx(className, 'snap-center')}
+        classNames={mx(className, 'snap-center', isDragging && 'opacity-50')}
         grow={grow}
         onDoubleClick={() => onSelect?.()}
       >
@@ -71,7 +80,7 @@ export const ComplexCard = forwardRef<HTMLDivElement, MosaicTileProps<SimpleCard
         )}
         {debug && (
           <Card.Body>
-            <Debug data={{ container, id }} />
+            <Mosaic.Debug data={{ container, id }} />
           </Card.Body>
         )}
       </Card.Root>
