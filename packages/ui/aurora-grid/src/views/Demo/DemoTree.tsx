@@ -44,7 +44,6 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
 
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      console.log({ id, active, over });
       if (active.container === id && over.container === id) {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
