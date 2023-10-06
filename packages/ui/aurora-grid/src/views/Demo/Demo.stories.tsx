@@ -9,8 +9,8 @@ import React from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { DemoCanvas } from './DemoCanvas';
 import { DemoGrid } from './DemoGrid';
+import { DemoKanban } from './DemoKanban';
 import { DemoStack } from './DemoStack';
 import { DemoTree } from './DemoTree';
 import { Mosaic } from '../../mosaic';
@@ -63,7 +63,7 @@ export const Tree = () => (
   </Mosaic.Root>
 );
 
-export const Canvas = () => (
+export const Kanban = () => (
   <Mosaic.Root debug={debug}>
     <Mosaic.DragOverlay />
     <div className='flex grow overflow-hidden'>
@@ -71,7 +71,7 @@ export const Canvas = () => (
         <DemoStack id='stack-1' Component={SimpleCard} types={types} debug={debug} className='p-2' />
       </div>
       <div className='flex grow overflow-hidden'>
-        <DemoCanvas id='grid-1' debug={debug} className='p-4' />
+        <DemoKanban id='kanban-1' Component={SimpleCard} debug={debug} className='p-4' />
       </div>
       <div className='flex shrink-0 w-[280px] overflow-hidden'>
         <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-2 bg-neutral-900' />

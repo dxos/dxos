@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
@@ -93,7 +92,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const sortedItems = useSortedItems({ container: column, items: children });
 
     // TODO(burdon): Rename "container" property to "path".
-    const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column, item, position } });
+    // TODO(wittjosiah): Breaks column reordering.
+    // const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column, item, position } });
 
     return (
       <div
@@ -114,10 +114,11 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
         </Card.Root>
 
         <Mosaic.Sortable id={column} items={sortedItems} direction='vertical'>
-          <div
+          {/* <div
             ref={setNodeRef}
             className={mx('flex flex-col grow overflow-y-scroll', isOver && 'border border-blue-700')}
-          >
+          > */}
+          <div className='flex flex-col grow overflow-y-scroll'>
             <div className='flex flex-col m-2 my-3 space-y-3'>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile key={item.id} item={item} container={column} position={i} Component={Component!} />

@@ -2,16 +2,64 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { FC, HTMLAttributes, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { Expando, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
 import { arrayMove } from '@dxos/util';
 
-import { Path } from '../../mosaic';
-import { SimpleCard } from '../../testing';
+import { TestComponentProps } from './test';
+import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
+import { SimpleCard, TestItem, createItem } from '../../testing';
 import { Kanban, KanbanColumn } from '../Kanban';
+
+export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElement>> = ({
+  id,
+  types,
+  debug,
+  Component = Mosaic.DefaultComponent,
+  className,
+}) => {
+  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
+    return Array.from({ length: 5 }).map((_, i) => ({
+      id: `column-${i}`,
+      title: `Column ${i}`,
+      children: Array.from({ length: 5 - i }).map(() => createItem(types)),
+    }));
+  });
+
+  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
+    // Reorder columns.
+    if (active.container === id) {
+      return setColumns((columns) => [...swapItems(columns, active.item, over.item)]);
+    }
+
+    const columnsPath = Path.create(id, 'column');
+    return setColumns((columns) =>
+      columns.map((column) => {
+        const children = [...column.children];
+        if (Path.last(active.container) === column.id) {
+          // Remove card from current postion.
+          invariant(active.position !== undefined);
+          children.splice(active.position, 1);
+        }
+
+        if (over.container === id && over.item.id === column.id) {
+          // Move card into empty column.
+          children.push(active.item as TestItem);
+        } else if (Path.hasDescendent(columnsPath, over.container) && Path.last(over.container) === column.id) {
+          // Move card within or between columns.
+          children.splice(over.position ?? 0, 0, active.item as TestItem);
+        }
+
+        return { ...column, children };
+      }),
+    );
+  };
+
+  return <Kanban id={id} debug={debug} columns={columns} Component={Component} onDrop={handleDrop} />;
+};
 
 export const EchoKanban = ({
   container = 'projects',

@@ -9,19 +9,19 @@ import React, { FC, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { Kanban, KanbanColumn } from './Kanban';
-import { Mosaic, MosaicMoveEvent, MosaicTileComponent, Path, swapItems } from '../../mosaic';
+import { Kanban, KanbanColumn, KanbanProps } from './Kanban';
+import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } from '../../testing';
 
 faker.seed(3);
 
-const KanbanStory: FC<{
-  id?: string;
-  Component: MosaicTileComponent<any>;
-  types?: string[];
-  count?: number;
-  debug?: boolean;
-}> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
+const KanbanStory: FC<
+  KanbanProps & {
+    types?: string[];
+    count?: number;
+    debug?: boolean;
+  }
+> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
   const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
     return Array.from({ length: count }).map((_, i) => ({
       id: `column-${i}`,
