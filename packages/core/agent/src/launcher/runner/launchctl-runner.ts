@@ -4,18 +4,30 @@
 
 import { exec } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { unlink, writeFile, mkdir } from 'node:fs/promises';
+import { unlink, writeFile, mkdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
+import pkgUp from 'pkg-up';
+
+import { raise } from '@dxos/debug';
 
 import { Runner, type RunnerStartOptions } from './runner';
+
+const PLIST_TEMPLATE_FILE = 'templates/org.dxos.agent.plist.template';
 
 const execPromise = util.promisify(exec);
 
 export class LaunchctlRunner implements Runner {
   async start({ profile, logFile, errFile, daemonOptions }: RunnerStartOptions): Promise<void> {
     try {
+      const defaultTemplatePath = path.join(
+        path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+        PLIST_TEMPLATE_FILE,
+      );
+
+      const plistTemplate = await readFile(defaultTemplatePath, 'utf-8');
+
       const service = this._getServiceName(profile);
       const plistPath = await this._getPlistPath(service);
 
@@ -88,42 +100,3 @@ export class LaunchctlRunner implements Runner {
     return `org.dxos.agent.${profile}`;
   }
 }
-
-// TODO(egorgripasov): Read from template file.
-const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-    <dict>
-    <key>Label</key>
-    <string>org.dxos.agent.{{PROFILE}}</string>
-    <key>KeepAlive</key>
-    <true/>
-    <key>ProgramArguments</key>
-    <array>
-      <string>{{DX_PATH}}</string>
-      <string>agent</string>
-      <string>start</string>
-      <string>--foreground</string>
-      <string>--profile={{PROFILE}}</string>{{OPTIONS}}
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <dict>
-      <key>Crashed</key>
-      <true/>
-    </dict>
-    <key>EnvironmentVariables</key>
-    <dict>
-      <key>PATH</key>
-      <string>{{NODE_PATH}}</string>
-      <key>LOG_FILTER</key>
-      <string>info</string>
-    </dict>
-    <key>StandardErrorPath</key>
-    <string>{{ERROR_LOG}}</string>
-    <key>StandardOutPath</key>
-    <string>{{OUT_LOG}}</string>
-  </dict>
-</plist>
-`;
