@@ -294,7 +294,18 @@ const MosaicDragOverlay: FC<{
             container={activeItem.container}
             isActive={true}
           />
-          {debug && <span className='m-2 p-1 bg-white text-xs'>{container.id}</span>}
+          {debug && (
+            <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
+              <span className='truncate'>
+                <span className='text-neutral-400'>container </span>
+                {container.id}
+              </span>
+              <span className='truncate'>
+                <span className='text-neutral-400'>item </span>
+                {activeItem.item.id.slice(0, 8)}
+              </span>
+            </div>
+          )}
         </DensityProvider>
       </OverlayErrorBoundary>
     </div>

@@ -20,6 +20,7 @@ import {
   MosaicContainerProps,
   MosaicDataItem,
   MosaicDraggedItem,
+  Path,
   useContainer,
   useMosaic,
 } from '../../dnd';
@@ -53,7 +54,7 @@ const StackViewport = ({
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
 
   return (
-    <SortableContext id={id} items={items.map((item) => `${id}/${item.id}`)} strategy={strategy}>
+    <SortableContext id={id} items={items.map((item) => Path.create(id, item.id))} strategy={strategy}>
       {children}
     </SortableContext>
   );

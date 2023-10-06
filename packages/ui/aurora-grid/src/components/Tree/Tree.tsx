@@ -18,6 +18,7 @@ import {
   useSortedItems,
   getTransformCSS,
   useMosaic,
+  Path,
 } from '../../dnd';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -60,7 +61,7 @@ const TreeRoot = ({
 
 export type TreeData = {
   id: string;
-  label?: string;
+  label?: string; // TODO(burdon): Provide adapter.
   children: TreeData[];
 };
 
@@ -88,7 +89,7 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 );
 
 const TreeBranch = ({ container, id, items }: { container: string; id: string; items: TreeData[] }) => {
-  const parent = `${container}/branch/${id}`;
+  const parent = Path.create(container, 'branch', id);
   const sortedItems = useSortedItems({
     container: parent,
     items,
@@ -98,7 +99,7 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
     <TreeItemComponent.Body className='pis-4'>
       <SortableContext
         id={id}
-        items={sortedItems.map(({ id }) => `${parent}/${id}`)}
+        items={sortedItems.map(({ id }) => Path.create(parent, id))}
         strategy={verticalListSortingStrategy}
       >
         {sortedItems.map((child, i) => (
@@ -134,7 +135,7 @@ const TreeTile = ({
     transition,
     isDragging: isDraggingLocal,
   } = useSortable({
-    id: `${container}/${item.id}`,
+    id: Path.create(container, item.id),
     data: { container, item, position: index } satisfies MosaicDraggedItem,
   });
   const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);

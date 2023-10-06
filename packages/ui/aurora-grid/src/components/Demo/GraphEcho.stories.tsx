@@ -14,7 +14,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { arrayMove } from '@dxos/util';
 
 import { MosaicContextProvider, MosaicMoveEvent, Path } from '../../dnd';
-import { Generator, SimpleCard, Status } from '../../testing';
+import { FullscreenDecorator, Generator, SimpleCard, Status } from '../../testing';
 import { Kanban, KanbanColumn } from '../Kanban';
 import { Tree, TreeData } from '../Tree';
 
@@ -167,13 +167,14 @@ export const GraphEcho = {
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
           <GraphTree />
         </div>
-        <div className='flex grow overflow-hidden bg-neutral-900'>
+        <div className='flex grow overflow-hidden'>
           <EchoKanban spaceKey={spaceKey} />
         </div>
       </div>
     </MosaicContextProvider>
   ),
   decorators: [
+    FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
         const generator = new Generator(space);
