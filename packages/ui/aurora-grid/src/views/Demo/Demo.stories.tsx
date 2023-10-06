@@ -68,13 +68,13 @@ export const Kanban = () => (
     <Mosaic.DragOverlay />
     <div className='flex grow overflow-hidden'>
       <div className='flex shrink-0 w-[280px] overflow-hidden'>
-        <DemoStack id='stack-1' Component={SimpleCard} types={types} debug={debug} className='p-2' />
+        <DemoTree id='tree-1' types={types} debug={debug} />
       </div>
       <div className='flex grow overflow-hidden'>
         <DemoKanban id='kanban-1' Component={SimpleCard} debug={debug} className='p-4' />
       </div>
       <div className='flex shrink-0 w-[280px] overflow-hidden'>
-        <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} className='p-2 bg-neutral-900' />
+        <DemoStack id='stack-1' Component={ComplexCard} types={types} debug={debug} className='p-2 bg-neutral-900' />
       </div>
     </div>
   </Mosaic.Root>
