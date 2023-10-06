@@ -58,8 +58,8 @@ const Story = ({
     };
   });
 
-  // TODO(burdon): Called 21 times on startup;
-  // console.log(JSON.stringify(objects[0]));
+  // TODO(burdon): Called for each object generated (should batch?)
+  console.log(JSON.stringify(objects[0]));
 
   // TODO(burdon): Should views maintain an positional index map per property (to enable switching?)
   // TODO(burdon): Is the current index map making use of ECHO object CRDT? Need multi-peer test in this suite.
@@ -75,37 +75,38 @@ const Story = ({
       const fromIndex = kanban.columnValues.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.columnValues.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.columnValues, fromIndex, toIndex);
-      return;
-    }
+    } else {
+      const columnsPath = Path.create(container, 'column'); // TODO(burdon): Export string/function from layout.
+      if (Path.hasDescendent(columnsPath, active.container)) {
+        const activeProperty = Path.last(active.container);
+        const overProperty = Path.last(over.container);
+        invariant(activeProperty);
+        invariant(overProperty);
 
-    const columnsPath = Path.create(container, 'column'); // TODO(burdon): Export string/function from layout.
-    if (Path.hasDescendent(columnsPath, active.container)) {
-      const activeProperty = Path.last(active.container);
-      const overProperty = Path.last(over.container);
-      invariant(activeProperty);
-      invariant(overProperty);
+        // TODO(burdon): Factor out util.
+        const getOrder = (kanban: TypedObject, property: string) => {
+          return (
+            kanban.objectPosition[property] ??
+            columns.find((column) => column.id === property)?.items.map((item) => item.id) ??
+            []
+          );
+        };
 
-      // TODO(burdon): Factor out util.
-      const getOrder = (kanban: TypedObject, property: string) => {
-        return (
-          kanban.objectPosition[property] ??
-          columns.find((column) => column.id === property)?.items.map((item) => item.id) ??
-          []
-        );
-      };
+        console.log({ columnProp: kanban.columnProp, activeProperty, overProperty });
 
-      // Update property.
-      active.item[kanban.columnProp] = overProperty;
+        // Update property.
+        active.item[kanban.columnProp] = overProperty;
 
-      // Update active column order.
-      const activeOrder = getOrder(kanban, activeProperty);
-      activeOrder.length > 0 && activeOrder.splice(active.position, 1);
-      kanban.objectPosition[activeProperty] = activeOrder; // TODO(burdon): Create object if empty?
+        // Update active column order.
+        const activeOrder = getOrder(kanban, activeProperty);
+        activeOrder.length > 0 && activeOrder.splice(active.position, 1);
+        kanban.objectPosition[activeProperty] = activeOrder;
 
-      // Update over column order.
-      const overOrder = getOrder(kanban, overProperty);
-      overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
-      kanban.objectPosition[overProperty] = overOrder; // TODO(burdon): Create object if empty?
+        // Update over column order.
+        const overOrder = getOrder(kanban, overProperty);
+        overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
+        kanban.objectPosition[overProperty] = overOrder;
+      }
     }
   };
 
@@ -148,7 +149,7 @@ export const ECHO = {
             schema: project,
             columnProp: 'status',
             columnValues: columnValues.status,
-            objectPosition: {},
+            objectPosition: {}, // TODO(burdon): Make this a CRDT.
           }),
         );
       },

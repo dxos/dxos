@@ -54,6 +54,7 @@ export class Generator {
     const projects = this._faker.helpers
       .uniqueArray(this._faker.commerce.productName, options.projects)
       .map((title: string) => {
+        // TODO(burdon): Create batch.
         return this._space.db.add(
           new Expando(
             {

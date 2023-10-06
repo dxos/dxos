@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import {
   defaultAnimateLayoutChanges,
   horizontalListSortingStrategy,
@@ -131,14 +132,13 @@ const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentPr
     const column = Path.create(container, 'column', id);
     const sortedItems = useSortedItems({ container: column, items });
 
+    // TODO(burdon): Rename "container" property to "path".
+    const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column } });
+
     return (
       <div
         ref={forwardRef}
-        className={mx(
-          groupSurface,
-          'flex flex-col w-[300px] snap-center overflow-hidden min-h-[50vh]',
-          isDragging && 'opacity-0',
-        )}
+        className={mx(groupSurface, 'flex flex-col w-[300px] snap-center overflow-hidden', isDragging && 'opacity-0')}
         style={draggableStyle}
       >
         <Card.Root classNames='shrink-0 bg-blue-100'>
@@ -150,7 +150,10 @@ const KanbanColumnComponent = forwardRef<HTMLDivElement, KanbanColumnComponentPr
         </Card.Root>
 
         <SortableContext id={id} items={sortedItems.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-          <div className='flex flex-col grow overflow-y-scroll'>
+          <div
+            ref={setNodeRef}
+            className={mx('flex flex-col grow overflow-y-scroll', isOver && 'border border-red-700')}
+          >
             <div className='flex flex-col m-2 my-3 space-y-3'>
               {sortedItems.map((item, i) => (
                 <KanbanTile key={item.id} item={item} column={column} index={i} />
