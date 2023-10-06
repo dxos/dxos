@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, useRef } from 'react';
 
 import { Select, Toolbar } from '@dxos/aurora';
-import { Expando, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Expando, Schema, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { arrayMove } from '@dxos/util';
 
@@ -42,7 +41,17 @@ const Story = ({
   const space = useSpace(spaceKey);
   const [kanban] = useQuery(space, { type: 'kanban' });
 
+  const getProperty = (property: string) => {
+    const schemaProperty = kanban.schema.props.find((prop: any) => prop.id === kanban.columnProp);
+    if (schemaProperty.type === Schema.PropType.NUMBER) {
+      return parseInt(property);
+    } else {
+      return property;
+    }
+  };
+
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
+  const columnsRef = useRef<KanbanColumn<TypedObject>[]>([]);
   const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
     const objectPosition = kanban.objectPosition[value] ?? [];
     const children =
@@ -52,20 +61,31 @@ const Story = ({
 
     // TODO(burdon): Special case for 'unknown' values?
     return {
-      id: value,
+      id: getProperty(value),
       title: value,
       children: children.filter((object: TypedObject) => object[kanban.columnProp] === value),
     };
   });
+  columnsRef.current = columns;
 
   // TODO(burdon): Called for each object generated (should batch?)
-  console.log(JSON.stringify(objects[0]));
+  // console.log(JSON.stringify(objects[0]));
 
   // TODO(burdon): Should views maintain an positional index map per property (to enable switching?)
   // TODO(burdon): Is the current index map making use of ECHO object CRDT? Need multi-peer test in this suite.
   const handleSetProperty = (property: string) => {
     kanban.columnProp = property;
     kanban.columnValues = columnValues[kanban.columnProp];
+  };
+
+  // TODO(burdon): Factor out util.
+  const getOrder = (kanban: TypedObject, property: string) => {
+    // TODO(wittjosiah): Columns is stale here.
+    return (
+      kanban.objectPosition[property] ??
+      columnsRef.current.find((column) => column.id === getProperty(property))?.children.map((item) => item.id) ??
+      []
+    );
   };
 
   const handleDrop = ({ active, over }: any) => {
@@ -83,19 +103,8 @@ const Story = ({
         invariant(activeProperty);
         invariant(overProperty);
 
-        // TODO(burdon): Factor out util.
-        const getOrder = (kanban: TypedObject, property: string) => {
-          return (
-            kanban.objectPosition[property] ??
-            columns.find((column) => column.id === property)?.children.map((item) => item.id) ??
-            []
-          );
-        };
-
-        console.log({ columnProp: kanban.columnProp, activeProperty, overProperty });
-
         // Update property.
-        active.item[kanban.columnProp] = overProperty;
+        active.item[kanban.columnProp] = getProperty(overProperty);
 
         // Update active column order.
         const activeOrder = getOrder(kanban, activeProperty);
