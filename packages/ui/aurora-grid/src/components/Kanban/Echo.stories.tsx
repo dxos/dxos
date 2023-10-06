@@ -50,6 +50,7 @@ const Story = ({
 
   const handleDrop = ({ active, over }: any) => {
     // Reorder columns.
+    // TODO(burdon): Factor out util.
     if (active.container === container) {
       const fromIndex = kanban.order.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.order.findIndex((value: string) => value === over.item.id);
@@ -57,29 +58,32 @@ const Story = ({
       return;
     }
 
-    const columnsPath = Path.create(container, 'column');
+    const columnsPath = Path.create(container, 'column'); // TODO(burdon): Export string/function from layout.
     if (Path.hasDescendent(columnsPath, active.container)) {
       const activeProperty = Path.last(active.container);
       const overProperty = Path.last(over.container);
       invariant(activeProperty);
       invariant(overProperty);
 
+      // TODO(burdon): Factor out util.
+      const getOrder = (kanban: TypedObject, property: string) => {
+        return (
+          kanban.columnOrder[property] ??
+          columns.find((column) => column.id === property)?.items.map((item) => item.id) ??
+          []
+        );
+      };
+
       // Update property.
       active.item[property] = overProperty;
 
       // Update active column order.
-      const activeOrder =
-        kanban.columnOrder[activeProperty] ??
-        columns.find((column) => column.id === activeProperty)?.items.map((item) => item.id) ??
-        [];
+      const activeOrder = getOrder(kanban, activeProperty);
       activeOrder.length > 0 && activeOrder.splice(active.position, 1);
       kanban.columnOrder[activeProperty] = activeOrder;
 
       // Update over column order.
-      const overOrder =
-        kanban.columnOrder[overProperty] ??
-        columns.find((column) => column.id === overProperty)?.items.map((item) => item.id) ??
-        [];
+      const overOrder = getOrder(kanban, overProperty);
       overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
       kanban.columnOrder[overProperty] = overOrder;
     }

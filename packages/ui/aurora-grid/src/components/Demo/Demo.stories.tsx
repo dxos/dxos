@@ -65,7 +65,7 @@ export const Canvas = () => (
   <MosaicContextProvider debug={debug}>
     <div className='flex grow overflow-hidden'>
       <div className='flex shrink-0 w-[280px] overflow-hidden'>
-        <DemoTree id='tree-1' types={types} debug={debug} />
+        <DemoStack id='stack-1' Component={SimpleCard} types={types} debug={debug} className='p-2' />
       </div>
       <div className='flex grow overflow-hidden'>
         <DemoCanvas id='grid-1' debug={debug} className='p-4' />
