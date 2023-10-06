@@ -22,12 +22,11 @@ const services = () => testBuilder.createLocal();
 const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
   return (
     <ClientProvider
-      fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.person.firstName() });
         schema && client.spaces.addSchema(schema);
-        await performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
+        performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
       }}
     >
       {children}
@@ -54,7 +53,6 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
   return (
     <div className='flex' style={{ display: 'flex' }}>
       <ClientProvider
-        fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
           await client.halo.createIdentity();

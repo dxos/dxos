@@ -11,6 +11,7 @@ import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 export const Status = ['pending', 'active', 'done'];
+export const Priority = [1, 2, 3, 4, 5];
 
 export class Generator {
   private _faker!: Faker;
@@ -43,21 +44,28 @@ export class Generator {
           id: 'status',
           type: SchemaType.PropType.STRING,
         },
+        {
+          id: 'priority',
+          type: SchemaType.PropType.NUMBER,
+        },
       ],
     });
 
     const projects = this._faker.helpers
       .uniqueArray(this._faker.commerce.productName, options.projects)
       .map((title: string) => {
-        const obj = new Expando(
-          {
-            title,
-            repo: this._faker.datatype.boolean({ probability: 0.3 }) ? this._faker.internet.url() : undefined,
-            status: this._faker.helpers.arrayElement(Status),
-          },
-          { schema: project },
+        // TODO(burdon): Create batch.
+        return this._space.db.add(
+          new Expando(
+            {
+              title,
+              repo: this._faker.datatype.boolean({ probability: 0.3 }) ? this._faker.internet.url() : undefined,
+              status: this._faker.helpers.arrayElement(Status),
+              priority: this._faker.helpers.arrayElement(Priority),
+            },
+            { schema: project },
+          ),
         );
-        return this._space.db.add(obj);
       });
 
     return { project, projects };

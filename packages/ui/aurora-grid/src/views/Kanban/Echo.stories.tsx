@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 
+import { Select, Toolbar } from '@dxos/aurora';
 import { Expando, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
@@ -13,7 +14,7 @@ import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn } from './Kanban';
 import { Mosaic, Path } from '../../mosaic';
-import { FullscreenDecorator, Generator, SimpleCard, Status } from '../../testing';
+import { FullscreenDecorator, Generator, Priority, SimpleCard, Status } from '../../testing';
 
 export default {
   title: 'Kanban',
@@ -21,6 +22,12 @@ export default {
   parameters: {
     layout: 'fullscreen',
   },
+};
+
+// TODO(burdon): Compute this?
+const columnValues: { [property: string]: any[] } = {
+  status: ['unknown', ...Status],
+  priority: ['unknown', ...Priority],
 };
 
 const Story = ({
@@ -34,61 +41,88 @@ const Story = ({
 }) => {
   const space = useSpace(spaceKey);
   const [kanban] = useQuery(space, { type: 'kanban' });
-  const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
 
-  const property = kanban.columnBy;
-  const columns: KanbanColumn<TypedObject>[] = kanban.order.map((value: string) => {
-    const columnOrder = kanban.columnOrder[value] ?? [];
+  const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
+  const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
+    const objectPosition = kanban.objectPosition[value] ?? [];
     const children =
-      columnOrder.length > 0 ? columnOrder.map((id: string) => objects.find((object) => object.id === id)) : objects;
+      objectPosition.length > 0
+        ? objectPosition.map((id: string) => objects.find((object) => object.id === id))
+        : objects;
+
+    // TODO(burdon): Special case for 'unknown' values?
     return {
       id: value,
       title: value,
-      children: children.filter((object: TypedObject) => object[property] === value),
+      children: children.filter((object: TypedObject) => object[kanban.columnProp] === value),
     };
   });
 
+  // TODO(burdon): Called for each object generated (should batch?)
+  console.log(JSON.stringify(objects[0]));
+
+  // TODO(burdon): Should views maintain an positional index map per property (to enable switching?)
+  // TODO(burdon): Is the current index map making use of ECHO object CRDT? Need multi-peer test in this suite.
+  const handleSetProperty = (property: string) => {
+    kanban.columnProp = property;
+    kanban.columnValues = columnValues[kanban.columnProp];
+  };
+
   const handleDrop = ({ active, over }: any) => {
     // Reorder columns.
+    // TODO(burdon): Factor out util.
     if (active.container === container) {
-      const fromIndex = kanban.order.findIndex((value: string) => value === active.item.id);
-      const toIndex = kanban.order.findIndex((value: string) => value === over.item.id);
-      fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.order, fromIndex, toIndex);
-      return;
-    }
+      const fromIndex = kanban.columnValues.findIndex((value: string) => value === active.item.id);
+      const toIndex = kanban.columnValues.findIndex((value: string) => value === over.item.id);
+      fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.columnValues, fromIndex, toIndex);
+    } else {
+      const columnsPath = Path.create(container, 'column'); // TODO(burdon): Export string/function from layout.
+      if (Path.hasDescendent(columnsPath, active.container)) {
+        const activeProperty = Path.last(active.container);
+        const overProperty = Path.last(over.container);
+        invariant(activeProperty);
+        invariant(overProperty);
 
-    const columnsPath = Path.create(container, 'column');
-    if (Path.hasDescendent(columnsPath, active.container)) {
-      const activeProperty = Path.last(active.container);
-      const overProperty = Path.last(over.container);
-      invariant(activeProperty);
-      invariant(overProperty);
+        // TODO(burdon): Factor out util.
+        const getOrder = (kanban: TypedObject, property: string) => {
+          return (
+            kanban.objectPosition[property] ??
+            columns.find((column) => column.id === property)?.children.map((item) => item.id) ??
+            []
+          );
+        };
 
-      // Update property.
-      active.item[property] = overProperty;
+        console.log({ columnProp: kanban.columnProp, activeProperty, overProperty });
 
-      // Update active column order.
-      const activeOrder =
-        kanban.columnOrder[activeProperty] ??
-        columns.find((column) => column.id === activeProperty)?.children.map((item) => item.id) ??
-        [];
-      activeOrder.length > 0 && activeOrder.splice(active.position, 1);
-      kanban.columnOrder[activeProperty] = activeOrder;
+        // Update property.
+        active.item[kanban.columnProp] = overProperty;
 
-      // Update over column order.
-      const overOrder =
-        kanban.columnOrder[overProperty] ??
-        columns.find((column) => column.id === overProperty)?.children.map((item) => item.id) ??
-        [];
-      overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
-      kanban.columnOrder[overProperty] = overOrder;
+        // Update active column order.
+        const activeOrder = getOrder(kanban, activeProperty);
+        activeOrder.length > 0 && activeOrder.splice(active.position, 1);
+        kanban.objectPosition[activeProperty] = activeOrder;
+
+        // Update over column order.
+        const overOrder = getOrder(kanban, overProperty);
+        overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
+        kanban.objectPosition[overProperty] = overOrder;
+      }
     }
   };
 
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
-      <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
+      <div className='flex flex-col grow'>
+        <Toolbar.Root classNames='p-2'>
+          <PropertySelector
+            property={kanban.columnProp}
+            properties={Object.keys(columnValues)}
+            onSetProperty={handleSetProperty}
+          />
+        </Toolbar.Root>
+        <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
+      </div>
     </Mosaic.Root>
   );
 };
@@ -106,12 +140,38 @@ export const ECHO = {
             type: 'kanban',
             title: 'Projects',
             schema: project,
-            columnBy: 'status',
-            order: Status,
-            columnOrder: {},
+            columnProp: 'status',
+            columnValues: columnValues.status,
+            objectPosition: {}, // TODO(burdon): Make this a CRDT.
           }),
         );
       },
     }),
   ],
+};
+
+const PropertySelector: FC<{ property: string; properties: string[]; onSetProperty: (property: string) => void }> = ({
+  property,
+  properties,
+  onSetProperty,
+}) => {
+  return (
+    <Select.Root value={property} onValueChange={onSetProperty}>
+      <Select.TriggerButton placeholder='Select value' />
+      <Select.Portal>
+        <Select.Content>
+          <Select.ScrollUpButton />
+          <Select.Viewport>
+            {properties.map((property) => (
+              <Select.Option key={property} value={property}>
+                {property}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+          <Select.ScrollDownButton />
+          <Select.Arrow />
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
 };

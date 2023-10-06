@@ -14,6 +14,7 @@ import {
   MosaicTileComponent,
   useContainer,
   useSortedItems,
+  Path,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -28,7 +29,7 @@ export type TreeProps<TData extends MosaicDataItem = TreeData> = MosaicContainer
 
 export type TreeData = {
   id: string;
-  label?: string;
+  label?: string; // TODO(burdon): Provide adapter.
   children: TreeData[];
 };
 
@@ -76,16 +77,16 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
           <Card.Title title={item.label ?? `${container}/${item.id}`} classNames='truncate' />
         </Card.Header>
         {!isActive && !isDragging && item.children && (
-          <TreeBranch parent={container} id={item.id} items={item.children} />
+          <TreeBranch path={container} id={item.id} items={item.children} />
         )}
       </div>
     );
   },
 );
 
-const TreeBranch = ({ parent, id, items }: { parent: string; id: string; items: TreeData[] }) => {
+const TreeBranch = ({ path: parentPath, id, items }: { path: string; id: string; items: TreeData[] }) => {
   const { Component } = useContainer();
-  const path = `${parent}/branch/${id}`;
+  const path = Path.create(parentPath, 'branch', id);
   const sortedItems = useSortedItems({
     container: path,
     items,

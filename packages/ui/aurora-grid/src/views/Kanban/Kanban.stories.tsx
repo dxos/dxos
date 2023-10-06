@@ -10,7 +10,7 @@ import React, { FC, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 
 import { Kanban, KanbanColumn } from './Kanban';
-import { DefaultComponent, Mosaic, MosaicMoveEvent, MosaicTileComponent, Path, swapItems } from '../../mosaic';
+import { Mosaic, MosaicMoveEvent, MosaicTileComponent, Path, swapItems } from '../../mosaic';
 import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } from '../../testing';
 
 faker.seed(3);
@@ -21,7 +21,7 @@ const KanbanStory: FC<{
   types?: string[];
   count?: number;
   debug?: boolean;
-}> = ({ id = 'kanban', Component = DefaultComponent, types = ['document'], count = 3, debug = false }) => {
+}> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
   const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
     return Array.from({ length: count }).map((_, i) => ({
       id: `column-${i}`,
@@ -58,8 +58,7 @@ const KanbanStory: FC<{
             children.push(active.item as TestItem);
           } else if (Path.hasDescendent(columnsPath, over.container) && Path.last(over.container) === column.id) {
             // Move card within or between columns.
-            invariant(over.position !== undefined);
-            children.splice(over.position, 0, active.item as TestItem);
+            children.splice(over.position ?? 0, 0, active.item as TestItem);
           }
 
           return { ...column, children };

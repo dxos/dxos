@@ -21,7 +21,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 > &
   MosaicTileOverlayProps & {
     Component: MosaicTileComponent<TData>;
-    container: string;
+    container: string; // TODO(wittjosiah): Rename to path.
     item: TData;
 
     position?: TPosition;

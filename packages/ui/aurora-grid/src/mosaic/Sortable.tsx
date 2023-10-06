@@ -7,6 +7,7 @@ import React, { PropsWithChildren } from 'react';
 
 import { useContainer } from './hooks';
 import { MosaicDataItem } from './types';
+import { Path } from './util';
 
 type Direction = 'horizontal' | 'vertical';
 
@@ -25,7 +26,7 @@ export const MosaicSortable = ({ id, items = [], direction = 'vertical', childre
   const Direction = direction === 'vertical' ? Column : Row;
 
   return (
-    <Direction id={contextId} items={items.map((item) => `${contextId}/${item.id}`)}>
+    <Direction id={contextId} items={items.map((item) => Path.create(contextId, item.id))}>
       {children}
     </Direction>
   );

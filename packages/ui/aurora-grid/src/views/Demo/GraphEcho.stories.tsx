@@ -12,7 +12,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { EchoKanban } from './DemoKanban';
 import { GraphTree } from './DemoTree';
 import { Mosaic } from '../../mosaic';
-import { Generator, Status } from '../../testing';
+import { FullscreenDecorator, Generator, Status } from '../../testing';
 
 faker.seed(3);
 const debug = true;
@@ -29,13 +29,14 @@ export const GraphEcho = {
         <div className='flex shrink-0 w-[280px] overflow-hidden'>
           <GraphTree debug={debug} />
         </div>
-        <div className='flex grow overflow-hidden bg-neutral-900'>
+        <div className='flex grow overflow-hidden'>
           <EchoKanban spaceKey={spaceKey} debug={debug} />
         </div>
       </div>
     </Mosaic.Root>
   ),
   decorators: [
+    FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
         const generator = new Generator(space);
