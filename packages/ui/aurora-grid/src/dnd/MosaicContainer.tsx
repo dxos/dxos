@@ -98,7 +98,9 @@ export const useSortedItems = <T extends MosaicDataItem>({
     overItem?.container === container
   ) {
     // TODO(burdon): Can we check the type? Default action for `allows`?
-    return [activeItem.item as T, ...items];
+    const sortedItems = [...items];
+    sortedItems.splice(overItem.position as number, 0, activeItem.item as T);
+    return sortedItems;
   }
 
   if (activeItem && activeItem.container === container && overItem && overItem?.container !== activeItem.container) {

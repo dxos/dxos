@@ -21,6 +21,7 @@ import {
   MosaicDataItem,
   MosaicDraggedItem,
   useContainer,
+  useMosaic,
 } from '../../dnd';
 
 export type Direction = 'horizontal' | 'vertical';
@@ -28,8 +29,14 @@ export type Direction = 'horizontal' | 'vertical';
 type StackRootProps<TData extends MosaicDataItem> = MosaicContainerProps<TData, number>;
 
 // TODO(burdon): Make generic (and forwardRef).
-const StackRoot = ({ id, Component = DefaultComponent, onDrop, children }: PropsWithChildren<StackRootProps<any>>) => {
-  return <MosaicContainer container={{ id, Component, isDroppable: () => true, onDrop }}>{children}</MosaicContainer>;
+const StackRoot = ({
+  id,
+  Component = DefaultComponent,
+  onDrop,
+  isDroppable,
+  children,
+}: PropsWithChildren<StackRootProps<any>>) => {
+  return <MosaicContainer container={{ id, Component, isDroppable, onDrop }}>{children}</MosaicContainer>;
 };
 
 type StackViewportProps<TData extends MosaicDataItem> = {
@@ -46,7 +53,7 @@ const StackViewport = ({
   const strategy = direction === 'vertical' ? verticalListSortingStrategy : horizontalListSortingStrategy;
 
   return (
-    <SortableContext id={id} items={items.map((item) => item.id)} strategy={strategy}>
+    <SortableContext id={id} items={items.map((item) => `${id}/${item.id}`)} strategy={strategy}>
       {children}
     </SortableContext>
   );
@@ -58,12 +65,21 @@ const StackTile: FC<{
   debug?: boolean;
   onSelect?: () => void;
 }> = ({ item, index, debug, onSelect }) => {
+  const { activeItem, overItem } = useMosaic();
   const { id: container, Component = DefaultComponent } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: item.id,
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging: isDraggingLocal,
+  } = useSortable({
+    id: `${container}/${item.id}`,
     data: { container, item, position: index } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
 
   return (
     <Component
@@ -77,7 +93,7 @@ const StackTile: FC<{
         transition,
       }}
       draggableProps={{ ...attributes, ...listeners }}
-      className={mx(isDragging && 'opacity-0')}
+      className={mx(isDragging && 'opacity-50')}
       onSelect={onSelect}
       debug={debug}
     />

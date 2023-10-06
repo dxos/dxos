@@ -17,6 +17,7 @@ import {
   useContainer,
   useSortedItems,
   getTransformCSS,
+  useMosaic,
 } from '../../dnd';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -33,13 +34,22 @@ const TreeRoot = ({
   debug,
   items = [],
   Component = TreeItem,
+  isDroppable,
   onDrop,
   children,
 }: PropsWithChildren<TreeRootProps<any>>) => {
   return (
-    <TreeComponent.Root classNames={'flex overflow-hidden'}>
+    <TreeComponent.Root classNames='flex flex-col'>
       {/* TODO(wittjosiah): This is Stack.Root. */}
-      <MosaicContainer container={{ id, debug, Component, isDroppable: () => true, onDrop }}>
+      <MosaicContainer
+        container={{
+          id,
+          debug,
+          Component,
+          isDroppable,
+          onDrop,
+        }}
+      >
         <SortableContext id={id} items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
@@ -50,8 +60,8 @@ const TreeRoot = ({
 
 export type TreeData = {
   id: string;
-  title?: string;
-  items: TreeData[];
+  label?: string;
+  children: TreeData[];
 };
 
 /**
@@ -67,9 +77,11 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
-          <Card.Title title={data.title ?? `${container}/${data.id}`} classNames='truncate' />
+          <Card.Title title={data.label ?? `${container}/${data.id}`} classNames='truncate' />
         </Card.Header>
-        {!isActive && !isDragging && data.items && <TreeBranch container={container} id={data.id} items={data.items} />}
+        {!isActive && !isDragging && data.children && (
+          <TreeBranch container={container} id={data.id} items={data.children} />
+        )}
       </div>
     );
   },
@@ -80,15 +92,15 @@ const TreeBranch = ({ container, id, items }: { container: string; id: string; i
   const sortedItems = useSortedItems({
     container: parent,
     items,
-    // isDroppable: (active) => {
-    // TODO(wittjosiah): This should be configurable.
-    // return active.container !== container;
-    // },
   });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <SortableContext id={id} items={sortedItems} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        id={id}
+        items={sortedItems.map(({ id }) => `${parent}/${id}`)}
+        strategy={verticalListSortingStrategy}
+      >
         {sortedItems.map((child, i) => (
           <TreeComponent.Branch key={child.id}>
             <TreeTile item={child} parent={parent} index={i} />
@@ -111,11 +123,21 @@ const TreeTile = ({
   parent?: string;
   onSelect?: () => void;
 }) => {
-  const { id: container, Component = TreeItem } = useContainer();
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: item.id,
-    data: { container: parent ?? container, item, position: index } satisfies MosaicDraggedItem,
+  const { activeItem, overItem } = useMosaic();
+  const { id, Component = TreeItem } = useContainer();
+  const container = parent ?? id;
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging: isDraggingLocal,
+  } = useSortable({
+    id: `${container}/${item.id}`,
+    data: { container, item, position: index } satisfies MosaicDraggedItem,
   });
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
 
   return (
     <TreeItemComponent.Root collapsible defaultOpen>
@@ -123,7 +145,7 @@ const TreeTile = ({
       <Component
         ref={setNodeRef}
         data={item}
-        container={parent ?? container}
+        container={container}
         position={index}
         isDragging={isDragging}
         draggableStyle={{
@@ -131,7 +153,7 @@ const TreeTile = ({
           transition,
         }}
         draggableProps={{ ...attributes, ...listeners }}
-        className={mx(isDragging && 'opacity-0')}
+        className={mx(isDragging && 'opacity-50')}
         onSelect={onSelect}
       />
     </TreeItemComponent.Root>

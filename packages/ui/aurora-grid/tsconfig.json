@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/plugins/plugin-graph"
+    },
+    {
       "path": "../../common/debug"
     },
     {
