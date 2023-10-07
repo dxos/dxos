@@ -13,13 +13,13 @@ import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
-type StoryProps = StackProps & {
+type TestStackProps = StackProps & {
   types: string[];
   count: number;
   behavior?: 'move' | 'copy' | 'disallow';
 };
 
-const StackStory = ({
+const TestStack = ({
   id = 'stack',
   Component,
   types,
@@ -27,7 +27,7 @@ const StackStory = ({
   direction = 'vertical',
   behavior = 'move',
   debug,
-}: StoryProps) => {
+}: TestStackProps) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() =>
     Array.from({ length: count }).map(() => createItem(types)),
   );
@@ -57,24 +57,35 @@ const StackStory = ({
   };
 
   return (
-    <Mosaic.Root debug={debug}>
+    <Stack
+      id={id}
+      Component={Component}
+      onDrop={handleDrop}
+      isDroppable={handleDroppable}
+      items={items}
+      direction={direction}
+      debug={debug}
+    />
+  );
+};
+
+const StackStory = (args: TestStackProps) => {
+  return (
+    <Mosaic.Root debug={args.debug}>
       <Mosaic.DragOverlay />
-      <Stack
-        id={id}
-        Component={Component}
-        onDrop={handleDrop}
-        isDroppable={handleDroppable}
-        items={items}
-        direction={direction}
-        debug={debug}
-      />
+      <div className='flex grow justify-center p-4'>
+        <div className='grid grid-cols-2'>
+          <TestStack {...args} id='stack-1' />
+          <TestStack {...args} id='stack-2' />
+        </div>
+      </div>
     </Mosaic.Root>
   );
 };
 
 export default {
-  title: 'Stack/Multiple',
-  component: Stack,
+  title: 'Stack/Columns',
+  component: StackStory,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
@@ -86,29 +97,14 @@ export const Move = {
     Component: SimpleCard,
     debug: true,
   },
-  render: (args: StoryProps) => {
-    return (
-      <div className='flex grow justify-around'>
-        <StackStory {...args} id='a' />
-        <StackStory {...args} id='b' />
-      </div>
-    );
-  },
 };
 
+// TODO(burdon): Should not hide from source while dragging.
 export const Copy = {
   args: {
     Component: SimpleCard,
     debug: true,
     behavior: 'copy',
-  },
-  render: (args: StoryProps) => {
-    return (
-      <div className='flex grow justify-around'>
-        <StackStory {...args} id='a' />
-        <StackStory {...args} id='b' />
-      </div>
-    );
   },
 };
 
@@ -117,13 +113,5 @@ export const Disallow = {
     Component: SimpleCard,
     debug: true,
     behavior: 'disallow',
-  },
-  render: (args: StoryProps) => {
-    return (
-      <div className='flex grow justify-around'>
-        <StackStory {...args} id='a' />
-        <StackStory {...args} id='b' />
-      </div>
-    );
   },
 };

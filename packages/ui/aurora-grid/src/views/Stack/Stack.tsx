@@ -32,8 +32,8 @@ export const Stack = ({
     <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
       <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
         <Mosaic.Sortable items={sortedItems} direction={direction}>
-          <div className={mx('flex flex-col', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
-            <div className={mx('flex gap-4', direction === 'vertical' && 'flex-col')}>
+          <div className={mx('flex flex-col my-2', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
+            <div className={mx('flex gap-2', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile
                   key={item.id}
@@ -41,11 +41,16 @@ export const Stack = ({
                   container={id}
                   position={i}
                   Component={Component}
-                  debug={debug}
+                  // debug={debug}
                 />
               ))}
             </div>
-            {debug && <Mosaic.Debug data={{ id: 'stack', items: sortedItems.length }} />}
+
+            {debug && (
+              <div className='grow'>
+                <Mosaic.Debug data={{ id, items: sortedItems.length }} />
+              </div>
+            )}
           </div>
         </Mosaic.Sortable>
       </Mosaic.Container>

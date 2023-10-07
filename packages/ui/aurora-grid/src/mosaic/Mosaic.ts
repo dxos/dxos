@@ -25,6 +25,8 @@ export const Mosaic = {
   Sortable: MosaicSortable,
   DraggableTile,
   SortableTile,
+
+  // TODO(burdon): Don't export.
   // TODO(wittjosiah): Consider factoring out or using inline styles instead depending on aurora theme/tailwind.
   DefaultComponent,
   Debug,
@@ -35,21 +37,28 @@ export const Mosaic = {
   Sortable: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
+
   DefaultComponent: MosaicTileComponent;
   Debug: FC<MosaicDebugProps>;
 };
 
 export type MosaicRootProps = NaturalMosaicRootProps;
+
 export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
   TCustom = any,
 > = NaturalMosaicContainerProps<TData, TPosition, TCustom>;
+
 export type MosaicOverlayProps = MosaicDragOverlayProps;
+
 export type MosaicSortableProps = NaturalMosaicSortableProps;
-export type MosaicDebugProps = DebugProps;
+
 export type MosaicTileProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
 > = NaturalMosaicTileProps<TData, TPosition>;
+
 export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = NaturalMosaicTileComponent<TData>;
+
+export type MosaicDebugProps = DebugProps;

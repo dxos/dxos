@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
@@ -91,21 +92,21 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const column = Path.create(container, 'column', id);
     const sortedItems = useSortedItems({ container: column, items: children });
 
+    // TODO(burdon): Doesn't drop at end.
     // TODO(burdon): Rename "container" property to "path".
-    // TODO(wittjosiah): Breaks column reordering.
-    // const { setNodeRef, isOver } = useDroppable({ id: column, data: { container: column, item, position } });
+    const { setNodeRef } = useDroppable({ id: column, data: { container: column, item, position } });
 
     return (
       <div
         ref={forwardRef}
         className={mx(
           groupSurface,
-          'flex flex-col w-[300px] snap-center overflow-hidden min-h-[50vh]',
-          isDragging && 'opacity-0',
+          'flex flex-col w-[300px] snap-center overflow-hidden h-full m-1',
+          isDragging && 'opacity-20',
         )}
         style={draggableStyle}
       >
-        <Card.Root classNames='shrink-0 bg-blue-100'>
+        <Card.Root classNames='shrink-0 bg-cyan-200'>
           <Card.Header>
             <Card.DragHandle {...draggableProps} />
             <Card.Title title={title} />
@@ -114,12 +115,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
         </Card.Root>
 
         <Mosaic.Sortable id={column} items={sortedItems} direction='vertical'>
-          {/* <div
-            ref={setNodeRef}
-            className={mx('flex flex-col grow overflow-y-scroll', isOver && 'border border-blue-700')}
-          > */}
-          <div className='flex flex-col grow overflow-y-scroll'>
-            <div className='flex flex-col m-2 my-3 space-y-3'>
+          <div ref={setNodeRef} className={mx('flex flex-col grow overflow-y-scroll')}>
+            <div className='flex flex-col m-2 my-3 gap-2'>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile key={item.id} item={item} container={column} position={i} Component={Component!} />
               ))}

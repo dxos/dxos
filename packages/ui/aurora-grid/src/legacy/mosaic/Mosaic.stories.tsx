@@ -310,7 +310,7 @@ const StorybookDelegator = forwardRef<HTMLDivElement, DelegatorProps<TestDataPro
               groupSurface,
               surfaceElevation({ elevation: 'group' }),
               'rounded relative',
-              isPreview ? 'opacity-50' : isActive && 'opacity-0',
+              isPreview ? 'opacity-20' : isActive && 'opacity-0',
             )}
             style={style}
             ref={forwardedRef}

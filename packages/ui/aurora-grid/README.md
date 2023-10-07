@@ -16,38 +16,6 @@ It is built on top of [dnd kit](https://dndkit.com/) and Aurora.
 | Item               | A datum represented by a Tile.                                                                                       |
 
 
-Hierarchy:
-
- - Components
- - Mosaics (DND)
- - Views (schema)
- - Plugins
-
-Naming:
-
-```ts
-// Platform
-@dxos/client
-@dxos/echo
-@dxos/graph
-@dxos/halo
-
-// Windows system
-@dxos/app-graph
-@dxos/app-intent
-@dxos/app-surface
-
-// Componentry
-@dxos/ui
-@dxos/ui-mosaic
-@dxos/ui-theme
-
-// Apps
-@dxos/halo-app
-@dxos/composer
-```
-
-
 ## Design principles
 
 - Extends `dnd-kit` without obfuscation or wrapping;
@@ -62,15 +30,16 @@ Naming:
 
 ## Issues
 
-- isDroppable logic (subscriptions)? (e.g., prevent kanban column from accepting entire column.)
-- Nested contexts (e.g., to set modifiers at different levels).
-- Reactivity: tile props (e.g., label); position (e.g., index, grid position).
-- 
+- When dragging across grid always set bounds (currently changes when between cell gaps).
+- Remove padding between tiles in Sortable (causes flickering); instead selectively add padding to tiles.
+
+- Projections/Lenses: tile props (e.g., label); position (e.g., index, grid position).
 - Standardize generics (when to use any, unknown, provide default, etc.)
 - Standardize events (e.g., onSelect).
 - Standardize Mosaic Root components (e.g., make generic).
   - https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref#58473012
 - Radix-style components and theming (forwardRefs).
-
 - Focus (e.g., show grid while dragging in grid).
 - Mobile
+
+- Future of dnd-kit: https://github.com/clauderic/dnd-kit/issues/1194#issuecomment-1696704815

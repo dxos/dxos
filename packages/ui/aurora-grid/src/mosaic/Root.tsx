@@ -3,6 +3,7 @@
 //
 
 import {
+  CollisionDetection,
   DndContext,
   DragCancelEvent,
   DragEndEvent,
@@ -12,6 +13,7 @@ import {
   KeyboardSensor,
   Modifier,
   MouseSensor,
+  pointerWithin,
   rectIntersection,
   TouchSensor,
   useSensor,
@@ -41,12 +43,15 @@ export type MosaicContextType = {
 export const MosaicContext = createContext<MosaicContextType | undefined>(undefined);
 
 export type MosaicRootProps = PropsWithChildren<{
+  /**
+   * Default component.
+   */
   Component?: MosaicTileComponent<any>;
   debug?: boolean;
 }>;
 
 /**
- * Root provider.
+ * Root context provider.
  */
 export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, debug, children }) => {
   const [containers, setContainers] = useState(
@@ -72,6 +77,39 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   // DndKit Defaults
   //
 
+  /**
+   * See: https://docs.dndkit.com/api-documentation/context-provider/collision-detection-algorithms#custom-collision-detection-algorithms
+   * See: https://github.com/clauderic/dnd-kit/tree/master/packages/core/src/utilities/algorithms
+   */
+  // TODO(burdon): Flickering: should not change while animation is happening.
+  const collisionDetection: CollisionDetection = (args) => {
+    // pointerWithin is the most accurate (since we're using drag handles), but only works with pointer sensors.
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+
+    // If there are no collisions with the pointer, return rectangle intersections.
+    return rectIntersection(args);
+  };
+
+  /**
+   * Dragging transformation modifiers adaptable by container.
+   * See: https://github.com/clauderic/dnd-kit/tree/master/packages/core/src/modifiers
+   */
+  const modifiers: Modifier = (props) => {
+    const { transform } = props;
+    if (activeItem) {
+      const container = containers.get(activeItem.container);
+      return container?.modifier?.(activeItem, props) ?? transform;
+    } else {
+      return transform;
+    }
+  };
+
+  /**
+   * See: https://github.com/clauderic/dnd-kit/tree/master/packages/core/src/sensors
+   */
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -88,16 +126,6 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  const containerContextModifier: Modifier = (props) => {
-    const { transform } = props;
-    if (activeItem) {
-      const container = containers.get(activeItem.container);
-      return container?.modifier?.(activeItem, props) ?? transform;
-    } else {
-      return transform;
-    }
-  };
 
   //
   // Events
@@ -171,8 +199,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   return (
     <MosaicContext.Provider value={{ containers, setContainer: handleSetContainer, activeItem, overItem }}>
       <DndContext
-        collisionDetection={rectIntersection}
-        modifiers={[containerContextModifier]}
+        collisionDetection={collisionDetection}
+        modifiers={[modifiers]}
         sensors={sensors}
         // TODO(burdon): Allow container to veto drop.
         cancelDrop={(event) => false}

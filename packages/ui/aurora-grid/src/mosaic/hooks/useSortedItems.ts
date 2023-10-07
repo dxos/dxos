@@ -17,19 +17,21 @@ export const useSortedItems = <T extends MosaicDataItem>({
   items: T[];
 }): T[] => {
   const { activeItem, overItem } = useMosaic();
+
+  // Insert item being dragged in.
   if (
     activeItem &&
     activeItem.item.id !== container &&
     activeItem.container !== container &&
     overItem?.container === container
   ) {
-    // TODO(burdon): Can we check the type? Default action for `allows`?
     const sortedItems = [...items];
     sortedItems.splice(overItem.position as number, 0, activeItem.item as T);
     return sortedItems;
   }
 
-  if (activeItem && activeItem.container === container && overItem && overItem?.container !== activeItem.container) {
+  // Remove item being dragged out.
+  if (activeItem && activeItem.container === container && overItem?.container !== activeItem.container) {
     return items.filter((item) => item.id !== activeItem.item.id);
   }
 

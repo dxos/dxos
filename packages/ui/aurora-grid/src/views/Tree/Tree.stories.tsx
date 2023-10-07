@@ -16,6 +16,7 @@ faker.seed(3);
 
 const count = 5;
 
+// TODO(burdon): Move to testing.
 const testItems1 = Array.from({ length: count }).map((_, i) => ({
   id: `branch-${i}`,
   label: `Branch ${i}`,
@@ -97,11 +98,7 @@ const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialIt
   );
 
   const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    if (active.container === id && over.container !== id) {
-      return false;
-    }
-
-    return true;
+    return !(active.container === id && over.container !== id);
   }, []);
 
   return (

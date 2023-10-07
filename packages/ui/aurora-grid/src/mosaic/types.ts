@@ -4,11 +4,11 @@
 
 export type MosaicDataItem = { id: string };
 
-// TODO(burdon): Any point making this generic?
 export type MosaicDraggedItem<TPosition = unknown> = {
-  container: string;
+  container: string; // TODO(burdon): Rename path?
   item: MosaicDataItem;
-  position?: TPosition; // Index or layout-specific positional information (stored separately from the item).
+  // Index or layout-specific positional information (stored separately from the item).
+  position?: TPosition;
 };
 
 export type MosaicMoveEvent<TPosition = unknown> = {

@@ -18,17 +18,17 @@ export type MosaicSortableProps<TData extends MosaicDataItem = MosaicDataItem> =
 }>;
 
 /**
- * Mosaic convenience wrapper for DndKit SortableContext.
+ * Mosaic convenience wrapper for dnd-kit SortableContext.
  */
 export const MosaicSortable = ({ id, items = [], direction = 'vertical', children }: MosaicSortableProps) => {
   const container = useContainer();
   const contextId = id ?? container.id;
-  const Direction = direction === 'vertical' ? Column : Row;
+  const Sortable = direction === 'vertical' ? Column : Row;
 
   return (
-    <Direction id={contextId} items={items.map((item) => Path.create(contextId, item.id))}>
+    <Sortable id={contextId} items={items.map((item) => Path.create(contextId, item.id))}>
       {children}
-    </Direction>
+    </Sortable>
   );
 };
 

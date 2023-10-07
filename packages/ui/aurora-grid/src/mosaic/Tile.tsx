@@ -10,7 +10,7 @@ import { MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
 import { MosaicDataItem, MosaicDraggedItem } from './types';
-import { getTransformCSS } from './util';
+import { getTransformCSS, Path } from './util';
 
 /**
  * Props passed to mosaic tile.
@@ -60,7 +60,7 @@ export const DraggableTile = ({
     transform,
     isDragging: isDraggingLocal,
   } = useDraggable({
-    id: `${container}/${item.id}`,
+    id: Path.create(container, item.id),
     data: { container, item, position } satisfies MosaicDraggedItem,
   });
   const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
@@ -102,7 +102,7 @@ export const SortableTile = ({
     transition,
     isDragging: isDraggingLocal,
   } = useSortable({
-    id: `${container}/${item.id}`,
+    id: Path.create(container, item.id),
     data: { container, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });

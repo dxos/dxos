@@ -38,7 +38,7 @@ export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = []
   const sortedItems = useSortedItems({ container: id, items });
 
   return (
-    <TreeComponent.Root classNames='flex flex-col'>
+    <TreeComponent.Root classNames='flex flex-col overflow-hidden'>
       {/* TODO(wittjosiah): This is Stack.Root. */}
       <Mosaic.Container
         {...{
@@ -70,12 +70,13 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       <div
         ref={forwardedRef}
         style={draggableStyle}
-        className={mx('flex flex-col', className, isDragging && 'opacity-50')}
+        className={mx('flex flex-col', className, isDragging && 'opacity-20')}
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={item.label ?? `${container}/${item.id}`} classNames='truncate' />
         </Card.Header>
+
         {!isActive && !isDragging && item.children && (
           <TreeBranch path={container} id={item.id} items={item.children} />
         )}

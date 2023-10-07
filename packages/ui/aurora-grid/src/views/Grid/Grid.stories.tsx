@@ -14,6 +14,7 @@ import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 
 faker.seed(99);
 
+const debug = true;
 const size = { x: 8, y: 8 };
 const testItems = Array.from({ length: 8 }).map(() => createItem(['document', 'image']));
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
@@ -37,9 +38,17 @@ export const Default = () => {
   };
 
   return (
-    <Mosaic.Root debug>
+    <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
-      <Grid id='test' items={items} layout={layout} size={size} debug Component={ComplexCard} onDrop={handleDrop} />
+      <Grid
+        id='test'
+        items={items}
+        layout={layout}
+        size={size}
+        Component={ComplexCard}
+        onDrop={handleDrop}
+        debug={debug}
+      />
     </Mosaic.Root>
   );
 };

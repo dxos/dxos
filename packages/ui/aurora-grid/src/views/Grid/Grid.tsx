@@ -186,7 +186,7 @@ export const Grid = ({
                       container={id}
                       position={position}
                       Component={Component}
-                      debug={debug}
+                      // debug={debug}
                       draggableStyle={{
                         position: 'absolute',
                         ...getBounds(position, cellBounds, spacing),
