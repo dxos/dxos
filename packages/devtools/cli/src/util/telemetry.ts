@@ -23,6 +23,7 @@ export const IPDATA_API_KEY = config.IPDATA_API_KEY ?? undefined;
 
 // Environment variables.
 export const DX_DISABLE_TELEMETRY = process.env.DX_DISABLE_TELEMETRY ?? undefined;
+const DX_TELEMETRY_GROUP = process.env.DX_TELEMETRY_GROUP ?? undefined;
 
 export type TelemetryContext = {
   mode: 'disabled' | 'basic' | 'full';
@@ -40,6 +41,7 @@ export type TelemetryContext = {
 
 const DEFAULTS: TelemetryContext = {
   mode: 'basic',
+  group: DX_TELEMETRY_GROUP,
   environment: DX_ENVIRONMENT,
   release: DX_RELEASE,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
