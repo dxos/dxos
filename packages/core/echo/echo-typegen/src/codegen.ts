@@ -133,7 +133,7 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
 
   ${createSchema(root)}
 
-  export const schema$ = ${importNamespace}.EchoSchema.fromJson(schemaJson);
+  export const schema$ = ${importNamespace}.TypeCollection.fromJson(schemaJson);
 
   ${declarations}
   `;

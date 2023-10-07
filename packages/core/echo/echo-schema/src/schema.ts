@@ -85,11 +85,11 @@ type Prototype = {
 /**
  * Constructed via generated protobuf class.
  */
-export class EchoSchema {
+export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
 
-  static fromJson(json: string): EchoSchema {
-    return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
+  static fromJson(json: string): TypeCollection {
+    return new TypeCollection(pb.Root.fromJSON(JSON.parse(json)));
   }
 
   constructor(private readonly _root: pb.Root) {}
@@ -102,7 +102,7 @@ export class EchoSchema {
     return new EchoSchemaType(this._root.lookupType(name));
   }
 
-  mergeSchema(schema: EchoSchema) {
+  mergeSchema(schema: TypeCollection) {
     const rootToMerge = filterNamespaces({ base: this._root, toFilter: schema._root });
     rootToMerge.nestedArray.forEach((nested) => {
       this._root.add(nested);
