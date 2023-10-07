@@ -18,6 +18,7 @@ import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
 import { DevtoolsFormatter, devtoolsFormatter, JsonML } from '@dxos/debug';
+import { getBody, getHeader } from './devtools-formatter';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -128,62 +129,9 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   }
 
   [devtoolsFormatter]: DevtoolsFormatter = {
-    // he
-    header: () => {
-      // const obj = this[data];
-      // Object.defineProperty(obj, Symbol.toStringTag, {
-      //   enumerable: false,
-      //   value: `${this[Symbol.toStringTag]}#${this.id}`
-      // })
-
-      return ['span', {}, `${this[Symbol.toStringTag]}`, ['span', { style: 'color: #777' }, `#${this.id}`]];
-    },
+    header: () => getHeader(this),
     hasBody: () => true,
-    body: () => {
-      const listStyle = { style: 'list-style-type: none; padding: 0; margin: 0 0 0 12px; font-style: normal; position: relative' };
-      const liStyle = { style: 'min-height: 16px;' }
-      const immutableNameStyle = { style: 'color: rgb(232,98,0); position: relative' };
-      const keyStyle = { style: 'color: #881391' };
-      const defaultValueKeyStyle = { style: 'color: #777' };
-      const alteredValueKeyStyle = { style: 'color: #881391; font-weight: bolder' };
-      const inlineValuesStyle = { style: 'color: #777; font-style: italic; position: relative' }
-      const nullStyle = { style: 'color: #777' };
-
-      const reference = (object: any, config?: any): JsonML => {
-        if (typeof object === 'undefined')
-          return ['span', nullStyle, 'undefined'];
-        else if (object === 'null')
-          return ['span', nullStyle, 'null'];
-
-        return ['span', { style: 'margin: -2px 0 0;'}, 
-        ['object', { object, config }]];
-      };
-
-      let obj = this[data];
-     
-      const defaultKeys = ['id', '__typename', '__schema', 'meta'];
-
-      obj = {
-        id: this.id,
-        __typename: this.__typename,
-        __schema: this.__schema,
-        ...obj,
-        meta: obj['@meta'],
-        '[[Model]]': obj['@model'],
-      };
-      delete obj['@id'];
-      delete obj['@type'];
-      delete obj['@model'];
-      delete obj['@meta'];
-
-      return ['ol', listStyle, ...Object.keys(obj).map((key): JsonML =>
-        ['li', liStyle,
-          ['span', defaultKeys.includes(key) ? keyStyle : (key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle), key],
-          ['span', {}, ': '],
-          reference(obj[key])
-        ]
-      )]
-    },
+    body: () => getBody(this),
   };
 
   get [Symbol.toStringTag]() {
