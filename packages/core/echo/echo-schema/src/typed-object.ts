@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, immutable, schema, meta } from './defs';
-import { EchoObject } from './object';
+import { base, data, proxy, immutable, schema, meta, ObjectMeta, TypedObjectProperties, EchoObject } from './defs';
+import { EchoObjectBase } from './echo-object-base';
 import type { Schema } from './proto'; // NOTE: Keep as type-import.
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { Text } from './text-object';
@@ -56,17 +56,6 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 // Generic base class for strongly-typed schema-generated classes.
 //
 
-// TODO(dmaretskyi): Document.
-export type ForeignKey = {
-  source?: string;
-  id?: string;
-};
-
-// TODO(dmaretskyi): Document.
-export type ObjectMeta = {
-  keys: ForeignKey[];
-  index?: string;
-};
 
 export type TypedObjectOptions = {
   // TODO(burdon): Reconcile.
@@ -82,7 +71,7 @@ export type TypedObjectOptions = {
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 // TODO(burdon): Extract interface.
-class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
+class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedObjectProperties {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -284,7 +273,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => this._transform(value, visitorsWithDefaults);
 
-    if (value instanceof EchoObject) {
+    if (value instanceof EchoObjectBase) {
       return visitorsWithDefaults.onRef!(value.id, value);
     } else if (value instanceof Reference) {
       return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
@@ -383,12 +372,12 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof EchoObject) {
+      if (value instanceof EchoObjectBase) {
         this._linkObject(value);
         this._mutate(this._model.builder().set(key, new Reference(value.id)).build(meta));
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
-          if (item instanceof EchoObject) {
+          if (item instanceof EchoObjectBase) {
             this._linkObject(item);
             return new Reference(item.id);
           } else if (isReferenceLike(item)) {
@@ -546,7 +535,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: EchoObject) {
+  _linkObject(obj: EchoObjectBase) {
     if (this._database) {
       this._database.add(obj as TypedObject);
     } else {
@@ -575,7 +564,6 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 /**
  * Base class for generated document types and expando objects.
  */
-export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
@@ -583,6 +571,8 @@ type TypedObjectConstructor = {
     opts?: TypedObjectOptions,
   ): TypedObject<T>;
 };
+
+export type TypedObject<T extends Record<string, any> = Record<string, any>> = TypedObjectImpl<T> & T;
 
 export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
 

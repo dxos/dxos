@@ -9,7 +9,7 @@ import React from 'react';
 import { Node } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { Space, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
@@ -50,7 +50,7 @@ export const isMarkdownPlaceholder = (data: unknown): data is ComposerModel =>
     : false;
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  data instanceof EchoObject
+  isTypedObject(data)
     ? true
     : data && typeof data === 'object'
     ? 'title' in data && typeof data.title === 'string'

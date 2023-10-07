@@ -11,8 +11,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { base, db } from './defs';
-import { EchoObject } from './object';
+import { EchoObject, base, db } from './defs';
 import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
 import { DatabaseRouter } from './router';
@@ -60,8 +59,7 @@ export class EchoDatabase {
     return this._router;
   }
 
-  // TODO(burdon): Return type via generic?
-  getObjectById<T extends TypedObject>(id: string): T | undefined {
+  getObjectById<T extends EchoObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;

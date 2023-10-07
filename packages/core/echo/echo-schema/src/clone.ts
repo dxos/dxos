@@ -8,8 +8,9 @@ import { PublicKey } from '@dxos/keys';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { base } from './defs';
-import { EchoObject } from './object';
+import { EchoObject } from './defs';
 import { TypedObject } from './typed-object';
+import { EchoObjectBase } from './echo-object-base';
 
 export type CloneOptions = {
   /**
@@ -67,7 +68,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
   return clone;
 };
 
-const cloneInner = (obj: EchoObject, id: string): EchoObject => {
+const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
   const prototype = Object.getPrototypeOf(obj);
   const snapshot = getObjectSnapshot(obj);
 
@@ -78,7 +79,7 @@ const cloneInner = (obj: EchoObject, id: string): EchoObject => {
   return clone;
 };
 
-const getObjectSnapshot = (obj: EchoObject): EchoObjectProto => {
+const getObjectSnapshot = (obj: EchoObjectBase): EchoObjectProto => {
   if (obj._item) {
     return obj._item.createSnapshot();
   } else {

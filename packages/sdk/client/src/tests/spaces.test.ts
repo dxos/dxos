@@ -11,7 +11,7 @@ import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, subscribe } from '@dxos/echo-schema';
+import { Expando, subscribe, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -388,7 +388,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById(id)!.data = 'test2';
+    space.db.getObjectById<Expando>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -435,7 +435,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById(id)!.data = 'test2';
+    space2.db.getObjectById<Expando>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -468,7 +468,7 @@ describe('Spaces', () => {
     hostDocument.content.model?.insert('Hello, world!', 0);
 
     await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
+      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.text).to.equal('Hello, world!');
     });
   });
 
