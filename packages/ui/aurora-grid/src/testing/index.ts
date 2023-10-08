@@ -4,6 +4,6 @@
 
 export * from './decorators';
 export * from './generator';
-export * from './testing';
+export * from './item-factory';
 
 export * from './SimpleCard';

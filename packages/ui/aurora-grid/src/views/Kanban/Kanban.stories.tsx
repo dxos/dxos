@@ -15,6 +15,14 @@ import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } fr
 
 faker.seed(3);
 
+const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
+  return Array.from({ length: columns }).map((_, i) => ({
+    id: `column-${i}`,
+    title: `Column ${i}`,
+    children: Array.from({ length: columns - i }).map(() => createItem(types)),
+  }));
+};
+
 const KanbanStory: FC<
   KanbanProps & {
     types?: string[];
@@ -22,13 +30,7 @@ const KanbanStory: FC<
     debug?: boolean;
   }
 > = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
-  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
-    return Array.from({ length: count }).map((_, i) => ({
-      id: `column-${i}`,
-      title: `Column ${i}`,
-      children: Array.from({ length: i === count - 1 ? 0 : 5 - i }).map(() => createItem(types)),
-    }));
-  });
+  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => createKanban({ types, columns: count }));
 
   // const handleDelete = (id: string) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));

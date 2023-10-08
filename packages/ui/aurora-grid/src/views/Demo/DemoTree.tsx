@@ -100,6 +100,7 @@ const createGraph = () => {
 
 export const GraphTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean }) => {
   const graph = useMemo(() => createGraph(), []);
+
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Moving within the tree.

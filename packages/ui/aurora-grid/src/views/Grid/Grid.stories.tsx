@@ -15,6 +15,7 @@ import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
 faker.seed(99);
 
 const debug = true;
+
 const size = { x: 8, y: 8 };
 const testItems = Array.from({ length: 8 }).map(() => createItem(['document', 'image']));
 const testLayout = testItems.reduce<GridLayout>((map, item) => {

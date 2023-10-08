@@ -23,7 +23,7 @@ const TestStack = ({
   id = 'stack',
   Component,
   types,
-  count = 3,
+  count = 8,
   direction = 'vertical',
   behavior = 'move',
   debug,
@@ -74,7 +74,7 @@ const StackStory = (args: TestStackProps) => {
     <Mosaic.Root debug={args.debug}>
       <Mosaic.DragOverlay />
       <div className='flex grow justify-center p-4'>
-        <div className='grid grid-cols-2'>
+        <div className='grid grid-cols-2 gap-4'>
           <TestStack {...args} id='stack-1' />
           <TestStack {...args} id='stack-2' />
         </div>

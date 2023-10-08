@@ -29,10 +29,15 @@ export const Stack = ({
   const sortedItems = useSortedItems({ container: id, items });
 
   return (
-    <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
-      <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
-        <Mosaic.Sortable items={sortedItems} direction={direction}>
-          <div className={mx('flex flex-col my-2', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}>
+    <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
+      <Mosaic.Sortable items={sortedItems} direction={direction}>
+        <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
+          <div
+            className={mx(
+              'flex flex-col w-full my-2',
+              direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
+            )}
+          >
             <div className={mx('flex gap-2', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile
@@ -52,8 +57,8 @@ export const Stack = ({
               </div>
             )}
           </div>
-        </Mosaic.Sortable>
-      </Mosaic.Container>
-    </div>
+        </div>
+      </Mosaic.Sortable>
+    </Mosaic.Container>
   );
 };

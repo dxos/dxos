@@ -7,8 +7,6 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { Card } from '@dxos/aurora';
-
 import { DemoGrid } from './DemoGrid';
 import { DemoKanban } from './DemoKanban';
 import { DemoStack } from './DemoStack';
@@ -19,14 +17,14 @@ import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(5);
 
 export default {
-  component: Card,
+  component: Mosaic,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
-const debug = true;
+const debug = false;
 const types = ['document', 'image'];
 
 export const Default = () => (

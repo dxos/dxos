@@ -14,6 +14,14 @@ import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
 import { SimpleCard, TestItem, createItem } from '../../testing';
 import { Kanban, KanbanColumn } from '../Kanban';
 
+const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
+  return Array.from({ length: columns }).map((_, i) => ({
+    id: `column-${i}`,
+    title: `Column ${i}`,
+    children: Array.from({ length: columns - i }).map(() => createItem(types)),
+  }));
+};
+
 export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElement>> = ({
   id,
   types,
@@ -21,13 +29,7 @@ export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElem
   Component = Mosaic.DefaultComponent,
   className,
 }) => {
-  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => {
-    return Array.from({ length: 5 }).map((_, i) => ({
-      id: `column-${i}`,
-      title: `Column ${i}`,
-      children: Array.from({ length: 5 - i }).map(() => createItem(types)),
-    }));
-  });
+  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => createKanban({ types, columns: 3 }));
 
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Reorder columns.
@@ -58,15 +60,15 @@ export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElem
     );
   };
 
-  return <Kanban id={id} debug={debug} columns={columns} Component={Component} onDrop={handleDrop} />;
+  return <Kanban id={id} Component={Component} columns={columns} onDrop={handleDrop} debug={debug} />;
 };
 
 export const EchoKanban = ({
-  container = 'projects',
+  id = 'projects',
   spaceKey,
   debug,
 }: {
-  container?: string;
+  id?: string;
   spaceKey: PublicKey;
   debug?: boolean;
 }) => {
@@ -88,14 +90,14 @@ export const EchoKanban = ({
 
   const handleDrop = ({ active, over }: any) => {
     // Reorder columns.
-    if (active.container === container) {
+    if (active.container === id) {
       const fromIndex = kanban.order.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.order.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.order, fromIndex, toIndex);
       return;
     }
 
-    const columnsPath = Path.create(container, 'column');
+    const columnsPath = Path.create(id, 'column');
     if (Path.hasDescendent(columnsPath, active.container)) {
       const activeProperty = Path.last(active.container);
       const overProperty = Path.last(over.container);
@@ -124,14 +126,16 @@ export const EchoKanban = ({
       const overProperty = Path.last(over.container);
       invariant(overProperty);
 
-      const obj = new Expando(
-        {
-          title: active.item.label,
-          status: overProperty,
-        },
-        { schema: kanban.schema },
+      invariant(space);
+      const obj = space.db.add(
+        new Expando(
+          {
+            title: active.item.label,
+            status: overProperty,
+          },
+          { schema: kanban.schema },
+        ),
       );
-      space?.db.add(obj);
 
       const overOrder =
         kanban.columnOrder[overProperty] ??
@@ -142,5 +146,5 @@ export const EchoKanban = ({
     }
   };
 
-  return <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />;
+  return <Kanban id={id} Component={SimpleCard} columns={columns} onDrop={handleDrop} debug={debug} />;
 };
