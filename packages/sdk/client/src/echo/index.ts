@@ -20,7 +20,7 @@ export {
   base,
   subscribe,
   EchoDatabase,
-  EchoObject,
+  type EchoObject,
   type ObjectMeta,
   EchoSchema,
   Expando,

@@ -5,6 +5,7 @@ import { data } from './defs';
 const idStyle = { style: 'color: #777' };
 const listStyle = { style: 'list-style-type: none; padding: 0; margin: 0 0 0 12px; font-style: normal; position: relative' };
 const liStyle = { style: 'min-height: 16px;' }
+const nestedObjectContainerStyle = { style: 'margin: -2px 0 0; display: inline-flex' };
 const immutableNameStyle = { style: 'color: rgb(232,98,0); position: relative' };
 const keyStyle = { style: 'color: #881391' };
 const defaultValueKeyStyle = { style: 'color: #777' };
@@ -14,8 +15,10 @@ const nullStyle = { style: 'color: #777' };
 
 const defaultKeys = ['id', '__typename', '__schema', 'meta'];
 
-export const getHeader = (obj: TypedObject): JsonML => {
-  return ['span', {}, `${obj[Symbol.toStringTag]}`, ['span', idStyle, `#${obj.id}`]];
+export const getHeader = (obj: TypedObject, config?: any): JsonML => {
+  return ['span', { 
+    style: (config?.nested ? 'padding: 2px 0 0;' : '') + '\n height: 18px;' }
+    , `${obj[Symbol.toStringTag]}`, ['span', idStyle, `#${obj.id}`]];
 }
 
 const formatValue = (object: any, config?: any): JsonML => {
@@ -24,8 +27,9 @@ const formatValue = (object: any, config?: any): JsonML => {
   else if (object === 'null')
     return ['span', nullStyle, 'null'];
 
-  return ['span', { style: 'margin: -2px 0 0;' },
-    ['object', { object, config }]];
+  return ['span', nestedObjectContainerStyle,
+    ['object', { object, config }]
+  ];
 };
 
 export const getBody = (obj: TypedObject): JsonML => {
@@ -47,7 +51,7 @@ export const getBody = (obj: TypedObject): JsonML => {
     ['li', liStyle,
       ['span', defaultKeys.includes(key) ? keyStyle : (key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle), key],
       ['span', {}, ': '],
-      formatValue(objData[key])
+      formatValue(objData[key], { nested: true })
     ]
   )]
 }

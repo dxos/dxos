@@ -129,7 +129,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   }
 
   [devtoolsFormatter]: DevtoolsFormatter = {
-    header: () => getHeader(this),
+    header: (config?: any) => getHeader(this, config),
     hasBody: () => true,
     body: () => getBody(this),
   };
