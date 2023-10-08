@@ -9,9 +9,9 @@ import React, { FC, HTMLAttributes, useCallback, useMemo, useState } from 'react
 
 import { GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { arrayMove } from '@dxos/util';
 
 import { TestComponentProps } from './test';
-import { arrayMove } from '../../legacy';
 import { MosaicMoveEvent, Path } from '../../mosaic';
 import { createItem } from '../../testing';
 import { Tree, TreeData } from '../Tree';
