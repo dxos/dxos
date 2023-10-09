@@ -30,6 +30,7 @@ export const USER_PROCESSOR: LogProcessor = (config, entry) => {
             id: context.identityKey.truncate(),
             username: context.displayName ?? humanize(context.identityKey),
           });
+          setTag('username', context.displayName ?? humanize(context.identityKey));
         }
         break;
       case 'dxos.halo.device':
