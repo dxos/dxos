@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, schema$ as clientSchema, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { ClientServicesProvider, types as clientSchema, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';

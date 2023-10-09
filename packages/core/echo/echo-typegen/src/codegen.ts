@@ -121,11 +121,11 @@ export const generate = (root: pb.NamespaceBase, options: CodegenOptions): strin
   return plate`
   import * as ${importNamespace} from '${options.schemaPackage}';
 
-  export const schema$ = new ${importNamespace}.TypeCollection();
+  export const types = new ${importNamespace}.TypeCollection();
 
   ${declarations}
 
-  schema$.link();
+  types.link();
   `;
 };
 
@@ -191,7 +191,7 @@ export const createObjectClass = (type: pb.Type) => {
       ${fields}
     }
 
-    schema$.registerPrototype(${name}, ${JSON.stringify(createProtoSchema(type))});
+    types.registerPrototype(${name}, ${JSON.stringify(createProtoSchema(type))});
   `;
 };
 

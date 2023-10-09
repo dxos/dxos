@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Contact, Container, Task, schema$ } from './proto';
+import { Contact, Container, Task, types } from './proto';
 import { immutable } from '../defs';
 import { Schema } from '../proto';
 import { TestBuilder, createDatabase } from '../testing';
@@ -129,7 +129,7 @@ describe('static schema', () => {
 
   test('restart with static schema', async () => {
     const builder = new TestBuilder();
-    builder.router.addSchema(schema$);
+    builder.router.addSchema(types);
 
     const peer = await builder.createPeer();
     const task = peer.db.add(new Task({ title: 'Task 1' }));
