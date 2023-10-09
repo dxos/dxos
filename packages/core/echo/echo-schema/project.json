@@ -49,8 +49,8 @@
         ]
       },
       "outputs": [
-        "packages/core/echo/echo-schema/src/test/proto/gen",
-        "packages/core/echo/echo-schema/src/proto/gen"
+        "packages/core/echo/echo-schema/src/proto/gen",
+        "packages/core/echo/echo-schema/src/test/proto/gen"
       ]
     },
     "test": {
