@@ -13,8 +13,8 @@ import { TextModel } from '@dxos/text-model';
 import { EchoArray } from './array';
 import { base, data, proxy, immutable, schema, meta, ObjectMeta, TypedObjectProperties, EchoObject } from './defs';
 import { EchoObjectBase } from './echo-object-base';
-import type { Schema } from './proto'; // NOTE: Keep as type-import.
-import { EchoSchemaField, EchoSchemaType } from './schema';
+import { Schema } from './proto'; // NOTE: Keep as type-import.
+import type { EchoSchemaType } from './schema'; // NOTE: Keep as type-import.
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
 import { DevtoolsFormatter, devtoolsFormatter, JsonML } from '@dxos/debug';
@@ -59,8 +59,7 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 
 
 export type TypedObjectOptions = {
-  // TODO(burdon): Reconcile.
-  schema?: EchoSchemaType | Schema;
+  schema?: Schema;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
@@ -79,8 +78,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  // TODO(burdon): Reconcile types.
-  private readonly _schema?: EchoSchemaType | Schema = undefined;
+  private readonly _schema?: Schema = undefined;
   private readonly _immutable;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
@@ -93,19 +91,15 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     this._updateMeta({ keys: [], ...opts?.meta });
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
-    if (this._schema instanceof EchoSchemaType) {
-      // Set type.
-      this._mutate({ typeRef: Reference.fromLegacyTypeName(this._schema.name) });
-
-      for (const field of this._schema.fields) {
-        if (field.type.kind === 'array') {
-          this._set(field.name, new EchoArray());
-        } else if (field.type.kind === 'ref' && field.type.modelType === TextModel.meta.type) {
-          this._set(field.name, new Text());
+    if (this._schema) {
+      this._mutate({ typeRef: new Reference(this._schema!.id) });
+      for(const field of this._schema.props) {
+        if(field.repeated) {
+          this._set(field.id!, new EchoArray());
+        } else if(field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
+          this._set(field.id!, new Text());
         }
       }
-    } else if (isRuntimeSchema(this._schema)) {
-      this._mutate({ typeRef: new Reference(this._schema!.id) });
     }
 
     if (initialProps) {
@@ -135,17 +129,14 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   };
 
   get [Symbol.toStringTag]() {
-    if (this.__schema instanceof EchoSchemaType) {
-      return this.__schema.name ?? 'TypedObject';
-    } else {
-      return 'TypedObject';
-    }
+    return this._schema?.typename ?? 'Expando';
   }
 
   /**
    * Returns the schema type descriptor for the object.
+   * @deprecated Use `__schema` instead.
    */
-  get [schema](): EchoSchemaType | Schema | undefined {
+  get [schema](): Schema | undefined {
     return this[base]._schema;
   }
 
@@ -163,16 +154,15 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     return !!this[base]?._immutable;
   }
 
-  get __schema(): EchoSchemaType | Schema | undefined {
+  get __schema(): Schema | undefined {
     return this[base]._schema;
   }
 
   /**
    * Fully qualified name of the object type for objects created from the schema.
    */
-  // TODO(burdon): Reconcile schema type.
   get __typename(): string | undefined {
-    return this[base]._schema instanceof EchoSchemaType ? this[base]._schema!.name : undefined;
+    return this.__schema?.typename;
   }
 
   get __meta(): ObjectMeta {
@@ -268,9 +258,9 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
-    if (!type && this._schema instanceof EchoSchemaType) {
-      const field = this._schema.fields.find((field) => field.name === key);
-      if (field?.type.kind === 'array') {
+    if (!type && this._schema) {
+      const field = this._schema.props.find((field) => field.id === key);
+      if (field?.repeated) {
         type = 'array';
       }
     }
@@ -387,8 +377,8 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
      */
     return new Proxy(object, {
       ownKeys: (target) => {
-        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
-          return this._schema.fields.map(({ name }: EchoSchemaField) => name) ?? [];
+        if (this._schema && !parent && !meta) {
+          return this._schema.props.map(field => field.id!) ?? [];
         } else {
           return this._properties(parent, meta);
         }
@@ -407,8 +397,8 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
           return false;
         }
 
-        if (this._schema instanceof EchoSchemaType && !parent && !meta) {
-          return !!this._schema?.fields.find(({ name }: EchoSchemaField) => name === property);
+        if (this._schema && !parent && !meta) {
+          return !!this._schema?.props.find(field => field.id === property);
         } else {
           return this._properties(parent, meta).includes(property);
         }
@@ -453,7 +443,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       },
 
       set: (target, property, value, receiver) => {
-        if (this[base]._immutable && !parent && !meta) {
+        if (this[base]._immutable && !MUTATION_OVERRIDE && !parent && !meta) {
           log.warn('Read only access');
           return false;
         }
@@ -537,3 +527,25 @@ export type Expando = TypedObject;
 
 const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
   !!schema && !!(schema as any)[base];
+
+let MUTATION_OVERRIDE = false;
+
+export const dangerouslyMutateImmutableObject = (cb: () => void) => {
+  const prev = MUTATION_OVERRIDE;
+  MUTATION_OVERRIDE = true;
+  try {
+    cb();
+  } finally {
+    MUTATION_OVERRIDE = prev;
+  }
+}
+
+// Deferred import to avoid circular dependency.
+let schemaProto: typeof Schema;
+const getSchemaProto = (): typeof Schema => {
+  if(!schemaProto) {
+    const { Schema } = require('./proto')
+    schemaProto = Schema;
+  }
+  return schemaProto;
+}

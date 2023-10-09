@@ -27,6 +27,9 @@ message Schema {
     string id = 1; // TODO(burdon): Rename key.
     PropType type = 2;
 
+    /// Referenced object's FQN.
+    optional string ref_name = 6;
+
     /// Referenced object's schema.
     optional Schema ref = 3;
 

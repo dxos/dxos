@@ -8,36 +8,38 @@ import { DocumentModel } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
+import { Schema, type SchemaProps, type Schema as SchemaProto } from './proto';
 
 import { immutable } from './defs';
 import { TypeFilter } from './query';
+import { dangerouslyMutateImmutableObject } from './typed-object';
 
 export type EchoType =
   | {
-      kind: 'number' | 'string' | 'boolean' | 'bytes';
-    }
+    kind: 'number' | 'string' | 'boolean' | 'bytes';
+  }
   | {
-      /**
-       * Plain JS object.
-       */
-      kind: 'record';
-      objectType: string;
-      // TODO(mykola): Add ability to list fields.
-    }
+    /**
+     * Plain JS object.
+     */
+    kind: 'record';
+    objectType: string;
+    // TODO(mykola): Add ability to list fields.
+  }
   | {
-      kind: 'ref';
-      objectType: string;
-      modelType: string;
-    }
+    kind: 'ref';
+    objectType: string;
+    modelType: string;
+  }
   | {
-      kind: 'array';
-      elementType: EchoType;
-    }
+    kind: 'array';
+    elementType: EchoType;
+  }
   | {
-      kind: 'enum';
-      enumType: string;
-      // TODO(mykola): Add ability to list enum values.
-    };
+    kind: 'enum';
+    enumType: string;
+    // TODO(mykola): Add ability to list enum values.
+  };
 
 export type EchoSchemaField = {
   name: string;
@@ -78,8 +80,8 @@ export class EchoSchemaType {
 }
 
 type Prototype = {
-  new (...args: any): any;
-  type: EchoSchemaType;
+  new(...args: any): any;
+  schema: SchemaProto;
 };
 
 /**
@@ -87,17 +89,27 @@ type Prototype = {
  */
 export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
+  private readonly _types = new Map<string, SchemaProto>();
 
+  /**
+   * @deprecated
+   */
   static fromJson(json: string): TypeCollection {
     return new TypeCollection(pb.Root.fromJSON(JSON.parse(json)));
   }
 
-  constructor(private readonly _root: pb.Root) {}
+  constructor(private readonly _root: pb.Root = new pb.Root()) { }
 
+  /**
+   * @deprecated
+   */
   get types() {
     return Array.from(this._prototypes.keys()).map((name) => this.getType(name));
   }
 
+  /**
+   * @deprecated
+   */
   getType(name: string): EchoSchemaType {
     return new EchoSchemaType(this._root.lookupType(name));
   }
@@ -117,11 +129,34 @@ export class TypeCollection {
    * Called from generated code.
    */
   registerPrototype(proto: Prototype) {
-    this._prototypes.set(proto.type.name, proto);
+    this._prototypes.set(proto.schema.typename, proto);
   }
 
   getPrototype(name: string): Prototype | undefined {
     return this._prototypes.get(name);
+  }
+
+  addSchema(schema: SchemaProps): SchemaProto {
+    const delegate = new Schema(schema, { immutable: true });
+    this._types.set(schema.typename, delegate);
+    return delegate;
+  }
+
+  /**
+   * Resolve cross-schema references.
+   */
+  link() {
+    dangerouslyMutateImmutableObject(() => {
+      for (const type of this._types.values()) {
+        for (const field of type.props) {
+          if (field.refName) {
+            if (this._types.has(field.refName)) {
+              field.ref = this._types.get(field.refName);
+            }
+          }
+        }
+      }
+    })
   }
 }
 

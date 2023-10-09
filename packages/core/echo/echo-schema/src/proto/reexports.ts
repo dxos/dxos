@@ -1,10 +1,10 @@
-// Needed to avoid circular dependencies
-
 //
 // Copyright 2023 DXOS.org
 //
 
+// Needed to avoid circular dependencies
+
 export { TypedObject, type TypedObjectOptions } from '../typed-object';
-export { EchoSchema } from '../schema';
+export { TypeCollection } from '../schema';
 export type { TypeFilter } from '../query';
 export type { Schema } from './index';

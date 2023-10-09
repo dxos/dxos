@@ -85,7 +85,7 @@ export type ObjectMeta = {
  */
 export interface TypedObjectProperties extends EchoObject {
   /**
-   * String name of the object type.
+   * Fully qualified name of the object type for objects created from the schema.
    */
   readonly __typename: string | undefined; 
 
@@ -110,4 +110,3 @@ export interface TypedObjectProperties extends EchoObject {
    */
   toJSON(): any;
 }
-

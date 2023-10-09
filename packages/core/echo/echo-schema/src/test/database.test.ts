@@ -19,7 +19,7 @@ describe('database', () => {
     expect(task.id).to.exist;
     expect(task[base]).to.exist;
     expect(task[db]).to.be.undefined;
-    expect(task.__schema).to.eq(Task.type);
+    expect(task.__schema).to.eq(Task.schema);
     expect(task.__typename).to.eq('example.test.Task');
 
     database.add(task);
@@ -101,8 +101,8 @@ describe('database', () => {
       const { objects } = database.query(Container.filter());
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(container.objects[0].__typename).to.equal(Task.type.name);
-      expect(container.objects[1].__typename).to.equal(Contact.type.name);
+      expect(container.objects[0].__typename).to.equal(Task.schema.typename);
+      expect(container.objects[1].__typename).to.equal(Contact.schema.typename);
     }
   });
 

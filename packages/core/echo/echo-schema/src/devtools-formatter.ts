@@ -1,6 +1,6 @@
 import { JsonML } from '@dxos/debug';
 import { TypedObject } from './typed-object'
-import { data } from './defs';
+import { base, data } from './defs';
 
 const idStyle = { style: 'color: #777' };
 const listStyle = { style: 'list-style-type: none; padding: 0; margin: 0 0 0 12px; font-style: normal; position: relative' };
@@ -41,6 +41,7 @@ export const getBody = (obj: TypedObject): JsonML => {
     ...objData,
     meta: objData['@meta'],
     '[[Model]]': objData['@model'],
+    '[[Base]]': obj[base],
   };
   delete objData['@id'];
   delete objData['@type'];

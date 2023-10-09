@@ -89,32 +89,6 @@ describe('static schema', () => {
     expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
   });
 
-  test('fields', () => {
-    expect(Contact.type.fields).to.deep.eq([
-      {
-        name: 'name',
-        type: {
-          kind: 'string',
-        },
-        options: {
-          default: 'Anonymous',
-          required: true,
-        },
-      },
-      { name: 'username', type: { kind: 'string' } },
-      { name: 'email', type: { kind: 'string' } },
-      { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },
-      {
-        name: 'tasks',
-        type: {
-          kind: 'array',
-          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos.org/model/document' },
-        },
-      },
-      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } },
-    ]);
-  });
-
   test('enums', () => {
     const container = new Container({ records: [{ type: Container.Record.Type.PERSONAL }] });
     expect(container.records[0].type).to.eq(Container.Record.Type.PERSONAL);

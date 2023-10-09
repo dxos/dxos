@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
-import { EchoSchema } from './schema';
+import { TypeCollection } from './schema';
 
 /**
  * Manages cross-space databases.
@@ -20,13 +20,13 @@ export class DatabaseRouter {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Item<any>[] }>();
 
-  private readonly _schema = EchoSchema.fromJson('{}');
+  private readonly _schema = TypeCollection.fromJson('{}');
 
-  get schema(): EchoSchema | undefined {
+  get schema(): TypeCollection | undefined {
     return this._schema;
   }
 
-  addSchema(schema: EchoSchema) {
+  addSchema(schema: TypeCollection) {
     this._schema.mergeSchema(schema);
   }
 
