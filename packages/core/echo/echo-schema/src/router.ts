@@ -20,7 +20,7 @@ export class DatabaseRouter {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Item<any>[] }>();
 
-  private readonly _schema = TypeCollection.fromJson('{}');
+  private readonly _schema = new TypeCollection();
 
   get schema(): TypeCollection | undefined {
     return this._schema;

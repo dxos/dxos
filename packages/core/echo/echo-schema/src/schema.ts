@@ -8,12 +8,15 @@ import { DocumentModel } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
-import { Schema, type SchemaProps, type Schema as SchemaProto } from './proto';
+import type { SchemaProps, Schema as SchemaProto } from './proto';
 
 import { immutable } from './defs';
 import { TypeFilter } from './query';
 import { dangerouslyMutateImmutableObject } from './typed-object';
 
+/**
+ * @deprecated
+ */
 export type EchoType =
   | {
     kind: 'number' | 'string' | 'boolean' | 'bytes';
@@ -41,6 +44,9 @@ export type EchoType =
     // TODO(mykola): Add ability to list enum values.
   };
 
+/**
+ * @deprecated
+ */
 export type EchoSchemaField = {
   name: string;
   type: EchoType;
@@ -49,6 +55,7 @@ export type EchoSchemaField = {
 
 /**
  * Wraps protocol generated type.
+ * @deprecated
  */
 // TODO(burdon): Rename SchemaType (since part of API).
 export class EchoSchemaType {
@@ -90,6 +97,7 @@ type Prototype = {
 export class TypeCollection {
   private readonly _prototypes = new Map<string, Prototype>();
   private readonly _types = new Map<string, SchemaProto>();
+  private readonly _schemaDefs = new Map<string, SchemaProps>();
 
   /**
    * @deprecated
@@ -128,24 +136,34 @@ export class TypeCollection {
   /**
    * Called from generated code.
    */
-  registerPrototype(proto: Prototype) {
-    this._prototypes.set(proto.schema.typename, proto);
+  registerPrototype(proto: Prototype, schema: SchemaProps) {
+    this._prototypes.set(schema.typename, proto);
+    this._schemaDefs.set(schema.typename, schema);
   }
 
   getPrototype(name: string): Prototype | undefined {
     return this._prototypes.get(name);
   }
 
-  addSchema(schema: SchemaProps): SchemaProto {
-    const delegate = new Schema(schema, { immutable: true });
-    this._types.set(schema.typename, delegate);
-    return delegate;
-  }
 
   /**
    * Resolve cross-schema references.
    */
   link() {
+    if (deferLink) { // Circular dependency hack.
+      return;
+    }
+
+    const { Schema } = require('./proto');
+    invariant(Schema, 'Circular dependency error');
+
+    // Create immutable schema objects.
+    for (const def of this._schemaDefs.values()) {
+      const schema = new Schema(def, { immutable: true });
+      this._types.set(schema.typename, schema);
+    }
+
+    // Link.
     dangerouslyMutateImmutableObject(() => {
       for (const type of this._types.values()) {
         for (const field of type.props) {
@@ -155,9 +173,31 @@ export class TypeCollection {
             }
           }
         }
+
+        const proto = this._prototypes.get(type.typename);
+        invariant(proto, 'Missing prototype');
+        proto.schema = type;
       }
     })
+
+    for (const [typename, proto] of this._prototypes) {
+      const schema = this._types.get(typename);
+      invariant(schema);
+      proto.schema = schema;
+    }
   }
+}
+
+let deferLink = true;
+
+/**
+ * Call after module code has loaded to avoid circular dependency errors.
+ */
+export const linkDeferred = () => {
+  deferLink = false;
+  const { schemaBuiltin } = require('./proto');
+  schemaBuiltin.link();
+
 }
 
 /**

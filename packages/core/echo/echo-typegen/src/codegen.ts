@@ -179,7 +179,7 @@ export const createObjectClass = (type: pb.Type) => {
     export type ${name}Props = {\n${initializer}\n};
 
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
-      static readonly schema = schema$.addSchema(${JSON.stringify(createProtoSchema(type))});
+      declare static readonly schema: ${importNamespace}.Schema;
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
         return { ...opts, '@type': '${fullName}' } as any;
@@ -191,7 +191,7 @@ export const createObjectClass = (type: pb.Type) => {
       ${fields}
     }
 
-    schema$.registerPrototype(${name});
+    schema$.registerPrototype(${name}, ${JSON.stringify(createProtoSchema(type))});
   `;
 };
 

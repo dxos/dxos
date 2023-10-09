@@ -443,7 +443,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       },
 
       set: (target, property, value, receiver) => {
-        if (this[base]._immutable && !MUTATION_OVERRIDE && !parent && !meta) {
+        if (this[base]._immutable && !mutationOverride && !parent && !meta) {
           log.warn('Read only access');
           return false;
         }
@@ -528,15 +528,15 @@ export type Expando = TypedObject;
 const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
   !!schema && !!(schema as any)[base];
 
-let MUTATION_OVERRIDE = false;
+let mutationOverride = false;
 
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
-  const prev = MUTATION_OVERRIDE;
-  MUTATION_OVERRIDE = true;
+  const prev = mutationOverride;
+  mutationOverride = true;
   try {
     cb();
   } finally {
-    MUTATION_OVERRIDE = prev;
+    mutationOverride = prev;
   }
 }
 
