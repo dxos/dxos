@@ -57,6 +57,8 @@ export class Identity {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
+    log.trace('dxos.halo.device', { deviceKey });
+
     this._deviceStateMachine = new DeviceStateMachine({
       identityKey: this.identityKey,
       deviceKey: this.deviceKey,
