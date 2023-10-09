@@ -13,6 +13,7 @@ import { DatabaseTestBuilder, DatabaseTestPeer as BasePeer } from '@dxos/echo-pi
 import { EchoDatabase } from './database';
 import { DatabaseRouter } from './router';
 import { ComplexMap } from '@dxos/util';
+import { schemaBuiltin } from './proto';
 
 // TODO(burdon): Builder pattern.
 // TODO(burdon): Rename createMemoryDatabase.
@@ -21,6 +22,8 @@ export const createDatabase = async (router = new DatabaseRouter()) => {
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
     .registerModel(TextModel);
+
+  router.schema.mergeSchema(schemaBuiltin)
 
   // TODO(dmaretskyi): Fix.
   const host = await createMemoryDatabase(modelFactory);

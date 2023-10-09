@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document as DocumentType } from '@braneframe/types';
+import { Document as DocumentType, types } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -444,6 +444,9 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
+
+    host.addSchema(types)
+    guest.addSchema(types)
 
     await host.initialize();
     await guest.initialize();

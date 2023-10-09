@@ -22,12 +22,13 @@ export class DatabaseRouter {
 
   private readonly _schema = new TypeCollection();
 
-  get schema(): TypeCollection | undefined {
+  get schema(): TypeCollection {
     return this._schema;
   }
 
   addSchema(schema: TypeCollection) {
     this._schema.mergeSchema(schema);
+    return this;
   }
 
   register(spaceKey: PublicKey, database: EchoDatabase) {

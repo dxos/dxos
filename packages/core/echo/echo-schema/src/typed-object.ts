@@ -242,7 +242,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
-      '@type': this.__typename ?? (isRuntimeSchema(this._schema) ? { '@id': this._schema!.id } : undefined),
+      '@type': this.__typename ?? (this._schema ? { '@id': this._schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
