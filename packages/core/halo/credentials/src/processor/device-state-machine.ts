@@ -45,6 +45,7 @@ export class DeviceStateMachine implements CredentialProcessor {
     }
 
     const assertion = getCredentialAssertion(credential);
+
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
         invariant(!this.authorizedDeviceKeys.has(assertion.deviceKey), 'Device already added.');
@@ -60,6 +61,14 @@ export class DeviceStateMachine implements CredentialProcessor {
       }
       case 'dxos.halo.credentials.DeviceProfile': {
         invariant(this.authorizedDeviceKeys.has(assertion.deviceKey), 'Device not found.');
+
+        if (assertion && assertion.deviceKey.equals(this._params.deviceKey)) {
+          log.trace('dxos.halo.device', {
+            deviceKey: assertion.deviceKey,
+            deviceName: assertion.profile?.displayName,
+          });
+        }
+
         this.authorizedDeviceKeys.set(assertion.deviceKey, assertion.profile);
         this._params.onUpdate?.();
         break;
