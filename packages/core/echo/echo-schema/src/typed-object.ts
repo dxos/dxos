@@ -91,7 +91,12 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schema) {
-      this._mutate({ typeRef: new Reference(this._schema!.id) });
+      // TODO(dmaretskyi): Add a separate field to schema for `protocol`.
+      const typeRef = this._schema[immutable]
+        ? new Reference(this._schema!.typename, 'protobuf')
+        : new Reference(this._schema!.id);
+      this._mutate({ typeRef });
+
       for(const field of this._schema.props) {
         if(field.repeated) {
           this._set(field.id!, new EchoArray());

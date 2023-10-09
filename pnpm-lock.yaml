@@ -2793,13 +2793,13 @@ importers:
       '@dxos/teleport-extension-gossip': link:../../mesh/teleport-extension-gossip
       '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
+      '@dxos/text-model': link:../text-model
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/tracing': link:../../../common/tracing
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
       crc-32: 1.2.2
     devDependencies:
-      '@dxos/text-model': link:../text-model
       fast-check: 3.3.0
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21

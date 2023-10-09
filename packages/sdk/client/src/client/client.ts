@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, schema$, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { ClientServicesProvider, schema$ as clientSchema, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -89,7 +89,7 @@ export class Client {
     }
 
     this.addSchema(schemaBuiltin);
-    this.addSchema(schema$);
+    this.addSchema(clientSchema);
   }
 
   [inspect.custom]() {
@@ -197,7 +197,7 @@ export class Client {
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    await this._services.open(new Context());
+    await this._services!.open(new Context());
 
     const { SpaceList, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
@@ -235,7 +235,7 @@ export class Client {
     }
 
     const trigger = new Trigger<Error | undefined>();
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
