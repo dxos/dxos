@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 import { humanize } from '@dxos/util';
 
-import { setTag, setUser } from './node-util';
+import { setTag, setUser } from './node';
 
 const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
 

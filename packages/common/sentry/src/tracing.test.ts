@@ -10,7 +10,7 @@ import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
-import * as Sentry from './init';
+import * as Sentry from './browser';
 import * as Tracing from './tracing';
 import { sentryTestkit } from '../testing';
 

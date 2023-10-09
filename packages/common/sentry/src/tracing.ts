@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+// NOTE: Browser only API. There is no node polyfill.
+
+import { getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
 
 import { runInContext, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
-
-import { getCurrentHub } from './node-util';
 
 const REPORT_SPANS = false;
 

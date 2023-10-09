@@ -2,7 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { init as naturalInit, Replay, setTag } from '@sentry/browser';
+import {
+  init as naturalInit,
+  Replay,
+  setTag,
+  addBreadcrumb as naturalAddBreadcrumb,
+  captureException as naturalCaptureException,
+} from '@sentry/browser';
 import { CaptureConsole, HttpClient } from '@sentry/integrations';
 import { BrowserTracing } from '@sentry/tracing';
 
@@ -14,13 +20,7 @@ import { InitOptions } from './types';
 export * from './tracing';
 
 // Polyfill export.
-export {
-  setTag,
-  setUser,
-  getCurrentHub,
-  addBreadcrumb as naturalAddBreadcrumb,
-  captureException as naturalCaptureException,
-} from '@sentry/browser';
+export { setTag, setUser } from '@sentry/browser';
 
 /**
  * To use this SDK, call the init function as early as possible when loading the web page.
@@ -57,5 +57,41 @@ export const init = (options: InitOptions) => {
     });
   } catch (err) {
     log.catch('Failed to initialize sentry', err);
+  }
+};
+
+/**
+ * Records a new breadcrumb which will be attached to future events.
+ *
+ * Breadcrumbs will be added to subsequent events to provide more context on user's actions prior to an error or crash.
+ *
+ * https://docs.sentry.io/platforms/javascript/enriching-events/breadcrumbs/
+ *
+ * @param breadcrumb — The breadcrumb to record.
+ */
+export const addBreadcrumb: typeof naturalAddBreadcrumb = (breadcrumb) => {
+  try {
+    naturalAddBreadcrumb(breadcrumb);
+    log('add breadcrumb', breadcrumb);
+  } catch (err) {
+    log.catch('Failed to add breadcrumb', err);
+  }
+};
+
+/**
+ * Captures an exception event and sends it to Sentry.
+ *
+ * @param exception — An exception-like object.
+ * @param captureContext — Additional scope data to apply to exception event.
+ * @returns — The generated eventId.
+ */
+export const captureException: typeof naturalCaptureException = (exception, captureContext) => {
+  try {
+    const eventId = naturalCaptureException(exception, captureContext);
+    log('capture exception', { exception, eventId, ...captureContext });
+    return eventId;
+  } catch (err) {
+    log.catch('Failed to capture exception', err);
+    return 'unknown';
   }
 };
