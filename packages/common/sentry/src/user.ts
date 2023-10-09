@@ -33,8 +33,11 @@ export const USER_PROCESSOR: LogProcessor = (config, entry) => {
         }
         break;
       case 'dxos.halo.device':
-        setTag('device', context?.deviceKey?.truncate());
-        break;
+        if (context?.deviceKey) {
+          setTag('deviceKey', context.deviceKey.truncate());
+          setTag('deviceName', context.deviceName);
+          break;
+        }
     }
   });
 };
