@@ -8,9 +8,8 @@ import { runInContext, scheduleMicroTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
-import { humanize } from '@dxos/util';
 
-import { setUser, getCurrentHub } from './node-util';
+import { getCurrentHub } from './node-util';
 
 const REPORT_SPANS = false;
 
@@ -72,13 +71,6 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
   // NOTE: Make sure `entry` is not captured in this closure to avoid a memory leak.
   scheduleMicroTask(ctx, async () => {
     await SENTRY_INITIALIZED.wait();
-
-    if (message === 'dxos.halo.identity' && context?.identityKey) {
-      setUser({
-        id: humanize(context.identityKey),
-        username: context.displayName,
-      });
-    }
 
     if (REPORT_SPANS && context?.span) {
       switch (context.span.command) {

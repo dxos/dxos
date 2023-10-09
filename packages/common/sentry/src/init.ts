@@ -6,8 +6,9 @@ import { log } from '@dxos/log';
 
 import { naturalAddBreadcrumb, naturalCaptureException } from './node-util';
 
-export { init } from './node-util';
-export * from './tracing';
+export * from './node-util';
+// Adds user sentry processor to @dxos/log framework.
+export * from './user';
 
 /**
  * Records a new breadcrumb which will be attached to future events.

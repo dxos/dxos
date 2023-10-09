@@ -10,6 +10,9 @@ import { log } from '@dxos/log';
 
 import { InitOptions } from './types';
 
+// Browser only feature.
+export * from './tracing';
+
 // Polyfill export.
 export {
   setTag,
