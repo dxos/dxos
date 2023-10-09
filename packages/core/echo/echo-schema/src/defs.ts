@@ -5,7 +5,7 @@
 import type { EchoDatabase } from "./database";
 import { EchoObjectBase } from "./echo-object-base";
 import { Schema } from "./proto";
-import { EchoSchemaType } from "./schema";
+import { EchoSchemaType } from "./type-collection";
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');

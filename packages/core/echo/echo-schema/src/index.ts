@@ -8,7 +8,7 @@ export * from './defs';
 export * from './echo-object-base';
 export * from './query';
 export * from './router';
-export { TypeCollection } from './schema';
+export { TypeCollection } from './type-collection';
 export * from './serializer';
 export * from './subscription';
 export * from './text-object';
@@ -18,5 +18,5 @@ export * from './clone';
 export * from './proto';
 export * from './signal';
 
-import { linkDeferred } from './schema';
+import { linkDeferred } from './type-collection';
 linkDeferred();

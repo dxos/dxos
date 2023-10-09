@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
-import { TypeCollection } from './schema';
+import { TypeCollection } from './type-collection';
 
 /**
  * Manages cross-space databases.
