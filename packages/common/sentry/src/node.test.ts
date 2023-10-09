@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import * as Sentry from './node';
+import * as Sentry from './init';
 import { sentryTestkit } from '../testing';
 
 const { testkit, sentryTransport } = sentryTestkit();
