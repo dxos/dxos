@@ -261,6 +261,7 @@ export interface Prop {
 
 
 export const createProtoSchema = (type: pb.Type): SchemaProps => {
+  type.fieldsArray.forEach(field => field.resolve());
   return {
     typename: type.fullName.slice(1),
     props: type.fieldsArray.map((field) => ({
@@ -274,6 +275,10 @@ export const createProtoSchema = (type: pb.Type): SchemaProps => {
 }
 
 const getPropType = (field: pb.Field): PropType => {
+  if(field.resolvedType) {
+    return PropType.REF
+  }
+
   switch (field.type) {
     case 'double':
     case 'float':
@@ -301,12 +306,10 @@ const getPropType = (field: pb.Field): PropType => {
 const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'Text';
 
 const getRefModel = (field: pb.Field): string | undefined => {
-  if (field.resolvedType) {
-    if (isTextObject(field.resolvedType.fullName)) {
-      return 'dxos.org/model/text';
-    } else if (field.resolvedType.options && field.resolvedType.options['(object)']) {
-      return 'dxos.org/model/document';
-    }
+  if (isTextObject(field.type)) {
+    return 'dxos.org/model/text';
+  } else if (field.resolvedType && field.resolvedType.options && field.resolvedType.options['(object)']) {
+    return 'dxos.org/model/document';
   } else {
     return undefined;
   }

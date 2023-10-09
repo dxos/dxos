@@ -147,11 +147,15 @@ export class TypeCollection {
 
 
   /**
-   * Resolve cross-schema references.
+   * Resolve cross-schema references and instantiate schemas.
    */
   link() {
     if (deferLink) { // Circular dependency hack.
       return;
+    }
+
+    if(this._types.size !== 0) {
+      throw new Error('Already linked')
     }
 
     const { Schema } = require('./proto');
