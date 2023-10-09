@@ -12,6 +12,7 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
   return devices.map((device) => ({
     key: maybeTruncateKey(device.deviceKey, truncateKeys),
     kind: device.kind,
+    label: device.profile?.displayName,
   }));
 };
 
@@ -24,6 +25,9 @@ export const printDevices = (devices: Device[], flags = {}) => {
       },
       kind: {
         header: 'kind',
+      },
+      label: {
+        header: 'label',
       },
     },
     {

@@ -118,6 +118,11 @@ export class HaloProxy implements Halo {
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
+        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        log.trace('dxos.halo.device', {
+          deviceKey: current?.deviceKey,
+          deviceName: current?.profile?.displayName,
+        });
       }
     });
 
@@ -180,6 +185,13 @@ export class HaloProxy implements Halo {
     const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
     this._identityChanged.emit(identity);
     return identity;
+  }
+
+  async updateDevice(profile: ProfileDocument): Promise<Device> {
+    invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
+    // NOTE: Event that device changed will be fired by devicesStream subscription.
+    const device = await this._serviceProvider.services.DevicesService.updateDevice(profile);
+    return device;
   }
 
   /**

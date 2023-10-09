@@ -76,7 +76,7 @@ describe('Indexing', () => {
     }
   });
 
-  test.only('search request/response', async () => {
+  test('search request/response', async () => {
     //
     // 1. Test topology:
     //

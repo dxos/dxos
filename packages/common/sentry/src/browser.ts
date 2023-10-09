@@ -4,10 +4,10 @@
 
 import {
   init as naturalInit,
-  addBreadcrumb as naturalAddBreadcrumb,
-  captureException as naturalCaptureException,
   Replay,
   setTag,
+  addBreadcrumb as naturalAddBreadcrumb,
+  captureException as naturalCaptureException,
 } from '@sentry/browser';
 import { CaptureConsole, HttpClient } from '@sentry/integrations';
 import { BrowserTracing } from '@sentry/tracing';
@@ -16,7 +16,11 @@ import { log } from '@dxos/log';
 
 import { InitOptions } from './types';
 
+// Browser only feature.
 export * from './tracing';
+
+// Polyfill export.
+export { setTag, setUser } from '@sentry/browser';
 
 /**
  * To use this SDK, call the init function as early as possible when loading the web page.
