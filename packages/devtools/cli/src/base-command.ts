@@ -11,7 +11,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -357,7 +357,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile, { config: this.flags.config });
         }
-      });
+      }, false);
     }
   }
 
@@ -441,8 +441,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Convenience function to wrap starting the agent.
    */
-  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new PhoenixDaemon(DX_RUNTIME);
+  async execWithDaemon<T>(
+    callback: (daemon: Daemon) => Promise<T | undefined>,
+    system: boolean,
+  ): Promise<T | undefined> {
+    const daemon = system ? new SystemDaemon(DX_RUNTIME) : new PhoenixDaemon(DX_RUNTIME);
+
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();
