@@ -4,6 +4,7 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/invariant';
 import { Device, DeviceKind, DevicesService, QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -12,8 +13,19 @@ import { IdentityManager } from '../identity';
 export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}
 
-  updateDevice(request: ProfileDocument): Promise<Device> {
-    throw new Error('Method not implemented.');
+  async updateDevice(profile: ProfileDocument): Promise<Device> {
+    invariant(this._identityManager.identity, 'Identity not initialized');
+    const deviceKey = this._identityManager.identity.deviceKey;
+    await this._identityManager.updateDevice({
+      deviceKey,
+      profile,
+    });
+
+    return {
+      deviceKey,
+      kind: DeviceKind.CURRENT,
+      profile,
+    };
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {
@@ -24,9 +36,10 @@ export class DevicesServiceImpl implements DevicesService {
           next({ devices: [] });
         } else {
           next({
-            devices: Array.from(deviceKeys.values()).map((key) => ({
+            devices: Array.from(deviceKeys.entries()).map(([key, profile]) => ({
               deviceKey: key,
               kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+              profile,
             })),
           });
         }
