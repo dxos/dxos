@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { linkDeferred } from './type-collection';
+
 export * from './array';
 export * from './database';
 export * from './defs';
@@ -17,6 +19,4 @@ export * from './util';
 export * from './clone';
 export * from './proto';
 export * from './signal';
-
-import { linkDeferred } from './type-collection';
 linkDeferred();

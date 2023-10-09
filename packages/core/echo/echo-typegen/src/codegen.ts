@@ -248,7 +248,7 @@ export enum PropType {
 export type SchemaProps = {
   typename: string;
   props: Prop[];
-}
+};
 
 export interface Prop {
   id?: string;
@@ -259,9 +259,8 @@ export interface Prop {
   digits?: number;
 }
 
-
 export const createProtoSchema = (type: pb.Type): SchemaProps => {
-  type.fieldsArray.forEach(field => field.resolve());
+  type.fieldsArray.forEach((field) => field.resolve());
   return {
     typename: type.fullName.slice(1),
     props: type.fieldsArray.map((field) => ({
@@ -270,13 +269,13 @@ export const createProtoSchema = (type: pb.Type): SchemaProps => {
       repeated: field.repeated,
       refName: field.resolvedType?.fullName.slice(1),
       refModelType: getRefModel(field),
-    }))
+    })),
   };
-}
+};
 
 const getPropType = (field: pb.Field): PropType => {
-  if(field.resolvedType) {
-    return PropType.REF
+  if (field.resolvedType) {
+    return PropType.REF;
   }
 
   switch (field.type) {
@@ -301,7 +300,7 @@ const getPropType = (field: pb.Field): PropType => {
     default:
       return PropType.NONE;
   }
-}
+};
 
 const isTextObject = (typeName: string) => typeName.split('.').at(-1) === 'Text';
 
@@ -313,4 +312,4 @@ const getRefModel = (field: pb.Field): string | undefined => {
   } else {
     return undefined;
   }
-}
+};

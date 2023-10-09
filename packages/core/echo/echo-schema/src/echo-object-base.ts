@@ -13,7 +13,6 @@ import { EchoDatabase } from './database';
 import { EchoObject, base, db, subscribe } from './defs';
 import { createSignal } from './signal';
 
-
 /**
  * Base class for all echo objects.
  * Can carry different models.
@@ -96,13 +95,13 @@ export abstract class EchoObjectBase<T extends Model = any> implements EchoObjec
    * Called before object is bound to database.
    * `_database` is guaranteed to be set.
    */
-  _beforeBind(): void { }
+  _beforeBind(): void {}
 
   /**
    * @internal
    * Called after object is bound to database.
    */
-  protected _afterBind(): void { }
+  protected _afterBind(): void {}
 
   /**
    * @internal

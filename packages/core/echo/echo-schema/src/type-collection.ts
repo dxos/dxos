@@ -3,13 +3,12 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { SchemaProps, Schema as SchemaProto } from './proto';
 
+import type { SchemaProps, Schema as SchemaProto } from './proto';
 import { dangerouslyMutateImmutableObject } from './typed-object';
 
-
 type Prototype = {
-  new(...args: any): any;
+  new (...args: any): any;
   schema: SchemaProto;
 };
 
@@ -40,19 +39,20 @@ export class TypeCollection {
     return this._prototypes.get(name);
   }
 
-
   /**
    * Resolve cross-schema references and instantiate schemas.
    */
   link() {
-    if (deferLink) { // Circular dependency hack.
+    if (deferLink) {
+      // Circular dependency hack.
       return;
     }
 
     if (this._types.size !== 0) {
-      throw new Error('Already linked')
+      throw new Error('Already linked');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Schema } = require('./proto');
     invariant(Schema, 'Circular dependency error');
 
@@ -77,7 +77,7 @@ export class TypeCollection {
         invariant(proto, 'Missing prototype');
         proto.schema = type;
       }
-    })
+    });
 
     for (const [typename, proto] of this._prototypes) {
       const schema = this._types.get(typename);
@@ -94,6 +94,7 @@ let deferLink = true;
  */
 export const linkDeferred = () => {
   deferLink = false;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { schemaBuiltin } = require('./proto');
   schemaBuiltin.link();
-}
+};

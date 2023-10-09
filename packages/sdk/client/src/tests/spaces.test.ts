@@ -11,7 +11,7 @@ import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, subscribe, Text } from '@dxos/echo-schema';
+import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -445,8 +445,8 @@ describe('Spaces', () => {
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
 
-    host.addSchema(types)
-    guest.addSchema(types)
+    host.addSchema(types);
+    guest.addSchema(types);
 
     await host.initialize();
     await guest.initialize();

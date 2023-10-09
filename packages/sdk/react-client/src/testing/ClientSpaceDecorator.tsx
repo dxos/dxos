@@ -19,7 +19,11 @@ const testBuilder = new TestBuilder();
 const services = () => testBuilder.createLocal();
 
 // TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
-const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: TypeCollection }>) => {
+const ChildClient = ({
+  rootSpace,
+  schema,
+  children,
+}: PropsWithChildren<{ rootSpace: Space; schema?: TypeCollection }>) => {
   return (
     <ClientProvider
       fallback={() => <p>Loading</p>}

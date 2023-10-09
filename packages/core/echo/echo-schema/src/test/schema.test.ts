@@ -136,13 +136,12 @@ describe('static schema', () => {
     await peer.base.confirm();
     expect(task).to.be.instanceOf(Task);
 
-    await peer.reload()
+    await peer.reload();
     {
-      const task2 = peer.db.getObjectById<Task>(task.id)
+      const task2 = peer.db.getObjectById<Task>(task.id);
       expect(task2).to.be.instanceOf(Task);
       expect(task2!.__typename).to.eq('example.test.Task');
-      expect(task2!.__schema?.typename).to.eq('example.test.Task')
+      expect(task2!.__schema?.typename).to.eq('example.test.Task');
     }
-  })
+  });
 });
-

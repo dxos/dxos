@@ -9,7 +9,7 @@ import React from 'react';
 import type { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Stack as StackType } from '@braneframe/types';
-import { EchoObject, Space, isTypedObject } from '@dxos/client/echo';
+import { Space, isTypedObject } from '@dxos/client/echo';
 
 import { GenericStackObject, STACK_PLUGIN, StackModel, StackObject, StackProperties } from './types';
 

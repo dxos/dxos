@@ -81,9 +81,12 @@ export class EchoDatabase {
     invariant(obj[base]);
 
     // TODO(dmaretskyi): Better way to differentiate static schemas.
-    if(isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
+    if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
       const objectConstructor = Object.getPrototypeOf(obj).constructor;
-      invariant(this._router.schema.getPrototype(obj.__typename!) === objectConstructor, `Prototype invalid or not registered: ${objectConstructor.name}`);
+      invariant(
+        this._router.schema.getPrototype(obj.__typename!) === objectConstructor,
+        `Prototype invalid or not registered: ${objectConstructor.name}`,
+      );
     }
 
     if (this._removed.has(obj[base]._id)) {

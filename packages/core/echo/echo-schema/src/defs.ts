@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { EchoDatabase } from "./database";
-import { EchoObjectBase } from "./echo-object-base";
-import { Schema } from "./proto";
+import type { EchoDatabase } from './database';
+import { EchoObjectBase } from './echo-object-base';
+import { Schema } from './proto';
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');
@@ -26,8 +26,8 @@ export interface EchoObject {
   readonly id: string;
 
   /**
-   * 
-   * @param callback 
+   *
+   * @param callback
    * @returns Unsubscribe function.
    */
   // TODO(dmaretskyi): Document `value`.
@@ -62,7 +62,6 @@ export type ForeignKey = {
   id?: string;
 };
 
-
 /**
  * Echo object metadata.
  */
@@ -86,7 +85,7 @@ export interface TypedObjectProperties extends EchoObject {
   /**
    * Fully qualified name of the object type for objects created from the schema.
    */
-  readonly __typename: string | undefined; 
+  readonly __typename: string | undefined;
 
   /**
    * Object schema.
@@ -98,12 +97,12 @@ export interface TypedObjectProperties extends EchoObject {
    * Object metadata.
    */
   readonly __meta: ObjectMeta | undefined;
-  
+
   /**
    * Deletion marker.
    */
   readonly __deleted: boolean;
-  
+
   /**
    * Returns a JSON-compatible representation of the object.
    */

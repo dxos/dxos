@@ -13,7 +13,6 @@ import { createDatabase } from '../testing';
 describe('database', () => {
   test('creating objects', async () => {
     const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
-    
 
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');

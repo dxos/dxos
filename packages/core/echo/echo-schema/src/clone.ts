@@ -7,10 +7,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { base } from './defs';
-import { EchoObject } from './defs';
-import { TypedObject } from './typed-object';
+import { base, EchoObject } from './defs';
 import { EchoObjectBase } from './echo-object-base';
+import { TypedObject } from './typed-object';
 
 export type CloneOptions = {
   /**
