@@ -43,12 +43,12 @@ export class LaunchctlRunner implements Runner {
       }
 
       const plistContent = plistTemplate
-        .replace('{{DX_PATH}}', process.argv[1])
-        .replace('{{NODE_PATH}}', path.dirname(process.execPath))
-        .replace('{{ERROR_LOG}}', errFile)
-        .replace('{{OUT_LOG}}', logFile)
-        .replace('{{OPTIONS}}', options.length > 1 ? options.join('\n') : '')
-        .replaceAll('{{PROFILE}}', profile);
+        .replace(/{{PROFILE}}/g, profile)
+        .replace(/{{DX_PATH}}/g, process.argv[1])
+        .replace(/{{NODE_PATH}}/g, path.dirname(process.execPath))
+        .replace(/{{ERROR_LOG}}/g, errFile)
+        .replace(/{{OUT_LOG}}/g, logFile)
+        .replace(/{{OPTIONS}}/g, options.length > 1 ? options.join('\n') : '')
 
       // Write the plist content to the file.
       await writeFile(plistPath, plistContent, 'utf-8');
@@ -89,7 +89,7 @@ export class LaunchctlRunner implements Runner {
   }
 
   private async _getPlistPath(service: string): Promise<string> {
-    const agentsPath = `${os.homedir()}/Library/LaunchAgents`;
+    const agentsPath = path.join(os.homedir(), 'Library', 'LaunchAgents');
     if (!existsSync(agentsPath)) {
       await mkdir(agentsPath, { recursive: true });
     }

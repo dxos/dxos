@@ -13,7 +13,7 @@ Environment="AGENT_NODE_PATH={{NODE_PATH}}"
 Environment="AGENT_BIN={{DX_PATH}}"
 Environment="AGENT_NODE_ARGS={{NODE_ARGS}}"
 
-ExecStart=/usr/bin/env -S bash -c '$AGENT_NODE_PATH $AGENT_NODE_ARGS $AGENT_BIN agent start --foreground --profile={{PROFILE}}{{OPTIONS}}'
+ExecStart=/usr/bin/env -S bash -c '$AGENT_NODE_PATH $AGENT_NODE_ARGS $AGENT_BIN agent start --foreground --profile={{PROFILE}} {{OPTIONS}}'
 LimitCORE=infinity
 Restart=always
 ExecStartPre=/usr/bin/env -S bash -c '[[ -f {{OUT_LOG}} ]] && mv {{OUT_LOG}} {{OUT_LOG}}.$$(date -Isec) || true'
