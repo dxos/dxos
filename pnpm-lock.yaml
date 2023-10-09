@@ -2824,7 +2824,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       lodash.get: ^4.4.2
-      protobufjs: ^7.2.2
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -2843,7 +2842,6 @@ importers:
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
-      protobufjs: 7.2.2
     devDependencies:
       '@dxos/echo-typegen': link:../echo-typegen
       wait-for-expect: 3.0.2
