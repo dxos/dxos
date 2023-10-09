@@ -20,7 +20,7 @@ import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/
 import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import type { EchoSchema, SpaceList } from '../echo';
+import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
@@ -308,7 +308,7 @@ export class Client {
     this._initialized = false;
   }
 
-  addSchema(schema: EchoSchema) {
+  addSchema(schema: TypeCollection) {
     this._schemaRegistry.addSchema(schema);
   }
 }

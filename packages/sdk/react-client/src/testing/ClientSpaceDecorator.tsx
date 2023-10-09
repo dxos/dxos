@@ -8,7 +8,7 @@ import { ReactRenderer } from '@storybook/react';
 import React, { PropsWithChildren, ReactNode, useState } from 'react';
 
 import { Client, PublicKey } from '@dxos/client';
-import { EchoSchema, SpaceProxy, Space } from '@dxos/client/echo';
+import { SpaceProxy, Space, TypeCollection } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { MaybePromise } from '@dxos/util';
@@ -19,7 +19,7 @@ const testBuilder = new TestBuilder();
 const services = () => testBuilder.createLocal();
 
 // TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
-const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
+const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: TypeCollection }>) => {
   return (
     <ClientProvider
       fallback={() => <p>Loading</p>}
@@ -38,7 +38,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
 export type PeersInSpaceProps = {
   count?: number;
   registerSignalFactory?: boolean;
-  schema?: EchoSchema;
+  schema?: TypeCollection;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
 };

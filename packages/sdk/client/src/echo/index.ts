@@ -22,7 +22,7 @@ export {
   EchoDatabase,
   type EchoObject,
   type ObjectMeta,
-  EchoSchema,
+  TypeCollection,
   Expando,
   Query,
   Text,
