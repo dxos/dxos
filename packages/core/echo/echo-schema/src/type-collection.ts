@@ -96,5 +96,4 @@ export const linkDeferred = () => {
   deferLink = false;
   const { schemaBuiltin } = require('./proto');
   schemaBuiltin.link();
-
 }

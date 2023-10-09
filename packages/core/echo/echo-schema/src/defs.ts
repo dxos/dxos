@@ -5,7 +5,6 @@
 import type { EchoDatabase } from "./database";
 import { EchoObjectBase } from "./echo-object-base";
 import { Schema } from "./proto";
-import { EchoSchemaType } from "./type-collection";
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');
@@ -93,7 +92,7 @@ export interface TypedObjectProperties extends EchoObject {
    * Object schema.
    * Can be a reference to a dynamic schema persisted in ECHO or a static one generated at compile-time.
    */
-  readonly __schema: EchoSchemaType | Schema | undefined;
+  readonly __schema: Schema | undefined;
 
   /**
    * Object metadata.

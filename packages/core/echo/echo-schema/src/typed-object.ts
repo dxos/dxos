@@ -14,7 +14,6 @@ import { EchoArray } from './array';
 import { base, data, proxy, immutable, schema, meta, ObjectMeta, TypedObjectProperties, EchoObject } from './defs';
 import { EchoObjectBase } from './echo-object-base';
 import { Schema } from './proto'; // NOTE: Keep as type-import.
-import type { EchoSchemaType } from './type-collection'; // NOTE: Keep as type-import.
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
 import { DevtoolsFormatter, devtoolsFormatter, JsonML } from '@dxos/debug';
@@ -525,7 +524,7 @@ export const Expando: ExpandoConstructor = TypedObject;
 
 export type Expando = TypedObject;
 
-const isRuntimeSchema = (schema: EchoSchemaType | Schema | undefined): schema is Schema =>
+const isRuntimeSchema = (schema: Schema | undefined): schema is Schema =>
   !!schema && !!(schema as any)[base];
 
 let mutationOverride = false;
