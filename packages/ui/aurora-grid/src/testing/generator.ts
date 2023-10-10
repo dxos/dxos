@@ -47,6 +47,7 @@ export const Priority = [1, 2, 3, 4, 5];
 export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
   document: {
     createData: () => ({
+      id: faker.string.uuid(),
       title: faker.lorem.sentence(3),
       body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
     }),
@@ -54,6 +55,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   image: {
     createData: () => ({
+      id: faker.string.uuid(),
       title: faker.lorem.sentence(3),
       image: faker.helpers.arrayElement(data.images),
       body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
