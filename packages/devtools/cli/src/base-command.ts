@@ -147,7 +147,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     super(argv, config);
 
     try {
-      this._stdin = fs.readFileSync(0, 'utf8');
+      if (process.stdin.isTTY) {
+        this._stdin = fs.readFileSync(0, 'utf8');
+      }
     } catch (err) {
       this._stdin = undefined;
     }
