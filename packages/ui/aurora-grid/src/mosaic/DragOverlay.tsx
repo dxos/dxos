@@ -37,13 +37,13 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     if (activeItem) {
       let container: MosaicContainerProps<any> | undefined;
       let OverlayComponent: MosaicTileComponent<any> | undefined;
-      if (overItem?.container) {
-        container = containers.get(Path.first(overItem.container));
+      if (overItem?.path) {
+        container = containers.get(Path.first(overItem.path));
         OverlayComponent = container?.Component;
       }
 
       if (!OverlayComponent) {
-        container = containers.get(Path.first(activeItem.container));
+        container = containers.get(Path.first(activeItem.path));
         OverlayComponent = container?.Component ?? DefaultComponent;
       }
 
@@ -53,7 +53,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     }
   }, [activeItem, overItem]);
 
-  if (!activeItem?.container || !container || !OverlayComponent) {
+  if (!activeItem?.path || !container || !OverlayComponent) {
     return null;
   }
 
@@ -66,7 +66,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
             <OverlayComponent
               {...container.getOverlayProps?.()}
               item={activeItem.item}
-              container={activeItem.container}
+              path={activeItem.path}
               isActive={true}
             />
             {debug && (

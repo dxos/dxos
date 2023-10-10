@@ -22,12 +22,12 @@ export const DemoStack: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivEleme
     return generator.createObjects({ length: 10 });
   });
 
-  const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
-      if (active.container === container) {
+      if (active.path === id) {
         items.splice(active.position!, 1);
       }
-      if (over.container === container) {
+      if (over.path === id) {
         items.splice(over.position!, 0, active.item);
       }
       return [...items];

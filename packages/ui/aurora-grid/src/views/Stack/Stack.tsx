@@ -26,7 +26,7 @@ export const Stack = ({
   direction = 'vertical',
   debug,
 }: StackProps) => {
-  const sortedItems = useSortedItems({ container: id, items });
+  const sortedItems = useSortedItems({ path: id, items });
 
   return (
     <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
@@ -38,12 +38,12 @@ export const Stack = ({
               direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
             )}
           >
-            <div className={mx('flex gap-2', direction === 'vertical' && 'flex-col')}>
+            <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile
                   key={item.id}
                   item={item}
-                  container={id}
+                  path={id}
                   position={i}
                   Component={Component}
                   // debug={debug}
