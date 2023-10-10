@@ -4,6 +4,7 @@
 
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
+import { ContextDisposedError } from './context-disposed';
 
 export type ContextErrorHandler = (error: Error) => void;
 
@@ -34,6 +35,10 @@ export class Context {
 
   constructor({
     onError = (error) => {
+      if(error instanceof ContextDisposedError) {
+        return;
+      }
+
       void this.dispose();
 
       // Will generate an unhandled rejection.

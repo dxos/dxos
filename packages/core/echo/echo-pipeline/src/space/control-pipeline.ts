@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DeferredTask, sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { DeferredTask, sleep, sleepWithContext, trackLeaks } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -36,6 +36,7 @@ const USE_SNAPSHOTS = true;
  * Processes HALO credentials, which include genesis and invitations.
  */
 @trace.resource()
+@trackLeaks('start', 'stop')
 export class ControlPipeline {
   private readonly _ctx = new Context();
   private readonly _pipeline: Pipeline;
@@ -57,7 +58,7 @@ export class ControlPipeline {
   private _mutations = new TimeSeriesCounter();
 
   private _snapshotTask = new DeferredTask(this._ctx, async () => {
-    await sleep(CONTROL_PIPELINE_SNAPSHOT_DELAY);
+    await sleepWithContext(this._ctx, CONTROL_PIPELINE_SNAPSHOT_DELAY);
     await this._saveSnapshot();
   });
 
@@ -111,7 +112,7 @@ export class ControlPipeline {
       await this._processSnapshot(snapshot);
     }
 
-    log('starting...');
+    log.info('starting...');
     setTimeout(async () => {
       void this._consumePipeline(new Context());
     });
@@ -198,7 +199,7 @@ export class ControlPipeline {
   }
 
   async stop() {
-    log('stopping...');
+    log.warn('stopping...');
     await this._ctx.dispose();
     await this._pipeline.stop();
     await this._saveTargetTimeframe(this._pipeline.state.timeframe);

@@ -3,12 +3,13 @@
 //
 
 import { Context } from './context';
-
+import { ContextDisposedError } from './context-disposed';
+ 
 /**
  * @returns A promise that rejects when the context is disposed.
  */
 // TODO(dmaretskyi): Memory leak.
-export const rejectOnDispose = (ctx: Context, error = new Error('CANCELLED')): Promise<never> =>
+export const rejectOnDispose = (ctx: Context, error = new ContextDisposedError()): Promise<never> =>
   new Promise((resolve, reject) => {
     ctx.onDispose(() => reject(error));
   });
@@ -22,7 +23,7 @@ export const cancelWithContext = <T>(ctx: Context, promise: Promise<T>): Promise
     promise,
     new Promise<never>((resolve, reject) => {
       // Will be called before .finally() handlers.
-      clearDispose = ctx.onDispose(() => reject(new Error('CANCELLED')));
+      clearDispose = ctx.onDispose(() => reject(new ContextDisposedError()));
     }),
   ]).finally(() => clearDispose?.());
 };
