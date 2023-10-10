@@ -12,7 +12,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { EchoKanban } from './DemoKanban';
 import { GraphTree } from './DemoTree';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, Generator, Status } from '../../testing';
+import { FullscreenDecorator, TestObjectGenerator, range, Status } from '../../testing';
 
 faker.seed(3);
 const debug = true;
@@ -40,19 +40,23 @@ export default {
     FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
-        const generator = new Generator(space);
-        await generator.initialize();
-        const { project } = generator.createProjects();
-        space.db.add(
+        const generator = new TestObjectGenerator();
+        const factory = generator.factories.project;
+        const objects = [
+          factory.schema,
+          ...range(factory.createObject, 10),
           new Expando({
             type: 'kanban',
             title: 'Projects',
-            schema: project,
+            schema: factory.schema,
             columnBy: 'status',
             order: Status,
             columnOrder: {},
           }),
-        );
+        ];
+
+        // TODO(burdon): Batch API.
+        objects.forEach((object) => space.db.add(object));
       },
     }),
   ],

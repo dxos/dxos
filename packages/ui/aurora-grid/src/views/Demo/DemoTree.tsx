@@ -13,7 +13,7 @@ import { arrayMove } from '@dxos/util';
 
 import { TestComponentProps } from './test';
 import { MosaicMoveEvent, Path } from '../../mosaic';
-import { createItem } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 import { Tree, TreeData } from '../Tree';
 
 const fake = faker.helpers.fake;
@@ -24,23 +24,27 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
   debug,
   className,
 }) => {
-  const [items, setItems] = useState<TreeData[]>(() =>
-    Array.from({ length: 4 }).map(() => {
-      const item = createItem(types);
+  const [items, setItems] = useState<TreeData[]>(() => {
+    const generator = new TestObjectGenerator({ types });
+    return Array.from({ length: 4 }).map(() => {
+      const item = generator.createObject();
       return {
+        // TODO(wittjosiah): Object id isn't included in spread data.
+        id: item.id,
         ...item,
         label: item.title,
         children: Array.from({ length: 3 }).map(() => {
-          const item = createItem(types);
+          const item = generator.createObject();
           return {
+            id: item.id,
             ...item,
             label: item.title,
             children: [],
           };
         }),
       };
-    }),
-  );
+    });
+  });
 
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {

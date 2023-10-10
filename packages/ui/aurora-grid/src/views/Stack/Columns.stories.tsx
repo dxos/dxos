@@ -9,7 +9,7 @@ import React, { useRef, useState } from 'react';
 
 import { Stack, StackProps } from './Stack';
 import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
-import { createItem, FullscreenDecorator, SimpleCard } from '../../testing';
+import { FullscreenDecorator, SimpleCard, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
 
@@ -28,9 +28,12 @@ const TestStack = ({
   behavior = 'move',
   debug,
 }: TestStackProps) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: count }).map(() => createItem(types)),
-  );
+  const [items, setItems] = useState<MosaicDataItem[]>(() => {
+    const generator = new TestObjectGenerator({ types });
+    return generator.createObjects({ length: count });
+  });
+
+  // TODO(burdon): Can we avoid this using useCallback?
   const itemsRef = useRef(items);
 
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {

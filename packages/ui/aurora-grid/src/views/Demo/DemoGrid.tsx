@@ -9,7 +9,7 @@ import React, { FC, HTMLAttributes, useState } from 'react';
 
 import { TestComponentProps } from './test';
 import { MosaicMoveEvent, MosaicDataItem } from '../../mosaic';
-import { createItem } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 import { Grid, GridLayout, Position } from '../Grid';
 
 export const DemoGrid: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElement>> = ({
@@ -20,9 +20,10 @@ export const DemoGrid: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
   className,
 }) => {
   const size = { x: 4, y: 6 };
-  const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: 6 }).map(() => createItem(types)),
-  );
+  const [gridItems, setGridItems] = useState<MosaicDataItem[]>(() => {
+    const generator = new TestObjectGenerator({ types });
+    return generator.createObjects({ length: 12 });
+  });
   const [layout, setLayout] = useState<GridLayout>(() =>
     gridItems.reduce<GridLayout>((map, item, i) => {
       map[item.id] = {

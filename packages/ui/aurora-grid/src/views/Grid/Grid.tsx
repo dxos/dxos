@@ -137,7 +137,7 @@ export const Grid = ({
     }
   }, [selected, width, height]);
 
-  const { setNodeRef } = useDroppable({ id });
+  const { setNodeRef } = useDroppable({ id, data: { container: id } });
 
   return (
     // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).

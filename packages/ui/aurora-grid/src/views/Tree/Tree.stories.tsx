@@ -10,9 +10,10 @@ import React, { useCallback, useState } from 'react';
 
 import { Tree, TreeData } from './Tree';
 import { Mosaic, MosaicMoveEvent, Path } from '../../mosaic';
-import { FullscreenDecorator, createItem } from '../../testing';
+import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
+const generator = new TestObjectGenerator({ types: ['document', 'image'] });
 
 const count = 5;
 
@@ -21,11 +22,10 @@ const testItems1 = Array.from({ length: count }).map((_, i) => ({
   id: `branch-${i}`,
   label: `Branch ${i}`,
   children: Array.from({ length: i === count - 1 ? 0 : 5 - i }).map(() => {
-    const item = createItem();
-
+    const item = generator.createObject();
     return {
       id: item.id,
-      label: item.title,
+      label: item.title, // TODO(burdon): Lens.
       children: [],
     };
   }),

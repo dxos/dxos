@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Plus } from '@phosphor-icons/react';
 import React, { FC, useRef } from 'react';
 
-import { Select, Toolbar } from '@dxos/aurora';
+import { Button, Select, Toolbar } from '@dxos/aurora';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { Expando, Schema, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -13,15 +14,9 @@ import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn } from './Kanban';
 import { Mosaic, Path } from '../../mosaic';
-import { FullscreenDecorator, Generator, Priority, SimpleCard, Status } from '../../testing';
+import { FullscreenDecorator, TestObjectGenerator, Priority, range, SimpleCard, Status } from '../../testing';
 
-export default {
-  title: 'Kanban',
-  decorators: [FullscreenDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
+const generator = new TestObjectGenerator();
 
 // TODO(burdon): Compute this?
 const columnValues: { [property: string]: any[] } = {
@@ -29,8 +24,8 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const Story = ({
-  container = 'projects',
+const EchoStory = ({
+  container = 'projects', // TODO(burdon): id.
   debug,
   spaceKey,
 }: {
@@ -39,6 +34,7 @@ const Story = ({
   spaceKey: PublicKey;
 }) => {
   const space = useSpace(spaceKey);
+  // TODO(burdon): Decorator is not re-run schema is empty when returning to story after first run. Different kanban id.
   const [kanban] = useQuery(space, { type: 'kanban' });
 
   const getProperty = (property: string) => {
@@ -119,6 +115,11 @@ const Story = ({
     }
   };
 
+  const handleAddData = () => {
+    const object = generator.createObject({ types: ['project'] });
+    space?.db.add(object);
+  };
+
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
@@ -129,6 +130,9 @@ const Story = ({
             properties={Object.keys(columnValues)}
             onSetProperty={handleSetProperty}
           />
+          <Button title='Add Data' onClick={handleAddData}>
+            <Plus />
+          </Button>
         </Toolbar.Root>
         <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
       </div>
@@ -136,28 +140,39 @@ const Story = ({
   );
 };
 
-export const ECHO = {
-  render: Story,
+export default {
+  title: 'Kanban',
+  render: EchoStory,
   decorators: [
+    FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
-        const generator = new Generator(space);
-        await generator.initialize();
-        const { project } = generator.createProjects();
-        space.db.add(
+        const factory = generator.factories.project;
+        const objects = [
+          factory.schema,
+          ...range(factory.createObject, 10),
           new Expando({
             type: 'kanban',
             title: 'Projects',
-            schema: project,
+            schema: factory.schema,
+            // TODO(burdon): Standardize with other story.
             columnProp: 'status',
             columnValues: columnValues.status,
             objectPosition: {}, // TODO(burdon): Make this a CRDT.
           }),
-        );
+        ];
+
+        // TODO(burdon): Batch API.
+        objects.forEach((object) => space.db.add(object));
       },
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
+
+export const ECHO = {};
 
 const PropertySelector: FC<{ property: string; properties: string[]; onSetProperty: (property: string) => void }> = ({
   property,
