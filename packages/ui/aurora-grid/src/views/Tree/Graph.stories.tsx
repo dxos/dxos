@@ -43,7 +43,7 @@ const TreeStory = ({ id = 'tree', debug }: { id: string; debug: boolean }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Moving within the tree.
-    if (Path.hasDescendent(id, active.container) && Path.hasDescendent(id, over.container)) {
+    if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
       const activeNode = graph.findNode(active.item.id);
       const activeParent = activeNode?.parent;
       const overNode = graph.findNode(over.item.id);

@@ -26,7 +26,7 @@ export const Stack = ({
   direction = 'vertical',
   debug,
 }: StackProps) => {
-  const sortedItems = useSortedItems({ container: id, items });
+  const sortedItems = useSortedItems({ path: id, items });
 
   return (
     <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
@@ -43,7 +43,7 @@ export const Stack = ({
                 <Mosaic.SortableTile
                   key={item.id}
                   item={item}
-                  container={id}
+                  path={id}
                   position={i}
                   Component={Component}
                   // debug={debug}

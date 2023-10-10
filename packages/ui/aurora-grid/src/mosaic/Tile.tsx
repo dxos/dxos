@@ -21,7 +21,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 > &
   MosaicTileOverlayProps & {
     Component: MosaicTileComponent<TData>;
-    container: string; // TODO(wittjosiah): Rename to path.
+    path: string;
     item: TData;
 
     position?: TPosition;
@@ -45,7 +45,7 @@ export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> =
  * Basic draggable mosaic tile.
  */
 export const DraggableTile = ({
-  container,
+  path,
   item,
   Component = DefaultComponent,
   position,
@@ -60,16 +60,16 @@ export const DraggableTile = ({
     transform,
     isDragging: isDraggingLocal,
   } = useDraggable({
-    id: Path.create(container, item.id),
-    data: { container, item, position } satisfies MosaicDraggedItem,
+    id: Path.create(path, item.id),
+    data: { path, item, position } satisfies MosaicDraggedItem,
   });
-  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.path === path);
 
   return (
     <Component
       ref={setNodeRef}
       item={item}
-      container={container}
+      path={path}
       position={position}
       isDragging={isDragging}
       draggableStyle={{
@@ -86,7 +86,7 @@ export const DraggableTile = ({
  * Mosaic tile that can be sorted.
  */
 export const SortableTile = ({
-  container,
+  path,
   item,
   Component = DefaultComponent,
   position,
@@ -101,22 +101,22 @@ export const SortableTile = ({
     transform,
     isDragging: isDraggingLocal,
   } = useSortable({
-    id: Path.create(container, item.id),
-    data: { container, item, position } satisfies MosaicDraggedItem,
+    id: Path.create(path, item.id),
+    data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
 
   // If not dragging locally but:
   // - active item id matches AND
-  // - the over container matches THEN
-  // - this tile is being dragged from another container
-  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.container === container);
+  // - the over path matches THEN
+  // - this tile is being dragged from another path
+  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.path === path);
 
   return (
     <Component
       ref={setNodeRef}
       item={item}
-      container={container}
+      path={path}
       position={position}
       isDragging={isDragging}
       draggableStyle={{

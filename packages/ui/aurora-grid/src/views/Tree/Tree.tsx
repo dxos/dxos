@@ -35,7 +35,7 @@ export type TreeData = {
 
 // TODO(burdon): Make generic (and forwardRef).
 export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = [], debug }: TreeProps) => {
-  const sortedItems = useSortedItems({ container: id, items });
+  const sortedItems = useSortedItems({ path: id, items });
 
   return (
     <TreeComponent.Root classNames='flex flex-col overflow-hidden'>
@@ -52,7 +52,7 @@ export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = []
         <Mosaic.Sortable id={id} items={sortedItems} direction='vertical'>
           {sortedItems.map((item, index) => (
             <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
-              <Mosaic.SortableTile item={item} container={id} position={index} Component={Component} />
+              <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} />
             </TreeItemComponent.Root>
           ))}
         </Mosaic.Sortable>
@@ -65,7 +65,7 @@ export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = []
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ container, draggableStyle, draggableProps, item, isActive, isDragging, className }, forwardedRef) => {
+  ({ path, draggableStyle, draggableProps, item, isActive, isDragging, className }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
@@ -74,12 +74,10 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
-          <Card.Title title={item.label ?? `${container}/${item.id}`} classNames='truncate' />
+          <Card.Title title={item.label ?? Path.create(path, item.id)} classNames='truncate' />
         </Card.Header>
 
-        {!isActive && !isDragging && item.children && (
-          <TreeBranch path={container} id={item.id} items={item.children} />
-        )}
+        {!isActive && !isDragging && item.children && <TreeBranch path={path} id={item.id} items={item.children} />}
       </div>
     );
   },
@@ -89,7 +87,7 @@ const TreeBranch = ({ path: parentPath, id, items }: { path: string; id: string;
   const { Component } = useContainer();
   const path = Path.create(parentPath, 'branch', id);
   const sortedItems = useSortedItems({
-    container: path,
+    path,
     items,
   });
 
@@ -99,7 +97,7 @@ const TreeBranch = ({ path: parentPath, id, items }: { path: string; id: string;
         {sortedItems.map((child, i) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
-              <Mosaic.SortableTile item={child} container={path} position={i} Component={Component!} />
+              <Mosaic.SortableTile item={child} path={path} position={i} Component={Component!} />
             </TreeItemComponent.Root>
           </TreeComponent.Branch>
         ))}

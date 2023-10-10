@@ -34,8 +34,8 @@ export const DemoGrid: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
     }, {}),
   );
 
-  const handleDrop = ({ container, active, over }: MosaicMoveEvent<Position>) => {
-    if (over.container !== container) {
+  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
+    if (over.path !== id) {
       setGridItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {
       setGridItems((items) => {

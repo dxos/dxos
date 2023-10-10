@@ -167,7 +167,7 @@ export const Grid = ({
                   row.map(({ x, y }) => (
                     <GridCell
                       key={`${x}-${y}`}
-                      container={id}
+                      path={id}
                       position={{ x, y }}
                       bounds={getBounds({ x, y }, cellBounds, spacing)}
                     />
@@ -183,7 +183,7 @@ export const Grid = ({
                     <Mosaic.DraggableTile
                       key={item.id}
                       item={item}
-                      container={id}
+                      path={id}
                       position={position}
                       Component={Component}
                       // debug={debug}
@@ -210,14 +210,10 @@ export const Grid = ({
  * Grid cell.
  */
 // TODO(burdon): Make Cell pluggable (e.g., to include create button).
-const GridCell: FC<{ container: string; position: Position; bounds: Dimension }> = ({
-  container,
-  position,
-  bounds,
-}) => {
+const GridCell: FC<{ path: string; position: Position; bounds: Dimension }> = ({ path, position, bounds }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: Path.create(container, 'cell', `${position.x}-${position.y}`),
-    data: { container, position },
+    id: Path.create(path, 'cell', `${position.x}-${position.y}`),
+    data: { path, position },
   });
 
   return (

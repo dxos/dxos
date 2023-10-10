@@ -36,12 +36,12 @@ const TestStack = ({
   // TODO(burdon): Can we avoid this using useCallback?
   const itemsRef = useRef(items);
 
-  const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
-      if (active.container === container && (behavior !== 'copy' || over.container === container)) {
+      if (active.path === id && (behavior !== 'copy' || over.path === id)) {
         items.splice(active.position!, 1);
       }
-      if (over.container === container) {
+      if (over.path === id) {
         items.splice(over.position!, 0, active.item);
       }
       const i = [...items];
@@ -53,9 +53,8 @@ const TestStack = ({
   const handleDroppable = ({ active, over }: MosaicMoveEvent<number>) => {
     return (
       // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 ||
-        active.container === over.container) &&
-      (active.container === id || behavior !== 'disallow')
+      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 || active.path === over.path) &&
+      (active.path === id || behavior !== 'disallow')
     );
   };
 

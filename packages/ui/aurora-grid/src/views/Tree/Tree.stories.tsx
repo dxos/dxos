@@ -73,7 +73,7 @@ const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialIt
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      if (active.container === id) {
+      if (active.path === id) {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
           const overIndex = items.findIndex((item) => item.id === over.item.id);
@@ -83,10 +83,10 @@ const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialIt
         setItems((items) =>
           items.map((item) => {
             const children = [...item.children];
-            if (Path.last(active.container) === item.id) {
+            if (Path.last(active.path) === item.id) {
               children.splice(active.position!, 1);
             }
-            if (Path.last(over.container) === item.id) {
+            if (Path.last(over.path) === item.id) {
               children.splice(over.position!, 0, active.item as TreeData);
             }
             return { ...item, children };
@@ -98,7 +98,7 @@ const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialIt
   );
 
   const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.container === id && over.container !== id);
+    return !(active.path === id && over.path !== id);
   }, []);
 
   return (

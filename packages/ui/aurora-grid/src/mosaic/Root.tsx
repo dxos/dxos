@@ -100,7 +100,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const modifiers: Modifier = (props) => {
     const { transform } = props;
     if (activeItem) {
-      const container = containers.get(activeItem.container);
+      const container = containers.get(Path.first(activeItem.path));
       return container?.modifier?.(activeItem, props) ?? transform;
     } else {
       return transform;
@@ -132,13 +132,13 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   //
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'container', 'item', 'position'));
+    setActiveItem(pick(event.active.data.current as MosaicDraggedItem, 'path', 'item', 'position'));
   };
 
   const handleDragMove = (event: DragMoveEvent) => {};
 
   const handleDragOver = (event: DragOverEvent) => {
-    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'container', 'item', 'position');
+    const overItem = pick(event.over?.data.current as MosaicDraggedItem, 'path', 'item', 'position');
 
     // If the over item is the same as the active item, do nothing.
     // This happens when moving between containers where a placeholder of itself is rendered where it will be dropped.
@@ -146,17 +146,15 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       return;
     }
 
-    const activeContainer = activeItem && containers.get(Path.first(activeItem.container));
-    const overContainer = overItem?.container && containers.get(Path.first(overItem.container));
+    const activeContainer = activeItem && containers.get(Path.first(activeItem.path));
+    const overContainer = overItem?.path && containers.get(Path.first(overItem.path));
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOverItem(undefined);
       return;
     }
 
     const isDroppable = overContainer.isDroppable ?? (() => true);
-    const item = isDroppable({ container: overItem.container, active: activeItem, over: overItem })
-      ? overItem
-      : undefined;
+    const item = isDroppable({ active: activeItem, over: overItem }) ? overItem : undefined;
     setOverItem(item);
   };
 
@@ -167,27 +165,14 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   // TODO(burdon): Add event type (e.g., copy vs. move).
   const handleDragEnd = (event: DragEndEvent) => {
-    if (
-      activeItem &&
-      overItem &&
-      (activeItem.container !== overItem.container || activeItem.position !== overItem.position)
-    ) {
-      // TODO(wittjosiah): This is a hack to get the container id, if this is a pattern make it a utility function.
-      const activeContainer = containers.get(Path.first(activeItem.container));
+    if (activeItem && overItem && (activeItem.path !== overItem.path || activeItem.position !== overItem.position)) {
+      const activeContainer = containers.get(Path.first(activeItem.path));
       if (activeContainer) {
-        activeContainer.onDrop?.({
-          container: activeContainer.id,
-          active: activeItem,
-          over: overItem,
-        });
+        activeContainer.onDrop?.({ active: activeItem, over: overItem });
 
-        const overContainer = containers.get(Path.first(overItem?.container));
+        const overContainer = containers.get(Path.first(overItem?.path));
         if (overContainer && overContainer !== activeContainer) {
-          overContainer.onDrop?.({
-            container: overContainer.id,
-            active: activeItem,
-            over: overItem,
-          });
+          overContainer.onDrop?.({ active: activeItem, over: overItem });
         }
       }
     }
@@ -233,11 +218,11 @@ const MosaicDebug: FC<{
         containers: Array.from(containers.keys()).map((id) => id),
         active: {
           id: activeItem?.item?.id,
-          container: activeItem?.container,
+          path: activeItem?.path,
         },
         over: {
           id: overItem?.item?.id,
-          container: overItem?.container,
+          path: overItem?.path,
         },
       }}
     />

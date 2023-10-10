@@ -47,7 +47,7 @@ export const Kanban = ({
         debug,
         Component,
         // Restrict columns to x-axis.
-        modifier: (item, { transform }) => (item.container === id ? { ...transform, y: 0 } : transform),
+        modifier: (item, { transform }) => (item.path === id ? { ...transform, y: 0 } : transform),
         onDrop,
       }}
     >
@@ -58,7 +58,7 @@ export const Kanban = ({
               <Mosaic.SortableTile
                 key={column.id}
                 item={column}
-                container={id}
+                path={id}
                 position={index}
                 Component={Component}
                 debug={debug}
@@ -73,28 +73,27 @@ export const Kanban = ({
 
 const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
   forwardRef((props, ref) => {
-    if (props.container === id && props.isActive) {
+    if (props.path === id && props.isActive) {
       return (
-        // Needs to not override the main kanban container.
+        // Needs to not override the main kanban path.
         <Mosaic.Container {...{ id: `${id}-active`, Component }}>
           <KanbanColumnComponent {...props} ref={ref} />
         </Mosaic.Container>
       );
     }
 
-    return props.container === id ? <KanbanColumnComponent {...props} ref={ref} /> : <Component {...props} ref={ref} />;
+    return props.path === id ? <KanbanColumnComponent {...props} ref={ref} /> : <Component {...props} ref={ref} />;
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
-  ({ container, position, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+  ({ path, position, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
     const { id, title, children } = item;
     const { Component } = useContainer();
-    const column = Path.create(container, 'column', id);
-    const sortedItems = useSortedItems({ container: column, items: children });
+    const column = Path.create(path, 'column', id);
+    const sortedItems = useSortedItems({ path: column, items: children });
 
     // TODO(burdon): Doesn't drop at end.
-    // TODO(burdon): Rename "container" property to "path".
-    const { setNodeRef } = useDroppable({ id: column, data: { container: column, item, position } });
+    const { setNodeRef } = useDroppable({ id: column, data: { path: column, item, position } });
 
     return (
       <div
@@ -118,11 +117,11 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           <div ref={setNodeRef} className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col m-2 my-3 gap-2'>
               {sortedItems.map((item, i) => (
-                <Mosaic.SortableTile key={item.id} item={item} container={column} position={i} Component={Component!} />
+                <Mosaic.SortableTile key={item.id} item={item} path={column} position={i} Component={Component!} />
               ))}
             </div>
           </div>
-          {debug && <Mosaic.Debug data={{ container, id, items: sortedItems.length }} />}
+          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
         </Mosaic.Sortable>
       </div>
     );

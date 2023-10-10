@@ -13,7 +13,7 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn } from './Kanban';
-import { Mosaic, Path } from '../../mosaic';
+import { Mosaic, MosaicMoveEvent, Path } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, Priority, range, SimpleCard, Status } from '../../testing';
 
 const generator = new TestObjectGenerator();
@@ -24,15 +24,7 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const EchoStory = ({
-  container = 'projects', // TODO(burdon): id.
-  debug,
-  spaceKey,
-}: {
-  container?: string;
-  debug?: boolean;
-  spaceKey: PublicKey;
-}) => {
+const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: boolean; spaceKey: PublicKey }) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Decorator is not re-run schema is empty when returning to story after first run. Different kanban id.
   const [kanban] = useQuery(space, { type: 'kanban' });
@@ -84,23 +76,23 @@ const EchoStory = ({
     );
   };
 
-  const handleDrop = ({ active, over }: any) => {
+  const handleDrop = ({ active, over }: MosaicMoveEvent) => {
     // Reorder columns.
     // TODO(burdon): Factor out util.
-    if (active.container === container) {
+    if (active.path === id) {
       const fromIndex = kanban.columnValues.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.columnValues.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.columnValues, fromIndex, toIndex);
     } else {
-      const columnsPath = Path.create(container, 'column'); // TODO(burdon): Export string/function from layout.
-      if (Path.hasDescendent(columnsPath, active.container)) {
-        const activeProperty = Path.last(active.container);
-        const overProperty = Path.last(over.container);
+      const columnsPath = Path.create(id, 'column'); // TODO(burdon): Export string/function from layout.
+      if (Path.hasDescendent(columnsPath, active.path)) {
+        const activeProperty = Path.last(active.path);
+        const overProperty = Path.last(over.path);
         invariant(activeProperty);
         invariant(overProperty);
 
         // Update property.
-        active.item[kanban.columnProp] = getProperty(overProperty);
+        (active.item as TypedObject)[kanban.columnProp] = getProperty(overProperty);
 
         // Update active column order.
         const activeOrder = getOrder(kanban, activeProperty);
@@ -134,7 +126,7 @@ const EchoStory = ({
             <Plus />
           </Button>
         </Toolbar.Root>
-        <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
+        <Kanban id={id} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
       </div>
     </Mosaic.Root>
   );
