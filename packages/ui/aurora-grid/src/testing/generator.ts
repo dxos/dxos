@@ -45,13 +45,6 @@ export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
 export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
-  default: {
-    // TODO(burdon): !!!
-    createData: () => ({
-      title: faker.lorem.sentence(3),
-      body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
-    }),
-  },
   document: {
     createData: () => ({
       title: faker.lorem.sentence(3),

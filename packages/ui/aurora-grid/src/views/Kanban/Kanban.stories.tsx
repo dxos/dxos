@@ -30,7 +30,7 @@ const KanbanStory: FC<
     count?: number;
     debug?: boolean;
   }
-> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['default'], count = 3, debug = false }) => {
+> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
   const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => createKanban({ types, columns: count }));
 
   // const handleDelete = (id: string) => {
@@ -98,7 +98,7 @@ export const Default = {
 export const Complex = {
   args: {
     Component: ComplexCard,
-    types: ['default', 'image'],
+    types: ['document', 'image'],
     count: 4,
     debug: true,
   },

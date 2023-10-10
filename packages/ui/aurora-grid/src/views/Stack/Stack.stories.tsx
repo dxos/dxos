@@ -79,7 +79,7 @@ export const Horizontal = {
 export const Complex = {
   args: {
     Component: ComplexCard,
-    types: ['default', 'image'],
+    types: ['document', 'image'],
     count: 8,
     debug: true,
   },

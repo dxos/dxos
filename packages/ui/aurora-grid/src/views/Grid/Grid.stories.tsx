@@ -17,7 +17,7 @@ faker.seed(99);
 const debug = true;
 
 const size = { x: 8, y: 8 };
-const generator = new TestObjectGenerator({ types: ['default', 'image'] });
+const generator = new TestObjectGenerator({ types: ['document', 'image'] });
 const testItems = generator.createObjects({ length: 20 });
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
   map[item.id] = { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) };
