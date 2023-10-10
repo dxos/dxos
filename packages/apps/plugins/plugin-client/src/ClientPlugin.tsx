@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { AppState } from '@braneframe/types';
-import { EchoSchema } from '@dxos/client/echo';
+import { TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -15,7 +15,7 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: TypeCollection };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
