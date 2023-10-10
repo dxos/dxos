@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { exec } from 'child_process';
-import { existsSync } from 'fs';
-import { unlink, writeFile, mkdir, readFile } from 'fs/promises';
-import os from 'os';
-import path from 'path';
-import util from 'util';
+import { exec } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { unlink, writeFile, mkdir, readFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import util from 'node:util';
 import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
@@ -48,6 +48,7 @@ export class SystemctlRunner implements Runner {
         .replace(/{{NODE_PATH}}/g, path.dirname(process.execPath))
         .replace(/{{ERROR_LOG}}/g, errFile)
         .replace(/{{OUT_LOG}}/g, logFile)
+        .replace(/{{NODE_ARGS}}/g, '')
         .replace(/{{OPTIONS}}/g, options.join(' '));
 
       await writeFile(systemdPath, systemdContent, 'utf-8');
