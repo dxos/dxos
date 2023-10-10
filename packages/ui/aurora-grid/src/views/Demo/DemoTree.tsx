@@ -29,11 +29,14 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
     return Array.from({ length: 4 }).map(() => {
       const item = generator.createObject();
       return {
+        // TODO(wittjosiah): Object id isn't included in spread data.
+        id: item.id,
         ...item,
         label: item.title,
         children: Array.from({ length: 3 }).map(() => {
           const item = generator.createObject();
           return {
+            id: item.id,
             ...item,
             label: item.title,
             children: [],
