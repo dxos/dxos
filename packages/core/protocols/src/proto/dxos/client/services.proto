@@ -132,16 +132,12 @@ message Device {
   optional halo.credentials.DeviceProfileDocument profile = 3;
 }
 
-message UpdateDeviceRequest {
-  string label = 1;
-}
-
 message QueryDevicesResponse {
   repeated Device devices = 1;
 }
 
 service DevicesService {
-  rpc UpdateDevice(UpdateDeviceRequest) returns (Device);
+  rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 
