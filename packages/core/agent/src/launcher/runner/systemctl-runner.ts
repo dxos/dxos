@@ -87,8 +87,8 @@ export class SystemctlRunner implements Runner {
   async isRunning(profile: string): Promise<boolean> {
     try {
       const service = this._getServiceName(profile);
-      const { stdout } = await execPromise(`systemctl --user is-active ${service}`);
-      return stdout.trim() === 'active';
+      const { stdout } = await execPromise(`systemctl --user is-active ${service} || true`);
+      return (stdout ?? '').trim() === 'active';
     } catch (err: any) {
       throw new Error(`Failed to check if the service is running: ${err.message}`);
     }
