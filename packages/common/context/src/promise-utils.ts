@@ -4,7 +4,7 @@
 
 import { Context } from './context';
 import { ContextDisposedError } from './context-disposed';
- 
+
 /**
  * @returns A promise that rejects when the context is disposed.
  */

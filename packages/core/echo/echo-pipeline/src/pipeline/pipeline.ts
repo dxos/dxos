@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, sleep, sleepWithContext, synchronized, Trigger } from '@dxos/async';
+import { Event, sleepWithContext, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';

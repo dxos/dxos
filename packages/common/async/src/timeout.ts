@@ -3,6 +3,7 @@
 //
 
 import { Context, ContextDisposedError } from '@dxos/context';
+
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
@@ -64,9 +65,9 @@ export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
 export const sleepWithContext = (ctx: Context, ms: number) => {
   const error = new ContextDisposedError();
   return new Promise<void>((resolve, reject) => {
-    if(ctx.disposed) {
+    if (ctx.disposed) {
       reject(error);
-      return
+      return;
     }
     const timeout = setTimeout(() => {
       clearDispose();
@@ -76,5 +77,5 @@ export const sleepWithContext = (ctx: Context, ms: number) => {
       clearTimeout(timeout);
       reject(error);
     });
-  })
-}
+  });
+};

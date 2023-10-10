@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DeferredTask, sleep, sleepWithContext, trackLeaks } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
