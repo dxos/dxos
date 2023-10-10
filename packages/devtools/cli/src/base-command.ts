@@ -161,14 +161,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       this._stdin = inputLines.join('\n');
     });
 
-    try {
-      if (process.stdin.isTTY) {
-        this._stdin = fs.readFileSync(0, 'utf8');
-      }
-    } catch (err) {
-      this._stdin = undefined;
-    }
-
     this._startTime = new Date();
   }
 
