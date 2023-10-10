@@ -45,7 +45,7 @@ export class SystemctlRunner implements Runner {
       const systemdContent = systemdTemplate
         .replace(/{{PROFILE}}/g, profile)
         .replace(/{{DX_PATH}}/g, process.argv[1])
-        .replace(/{{NODE_PATH}}/g, path.dirname(process.execPath))
+        .replace(/{{NODE_PATH}}/g, process.execPath)
         .replace(/{{ERROR_LOG}}/g, errFile)
         .replace(/{{OUT_LOG}}/g, logFile)
         .replace(/{{NODE_ARGS}}/g, '')
