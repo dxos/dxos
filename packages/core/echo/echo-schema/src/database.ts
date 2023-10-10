@@ -11,13 +11,12 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { base, db } from './defs';
-import { EchoObject } from './object';
+import { EchoObject, base, db, immutable } from './defs';
 import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
 import { DatabaseRouter } from './router';
 import { Text } from './text-object';
-import { TypedObject } from './typed-object';
+import { TypedObject, isTypedObject } from './typed-object';
 
 /**
  * Database wrapper.
@@ -60,8 +59,7 @@ export class EchoDatabase {
     return this._router;
   }
 
-  // TODO(burdon): Return type via generic?
-  getObjectById<T extends TypedObject>(id: string): T | undefined {
+  getObjectById<T extends EchoObject>(id: string): T | undefined {
     const obj = this._objects.get(id);
     if (!obj) {
       return undefined;
@@ -81,6 +79,15 @@ export class EchoDatabase {
     log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
+
+    // TODO(dmaretskyi): Better way to differentiate static schemas.
+    if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
+      const objectConstructor = Object.getPrototypeOf(obj).constructor;
+      invariant(
+        this._router.schema.getPrototype(obj.__typename!) === objectConstructor,
+        `Prototype invalid or not registered: ${objectConstructor.name}`,
+      );
+    }
 
     if (this._removed.has(obj[base]._id)) {
       this._backend.mutate({

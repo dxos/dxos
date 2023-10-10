@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
@@ -17,7 +16,6 @@ const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot')
 /**
  * Snapshot manager for a specific space.
  */
-@trackLeaks('open', 'close')
 export class SnapshotManager {
   constructor(
     private readonly _snapshotStore: SnapshotStore,

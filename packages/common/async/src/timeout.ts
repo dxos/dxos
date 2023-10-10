@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Context, ContextDisposedError } from '@dxos/context';
+
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
@@ -58,4 +60,22 @@ export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
   if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
     timeoutId.unref();
   }
+};
+
+export const sleepWithContext = (ctx: Context, ms: number) => {
+  const error = new ContextDisposedError();
+  return new Promise<void>((resolve, reject) => {
+    if (ctx.disposed) {
+      reject(error);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      clearDispose();
+      resolve();
+    }, ms);
+    const clearDispose = ctx.onDispose(() => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+  });
 };

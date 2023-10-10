@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { base } from './defs';
-import { EchoObject } from './object';
+import { EchoObjectBase } from './echo-object-base';
 import { TypedObject } from './typed-object';
 
 const isIndex = (property: string | symbol): property is string =>
@@ -350,7 +350,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof EchoObject) {
+    if (value instanceof EchoObjectBase) {
       void this._object!._linkObject(value);
       return new Reference(value.id);
     } else if (
@@ -426,7 +426,7 @@ export class EchoArray<T> implements Array<T> {
 }
 
 const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof EchoObject) {
+  if (value instanceof EchoObjectBase) {
     void document!._linkObject(value);
     return new Reference(value.id);
   } else if (Array.isArray(value)) {

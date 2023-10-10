@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { devtoolsFormatter } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
@@ -53,5 +54,13 @@ describe('TypedObject', () => {
       obj.__meta.index = '5';
       expect(Object.keys(obj.__meta)).to.deep.equal(['keys', 'index']);
     });
+  });
+
+  test('devtools formatter', () => {
+    const obj = new TypedObject({ title: 'hello world' });
+
+    expect(obj[devtoolsFormatter].header()).to.not.be.undefined;
+    expect(obj[devtoolsFormatter].hasBody!()).to.be.true;
+    expect(obj[devtoolsFormatter].body!()).to.not.be.undefined;
   });
 });

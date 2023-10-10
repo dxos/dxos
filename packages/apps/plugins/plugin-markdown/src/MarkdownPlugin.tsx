@@ -52,7 +52,7 @@ import {
 (globalThis as any)[Document.name] = Document;
 
 export const isDocument = (data: unknown): data is Document =>
-  isTypedObject(data) && Document.type.name === data.__typename;
+  isTypedObject(data) && Document.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
@@ -163,7 +163,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
 
       const filter = (document: Document) =>
-        document.__typename === Document.type.name && filters.every((filter) => filter(document));
+        document.__typename === Document.schema.typename && filters.every((filter) => filter(document));
       adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');

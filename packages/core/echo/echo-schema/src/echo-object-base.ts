@@ -3,23 +3,21 @@
 //
 
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
-import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
+import { Item, MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
-import { base, db } from './defs';
+import { EchoObject, base, db, subscribe } from './defs';
 import { createSignal } from './signal';
-
-export const subscribe = Symbol.for('dxos.echo-object.subscribe');
 
 /**
  * Base class for all echo objects.
  * Can carry different models.
  */
-export abstract class EchoObject<T extends Model = any> {
+export abstract class EchoObjectBase<T extends Model = any> implements EchoObject {
   /**
    * @internal
    */
@@ -181,11 +179,11 @@ export abstract class EchoObject<T extends Model = any> {
   }
 }
 
-export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
+export const setStateFromSnapshot = (obj: EchoObjectBase, snapshot: ObjectSnapshot) => {
   invariant(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
 };
 
-export const forceUpdate = (obj: EchoObject) => {
+export const forceUpdate = (obj: EchoObjectBase) => {
   obj[base]._itemUpdate();
 };
