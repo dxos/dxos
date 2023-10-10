@@ -8,7 +8,7 @@ import React, { FC, HTMLAttributes, useState } from 'react';
 
 import { TestComponentProps } from './test';
 import { MosaicMoveEvent, MosaicDataItem } from '../../mosaic';
-import { createItem } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 import { Stack } from '../Stack';
 
 export const DemoStack: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElement>> = ({
@@ -17,7 +17,10 @@ export const DemoStack: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivEleme
   debug,
   Component,
 }) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() => Array.from({ length: 10 }).map(() => createItem(types)));
+  const [items, setItems] = useState<MosaicDataItem[]>(() => {
+    const generator = new TestObjectGenerator({ types });
+    return generator.createObjects({ length: 10 });
+  });
 
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {

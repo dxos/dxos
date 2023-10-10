@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Stack, StackProps } from './Stack';
 import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
-import { createItem, ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { ComplexCard, FullscreenDecorator, SimpleCard, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
 
@@ -24,9 +24,10 @@ const StackStory = ({
   types: string[];
   count: number;
 }) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() =>
-    Array.from({ length: count }).map(() => createItem(types)),
-  );
+  const [items, setItems] = useState<MosaicDataItem[]>(() => {
+    const generator = new TestObjectGenerator({ types });
+    return generator.createObjects({ length: count });
+  });
 
   const handleDrop = ({ container, active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
@@ -59,7 +60,7 @@ export default {
 export const Default = {
   args: {
     Component: SimpleCard,
-    count: 10,
+    count: 8,
     debug: true,
   },
   render: StackStory,
@@ -69,7 +70,7 @@ export const Horizontal = {
   args: {
     Component: SimpleCard,
     direction: 'horizontal',
-    count: 3,
+    count: 8,
     debug: true,
   },
   render: StackStory,
@@ -78,8 +79,8 @@ export const Horizontal = {
 export const Complex = {
   args: {
     Component: ComplexCard,
-    types: ['document', 'image'],
-    count: 3,
+    types: ['default', 'image'],
+    count: 8,
     debug: true,
   },
   render: StackStory,

@@ -11,15 +11,16 @@ import { invariant } from '@dxos/invariant';
 
 import { Kanban, KanbanColumn, KanbanProps } from './Kanban';
 import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
-import { ComplexCard, createItem, FullscreenDecorator, SimpleCard, TestItem } from '../../testing';
+import { ComplexCard, FullscreenDecorator, SimpleCard, TestItem, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
+  const generator = new TestObjectGenerator({ types });
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: Array.from({ length: columns - i }).map(() => createItem(types)),
+    children: generator.createObjects({ length: columns - 1 }),
   }));
 };
 
@@ -29,7 +30,7 @@ const KanbanStory: FC<
     count?: number;
     debug?: boolean;
   }
-> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['document'], count = 3, debug = false }) => {
+> = ({ id = 'kanban', Component = Mosaic.DefaultComponent, types = ['default'], count = 3, debug = false }) => {
   const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => createKanban({ types, columns: count }));
 
   // const handleDelete = (id: string) => {
@@ -78,6 +79,7 @@ const KanbanStory: FC<
 };
 
 export default {
+  title: 'Kanban',
   component: KanbanStory,
   decorators: [FullscreenDecorator()],
   parameters: {
@@ -96,7 +98,7 @@ export const Default = {
 export const Complex = {
   args: {
     Component: ComplexCard,
-    types: ['document', 'image'],
+    types: ['default', 'image'],
     count: 4,
     debug: true,
   },

@@ -13,15 +13,7 @@ import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn } from './Kanban';
 import { Mosaic, Path } from '../../mosaic';
-import { FullscreenDecorator, Generator, Priority, SimpleCard, Status } from '../../testing';
-
-export default {
-  title: 'Kanban',
-  decorators: [FullscreenDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
+import { FullscreenDecorator, TestObjectGenerator, Priority, range, SimpleCard, Status } from '../../testing';
 
 // TODO(burdon): Compute this?
 const columnValues: { [property: string]: any[] } = {
@@ -29,8 +21,8 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const Story = ({
-  container = 'projects',
+const EchoStory = ({
+  container = 'projects', // TODO(burdon): id.
   debug,
   spaceKey,
 }: {
@@ -39,6 +31,7 @@ const Story = ({
   spaceKey: PublicKey;
 }) => {
   const space = useSpace(spaceKey);
+  // TODO(burdon): Decorator is not re-run schema is empty when returning to story after first run. Different kanban id.
   const [kanban] = useQuery(space, { type: 'kanban' });
 
   const getProperty = (property: string) => {
@@ -136,28 +129,40 @@ const Story = ({
   );
 };
 
-export const ECHO = {
-  render: Story,
+export default {
+  title: 'Kanban',
+  render: EchoStory,
   decorators: [
+    FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
-        const generator = new Generator(space);
-        await generator.initialize();
-        const { project } = generator.createProjects();
-        space.db.add(
+        const generator = new TestObjectGenerator();
+        const factory = generator.factories.project;
+        const objects = [
+          factory.schema,
+          ...range(factory.createObject, 10),
           new Expando({
             type: 'kanban',
             title: 'Projects',
-            schema: project,
+            schema: factory.schema,
+            // TODO(burdon): Standardize with other story.
             columnProp: 'status',
             columnValues: columnValues.status,
             objectPosition: {}, // TODO(burdon): Make this a CRDT.
           }),
-        );
+        ];
+
+        // TODO(burdon): Batch API.
+        objects.forEach((object) => space.db.add(object));
       },
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
+
+export const ECHO = {};
 
 const PropertySelector: FC<{ property: string; properties: string[]; onSetProperty: (property: string) => void }> = ({
   property,

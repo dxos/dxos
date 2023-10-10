@@ -11,14 +11,15 @@ import { arrayMove } from '@dxos/util';
 
 import { TestComponentProps } from './test';
 import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
-import { SimpleCard, TestItem, createItem } from '../../testing';
+import { SimpleCard, TestItem, TestObjectGenerator } from '../../testing';
 import { Kanban, KanbanColumn } from '../Kanban';
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
+  const generator = new TestObjectGenerator({ types });
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: Array.from({ length: columns - i }).map(() => createItem(types)),
+    children: generator.createObjects({ length: columns - i }),
   }));
 };
 

@@ -10,14 +10,15 @@ import React, { useState } from 'react';
 import { Grid, GridLayout } from './Grid';
 import { Position } from './layout';
 import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
-import { createItem, FullscreenDecorator, ComplexCard } from '../../testing';
+import { FullscreenDecorator, ComplexCard, TestObjectGenerator } from '../../testing';
 
 faker.seed(99);
 
 const debug = true;
 
 const size = { x: 8, y: 8 };
-const testItems = Array.from({ length: 8 }).map(() => createItem(['document', 'image']));
+const generator = new TestObjectGenerator({ types: ['default', 'image'] });
+const testItems = generator.createObjects({ length: 20 });
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
   map[item.id] = { x: faker.number.int({ min: 0, max: size.x - 1 }), y: faker.number.int({ min: 0, max: size.y - 1 }) };
   return map;

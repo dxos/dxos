@@ -25,7 +25,7 @@ export default {
 };
 
 const debug = false;
-const types = ['document', 'image'];
+const types = ['default', 'image'];
 
 export const Default = () => (
   <Mosaic.Root debug={debug}>
