@@ -129,7 +129,11 @@ enum DeviceKind {
 message Device {
   dxos.keys.PublicKey device_key = 1;
   DeviceKind kind = 2;
-  optional halo.credentials.ProfileDocument profile = 3;
+  optional halo.credentials.DeviceProfileDocument profile = 3;
+}
+
+message UpdateDeviceRequest {
+  string label = 1;
 }
 
 message QueryDevicesResponse {
@@ -137,7 +141,7 @@ message QueryDevicesResponse {
 }
 
 service DevicesService {
-  rpc UpdateDevice(halo.credentials.ProfileDocument) returns (Device);
+  rpc UpdateDevice(UpdateDeviceRequest) returns (Device);
   rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 
