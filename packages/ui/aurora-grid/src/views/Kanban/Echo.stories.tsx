@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Plus } from '@phosphor-icons/react';
 import React, { FC, useRef } from 'react';
 
-import { Select, Toolbar } from '@dxos/aurora';
+import { Button, Select, Toolbar } from '@dxos/aurora';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { Expando, Schema, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -14,6 +15,8 @@ import { arrayMove } from '@dxos/util';
 import { Kanban, KanbanColumn } from './Kanban';
 import { Mosaic, Path } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, Priority, range, SimpleCard, Status } from '../../testing';
+
+const generator = new TestObjectGenerator();
 
 // TODO(burdon): Compute this?
 const columnValues: { [property: string]: any[] } = {
@@ -112,6 +115,11 @@ const EchoStory = ({
     }
   };
 
+  const handleAddData = () => {
+    const object = generator.createObject({ types: ['project'] });
+    space?.db.add(object);
+  };
+
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
@@ -122,6 +130,9 @@ const EchoStory = ({
             properties={Object.keys(columnValues)}
             onSetProperty={handleSetProperty}
           />
+          <Button title='Add Data' onClick={handleAddData}>
+            <Plus />
+          </Button>
         </Toolbar.Root>
         <Kanban id={container} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
       </div>
@@ -136,7 +147,6 @@ export default {
     FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
-        const generator = new TestObjectGenerator();
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
