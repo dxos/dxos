@@ -30,7 +30,7 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { schema$ } from '@braneframe/types';
+import { types } from '@braneframe/types';
 import {
   auroraTheme,
   bindTheme,
@@ -94,7 +94,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
+          ClientPlugin({ config, services, debugIdentity: debug, schema: types }),
 
           // Core UX.
           DndPlugin(),

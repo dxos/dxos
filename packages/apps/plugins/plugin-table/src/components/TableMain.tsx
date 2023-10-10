@@ -33,6 +33,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
+  console.log(table);
+
   const rows = [...objects, {} as any];
 
   const updateSchemaProp = (update: SchemaType.Prop) => {

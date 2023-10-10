@@ -16,7 +16,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
+import { DatabaseRouter, TypeCollection } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -223,7 +223,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @deprecated use client.addSchema
    */
-  addSchema(schema: EchoSchema) {
+  addSchema(schema: TypeCollection) {
     this._schemaRegistry.addSchema(schema);
   }
 }

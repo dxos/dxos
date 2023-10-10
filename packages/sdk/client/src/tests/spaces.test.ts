@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document as DocumentType } from '@braneframe/types';
+import { Document as DocumentType, types } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -388,7 +388,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById(id)!.data = 'test2';
+    space.db.getObjectById<Expando>(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -435,7 +435,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById(id)!.data = 'test2';
+    space2.db.getObjectById<Expando>(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -444,6 +444,9 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
+
+    host.addSchema(types);
+    guest.addSchema(types);
 
     await host.initialize();
     await guest.initialize();
@@ -468,7 +471,7 @@ describe('Spaces', () => {
     hostDocument.content.model?.insert('Hello, world!', 0);
 
     await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
+      expect(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content.text).to.equal('Hello, world!');
     });
   });
 

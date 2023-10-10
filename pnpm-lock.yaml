@@ -583,6 +583,34 @@ importers:
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
+  packages/apps/labs-app/build/ios/socket-test-dev.app/ui/socket:
+    specifiers:
+      '@socketsupply/socket-darwin-arm64': 0.4.0
+      '@socketsupply/socket-darwin-x64': 0.4.0
+      '@socketsupply/socket-linux-arm64': 0.4.0
+      '@socketsupply/socket-linux-x64': 0.4.0
+      '@socketsupply/socket-win32-x64': 0.4.0
+    optionalDependencies:
+      '@socketsupply/socket-darwin-arm64': 0.4.0
+      '@socketsupply/socket-darwin-x64': 0.4.0
+      '@socketsupply/socket-linux-arm64': 0.4.0
+      '@socketsupply/socket-linux-x64': 0.4.0
+      '@socketsupply/socket-win32-x64': 0.4.0
+
+  packages/apps/labs-app/build/ios/ui/socket:
+    specifiers:
+      '@socketsupply/socket-darwin-arm64': 0.4.0
+      '@socketsupply/socket-darwin-x64': 0.4.0
+      '@socketsupply/socket-linux-arm64': 0.4.0
+      '@socketsupply/socket-linux-x64': 0.4.0
+      '@socketsupply/socket-win32-x64': 0.4.0
+    optionalDependencies:
+      '@socketsupply/socket-darwin-arm64': 0.4.0
+      '@socketsupply/socket-darwin-x64': 0.4.0
+      '@socketsupply/socket-linux-arm64': 0.4.0
+      '@socketsupply/socket-linux-x64': 0.4.0
+      '@socketsupply/socket-win32-x64': 0.4.0
+
   packages/apps/plugins/plugin-chess:
     specifiers:
       '@braneframe/plugin-client': workspace:*
@@ -2767,13 +2795,13 @@ importers:
       '@dxos/teleport-extension-gossip': link:../../mesh/teleport-extension-gossip
       '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
+      '@dxos/text-model': link:../text-model
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/tracing': link:../../../common/tracing
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
       crc-32: 1.2.2
     devDependencies:
-      '@dxos/text-model': link:../text-model
       fast-check: 3.3.0
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
@@ -2798,7 +2826,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       lodash.get: ^4.4.2
-      protobufjs: ^7.2.2
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -2817,7 +2844,6 @@ importers:
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
-      protobufjs: 7.2.2
     devDependencies:
       '@dxos/echo-typegen': link:../echo-typegen
       wait-for-expect: 3.0.2
@@ -14768,6 +14794,46 @@ packages:
       lodash.union: 4.6.0
       lodash.values: 4.3.0
     dev: true
+
+  /@socketsupply/socket-darwin-arm64/0.4.0:
+    resolution: {integrity: sha512-0lap/Mj3fj85RY8jsex7AYNXjJnmY09mKwi7+4U0SjvsBktSyGiYywEmiosTHRh/4cUXYcqZwmiPxU5p9lbV3g==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-darwin-x64/0.4.0:
+    resolution: {integrity: sha512-GfAgfUSej3GOJijD58jWuEtno73R489gctqJQmnvS9qjcaDXb2+ifgCyhw6UQ/xI8UALjJbxxDMnX62ssq43hw==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-linux-arm64/0.4.0:
+    resolution: {integrity: sha512-32RngxA2BMfWlX0KbhTsnpzZMMbTsmyjdKmcq73+vXIplrHwRev5dZe/sC3nWCYcLBsBWk6kv5Ke/FRAHtraGQ==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-linux-x64/0.4.0:
+    resolution: {integrity: sha512-AE2ri6MwhptGrj3i7lcGAdd43bFGIhdoWv3UvjMyI2sHVpUwd/mmMiLp13nIzTyQlyQ1fewttuxcDbcR4iOnWQ==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@socketsupply/socket-win32-x64/0.4.0:
+    resolution: {integrity: sha512-vecVtpNNgbE+lL/FvJFY2U0BwP31beg3VgrC6XfmsRWa+Sem8Y5o4c5Q4P78Ejfux2YZuTU8pQtp94PkAwA2dA==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
 
   /@stackblitz/sdk/1.9.0:
     resolution: {integrity: sha512-3m6C7f8pnR5KXys/Hqx2x6ylnpqOak6HtnZI6T5keEO0yT+E4Spkw37VEbdwuC+2oxmjdgq6YZEgiKX7hM1GmQ==}

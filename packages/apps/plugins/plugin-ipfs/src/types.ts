@@ -20,5 +20,5 @@ export type IpfsProvides = {};
 export type IpfsPluginProvides = GraphProvides & TranslationsProvides;
 
 export const isFile = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && FileType.type.name === object.__typename;
+  return isTypedObject(object) && FileType.schema.typename === object.__typename;
 };

@@ -6,11 +6,11 @@ import { log } from '@dxos/log';
 import { TextKind, TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
-import { EchoObject } from './object';
+import { EchoObjectBase } from './echo-object-base';
 
 // TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
 //  So rethink how we expose this.
-export class Text extends EchoObject<TextModel> {
+export class Text extends EchoObjectBase<TextModel> {
   // TODO(burdon): Change to object.
   constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
