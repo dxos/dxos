@@ -44,7 +44,7 @@ const StackStory = ({
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
-      <Stack id={id} Component={Component} onDrop={handleDrop} items={items} direction={direction} debug={debug} />;
+      <Stack id={id} Component={Component} onDrop={handleDrop} items={items} direction={direction} debug={debug} />
     </Mosaic.Root>
   );
 };

@@ -18,24 +18,24 @@ export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   ) => {
     const full = !title;
     return (
-      <Card.Root
-        ref={forwardRef}
-        style={draggableStyle}
-        noPadding={full}
-        classNames={mx(className, 'snap-center', isDragging && 'opacity-20')}
-        grow={grow}
-      >
-        <Card.Header floating={full}>
-          <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
-          {title && <Card.Title title={title} />}
-          <Card.Menu position={full ? 'right' : undefined} />
-        </Card.Header>
-        {debug && (
-          <Card.Body>
-            <Mosaic.Debug data={{ container, id, position }} />
-          </Card.Body>
-        )}
-      </Card.Root>
+      <div role='none' ref={forwardRef} style={draggableStyle}>
+        <Card.Root
+          noPadding={full}
+          classNames={mx(className, 'm-1 snap-center', isDragging && 'opacity-20')}
+          grow={grow}
+        >
+          <Card.Header floating={full}>
+            <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
+            {title && <Card.Title title={title} />}
+            <Card.Menu position={full ? 'right' : undefined} />
+          </Card.Header>
+          {debug && (
+            <Card.Body>
+              <Mosaic.Debug data={{ container, id, position }} />
+            </Card.Body>
+          )}
+        </Card.Root>
+      </div>
     );
   },
 );

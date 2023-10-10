@@ -38,7 +38,7 @@ export const Stack = ({
               direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
             )}
           >
-            <div className={mx('flex gap-2', direction === 'vertical' && 'flex-col')}>
+            <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
               {sortedItems.map((item, i) => (
                 <Mosaic.SortableTile
                   key={item.id}

@@ -75,8 +75,8 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
   forwardRef((props, ref) => {
     if (props.container === id && props.isActive) {
       return (
-        // TODO(wittjosiah): Why does it need to be the data id for reordering to work?
-        <Mosaic.Container {...{ id: props.item.id, Component }}>
+        // Needs to not override the main kanban container.
+        <Mosaic.Container {...{ id: `${id}-active`, Component }}>
           <KanbanColumnComponent {...props} ref={ref} />
         </Mosaic.Container>
       );

@@ -31,7 +31,7 @@ export const useSortedItems = <T extends MosaicDataItem>({
   }
 
   // Remove item being dragged out.
-  if (activeItem && activeItem.container === container && overItem?.container !== activeItem.container) {
+  if (activeItem && activeItem.container === container && overItem && overItem.container !== activeItem.container) {
     return items.filter((item) => item.id !== activeItem.item.id);
   }
 
