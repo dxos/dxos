@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
+import readline from 'node:readline';
 
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
@@ -132,7 +133,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }),
   };
 
-  private readonly _stdin?: string;
+  private _stdin?: string;
   private _clientConfig?: Config;
   private _client?: Client;
   private _startTime: Date;
@@ -145,6 +146,20 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: process.stdin.isTTY
+    });
+
+    const inputLines: string[] = [];
+    rl.on('line', line => inputLines.push(line));
+
+    rl.on('close', () => {
+      // Concatenate all the lines to get the piped input
+      this._stdin = inputLines.join('\n');
+    });
 
     try {
       if (process.stdin.isTTY) {
