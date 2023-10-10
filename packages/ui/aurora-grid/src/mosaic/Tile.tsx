@@ -99,7 +99,6 @@ export const SortableTile = ({
     attributes,
     listeners,
     transform,
-    transition,
     isDragging: isDraggingLocal,
   } = useSortable({
     id: Path.create(container, item.id),
@@ -122,7 +121,7 @@ export const SortableTile = ({
       isDragging={isDragging}
       draggableStyle={{
         transform: getTransformCSS(transform),
-        transition,
+        transition: activeItem ? 'transform 200ms ease' : 'none',
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}
