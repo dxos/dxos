@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 
 // Don't require these until we've hooked certain builtins
