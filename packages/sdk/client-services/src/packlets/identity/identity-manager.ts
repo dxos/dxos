@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import platform from 'platform';
+
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
@@ -133,6 +135,17 @@ export class IdentityManager {
       // Device authorization (writes device chain).
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
+
+      // Write device metadata to profile.
+      credentials.push(
+        await generator.createDeviceProfile({
+          platform: platform.name,
+          platformVersion: platform.version,
+          architecture: String(platform.os?.architecture),
+          os: platform.os?.family,
+          osVersion: platform.os?.version,
+        }),
+      );
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
