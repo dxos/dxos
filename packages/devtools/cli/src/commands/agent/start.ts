@@ -40,9 +40,6 @@ export default class Start extends BaseCommand<typeof Start> {
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
     }),
-    timeout: Flags.integer({
-      description: 'Timeout (s).',
-    }),
   };
 
   static override examples = [
