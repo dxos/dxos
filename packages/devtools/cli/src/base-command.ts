@@ -12,7 +12,6 @@ import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
-import { asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -185,8 +184,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     await this._loadConfig();
   }
 
-  async readStdin(): Promise<string | undefined> {
-    const stdinPromise = new Promise<string>((resolve) => {
+  async readStdin(): Promise<string> {
+    return new Promise<string>((resolve) => {
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -196,12 +195,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       const inputLines: string[] = [];
       rl.on('line', (line) => inputLines.push(line));
       rl.on('close', () => resolve(inputLines.join('\n')));
+      setTimeout(() => rl.close(), STDIN_TIMEOUT);
     });
-    let stdin;
-    try {
-      stdin = await asyncTimeout(stdinPromise, STDIN_TIMEOUT);
-    } catch (err) {}
-    return stdin;
   }
 
   private async _initTelemetry() {
