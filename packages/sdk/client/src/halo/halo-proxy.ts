@@ -121,7 +121,7 @@ export class HaloProxy implements Halo {
         const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
         log.trace('dxos.halo.device', {
           deviceKey: current?.deviceKey,
-          deviceName: current?.profile?.displayName,
+          profile: current?.profile,
         });
       }
     });
