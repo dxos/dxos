@@ -48,7 +48,7 @@ export class LaunchctlRunner implements Runner {
         .replace(/{{NODE_PATH}}/g, path.dirname(process.execPath))
         .replace(/{{ERROR_LOG}}/g, errFile)
         .replace(/{{OUT_LOG}}/g, logFile)
-        .replace(/{{OPTIONS}}/g, options.length > 1 ? options.join('\n') : '')
+        .replace(/{{OPTIONS}}/g, options.length > 1 ? options.join('\n') : '');
 
       // Write the plist content to the file.
       await writeFile(plistPath, plistContent, 'utf-8');

@@ -29,7 +29,7 @@ export class SystemctlRunner implements Runner {
       const systemdTemplate = await readFile(defaultTemplatePath, 'utf-8');
 
       const service = this._getServiceName(profile);
-      const systemdPath = this._getSystemdPath(service);
+      const systemdPath = await this._getSystemdPath(service);
 
       const options = [];
       if (daemonOptions?.metrics) {
@@ -69,7 +69,7 @@ export class SystemctlRunner implements Runner {
   async stop(profile: string, force: boolean = false): Promise<void> {
     try {
       const service = this._getServiceName(profile);
-      const systemdPath = this._getSystemdPath(service);
+      const systemdPath = await this._getSystemdPath(service);
 
       // Stop the systemd service.
       await execPromise(`systemctl --user stop ${service}`);
@@ -98,10 +98,10 @@ export class SystemctlRunner implements Runner {
     return `dxos-agent-${profile}.service`;
   }
 
-  private _getSystemdPath(service: string): string {
+  private async _getSystemdPath(service: string): Promise<string> {
     const systemdPath = path.join(os.homedir(), '.config', 'systemd', 'user');
     if (!existsSync(systemdPath)) {
-      mkdir(systemdPath, { recursive: true });
+      await mkdir(systemdPath, { recursive: true });
     }
     return path.join(systemdPath, service);
   }
