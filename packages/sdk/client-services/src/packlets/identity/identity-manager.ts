@@ -139,11 +139,11 @@ export class IdentityManager {
       // Write device metadata to profile.
       credentials.push(
         await generator.createDeviceProfile({
-          platform: platform.name ?? '',
-          platformVersion: platform.version ?? '',
-          architecture: String(platform.os?.architecture ?? ''),
-          os: platform.os?.family ?? '',
-          osVersion: platform.os?.version ?? '',
+          platform: platform.name,
+          platformVersion: platform.version,
+          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+          os: platform.os?.family,
+          osVersion: platform.os?.version,
         }),
       );
       for (const credential of credentials) {
