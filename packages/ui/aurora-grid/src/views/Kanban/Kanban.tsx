@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useMemo, useRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
@@ -94,8 +94,6 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const { id, title, children } = item;
     const { Component } = useContainer();
     const sortedItems = useSortedItems({ path, items: children });
-    const render = useRef(0);
-    render.current++;
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
@@ -110,7 +108,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           <Card.Root classNames='shrink-0 bg-cyan-200'>
             <Card.Header>
               <Card.DragHandle {...draggableProps} />
-              <Card.Title title={title + ' #' + render.current} />
+              <Card.Title title={title} />
               <Card.Menu />
             </Card.Header>
           </Card.Root>
@@ -132,7 +130,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
               </Mosaic.SortableContext>
             </div>
           </div>
-          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length, count: render.current }} />}
+          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
         </div>
       </div>
     );
