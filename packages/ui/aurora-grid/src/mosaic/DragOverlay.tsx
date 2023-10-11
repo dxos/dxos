@@ -53,8 +53,8 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     }
   }, [activeItem, overItem]);
 
-  // TODO(burdon): Custom animations.
-  // NOTE: The DragOverlay wrapper element must always be rendered to support animations. Conditionally render the content.
+  // TODO(burdon): Set custom animations (e.g., in/out/around).
+  // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     <DragOverlay adjustScale={false} {...overlayProps}>
       {activeItem?.path && container && OverlayComponent && (
