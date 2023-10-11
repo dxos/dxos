@@ -139,14 +139,13 @@ export class IdentityManager {
       // Write device metadata to profile.
       credentials.push(
         await generator.createDeviceProfile({
-          platform: platform.name,
-          platformVersion: platform.version,
-          architecture: String(platform.os?.architecture),
-          os: platform.os?.family,
-          osVersion: platform.os?.version,
+          platform: platform.name ?? '',
+          platformVersion: platform.version ?? '',
+          architecture: String(platform.os?.architecture ?? ''),
+          os: platform.os?.family ?? '',
+          osVersion: platform.os?.version ?? '',
         }),
       );
-
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },
@@ -215,26 +214,6 @@ export class IdentityManager {
       subject: this._identity.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile,
-      },
-    });
-
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-    this.stateUpdate.emit();
-    return profile;
-  }
-
-  async updateDevice({ deviceKey, profile }: { deviceKey: PublicKey; profile: ProfileDocument }) {
-    invariant(this._identity, 'Identity not initialized.');
-
-    invariant(this._identity.authorizedDeviceKeys.has(deviceKey), 'Device not authorized.');
-
-    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
-      subject: this._identity.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DeviceProfile',
-        deviceKey,
         profile,
       },
     });
