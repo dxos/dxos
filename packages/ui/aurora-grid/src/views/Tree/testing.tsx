@@ -47,6 +47,10 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
       }),
   );
 
+  const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
+    return !(active.path === id && over.path !== id);
+  }, []);
+
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
@@ -74,12 +78,9 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
     [items],
   );
 
-  const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.path === id && over.path !== id);
-  }, []);
-
-  return <Tree id={id} items={items} onDrop={handleDrop} isDroppable={handleDroppable} />;
+  return <Tree id={id} items={items} onOver={handleOver} onDrop={handleDrop} />;
 };
+
 export const createGraph = () => {
   const content = [...Array(2)].map(() => ({
     id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),

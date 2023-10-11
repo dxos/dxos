@@ -30,6 +30,14 @@ export const DemoStack = ({
 
   const itemsRef = useRef(items);
 
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    return (
+      // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
+      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 || active.path === over.path) &&
+      (active.path === id || behavior !== 'disallow')
+    );
+  };
+
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
       if (
@@ -47,20 +55,12 @@ export const DemoStack = ({
     });
   };
 
-  const handleDroppable = ({ active, over }: MosaicMoveEvent<number>) => {
-    return (
-      // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 || active.path === over.path) &&
-      (active.path === id || behavior !== 'disallow')
-    );
-  };
-
   return (
     <Stack
       id={id}
       Component={Component}
+      onOver={handleOver}
       onDrop={handleDrop}
-      isDroppable={handleDroppable}
       items={items}
       direction={direction}
       debug={debug}

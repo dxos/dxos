@@ -33,7 +33,7 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = [], debug }: TreeProps) => {
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
   const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent' });
 
   return (
@@ -43,7 +43,7 @@ export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = []
           id,
           debug,
           Component,
-          isDroppable,
+          onOver,
           onDrop,
         }}
       >

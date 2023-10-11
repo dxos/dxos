@@ -20,8 +20,8 @@ export type StackProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCo
 export const Stack = ({
   id,
   Component = Mosaic.DefaultComponent,
+  onOver,
   onDrop,
-  isDroppable,
   items = [],
   direction = 'vertical',
   debug,
@@ -29,7 +29,7 @@ export const Stack = ({
   const sortedItems = useSortedItems({ path: id, items });
 
   return (
-    <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
+    <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
       <Mosaic.SortableContext items={sortedItems} direction={direction}>
         <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
           <div

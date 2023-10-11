@@ -22,22 +22,43 @@ export type MosaicContainerProps<
   id: string;
   debug?: boolean;
 
-  // Default component used to render tiles.
+  /**
+   * Default component used to render tiles.
+   */
   Component?: MosaicTileComponent<TData>;
 
-  // https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
+  /**
+   * Adapter to transform properties while dragging (e.g., constraint axes).
+   * https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
+   */
   modifier?: (activeItem: MosaicDraggedItem, ...modifierArgs: Parameters<Modifier>) => ReturnType<Modifier>;
 
-  // Overrides for the default overlay.
-  getOverlayStyle?: () => CSSProperties;
+  /**
+   * Property overrides for the default overlay.
+   */
   getOverlayProps?: () => MosaicTileOverlayProps;
 
+  /**
+   * Style property overrides for the default overlay.
+   */
+  getOverlayStyle?: () => CSSProperties;
+
+  /**
+   * Called when a tile is dragged over the container.
+   * Returns true if the tile can be dropped.
+   */
+  onOver?: (event: MosaicMoveEvent<TPosition>) => boolean;
+
+  /**
+   * Called when a tile is dropped on the container.
+   */
   // TODO(burdon): Handle copy, delete, etc.
   onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
-  // TODO(wittjosiah): Generalize to onOver?
-  isDroppable?: (event: MosaicMoveEvent<TPosition>) => boolean;
 
-  // Custom properties.
+  /**
+   * Custom properties (available to event handlers).
+   */
+  // TODO(burdon): Still used?
   custom?: TCustom;
 };
 
@@ -46,9 +67,8 @@ export type MosaicContainerContextType = MosaicContainerProps<any>;
 export const MosaicContainerContext = createContext<MosaicContainerContextType | undefined>(undefined);
 
 /**
- * Container for a collection of tiles.
+ * Root Container that manages the layout of tiles.
  */
-// TODO(burdon): Support passing in more context to event handlers; and for tiles to access.
 export const MosaicContainer = ({ children, ...container }: PropsWithChildren<MosaicContainerProps>) => {
   const mosaic = useMosaic();
   useEffect(() => {

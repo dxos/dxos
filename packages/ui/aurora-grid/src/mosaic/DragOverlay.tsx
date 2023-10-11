@@ -53,37 +53,37 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     }
   }, [activeItem, overItem]);
 
-  if (!activeItem?.path || !container || !OverlayComponent) {
-    return null;
-  }
-
+  // TODO(burdon): Set custom animations (e.g., in/out/around).
+  // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
-    <DragOverlay {...overlayProps}>
-      <div style={{ ...container.getOverlayStyle?.() }}>
-        <OverlayErrorBoundary>
-          {/* TODO(burdon): Configure density via getOverlayProps. */}
-          <DensityProvider density='fine'>
-            <OverlayComponent
-              {...container.getOverlayProps?.()}
-              item={activeItem.item}
-              path={activeItem.path}
-              isActive={true}
-            />
-            {debug && (
-              <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
-                <span className='truncate'>
-                  <span className='text-neutral-400'>container </span>
-                  {container.id}
-                </span>
-                <span className='truncate'>
-                  <span className='text-neutral-400'>item </span>
-                  {activeItem.item.id.slice(0, 8)}
-                </span>
-              </div>
-            )}
-          </DensityProvider>
-        </OverlayErrorBoundary>
-      </div>
+    <DragOverlay adjustScale={false} {...overlayProps}>
+      {activeItem?.path && container && OverlayComponent && (
+        <div style={{ ...container.getOverlayStyle?.() }}>
+          <OverlayErrorBoundary>
+            {/* TODO(burdon): Configure density via getOverlayProps. */}
+            <DensityProvider density='fine'>
+              <OverlayComponent
+                {...container.getOverlayProps?.()}
+                item={activeItem.item}
+                path={activeItem.path}
+                isActive={true}
+              />
+              {debug && (
+                <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
+                  <span className='truncate'>
+                    <span className='text-neutral-400'>container </span>
+                    {container.id}
+                  </span>
+                  <span className='truncate'>
+                    <span className='text-neutral-400'>item </span>
+                    {activeItem.item.id.slice(0, 8)}
+                  </span>
+                </div>
+              )}
+            </DensityProvider>
+          </OverlayErrorBoundary>
+        </div>
+      )}
     </DragOverlay>
   );
 };

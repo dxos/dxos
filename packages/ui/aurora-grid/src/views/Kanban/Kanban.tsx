@@ -8,12 +8,12 @@ import { Card } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 
 import {
-  MosaicContainerProps,
   Mosaic,
+  MosaicContainerProps,
   MosaicDataItem,
+  MosaicTileComponent,
   Path,
   useSortedItems,
-  MosaicTileComponent,
   useContainer,
 } from '../../mosaic';
 
@@ -48,7 +48,7 @@ export const Kanban = ({
         // Restrict columns to x-axis.
         modifier: ({ path, item }, { transform }) =>
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
-        isDroppable: ({ active, over }) => {
+        onOver: ({ active, over }) => {
           return Path.length(active.path) >= Path.length(over.path);
         },
         onDrop,
@@ -116,8 +116,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           <div className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col'>
               <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-                {sortedItems.map((item, i) => (
-                  <Mosaic.SortableTile key={item.id} item={item} path={path} position={i} Component={Component!} />
+                {sortedItems.map((item, index) => (
+                  <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
                 ))}
               </Mosaic.SortableContext>
             </div>
