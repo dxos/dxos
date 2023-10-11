@@ -4,12 +4,12 @@
 
 import '@dxosTheme';
 
-import { arrayMove } from '@dnd-kit/sortable';
 import { faker } from '@faker-js/faker';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 
-import { Tree, TreeData } from './Tree';
-import { Mosaic, MosaicMoveEvent, Path } from '../../mosaic';
+import { Tree } from './Tree';
+import { DemoTree, DemoTreeProps } from './testing';
+import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
@@ -66,51 +66,16 @@ const testItems2 = [
     ],
   },
 ];
-
-const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialItems: TreeData[]; debug?: boolean }) => {
-  const [items, setItems] = useState(initialItems);
-
-  // NOTE: Does not handle deep operations.
-  const handleDrop = useCallback(
-    ({ active, over }: MosaicMoveEvent<number>) => {
-      if (active.path === Path.create(id, active.item.id)) {
-        setItems((items) => {
-          const activeIndex = items.findIndex((item) => item.id === active.item.id);
-          const overIndex = items.findIndex((item) => item.id === over.item.id);
-          return [...arrayMove(items, activeIndex, overIndex)];
-        });
-      } else {
-        setItems((items) =>
-          items.map((item) => {
-            const children = [...item.children];
-            if (Path.last(Path.parent(active.path)) === item.id) {
-              children.splice(active.position!, 1);
-            }
-            if (Path.last(Path.parent(over.path)) === item.id) {
-              children.splice(over.position!, 0, active.item as TreeData);
-            }
-            return { ...item, children };
-          }),
-        );
-      }
-    },
-    [items],
-  );
-
-  const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.path === id && over.path !== id);
-  }, []);
-
-  return (
-    <Mosaic.Root debug={debug}>
-      <Mosaic.DragOverlay />
-      <Tree id={id} items={items} onDrop={handleDrop} isDroppable={handleDroppable} />
-    </Mosaic.Root>
-  );
-};
-
 export default {
   component: Tree,
+  render: (args: DemoTreeProps) => {
+    return (
+      <Mosaic.Root debug={args.debug}>
+        <Mosaic.DragOverlay />
+        <DemoTree {...args} />
+      </Mosaic.Root>
+    );
+  },
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
@@ -119,10 +84,8 @@ export default {
 
 export const Default = {
   args: { initialItems: testItems1, debug: true },
-  render: TreeStory,
 };
 
 export const Deep = {
   args: { initialItems: testItems2 },
-  render: TreeStory,
 };

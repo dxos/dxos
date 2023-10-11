@@ -9,13 +9,20 @@ import { PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
-import { EchoKanban } from './DemoKanban';
-import { GraphTree } from './DemoTree';
 import { Mosaic } from '../../mosaic';
-import { FullscreenDecorator, TestObjectGenerator, range, Status } from '../../testing';
+import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
+import { EchoKanban } from '../Kanban/testing';
+import { GraphTree } from '../Tree/testing';
 
 faker.seed(3);
 const debug = true;
+const generator = new TestObjectGenerator();
+
+// TODO(burdon): Compute this?
+const columnValues: { [property: string]: any[] } = {
+  status: ['unknown', ...Status],
+  priority: ['unknown', ...Priority],
+};
 
 const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   return (
@@ -26,7 +33,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
           <GraphTree id='graph' debug={debug} />
         </div>
         <div className='flex grow overflow-hidden'>
-          <EchoKanban id='projects' spaceKey={spaceKey} debug={debug} />
+          <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} />
         </div>
       </div>
     </Mosaic.Root>
@@ -40,7 +47,6 @@ export default {
     FullscreenDecorator(),
     ClientSpaceDecorator({
       onCreateSpace: async (space) => {
-        const generator = new TestObjectGenerator();
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
@@ -49,9 +55,10 @@ export default {
             type: 'kanban',
             title: 'Projects',
             schema: factory.schema,
-            columnBy: 'status',
-            order: Status,
-            columnOrder: {},
+            // TODO(burdon): Standardize with other story.
+            columnProp: 'status',
+            columnValues: columnValues.status,
+            objectPosition: {}, // TODO(burdon): Make this a CRDT.
           }),
         ];
 

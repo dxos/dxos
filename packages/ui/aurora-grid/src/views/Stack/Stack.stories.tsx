@@ -5,52 +5,30 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Stack, StackProps } from './Stack';
-import { Mosaic, MosaicDataItem, MosaicMoveEvent, Path } from '../../mosaic';
-import { ComplexCard, FullscreenDecorator, SimpleCard, TestObjectGenerator } from '../../testing';
+import { DemoStack } from './testing';
+import { Mosaic } from '../../mosaic';
+import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 
 faker.seed(3);
 
-const StackStory = ({
-  id = 'stack',
-  Component,
-  types,
-  count = 3,
-  direction = 'vertical',
-  debug,
-}: StackProps & {
-  types: string[];
-  count: number;
-}) => {
-  const [items, setItems] = useState<MosaicDataItem[]>(() => {
-    const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count });
-  });
-
-  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
-    setItems((items) => {
-      if (active.path === Path.create(id, active.item.id)) {
-        items.splice(active.position!, 1);
-      }
-      if (over.path === Path.create(id, over.item.id)) {
-        items.splice(over.position!, 0, active.item);
-      }
-      return [...items];
-    });
-  };
-
-  return (
-    <Mosaic.Root debug={debug}>
-      <Mosaic.DragOverlay />
-      <Stack id={id} Component={Component} onDrop={handleDrop} items={items} direction={direction} debug={debug} />
-    </Mosaic.Root>
-  );
-};
-
 export default {
   component: Stack,
+  render: (
+    args: StackProps & {
+      types: string[];
+      count: number;
+    },
+  ) => {
+    return (
+      <Mosaic.Root>
+        <Mosaic.DragOverlay />
+        <DemoStack {...args} />
+      </Mosaic.Root>
+    );
+  },
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
@@ -63,7 +41,6 @@ export const Default = {
     count: 8,
     debug: true,
   },
-  render: StackStory,
 };
 
 export const Horizontal = {
@@ -73,7 +50,6 @@ export const Horizontal = {
     count: 8,
     debug: true,
   },
-  render: StackStory,
 };
 
 export const Complex = {
@@ -83,5 +59,4 @@ export const Complex = {
     count: 8,
     debug: true,
   },
-  render: StackStory,
 };

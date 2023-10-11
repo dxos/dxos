@@ -7,12 +7,12 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { DemoGrid } from './DemoGrid';
-import { DemoKanban } from './DemoKanban';
-import { DemoStack } from './DemoStack';
-import { DemoTree } from './DemoTree';
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
+import { DemoGrid } from '../Grid/testing';
+import { DemoKanban } from '../Kanban/testing';
+import { DemoStack } from '../Stack/testing';
+import { DemoTree } from '../Tree/testing';
 
 faker.seed(5);
 

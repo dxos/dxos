@@ -2,73 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
-
 import { faker } from '@faker-js/faker';
-import React, { FC, HTMLAttributes, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { GraphBuilder } from '@braneframe/plugin-graph';
+import { Graph, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { arrayMove } from '@dxos/util';
 
-import { TestComponentProps } from './test';
+import { Tree, TreeData, TreeProps } from './Tree';
 import { MosaicMoveEvent, Path } from '../../mosaic';
 import { TestObjectGenerator } from '../../testing';
-import { Tree, TreeData } from '../Tree';
 
 const fake = faker.helpers.fake;
 
-export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElement>> = ({
-  id,
-  types,
-  debug,
-  className,
-}) => {
-  const [items, setItems] = useState<TreeData[]>(() => {
-    const generator = new TestObjectGenerator({ types });
-    return Array.from({ length: 4 }).map(() => {
-      const item = generator.createObject();
-      return {
-        // TODO(wittjosiah): Object id isn't included in spread data.
-        id: item.id,
-        ...item,
-        label: item.title,
-        children: Array.from({ length: 3 }).map(() => {
+export type DemoTreeProps = TreeProps & {
+  initialItems?: TreeData[];
+  types?: string[];
+  debug?: boolean;
+};
+
+export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreeProps) => {
+  const [items, setItems] = useState<TreeData[]>(
+    initialItems ??
+      (() => {
+        const generator = new TestObjectGenerator({ types });
+        return Array.from({ length: 4 }).map(() => {
           const item = generator.createObject();
           return {
+            // TODO(wittjosiah): Object id isn't included in spread data.
             id: item.id,
             ...item,
             label: item.title,
-            children: [],
+            children: Array.from({ length: 3 }).map(() => {
+              const item = generator.createObject();
+              return {
+                id: item.id,
+                ...item,
+                label: item.title,
+                children: [],
+              };
+            }),
           };
-        }),
-      };
-    });
-  });
+        });
+      }),
+  );
 
+  // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
-      if (active.path === id && over.path === id) {
+      if (active.path === Path.create(id, active.item.id)) {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
           const overIndex = items.findIndex((item) => item.id === over.item.id);
           return [...arrayMove(items, activeIndex, overIndex)];
         });
-      } else if (active.path === id && over.path !== id) {
-        setItems((items) => items.filter((item) => item.id !== active.item.id));
-      } else if (active.path !== id && over.path === id) {
-        setItems((items) => {
-          items.splice(over.position!, 0, active.item as TreeData);
-          return items;
-        });
       } else {
         setItems((items) =>
           items.map((item) => {
             const children = [...item.children];
-            if (Path.last(active.path) === item.id) {
+            if (Path.last(Path.parent(active.path)) === item.id) {
               children.splice(active.position!, 1);
             }
-            if (Path.last(over.path) === item.id) {
+            if (Path.last(Path.parent(over.path)) === item.id) {
               children.splice(over.position!, 0, active.item as TreeData);
             }
             return { ...item, children };
@@ -79,20 +74,23 @@ export const DemoTree: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElemen
     [items],
   );
 
-  return <Tree id={id} items={items} onDrop={handleDrop} className={className} debug={debug} />;
-};
+  const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
+    return !(active.path === id && over.path !== id);
+  }, []);
 
-const createGraph = () => {
-  const content = [...Array(3)].map(() => ({
-    id: faker.string.uuid(),
+  return <Tree id={id} items={items} onDrop={handleDrop} isDroppable={handleDroppable} />;
+};
+export const createGraph = () => {
+  const content = [...Array(2)].map(() => ({
+    id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
     children: [...Array(2)].map(() => ({
-      id: faker.string.uuid(),
+      id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
       label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
       description: fake('{{commerce.productDescription}}'),
-      children: [...Array(1)].map(() => ({
-        id: faker.string.uuid(),
+      children: [...Array(2)].map(() => ({
+        id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
         label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
         description: fake('{{commerce.productDescription}}'),
       })),
@@ -102,9 +100,7 @@ const createGraph = () => {
   return buildGraph(new GraphBuilder().build(), 'tree', content);
 };
 
-export const GraphTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean }) => {
-  const graph = useMemo(() => createGraph(), []);
-
+export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Moving within the tree.

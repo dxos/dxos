@@ -5,12 +5,12 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Grid, GridLayout } from './Grid';
-import { Position } from './layout';
-import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
-import { FullscreenDecorator, ComplexCard, TestObjectGenerator } from '../../testing';
+import { DemoGrid } from './testing';
+import { Mosaic } from '../../mosaic';
+import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
 
 faker.seed(99);
 
@@ -26,31 +26,18 @@ const testLayout = testItems.reduce<GridLayout>((map, item) => {
 
 export default {
   component: Grid,
+  render: () => {
+    return (
+      <Mosaic.Root debug={debug}>
+        <Mosaic.DragOverlay />
+        <DemoGrid id='grid' size={size} initialItems={testItems} initialLayout={testLayout} debug={debug} />
+      </Mosaic.Root>
+    );
+  },
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
-export const Default = () => {
-  const [items] = useState<MosaicDataItem[]>(testItems);
-  const [layout, setLayout] = useState<GridLayout>(testLayout);
-  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
-    setLayout((layout) => ({ ...layout, [active.item.id]: over.position! }));
-  };
-
-  return (
-    <Mosaic.Root debug={debug}>
-      <Mosaic.DragOverlay />
-      <Grid
-        id='test'
-        items={items}
-        layout={layout}
-        size={size}
-        Component={ComplexCard}
-        onDrop={handleDrop}
-        debug={debug}
-      />
-    </Mosaic.Root>
-  );
-};
+export const Default = {};
