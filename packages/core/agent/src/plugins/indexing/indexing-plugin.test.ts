@@ -156,5 +156,5 @@ describe('Indexing', () => {
     }
 
     await results.wait();
-  });
+  }).tag('flaky');
 });

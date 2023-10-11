@@ -128,8 +128,6 @@ export class InvitationsServiceImpl implements InvitationsService {
       await accepted.cancel();
       this._acceptInvitations.delete(invitationId);
       this._removedAccepted.emit(accepted.get());
-    } else {
-      log.warn('invalid invitation', { invitationId });
     }
   }
 

@@ -25,5 +25,5 @@ export type ChessPluginProvides = GraphProvides & IntentProvides & TranslationsP
 (globalThis as any)[Game.name] = Game;
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && object.__typename === Game.type.name;
+  return isTypedObject(object) && object.__typename === Game.schema.typename;
 };

@@ -23,7 +23,7 @@ import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { schema$ } from '@braneframe/types';
+import { types } from '@braneframe/types';
 import { ProgressBar } from '@dxos/aurora';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
@@ -62,7 +62,7 @@ const main = async () => {
           IntentPlugin(),
           GraphPlugin(),
           // TODO(burdon): Broken if services are not provided.
-          ClientPlugin({ config, services, schema: schema$ }),
+          ClientPlugin({ config, services, schema: types }),
 
           // Core UX.
           DndPlugin(),

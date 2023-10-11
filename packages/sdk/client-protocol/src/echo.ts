@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { EchoSchema } from '@dxos/echo-schema';
+import type { TypeCollection } from '@dxos/echo-schema';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -60,5 +60,6 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Adds a schema to ECHO.
    */
-  addSchema(schema: EchoSchema): void;
+  // TODO(dmaretskyi): Rename `addTypes`.
+  addSchema(schema: TypeCollection): void;
 }

@@ -22,5 +22,5 @@ export interface ThreadModel {
 }
 
 export const isThread = (data: unknown): data is ThreadType => {
-  return isTypedObject(data) && ThreadType.type.name === data.__typename;
+  return isTypedObject(data) && ThreadType.schema.typename === data.__typename;
 };
