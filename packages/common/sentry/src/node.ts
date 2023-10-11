@@ -8,10 +8,13 @@ import {
   setTag,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
+  captureMessage as naturalCaptureMessage,
+  withScope,
 } from '@sentry/node';
 import type { Event } from '@sentry/node';
+import type { SeverityLevel } from '@sentry/types';
 
-import { log } from '@dxos/log';
+import { log, LogLevel, shouldLog } from '@dxos/log';
 
 import { type InitOptions } from './types';
 
@@ -98,4 +101,53 @@ export const captureException: typeof naturalCaptureException = (exception, capt
     log.catch('Failed to capture exception', err);
     return 'unknown';
   }
+};
+
+// TODO(nf): move to log package as a first-class processor.
+export const enableSentryLogProcessor = (filter?: string | string[] | LogLevel) => {
+  log.runtimeConfig.processors.push(SENTRY_LOG_PROCESSOR);
+};
+
+export const SENTRY_LOG_PROCESSOR = (config: any, entry: any) => {
+  const { message, level, meta, error } = entry;
+  if (!shouldLog(entry, config.captureFilters)) {
+    return;
+  }
+  // TODO(nf): add rate limiting to avoid spamming Sentry/consuming excessive quota.
+  withScope((scope) => {
+    scope.setLevel(convertLevel(level));
+    scope.setContext('dxoslog', entry.context);
+    if (meta) {
+      scope.setTransactionName(getRelativeFilename(meta.F));
+    }
+    // Is this ever used?
+    if (error) {
+      scope.setExtra('message', message);
+      return naturalCaptureException(error);
+    }
+
+    naturalCaptureMessage(message);
+  });
+};
+
+const convertLevel = (level: LogLevel): SeverityLevel => {
+  if (level === LogLevel.TRACE) {
+    return 'debug';
+  }
+  if (level === LogLevel.WARN) {
+    return 'warning';
+  }
+  return LogLevel[level].toLowerCase() as SeverityLevel;
+};
+
+const getRelativeFilename = (filename: string) => {
+  // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
+  // Including `packages/` part of the path so that excluded paths (e.g. from dist) are clickable in vscode.
+  const match = filename.match(/.+\/(packages\/.+\/.+)/);
+  if (match) {
+    const [, filePath] = match;
+    return filePath;
+  }
+
+  return filename;
 };
