@@ -84,7 +84,7 @@ export class SystemDaemon implements Daemon {
       await this._runner.start({ profile, errFile, logFile, daemonOptions: options });
 
       try {
-        await waitForAgentToStart(profile);
+        await waitForAgentToStart(profile, options?.timeout);
       } catch (err) {
         log.warn('Failed to start daemon.');
         await this.stop(profile);

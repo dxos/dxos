@@ -40,6 +40,9 @@ export default class Start extends BaseCommand<typeof Start> {
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
     }),
+    timeout: Flags.integer({
+      description: 'Timeout (s).',
+    }),
   };
 
   static override examples = [
@@ -118,6 +121,7 @@ export default class Start extends BaseCommand<typeof Start> {
           config: this.flags.config,
           metrics: this.flags.metrics,
           ws: this.flags.ws,
+          timeout: this.flags.timeout,
         });
         if (process) {
           this.log('Agent started.');
