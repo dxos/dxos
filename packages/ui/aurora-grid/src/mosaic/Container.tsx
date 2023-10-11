@@ -32,10 +32,9 @@ export type MosaicContainerProps<
   getOverlayStyle?: () => CSSProperties;
   getOverlayProps?: () => MosaicTileOverlayProps;
 
+  onOver?: (event: MosaicMoveEvent<TPosition>) => boolean;
   // TODO(burdon): Handle copy, delete, etc.
   onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
-  // TODO(wittjosiah): Generalize to onOver?
-  isDroppable?: (event: MosaicMoveEvent<TPosition>) => boolean;
 
   // Custom properties.
   custom?: TCustom;

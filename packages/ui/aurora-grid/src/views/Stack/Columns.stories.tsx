@@ -50,7 +50,7 @@ const TestStack = ({
     });
   };
 
-  const handleDroppable = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     return (
       // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
       (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 || active.path === over.path) &&
@@ -62,8 +62,8 @@ const TestStack = ({
     <Stack
       id={id}
       Component={Component}
+      onOver={handleOver}
       onDrop={handleDrop}
-      isDroppable={handleDroppable}
       items={items}
       direction={direction}
       debug={debug}

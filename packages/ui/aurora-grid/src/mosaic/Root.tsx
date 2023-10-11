@@ -153,8 +153,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       return;
     }
 
-    const isDroppable = overContainer.isDroppable ?? (() => true);
-    const item = isDroppable({ active: activeItem, over: overItem }) ? overItem : undefined;
+    const onOver = overContainer.onOver ?? (() => true);
+    const item = onOver({ active: activeItem, over: overItem }) ? overItem : undefined;
     setOverItem(item);
   };
 

@@ -70,6 +70,10 @@ const testItems2 = [
 const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialItems: TreeData[]; debug?: boolean }) => {
   const [items, setItems] = useState(initialItems);
 
+  const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
+    return !(active.path === id && over.path !== id);
+  }, []);
+
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
@@ -97,14 +101,10 @@ const TreeStory = ({ id = 'tree', initialItems, debug }: { id: string; initialIt
     [items],
   );
 
-  const handleDroppable = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.path === id && over.path !== id);
-  }, []);
-
   return (
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
-      <Tree id={id} items={items} onDrop={handleDrop} isDroppable={handleDroppable} />
+      <Tree id={id} items={items} onOver={handleOver} onDrop={handleDrop} />
     </Mosaic.Root>
   );
 };

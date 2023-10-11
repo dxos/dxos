@@ -9,12 +9,12 @@ import { Card } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 
 import {
-  MosaicContainerProps,
   Mosaic,
+  MosaicContainerProps,
   MosaicDataItem,
+  MosaicTileComponent,
   Path,
   useSortedItems,
-  MosaicTileComponent,
   useContainer,
 } from '../../mosaic';
 
