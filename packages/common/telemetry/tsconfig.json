@@ -19,6 +19,12 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
       "path": "../invariant"
     },
     {
@@ -26,6 +32,9 @@
     },
     {
       "path": "../sentry"
+    },
+    {
+      "path": "../util"
     }
   ]
 }
