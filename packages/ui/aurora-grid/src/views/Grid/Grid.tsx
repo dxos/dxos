@@ -146,8 +146,8 @@ export const Grid = ({
       {...{
         id,
         Component,
-        getOverlayStyle: () => getDimension(cellBounds, spacing),
         getOverlayProps: () => ({ grow: true }),
+        getOverlayStyle: () => getDimension(cellBounds, spacing),
         onOver: () => true,
         onDrop,
       }}
