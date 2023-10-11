@@ -9,9 +9,9 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
   Credential,
+  DeviceProfileDocument,
   ProfileDocument,
   SpaceMember,
-  DeviceProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
