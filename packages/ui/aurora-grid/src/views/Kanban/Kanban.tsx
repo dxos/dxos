@@ -114,10 +114,12 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           </Card.Root>
 
           <div className={mx('flex flex-col grow overflow-y-scroll')}>
-            <div className='flex flex-col'>
+            <div className='flex flex-col my-1'>
               <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
                 {sortedItems.map((item, index) => (
-                  <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
+                  <div key={item.id} className='m-1'>
+                    <Mosaic.SortableTile item={item} path={path} position={index} Component={Component!} />
+                  </div>
                 ))}
               </Mosaic.SortableContext>
             </div>

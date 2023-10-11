@@ -5,4 +5,4 @@
 export * from './decorators';
 export * from './generator';
 
-export * from './SimpleCard';
+export * from './Cards';
