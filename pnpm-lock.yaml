@@ -2500,18 +2500,24 @@ importers:
 
   packages/common/telemetry:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/util': workspace:*
       '@segment/snippet': ^4.15.3
       '@types/analytics-node': ^3.1.9
       analytics-node: ^6.2.0
     dependencies:
+      '@dxos/async': link:../async
       '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../context
       '@dxos/invariant': link:../invariant
       '@dxos/log': link:../log
       '@dxos/sentry': link:../sentry
+      '@dxos/util': link:../util
       '@segment/snippet': 4.15.3
       analytics-node: 6.2.0
     devDependencies:
