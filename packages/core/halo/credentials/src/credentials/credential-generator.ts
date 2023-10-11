@@ -6,7 +6,13 @@ import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  Credential,
+  DeviceProfileDocument,
+  ProfileDocument,
+  SpaceMember,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createCredential, CredentialSigner } from './credential-factory';
@@ -104,6 +110,21 @@ export class CredentialGenerator {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
         identityKey: this._identityKey,
         deviceKey,
+      },
+    });
+  }
+
+  /**
+   * Add device metadata.
+   */
+  async createDeviceProfile(profile: DeviceProfileDocument): Promise<Credential> {
+    return createCredential({
+      signer: this._signer,
+      issuer: this._identityKey,
+      subject: this._deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.DeviceProfile',
+        profile,
       },
     });
   }

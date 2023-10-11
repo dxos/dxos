@@ -20,7 +20,7 @@ import { InitOptions } from './types';
 export * from './tracing';
 
 // Polyfill export.
-export { setTag, setUser } from '@sentry/browser';
+export { setTag, setTags, setUser } from '@sentry/browser';
 
 /**
  * To use this SDK, call the init function as early as possible when loading the web page.

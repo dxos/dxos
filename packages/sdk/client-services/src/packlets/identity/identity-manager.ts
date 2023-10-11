@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import platform from 'platform';
+
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
@@ -134,6 +136,16 @@ export class IdentityManager {
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
+      // Write device metadata to profile.
+      credentials.push(
+        await generator.createDeviceProfile({
+          platform: platform.name,
+          platformVersion: platform.version,
+          architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+          os: platform.os?.family,
+          osVersion: platform.os?.version,
+        }),
+      );
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
           credential: { credential },
@@ -202,26 +214,6 @@ export class IdentityManager {
       subject: this._identity.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile,
-      },
-    });
-
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-    this.stateUpdate.emit();
-    return profile;
-  }
-
-  async updateDevice({ deviceKey, profile }: { deviceKey: PublicKey; profile: ProfileDocument }) {
-    invariant(this._identity, 'Identity not initialized.');
-
-    invariant(this._identity.authorizedDeviceKeys.has(deviceKey), 'Device not authorized.');
-
-    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
-      subject: this._identity.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DeviceProfile',
-        deviceKey,
         profile,
       },
     });
