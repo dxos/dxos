@@ -53,7 +53,7 @@ export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
         ref={forwardRef}
         style={draggableStyle}
         noPadding={full}
-        classNames={mx(className, 'snap-center', isDragging && 'opacity-20')}
+        classNames={mx(className, 'm-1 snap-center', isDragging && 'opacity-20')}
         grow={grow}
         onDoubleClick={() => onSelect?.()}
       >

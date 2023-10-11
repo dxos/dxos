@@ -20,7 +20,7 @@ const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: numb
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: generator.createObjects({ length: columns - 1 }),
+    children: generator.createObjects({ length: 3 + columns - i }),
   }));
 };
 

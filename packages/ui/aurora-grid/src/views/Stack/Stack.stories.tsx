@@ -45,7 +45,7 @@ export const Default = {
 
 export const Horizontal = {
   args: {
-    Component: SimpleCard,
+    Component: ComplexCard,
     direction: 'horizontal',
     count: 8,
     debug: true,
