@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
@@ -51,9 +50,9 @@ export const Kanban = ({
         onDrop,
       }}
     >
-      <Mosaic.Sortable items={columns} direction='horizontal'>
-        <div className='flex grow overflow-y-hidden overflow-x-auto'>
-          <div className='flex gap-4'>
+      <div className='grow flex overflow-y-hidden overflow-x-auto'>
+        <div className='flex'>
+          <Mosaic.Sortable items={columns} direction='horizontal'>
             {columns.map((column, index) => (
               <Mosaic.SortableTile
                 key={column.id}
@@ -64,9 +63,9 @@ export const Kanban = ({
                 debug={debug}
               />
             ))}
-          </div>
+          </Mosaic.Sortable>
         </div>
-      </Mosaic.Sortable>
+      </div>
     </Mosaic.Container>
   );
 };
@@ -86,43 +85,41 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
-  ({ path, position, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+  ({ path, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
     const { id, title, children } = item;
     const { Component } = useContainer();
     const column = Path.create(path, 'column', id);
     const sortedItems = useSortedItems({ path: column, items: children });
 
-    // TODO(burdon): Doesn't drop at end.
-    const { setNodeRef } = useDroppable({ id: column, data: { path: column, item, position } });
-
     return (
-      <div
-        ref={forwardRef}
-        className={mx(
-          groupSurface,
-          'flex flex-col w-[300px] snap-center overflow-hidden h-full m-1',
-          isDragging && 'opacity-20',
-        )}
-        style={draggableStyle}
-      >
-        <Card.Root classNames='shrink-0 bg-cyan-200'>
-          <Card.Header>
-            <Card.DragHandle {...draggableProps} />
-            <Card.Title title={title} />
-            <Card.Menu />
-          </Card.Header>
-        </Card.Root>
+      <div role='none' className='grow flex flex-col' ref={forwardRef}>
+        <div
+          className={mx(
+            groupSurface,
+            'grow flex flex-col w-[300px] snap-center overflow-hidden m-1',
+            isDragging && 'opacity-20',
+          )}
+          style={draggableStyle}
+        >
+          <Card.Root classNames='shrink-0 bg-cyan-200'>
+            <Card.Header>
+              <Card.DragHandle {...draggableProps} />
+              <Card.Title title={title} />
+              <Card.Menu />
+            </Card.Header>
+          </Card.Root>
 
-        <Mosaic.Sortable id={column} items={sortedItems} direction='vertical'>
-          <div ref={setNodeRef} className={mx('flex flex-col grow overflow-y-scroll')}>
-            <div className='flex flex-col m-2 my-3 gap-2'>
-              {sortedItems.map((item, i) => (
-                <Mosaic.SortableTile key={item.id} item={item} path={column} position={i} Component={Component!} />
-              ))}
+          <div className={mx('flex flex-col grow overflow-y-scroll')}>
+            <div className='flex flex-col'>
+              <Mosaic.Sortable id={column} items={sortedItems} direction='vertical'>
+                {sortedItems.map((item, i) => (
+                  <Mosaic.SortableTile key={item.id} item={item} path={column} position={i} Component={Component!} />
+                ))}
+              </Mosaic.Sortable>
             </div>
           </div>
           {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
-        </Mosaic.Sortable>
+        </div>
       </div>
     );
   },
