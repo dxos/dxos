@@ -35,7 +35,7 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
 
 export default {
   component: Story,
-  title: 'Demo/ECHO',
+  title: 'Demo',
   decorators: [
     FullscreenDecorator(),
     ClientSpaceDecorator({
@@ -64,4 +64,4 @@ export default {
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.
 //   The bug didn't exist before the cleanup refactor so seems likely it's a side effect of that.
-export const Default = {};
+export const ECHO = {};

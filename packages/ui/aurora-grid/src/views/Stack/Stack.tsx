@@ -30,7 +30,7 @@ export const Stack = ({
 
   return (
     <Mosaic.Container {...{ id, Component, isDroppable, onDrop }}>
-      <Mosaic.Sortable items={sortedItems} direction={direction}>
+      <Mosaic.SortableContext items={sortedItems} direction={direction}>
         <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
           <div
             className={mx(
@@ -58,7 +58,7 @@ export const Stack = ({
             )}
           </div>
         </div>
-      </Mosaic.Sortable>
+      </Mosaic.SortableContext>
     </Mosaic.Container>
   );
 };

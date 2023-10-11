@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
@@ -52,7 +53,7 @@ export const Kanban = ({
     >
       <div className='grow flex overflow-y-hidden overflow-x-auto'>
         <div className='flex'>
-          <Mosaic.Sortable items={columns} direction='horizontal'>
+          <Mosaic.SortableContext items={columns} direction='horizontal'>
             {columns.map((column, index) => (
               <Mosaic.SortableTile
                 key={column.id}
@@ -63,7 +64,7 @@ export const Kanban = ({
                 debug={debug}
               />
             ))}
-          </Mosaic.Sortable>
+          </Mosaic.SortableContext>
         </div>
       </div>
     </Mosaic.Container>
@@ -91,6 +92,10 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const column = Path.create(path, 'column', id);
     const sortedItems = useSortedItems({ path: column, items: children });
 
+    // TODO(burdon): If columns use useSortableItem, then this is not needed -- unless we want to limit the scope of the drop-zone to the items flex.
+    // TODO(burdon): Currently inserted in the wrong place.
+    const { setNodeRef } = useDroppable({ id, data: { path: column } });
+
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
         <div
@@ -109,13 +114,13 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
             </Card.Header>
           </Card.Root>
 
-          <div className={mx('flex flex-col grow overflow-y-scroll')}>
+          <div ref={setNodeRef} className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col'>
-              <Mosaic.Sortable id={column} items={sortedItems} direction='vertical'>
+              <Mosaic.SortableContext id={column} items={sortedItems} direction='vertical'>
                 {sortedItems.map((item, i) => (
                   <Mosaic.SortableTile key={item.id} item={item} path={column} position={i} Component={Component!} />
                 ))}
-              </Mosaic.Sortable>
+              </Mosaic.SortableContext>
             </div>
           </div>
           {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}

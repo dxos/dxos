@@ -76,10 +76,12 @@ const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: 
     );
   };
 
+  // TODO(burdon): Currently broken: factor out with demo story.
   const handleDrop = ({ active, over }: MosaicMoveEvent) => {
     // Reorder columns.
     // TODO(burdon): Factor out util.
     if (active.path === id) {
+      // Reorder columns.
       const fromIndex = kanban.columnValues.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.columnValues.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.columnValues, fromIndex, toIndex);
@@ -91,6 +93,8 @@ const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: 
         invariant(activeProperty);
         invariant(overProperty);
 
+        console.log('???');
+
         // Update property.
         (active.item as TypedObject)[kanban.columnProp] = getProperty(overProperty);
 
@@ -101,6 +105,7 @@ const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: 
 
         // Update over column order.
         const overOrder = getOrder(kanban, overProperty);
+        console.log(':::::::::::', overOrder);
         overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
         kanban.objectPosition[overProperty] = overOrder;
       }

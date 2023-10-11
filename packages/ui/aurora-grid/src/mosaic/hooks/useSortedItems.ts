@@ -12,10 +12,12 @@ import { MosaicDataItem } from '../types';
 export const useSortedItems = <T extends MosaicDataItem>({ path, items }: { path: string; items: T[] }): T[] => {
   const { activeItem, overItem } = useMosaic();
 
-  // Insert item being dragged in.
+  // Insert placeholder item being dragged in.
+  // TODO(burdon): This currently isn't animated (e.g., dragging into new kanban column vs. same column).
   if (activeItem && activeItem.item.id !== path && activeItem.path !== path && overItem && overItem.path === path) {
     const sortedItems = [...items];
-    sortedItems.splice(overItem.position as number, 0, activeItem.item as T);
+    const position = (overItem.position as number) ?? sortedItems.length;
+    sortedItems.splice(position, 0, activeItem.item as T);
     return sortedItems;
   }
 

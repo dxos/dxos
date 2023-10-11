@@ -38,6 +38,8 @@ export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElem
       return setColumns((columns) => [...swapItems(columns, active.item, over.item)]);
     }
 
+    console.log('!!!!!!!!!!!!!');
+
     const columnsPath = Path.create(id, 'column');
     return setColumns((columns) =>
       columns.map((column) => {
@@ -53,7 +55,8 @@ export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElem
           children.push(active.item as TestItem);
         } else if (Path.hasDescendent(columnsPath, over.path) && Path.last(over.path) === column.id) {
           // Move card within or between columns.
-          children.splice(over.position ?? 0, 0, active.item as TestItem);
+          const position = over.position ?? children.length;
+          children.splice(position ?? 0, 0, active.item as TestItem);
         }
 
         return { ...column, children };
@@ -64,6 +67,7 @@ export const DemoKanban: FC<TestComponentProps<any> & HTMLAttributes<HTMLDivElem
   return <Kanban id={id} Component={Component} columns={columns} onDrop={handleDrop} debug={debug} />;
 };
 
+// TODO(burdon): Reconcile with ./views/Kanban
 export const EchoKanban = ({
   id = 'projects',
   spaceKey,
@@ -91,17 +95,22 @@ export const EchoKanban = ({
 
   const handleDrop = ({ active, over }: any) => {
     // Reorder columns.
-    if (active.container === id) {
+    if (active.path === id) {
       const fromIndex = kanban.order.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.order.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.order, fromIndex, toIndex);
       return;
     }
 
+    // Check from same container.
     const columnsPath = Path.create(id, 'column');
-    if (Path.hasDescendent(columnsPath, active.container)) {
-      const activeProperty = Path.last(active.container);
-      const overProperty = Path.last(over.container);
+    if (Path.hasDescendent(columnsPath, active.path)) {
+      if (!Path.hasDescendent(columnsPath, over.path)) {
+        return;
+      }
+
+      const activeProperty = Path.last(active.path);
+      const overProperty = Path.last(over.path);
       invariant(activeProperty);
       invariant(overProperty);
 
@@ -121,12 +130,13 @@ export const EchoKanban = ({
         kanban.columnOrder[overProperty] ??
         columns.find((column) => column.id === overProperty)?.children.map((item) => item.id) ??
         [];
-      overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
+      const position = over.position ?? overOrder.length;
+      overOrder.length > 0 ? overOrder.splice(position, 0, active.item.id) : overOrder.push(active.item.id);
       kanban.columnOrder[overProperty] = overOrder;
     } else {
-      const overProperty = Path.last(over.container);
+      // Create new kanban object for object dragged from other container.
+      const overProperty = Path.last(over.path);
       invariant(overProperty);
-
       invariant(space);
       const obj = space.db.add(
         new Expando(

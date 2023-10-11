@@ -20,7 +20,9 @@ export type MosaicSortableProps<TData extends MosaicDataItem = MosaicDataItem> =
 /**
  * Mosaic convenience wrapper for dnd-kit SortableContext.
  */
-export const MosaicSortable = ({ id, items = [], direction = 'vertical', children }: MosaicSortableProps) => {
+// TODO(burdon): Remove since just obfuscates SortableContext unless more deeply integrated with useSortableItem.
+//  Otherwise accept same props as SortableContext (e.g., verticalListSortingStrategy).
+export const MosaicSortableContext = ({ id, items = [], direction = 'vertical', children }: MosaicSortableProps) => {
   const container = useContainer();
   const contextId = id ?? container.id;
   const Sortable = direction === 'vertical' ? Column : Row;

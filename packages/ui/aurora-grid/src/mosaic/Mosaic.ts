@@ -9,7 +9,7 @@ import { Debug, DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicDragOverlay, MosaicDragOverlayProps } from './DragOverlay';
 import { MosaicRoot, MosaicRootProps as NaturalMosaicRootProps } from './Root';
-import { MosaicSortable, MosaicSortableProps as NaturalMosaicSortableProps } from './Sortable';
+import { MosaicSortableContext, MosaicSortableProps as NaturalMosaicSortableProps } from './Sortable';
 import {
   DraggableTile,
   SortableTile,
@@ -22,7 +22,7 @@ export const Mosaic = {
   Root: MosaicRoot,
   Container: MosaicContainer,
   DragOverlay: MosaicDragOverlay,
-  Sortable: MosaicSortable,
+  SortableContext: MosaicSortableContext,
   DraggableTile,
   SortableTile,
 
@@ -34,7 +34,7 @@ export const Mosaic = {
   Root: FC<MosaicRootProps>;
   Container: FC<MosaicContainerProps<any, any>>;
   DragOverlay: FC<MosaicOverlayProps>;
-  Sortable: FC<MosaicSortableProps>;
+  SortableContext: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
 

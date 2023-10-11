@@ -37,6 +37,7 @@ const KanbanStory: FC<
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };
 
+  // TODO(burdon): Reconcile with DemoKanban.
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Buggy dragging empty column.
@@ -61,7 +62,8 @@ const KanbanStory: FC<
             children.push(active.item as TestItem);
           } else if (Path.hasDescendent(columnsPath, over.path) && Path.last(over.path) === column.id) {
             // Move card within or between columns.
-            children.splice(over.position ?? 0, 0, active.item as TestItem);
+            const position = over.position ?? children.length;
+            children.splice(position, 0, active.item as TestItem);
           }
 
           return { ...column, children };
