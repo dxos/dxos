@@ -18,8 +18,12 @@ export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   ) => {
     const full = !title;
     return (
-      <div role='none' ref={forwardRef} style={draggableStyle}>
-        <Card.Root noPadding={full} classNames={mx(className, 'snap-center', isDragging && 'opacity-20')} grow={grow}>
+      <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
+        <Card.Root
+          noPadding={full}
+          classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
+          grow={grow}
+        >
           <Card.Header floating={full}>
             <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
             {title && <Card.Title title={title} />}
@@ -45,31 +49,31 @@ export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   ) => {
     const full = !title;
     return (
-      <Card.Root
-        ref={forwardRef}
-        style={draggableStyle}
-        noPadding={full}
-        classNames={mx(className, 'snap-center', isDragging && 'opacity-20')}
-        grow={grow}
-        onDoubleClick={() => onSelect?.()}
-      >
-        <Card.Header floating={full}>
-          <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
-          {title && <Card.Title title={title} />}
-          <Card.Menu position={full ? 'right' : undefined} />
-        </Card.Header>
-        {image && <Card.Media src={image} />}
-        {title && body && (
-          <Card.Body gutter classNames='line-clamp-3 text-sm'>
-            {body}
-          </Card.Body>
-        )}
-        {debug && (
-          <Card.Body>
-            <Mosaic.Debug data={{ id }} />
-          </Card.Body>
-        )}
-      </Card.Root>
+      <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
+        <Card.Root
+          noPadding={full}
+          classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
+          grow={grow}
+          onDoubleClick={() => onSelect?.()}
+        >
+          <Card.Header floating={full}>
+            <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
+            {title && <Card.Title title={title} />}
+            <Card.Menu position={full ? 'right' : undefined} />
+          </Card.Header>
+          {image && <Card.Media src={image} />}
+          {title && body && (
+            <Card.Body gutter classNames='line-clamp-3 text-sm'>
+              {body}
+            </Card.Body>
+          )}
+          {debug && (
+            <Card.Body>
+              <Mosaic.Debug data={{ id }} />
+            </Card.Body>
+          )}
+        </Card.Root>
+      </div>
     );
   },
 );

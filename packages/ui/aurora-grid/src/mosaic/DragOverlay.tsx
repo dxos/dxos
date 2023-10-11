@@ -53,15 +53,15 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
     }
   }, [activeItem, overItem]);
 
-  // TODO(burdon): Set custom animations (e.g., in/out/around).
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
+    // TODO(burdon): Set custom animations (e.g., in/out/around).
     <DragOverlay adjustScale={false} {...overlayProps}>
       {activeItem?.path && container && OverlayComponent && (
-        <div style={{ ...container.getOverlayStyle?.() }}>
-          <OverlayErrorBoundary>
-            {/* TODO(burdon): Configure density via getOverlayProps. */}
-            <DensityProvider density='fine'>
+        <OverlayErrorBoundary>
+          {/* TODO(burdon): Configure density via getOverlayProps. */}
+          <DensityProvider density='fine'>
+            <div role='none' className='flex w-full' style={{ ...container.getOverlayStyle?.() }}>
               <OverlayComponent
                 {...container.getOverlayProps?.()}
                 item={activeItem.item}
@@ -80,9 +80,9 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
                   </span>
                 </div>
               )}
-            </DensityProvider>
-          </OverlayErrorBoundary>
-        </div>
+            </div>
+          </DensityProvider>
+        </OverlayErrorBoundary>
       )}
     </DragOverlay>
   );

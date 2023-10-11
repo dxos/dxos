@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useRef } from 'react';
 
 import { Card } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
@@ -94,6 +94,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
     const { id, title, children } = item;
     const { Component } = useContainer();
     const sortedItems = useSortedItems({ path, items: children });
+    const render = useRef(0);
+    render.current++;
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
@@ -108,7 +110,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           <Card.Root classNames='shrink-0 bg-cyan-200'>
             <Card.Header>
               <Card.DragHandle {...draggableProps} />
-              <Card.Title title={title} />
+              <Card.Title title={title + ' #' + render.current} />
               <Card.Menu />
             </Card.Header>
           </Card.Root>
@@ -117,14 +119,20 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
             <div className='flex flex-col my-1'>
               <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
                 {sortedItems.map((item, index) => (
-                  <div key={item.id} className='m-1'>
-                    <Mosaic.SortableTile item={item} path={path} position={index} Component={Component!} />
-                  </div>
+                  <Mosaic.SortableTile
+                    key={item.id}
+                    item={item}
+                    path={path}
+                    position={index}
+                    Component={Component!}
+                    className='m-1'
+                    // debug={debug}
+                  />
                 ))}
               </Mosaic.SortableContext>
             </div>
           </div>
-          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
+          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length, count: render.current }} />}
         </div>
       </div>
     );
