@@ -10,15 +10,7 @@ import { Path } from '../util';
  * Returns a spliced collection of items including a placeholder if items that could drop,
  * and removing any item that is currently being dragged out.
  */
-export const useSortedItems = <T extends MosaicDataItem>({
-  path,
-  items,
-  mode = 'default',
-}: {
-  path: string;
-  items: T[];
-  mode?: 'default' | 'match-parent';
-}): T[] => {
+export const useSortedItems = <T extends MosaicDataItem>({ path, items }: { path: string; items: T[] }): T[] => {
   const { activeItem, overItem } = useMosaic();
 
   // Insert placeholder item being dragged in.
@@ -31,9 +23,7 @@ export const useSortedItems = <T extends MosaicDataItem>({
     // Over an item
     overItem &&
     // Which is this item (but only if it's not a sibling of the active item which indicates a reorder)
-    ((mode !== 'match-parent' &&
-      path === overItem.path &&
-      Path.parent(activeItem.path) !== Path.parent(overItem.path)) ||
+    ((path === overItem.path && Path.parent(activeItem.path) !== Path.parent(overItem.path)) ||
       // Or which is a child of this item
       Path.hasChild(path, overItem.path))
   ) {
