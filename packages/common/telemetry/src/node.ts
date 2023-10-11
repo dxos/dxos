@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
+import { tags } from './tags';
 import { EventOptions, InitOptions, PageOptions } from './types';
 
 let analytics: Analytics | undefined;
@@ -58,6 +59,7 @@ export const event = ({ installationId: anonymousId, identityId: userId, name: e
   try {
     analytics?.track({
       ...options,
+      context: tags,
       userId,
       anonymousId: anonymousId!,
       event,
