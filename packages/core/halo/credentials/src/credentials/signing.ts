@@ -43,6 +43,10 @@ export const canonicalStringify = (obj: any) =>
         return undefined;
       }
 
+      if (value === null) {
+        return undefined;
+      }
+
       // Value before .toJSON() is called.
       const original = this[key];
 

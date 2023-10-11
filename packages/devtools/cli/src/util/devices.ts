@@ -12,7 +12,11 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
   return devices.map((device) => ({
     key: maybeTruncateKey(device.deviceKey, truncateKeys),
     kind: device.kind,
-    label: device.profile?.displayName,
+    platform: device.profile?.platform,
+    platformVersion: device.profile?.platformVersion,
+    architecture: device.profile?.architecture,
+    os: device.profile?.os,
+    osVersion: device.profile?.osVersion,
   }));
 };
 
@@ -20,15 +24,13 @@ export const printDevices = (devices: Device[], flags = {}) => {
   ux.table(
     mapDevices(devices, true),
     {
-      key: {
-        header: 'key',
-      },
-      kind: {
-        header: 'kind',
-      },
-      label: {
-        header: 'label',
-      },
+      key: { header: 'key' },
+      kind: { header: 'kind' },
+      platform: { header: 'platform' },
+      platformVersion: { header: 'platformVersion' },
+      architecture: { header: 'architecture' },
+      os: { header: 'os' },
+      osVersion: { header: 'osVersion' },
     },
     {
       ...flags,

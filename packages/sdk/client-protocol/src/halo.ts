@@ -21,7 +21,6 @@ export interface Halo {
   createIdentity(options?: ProfileDocument): Promise<Identity>;
   recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
   updateProfile(profile: ProfileDocument): Promise<Identity>;
-  updateDevice(profile: ProfileDocument): Promise<Device>;
 
   share(): CancellableInvitation;
   join(invitation: Invitation): AuthenticatingInvitation;
