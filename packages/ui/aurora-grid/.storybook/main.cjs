@@ -11,8 +11,7 @@ const turbosnap = require('vite-plugin-turbosnap');
 module.exports = {
   stories: [
     '../src/**/*.stories.mdx',
-    '../src/views/**/*.stories.@(js|jsx|ts|tsx)'
-    // '../src/**/*.stories.@(js|jsx|ts|tsx)' // TODO(burdon): Temp.
+    '../src/**/*.stories.@(js|jsx|ts|tsx)'
   ],
   addons: [
     '@storybook/addon-links',
