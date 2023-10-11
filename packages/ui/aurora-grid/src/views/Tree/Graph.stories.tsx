@@ -18,16 +18,16 @@ faker.seed(3);
 const fake = faker.helpers.fake;
 
 const createGraph = () => {
-  const content = [...Array(3)].map(() => ({
-    id: faker.string.uuid(),
+  const content = [...Array(2)].map(() => ({
+    id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
     children: [...Array(2)].map(() => ({
-      id: faker.string.uuid(),
+      id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
       label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
       description: fake('{{commerce.productDescription}}'),
-      children: [...Array(1)].map(() => ({
-        id: faker.string.uuid(),
+      children: [...Array(2)].map(() => ({
+        id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
         label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
         description: fake('{{commerce.productDescription}}'),
       })),

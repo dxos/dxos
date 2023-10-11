@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
 import { Stack, StackProps } from './Stack';
-import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
+import { Mosaic, MosaicDataItem, MosaicMoveEvent, Path } from '../../mosaic';
 import { FullscreenDecorator, SimpleCard, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
@@ -33,15 +33,17 @@ const TestStack = ({
     return generator.createObjects({ length: count });
   });
 
-  // TODO(burdon): Can we avoid this using useCallback?
   const itemsRef = useRef(items);
 
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
-      if (active.path === id && (behavior !== 'copy' || over.path === id)) {
+      if (
+        active.path === Path.create(id, active.item.id) &&
+        (behavior !== 'copy' || over.path === Path.create(id, over.item.id))
+      ) {
         items.splice(active.position!, 1);
       }
-      if (over.path === id) {
+      if (over.path === Path.create(id, over.item.id)) {
         items.splice(over.position!, 0, active.item);
       }
       const i = [...items];

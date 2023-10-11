@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDroppable } from '@dnd-kit/core';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Card } from '@dxos/aurora';
@@ -47,7 +46,11 @@ export const Kanban = ({
         debug,
         Component,
         // Restrict columns to x-axis.
-        modifier: (item, { transform }) => (item.path === id ? { ...transform, y: 0 } : transform),
+        modifier: ({ path, item }, { transform }) =>
+          path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
+        isDroppable: ({ active, over }) => {
+          return Path.length(active.path) >= Path.length(over.path);
+        },
         onDrop,
       }}
     >
@@ -73,7 +76,8 @@ export const Kanban = ({
 
 const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
   forwardRef((props, ref) => {
-    if (props.path === id && props.isActive) {
+    const isColumn = Path.hasRoot(props.path, id) && Path.length(props.path) === 2;
+    if (isColumn && props.isActive) {
       return (
         // Needs to not override the main kanban path.
         <Mosaic.Container {...{ id: `${id}-active`, Component }}>
@@ -82,19 +86,14 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
       );
     }
 
-    return props.path === id ? <KanbanColumnComponent {...props} ref={ref} /> : <Component {...props} ref={ref} />;
+    return isColumn ? <KanbanColumnComponent {...props} ref={ref} /> : <Component {...props} ref={ref} />;
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
   ({ path, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
     const { id, title, children } = item;
     const { Component } = useContainer();
-    const column = Path.create(path, 'column', id);
-    const sortedItems = useSortedItems({ path: column, items: children });
-
-    // TODO(burdon): If columns use useSortableItem, then this is not needed -- unless we want to limit the scope of the drop-zone to the items flex.
-    // TODO(burdon): Currently inserted in the wrong place.
-    const { setNodeRef } = useDroppable({ id, data: { path: column } });
+    const sortedItems = useSortedItems({ path, items: children });
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
@@ -102,7 +101,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           className={mx(
             groupSurface,
             'grow flex flex-col w-[300px] snap-center overflow-hidden m-1',
-            isDragging && 'opacity-20',
+            isDragging && 'opacity-0',
           )}
           style={draggableStyle}
         >
@@ -114,11 +113,11 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
             </Card.Header>
           </Card.Root>
 
-          <div ref={setNodeRef} className={mx('flex flex-col grow overflow-y-scroll')}>
+          <div className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col'>
-              <Mosaic.SortableContext id={column} items={sortedItems} direction='vertical'>
+              <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
                 {sortedItems.map((item, i) => (
-                  <Mosaic.SortableTile key={item.id} item={item} path={column} position={i} Component={Component!} />
+                  <Mosaic.SortableTile key={item.id} item={item} path={path} position={i} Component={Component!} />
                 ))}
               </Mosaic.SortableContext>
             </div>

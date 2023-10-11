@@ -27,6 +27,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     position?: TPosition;
     isActive?: boolean;
     isDragging?: boolean;
+    isOver?: boolean;
     draggableStyle?: any;
     draggableProps?: any;
 
@@ -45,25 +46,18 @@ export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> =
  * Basic draggable mosaic tile.
  */
 export const DraggableTile = ({
-  path,
+  path: parentPath,
   item,
   Component = DefaultComponent,
   position,
   draggableStyle,
   ...props
 }: MosaicTileProps<any>) => {
-  const { activeItem, overItem } = useMosaic();
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    isDragging: isDraggingLocal,
-  } = useDraggable({
-    id: Path.create(path, item.id),
+  const path = Path.create(parentPath, item.id);
+  const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
+    id: path,
     data: { path, item, position } satisfies MosaicDraggedItem,
   });
-  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.path === path);
 
   return (
     <Component
@@ -86,7 +80,7 @@ export const DraggableTile = ({
  * Mosaic tile that can be sorted.
  */
 export const SortableTile = ({
-  path,
+  path: parentPath,
   item,
   Component = DefaultComponent,
   position,
@@ -94,23 +88,33 @@ export const SortableTile = ({
   ...props
 }: MosaicTileProps<any, number>) => {
   const { activeItem, overItem } = useMosaic();
+  // TODO(wittjosiah): If this is the active item, then use the same id.
+  const path = Path.create(parentPath, item.id);
   const {
     setNodeRef,
     attributes,
     listeners,
     transform,
     isDragging: isDraggingLocal,
+    isOver,
   } = useSortable({
-    id: Path.create(path, item.id),
+    id: path,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
 
+  // TODO(wittjosiah): Use same id for active item to avoid inference.
   // If not dragging locally but:
   // - active item id matches AND
   // - the over path matches THEN
   // - this tile is being dragged from another path
-  const isDragging = isDraggingLocal || (activeItem?.item.id === item.id && overItem?.path === path);
+  const isDragging =
+    isDraggingLocal ||
+    (activeItem?.item.id === item.id &&
+      overItem &&
+      (Path.hasChild(Path.parent(path), overItem.path) ||
+        Path.parent(path) === overItem.path ||
+        path === overItem.path));
 
   return (
     <Component
@@ -119,6 +123,7 @@ export const SortableTile = ({
       path={path}
       position={position}
       isDragging={isDragging}
+      isOver={isOver}
       draggableStyle={{
         transform: getTransformCSS(transform),
         transition: activeItem ? 'transform 200ms ease' : 'none',

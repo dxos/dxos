@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
 import { Stack, StackProps } from './Stack';
-import { Mosaic, MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
+import { Mosaic, MosaicDataItem, MosaicMoveEvent, Path } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard, TestObjectGenerator } from '../../testing';
 
 faker.seed(3);
@@ -31,10 +31,10 @@ const StackStory = ({
 
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     setItems((items) => {
-      if (active.path === id) {
+      if (active.path === Path.create(id, active.item.id)) {
         items.splice(active.position!, 1);
       }
-      if (over.path === id) {
+      if (over.path === Path.create(id, over.item.id)) {
         items.splice(over.position!, 0, active.item);
       }
       return [...items];

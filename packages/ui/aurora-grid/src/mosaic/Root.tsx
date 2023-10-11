@@ -219,10 +219,12 @@ const MosaicDebug: FC<{
         active: {
           id: activeItem?.item?.id,
           path: activeItem?.path,
+          position: activeItem?.position,
         },
         over: {
           id: overItem?.item?.id,
           path: overItem?.path,
+          position: overItem?.position,
         },
       }}
     />

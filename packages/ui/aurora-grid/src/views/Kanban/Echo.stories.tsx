@@ -24,7 +24,18 @@ const columnValues: { [property: string]: any[] } = {
   priority: ['unknown', ...Priority],
 };
 
-const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: boolean; spaceKey: PublicKey }) => {
+// TODO(wittjosiah): Can't use id because of ClientSpaceDecorator.
+const EchoStory = ({
+  basePath = 'projects',
+  debug,
+  spaceKey,
+  generator: objectGenerator = generator,
+}: {
+  basePath?: string;
+  debug?: boolean;
+  spaceKey: PublicKey;
+  generator: TestObjectGenerator;
+}) => {
   const space = useSpace(spaceKey);
   // TODO(burdon): Decorator is not re-run schema is empty when returning to story after first run. Different kanban id.
   const [kanban] = useQuery(space, { type: 'kanban' });
@@ -80,40 +91,39 @@ const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: 
   const handleDrop = ({ active, over }: MosaicMoveEvent) => {
     // Reorder columns.
     // TODO(burdon): Factor out util.
-    if (active.path === id) {
+    if (active.path === Path.create(basePath, active.item.id)) {
       // Reorder columns.
       const fromIndex = kanban.columnValues.findIndex((value: string) => value === active.item.id);
       const toIndex = kanban.columnValues.findIndex((value: string) => value === over.item.id);
       fromIndex !== -1 && toIndex !== -1 && arrayMove(kanban.columnValues, fromIndex, toIndex);
-    } else {
-      const columnsPath = Path.create(id, 'column'); // TODO(burdon): Export string/function from layout.
-      if (Path.hasDescendent(columnsPath, active.path)) {
-        const activeProperty = Path.last(active.path);
-        const overProperty = Path.last(over.path);
-        invariant(activeProperty);
-        invariant(overProperty);
+      return;
+    }
 
-        console.log('???');
+    if (Path.hasDescendent(basePath, active.path)) {
+      const activeProperty = Path.last(Path.parent(active.path));
+      const overProperty = Path.length(over.path) > 2 ? Path.last(Path.parent(over.path)) : Path.last(over.path);
+      invariant(activeProperty);
+      invariant(overProperty);
 
-        // Update property.
-        (active.item as TypedObject)[kanban.columnProp] = getProperty(overProperty);
+      // Update property.
+      (active.item as TypedObject)[kanban.columnProp] = getProperty(overProperty);
 
-        // Update active column order.
-        const activeOrder = getOrder(kanban, activeProperty);
-        activeOrder.length > 0 && activeOrder.splice(active.position, 1);
-        kanban.objectPosition[activeProperty] = activeOrder;
+      // Update active column order.
+      const activeOrder = getOrder(kanban, activeProperty);
+      activeOrder.length > 0 && activeOrder.splice(active.position, 1);
+      kanban.objectPosition[activeProperty] = activeOrder;
 
-        // Update over column order.
-        const overOrder = getOrder(kanban, overProperty);
-        console.log(':::::::::::', overOrder);
-        overOrder.length > 0 ? overOrder.splice(over.position, 0, active.item.id) : overOrder.push(active.item.id);
-        kanban.objectPosition[overProperty] = overOrder;
-      }
+      // Update over column order.
+      const overOrder = getOrder(kanban, overProperty);
+      overOrder.length > 0 && Path.length(over.path) === Path.length(active.path)
+        ? overOrder.splice(over.position, 0, active.item.id)
+        : overOrder.push(active.item.id);
+      kanban.objectPosition[overProperty] = overOrder;
     }
   };
 
   const handleAddData = () => {
-    const object = generator.createObject({ types: ['project'] });
+    const object = objectGenerator.createObject({ types: ['project'] });
     space?.db.add(object);
   };
 
@@ -131,7 +141,7 @@ const EchoStory = ({ id = 'projects', debug, spaceKey }: { id?: string; debug?: 
             <Plus />
           </Button>
         </Toolbar.Root>
-        <Kanban id={id} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
+        <Kanban id={basePath} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
       </div>
     </Mosaic.Root>
   );

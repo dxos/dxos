@@ -41,26 +41,25 @@ const KanbanStory: FC<
   const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Buggy dragging empty column.
-    if (active.path === id) {
+    if (active.path === Path.create(id, active.item.id)) {
       return setColumns((columns) => [...swapItems(columns, active.item, over.item)]);
     }
 
     // TODO(burdon): Handle dragging from other components.
-    const columnsPath = Path.create(id, 'column');
-    if (Path.hasDescendent(columnsPath, active.path)) {
+    if (Path.hasDescendent(id, active.path)) {
       return setColumns((columns) =>
         columns.map((column) => {
           const children = [...column.children];
-          if (Path.last(active.path) === column.id) {
+          if (Path.last(Path.parent(active.path)) === column.id) {
             // Remove card from current postion.
             invariant(active.position !== undefined);
             children.splice(active.position, 1);
           }
 
-          if (over.path === id && over.item.id === column.id) {
+          if (over.path === Path.create(id, column.id)) {
             // Move card into empty column.
             children.push(active.item as TestItem);
-          } else if (Path.hasDescendent(columnsPath, over.path) && Path.last(over.path) === column.id) {
+          } else if (Path.hasDescendent(id, over.path) && Path.last(Path.parent(over.path)) === column.id) {
             // Move card within or between columns.
             const position = over.position ?? children.length;
             children.splice(position, 0, active.item as TestItem);

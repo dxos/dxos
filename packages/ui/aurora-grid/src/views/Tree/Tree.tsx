@@ -14,7 +14,6 @@ import {
   MosaicTileComponent,
   useContainer,
   useSortedItems,
-  Path,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -35,11 +34,10 @@ export type TreeData = {
 
 // TODO(burdon): Make generic (and forwardRef).
 export const Tree = ({ id, Component = TreeItem, onDrop, isDroppable, items = [], debug }: TreeProps) => {
-  const sortedItems = useSortedItems({ path: id, items });
+  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent' });
 
   return (
     <TreeComponent.Root classNames='flex flex-col overflow-hidden'>
-      {/* TODO(wittjosiah): This is Stack.Root. */}
       <Mosaic.Container
         {...{
           id,
@@ -74,22 +72,18 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
-          <Card.Title title={item.label ?? Path.create(path, item.id)} classNames='truncate' />
+          <Card.Title title={item.label ?? path} classNames='truncate' />
         </Card.Header>
 
-        {!isActive && !isDragging && item.children && <TreeBranch path={path} id={item.id} items={item.children} />}
+        {!isActive && !isDragging && item.children && <TreeBranch path={path} items={item.children} />}
       </div>
     );
   },
 );
 
-const TreeBranch = ({ path: parentPath, id, items }: { path: string; id: string; items: TreeData[] }) => {
+const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { Component } = useContainer();
-  const path = Path.create(parentPath, 'branch', id);
-  const sortedItems = useSortedItems({
-    path,
-    items,
-  });
+  const sortedItems = useSortedItems({ path, items, mode: 'match-parent' });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
