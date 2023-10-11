@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { InitOptions } from './types';
 
 // Polyfill export.
-export { setTag, setUser } from '@sentry/node';
+export { setTag, setTags, setUser } from '@sentry/node';
 
 /**
  * To use this SDK, call the init function as early as possible in the main entry module.

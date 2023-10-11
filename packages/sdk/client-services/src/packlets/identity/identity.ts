@@ -20,7 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -77,7 +77,7 @@ export class Identity {
   }
 
   // TODO(burdon): Expose state object?
-  get authorizedDeviceKeys(): ComplexMap<PublicKey, ProfileDocument> {
+  get authorizedDeviceKeys(): ComplexMap<PublicKey, DeviceProfileDocument> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 

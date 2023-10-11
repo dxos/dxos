@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 import { humanize } from '@dxos/util';
 
-import { setTag, setUser } from './node';
+import { setTag, setTags } from './node';
 
 const ctx = new Context({ onError: (err) => log.warn('Unhandled error in Sentry context', err) });
 
@@ -26,19 +26,18 @@ export const USER_PROCESSOR: LogProcessor = (config, entry) => {
     switch (message) {
       case 'dxos.halo.identity':
         if (context?.identityKey) {
-          setUser({
-            id: context.identityKey.truncate(),
-            username: context.displayName ?? humanize(context.identityKey),
-          });
+          setTag('identityKey', context.identityKey.truncate());
           setTag('username', context.displayName ?? humanize(context.identityKey));
         }
         break;
       case 'dxos.halo.device':
         if (context?.deviceKey) {
           setTag('deviceKey', context.deviceKey.truncate());
-          setTag('deviceName', context.deviceName);
-          break;
         }
+        if (context?.profile) {
+          setTags(context.profile);
+        }
+        break;
     }
   });
 };
