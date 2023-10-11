@@ -41,8 +41,8 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
 };
 
 export default {
-  component: Story,
-  title: 'Demo',
+  title: 'Views/Demo',
+  render: Story,
   decorators: [
     FullscreenDecorator(),
     ClientSpaceDecorator({

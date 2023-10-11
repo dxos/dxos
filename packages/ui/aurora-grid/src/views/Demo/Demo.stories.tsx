@@ -17,7 +17,7 @@ import { DemoTree } from '../Tree/testing';
 faker.seed(5);
 
 export default {
-  component: Mosaic,
+  title: 'Views/Demo',
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

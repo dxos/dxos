@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { Kanban } from './Kanban';
 import { DemoKanban, DemoKanbanProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
@@ -14,7 +15,7 @@ import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Kanban',
+  component: Kanban,
   render: (args: DemoKanbanProps) => {
     return (
       <Mosaic.Root debug={args.debug}>

@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
+import { Kanban } from './Kanban';
 import { EchoKanban, columnValues } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range } from '../../testing';
@@ -15,7 +16,8 @@ import { FullscreenDecorator, TestObjectGenerator, range } from '../../testing';
 const generator = new TestObjectGenerator();
 
 export default {
-  title: 'Kanban',
+  title: 'Views/Kanban',
+  component: Kanban,
   render: ({
     // TODO(wittjosiah): Can't use id because of ClientSpaceDecorator.
     basePath = 'projects',

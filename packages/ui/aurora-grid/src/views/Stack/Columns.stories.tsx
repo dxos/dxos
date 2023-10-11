@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
+import { Stack } from './Stack';
 import { DemoStack, DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, SimpleCard } from '../../testing';
@@ -14,7 +15,8 @@ import { FullscreenDecorator, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'Stack/Columns',
+  title: 'Views/Stack/Columns',
+  component: Stack,
   render: (args: DemoStackProps) => {
     return (
       <Mosaic.Root debug={args.debug}>
