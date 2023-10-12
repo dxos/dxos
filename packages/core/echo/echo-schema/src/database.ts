@@ -14,7 +14,7 @@ import { WeakDictionary, getDebugName } from '@dxos/util';
 import { EchoObject, base, db, immutable } from './defs';
 import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
-import { DatabaseRouter } from './router';
+import { HyperGraph } from './hyper-graph';
 import { Text } from './text-object';
 import { TypedObject, isTypedObject } from './typed-object';
 
@@ -42,7 +42,7 @@ export class EchoDatabase {
      */
     public readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _router: DatabaseRouter,
+    private readonly _graph: HyperGraph,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
     this._update([]);
@@ -55,8 +55,8 @@ export class EchoDatabase {
   /**
    * @deprecated
    */
-  get router() {
-    return this._router;
+  get graph() {
+    return this._graph;
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
@@ -84,7 +84,7 @@ export class EchoDatabase {
     if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
       const objectConstructor = Object.getPrototypeOf(obj).constructor;
       invariant(
-        this._router.schema.getPrototype(obj.__typename!) === objectConstructor,
+        this._graph.types.getPrototype(obj.__typename!) === objectConstructor,
         `Prototype invalid or not registered: ${objectConstructor.name}`,
       );
     }
@@ -257,7 +257,7 @@ export class EchoDatabase {
 
       if (state.type.protocol === 'protobuf') {
         const type = state.type.itemId;
-        const Proto = this._router.schema?.getPrototype(type);
+        const Proto = this._graph.types.getPrototype(type);
         if (!Proto) {
           log.warn('Unknown schema type', { type: state.type?.encode() });
           return new TypedObject(); // TODO(burdon): Expando?

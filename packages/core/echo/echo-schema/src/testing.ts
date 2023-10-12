@@ -17,30 +17,33 @@ import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
 import { schemaBuiltin } from './proto';
-import { DatabaseRouter } from './router';
+import { HyperGraph } from './hyper-graph';
 
 // TODO(burdon): Builder pattern.
 // TODO(burdon): Rename createMemoryDatabase.
-export const createDatabase = async (router = new DatabaseRouter()) => {
+/**
+ * @deprecated Use TestBuilder.
+ */
+export const createDatabase = async (graph = new HyperGraph()) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
     .registerModel(TextModel);
 
-  router.schema.mergeSchema(schemaBuiltin);
+  graph.addTypes(schemaBuiltin);
 
   // TODO(dmaretskyi): Fix.
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
-  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, router);
-  router.register(PublicKey.random(), db); // TODO(burdon): Database should have random id?
+  const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph);
+  graph._register(PublicKey.random(), db); // TODO(burdon): Database should have random id?
   return { db, host };
 };
 
 export class TestBuilder {
   public readonly spaceKey = PublicKey.random();
 
-  constructor(public readonly router = new DatabaseRouter(), public readonly base = new DatabaseTestBuilder()) {}
+  constructor(public readonly graph = new HyperGraph(), public readonly base = new DatabaseTestBuilder()) {}
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
@@ -48,19 +51,19 @@ export class TestBuilder {
     const base = await this.base.createPeer();
     const peer = new TestPeer(this, base);
     this.peers.set(peer.base.key, peer);
-    this.router.register(this.spaceKey, peer.db);
+    this.graph._register(this.spaceKey, peer.db);
     await peer.base.open();
     return peer;
   }
 }
 
 export class TestPeer {
-  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.router);
+  public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
 
   constructor(public readonly builder: TestBuilder, public readonly base: BasePeer) {}
 
   async reload() {
     await this.base.reload();
-    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.router);
+    this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
   }
 }
