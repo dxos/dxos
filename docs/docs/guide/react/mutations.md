@@ -11,9 +11,9 @@ When an object comes out of an [ECHO](../platform/) query, it is tracked by fram
 
 ### Setting values
 
-In the example below, clicking a task sets `completed = true` on line 20.
+In the example below, clicking a task sets `completed = true`.
 
-```tsx{19,23,24} file=./snippets/mutations.tsx#L5-
+```tsx{17,26,27} file=./snippets/mutations.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -33,7 +33,8 @@ export const App = () => {
             task.completed = true;
           }}
         >
-          {task.title} - {task.completed}
+          {task.title} - {task.completedp}
+          rttyp
         </div>
       ))}
       <button
@@ -59,10 +60,10 @@ root.render(
 
 ### Creating objects
 
-To create (insert) a new object, simply construct a `new Document` and pass any initial values into the constructor (line 23 above).
+To create (insert) a new object, simply construct a `new Expando` and pass any initial values into the constructor.
 
 ::: note Tip
-Calling `space.db.add(task)` (line 24 above) needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
+Calling `space.db.add(task)` needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
 :::
 
 ## Typed Mutations
@@ -71,16 +72,16 @@ The following example uses the same [schema](./queries#typed-queries) definition
 
 ### Setting values
 
-In the example below, clicking a task sets `completed = true` on line 20 the same way as in the untyped API.
+In the example below, clicking a task sets `completed = true` in the same way as the untyped API.
 
-```tsx{20,24,25} file=./snippets/mutations-typed.tsx#L5-
+```tsx{19,28} file=./snippets/mutations-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task } from './schema';
+import { Task, types } from './schema';
 
 export const App = () => {
   useIdentity();
@@ -113,7 +114,11 @@ export const App = () => {
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
-  <ClientProvider>
+  <ClientProvider
+    onInitialized={async (client) => {
+      client.addSchema(types);
+    }}
+  >
     <App />
   </ClientProvider>
 );
@@ -121,7 +126,7 @@ root.render(
 
 ### Creating objects
 
-To create (insert) a new object, simply construct a `new` one with the appropriate constructor like `Task` and pass any initial values into the constructor (line 24 above).
+To create (insert) a new object, simply construct a `new` one with the appropriate constructor like `Task` and pass any initial values into the constructor.
 
 ## Removing objects
 

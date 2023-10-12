@@ -11,7 +11,7 @@ The simplest way to access data in [`ECHO`](../platform) from `react` is by usin
 
 The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
 
-```tsx{14} file=./snippets/use-query.tsx#L5-
+```tsx{10} file=./snippets/use-query.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -37,9 +37,10 @@ root.render(
 );
 ```
 
-The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
+The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
+
 ### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 Create subscription.
@@ -67,8 +68,8 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 ::: details Benefits of schema declarations
 
-*   ability to generate type-safe data access code, which makes development faster and safer.
-    :::
+- ability to generate type-safe data access code, which makes development faster and safer.
+  :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -118,41 +119,6 @@ dxtype <input protobuf file> <output typescript file>
 
 ::: info Tip
 If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
-:::
-
-::: details See TypeScript output from `dxtype`
-The output is a typescript file that looks roughly like this:
-
-```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client/echo';
-
-export const schema = EchoSchema.fromJson(
-  '{ "protobuf generated json here": true }',
-);
-
-export class Task extends TypedObject {
-  static readonly type: ReturnType<typeof schema.getType> =
-    schema.getType('example.tasks.Task');
-
-  static filter(opts?: {
-    title?: string;
-    completed?: boolean;
-  }): TypeFilter<Task> {
-    return Task.type.createFilter(opts);
-  }
-
-  constructor(opts?: { title?: string; completed?: boolean }) {
-    super({ ...opts, '@type': Task.type.name }, { schema: Task.type });
-  }
-
-  declare title: string;
-  declare completed: boolean;
-}
-```
-
-Declared are the ancestor class and specific fields on the type.
-
-There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
 :::
 
 To use the type declarations, simply import the relevant type like `Task` from the location where `dxtype` produces output and pass it to `useQuery<T>`.
@@ -226,3 +192,5 @@ root.render(
   </ClientProvider>
 );
 ```
+
+You can pass `Task.filter` to `useQuery` to locate items that match specific criteria.
