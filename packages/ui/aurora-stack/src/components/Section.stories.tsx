@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { List } from '@dxos/aurora';
-import { groupSurface, mx } from '@dxos/aurora-theme';
+import { groupSurface, mx, textBlockWidth } from '@dxos/aurora-theme';
 
 import { Section, SectionProps } from './Section';
 
@@ -19,7 +19,7 @@ export default {
   },
   render: (args: SectionProps) => {
     return (
-      <List>
+      <List classNames={textBlockWidth}>
         <Section {...args}>
           <div className={mx('h-full p-2', groupSurface)}>Content Area</div>
         </Section>

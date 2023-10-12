@@ -38,15 +38,15 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
     const { t } = useTranslation('stack');
 
     return (
-      <ListItem.Root ref={forwardedRef} id={id} classNames='grow is-full pbe-2' style={draggableStyle}>
-        <DensityProvider density='fine'>
+      <DensityProvider density='fine'>
+        <ListItem.Root ref={forwardedRef} id={id} classNames='pbe-2 block' style={draggableStyle}>
           <div
             role='none'
             className={mx(
               surfaceElevation({ elevation: 'group' }),
               inputSurface,
               hoverableControls,
-              'grow flex rounded',
+              'flex rounded',
               active && staticHoverableControls,
               active === 'destination' && 'opacity-50',
               (active === 'origin' || active === 'rearrange') && 'opacity-0',
@@ -69,7 +69,7 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
                 className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
               />
             </div>
-            <div role='none' className='flex-1'>
+            <div role='none' className='flex-1 min-is-0'>
               {children}
             </div>
             <Button
@@ -85,8 +85,8 @@ export const Section = forwardRef<HTMLLIElement, SectionProps>(
               <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
             </Button>
           </div>
-        </DensityProvider>
-      </ListItem.Root>
+        </ListItem.Root>
+      </DensityProvider>
     );
   },
 );

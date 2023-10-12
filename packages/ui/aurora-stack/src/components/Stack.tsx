@@ -31,7 +31,9 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
   onRemoveSection?: (id: string) => void;
 };
 
-const DefaultComponent = ({ data }: { data: StackSectionItem }) => <pre>{JSON.stringify(data)}</pre>;
+const DefaultComponent = ({ data }: { data: StackSectionItem }) => (
+  <pre className='whitespace-normal break-words'>{JSON.stringify(data)}</pre>
+);
 
 // TODO(burdon): Make generic (and forwardRef).
 export const Stack = <TData extends StackSectionItem = StackSectionItem>({
@@ -68,15 +70,13 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
 
   return (
     <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <div role='none' className={mx(textBlockWidth, 'p-1')}>
-        <List>
-          <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
-            {itemsWithPreview.map((item, index) => (
-              <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
-            ))}
-          </Mosaic.SortableContext>
-        </List>
-      </div>
+      <List classNames={mx(textBlockWidth, 'p-1')}>
+        <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
+          {itemsWithPreview.map((item, index) => (
+            <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
+          ))}
+        </Mosaic.SortableContext>
+      </List>
     </Mosaic.Container>
   );
 };
