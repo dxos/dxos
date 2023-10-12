@@ -61,6 +61,14 @@ export const DemoGrid = ({
     }
   };
 
+  const handleCreate = (position: Position) => {
+    setItems((items) => {
+      const item = new TestObjectGenerator({ types }).createObject();
+      setLayout((layout) => ({ ...layout, [item.id]: position }));
+      return [item, ...items];
+    });
+  };
+
   return (
     <Grid
       id={id}
@@ -68,9 +76,10 @@ export const DemoGrid = ({
       layout={layout}
       size={size}
       Component={Component}
-      onDrop={handleDrop}
       className={className}
       debug={debug}
+      onDrop={handleDrop}
+      onCreate={handleCreate}
     />
   );
 };

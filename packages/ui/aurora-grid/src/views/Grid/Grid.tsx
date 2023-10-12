@@ -5,11 +5,12 @@
 import '@dxosTheme';
 
 import { useDroppable } from '@dnd-kit/core';
+import { PlusCircle } from '@phosphor-icons/react';
 import React, { FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { useMediaQuery } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Button, useMediaQuery } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import {
   calculateCellWidth,
@@ -20,7 +21,7 @@ import {
   getPanelBounds,
   Position,
 } from './layout';
-import { MosaicContainerProps, MosaicDataItem, Mosaic, Path } from '../../mosaic';
+import { MosaicContainerProps, MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
 
 //
 // Context.
@@ -60,6 +61,7 @@ export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCon
 
   // TODO(burdon): Generalize (and pass item).
   onSelect?: (id: string) => void;
+  onCreate?: (position: Position) => void;
 };
 
 /**
@@ -78,6 +80,7 @@ export const Grid = ({
   className,
   onDrop,
   onSelect,
+  onCreate,
 }: GridProps) => {
   const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
@@ -118,6 +121,7 @@ export const Grid = ({
   };
 
   // TODO(burdon): Expose controlled selection.
+  // TODO(burdon): Focus ring/navigation.
   // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
   const contentRef = useRef<HTMLDivElement>(null);
   // const moveToCenter = () => {
@@ -137,9 +141,6 @@ export const Grid = ({
     }
   }, [selected, width, height]);
 
-  // TODO(burdon): Remove need for this by removing gaps around cells and instead including padding.
-  const { setNodeRef } = useDroppable({ id, data: { path: id } });
-
   return (
     // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).
     <Mosaic.Container
@@ -153,7 +154,7 @@ export const Grid = ({
       }}
     >
       <GridContext.Provider value={defaultGrid}>
-        <div ref={setNodeRef} className={mx('flex grow overflow-auto', className)}>
+        <div className={mx('flex grow overflow-auto', className)}>
           <div
             ref={containerRef}
             className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}
@@ -163,17 +164,21 @@ export const Grid = ({
               className='group block relative bg-neutral-500'
               style={{ ...bounds, margin: marginSize }}
             >
-              <div>
-                {matrix.map((row) =>
-                  row.map(({ x, y }) => (
-                    <GridCell
-                      key={`${x}-${y}`}
-                      path={id}
-                      position={{ x, y }}
-                      bounds={getBounds({ x, y }, cellBounds, spacing)}
-                    />
-                  )),
-                )}
+              <div style={{ padding: spacing }}>
+                <div className='relative'>
+                  {matrix.map((row) =>
+                    row.map(({ x, y }) => (
+                      <GridCell
+                        key={`${x}-${y}`}
+                        path={id}
+                        position={{ x, y }}
+                        bounds={getBounds({ x, y }, cellBounds, 0)}
+                        padding={spacing}
+                        onCreate={onCreate}
+                      />
+                    )),
+                  )}
+                </div>
               </div>
 
               {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
@@ -192,7 +197,7 @@ export const Grid = ({
                         ...getBounds(position, cellBounds, spacing),
                       }}
                       onSelect={() => handleSelect(id)}
-                      debug={debug}
+                      // debug={debug}
                     />
                   );
                 })}
@@ -210,8 +215,15 @@ export const Grid = ({
 /**
  * Grid cell.
  */
-// TODO(burdon): Make Cell pluggable (e.g., to include create button).
-const GridCell: FC<{ path: string; position: Position; bounds: Dimension }> = ({ path, position, bounds }) => {
+const GridCell: FC<{
+  path: string;
+  position: Position;
+  bounds: Dimension;
+  padding?: number;
+  onCreate?: (position: Position) => void;
+}> = ({ path, position, bounds, padding, onCreate }) => {
+  const { overItem } = useMosaic();
+  const isOverContainer = path === overItem?.path;
   const { setNodeRef, isOver } = useDroppable({
     id: Path.create(path, 'cell', `${position.x}-${position.y}`),
     data: { path, position },
@@ -220,18 +232,26 @@ const GridCell: FC<{ path: string; position: Position; bounds: Dimension }> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...bounds }}
+      style={{ ...bounds, padding }}
       className='absolute flex justify-center items-center grow select-none cursor-pointer'
     >
       <div
-        // TODO(burdon): Show grid borders while dragging (or if grid is focused?)
         className={mx(
-          'flex w-full h-full box-border border-dashed group-hover:border-4 border-neutral-600/50 rounded-lg',
+          'group/cell hidden group-hover:flex w-full h-full items-center justify-center',
+          isOverContainer && 'flex',
+          'box-border border-dashed border-4 border-neutral-600/50 rounded-lg',
           'transition ease-in-out duration-200 bg-neutral-500',
-          isOver && 'bg-neutral-600',
+          isOver && 'flex bg-neutral-600',
         )}
       >
-        <div className='font-mono text-sm text-red-700 hidden'>{JSON.stringify(position)}</div>
+        <div className={mx('hidden group-hover/cell:flex', isOverContainer && 'hidden')}>
+          {onCreate && (
+            // TODO(burdon): Style button.
+            <Button variant='ghost' onClick={() => onCreate(position)}>
+              <PlusCircle className={getSize(8)} />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -16,6 +16,11 @@ faker.seed(99);
 
 const debug = true;
 
+// TODO(burdon): Create object.
+// TODO(burdon): Delete object (delete/remove from grid).
+// TODO(burdon): Editable cards (and other card stories).
+// TODO(burdon): Search story (drag from search stack).
+
 const size = { x: 8, y: 8 };
 const generator = new TestObjectGenerator({ types: ['document', 'image'] });
 const testItems = generator.createObjects({ length: 20 });
