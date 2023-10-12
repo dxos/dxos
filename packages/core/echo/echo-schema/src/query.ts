@@ -4,15 +4,15 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Item, QueryOptions, ShowDeletedOption, UpdateEvent } from '@dxos/echo-db';
+import { QueryOptions, ShowDeletedOption, UpdateEvent } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { ComplexMap } from '@dxos/util';
 
 import { EchoObject } from './defs';
 import { createSignal } from './signal';
 import { isTypedObject, TypedObject } from './typed-object';
-import { ComplexMap } from '@dxos/util';
-import { PublicKey } from '@dxos/keys';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -36,9 +36,12 @@ export type Subscription = () => void;
  * Predicate based query.
  */
 export class Query<T extends TypedObject = TypedObject> {
-  private readonly _ctx = new Context({ onError: err => {
-    log.catch(err)
-  }});
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+    },
+  });
+
   private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined = undefined;
   private _signal = createSignal?.();
@@ -66,11 +69,15 @@ export class Query<T extends TypedObject = TypedObject> {
   // Hold a reference to the listener to prevent it from being garbage collected.
   private _onUpdate = (updateEvent: UpdateEvent) => {
     const objectMap = this._objectMaps.get(updateEvent.spaceKey);
-    invariant(objectMap, 'Invalid update routed.')
+    invariant(objectMap, 'Invalid update routed.');
 
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
     const changed = updateEvent.itemsUpdated.some((object) => {
-      return !this._cache || this._cache.find((obj) => obj.id === object.id) || objectMap.has(object.id) && this._match(objectMap.get(object.id)! as T);
+      return (
+        !this._cache ||
+        this._cache.find((obj) => obj.id === object.id) ||
+        (objectMap.has(object.id) && this._match(objectMap.get(object.id)! as T))
+      );
     });
 
     if (changed) {
@@ -82,7 +89,9 @@ export class Query<T extends TypedObject = TypedObject> {
 
   private _getObjects() {
     if (!this._cache) {
-      this._cache = Array.from(this._objectMaps.values()).flatMap(objects => Array.from(objects.values()).filter((object): object is T => this._match(object as T)));
+      this._cache = Array.from(this._objectMaps.values()).flatMap((objects) =>
+        Array.from(objects.values()).filter((object): object is T => this._match(object as T)),
+      );
     }
 
     return this._cache;

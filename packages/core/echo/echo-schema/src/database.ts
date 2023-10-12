@@ -6,24 +6,23 @@ import { Event, ReadOnlyEvent } from '@dxos/async';
 import { DocumentModel, DocumentModelState } from '@dxos/document-model';
 import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
 import { EchoObject, base, db, immutable } from './defs';
+import { HyperGraph } from './hyper-graph';
 import { Schema } from './proto';
 import { Filter, Query, TypeFilter } from './query';
-import { HyperGraph } from './hyper-graph';
 import { Text } from './text-object';
 import { TypedObject, isTypedObject } from './typed-object';
-import { PublicKey } from '@dxos/keys';
 
 /**
  * Database wrapper.
  */
 export class EchoDatabase {
-
   /**
    * @internal
    */
@@ -202,7 +201,12 @@ export class EchoDatabase {
   query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
   query(filter?: Filter<any>, options?: QueryOptions): Query;
   query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]), this._updateEvent, filter, options);
+    return new Query(
+      new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
+      this._updateEvent,
+      filter,
+      options,
+    );
   }
 
   private _update(updateEvent: UpdateEvent) {

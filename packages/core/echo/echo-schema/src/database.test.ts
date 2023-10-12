@@ -17,11 +17,11 @@ import { Expando, TypedObject } from './typed-object';
 
 describe('Database', () => {
   test('flush with test builder', async () => {
-    const testBuilder = new TestBuilder()
+    const testBuilder = new TestBuilder();
     const peer = await testBuilder.createPeer();
     peer.db.add(new Expando({ str: 'test' }));
     await testBuilder.flushAll();
-  })
+  });
 
   test('inspect', async () => {
     const { db } = await createDatabase();

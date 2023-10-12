@@ -16,6 +16,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import { QueryOptions } from '@dxos/echo-db';
 import { Filter, HyperGraph, Query, TypeCollection, TypeFilter, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -27,7 +28,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
-import { QueryOptions } from '@dxos/echo-db';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -228,11 +228,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._graph.addTypes(schema);
   }
 
-
   /**
    * Query all spaces.
-   * @param filter 
-   * @param options 
+   * @param filter
+   * @param options
    */
   query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
   query(filter?: Filter<any>, options?: QueryOptions): Query;

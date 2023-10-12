@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Event } from '@dxos/async';
+import { QueryOptions, UpdateEvent } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
+import { Filter, Query, TypeFilter } from './query';
 import { TypeCollection } from './type-collection';
 import { TypedObject } from './typed-object';
-import { Filter, Query, TypeFilter } from './query';
-import { QueryOptions, UpdateEvent } from '@dxos/echo-db';
-import { Event } from '@dxos/async';
 
 /**
  * Manages cross-space database interactions.
@@ -18,7 +18,7 @@ import { Event } from '@dxos/async';
 export class HyperGraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _types = new TypeCollection();
-  private readonly _updateEvent = new Event<UpdateEvent>()
+  private readonly _updateEvent = new Event<UpdateEvent>();
 
   get types(): TypeCollection {
     return this._types;
@@ -44,6 +44,14 @@ export class HyperGraph {
   query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
   query(filter?: Filter<any>, options?: QueryOptions): Query;
   query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(new ComplexMap(PublicKey.hash, Array.from(this._databases.entries()).map(([key, db]) => [key, db._objects])), this._updateEvent, filter, options);
+    return new Query(
+      new ComplexMap(
+        PublicKey.hash,
+        Array.from(this._databases.entries()).map(([key, db]) => [key, db._objects]),
+      ),
+      this._updateEvent,
+      filter,
+      options,
+    );
   }
 }

@@ -74,7 +74,8 @@ const createLog = (): LogImp => {
   // Show break.
   log.break = () => log.info('——————————————————————————————————————————————————');
 
-  log.stack = (message, context, meta) => processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
+  log.stack = (message, context, meta) =>
+    processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
 
   /**
    * Process the current log call.

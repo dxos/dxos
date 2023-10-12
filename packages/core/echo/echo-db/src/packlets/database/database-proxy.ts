@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Model, ModelFactory } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
 import { ApiError } from '@dxos/protocols';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
@@ -312,8 +312,7 @@ export class DatabaseProxy {
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
     this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
-    log('begin batch', { clientTag: this._currentBatch.clientTag })
-
+    log('begin batch', { clientTag: this._currentBatch.clientTag });
 
     return true;
   }
@@ -328,7 +327,7 @@ export class DatabaseProxy {
     const batch = this._currentBatch;
     invariant(batch);
     this._currentBatch = undefined;
-    log('commit batch', { clientTag: batch.clientTag })
+    log('commit batch', { clientTag: batch.clientTag });
 
     invariant(!batch.committing);
     invariant(!batch.processTrigger);
@@ -440,8 +439,5 @@ export class DatabaseProxy {
 }
 
 export class UpdateEvent {
-  constructor(
-    public readonly spaceKey: PublicKey,
-    public readonly itemsUpdated: Item[] = []
-  ) {}
+  constructor(public readonly spaceKey: PublicKey, public readonly itemsUpdated: Item[] = []) {}
 }

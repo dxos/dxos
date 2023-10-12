@@ -19,12 +19,12 @@ import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
+import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.
@@ -313,5 +313,4 @@ export class Client {
   addSchema(schema: TypeCollection) {
     this._graph.addTypes(schema);
   }
-
 }

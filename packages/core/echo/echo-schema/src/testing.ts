@@ -16,8 +16,8 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
-import { schemaBuiltin } from './proto';
 import { HyperGraph } from './hyper-graph';
+import { schemaBuiltin } from './proto';
 
 // TODO(burdon): Builder pattern.
 // TODO(burdon): Rename createMemoryDatabase.
@@ -73,7 +73,7 @@ export class TestPeer {
   }
 
   async flush() {
-    if(this.db._backend.currentBatch) {
+    if (this.db._backend.currentBatch) {
       this.db._backend.commitBatch();
     }
     await this.base.confirm();
