@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Model, ModelFactory } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
 import { ApiError } from '@dxos/protocols';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
@@ -21,7 +21,7 @@ import { ItemManager } from './item-manager';
 const FLUSH_TIMEOUT = 5_000;
 
 export type MutateResult = {
-  objectsUpdated: Item<any>[];
+  updateEvent: UpdateEvent;
   batch: Batch;
 };
 
@@ -59,7 +59,7 @@ export class DatabaseProxy {
   private readonly _ctx = new Context();
   private _currentBatchCtx?: Context;
 
-  public readonly itemUpdate = new Event<Item<Model>[]>();
+  public readonly itemUpdate = new Event<UpdateEvent>();
   public readonly pendingBatch = new Event<BatchUpdate>();
 
   private _initialEventTrigger = new Trigger();
@@ -115,6 +115,10 @@ export class DatabaseProxy {
 
   set maxBatchSize(value: number) {
     this._maxBatchSize = value;
+  }
+
+  get spaceKey(): PublicKey {
+    return this._spaceKey;
   }
 
   @synchronized
@@ -182,7 +186,7 @@ export class DatabaseProxy {
       objectCount: msg.batch.objects?.length ?? 0,
     });
 
-    const objectsUpdated: Item[] = [];
+    const updateEvent = new UpdateEvent(this._spaceKey);
 
     if (msg.action === EchoEvent.DatabaseAction.RESET) {
       const keepIds = new Set<string>(
@@ -191,12 +195,12 @@ export class DatabaseProxy {
       for (const item of this._itemManager.entities.values()) {
         if (!keepIds.has(item.id)) {
           this._itemManager.deconstructItem(item.id);
-          objectsUpdated.push(item);
+          updateEvent.itemsUpdated.push(item);
         }
       }
     }
 
-    this._processMessage(msg.batch, objectsUpdated);
+    this._processMessage(msg.batch, updateEvent);
 
     if (msg.clientTag) {
       const batch = this._pendingBatches.get(msg.clientTag);
@@ -224,10 +228,10 @@ export class DatabaseProxy {
     this._initialEventTrigger.wake();
 
     // Emit update event.
-    this.itemUpdate.emit(objectsUpdated);
+    this.itemUpdate.emit(updateEvent);
   }
 
-  private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
+  private _processMessage(batch: EchoObjectBatch, updateEvent: UpdateEvent) {
     for (const object of batch.objects ?? []) {
       invariant(object.objectId);
 
@@ -246,7 +250,7 @@ export class DatabaseProxy {
         log.warn('Item not found', { objectId: object.objectId });
         return;
       }
-      objectsUpdated.push(entity);
+      updateEvent.itemsUpdated.push(entity);
 
       if (object.snapshot) {
         log('reset to snapshot', { object });
@@ -308,6 +312,7 @@ export class DatabaseProxy {
     this._currentBatch = new Batch();
     this._currentBatch.clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
     this.pendingBatch.emit({ size: this._pendingBatches.size + 1 });
+    log('begin batch', { clientTag: this._currentBatch.clientTag });
 
     return true;
   }
@@ -322,6 +327,7 @@ export class DatabaseProxy {
     const batch = this._currentBatch;
     invariant(batch);
     this._currentBatch = undefined;
+    log('commit batch', { clientTag: batch.clientTag });
 
     invariant(!batch.committing);
     invariant(!batch.processTrigger);
@@ -341,7 +347,7 @@ export class DatabaseProxy {
       })
       .then(
         (receipt) => {
-          log('commit', { clientTag: batch.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
+          log('commited', { clientTag: batch.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
           // No-op because the pipeline message will set the receipt.
         },
         (err) => {
@@ -367,18 +373,18 @@ export class DatabaseProxy {
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.
-      const objectsUpdated: Item<any>[] = [];
+      const updateEvent = new UpdateEvent(this._spaceKey);
       for (const objectMutation of batchInput.objects ?? []) {
         const item = this._processOptimistic(objectMutation);
         if (item) {
-          objectsUpdated.push(item);
+          updateEvent.itemsUpdated.push(item);
         }
       }
-      this.itemUpdate.emit(objectsUpdated);
+      this.itemUpdate.emit(updateEvent);
 
       const batch = this._currentBatch!;
       return {
-        objectsUpdated,
+        updateEvent,
         batch,
       };
     } finally {
@@ -430,4 +436,8 @@ export class DatabaseProxy {
     });
     this._pendingBatches.clear();
   }
+}
+
+export class UpdateEvent {
+  constructor(public readonly spaceKey: PublicKey, public readonly itemsUpdated: Item[] = []) {}
 }

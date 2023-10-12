@@ -24,8 +24,8 @@ const SPACE_KEY = PublicKey.random();
 export class DatabaseTestBuilder {
   public readonly peers = new ComplexMap<PublicKey, DatabaseTestPeer>(PublicKey.hash);
 
-  async createPeer(): Promise<DatabaseTestPeer> {
-    const peer = new DatabaseTestPeer(this);
+  async createPeer(spaceKey = SPACE_KEY): Promise<DatabaseTestPeer> {
+    const peer = new DatabaseTestPeer(this, spaceKey);
     this.peers.set(peer.key, peer);
     await peer.open();
     return peer;
@@ -74,7 +74,7 @@ export class DatabaseTestPeer {
 
   private readonly _writes = new Set<WriteRequest>();
 
-  constructor(public readonly rig: DatabaseTestBuilder) {}
+  constructor(public readonly rig: DatabaseTestBuilder, public readonly spaceKey: PublicKey) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
@@ -116,7 +116,7 @@ export class DatabaseTestPeer {
     this.proxy = new DatabaseProxy({
       service: this.host.createDataServiceHost(),
       itemManager: this.items,
-      spaceKey: SPACE_KEY,
+      spaceKey: this.spaceKey,
     });
     await this.proxy.open(this.modelFactory);
   }
