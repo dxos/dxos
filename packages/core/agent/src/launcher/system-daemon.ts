@@ -58,7 +58,8 @@ export class SystemDaemon implements Daemon {
 
     return Promise.all(
       profiles.map(async (profile) => {
-        return { profile, running: await this.isRunning(profile) };
+        const running = await this.isRunning(profile);
+        return { profile, running, ...(running && (await this._runner.info(profile))) };
       }),
     );
   }
