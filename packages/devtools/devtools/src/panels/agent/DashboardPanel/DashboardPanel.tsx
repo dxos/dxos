@@ -20,13 +20,17 @@ export const DashboardPanel = () => {
     await client.spaces.default.waitUntilReady();
     setAgentState({ status: DashboardResponse.Status.OFF });
     const unsubscribe = client.spaces.default.listen('dxos.agent.dashboard-plugin', (data) => {
-      log.info('response', { data });
-      if (data.payload.type === 'dxos.agent.dashboard.DashboardResponse') {
+      if (data.payload['@type'] === 'dxos.agent.dashboard.DashboardResponse') {
+        log.info('response', { data });
         setAgentState(data.payload);
       }
     });
+    log.info('request');
+    await client.spaces.default.postMessage('dxos.agent.dashboard-plugin', {
+      '@type': 'dxos.agent.dashboard.DashboardRequest',
+    });
     return () => unsubscribe();
-  });
+  }, []);
 
   if (!agentState) {
     return <div>Waiting for Identity...</div>;
