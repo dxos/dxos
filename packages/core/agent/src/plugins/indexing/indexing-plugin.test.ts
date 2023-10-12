@@ -152,9 +152,12 @@ describe('Indexing', () => {
       };
 
       await sleep(500);
-      await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', searchRequest);
+      await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', {
+        '@type': 'dxos.agent.indexing.SearchRequest',
+        ...searchRequest,
+      });
     }
 
-    await results.wait();
+    await asyncTimeout(results.wait(), 1000);
   }).tag('flaky');
 });
