@@ -25,16 +25,16 @@ export class EchoProxyServer extends AbstractPlugin {
   }
 
   async open() {
-    invariant(this._client);
+    invariant(this._pluginCtx);
     log('starting proxy...', { ports: this._options.port });
-    await this._client.initialize();
+    await this._pluginCtx.client.initialize();
 
     const app = express();
     app.use(express.json());
 
     app.get('/spaces', async (req, res) => {
       log('/spaces');
-      const spaces = this._client!.spaces.get();
+      const spaces = this._pluginCtx!.client.spaces.get();
       const result = {
         spaces: spaces.map((space) => ({ key: space.key.toHex() })),
       };
@@ -50,7 +50,7 @@ export class EchoProxyServer extends AbstractPlugin {
       };
 
       if (spaceKey) {
-        const space = this._client!.spaces.get(PublicKey.from(spaceKey));
+        const space = this._pluginCtx!.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const { objects } = space.db.query();
           Object.assign(result, {
@@ -71,7 +71,7 @@ export class EchoProxyServer extends AbstractPlugin {
       };
 
       if (spaceKey) {
-        const space = this._client!.spaces.get(PublicKey.from(spaceKey));
+        const space = this._pluginCtx!.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
           const objects = req.body;
           Object.assign(result, {

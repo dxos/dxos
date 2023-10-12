@@ -112,7 +112,7 @@ export class ControlPipeline {
       await this._processSnapshot(snapshot);
     }
 
-    log.info('starting...');
+    log('starting...');
     setTimeout(async () => {
       void this._consumePipeline(new Context());
     });
@@ -199,7 +199,7 @@ export class ControlPipeline {
   }
 
   async stop() {
-    log.warn('stopping...');
+    log('stopping...');
     await this._ctx.dispose();
     await this._pipeline.stop();
     await this._saveTargetTimeframe(this._pipeline.state.timeframe);
