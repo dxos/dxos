@@ -26,14 +26,13 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 
     operation?: MosaicOperation;
     position?: TPosition;
-    // TODO(wittjosiah): active?: 'overlay' | 'rearrange' | 'origin' | 'destination';
+    // TODO(wittjosiah): active?: 'overlay' | 'rearrange' | 'origin' | 'destination'; (change to `state`?)
     isActive?: boolean;
     isDragging?: boolean;
     isOver?: boolean;
     draggableStyle?: any;
     draggableProps?: any;
 
-    // TODO(burdon): Generalize tile events (or use intents?)
     onSelect?: () => void;
   };
 

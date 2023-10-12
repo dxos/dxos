@@ -187,7 +187,7 @@ export const Grid = ({
                       position: 'absolute',
                       ...getBounds(position, cellBounds, options.spacing),
                     }}
-                    onSelect={() => handleSelect(id)}
+                    onSelect={() => handleSelect(item.id)}
                     // debug={debug}
                   />
                 );
