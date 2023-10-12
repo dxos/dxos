@@ -8,7 +8,6 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
-import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -52,7 +51,7 @@ export class Agent {
 
   constructor(private readonly _options: AgentOptions) {
     invariant(this._options);
-    this._plugins = (this._options.plugins?.filter(Boolean) as Plugin[]) ?? [];
+    this._plugins = this._options.plugins?.filter(Boolean) ?? [];
     if (this._options.metrics) {
       tracer.start();
     }
@@ -86,9 +85,6 @@ export class Agent {
     this._client = new Client({ config: this._options.config, services: this._clientServices });
     await this._client.initialize();
 
-    // Global hook for debuggers.
-    mountDevtoolsHooks({ host: (this._clientServices as any)._host });
-
     //
     // Unix socket (accessed via CLI).
     // TODO(burdon): Configure ClientServices plugin with multiple endpoints.
@@ -119,7 +115,7 @@ export class Agent {
 
     // Open plugins.
     for (const plugin of this._plugins) {
-      await plugin.initialize(this._client!, this._clientServices!);
+      await plugin.initialize({ client: this._client!, clientServices: this._clientServices!, plugins: this._plugins });
       await plugin.open();
       log('open', { plugin });
     }
@@ -144,7 +140,6 @@ export class Agent {
     this._client = undefined;
     this._clientServices = undefined;
 
-    unmountDevtoolsHooks();
     log('stopped');
   }
 }
