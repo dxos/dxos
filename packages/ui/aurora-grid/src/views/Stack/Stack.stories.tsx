@@ -23,7 +23,7 @@ export default {
     },
   ) => {
     return (
-      <Mosaic.Root>
+      <Mosaic.Root debug={args.debug}>
         <Mosaic.DragOverlay />
         <DemoStack {...args} />
       </Mosaic.Root>

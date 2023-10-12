@@ -13,7 +13,7 @@ import {
   MosaicDataItem,
   MosaicTileComponent,
   Path,
-  useSortedItems,
+  useItemsWithPreview,
   useContainer,
 } from '../../mosaic';
 
@@ -50,7 +50,7 @@ export const Kanban = ({
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
         // Restrict to objects from other columns.
         // TODO(burdon): Consider objects from other containers.
-        onOver: ({ active, over }) => Path.length(active.path) >= Path.length(over.path),
+        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'reject'),
         onDrop,
       }}
     >
@@ -93,7 +93,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
   ({ path, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
     const { id, title, children } = item;
     const { Component } = useContainer();
-    const sortedItems = useSortedItems({ path, items: children });
+    const itemsWithPreview = useItemsWithPreview({ path, items: children });
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
@@ -115,8 +115,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
 
           <div className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col my-1'>
-              <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-                {sortedItems.map((item, index) => (
+              <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
+                {itemsWithPreview.map((item, index) => (
                   <Mosaic.SortableTile
                     key={item.id}
                     item={item}
@@ -130,7 +130,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
               </Mosaic.SortableContext>
             </div>
           </div>
-          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
+          {debug && <Mosaic.Debug data={{ path, id, items: itemsWithPreview.length }} />}
         </div>
       </div>
     );
