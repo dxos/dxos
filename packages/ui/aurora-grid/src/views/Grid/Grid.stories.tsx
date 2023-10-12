@@ -21,7 +21,7 @@ const debug = true;
 // TODO(burdon): Editable cards (and other card stories).
 // TODO(burdon): Search story (drag from search stack).
 
-const size = { x: 8, y: 8 };
+const size = { x: 4, y: 4 };
 const generator = new TestObjectGenerator({ types: ['document', 'image'] });
 const testItems = generator.createObjects({ length: 20 });
 const testLayout = testItems.reduce<GridLayout>((map, item) => {
@@ -35,7 +35,7 @@ export default {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
-        <DemoGrid id='grid' size={size} initialItems={testItems} initialLayout={testLayout} debug={debug} />
+        <DemoGrid id='grid' options={{ size }} initialItems={testItems} initialLayout={testLayout} debug={debug} />
       </Mosaic.Root>
     );
   },

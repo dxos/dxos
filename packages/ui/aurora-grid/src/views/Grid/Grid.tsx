@@ -6,7 +6,8 @@ import '@dxosTheme';
 
 import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
-import React, { FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
+import defaultsDeep from 'lodash.defaultsdeep';
+import React, { FC, useState, useMemo, useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Button, useMediaQuery } from '@dxos/aurora';
@@ -15,33 +16,39 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import {
   calculateCellWidth,
   createMatrix,
-  Dimension,
   getBounds,
   getDimension,
   getPanelBounds,
+  Dimension,
   Position,
+  Size,
 } from './layout';
 import { MosaicContainerProps, MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
+
+//
+// Selection
+//
+
+// TODO(burdon): Factor out as mosaic standard.
+type ControlledSelection = {
+  selected?: string;
+  onSelect?: (id: string) => void;
+};
 
 //
 // Context.
 //
 
-type GridContextType = {
-  defaultCellBounds: Dimension;
+type GridOptions = {
+  size: Size;
+  cellBounds: Dimension;
   spacing?: number;
 };
 
-const defaultGrid: GridContextType = {
-  defaultCellBounds: { width: 280, height: 280 },
+const defaultGridOptions: GridOptions = {
+  size: { x: 8, y: 8 },
+  cellBounds: { width: 280, height: 280 },
   spacing: 8,
-};
-
-// TODO(burdon): Context isn't used and could be removed.
-const GridContext = createContext<GridContextType>(defaultGrid);
-
-const useGrid = () => {
-  return useContext(GridContext);
 };
 
 //
@@ -50,19 +57,16 @@ const useGrid = () => {
 
 export type GridLayout = { [id: string]: Position };
 
-export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, Position> & {
-  items?: TData[];
-  layout?: GridLayout;
-  size?: { x: number; y: number };
-  center?: Position;
-  margin?: boolean;
-  square?: boolean;
-  debug?: boolean;
-
-  // TODO(burdon): Generalize (and pass item).
-  onSelect?: (id: string) => void;
-  onCreate?: (position: Position) => void;
-};
+export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, Position> &
+  ControlledSelection & {
+    items?: TData[];
+    layout?: GridLayout;
+    options?: Partial<GridOptions>;
+    margin?: boolean;
+    square?: boolean;
+    debug?: boolean;
+    onCreate?: (position: Position) => void;
+  };
 
 /**
  * Grid content.
@@ -72,38 +76,47 @@ export const Grid = ({
   id,
   items = [],
   layout = {},
-  size = { x: 8, y: 8 },
+  options: opts,
   margin,
   square = true,
   debug,
+  selected: controlledSelected,
   Component = Mosaic.DefaultComponent,
   className,
   onDrop,
   onSelect,
   onCreate,
 }: GridProps) => {
-  const { defaultCellBounds, spacing } = useGrid(); // TODO(burdon): Remove.
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+  const options = defaultsDeep({}, opts, defaultGridOptions);
   const { matrix, bounds, cellBounds } = useMemo(() => {
     // Change default cell bounds to screen width if mobile.
-    const cellWidth = calculateCellWidth(defaultCellBounds.width, width ?? 0);
+    const cellWidth = calculateCellWidth(options.cellBounds.width, width ?? 0);
     const cellBounds = {
       width: cellWidth,
-      height: square ? cellWidth : defaultCellBounds.height,
+      height: square ? cellWidth : options.cellBounds.height,
     };
 
     return {
-      matrix: createMatrix(size.x, size.y, ({ x, y }) => ({ x, y })),
-      bounds: getPanelBounds(size, cellBounds, spacing),
+      matrix: createMatrix(options.size, ({ x, y }) => ({ x, y })),
+      bounds: getPanelBounds(options.size, cellBounds, options.spacing),
       cellBounds,
     };
-  }, [defaultCellBounds, size, width]);
+  }, [options, width]);
 
   // No margin if mobile.
   const [isNotMobile] = useMediaQuery('md');
   const marginSize = margin && !isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
 
-  const setCenter = (id: string) => {
+  const [selected, setSelected] = useState(controlledSelected);
+  useEffect(() => {
+    setSelected(controlledSelected);
+    if (controlledSelected) {
+      scrollToCenter(controlledSelected);
+    }
+  }, [controlledSelected]);
+
+  const scrollToCenter = (id: string) => {
     const item = items.find((item) => item.id === id);
     if (item && width && height) {
       const pos = getBounds(layout[item.id], cellBounds);
@@ -113,58 +126,36 @@ export const Grid = ({
     }
   };
 
-  const [selected, setSelected] = useState<string>();
+  // TODO(burdon): Focus ring/navigation.
+  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
   const handleSelect = (id: string) => {
     setSelected(id);
-    setCenter(id);
+    scrollToCenter(id);
     onSelect?.(id);
   };
 
-  // TODO(burdon): Expose controlled selection.
-  // TODO(burdon): Focus ring/navigation.
-  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
-  const contentRef = useRef<HTMLDivElement>(null);
-  // const moveToCenter = () => {
-  //   if (width && height && isNotMobile) {
-  //     const center = {
-  //       x: (contentRef.current!.offsetWidth + marginSize * 2 - width) / 2,
-  //       y: (contentRef.current!.offsetHeight + marginSize * 2 - height) / 2,
-  //     };
-  //
-  //     containerRef.current!.scrollTo({ top: center.y, left: center.x });
-  //   }
-  // };
-
   useEffect(() => {
     if (selected) {
-      setCenter(selected);
+      scrollToCenter(selected);
     }
   }, [selected, width, height]);
 
   return (
-    // TODO(burdon): Combine GridContext.Provider with MosaicContainer custom property (make generic).
     <Mosaic.Container
       {...{
         id,
         Component,
         getOverlayProps: () => ({ grow: true }),
-        getOverlayStyle: () => getDimension(cellBounds, spacing),
-        onOver: () => true,
+        getOverlayStyle: () => getDimension(cellBounds, options.spacing),
+        // onOver: () => true,
         onDrop,
       }}
     >
-      <GridContext.Provider value={defaultGrid}>
-        <div className={mx('flex grow overflow-auto', className)}>
-          <div
-            ref={containerRef}
-            className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}
-          >
-            <div
-              ref={contentRef}
-              className='group block relative bg-neutral-500'
-              style={{ ...bounds, margin: marginSize }}
-            >
-              <div style={{ padding: spacing }}>
+      <div className={mx('flex grow overflow-auto', className)}>
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}>
+          <div className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
+            {matrix && (
+              <div style={{ padding: options.spacing }}>
                 <div className='relative'>
                   {matrix.map((row) =>
                     row.map(({ x, y }) => (
@@ -172,42 +163,42 @@ export const Grid = ({
                         key={`${x}-${y}`}
                         path={id}
                         position={{ x, y }}
-                        bounds={getBounds({ x, y }, cellBounds, 0)}
-                        padding={spacing}
+                        bounds={getBounds({ x, y }, cellBounds)}
+                        padding={options.spacing}
                         onCreate={onCreate}
                       />
                     )),
                   )}
                 </div>
               </div>
+            )}
 
-              {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
-              <div>
-                {items.map((item) => {
-                  const position = layout[item.id] ?? { x: 0, y: 0 };
-                  return (
-                    <Mosaic.DraggableTile
-                      key={item.id}
-                      item={item}
-                      path={id}
-                      position={position}
-                      Component={Component}
-                      draggableStyle={{
-                        position: 'absolute',
-                        ...getBounds(position, cellBounds, spacing),
-                      }}
-                      onSelect={() => handleSelect(id)}
-                      // debug={debug}
-                    />
-                  );
-                })}
-              </div>
+            {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
+            <div>
+              {items.map((item) => {
+                const position = layout[item.id] ?? { x: 0, y: 0 };
+                return (
+                  <Mosaic.DraggableTile
+                    key={item.id}
+                    item={item}
+                    path={id}
+                    position={position}
+                    Component={Component}
+                    draggableStyle={{
+                      position: 'absolute',
+                      ...getBounds(position, cellBounds, options.spacing),
+                    }}
+                    onSelect={() => handleSelect(id)}
+                    // debug={debug}
+                  />
+                );
+              })}
             </div>
-
-            {debug && <Mosaic.Debug data={{ items: items?.length }} position='bottom-right' />}
           </div>
+
+          {debug && <Mosaic.Debug data={{ items: items?.length }} position='bottom-right' />}
         </div>
-      </GridContext.Provider>
+      </div>
     </Mosaic.Container>
   );
 };
