@@ -1,0 +1,26 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.agent.dashboard;
+
+message DashboardRequest {
+
+}
+
+message DashboardResponse {
+  enum Status {
+    ON = 0;
+    OFF = 1;
+  }
+
+  message Plugin {
+    string name = 1;
+    string status = 2;
+  }
+  
+  Status status = 1;
+  repeated Plugin plugins = 2;
+}
