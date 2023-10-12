@@ -12,11 +12,12 @@ import { EventEmitter, Point, Size } from '../util';
  * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.
  */
 export class SVGContext {
-  readonly resized = new EventEmitter<SVGContext>();
-
   private readonly _ref = createRef<SVGSVGElement>();
+
   private _size?: Size;
   private _center?: Point;
+
+  readonly resized = new EventEmitter<SVGContext>();
 
   // prettier-ignore
   constructor(

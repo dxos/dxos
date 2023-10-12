@@ -17,6 +17,12 @@
   ],
   "references": [
     {
+      "path": "../../apps/plugins/plugin-graph"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -26,10 +32,16 @@
       "path": "../../common/util"
     },
     {
-      "path": "../aurora"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../aurora-theme"
+      "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../aurora"
     },
     {
       "path": "../aurora-theme"
