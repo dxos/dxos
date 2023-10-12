@@ -138,15 +138,20 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
         activeNode.properties.index = nextIndex ?? 'a0';
       } else if (activeNode && activeParent && overParent) {
         activeParent.removeNode(active.item.id);
-        overParent.addNode('tree', { ...activeNode });
+        overNode.addNode('tree', { ...activeNode });
       }
     }
+  };
+
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+    return Path.parent(active.path) !== Path.parent(over.path);
   };
 
   return (
     <Tree
       id={id}
       items={graph.root.children as TreeData[]}
+      onOver={handleOver}
       onDrop={handleDrop}
       debug={debug}
       compare={graphNodeCompare}

@@ -34,18 +34,19 @@ export const Stack = ({
         <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
           <div
             className={mx(
-              'flex flex-col w-full my-2',
+              'flex flex-col w-full my-1',
               direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
             )}
           >
             <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
-              {sortedItems.map((item, i) => (
+              {sortedItems.map((item, index) => (
                 <Mosaic.SortableTile
                   key={item.id}
                   item={item}
                   path={id}
-                  position={i}
+                  position={index}
                   Component={Component}
+                  className='m-1'
                   // debug={debug}
                 />
               ))}

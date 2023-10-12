@@ -33,7 +33,8 @@ export const DemoStack = ({
   const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     return (
       // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 || active.path === over.path) &&
+      (itemsRef.current.findIndex((item) => item.id === active.item.id) === -1 ||
+        Path.parent(active.path) === Path.parent(over.path)) &&
       (active.path === id || behavior !== 'disallow')
     );
   };

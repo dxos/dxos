@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { dropRing, mx } from '@dxos/aurora-theme';
 
 import {
   MosaicContainerProps,
@@ -13,8 +13,10 @@ import {
   MosaicDataItem,
   MosaicTileComponent,
   useContainer,
-  useSortedItems,
+  useMosaic,
+  Path,
   CompareMosaicDataItem,
+  useSortedItems,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -35,11 +37,11 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
-  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent', compare });
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
+  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent' });
 
   return (
-    <TreeComponent.Root classNames='flex flex-col overflow-hidden'>
+    <TreeComponent.Root classNames='flex flex-col'>
       <Mosaic.Container
         {...{
           id,
@@ -49,7 +51,7 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
           onDrop,
         }}
       >
-        <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
+        <Mosaic.SortableContext id={id} items={items} direction='vertical'>
           {sortedItems.map((item, index) => (
             <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
               <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} compare={compare} />
@@ -65,12 +67,12 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ path, draggableStyle, draggableProps, item, isActive, isDragging, className, compare }, forwardedRef) => {
+  ({ path, draggableStyle, draggableProps, item, isActive, isOver, isDragging, className, compare }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
         style={draggableStyle}
-        className={mx('flex flex-col', className, isDragging && 'opacity-20')}
+        className={mx('flex flex-col rounded', className, isDragging && 'opacity-0', isOver && dropRing)}
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
@@ -86,16 +88,24 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 );
 
 const TreeBranch = ({ path, items, compare }: { path: string; items: TreeData[]; compare?: CompareMosaicDataItem }) => {
+  const { overItem } = useMosaic();
   const { Component } = useContainer();
   const sortedItems = useSortedItems({ path, items, mode: 'match-parent', compare });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-        {sortedItems.map((child, i) => (
+      <Mosaic.SortableContext id={path} items={items} direction='vertical'>
+        {sortedItems.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
-              <Mosaic.SortableTile item={child} path={path} position={i} Component={Component!} compare={compare} />
+              <Mosaic.SortableTile
+                item={child}
+                path={path}
+                position={index}
+                Component={Component!}
+                compare={compare}
+                isOver={overItem?.path === Path.create(path, child.id)}
+              />
             </TreeItemComponent.Root>
           </TreeComponent.Branch>
         ))}

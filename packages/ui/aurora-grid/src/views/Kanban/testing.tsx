@@ -20,7 +20,7 @@ const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: numb
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: generator.createObjects({ length: columns - 1 }),
+    children: generator.createObjects({ length: 3 + columns - i }),
   }));
 };
 
@@ -74,7 +74,7 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
     );
   };
 
-  return <Kanban id={id} debug={debug} columns={columns} Component={Component} onDrop={handleDrop} />;
+  return <Kanban id={id} columns={columns} Component={Component} onDrop={handleDrop} debug={debug} />;
 };
 
 // TODO(burdon): Compute this?
@@ -197,7 +197,7 @@ export const EchoKanban = ({
           <Plus />
         </Button>
       </Toolbar.Root>
-      <Kanban id={id} debug={debug} columns={columns} Component={SimpleCard} onDrop={handleDrop} />
+      <Kanban id={id} columns={columns} Component={SimpleCard} onDrop={handleDrop} debug={debug} />
     </div>
   );
 };

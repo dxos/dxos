@@ -55,7 +55,7 @@ export const DraggableTile = ({
   ...props
 }: MosaicTileProps<any>) => {
   const path = Path.create(parentPath, item.id);
-  const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({
+  const { setNodeRef, attributes, listeners, /* transform, */ isDragging } = useDraggable({
     id: path,
     data: { path, item, position } satisfies MosaicDraggedItem,
   });
@@ -68,7 +68,8 @@ export const DraggableTile = ({
       position={position}
       isDragging={isDragging}
       draggableStyle={{
-        transform: getTransformCSS(transform),
+        // TODO(burdon): Override by container?
+        // transform: getTransformCSS(transform),
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}

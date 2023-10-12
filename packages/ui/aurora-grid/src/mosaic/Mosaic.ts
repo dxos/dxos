@@ -9,7 +9,7 @@ import { Debug, DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicDragOverlay, MosaicDragOverlayProps } from './DragOverlay';
 import { MosaicRoot, MosaicRootProps as NaturalMosaicRootProps } from './Root';
-import { MosaicSortableContext, MosaicSortableProps as NaturalMosaicSortableProps } from './Sortable';
+import { MosaicSortableContext, MosaicSortableProps as NaturalMosaicSortableProps } from './SortableContext';
 import {
   DraggableTile,
   SortableTile,
@@ -26,9 +26,9 @@ export const Mosaic = {
   DraggableTile,
   SortableTile,
 
-  // TODO(burdon): Don't export.
   // TODO(wittjosiah): Consider factoring out or using inline styles instead depending on aurora theme/tailwind.
   DefaultComponent,
+  // TODO(burdon): Don't export; move to util.
   Debug,
 } as {
   Root: FC<MosaicRootProps>;
