@@ -16,15 +16,9 @@ faker.seed(3);
 
 export default {
   component: Stack,
-  render: (
-    args: StackProps & {
-      debug: boolean;
-      types: string[];
-      count: number;
-    },
-  ) => {
+  render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
     return (
-      <Mosaic.Root debug={args.debug}>
+      <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
         <DemoStack {...args} />
       </Mosaic.Root>
@@ -39,16 +33,17 @@ export const Default = {
   },
 };
 
-export const Horizontal = {
-  args: {
-    direction: 'horizontal',
-    count: 8,
-    debug: true,
-  },
-};
-
 export const Complex = {
   args: {
+    Component: ({ data }: { data: StackSectionItem & { body?: string; image?: string } }) => (
+      <div className='flex'>
+        <div className='grow p-4'>
+          <h1>{data.title ?? data.id}</h1>
+          {data.body && <p>{data.body}</p>}
+        </div>
+        {data.image && <img src={data.image} />}
+      </div>
+    ),
     types: ['document', 'image'],
     count: 8,
     debug: true,
