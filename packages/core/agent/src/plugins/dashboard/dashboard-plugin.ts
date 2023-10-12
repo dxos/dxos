@@ -10,8 +10,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DashboardResponse } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { AbstractPlugin } from '../plugin';
 

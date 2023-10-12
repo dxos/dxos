@@ -8,7 +8,7 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { DashboardResponse } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { CHANNEL_NAME, DashboardPlugin } from './dashboard-plugin';

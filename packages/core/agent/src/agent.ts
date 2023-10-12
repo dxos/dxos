@@ -7,8 +7,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { Config, Client, PublicKey } from '@dxos/client';
-import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { type Config, Client, PublicKey } from '@dxos/client';
+import { type ClientServices, type ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
