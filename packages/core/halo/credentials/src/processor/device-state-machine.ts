@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Chain, Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Chain, Credential, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
 import { CredentialProcessor } from './credential-processor';
@@ -23,7 +23,7 @@ export type DeviceStateMachineParams = {
  */
 export class DeviceStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
-  public readonly authorizedDeviceKeys = new ComplexMap<PublicKey, ProfileDocument>(PublicKey.hash);
+  public readonly authorizedDeviceKeys = new ComplexMap<PublicKey, DeviceProfileDocument>(PublicKey.hash);
 
   public readonly deviceChainReady = new Trigger();
 
@@ -59,17 +59,18 @@ export class DeviceStateMachine implements CredentialProcessor {
         this._params.onUpdate?.();
         break;
       }
-      case 'dxos.halo.credentials.DeviceProfile': {
-        invariant(this.authorizedDeviceKeys.has(assertion.deviceKey), 'Device not found.');
 
-        if (assertion && assertion.deviceKey.equals(this._params.deviceKey)) {
+      case 'dxos.halo.credentials.DeviceProfile': {
+        invariant(this.authorizedDeviceKeys.has(credential.subject.id), 'Device not found.');
+
+        if (assertion && credential.subject.id.equals(this._params.deviceKey)) {
           log.trace('dxos.halo.device', {
-            deviceKey: assertion.deviceKey,
-            deviceName: assertion.profile?.displayName,
+            deviceKey: credential.subject.id,
+            profile: assertion.profile,
           });
         }
 
-        this.authorizedDeviceKeys.set(assertion.deviceKey, assertion.profile);
+        this.authorizedDeviceKeys.set(credential.subject.id, assertion.profile);
         this._params.onUpdate?.();
         break;
       }

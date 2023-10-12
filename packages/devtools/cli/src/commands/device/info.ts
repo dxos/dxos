@@ -23,8 +23,8 @@ export default class Info extends BaseCommand<typeof Info> {
         return;
       }
 
-      this.log(chalk`{magenta Device label:}`, device.profile?.displayName);
       this.log(chalk`{magenta Device key:}`, device.deviceKey.toHex());
+      this.log(chalk`{magenta Device profile:}`, device.profile);
 
       return device;
     });
