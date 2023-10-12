@@ -51,8 +51,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       const graph = graphPlugin?.provides.graph();
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
-        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {
-          if (tile.copyClass?.has('stack-section')) {
+        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic, operation) => {
+          if (operation === 'copy' && tile.copyClass?.has('stack-section')) {
             const [_, ...idParts] = parseDndId(originalId);
             tile.id = getDndId(toId, ...idParts);
             tile.variant = 'card';
@@ -141,6 +141,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return null;
             }
           case 'mosaic-delegator':
+            // TODO(burdon): Need stronger typing (vs. 'tile' in)?
             if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
               const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
               return mosaicId === STACK_PLUGIN || mosaicId === STACK_PLUGIN_PREVIEW_SECTION

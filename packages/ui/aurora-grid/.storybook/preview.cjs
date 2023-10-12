@@ -1,4 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+// NOTE: Pre-emptively load signals; otherwise runtime error since stories are loaded asynchronously.
+import 'deepsignal/react';
 import React, {createElement, useEffect} from 'react';
+
 import { ThemeProvider } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 

@@ -13,7 +13,7 @@ const Alea: PrngFactory = alea as unknown as PrngFactory;
 
 const prng = new Alea('@dxos/react-hooks');
 
-// TODO(burdon): Replace with PublicKey.random() but consider removing (dangerous mis-use of ECHO objects).
+// TODO(burdon): Replace with PublicKey.random().
 export const randomString = (n = 4) =>
   prng()
     .toString(16)

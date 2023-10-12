@@ -75,7 +75,6 @@ describe('Database', () => {
 
     const update = new Trigger<BatchUpdate>();
     db.pendingBatch.on((event) => {
-      console.log('????', event);
       update.wake(event);
     });
 
