@@ -30,7 +30,7 @@ export class HyperGraph {
   }
 
   /**
-   * @internal
+   * Register a database in hyper-graph.
    */
   _register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);

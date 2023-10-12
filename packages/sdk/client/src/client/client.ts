@@ -5,12 +5,12 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, types as clientSchema, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { types as clientSchema, ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { DatabaseRouter, schemaBuiltin } from '@dxos/echo-schema';
+import { HyperGraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,12 +19,12 @@ import { ApiError, trace } from '@dxos/protocols';
 import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
-import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { Shell } from '../services';
 import { DXOS_VERSION } from '../version';
+import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.
@@ -62,7 +62,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
-  private readonly _schemaRegistry = new DatabaseRouter();
+  private readonly _graph = new HyperGraph();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -210,7 +210,7 @@ export class Client {
     const spaces = new SpaceList(
       this._services,
       modelFactory,
-      this._schemaRegistry,
+      this._graph,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -308,7 +308,10 @@ export class Client {
     this._initialized = false;
   }
 
+  // TODO(dmaretskyi): Expose `graph` directly?
+  // TODO(dmaretskyi): Rename to add types.
   addSchema(schema: TypeCollection) {
-    this._schemaRegistry.addSchema(schema);
+    this._graph.addTypes(schema);
   }
+
 }

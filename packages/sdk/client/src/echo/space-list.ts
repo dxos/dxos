@@ -16,7 +16,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { DatabaseRouter, TypeCollection } from '@dxos/echo-schema';
+import { Filter, HyperGraph, Query, TypeCollection, TypeFilter, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,6 +27,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
+import { QueryOptions } from '@dxos/echo-db';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -40,7 +41,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
-    private readonly _schemaRegistry: DatabaseRouter,
+    private readonly _graph: HyperGraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
@@ -99,7 +100,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._schemaRegistry);
+          spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this._graph);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -224,6 +225,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @deprecated use client.addSchema
    */
   addSchema(schema: TypeCollection) {
-    this._schemaRegistry.addSchema(schema);
+    this._graph.addTypes(schema);
+  }
+
+
+  /**
+   * Query all spaces.
+   * @param filter 
+   * @param options 
+   */
+  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
+  query(filter?: Filter<any>, options?: QueryOptions): Query;
+  query(filter: Filter<any>, options?: QueryOptions): Query {
+    return this._graph.query(filter, options);
   }
 }
