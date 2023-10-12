@@ -12,7 +12,6 @@ import {
   MosaicTileComponent,
   useItemsWithPreview,
 } from '@dxos/aurora-grid/next';
-import { mx } from '@dxos/aurora-theme';
 
 import { Section } from './Section';
 
@@ -39,7 +38,6 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
   onOver,
   onDrop,
   items = [],
-  direction = 'vertical',
   onRemoveSection,
 }: StackProps<TData>) => {
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
@@ -69,21 +67,10 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
   return (
     <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
       <List>
-        <Mosaic.SortableContext items={itemsWithPreview} direction={direction}>
-          <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
-            <div
-              className={mx(
-                'flex flex-col w-full my-1',
-                direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
-              )}
-            >
-              <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
-                {itemsWithPreview.map((item, index) => (
-                  <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
-                ))}
-              </div>
-            </div>
-          </div>
+        <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
+          {itemsWithPreview.map((item, index) => (
+            <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
+          ))}
         </Mosaic.SortableContext>
       </List>
     </Mosaic.Container>
