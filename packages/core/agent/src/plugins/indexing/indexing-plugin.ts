@@ -151,6 +151,10 @@ export class Indexing extends AbstractPlugin {
   }
 
   private async _processMessage(message: GossipMessage) {
+    if (message.payload['@type'] !== 'dxos.mesh.agent.indexing.SearchRequest') {
+      log.warn('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
+      return;
+    }
     const request: SearchRequest = message.payload;
     if (request.query) {
       const response = this._search(request);
@@ -164,6 +168,7 @@ export class Indexing extends AbstractPlugin {
     return {
       results: results.map((result) => {
         return {
+          '@type': 'dxos.mesh.agent.indexing.SearchResult',
           spaceKey: result.id.split(':')[0],
           objectId: result.id.split(':')[1],
           score: result.score,
