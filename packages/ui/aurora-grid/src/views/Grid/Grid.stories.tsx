@@ -30,7 +30,7 @@ export default {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
-        <DemoGrid id='grid' size={size} initialItems={testItems} initialLayout={testLayout} debug={debug} />
+        <DemoGrid id='grid' size={size} initialItems={testItems} initialLayout={testLayout} />
       </Mosaic.Root>
     );
   },

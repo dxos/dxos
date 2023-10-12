@@ -12,7 +12,7 @@ import { Schema, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo
 import { arrayMove } from '@dxos/util';
 
 import { Kanban, KanbanColumn, KanbanProps } from './Kanban';
-import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
+import { Mosaic, MosaicDropEvent, Path, swapItems } from '../../mosaic';
 import { TestObjectGenerator, SimpleCard, Priority, Status, TestItem } from '../../testing';
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
@@ -44,7 +44,7 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
   // };
 
   // TODO(burdon): Reconcile with DemoKanban.
-  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Buggy dragging empty column.
     if (active.path === Path.create(id, active.item.id)) {
@@ -146,7 +146,7 @@ export const EchoKanban = ({
   };
 
   // TODO(burdon): Currently broken: factor out with demo story.
-  const handleDrop = ({ active, over }: MosaicMoveEvent) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Factor out util.
     if (active.path === Path.create(id, active.item.id)) {
