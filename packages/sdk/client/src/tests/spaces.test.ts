@@ -99,7 +99,9 @@ describe('Spaces', () => {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
       const {
-        objectsUpdated: [item],
+        updateEvent: {
+          itemsUpdated: [item],
+        },
       } = await testSpace(space.internal.db);
       itemId = item.id;
       expect(space.members.get()).to.be.length(1);

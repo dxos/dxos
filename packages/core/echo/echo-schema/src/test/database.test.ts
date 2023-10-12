@@ -7,12 +7,12 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
-import { base, clone, DatabaseRouter, db, Expando, Text } from '..';
+import { base, clone, HyperGraph, db, Expando, Text } from '..';
 import { createDatabase } from '../testing';
 
 describe('database', () => {
   test('creating objects', async () => {
-    const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: database } = await createDatabase(new HyperGraph().addTypes(types));
 
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
@@ -32,7 +32,7 @@ describe('database', () => {
   });
 
   test('enums', async () => {
-    const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: database } = await createDatabase(new HyperGraph().addTypes(types));
 
     {
       const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
@@ -49,7 +49,7 @@ describe('database', () => {
 
   describe('dxos.schema.Text', () => {
     test('text objects are auto-created on schema', async () => {
-      const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
+      const { db: database } = await createDatabase(new HyperGraph().addTypes(types));
 
       const task = new Task();
       expect(task.description).to.be.instanceOf(Text);
@@ -64,7 +64,7 @@ describe('database', () => {
   });
 
   test('dxos.schema.Expando', async () => {
-    const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: database } = await createDatabase(new HyperGraph().addTypes(types));
 
     {
       const container = new Container();
@@ -86,7 +86,7 @@ describe('database', () => {
 
   // TODO(burdon): Test cannot update random properties.
   test('dxos.schema.TextObject', async () => {
-    const { db: database } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: database } = await createDatabase(new HyperGraph().addTypes(types));
 
     {
       const container = new Container();
@@ -119,8 +119,8 @@ describe('database', () => {
   });
 
   test('text objects are auto-created on schema', async () => {
-    const { db: database1 } = await createDatabase(new DatabaseRouter().addSchema(types));
-    const { db: database2 } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: database1 } = await createDatabase(new HyperGraph().addTypes(types));
+    const { db: database2 } = await createDatabase(new HyperGraph().addTypes(types));
 
     const task1 = new Task();
     task1.description.model!.insert('test', 0);
@@ -135,8 +135,8 @@ describe('database', () => {
   });
 
   test('clone', async () => {
-    const { db: db1 } = await createDatabase(new DatabaseRouter().addSchema(types));
-    const { db: db2 } = await createDatabase(new DatabaseRouter().addSchema(types));
+    const { db: db1 } = await createDatabase(new HyperGraph().addTypes(types));
+    const { db: db2 } = await createDatabase(new HyperGraph().addTypes(types));
 
     const task1 = new Task({
       title: 'Main task',

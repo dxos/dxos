@@ -11,7 +11,7 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
+import { HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -75,7 +75,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter,
+    graph: HyperGraph,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -91,7 +91,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -108,7 +108,7 @@ export class SpaceProxy implements Space {
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
-    databaseRouter.register(this.key, this._db);
+    graph._register(this.key, this._db);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);

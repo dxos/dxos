@@ -64,7 +64,7 @@ export class Serializer {
 
       switch (model) {
         case DocumentModel.meta.type: {
-          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? TypedObject;
+          const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
 
           const obj = new Prototype({
             ...data,

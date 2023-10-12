@@ -169,7 +169,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
 
   await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
-  invariant(create._itemManager.entities.has(result.objectsUpdated[0].id));
+  invariant(create._itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
 
   await asyncTimeout(
     check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
