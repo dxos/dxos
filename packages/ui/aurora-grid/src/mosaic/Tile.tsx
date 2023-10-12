@@ -6,10 +6,10 @@ import { useDraggable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import React, { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-import { MosaicTileOverlayProps } from './Container';
+import { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
-import { CompareMosaicDataItem, MosaicDataItem, MosaicDraggedItem } from './types';
+import { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
 /**
@@ -24,7 +24,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     path: string;
     item: TData;
 
-    compare?: CompareMosaicDataItem;
+    operation?: MosaicOperation;
     position?: TPosition;
     isActive?: boolean;
     isDragging?: boolean;
@@ -40,7 +40,8 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
  * Mosaic Tile component.
  */
 export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> & Omit<MosaicTileProps<TData>, 'Component'>
+  RefAttributes<HTMLDivElement> &
+    Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
 >;
 
 /**
@@ -54,6 +55,7 @@ export const DraggableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any>) => {
+  const { operation } = useMosaic();
   const path = Path.create(parentPath, item.id);
   const { setNodeRef, attributes, listeners, /* transform, */ isDragging } = useDraggable({
     id: path,
@@ -65,6 +67,7 @@ export const DraggableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
+      operation={operation}
       position={position}
       isDragging={isDragging}
       draggableStyle={{
@@ -89,7 +92,7 @@ export const SortableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { activeItem, overItem } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   // TODO(wittjosiah): If this is the active item, then use the same id.
   const path = Path.create(parentPath, item.id);
   const {
@@ -112,7 +115,8 @@ export const SortableTile = ({
   // - this tile is being dragged from another path
   const isDragging =
     isDraggingLocal ||
-    (activeItem?.item.id === item.id &&
+    (operation !== 'refuse' &&
+      activeItem?.item.id === item.id &&
       overItem &&
       (Path.hasChild(Path.parent(path), overItem.path) ||
         Path.parent(path) === overItem.path ||
@@ -123,6 +127,7 @@ export const SortableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
+      operation={operation}
       position={position}
       isDragging={isDragging}
       isOver={isOver}
