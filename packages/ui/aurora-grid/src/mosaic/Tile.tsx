@@ -9,7 +9,7 @@ import React, { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 
 import { MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
-import { MosaicDataItem, MosaicDraggedItem } from './types';
+import { CompareMosaicDataItem, MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
 /**
@@ -24,6 +24,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     path: string;
     item: TData;
 
+    compare?: CompareMosaicDataItem;
     position?: TPosition;
     isActive?: boolean;
     isDragging?: boolean;

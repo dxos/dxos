@@ -14,6 +14,7 @@ import {
   MosaicTileComponent,
   useContainer,
   useSortedItems,
+  CompareMosaicDataItem,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -24,6 +25,7 @@ import {
 export type TreeProps<TData extends MosaicDataItem = TreeData> = MosaicContainerProps<TData, number> & {
   items?: TData[];
   debug?: boolean;
+  compare?: CompareMosaicDataItem;
 };
 
 export type TreeData = {
@@ -33,8 +35,8 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
-  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent' });
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
+  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent', compare });
 
   return (
     <TreeComponent.Root classNames='flex flex-col overflow-hidden'>
@@ -50,7 +52,7 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
         <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
           {sortedItems.map((item, index) => (
             <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
-              <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} />
+              <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} compare={compare} />
             </TreeItemComponent.Root>
           ))}
         </Mosaic.SortableContext>
@@ -63,7 +65,7 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  ({ path, draggableStyle, draggableProps, item, isActive, isDragging, className }, forwardedRef) => {
+  ({ path, draggableStyle, draggableProps, item, isActive, isDragging, className, compare }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
@@ -75,15 +77,17 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
           <Card.Title title={item.label ?? path} classNames='truncate' />
         </Card.Header>
 
-        {!isActive && !isDragging && item.children && <TreeBranch path={path} items={item.children} />}
+        {!isActive && !isDragging && item.children && (
+          <TreeBranch path={path} items={item.children} compare={compare} />
+        )}
       </div>
     );
   },
 );
 
-const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
+const TreeBranch = ({ path, items, compare }: { path: string; items: TreeData[]; compare?: CompareMosaicDataItem }) => {
   const { Component } = useContainer();
-  const sortedItems = useSortedItems({ path, items, mode: 'match-parent' });
+  const sortedItems = useSortedItems({ path, items, mode: 'match-parent', compare });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
@@ -91,7 +95,7 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
         {sortedItems.map((child, i) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
-              <Mosaic.SortableTile item={child} path={path} position={i} Component={Component!} />
+              <Mosaic.SortableTile item={child} path={path} position={i} Component={Component!} compare={compare} />
             </TreeItemComponent.Root>
           </TreeComponent.Branch>
         ))}

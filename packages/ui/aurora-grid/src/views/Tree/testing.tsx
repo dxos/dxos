@@ -5,13 +5,13 @@
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { Graph, GraphBuilder } from '@braneframe/plugin-graph';
+import { Graph, GraphBuilder, Node } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { arrayMove } from '@dxos/util';
 
 import { Tree, TreeData, TreeProps } from './Tree';
 import { MosaicMoveEvent, Path } from '../../mosaic';
-import { TestObjectGenerator } from '../../testing';
+import { TestObjectGenerator, nextRearrangeIndex } from '../../testing';
 
 const fake = faker.helpers.fake;
 
@@ -82,23 +82,38 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
 };
 
 export const createGraph = () => {
-  const content = [...Array(2)].map(() => ({
+  const content = [...Array(2)].map((_, i) => ({
     id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
     label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
     description: fake('{{commerce.productDescription}}'),
-    children: [...Array(2)].map(() => ({
+    properties: { index: `a${i}` },
+    children: [...Array(2)].map((_, j) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
       label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
       description: fake('{{commerce.productDescription}}'),
-      children: [...Array(2)].map(() => ({
+      properties: { index: `a${j}` },
+      children: [...Array(2)].map((_, k) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
         label: fake('{{commerce.productMaterial}} {{animal.cat}}'),
         description: fake('{{commerce.productDescription}}'),
+        properties: { index: `a${k}` },
       })),
     })),
   }));
 
   return buildGraph(new GraphBuilder().build(), 'tree', content);
+};
+
+const graphNodeCompare = (a: Node, b: Node) => {
+  if (a.properties.index && b.properties.index) {
+    if (a.properties.index < b.properties.index) {
+      return -1;
+    } else if (a.properties.index > b.properties.index) {
+      return 1;
+    }
+    return 0;
+  }
+  return 0;
 };
 
 export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
@@ -107,16 +122,34 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
     // Moving within the tree.
     if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
       const activeNode = graph.findNode(active.item.id);
-      const activeParent = activeNode?.parent;
       const overNode = graph.findNode(over.item.id);
+      const activeParent = activeNode?.parent;
       const overParent = overNode?.parent;
-
-      if (activeNode && activeParent && overParent) {
+      if (
+        activeNode &&
+        overNode &&
+        activeParent &&
+        overParent &&
+        activeParent?.id === overParent?.id &&
+        activeNode.id !== overNode.id
+      ) {
+        // This is a rearrange operation
+        const nextIndex = nextRearrangeIndex(activeParent.children, activeNode.id, overNode.id);
+        activeNode.properties.index = nextIndex ?? 'a0';
+      } else if (activeNode && activeParent && overParent) {
         activeParent.removeNode(active.item.id);
         overParent.addNode('tree', { ...activeNode });
       }
     }
   };
 
-  return <Tree id={id} items={graph.root.children as TreeData[]} onDrop={handleDrop} debug={debug} />;
+  return (
+    <Tree
+      id={id}
+      items={graph.root.children as TreeData[]}
+      onDrop={handleDrop}
+      debug={debug}
+      compare={graphNodeCompare}
+    />
+  );
 };

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+export type CompareMosaicDataItem = Parameters<typeof Array.prototype.sort>[0];
+
 export type MosaicDataItem = { id: string };
 
 export type MosaicDraggedItem<TPosition = unknown> = {

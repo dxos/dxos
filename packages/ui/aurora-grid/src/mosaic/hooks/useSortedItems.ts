@@ -3,7 +3,7 @@
 //
 
 import { useMosaic } from './useMosaic';
-import { MosaicDataItem } from '../types';
+import { CompareMosaicDataItem, MosaicDataItem } from '../types';
 import { Path } from '../util';
 
 /**
@@ -14,10 +14,12 @@ export const useSortedItems = <T extends MosaicDataItem>({
   path,
   items,
   mode = 'default',
+  compare,
 }: {
   path: string;
   items: T[];
   mode?: 'default' | 'match-parent';
+  compare?: CompareMosaicDataItem;
 }): T[] => {
   const { activeItem, overItem } = useMosaic();
 
@@ -37,7 +39,7 @@ export const useSortedItems = <T extends MosaicDataItem>({
       // Or which is a child of this item
       Path.hasChild(path, overItem.path))
   ) {
-    const sortedItems = [...items];
+    const sortedItems = compare ? [...items].sort(compare) : [...items];
     const position = path === overItem.path ? sortedItems.length : (overItem.position as number);
     sortedItems.splice(position, 0, activeItem.item as T);
     return sortedItems;
@@ -45,8 +47,9 @@ export const useSortedItems = <T extends MosaicDataItem>({
 
   // Remove item being dragged out.
   if (activeItem && Path.hasChild(path, activeItem.path) && overItem && !Path.hasChild(path, overItem.path)) {
-    return items.filter((item) => item.id !== activeItem.item.id);
+    const filteredItems = items.filter((item) => item.id !== activeItem.item.id);
+    return compare ? filteredItems.sort(compare) : filteredItems;
   }
 
-  return items;
+  return compare ? [...items].sort(compare) : items;
 };
