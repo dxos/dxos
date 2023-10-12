@@ -35,7 +35,7 @@ export default {
     return (
       <Mosaic.Root debug={debug}>
         <Mosaic.DragOverlay />
-        <DemoGrid id='grid' options={{ size }} initialItems={testItems} initialLayout={testLayout} debug={debug} />
+        <DemoGrid id='grid' options={{ size }} initialItems={testItems} initialLayout={testLayout} />
       </Mosaic.Root>
     );
   },

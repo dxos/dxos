@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Grid, GridLayout, GridProps } from './Grid';
 import { Position } from './layout';
-import { MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
+import { MosaicDataItem, MosaicDropEvent } from '../../mosaic';
 import { ComplexCard, TestObjectGenerator } from '../../testing';
 
 export type DemoGridProps = GridProps & {
@@ -47,7 +47,7 @@ export const DemoGrid = ({
         }, {})),
   );
 
-  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
     if (over.path !== id) {
       setItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {

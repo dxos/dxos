@@ -4,7 +4,14 @@
 
 import { FC } from 'react';
 
-import { MosaicContainer, MosaicContainerProps as NaturalMosaicContainerProps } from './Container';
+import {
+  MosaicContainer,
+  MosaicContainerProps as NaturalMosaicContainerProps,
+  MosaicMoveEvent as NaturalMosaicMoveEvent,
+  MosaicDropEvent as NaturalMosaicDropEvent,
+  MosaicOperation as NaturalMosaicOperation,
+  MosaicCompareDataItem as NaturalMosaicCompareDataItem,
+} from './Container';
 import { Debug, DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicDragOverlay, MosaicDragOverlayProps } from './DragOverlay';
@@ -62,3 +69,9 @@ export type MosaicTileProps<
 export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = NaturalMosaicTileComponent<TData>;
 
 export type MosaicDebugProps = DebugProps;
+
+export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
+export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
+export type MosaicOperation = NaturalMosaicOperation;
+
+export type MosaicCompareDataItem = NaturalMosaicCompareDataItem;

@@ -2,50 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useMosaic } from './useMosaic';
-import { CompareMosaicDataItem, MosaicDataItem } from '../types';
-import { Path } from '../util';
+import { useContainer } from './useContainer';
+import { MosaicDataItem } from '../types';
 
 /**
- * Returns a spliced collection of items including a placeholder if items that could drop,
- * and removing any item that is currently being dragged out.
+ * Returns a sorted collection of items if a compare function is provided.
  */
-export const useSortedItems = <T extends MosaicDataItem>({
-  path,
-  items,
-  compare,
-}: {
-  path: string;
-  items: T[];
-  compare?: CompareMosaicDataItem;
-}): T[] => {
-  const { activeItem, overItem } = useMosaic();
-
-  // Insert placeholder item being dragged in.
-  // TODO(burdon): This currently isn't animated (e.g., dragging into new kanban column vs. same column).
-  if (
-    // Item is being dragged
-    activeItem &&
-    // From a different path
-    !Path.hasChild(path, activeItem.path) &&
-    // Over an item
-    overItem &&
-    // Which is this item (but only if it's not a sibling of the active item which indicates a reorder)
-    ((path === overItem.path && Path.parent(activeItem.path) !== Path.parent(overItem.path)) ||
-      // Or which is a child of this item
-      Path.hasChild(path, overItem.path))
-  ) {
-    const sortedItems = compare ? [...items].sort(compare) : [...items];
-    const position = path === overItem.path ? sortedItems.length : (overItem.position as number);
-    sortedItems.splice(position, 0, activeItem.item as T);
-    return sortedItems;
-  }
-
-  // Remove item being dragged out.
-  if (activeItem && Path.hasChild(path, activeItem.path) && overItem && !Path.hasChild(path, overItem.path)) {
-    const filteredItems = items.filter((item) => item.id !== activeItem.item.id);
-    return compare ? filteredItems.sort(compare) : filteredItems;
-  }
-
+export const useSortedItems = <T extends MosaicDataItem>(items: T[]): T[] => {
+  const { compare } = useContainer();
   return compare ? [...items].sort(compare) : items;
 };
