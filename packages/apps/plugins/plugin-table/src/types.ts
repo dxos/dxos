@@ -21,5 +21,5 @@ export type TableProvides = {};
 export type TablePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && TableType.type.name === object.__typename;
+  return isTypedObject(object) && TableType.schema.typename === object.__typename;
 };

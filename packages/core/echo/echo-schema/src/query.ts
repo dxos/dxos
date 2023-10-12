@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 
-import { EchoObject } from './object';
+import { EchoObject } from './defs';
 import { createSignal } from './signal';
 import { isTypedObject, TypedObject } from './typed-object';
 

@@ -6,12 +6,12 @@ import { Command, Config as OclifConfig, Flags, Interfaces } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
-import fs from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon } from '@dxos/agent';
+import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -48,6 +48,8 @@ import {
   selectSpace,
   waitForSpace,
 } from './util';
+
+const STDIN_TIMEOUT = 100;
 
 // Set config if not overridden by env.
 log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
@@ -132,7 +134,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }),
   };
 
-  private readonly _stdin?: string;
   private _clientConfig?: Config;
   private _client?: Client;
   private _startTime: Date;
@@ -146,22 +147,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
 
-    try {
-      this._stdin = fs.readFileSync(0, 'utf8');
-    } catch (err) {
-      this._stdin = undefined;
-    }
-
     this._startTime = new Date();
   }
 
   get clientConfig() {
     invariant(this._clientConfig);
     return this._clientConfig!;
-  }
-
-  get stdin() {
-    return this._stdin;
   }
 
   get duration() {
@@ -191,6 +182,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Load user config file.
     await this._loadConfig();
+  }
+
+  async readStdin(): Promise<string> {
+    return new Promise<string>((resolve) => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: process.stdin.isTTY,
+      });
+
+      const inputLines: string[] = [];
+      rl.on('line', (line) => inputLines.push(line));
+      rl.on('close', () => resolve(inputLines.join('\n')));
+      setTimeout(() => rl.close(), STDIN_TIMEOUT);
+    });
   }
 
   private async _initTelemetry() {
@@ -322,7 +328,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
     } else if (err instanceof AgentIsNotStartedByCLIError) {
       this.logToStderr(
-        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually.`,
+        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually or as a system daemon.`,
       );
     } else {
       // Handle unknown errors with default method.
@@ -357,7 +363,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile, { config: this.flags.config });
         }
-      });
+      }, false);
     }
   }
 
@@ -441,8 +447,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Convenience function to wrap starting the agent.
    */
-  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new PhoenixDaemon(DX_RUNTIME);
+  async execWithDaemon<T>(
+    callback: (daemon: Daemon) => Promise<T | undefined>,
+    system: boolean,
+  ): Promise<T | undefined> {
+    const daemon = system ? new SystemDaemon(DX_RUNTIME) : new PhoenixDaemon(DX_RUNTIME);
+
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();

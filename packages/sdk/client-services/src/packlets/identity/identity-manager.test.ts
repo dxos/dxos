@@ -151,4 +151,16 @@ describe('identity/identity-manager', () => {
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)).to.exist;
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
+
+  test('sets device profile', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const peer = await setupPeer({ signalContext });
+    const identity = await peer.identityManager.createIdentity();
+
+    // Note: Waiting for device profile credential to be processed.
+    await identity.stateUpdate.waitForCount(1);
+
+    expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
+  });
 });

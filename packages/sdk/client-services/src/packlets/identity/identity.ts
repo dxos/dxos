@@ -20,10 +20,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { trace } from '@dxos/tracing';
-import { ComplexSet } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
 
@@ -57,6 +57,8 @@ export class Identity {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
+    log.trace('dxos.halo.device', { deviceKey });
+
     this._deviceStateMachine = new DeviceStateMachine({
       identityKey: this.identityKey,
       deviceKey: this.deviceKey,
@@ -68,14 +70,14 @@ export class Identity {
     });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
-      trustedKeysProvider: () => this.authorizedDeviceKeys,
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, this.authorizedDeviceKeys.keys()),
       update: this.stateUpdate,
       authTimeout: AUTH_TIMEOUT,
     });
   }
 
   // TODO(burdon): Expose state object?
-  get authorizedDeviceKeys(): ComplexSet<PublicKey> {
+  get authorizedDeviceKeys(): ComplexMap<PublicKey, DeviceProfileDocument> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 

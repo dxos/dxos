@@ -99,7 +99,7 @@ export class TestBuilder {
       };
     }
     if (this._transport !== TransportKind.MEMORY) {
-      log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+      // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
     }
 
     // Memory transport with shared context.

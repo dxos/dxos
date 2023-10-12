@@ -19,7 +19,7 @@ export default class Add extends BaseCommand<typeof Add> {
   async run(): Promise<any> {
     let { credential: credentialHex } = this.args;
     if (!credentialHex) {
-      credentialHex = await this.stdin;
+      credentialHex = await this.readStdin();
     }
 
     invariant(credentialHex, 'Invalid credential.');

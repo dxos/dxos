@@ -336,7 +336,7 @@ describe('identity/identity', () => {
       await identity2.ready();
     }
 
-    expect(Array.from(identity1.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
-    expect(Array.from(identity2.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
+    expect(Array.from(identity1.authorizedDeviceKeys.keys())).toEqual([identity1.deviceKey, identity2.deviceKey]);
+    expect(Array.from(identity2.authorizedDeviceKeys.keys())).toEqual([identity1.deviceKey, identity2.deviceKey]);
   });
 });
