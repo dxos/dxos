@@ -33,8 +33,7 @@ export const App = () => {
             task.completed = true;
           }}
         >
-          {task.title} - {task.completedp}
-          rttyp
+          {task.title} - {task.completed}
         </div>
       ))}
       <button
@@ -100,7 +99,7 @@ export const App = () => {
         </div>
       ))}
       <button
-        name="add"
+        name='add'
         onClick={() => {
           const task = new Task({ title: 'buy milk' });
           space?.db.add(task);
@@ -120,7 +119,7 @@ root.render(
     }}
   >
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
 ```
 
