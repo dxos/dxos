@@ -112,7 +112,7 @@ describe('Indexing', () => {
       await space.db.flush();
     }
     const index = new Indexing();
-    await index.initialize(client1, services1);
+    await index.initialize({ client: client1, clientServices: services1, plugins: [] });
     await index.open();
     afterTest(() => index.close());
 
