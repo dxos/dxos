@@ -5,8 +5,8 @@
 import { ux } from '@oclif/core';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Client } from '@dxos/client';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { maybeTruncateKey } from './types';
 

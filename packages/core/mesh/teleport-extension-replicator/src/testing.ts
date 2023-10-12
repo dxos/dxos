@@ -4,7 +4,7 @@
 
 import { pipeline } from 'stream';
 
-import { FeedFactory, FeedOptions, FeedStore } from '@dxos/feed-store';
+import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

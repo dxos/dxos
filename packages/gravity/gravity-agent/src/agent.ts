@@ -4,13 +4,13 @@
 
 import { Event } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
-import { ClientServicesProvider, fromHost } from '@dxos/client/services';
-import { Config, ConfigProto } from '@dxos/config';
+import { type ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { Config, type ConfigProto } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
+import { type AgentSpec, type CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 
-import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
+import { type AgentStateMachine, type AgentContext, DummyStateMachine } from './statemachine';
 
 export type AgentParams = {
   config: ConfigProto;

@@ -8,12 +8,12 @@ import waitForExpect from 'wait-for-expect';
 
 import { latch, asyncTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Muxer } from './muxer';
-import { RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port';
 
 const setupPeers = () => {
   const peer1 = new Muxer();

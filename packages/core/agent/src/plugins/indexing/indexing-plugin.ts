@@ -6,14 +6,14 @@ import MiniSearch from 'minisearch';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import { PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Query, Subscription, TypedObject } from '@dxos/echo-schema';
+import { type Query, type Subscription, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { SearchRequest, SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';

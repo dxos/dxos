@@ -3,19 +3,19 @@
 //
 
 import { Event } from '@dxos/async';
-import { AuthenticatingInvitation, CancellableInvitation } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
-  AuthenticationRequest,
+  type AuthenticationRequest,
   Invitation,
-  InvitationsService,
+  type InvitationsService,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationProtocol } from './invitation-protocol';
-import { InvitationsHandler } from './invitations-handler';
+import { type InvitationProtocol } from './invitation-protocol';
+import { type InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.

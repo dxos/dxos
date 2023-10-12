@@ -3,7 +3,7 @@
 //
 
 import { useMosaic } from './useMosaic';
-import { CompareMosaicDataItem, MosaicDataItem } from '../types';
+import { type CompareMosaicDataItem, type MosaicDataItem } from '../types';
 import { Path } from '../util';
 
 /**

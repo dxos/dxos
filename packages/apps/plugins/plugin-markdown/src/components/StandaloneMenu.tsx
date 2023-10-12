@@ -3,14 +3,14 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { PropsWithChildren, RefObject } from 'react';
+import React, { type PropsWithChildren, type RefObject } from 'react';
 
 import { Button, DropdownMenu } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
 import { fineButtonDimensions, getSize } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const StandaloneMenu = ({
   model,

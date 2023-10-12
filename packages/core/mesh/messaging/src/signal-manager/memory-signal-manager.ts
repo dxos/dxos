@@ -3,17 +3,17 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { SignalManager } from './signal-manager';
-import { CommandTrace, SignalStatus } from '../signal-client';
+import { type SignalManager } from './signal-manager';
+import { type CommandTrace, type SignalStatus } from '../signal-client';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.

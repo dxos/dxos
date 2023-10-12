@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, forwardRef } from 'react';
 
 import { Avatar, useId, useJdenticonHref } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';

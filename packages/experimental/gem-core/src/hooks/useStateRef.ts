@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from 'react';
+import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, useState } from 'react';
 
 /**
  * Extension of useState to return an up-to-date reference.

@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Bool, Op, Query } from './query';
+import { Bool, Op, type Query } from './query';
 import { QueryProcessor } from './query-processor';
 
 const q1: Query = {

@@ -3,15 +3,15 @@
 //
 
 import { Box } from 'ink';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { InvitationEncoder, Invitation } from '@dxos/react-client/invitations';
 
 import { SpaceInfo } from '../echo';
-import { ActionStatus, StatusState, TextInput, Panel } from '../util';
+import { ActionStatus, type StatusState, TextInput, Panel } from '../util';
 
 export const Join: FC<{
   onJoin?: (spaceKey: PublicKey) => void;

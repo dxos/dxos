@@ -7,13 +7,13 @@ import { log } from '@dxos/log';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
-  SignalManager,
+  type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TestWireProtocol, type TestTeleportExtensionFactory } from './test-wire-protocol';
@@ -21,7 +21,7 @@ import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
-  TransportFactory,
+  type TransportFactory,
   SimplePeerTransportProxyFactory,
   SimplePeerTransportService,
   createSimplePeerTransportFactory,

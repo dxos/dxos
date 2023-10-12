@@ -5,24 +5,24 @@
 import chalk from 'chalk';
 import path from 'node:path';
 import readDir from 'recursive-readdir';
-import { ZodObject, ZodObjectDef, ZodType } from 'zod';
+import { ZodObject, type ZodObjectDef, ZodType } from 'zod';
 
 import { executeFileTemplate } from './FileTemplate';
 import { Plate } from './api';
-import { Effect } from './util/effect';
-import { FileEffect, Path } from './util/file';
+import { type Effect } from './util/effect';
+import { FileEffect, type Path } from './util/file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
-import { LoadModuleOptions } from './util/loadModule';
+import { type LoadModuleOptions } from './util/loadModule';
 import { logger } from './util/logger';
 import { runPromises } from './util/runPromises';
 import {
-  Template,
-  FileResults,
-  Context,
+  type Template,
+  type FileResults,
+  type Context,
   TEMPLATE_FILE_IGNORE,
   results,
   isTemplateFile,
-  Options,
+  type Options,
 } from './util/template';
 
 export const BASENAME = 'template.t';

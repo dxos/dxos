@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, PropsWithChildren } from 'react';
+import React, { createContext, type PropsWithChildren } from 'react';
 
-import { Density } from '@dxos/aurora-types';
+import { type Density } from '@dxos/aurora-types';
 
 export interface DensityContextValue {
   density?: Density;

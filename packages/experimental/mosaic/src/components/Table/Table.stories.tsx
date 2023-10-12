@@ -8,9 +8,9 @@ import React, { useState } from 'react';
 
 import { range } from '@dxos/util';
 
-import { Table, TableColumn } from './Table';
-import { Item } from '../../layout';
-import { createItem, SeedDecorator, TestData } from '../../testing';
+import { Table, type TableColumn } from './Table';
+import { type Item } from '../../layout';
+import { createItem, SeedDecorator, type TestData } from '../../testing';
 
 const num = 8;
 

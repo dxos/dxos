@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AgentEnv } from './env';
+import { type AgentEnv } from './env';
 
 export type TestParams<S> = {
   testId: string;

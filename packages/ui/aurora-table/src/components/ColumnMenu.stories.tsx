@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { ColumnPanel } from './ColumnMenu';
-import { ColumnProps } from '../schema';
+import { type ColumnProps } from '../schema';
 
 export default {
   component: ColumnPanel,

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { Mosaic, MosaicContainerProps, MosaicDataItem, useSortedItems } from '../../mosaic';
+import { Mosaic, type MosaicContainerProps, type MosaicDataItem, useSortedItems } from '../../mosaic';
 
 export type Direction = 'horizontal' | 'vertical';
 

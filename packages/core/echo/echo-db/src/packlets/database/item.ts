@@ -3,15 +3,22 @@
 //
 
 import { Event } from '@dxos/async';
-import { ProtoCodec } from '@dxos/codec-protobuf';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
-import { ItemID } from '@dxos/protocols';
-import { EchoObject, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
+import {
+  type Model,
+  type ModelConstructor,
+  type ModelMeta,
+  type MutationOf,
+  type StateMachine,
+  type StateOf,
+} from '@dxos/model-factory';
+import { type ItemID } from '@dxos/protocols';
+import { EchoObject, type MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { ItemManager } from './item-manager';
-import { MutationInQueue, MutationQueue } from './ordering';
+import { type ItemManager } from './item-manager';
+import { type MutationInQueue, MutationQueue } from './ordering';
 
 /**
  * A globally addressable data item.

@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Grid, GridLayout, GridProps } from './Grid';
-import { Position } from './layout';
-import { MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
+import { Grid, type GridLayout, type GridProps } from './Grid';
+import { type Position } from './layout';
+import { type MosaicDataItem, type MosaicMoveEvent } from '../../mosaic';
 import { ComplexCard, TestObjectGenerator } from '../../testing';
 
 export type DemoGridProps = GridProps & {

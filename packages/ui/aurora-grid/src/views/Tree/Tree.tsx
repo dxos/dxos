@@ -8,14 +8,14 @@ import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxo
 import { dropRing, mx } from '@dxos/aurora-theme';
 
 import {
-  MosaicContainerProps,
+  type MosaicContainerProps,
   Mosaic,
-  MosaicDataItem,
-  MosaicTileComponent,
+  type MosaicDataItem,
+  type MosaicTileComponent,
   useContainer,
   useMosaic,
   Path,
-  CompareMosaicDataItem,
+  type CompareMosaicDataItem,
   useSortedItems,
 } from '../../mosaic';
 

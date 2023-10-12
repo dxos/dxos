@@ -4,12 +4,12 @@
 
 import { useDraggable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React, { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
+import React, { type ForwardRefExoticComponent, type HTMLAttributes, type RefAttributes } from 'react';
 
-import { MosaicTileOverlayProps } from './Container';
+import { type MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
-import { CompareMosaicDataItem, MosaicDataItem, MosaicDraggedItem } from './types';
+import { type CompareMosaicDataItem, type MosaicDataItem, type MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
 /**

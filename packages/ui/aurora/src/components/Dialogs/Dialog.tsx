@@ -4,27 +4,27 @@
 
 import { createContext } from '@radix-ui/react-context';
 import {
-  DialogProps as DialogRootPrimitiveProps,
+  type DialogProps as DialogRootPrimitiveProps,
   Root as DialogRootPrimitive,
   DialogTrigger as DialogTriggerPrimitive,
-  DialogTriggerProps as DialogTriggerPrimitiveProps,
+  type DialogTriggerProps as DialogTriggerPrimitiveProps,
   DialogPortal as DialogPortalPrimitive,
-  DialogPortalProps as DialogPortalPrimitiveProps,
+  type DialogPortalProps as DialogPortalPrimitiveProps,
   DialogOverlay as DialogOverlayPrimitive,
-  DialogOverlayProps as DialogOverlayPrimitiveProps,
+  type DialogOverlayProps as DialogOverlayPrimitiveProps,
   DialogTitle as DialogTitlePrimitive,
-  DialogTitleProps as DialogTitlePrimitiveProps,
+  type DialogTitleProps as DialogTitlePrimitiveProps,
   DialogDescription as DialogDescriptionPrimitive,
-  DialogDescriptionProps as DialogDescriptionPrimitiveProps,
+  type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
   DialogClose as DialogClosePrimitive,
-  DialogCloseProps as DialogClosePrimitiveProps,
+  type DialogCloseProps as DialogClosePrimitiveProps,
   DialogContent as DialogContentPrimitive,
-  DialogContentProps as DialogContentPrimitiveProps,
+  type DialogContentProps as DialogContentPrimitiveProps,
 } from '@radix-ui/react-dialog';
-import React, { forwardRef, ForwardRefExoticComponent, FunctionComponent } from 'react';
+import React, { forwardRef, type ForwardRefExoticComponent, type FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 type DialogRootProps = DialogRootPrimitiveProps;

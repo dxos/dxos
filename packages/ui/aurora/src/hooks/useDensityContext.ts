@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { Density } from '@dxos/aurora-types';
+import { type Density } from '@dxos/aurora-types';
 
 import { DensityContext } from '../components';
 

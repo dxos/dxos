@@ -7,7 +7,7 @@
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
+import { getContextFromEntry, log, LogLevel, type LogProcessor } from '@dxos/log';
 import { humanize } from '@dxos/util';
 
 import { setTag, setTags } from './node';

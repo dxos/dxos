@@ -3,13 +3,13 @@
 //
 
 import { scheduleTask } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client-protocol';
+import { type Client, PublicKey } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';

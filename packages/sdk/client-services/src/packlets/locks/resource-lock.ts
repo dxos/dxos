@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 export type ResourceLockOptions = {
   lockKey: string;

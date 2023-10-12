@@ -6,9 +6,9 @@
 
 import { TestStream } from '@dxos/async';
 import { schema } from '@dxos/protocols';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SimplePeerTransportProxy } from './simplepeer-transport-proxy';

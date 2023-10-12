@@ -5,8 +5,8 @@
 import { deepSignal } from 'deepsignal/react';
 import get from 'lodash.get';
 
-import { Label } from './action';
-import { Node } from './node';
+import { type Label } from './action';
+import { type Node } from './node';
 
 export type TraversalOptions = {
   /**

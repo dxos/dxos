@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
-import { ItemConstructionOptions, ItemManager } from './item-manager';
+import { type ItemConstructionOptions, ItemManager } from './item-manager';
 
 describe('ItemManager', () => {
   describe('basic', () => {

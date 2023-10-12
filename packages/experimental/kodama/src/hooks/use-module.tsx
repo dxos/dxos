@@ -3,7 +3,7 @@
 //
 
 import { useFocus } from 'ink';
-import React, { FC, ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
+import React, { type FC, type ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 // Currently active path.
 type ModuleState = string;

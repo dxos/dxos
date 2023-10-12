@@ -3,7 +3,7 @@
 //
 
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
-import React, { FC, ReactNode, useState } from 'react';
+import React, { type FC, type ReactNode, useState } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 

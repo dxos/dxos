@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Signal } from '@preact/signals-core';
-import { DeepSignal, deepSignal } from 'deepsignal';
+import { type Signal } from '@preact/signals-core';
+import { type DeepSignal, deepSignal } from 'deepsignal';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 

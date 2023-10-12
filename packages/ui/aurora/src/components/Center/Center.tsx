@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { DetailedHTMLProps, PropsWithChildren, HTMLAttributes } from 'react';
+import React, { type DetailedHTMLProps, type PropsWithChildren, type HTMLAttributes } from 'react';
 
 export type CenterProps = PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>>;
 

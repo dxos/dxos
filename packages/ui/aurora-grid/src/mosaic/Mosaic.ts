@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FC } from 'react';
+import { type FC } from 'react';
 
-import { MosaicContainer, MosaicContainerProps as NaturalMosaicContainerProps } from './Container';
-import { Debug, DebugProps } from './Debug';
+import { MosaicContainer, type MosaicContainerProps as NaturalMosaicContainerProps } from './Container';
+import { Debug, type DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
-import { MosaicDragOverlay, MosaicDragOverlayProps } from './DragOverlay';
-import { MosaicRoot, MosaicRootProps as NaturalMosaicRootProps } from './Root';
-import { MosaicSortableContext, MosaicSortableProps as NaturalMosaicSortableProps } from './SortableContext';
+import { MosaicDragOverlay, type MosaicDragOverlayProps } from './DragOverlay';
+import { MosaicRoot, type MosaicRootProps as NaturalMosaicRootProps } from './Root';
+import { MosaicSortableContext, type MosaicSortableProps as NaturalMosaicSortableProps } from './SortableContext';
 import {
   DraggableTile,
   SortableTile,
-  MosaicTileProps as NaturalMosaicTileProps,
-  MosaicTileComponent as NaturalMosaicTileComponent,
+  type MosaicTileProps as NaturalMosaicTileProps,
+  type MosaicTileComponent as NaturalMosaicTileComponent,
 } from './Tile';
-import { MosaicDataItem } from './types';
+import { type MosaicDataItem } from './types';
 
 export const Mosaic = {
   Root: MosaicRoot,

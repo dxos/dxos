@@ -15,7 +15,7 @@ import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-import { ComposerModel } from '../model';
+import { type ComposerModel } from '../model';
 import { cursorColor } from '../yjs';
 
 type Awareness = awarenessProtocol.Awareness;

@@ -9,14 +9,14 @@ import { MyKey } from './my-key';
 import { schema } from './proto';
 import {
   ComplexFields,
-  OptionalScalars,
-  Outer,
-  Scalars,
-  TaskList,
+  type OptionalScalars,
+  type Outer,
+  type Scalars,
+  type TaskList,
   TaskType,
-  WithTimestamp,
+  type WithTimestamp,
 } from './proto/gen/example/testing/types';
-import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
+import { type Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 
 // TODO(burdon): Remove foo, bar, etc.
 

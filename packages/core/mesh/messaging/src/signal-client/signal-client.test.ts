@@ -5,10 +5,10 @@
 import { expect, mockFn } from 'earljs';
 
 import { sleep, Event, Trigger, asyncTimeout } from '@dxos/async';
-import { Any, TaggedType } from '@dxos/codec-protobuf';
+import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { TYPES } from '@dxos/protocols';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { type TYPES } from '@dxos/protocols';
+import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { SignalClient } from './signal-client';

@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useSortable } from '@dnd-kit/sortable';
-import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
+import { type useSortable } from '@dnd-kit/sortable';
+import { type ComponentPropsWithoutRef, type FC, type PropsWithChildren, type RefAttributes } from 'react';
 
-import { TileProps } from '.';
-import { EventHandler } from '../dnd';
+import { type TileProps } from '.';
+import { type EventHandler } from '../dnd';
 
 //
 // Delegator

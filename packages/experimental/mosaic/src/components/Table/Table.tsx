@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { MutableRefObject, useMemo } from 'react';
-import { CellProps, Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
+import React, { type MutableRefObject, useMemo } from 'react';
+import { type CellProps, type Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
 import { mx } from '@dxos/aurora-theme';
 

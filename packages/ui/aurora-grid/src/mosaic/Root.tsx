@@ -3,15 +3,15 @@
 //
 
 import {
-  CollisionDetection,
+  type CollisionDetection,
   DndContext,
-  DragCancelEvent,
-  DragEndEvent,
-  DragMoveEvent,
-  DragOverEvent,
-  DragStartEvent,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragMoveEvent,
+  type DragOverEvent,
+  type DragStartEvent,
   KeyboardSensor,
-  Modifier,
+  type Modifier,
   MouseSensor,
   pointerWithin,
   rectIntersection,
@@ -21,14 +21,14 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import pick from 'lodash.pick';
-import React, { createContext, FC, PropsWithChildren, useState } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { MosaicContainerProps } from './Container';
+import { type MosaicContainerProps } from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
-import { MosaicTileComponent } from './Tile';
-import { MosaicDraggedItem } from './types';
+import { type MosaicTileComponent } from './Tile';
+import { type MosaicDraggedItem } from './types';
 import { Path } from './util';
 
 const DEFAULT_COMPONENT_ID = '__default';

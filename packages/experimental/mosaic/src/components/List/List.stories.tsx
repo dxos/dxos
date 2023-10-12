@@ -11,8 +11,8 @@ import { getSize } from '@dxos/aurora-theme';
 import { range } from '@dxos/util';
 
 import { List, ListItem, IconButton, ListItemText } from './List';
-import { Item } from '../../layout';
-import { createItem, SeedDecorator, TestData } from '../../testing';
+import { type Item } from '../../layout';
+import { createItem, SeedDecorator, type TestData } from '../../testing';
 
 const num = 20;
 

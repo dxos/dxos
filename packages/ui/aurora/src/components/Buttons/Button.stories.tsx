@@ -5,11 +5,11 @@
 import '@dxosTheme';
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 
-import { Button, ButtonGroup, ButtonProps } from './Button';
+import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 

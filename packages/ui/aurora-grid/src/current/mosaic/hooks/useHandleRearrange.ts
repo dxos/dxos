@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent } from '@dnd-kit/core';
+import { type DragEndEvent } from '@dnd-kit/core';
 import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';

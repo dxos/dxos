@@ -4,8 +4,8 @@
 
 import React, { useRef, useState } from 'react';
 
-import { Stack, StackProps } from './Stack';
-import { MosaicDataItem, MosaicMoveEvent, Path } from '../../mosaic';
+import { Stack, type StackProps } from './Stack';
+import { type MosaicDataItem, type MosaicMoveEvent, Path } from '../../mosaic';
 import { TestObjectGenerator } from '../../testing';
 
 export type DemoStackProps = StackProps & {

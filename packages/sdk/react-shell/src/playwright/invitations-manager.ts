@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Invitation } from '@dxos/react-client/invitations';
+import { type Invitation } from '@dxos/react-client/invitations';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test/playwright';
 

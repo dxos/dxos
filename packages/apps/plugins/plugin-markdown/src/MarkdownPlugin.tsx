@@ -5,20 +5,25 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React, { FC, MutableRefObject, RefCallback, useCallback } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { Node } from '@braneframe/plugin-graph';
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { type DndPluginProvides } from '@braneframe/plugin-dnd';
+import { type Node } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
+import {
+  type ComposerModel,
+  type MarkdownComposerProps,
+  type MarkdownComposerRef,
+  useTextModel,
+} from '@dxos/aurora-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
 
 import {
   EditorMain,
@@ -34,9 +39,9 @@ import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
   MarkdownAction,
-  MarkdownPluginProvides,
-  MarkdownProperties,
-  MarkdownSettingsProps,
+  type MarkdownPluginProvides,
+  type MarkdownProperties,
+  type MarkdownSettingsProps,
 } from './types';
 import {
   documentToGraphNode,

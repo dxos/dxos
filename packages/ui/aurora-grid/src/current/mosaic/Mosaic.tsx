@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverlay } from '@dnd-kit/core';
-import React, { PropsWithChildren, useCallback } from 'react';
+import { type DragEndEvent, DragOverlay } from '@dnd-kit/core';
+import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { List, useId } from '@dxos/aurora';
 
 import {
   MosaicContext,
   MosaicRootContext,
-  MosaicRootContextValue,
+  type MosaicRootContextValue,
   useDragEnd,
   useDragOver,
   useDragStart,
@@ -22,8 +22,8 @@ import {
   useHandleMigrateDragStart,
   useHandleRearrangeDragEnd,
   useMosaic,
+  type MosaicContextValue,
 } from './hooks';
-import type { MosaicContextValue } from './hooks';
 import { MosaicDndProvider, dropAnimations, useMosaicDnd } from '../dnd';
 import { Tile } from '../tile';
 

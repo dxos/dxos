@@ -5,11 +5,15 @@
 import get from 'lodash.get';
 
 import { invariant } from '@dxos/invariant';
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { type ModelMeta, Model, type StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import {
+  ObjectMutation,
+  type ObjectMutationSet,
+  type ObjectSnapshot,
+} from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
+import { type DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';

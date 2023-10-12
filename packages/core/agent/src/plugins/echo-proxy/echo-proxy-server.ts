@@ -3,7 +3,7 @@
 //
 
 import express from 'express';
-import http from 'http';
+import type http from 'http';
 
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';

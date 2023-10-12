@@ -9,7 +9,7 @@ import { createModelMutation, DatabaseProxy, encodeModelMutation, genesisMutatio
 import { TestBuilder as FeedTestBuilder } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
 import { createMappedFeedWriter } from '../common';

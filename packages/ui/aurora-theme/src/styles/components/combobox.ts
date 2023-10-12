@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
+import { type ComponentFunction, type Elevation, type Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import { chromeSurface, inputSurface, surfaceElevation } from '../fragments';

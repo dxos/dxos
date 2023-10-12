@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from './context';
+import { type Context } from './context';
 import { ContextDisposedError } from './context-disposed';
 
 /**

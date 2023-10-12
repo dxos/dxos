@@ -6,13 +6,13 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { sortByIndex } from '@tldraw/indices';
-import { DeepSignal } from 'deepsignal';
+import { type DeepSignal } from 'deepsignal';
 import React, { forwardRef } from 'react';
 
 import { Tree, TreeItem as AuroraTreeItem } from '@dxos/aurora';
 
 import { useMosaicDnd } from '../../dnd';
-import { TileProps, useMosaic } from '../../mosaic';
+import { type TileProps, useMosaic } from '../../mosaic';
 
 export type TreeItemTileProps = TileProps & {
   // Overrides

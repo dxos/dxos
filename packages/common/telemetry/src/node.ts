@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { tags } from './tags';
-import { EventOptions, InitOptions, PageOptions } from './types';
+import { type EventOptions, type InitOptions, type PageOptions } from './types';
 
 let analytics: Analytics | undefined;
 

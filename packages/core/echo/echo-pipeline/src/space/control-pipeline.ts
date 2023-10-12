@@ -4,20 +4,20 @@
 
 import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
-import { FeedWrapper } from '@dxos/feed-store';
+import { SpaceStateMachine, type SpaceState, type MemberInfo, type FeedInfo } from '@dxos/credentials';
+import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessageBlock } from '@dxos/protocols';
+import { type FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
-import { AsyncCallback, Callback, tracer } from '@dxos/util';
+import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
-import { MetadataStore } from '../metadata';
-import { Pipeline, PipelineAccessor } from '../pipeline';
+import { type MetadataStore } from '../metadata';
+import { Pipeline, type PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;

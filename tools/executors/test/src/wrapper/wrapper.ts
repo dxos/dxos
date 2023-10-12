@@ -2,9 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsyncFunc, Func, HookFunction, TestFunction as NaturalTestFunction, SuiteFunction } from 'mocha';
+import {
+  type AsyncFunc,
+  type Func,
+  type HookFunction,
+  type TestFunction as NaturalTestFunction,
+  type SuiteFunction,
+} from 'mocha';
 
-import { TestEnvironment } from '../types';
+import { type TestEnvironment } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mocha = require('mocha/lib/mocha');

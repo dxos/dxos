@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 export const FILE_DEFAULTS = 'defaults.yml';
 export const FILE_ENVS = 'envs-map.yml';

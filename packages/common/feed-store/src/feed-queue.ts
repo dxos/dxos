@@ -11,8 +11,8 @@ import type { ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { FeedWrapper } from './feed-wrapper';
-import { FeedBlock } from './types';
+import { type FeedWrapper } from './feed-wrapper';
+import { type FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.

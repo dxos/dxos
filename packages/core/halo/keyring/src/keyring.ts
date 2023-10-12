@@ -3,14 +3,14 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { ProtoCodec } from '@dxos/codec-protobuf';
-import { subtleCrypto, Signer } from '@dxos/crypto';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
+import { subtleCrypto, type Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');

@@ -3,25 +3,25 @@
 //
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { FeedInfo } from '@dxos/credentials';
-import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
+import { type Context } from '@dxos/context';
+import { type FeedInfo } from '@dxos/credentials';
+import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
+import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { AsyncCallback, Callback } from '@dxos/util';
+import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
-import { SpaceProtocol } from './space-protocol';
-import { SnapshotManager } from '../db-host';
-import { MetadataStore } from '../metadata';
-import { PipelineAccessor } from '../pipeline';
+import { type SpaceProtocol } from './space-protocol';
+import { type SnapshotManager } from '../db-host';
+import { type MetadataStore } from '../metadata';
+import { type PipelineAccessor } from '../pipeline';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;

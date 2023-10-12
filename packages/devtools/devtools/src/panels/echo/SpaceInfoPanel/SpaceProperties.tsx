@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { Timeframe } from '@dxos/timeframe';
 

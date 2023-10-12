@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
+import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
-import { SpaceProxy, TypedObject } from '@dxos/client/echo';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection } from './components';
 import translations from './translations';
-import { isFile, IPFS_PLUGIN, IpfsPluginProvides } from './types';
+import { isFile, IPFS_PLUGIN, type IpfsPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {

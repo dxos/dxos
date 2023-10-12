@@ -3,14 +3,19 @@
 //
 
 import { Event } from '@dxos/async';
-import { DEFAULT_SHELL_CHANNEL, ShellServiceBundle, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
-import { PublicKey } from '@dxos/keys';
+import {
+  DEFAULT_SHELL_CHANNEL,
+  type ShellServiceBundle,
+  appServiceBundle,
+  shellServiceBundle,
+} from '@dxos/client-protocol';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AppContextRequest, LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type AppContextRequest, type LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { IFrameManager } from './iframe-manager';
+import { type IFrameManager } from './iframe-manager';
 
 const shellStyles = Object.entries({
   display: 'none',

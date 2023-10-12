@@ -2,45 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, IconWeight, Minus } from '@phosphor-icons/react';
+import { Check, type IconWeight, Minus } from '@phosphor-icons/react';
 import {
   Root as CheckboxPrimitive,
-  CheckboxProps as CheckboxPrimitiveProps,
+  type CheckboxProps as CheckboxPrimitiveProps,
   Indicator as CheckboxIndicatorPrimitive,
 } from '@radix-ui/react-checkbox';
 import {
   Root as SwitchPrimitive,
   Thumb as SwitchThumbPrimitive,
-  SwitchProps as SwitchPrimitiveProps,
+  type SwitchProps as SwitchPrimitiveProps,
 } from '@radix-ui/react-switch';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { forwardRef, ForwardRefExoticComponent, Fragment, useCallback } from 'react';
+import React, { forwardRef, type ForwardRefExoticComponent, Fragment, useCallback } from 'react';
 
-import { Density, Elevation, ClassNameValue, Size } from '@dxos/aurora-types';
+import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/aurora-types';
 import {
   InputRoot,
-  InputRootProps,
+  type InputRootProps,
   PinInput as PinInputPrimitive,
-  PinInputProps as PinInputPrimitiveProps,
+  type PinInputProps as PinInputPrimitiveProps,
   TextInput as TextInputPrimitive,
-  TextInputProps as TextInputPrimitiveProps,
+  type TextInputProps as TextInputPrimitiveProps,
   TextArea as TextAreaPrimitive,
-  TextAreaProps as TextAreaPrimitiveProps,
+  type TextAreaProps as TextAreaPrimitiveProps,
   useInputContext,
   INPUT_NAME,
-  InputScopedProps,
+  type InputScopedProps,
   Description as DescriptionPrimitive,
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
-  DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
-  DescriptionProps as DescriptionPrimitiveProps,
+  type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
+  type DescriptionProps as DescriptionPrimitiveProps,
   Label as LabelPrimitive,
-  LabelProps as LabelPrimitiveProps,
+  type LabelProps as LabelPrimitiveProps,
   Validation as ValidationPrimitive,
-  ValidationProps as ValidationPrimitiveProps,
+  type ValidationProps as ValidationPrimitiveProps,
 } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type InputVariant = 'default' | 'subdued';
 

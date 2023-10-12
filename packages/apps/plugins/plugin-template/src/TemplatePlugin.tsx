@@ -7,12 +7,12 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import { TemplateMain } from './components';
 import translations from './translations';
-import { isObject, TEMPLATE_PLUGIN, TemplateAction, TemplatePluginProvides } from './types';
+import { isObject, TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.

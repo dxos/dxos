@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesProvider } from '@dxos/client-protocol';
-import { Config, ConfigProto } from '@dxos/config';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { type Config, type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 
 import { fromSocket } from './socket';

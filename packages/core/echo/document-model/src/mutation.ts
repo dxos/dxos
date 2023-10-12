@@ -9,11 +9,11 @@ import set from 'lodash.set';
 
 import { invariant } from '@dxos/invariant';
 import {
-  KeyValue,
+  type KeyValue,
   ObjectMutation,
-  ObjectMutationSet,
-  KeyValueObject,
-  Value,
+  type ObjectMutationSet,
+  type KeyValueObject,
+  type Value,
 } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { OrderedArray } from './ordered-array';

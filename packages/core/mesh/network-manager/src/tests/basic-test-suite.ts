@@ -12,7 +12,7 @@ import { afterTest, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
-import { TestBuilder } from '../testing';
+import { type TestBuilder } from '../testing';
 import { FullyConnectedTopology, StarTopology } from '../topology';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)

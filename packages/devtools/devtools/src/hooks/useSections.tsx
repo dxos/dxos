@@ -12,7 +12,7 @@ import {
   Graph,
   HardDrive,
   HardDrives,
-  Icon,
+  type Icon,
   IdentificationBadge,
   Key,
   Planet,

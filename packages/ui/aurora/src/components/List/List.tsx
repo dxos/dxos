@@ -4,22 +4,22 @@
 
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
+import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
 
-import { Density } from '@dxos/aurora-types';
+import { type Density } from '@dxos/aurora-types';
 import {
   List as ListPrimitive,
-  ListProps as ListPrimitiveProps,
-  ListScopedProps,
+  type ListProps as ListPrimitiveProps,
+  type ListScopedProps,
   ListItemHeading as ListPrimitiveItemHeading,
-  ListItemHeadingProps as ListPrimitiveItemHeadingProps,
+  type ListItemHeadingProps as ListPrimitiveItemHeadingProps,
   ListItemOpenTrigger as ListPrimitiveItemOpenTrigger,
-  ListItemOpenTriggerProps as ListPrimitiveItemOpenTriggerProps,
+  type ListItemOpenTriggerProps as ListPrimitiveItemOpenTriggerProps,
   ListItemCollapsibleContent,
-  ListItemCollapsibleContentProps,
+  type ListItemCollapsibleContentProps,
   ListItem as ListPrimitiveItem,
-  ListItemProps as ListPrimitiveItemProps,
-  ListItemScopedProps,
+  type ListItemProps as ListPrimitiveItemProps,
+  type ListItemScopedProps,
   LIST_NAME,
   LIST_ITEM_NAME,
   useListContext,
@@ -27,7 +27,7 @@ import {
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 
 type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };

@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { SVGContext } from '../context';

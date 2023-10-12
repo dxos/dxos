@@ -5,12 +5,12 @@
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { Graph, GraphBuilder, Node } from '@braneframe/plugin-graph';
+import { type Graph, GraphBuilder, type Node } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { arrayMove } from '@dxos/util';
 
-import { Tree, TreeData, TreeProps } from './Tree';
-import { MosaicMoveEvent, Path } from '../../mosaic';
+import { Tree, type TreeData, type TreeProps } from './Tree';
+import { type MosaicMoveEvent, Path } from '../../mosaic';
 import { TestObjectGenerator, nextRearrangeIndex } from '../../testing';
 
 const fake = faker.helpers.fake;

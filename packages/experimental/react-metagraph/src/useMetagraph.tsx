@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Context, createContext, FC, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { type Context, createContext, type FC, type ReactNode, useContext, useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Metagraph, MetagraphClient, Query } from '@dxos/metagraph';
-import { Module } from '@dxos/protocols/proto/dxos/config';
+import { type Metagraph, MetagraphClient, type Query } from '@dxos/metagraph';
+import { type Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig } from '@dxos/react-client';
 
 export type MetagraphContextType = {

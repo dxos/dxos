@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { type DragOverEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { batch } from '@preact/signals-core';
-import { DeepSignal } from 'deepsignal';
+import { type DeepSignal } from 'deepsignal';
 
 import { getDndId, parseDndId } from './dnd-id';
 import { getSubtiles } from './get-subtiles';
 import { nextCopyIndex } from './next-index';
-import { DndContextValue } from '../../dnd';
-import { CopyTileAction, MosaicState } from '../types';
+import { type DndContextValue } from '../../dnd';
+import { type CopyTileAction, type MosaicState } from '../types';
 
 export type ManagePreviewArgs = {
   operation: 'migrate' | 'copy';

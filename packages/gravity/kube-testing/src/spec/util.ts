@@ -3,9 +3,9 @@
 //
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { cancelWithContext, type Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { TestSwarmConnection } from '@dxos/network-manager/testing';
+import { type TestSwarmConnection } from '@dxos/network-manager/testing';
 
 type JoinSwarmOptions = {
   context: Context;
