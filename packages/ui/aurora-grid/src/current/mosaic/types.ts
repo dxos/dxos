@@ -5,8 +5,8 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { ComponentPropsWithoutRef, FC, PropsWithChildren, RefAttributes } from 'react';
 
-import { EventHandler } from '../dnd';
 import { TileProps } from '.';
+import { EventHandler } from '../dnd';
 
 //
 // Delegator

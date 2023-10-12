@@ -88,12 +88,12 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
           case 'document-title':
             return TreeViewDocumentTitle;
-            case 'mosaic-delegator':
-              if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
+          case 'mosaic-delegator':
+            if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
               const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
-                return mosaicId === TREE_VIEW_PLUGIN || mosaicId === TREEVIEW_PLUGIN_PREVIEW_ITEM
-                  ? NavTreeItemDelegator
-                  : null;
+              return mosaicId === TREE_VIEW_PLUGIN || mosaicId === TREEVIEW_PLUGIN_PREVIEW_ITEM
+                ? NavTreeItemDelegator
+                : null;
             }
             break;
 
