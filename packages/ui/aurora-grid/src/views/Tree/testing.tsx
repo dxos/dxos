@@ -136,7 +136,7 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
         operation === 'rearrange'
       ) {
         // This is a rearrange operation
-        const nextIndex = nextRearrangeIndex(activeParent.children, activeNode.id, overNode.id);
+        const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
         console.log({ nextIndex });
         activeNode.properties.index = nextIndex ?? 'a0';
       } else if (activeNode && activeParent && overParent && operation === 'adopt') {
