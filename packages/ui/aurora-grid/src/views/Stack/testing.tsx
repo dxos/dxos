@@ -30,7 +30,7 @@ export const DemoStack = ({
 
   const itemsRef = useRef(items);
 
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
     if (behavior === 'reject') {
       return 'reject';

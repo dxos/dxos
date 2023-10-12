@@ -50,6 +50,7 @@ export const Kanban = ({
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
         // Restrict to objects from other columns.
         // TODO(burdon): Consider objects from other containers.
+        // TODO(wittjosiah): Allow override.
         onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'reject'),
         onDrop,
       }}
@@ -64,7 +65,7 @@ export const Kanban = ({
                 path={id}
                 position={index}
                 Component={Component}
-                // debug={debug}
+                debug={debug}
               />
             ))}
           </Mosaic.SortableContext>
@@ -77,7 +78,7 @@ export const Kanban = ({
 const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
   forwardRef((props, ref) => {
     const isColumn = Path.hasRoot(props.path, id) && Path.length(props.path) === 2;
-    if (isColumn && props.isActive) {
+    if (isColumn && props.active === 'overlay') {
       return (
         // Needs to not override the main kanban path.
         <Mosaic.Container {...{ id: `${id}-active`, Component }}>
@@ -90,7 +91,7 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
-  ({ path, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
+  ({ path, item, active, draggableStyle, draggableProps, debug }, forwardRef) => {
     const { id, title, children } = item;
     const { Component } = useContainer();
     const itemsWithPreview = useItemsWithPreview({ path, items: children });
@@ -101,7 +102,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           className={mx(
             groupSurface,
             'grow flex flex-col w-[300px] snap-center overflow-hidden m-1',
-            isDragging && 'opacity-0',
+            active === 'rearrange' && 'opacity-0',
           )}
           style={draggableStyle}
         >

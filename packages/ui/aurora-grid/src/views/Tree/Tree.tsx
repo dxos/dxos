@@ -75,10 +75,7 @@ const TreeRoot = ({ items }: { items: TreeData[] }) => {
  * Pure component that is used by the mosaic overlay.
  */
 const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
-  (
-    { path, draggableStyle, draggableProps, item, operation, isActive, isOver, isDragging, className },
-    forwardedRef,
-  ) => {
+  ({ path, draggableStyle, draggableProps, item, operation, active, isOver, isDragging, className }, forwardedRef) => {
     return (
       <div
         ref={forwardedRef}
@@ -86,8 +83,9 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
         className={mx(
           'flex flex-col rounded',
           className,
-          isDragging && 'opacity-0',
-          isOver && (operation === 'adopt' || operation === 'copy') && dropRing,
+          (active === 'rearrange' || active === 'origin') && 'opacity-0',
+          active === 'destination' && 'opacity-20',
+          isOver && dropRing,
         )}
       >
         <Card.Header>
@@ -95,14 +93,14 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
           <Card.Title title={item.label ?? path} classNames='truncate' />
         </Card.Header>
 
-        {!isActive && !isDragging && item.children && <TreeBranch path={path} items={item.children} />}
+        {!active && item.children && <TreeBranch path={path} items={item.children} />}
       </div>
     );
   },
 );
 
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
-  const { overItem } = useMosaic();
+  const { operation, overItem } = useMosaic();
   const { Component } = useContainer();
   const sortedItems = useSortedItems(items);
 
@@ -117,7 +115,9 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
                 path={path}
                 position={index}
                 Component={Component!}
-                isOver={overItem?.path === Path.create(path, child.id)}
+                isOver={
+                  overItem?.path === Path.create(path, child.id) && (operation === 'adopt' || operation === 'copy')
+                }
               />
             </TreeItemComponent.Root>
           </TreeComponent.Branch>

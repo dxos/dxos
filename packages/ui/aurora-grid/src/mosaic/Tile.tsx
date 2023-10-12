@@ -12,6 +12,8 @@ import { useMosaic } from './hooks';
 import { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
+export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
+
 /**
  * Props passed to mosaic tile.
  */
@@ -23,11 +25,11 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     Component: MosaicTileComponent<TData>;
     path: string;
     item: TData;
-
-    operation?: MosaicOperation;
     position?: TPosition;
-    // TODO(wittjosiah): active?: 'overlay' | 'rearrange' | 'origin' | 'destination';
-    isActive?: boolean;
+    operation?: MosaicOperation;
+    active?: MosaicActiveType;
+
+    // DndKit props.
     isDragging?: boolean;
     isOver?: boolean;
     draggableStyle?: any;
@@ -68,8 +70,8 @@ export const DraggableTile = ({
       ref={setNodeRef}
       item={item}
       path={path}
-      operation={operation}
       position={position}
+      operation={operation}
       isDragging={isDragging}
       draggableStyle={{
         // TODO(burdon): Override by container?
@@ -96,40 +98,34 @@ export const SortableTile = ({
   const { operation, activeItem, overItem } = useMosaic();
   // TODO(wittjosiah): If this is the active item, then use the same id.
   const path = Path.create(parentPath, item.id);
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    isDragging: isDraggingLocal,
-    isOver,
-  } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
     id: path,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
 
-  // TODO(wittjosiah): Use same id for active item to avoid inference.
-  // If not dragging locally but:
-  // - active item id matches AND
-  // - the over path matches THEN
-  // - this tile is being dragged from another path
-  const isDragging =
-    isDraggingLocal ||
-    (operation !== 'reject' &&
-      activeItem?.item.id === item.id &&
-      overItem &&
-      (Path.hasChild(Path.parent(path), overItem.path) ||
-        Path.parent(path) === overItem.path ||
-        path === overItem.path));
+  let active: MosaicActiveType | undefined;
+  if (
+    !isDragging &&
+    operation !== 'reject' &&
+    activeItem &&
+    activeItem.item.id === item.id &&
+    overItem &&
+    (Path.hasChild(Path.parent(path), overItem.path) || Path.parent(path) === overItem.path || path === overItem.path)
+  ) {
+    active = 'destination';
+  } else if (activeItem && activeItem.item.id === item.id) {
+    active = operation === 'rearrange' ? 'rearrange' : 'origin';
+  }
 
   return (
     <Component
       ref={setNodeRef}
       item={item}
       path={path}
-      operation={operation}
       position={position}
+      operation={operation}
+      active={active}
       isDragging={isDragging}
       isOver={isOver}
       draggableStyle={{
