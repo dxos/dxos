@@ -10,7 +10,7 @@ import path from 'node:path';
 import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { LaunchctlRunner, Runner } from './runner';
+import { LaunchctlRunner, SystemctlRunner, Runner } from './runner';
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
@@ -23,10 +23,15 @@ export class SystemDaemon implements Daemon {
   private readonly _runner: Runner;
 
   constructor(private readonly _rootDir: string) {
-    if (platform() === 'darwin') {
-      this._runner = new LaunchctlRunner();
-    } else {
-      throw new Error(`System daemon not implemented for ${platform()} yet.`);
+    switch (platform()) {
+      case 'darwin':
+        this._runner = new LaunchctlRunner();
+        break;
+      case 'linux':
+        this._runner = new SystemctlRunner();
+        break;
+      default:
+        throw new Error(`System daemon not implemented for ${platform()} yet.`);
     }
 
     const dir = path.join(this._rootDir, 'profile');
@@ -79,7 +84,7 @@ export class SystemDaemon implements Daemon {
       await this._runner.start({ profile, errFile, logFile, daemonOptions: options });
 
       try {
-        await waitForAgentToStart(profile);
+        await waitForAgentToStart(profile, options?.timeout);
       } catch (err) {
         log.warn('Failed to start daemon.');
         await this.stop(profile);

@@ -118,6 +118,7 @@ export default class Start extends BaseCommand<typeof Start> {
           config: this.flags.config,
           metrics: this.flags.metrics,
           ws: this.flags.ws,
+          timeout: this.flags.timeout,
         });
         if (process) {
           this.log('Agent started.');

@@ -52,20 +52,16 @@ export default class Reset extends BaseCommand<typeof Reset> {
       !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
 
     if (!dryRun) {
+      await this.execWithDaemon(async (daemon) => {
+        await daemon.stop(this.flags.profile, { force: this.flags.force });
+      }, true);
+
       // TODO(burdon): Problem if running manually.
       await this.execWithDaemon(async (daemon) => {
         if (await daemon.isRunning(this.flags.profile)) {
           await daemon.stop(this.flags.profile, { force: this.flags.force });
         }
       }, false);
-      // TODO(egorgripasov): Better compatibility with Phoenix daemon.
-      try {
-        await this.execWithDaemon(async (daemon) => {
-          if (await daemon.isRunning(this.flags.profile)) {
-            await daemon.stop(this.flags.profile, { force: this.flags.force });
-          }
-        }, true);
-      } catch (err) {}
       if (this.flags.verbose) {
         this.log(chalk`{red Deleting files...}`);
         paths.forEach((path) => this.log(`- ${path}`));
