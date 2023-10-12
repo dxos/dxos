@@ -12,6 +12,7 @@ import {
   MosaicTileComponent,
   useItemsWithPreview,
 } from '@dxos/aurora-grid/next';
+import { mx, textBlockWidth } from '@dxos/aurora-theme';
 
 import { Section } from './Section';
 
@@ -27,7 +28,6 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
 > & {
   Component?: FC<{ data: TData }>;
   items?: TData[];
-  direction?: Direction;
   onRemoveSection?: (id: string) => void;
 };
 
@@ -68,13 +68,15 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
 
   return (
     <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <List>
-        <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
-          {itemsWithPreview.map((item, index) => (
-            <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
-          ))}
-        </Mosaic.SortableContext>
-      </List>
+      <div role='none' className={mx(textBlockWidth, 'p-1')}>
+        <List>
+          <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
+            {itemsWithPreview.map((item, index) => (
+              <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
+            ))}
+          </Mosaic.SortableContext>
+        </List>
+      </div>
     </Mosaic.Container>
   );
 };

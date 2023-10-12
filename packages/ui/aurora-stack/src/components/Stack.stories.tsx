@@ -55,15 +55,18 @@ export type DemoStackProps = StackProps & {
   count?: number;
 };
 
-const DemoStack = ({ id = 'stack', Component, types, count = 8, direction = 'vertical' }: DemoStackProps) => {
+const DemoStack = ({ id = 'stack', Component, types, count = 8 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
     return generator.createObjects({ length: count });
   });
 
-  const handleDrop = ({ active, over }: MosaicDropEvent<number>) => {
+  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
     setItems((items) => {
-      if (active.path === Path.create(id, active.item.id)) {
+      if (
+        active.path === Path.create(id, active.item.id) &&
+        (operation !== 'copy' || over.path === Path.create(id, over.item.id))
+      ) {
         items.splice(active.position!, 1);
       }
       if (over.path === Path.create(id, over.item.id)) {
@@ -73,5 +76,5 @@ const DemoStack = ({ id = 'stack', Component, types, count = 8, direction = 'ver
     });
   };
 
-  return <Stack id={id} Component={Component} onDrop={handleDrop} items={items} direction={direction} />;
+  return <Stack id={id} Component={Component} onDrop={handleDrop} items={items} />;
 };
