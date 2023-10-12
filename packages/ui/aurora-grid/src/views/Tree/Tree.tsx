@@ -37,8 +37,8 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
-  const sortedItems = useSortedItems({ path: id, items, mode: 'match-parent' });
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
+  const sortedItems = useSortedItems({ path: id, items, compare });
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
@@ -90,7 +90,7 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 const TreeBranch = ({ path, items, compare }: { path: string; items: TreeData[]; compare?: CompareMosaicDataItem }) => {
   const { overItem } = useMosaic();
   const { Component } = useContainer();
-  const sortedItems = useSortedItems({ path, items, mode: 'match-parent', compare });
+  const sortedItems = useSortedItems({ path, items, compare });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
