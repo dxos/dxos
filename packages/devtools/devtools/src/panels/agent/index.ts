@@ -2,4 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './dashboard';
+import React from 'react';
+
+export const DashboardPanel = React.lazy(() => import('./DashboardPanel'));
