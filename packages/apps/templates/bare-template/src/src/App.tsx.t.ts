@@ -8,7 +8,7 @@ export default template.define
   })
   .script({
     content: ({ input, slots, imports }) => {
-      const { react, pwa, dxosUi, name } = input;
+      const { react, pwa, dxosUi, name, proto } = input;
       const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.use(
         ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
         '@dxos/react-client',
@@ -21,6 +21,8 @@ export default template.define
         '@dxos/react-appkit',
       );
 
+      const types = imports.use('types', './proto');
+
       const swToast = () => plate`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
 
       const coreContent = plate`
@@ -29,7 +31,11 @@ export default template.define
           config={config}${dxosUi ? plate`
           fallback={${GenericFallback}}` : ''}
           onInitialized={async (client) => {
-            !client.halo.identity.get() && (await client.halo.createIdentity());
+            ${proto && plate`client.addSchema(${types});`}
+            const searchParams = new URLSearchParams(location.search);
+            if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+              await client.halo.createIdentity();
+            }
           }}
         >
           ${slots.content}
