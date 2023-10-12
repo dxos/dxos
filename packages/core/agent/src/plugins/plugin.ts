@@ -7,24 +7,28 @@ import { ClientServicesProvider, LocalClientServices } from '@dxos/client/servic
 import { ClientServicesHost } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 
+export type PluginContext = {
+  client: Client;
+  clientServices: ClientServicesProvider;
+  plugins: Plugin[];
+};
+
 export interface Plugin {
-  initialize(client: Client, clientServices: ClientServicesProvider): Promise<void>;
+  initialize(pluginCtx: PluginContext): Promise<void>;
   open(): Promise<void>;
   close(): Promise<void>;
 }
 
 export abstract class AbstractPlugin implements Plugin {
-  protected _client?: Client;
-  protected _clientServices?: ClientServicesProvider;
+  protected _pluginCtx?: PluginContext;
 
   get host(): ClientServicesHost {
-    return (this._clientServices as LocalClientServices).host ?? failUndefined();
+    return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
-  async initialize(client: Client, clientServices: ClientServicesProvider): Promise<void> {
-    this._client = client;
-    this._clientServices = clientServices;
+  async initialize(pluginCtx: PluginContext): Promise<void> {
+    this._pluginCtx = pluginCtx;
   }
 
   abstract open(): Promise<void>;

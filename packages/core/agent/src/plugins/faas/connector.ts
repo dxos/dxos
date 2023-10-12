@@ -53,7 +53,7 @@ export class FaasConnector extends AbstractPlugin {
     const observedSpaces = new Map<Space, Context>();
 
     const update = () => {
-      const spaces = this._client!.spaces.get();
+      const spaces = this._pluginCtx!.client.spaces.get();
       for (const space of spaces) {
         if (observedSpaces.has(space)) {
           continue;
@@ -86,7 +86,7 @@ export class FaasConnector extends AbstractPlugin {
       }
     };
 
-    const sub = this._client!.spaces.subscribe(() => {
+    const sub = this._pluginCtx!.client.spaces.subscribe(() => {
       update();
     });
     this._ctx.onDispose(() => sub.unsubscribe());
@@ -95,7 +95,7 @@ export class FaasConnector extends AbstractPlugin {
   private async _getTriggers(): Promise<Trigger[]> {
     const triggers: Trigger[] = [];
 
-    for (const space of this._client!.spaces.get()) {
+    for (const space of this._pluginCtx!.client.spaces.get()) {
       if (space.state.get() !== SpaceState.READY) {
         continue;
       }
@@ -141,7 +141,7 @@ export class FaasConnector extends AbstractPlugin {
       },
     });
 
-    const space = this._client!.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
+    const space = this._pluginCtx!.client.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
     if (!space) {
       log.warn('space not found', { space: trigger.spaceKey });
       return;
