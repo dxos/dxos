@@ -328,7 +328,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
     } else if (err instanceof AgentIsNotStartedByCLIError) {
       this.logToStderr(
-        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually.`,
+        chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually or as a system daemon.`,
       );
     } else {
       // Handle unknown errors with default method.
