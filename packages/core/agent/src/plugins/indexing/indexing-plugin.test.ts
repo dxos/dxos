@@ -19,7 +19,7 @@ import { Indexing } from './indexing-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
-describe('Indexing', () => {
+describe('IndexingPlugin', () => {
   const documents = [
     {
       id: 1,

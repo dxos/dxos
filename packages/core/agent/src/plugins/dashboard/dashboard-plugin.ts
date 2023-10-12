@@ -21,6 +21,8 @@ const DEFAULT_OPTIONS: Options = {
   enabled: true,
 };
 
+export const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
+
 export class DashboardPlugin extends AbstractPlugin {
   private readonly _ctx = new Context();
   private _options?: Options = undefined;
@@ -33,17 +35,19 @@ export class DashboardPlugin extends AbstractPlugin {
 
     this._options = { ...DEFAULT_OPTIONS, ...config };
 
-    this._pluginCtx.client.spaces.isReady.subscribe(async () => {
+    const subscription = this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
       invariant(this._pluginCtx);
       await this._pluginCtx.client.spaces.default.waitUntilReady();
-      this._pluginCtx.client.spaces.default.listen('dxos.agent.dashboard', async (msg) => {
-        invariant(this._pluginCtx);
-        await this._pluginCtx.client.spaces.default.postMessage(
-          'dxos.agent.dashboard',
-          await this._handleDashboardRequest(msg),
-        );
-      });
+      const unsubscribe = this._pluginCtx.client.spaces.default.listen(CHANNEL_NAME, (msg) =>
+        this._handleDashboardRequest(msg),
+      );
+      this._ctx.onDispose(unsubscribe);
     });
+
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     if (!this._options.enabled) {
       log.info('dashboard disabled');
@@ -55,7 +59,7 @@ export class DashboardPlugin extends AbstractPlugin {
   }
 
   private async _handleDashboardRequest(message: GossipMessage) {
-    if (message.payload['@type'] !== '') {
+    if (message.payload['@type'] !== 'dxos.agent.dashboard.DashboardRequest') {
       return;
     }
 
@@ -63,8 +67,8 @@ export class DashboardPlugin extends AbstractPlugin {
 
     await this._pluginCtx.client?.spaces.isReady.wait();
     await this._pluginCtx.client.spaces.default.waitUntilReady();
-    await this._pluginCtx.client.spaces.default.postMessage('dxos.agent.dashboard', {
-      '@type': 'dxos.agen.dashboard.DashboardResponse',
+    await this._pluginCtx.client.spaces.default.postMessage(CHANNEL_NAME, {
+      '@type': 'dxos.agent.dashboard.DashboardResponse',
       status: DashboardResponse.Status,
       plugins: this._pluginCtx.plugins.map((plugin) => ({
         name: Object.getPrototypeOf(plugin).constructor.name,
