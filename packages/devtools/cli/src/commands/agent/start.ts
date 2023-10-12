@@ -6,7 +6,15 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { rmSync } from 'node:fs';
 
-import { Agent, DashboardPlugin, EchoProxyServer, EpochMonitor, FunctionsPlugin, Indexing, parseAddress } from '@dxos/agent';
+import {
+  Agent,
+  DashboardPlugin,
+  EchoProxyServer,
+  EpochMonitor,
+  FunctionsPlugin,
+  Indexing,
+  parseAddress,
+} from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -86,7 +94,7 @@ export default class Start extends BaseCommand<typeof Start> {
         new Indexing(),
 
         // Dashboard.
-        new DashboardPlugin();
+        new DashboardPlugin(),
 
         // ECHO API.
         // TODO(burdon): Config.
