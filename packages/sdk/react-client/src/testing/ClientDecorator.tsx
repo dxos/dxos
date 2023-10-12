@@ -26,9 +26,9 @@ export type ClientDecoratorOptions = {
  * Storybook decorator to setup client for n peers.
  * The story is rendered n times, once for each peer.
  *
- * @param {number} count Number of peers to join.
  * @returns {DecoratorFunction}
  */
+// TODO(burdon): Reconcile with ClientSpaceDecorator.
 export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> => {
   const {
     clients,
@@ -53,7 +53,7 @@ export const ClientDecorator = (options: ClientDecoratorOptions = {}): Decorator
   return (Story, context) => (
     <div className={className}>
       {[...Array(count)].map((_, index) => (
-        <ClientProvider key={index} services={services} fallback={() => <p>Loading</p>}>
+        <ClientProvider key={index} services={services}>
           {Story({ args: { id: index, count, ...context.args } })}
         </ClientProvider>
       ))}

@@ -5,10 +5,10 @@
 import React, { useContext, useState } from 'react';
 
 import {
-  useDnd,
   useDragEnd,
   useDragOver,
   useDragStart,
+  useMosaicDnd,
   SortableContext,
   verticalListSortingStrategy,
   UniqueIdentifier,
@@ -21,7 +21,7 @@ import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaul
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
   const store = useContext(DndPluginStoryPluginContext);
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   useDragStart(({ active: { id } }) => {
     setActiveId(id);
