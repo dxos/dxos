@@ -22,6 +22,7 @@ import {
   SortableTile,
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
+  type MosaicActiveType as NaturalMosaicActiveType,
 } from './Tile';
 import { type MosaicDataItem } from './types';
 
@@ -66,12 +67,16 @@ export type MosaicTileProps<
   TPosition = unknown,
 > = NaturalMosaicTileProps<TData, TPosition>;
 
-export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = NaturalMosaicTileComponent<TData>;
+export type MosaicTileComponent<
+  TData extends MosaicDataItem = MosaicDataItem,
+  TElement extends HTMLElement = HTMLDivElement,
+> = NaturalMosaicTileComponent<TData, TElement>;
 
 export type MosaicDebugProps = DebugProps;
 
 export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
 export type MosaicOperation = NaturalMosaicOperation;
+export type MosaicActiveType = NaturalMosaicActiveType;
 
 export type MosaicCompareDataItem = NaturalMosaicCompareDataItem;

@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDraggable } from '@dnd-kit/core';
+import { DraggableAttributes, useDraggable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React, { type ForwardRefExoticComponent, type HTMLAttributes, type RefAttributes } from 'react';
+import React from 'react';
+import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-import { type MosaicOperation, type MosaicTileOverlayProps } from './Container';
+import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
-import { type MosaicDataItem, type MosaicDraggedItem } from './types';
+import type { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
 export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
@@ -22,7 +23,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
   'className'
 > &
   MosaicTileOverlayProps & {
-    Component: MosaicTileComponent<TData>;
+    Component: MosaicTileComponent<TData, any>;
     path: string;
     item: TData;
     position?: TPosition;
@@ -32,19 +33,24 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     // DndKit props.
     isDragging?: boolean;
     isOver?: boolean;
-    draggableStyle?: any;
-    draggableProps?: any;
+    draggableStyle?: CSSProperties;
+    draggableProps?: DraggableAttributes &
+      // TODO(wittjosiah): SyntheticListenerMap.
+      HTMLAttributes<HTMLElement>;
 
     // TODO(burdon): Generalize tile events (or use intents?)
     onSelect?: () => void;
+    onRemove?: () => void;
   };
 
 /**
  * Mosaic Tile component.
  */
-export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> &
-    Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
+export type MosaicTileComponent<
+  TData extends MosaicDataItem = MosaicDataItem,
+  TElement extends HTMLElement = HTMLDivElement,
+> = ForwardRefExoticComponent<
+  RefAttributes<TElement> & Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
 >;
 
 /**
