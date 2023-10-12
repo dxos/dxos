@@ -187,12 +187,12 @@ export const Grid = ({
                       path={id}
                       position={position}
                       Component={Component}
-                      // debug={debug}
                       draggableStyle={{
                         position: 'absolute',
                         ...getBounds(position, cellBounds, spacing),
                       }}
                       onSelect={() => handleSelect(id)}
+                      debug={debug}
                     />
                   );
                 })}

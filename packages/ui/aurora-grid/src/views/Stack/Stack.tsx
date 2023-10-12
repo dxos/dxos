@@ -39,12 +39,12 @@ export const Stack = ({
             )}
           >
             <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
-              {sortedItems.map((item, i) => (
+              {sortedItems.map((item, index) => (
                 <Mosaic.SortableTile
                   key={item.id}
                   item={item}
                   path={id}
-                  position={i}
+                  position={index}
                   Component={Component}
                   className='m-1'
                   // debug={debug}

@@ -49,7 +49,7 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
         <Mosaic.SortableContext id={id} items={items} direction='vertical'>
           {items.map((item, index) => (
             <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
-              <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} />
+              <Mosaic.SortableTile item={item} path={id} position={index} Component={Component} debug={debug} />
             </TreeItemComponent.Root>
           ))}
         </Mosaic.SortableContext>
@@ -87,13 +87,13 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   return (
     <TreeItemComponent.Body className='pis-4'>
       <Mosaic.SortableContext id={path} items={items} direction='vertical'>
-        {items.map((child, i) => (
+        {items.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
               <Mosaic.SortableTile
                 item={child}
                 path={path}
-                position={i}
+                position={index}
                 Component={Component!}
                 isOver={overItem?.path === Path.create(path, child.id)}
               />

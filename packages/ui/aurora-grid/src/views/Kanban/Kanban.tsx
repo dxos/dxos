@@ -48,9 +48,9 @@ export const Kanban = ({
         // Restrict columns to x-axis.
         modifier: ({ path, item }, { transform }) =>
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
-        onOver: ({ active, over }) => {
-          return Path.length(active.path) >= Path.length(over.path);
-        },
+        // Restrict to objects from other columns.
+        // TODO(burdon): Consider objects from other containers.
+        onOver: ({ active, over }) => Path.length(active.path) >= Path.length(over.path),
         onDrop,
       }}
     >
@@ -64,7 +64,7 @@ export const Kanban = ({
                 path={id}
                 position={index}
                 Component={Component}
-                debug={debug}
+                // debug={debug}
               />
             ))}
           </Mosaic.SortableContext>

@@ -69,8 +69,8 @@ export const DemoGrid = ({
       size={size}
       Component={Component}
       onDrop={handleDrop}
-      debug={debug}
       className={className}
+      debug={debug}
     />
   );
 };
