@@ -35,12 +35,12 @@ export const lockFilePath = (profile: string): string => {
   return lockFile;
 };
 
-export const waitForAgentToStart = async (profile: string) => {
+export const waitForAgentToStart = async (profile: string, timeout?: number) => {
   // Wait for socket file to appear.
   {
     await waitForCondition({
       condition: () => existsSync(parseAddress(getUnixSocket(profile)).path),
-      timeout: DAEMON_START_TIMEOUT,
+      timeout: timeout ?? DAEMON_START_TIMEOUT,
       interval: CHECK_INTERVAL,
       error: new AgentWaitTimeoutError(),
     });

@@ -16,6 +16,8 @@ import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewPluginProvides } from './types';
 import { computeTreeViewMosaic, getPersistenceParent } from './util';
 
+const TREEVIEW_PLUGIN_PREVIEW_ITEM = `preview--${TREE_VIEW_PLUGIN}`;
+
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   const subscriptions = new EventSubscriptions();
 
@@ -86,16 +88,12 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
 
           case 'document-title':
             return TreeViewDocumentTitle;
-
           case 'mosaic-delegator':
-            if (
-              'tile' in data &&
-              typeof data.tile === 'object' &&
-              !!data.tile &&
-              'id' in data.tile &&
-              parseDndId((data.tile.id as string) ?? '')[0] === TREE_VIEW_PLUGIN
-            ) {
-              return NavTreeItemDelegator;
+            if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
+              const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
+              return mosaicId === TREE_VIEW_PLUGIN || mosaicId === TREEVIEW_PLUGIN_PREVIEW_ITEM
+                ? NavTreeItemDelegator
+                : null;
             }
             break;
 

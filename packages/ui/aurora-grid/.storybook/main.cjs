@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
@@ -14,6 +18,7 @@ module.exports = {
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
   ],
+  staticDirs: ['../public'],
   framework: {
     name: '@storybook/react-vite',
     options: {}

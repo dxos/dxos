@@ -10,16 +10,17 @@ import { useDensityContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
 type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  grow?: boolean;
   square?: boolean;
   noPadding?: boolean;
 };
 
 // TODO(burdon): Forward refs for all components?
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ square, noPadding, classNames, children, ...props }, forwardedRef) => {
+  ({ grow, square, noPadding, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div {...props} ref={forwardedRef} className={tx('card.root', 'card', { square, noPadding }, classNames)}>
+      <div {...props} ref={forwardedRef} className={tx('card.root', 'card', { grow, square, noPadding }, classNames)}>
         {children}
       </div>
     );
@@ -38,15 +39,14 @@ export const CardHeader: FC<CardHeaderProps> = ({ floating, classNames, children
 };
 
 type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  padding?: boolean;
   center?: boolean;
   title?: string;
 };
 
-export const CardTitle: FC<CardTitleProps> = ({ padding, center, title, classNames, ...props }) => {
+export const CardTitle: FC<CardTitleProps> = ({ center, title, classNames, ...props }) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('card.title', 'card', { padding, center }, classNames)}>
+    <div {...props} className={tx('card.title', 'card', { center }, classNames)}>
       {title}
     </div>
   );
@@ -91,9 +91,14 @@ export const CardBody: FC<CardBodyProps> = ({ gutter, classNames, children, ...p
 
 type CardMediaProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { src?: string; contain?: boolean };
 
+// TODO(burdon): Option to set to 50% of height of card.
 export const CardMedia: FC<CardMediaProps> = ({ src, contain, classNames, ...props }) => {
   const { tx } = useThemeContext();
-  return <img {...props} className={tx('card.media', 'card', { contain }, classNames)} src={src} />;
+  return (
+    <div className='flex grow overflow-hidden'>
+      <img {...props} className={tx('card.media', 'card', { contain }, classNames)} src={src} />
+    </div>
+  );
 };
 
 export const Card = {
