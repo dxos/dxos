@@ -41,19 +41,24 @@ export const createDatabase = async (graph = new HyperGraph()) => {
 };
 
 export class TestBuilder {
-  public readonly spaceKey = PublicKey.random();
+  public readonly defaultSpaceKey = PublicKey.random();
 
   constructor(public readonly graph = new HyperGraph(), public readonly base = new DatabaseTestBuilder()) {}
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
-  async createPeer(): Promise<TestPeer> {
-    const base = await this.base.createPeer();
+  async createPeer(spaceKey = this.defaultSpaceKey): Promise<TestPeer> {
+    const base = await this.base.createPeer(spaceKey);
     const peer = new TestPeer(this, base);
     this.peers.set(peer.base.key, peer);
-    this.graph._register(this.spaceKey, peer.db);
-    await peer.base.open();
+    this.graph._register(spaceKey, peer.db);
     return peer;
+  }
+
+  async flushAll() {
+    for (const peer of this.peers.values()) {
+      await peer.flush();
+    }
   }
 }
 
@@ -65,5 +70,13 @@ export class TestPeer {
   async reload() {
     await this.base.reload();
     this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+  }
+
+  async flush() {
+    if(this.db._backend.currentBatch) {
+      this.db._backend.commitBatch();
+    }
+    await this.base.confirm();
+    await this.db.flush();
   }
 }

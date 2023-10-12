@@ -10,12 +10,19 @@ import { BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { data } from './defs';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { TestBuilder, createDatabase } from './testing';
+import { Expando, TypedObject } from './typed-object';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
 describe('Database', () => {
+  test('flush with test builder', async () => {
+    const testBuilder = new TestBuilder()
+    const peer = await testBuilder.createPeer();
+    peer.db.add(new Expando({ str: 'test' }));
+    await testBuilder.flushAll();
+  })
+
   test('inspect', async () => {
     const { db } = await createDatabase();
 
