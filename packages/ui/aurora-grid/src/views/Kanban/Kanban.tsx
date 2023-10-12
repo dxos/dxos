@@ -50,7 +50,7 @@ export const Kanban = ({
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
         // Restrict to objects from other columns.
         // TODO(burdon): Consider objects from other containers.
-        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'refuse'),
+        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'reject'),
         onDrop,
       }}
     >

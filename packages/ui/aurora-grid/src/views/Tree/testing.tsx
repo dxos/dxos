@@ -48,7 +48,7 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
   );
 
   const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.path === id && over.path !== id) ? 'adopt' : 'refuse';
+    return !(active.path === id && over.path !== id) ? 'adopt' : 'reject';
   }, []);
 
   // NOTE: Does not handle deep operations.
@@ -119,7 +119,6 @@ const graphNodeCompare = (a: Node, b: Node) => {
 export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    console.log({ operation, active, over });
     // Moving within the tree.
     if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
       const activeNode = graph.findNode(active.item.id);
@@ -137,7 +136,6 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
       ) {
         // This is a rearrange operation
         const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
-        console.log({ nextIndex });
         activeNode.properties.index = nextIndex ?? 'a0';
       } else if (activeNode && activeParent && overParent && operation === 'adopt') {
         activeParent.removeNode(active.item.id);
@@ -150,7 +148,6 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
     <Tree
       id={id}
       items={graph.root.children as TreeData[]}
-      // onOver={handleOver}
       onDrop={handleDrop}
       debug={debug}
       compare={graphNodeCompare}

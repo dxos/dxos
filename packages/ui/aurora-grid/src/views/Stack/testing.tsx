@@ -32,8 +32,8 @@ export const DemoStack = ({
 
   const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-    if (behavior === 'refuse') {
-      return 'refuse';
+    if (behavior === 'reject') {
+      return 'reject';
     }
 
     const exists = itemsRef.current.findIndex((item) => item.id === active.item.id) >= 0;
@@ -41,7 +41,7 @@ export const DemoStack = ({
     if (!exists) {
       return behavior;
     } else {
-      return 'refuse';
+      return 'reject';
     }
   };
 

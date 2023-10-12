@@ -14,7 +14,8 @@ export type MosaicTileOverlayProps = {
   debug?: boolean;
 };
 
-export type MosaicOperation = 'adopt' | 'copy' | 'rearrange' | 'refuse';
+// TODO(wittjosiah): Add delete.
+export type MosaicOperation = 'adopt' | 'copy' | 'rearrange' | 'reject';
 
 export type MosaicMoveEvent<TPosition = unknown> = {
   active: MosaicDraggedItem<TPosition>;
@@ -65,7 +66,6 @@ export type MosaicContainerProps<
   /**
    * Called when a tile is dropped on the container.
    */
-  // TODO(burdon): Handle copy, delete, etc.
   onDrop?: (event: MosaicDropEvent<TPosition>) => void;
 
   /**

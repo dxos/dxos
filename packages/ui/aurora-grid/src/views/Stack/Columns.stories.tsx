@@ -52,10 +52,10 @@ export const Copy = {
   },
 };
 
-export const Refuse = {
+export const Reject = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'refuse',
+    behavior: 'reject',
   },
 };

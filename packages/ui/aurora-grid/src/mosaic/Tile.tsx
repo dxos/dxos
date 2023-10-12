@@ -26,6 +26,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
 
     operation?: MosaicOperation;
     position?: TPosition;
+    // TODO(wittjosiah): active?: 'overlay' | 'rearrange' | 'origin' | 'destination';
     isActive?: boolean;
     isDragging?: boolean;
     isOver?: boolean;
@@ -115,7 +116,7 @@ export const SortableTile = ({
   // - this tile is being dragged from another path
   const isDragging =
     isDraggingLocal ||
-    (operation !== 'refuse' &&
+    (operation !== 'reject' &&
       activeItem?.item.id === item.id &&
       overItem &&
       (Path.hasChild(Path.parent(path), overItem.path) ||

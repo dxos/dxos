@@ -73,7 +73,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
   const [overItem, setOverItem] = useState<MosaicDraggedItem>();
-  const [operation, setOperation] = useState<MosaicOperation>('refuse');
+  const [operation, setOperation] = useState<MosaicOperation>('reject');
 
   //
   // DndKit Defaults
@@ -151,7 +151,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     const activeContainer = activeItem && containers.get(Path.first(activeItem.path));
     const overContainer = overItem?.path && containers.get(Path.first(overItem.path));
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
-      setOperation('refuse');
+      setOperation('reject');
       setOverItem(undefined);
       return;
     }
@@ -162,7 +162,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       } else if (overContainer.onOver) {
         return overContainer.onOver({ active, over });
       } else {
-        // TODO(wittjosiah): Default to refuse.
+        // TODO(wittjosiah): Default to reject.
         return 'adopt';
       }
     };
@@ -172,7 +172,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   const handleDragCancel = (event: DragCancelEvent) => {
-    setOperation('refuse');
+    setOperation('reject');
     setActiveItem(undefined);
     setOverItem(undefined);
   };
@@ -180,7 +180,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   // TODO(burdon): Add event type (e.g., copy vs. move).
   const handleDragEnd = (event: DragEndEvent) => {
     if (
-      operation !== 'refuse' &&
+      operation !== 'reject' &&
       activeItem &&
       overItem &&
       (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
@@ -196,7 +196,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       }
     }
 
-    setOperation('refuse');
+    setOperation('reject');
     setActiveItem(undefined);
     setOverItem(undefined);
   };

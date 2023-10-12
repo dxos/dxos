@@ -60,7 +60,7 @@ const TreeRoot = ({ items }: { items: TreeData[] }) => {
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
-      <Mosaic.SortableContext id={id} items={items} direction='vertical'>
+      <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
         {sortedItems.map((item, index) => (
           <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
             <Mosaic.SortableTile item={item} path={id} position={index} Component={Component!} />
@@ -108,7 +108,7 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={items} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
         {sortedItems.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
