@@ -13,6 +13,7 @@ import pkgUp from 'pkg-up';
 import { raise } from '@dxos/debug';
 
 import { type Runner, type RunnerStartOptions } from './runner';
+import { type ProcessInfo } from '../../daemon';
 
 const PLIST_TEMPLATE_FILE = 'templates/org.dxos.agent.plist.template';
 
@@ -86,6 +87,25 @@ export class LaunchctlRunner implements Runner {
     } catch (err: any) {
       throw new Error(`Failed to check if the service is running: ${err.message}`);
     }
+  }
+
+  async info(profile: string): Promise<ProcessInfo> {
+    const result: ProcessInfo = {};
+    try {
+      const service = this._getServiceName(profile);
+      const { stdout: pidOutput } = await execPromise(`launchctl list | grep "${service}" | awk '{print $1}'`);
+
+      const pid = parseInt(pidOutput);
+      if (!isNaN(pid)) {
+        result.pid = pid;
+        const { stdout: psOutput } = await execPromise(`ps -p ${pid} -o lstart=`);
+        if (psOutput) {
+          result.started = new Date(psOutput).getTime();
+        }
+      }
+    } catch (err: any) {}
+
+    return result;
   }
 
   private async _getPlistPath(service: string): Promise<string> {
