@@ -28,7 +28,7 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     item: TData;
     position?: TPosition;
     operation?: MosaicOperation;
-    active?: MosaicActiveType;
+    active?: MosaicActiveType; // TODO(burdon): Rename state?
 
     // DndKit props.
     isDragging?: boolean;
@@ -38,7 +38,6 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
       // TODO(wittjosiah): SyntheticListenerMap.
       HTMLAttributes<HTMLElement>;
 
-    // TODO(burdon): Generalize tile events (or use intents?)
     onSelect?: () => void;
     onRemove?: () => void;
   };

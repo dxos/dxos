@@ -9,11 +9,14 @@ import { mx } from '@dxos/aurora-theme';
 
 import { Mosaic, type MosaicTileComponent } from '../mosaic';
 
+// TODO(burdon): Menu options.
+// TODO(burdon): Margin while dragging.
+
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
 export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug },
+    { className, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug, onSelect },
     forwardRef,
   ) => {
     const full = !title;
@@ -29,7 +32,7 @@ export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
           )}
           grow={grow}
         >
-          <Card.Header floating={full}>
+          <Card.Header floating={full} onDoubleClick={() => onSelect?.()}>
             <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
             {title && <Card.Title title={title} />}
             <Card.Menu position={full ? 'right' : undefined} />
@@ -49,7 +52,7 @@ SimpleCard.displayName = 'SimpleCard';
 
 export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, title, body, image }, onSelect, grow, debug },
+    { className, isDragging, draggableStyle, draggableProps, item: { id, title, body, image }, grow, debug, onSelect },
     forwardRef,
   ) => {
     const full = !title;
@@ -59,9 +62,8 @@ export const ComplexCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
           noPadding={full}
           classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
           grow={grow}
-          onDoubleClick={() => onSelect?.()}
         >
-          <Card.Header floating={full}>
+          <Card.Header floating={full} onDoubleClick={() => onSelect?.()}>
             <Card.DragHandle position={full ? 'left' : undefined} {...draggableProps} />
             {title && <Card.Title title={title} />}
             <Card.Menu position={full ? 'right' : undefined} />
