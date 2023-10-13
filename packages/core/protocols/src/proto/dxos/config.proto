@@ -174,7 +174,7 @@ message Runtime {
       }
 
       /// Automatic index spaces
-      message Indexing {
+      message Search {
         optional bool enabled = 1;
       }
 
@@ -185,7 +185,7 @@ message Runtime {
 
       optional Functions functions = 1;
       optional EpochMontior epoch_monitor = 2;
-      optional Indexing indexing = 3;
+      optional Search search = 3;
       optional Dashboard dashboard = 4;
     }
 
