@@ -19,6 +19,7 @@
     "chromatic": "true"
   },
   "dependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
     "@dxos/aurora-theme": "workspace:*"

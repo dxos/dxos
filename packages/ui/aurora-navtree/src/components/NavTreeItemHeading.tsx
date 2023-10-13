@@ -5,8 +5,7 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 
-import { useIntent } from '@braneframe/plugin-intent';
-import { Button, TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
+import { Button, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import {
@@ -16,34 +15,28 @@ import {
   topLevelText,
   treeItemText,
 } from './navtree-fragments';
-import { type SharedTreeItemHeadingProps } from './props';
-import { TREE_VIEW_PLUGIN } from '../../types';
-import { getTreeItemLabel } from '../../util';
+import { type NavTreeItemData } from './props';
+import { translationKey } from '../translations';
 
-export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHeadingProps>(
-  ({ open, node, level, active }, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg', { ssr: false });
-    const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
-    const { t } = useTranslation(TREE_VIEW_PLUGIN);
-    const { dispatch } = useIntent();
+export type NavTreeItemHeadingProps = {
+  open?: boolean;
+  current?: boolean;
+  node: NavTreeItemData;
+};
+
+export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
+  ({ open, node, current }, forwardedRef) => {
+    // const [isLg] = useMediaQuery('lg', { ssr: false });
+    const { navigationSidebarOpen /*, closeNavigationSidebar */ } = useSidebars();
+    const { t } = useTranslation(translationKey);
+    const { level } = node;
 
     const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
     const disabled = !!node.properties?.disabled;
     const error = !!node.properties?.error;
     const modified = node.properties?.modified ?? false;
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
-    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
-
-    const handleSelect = async () => {
-      await dispatch({
-        action: 'dxos.org/plugin/splitview/action/activate',
-        data: {
-          id: node.id,
-        },
-      });
-      void defaultAction?.invoke();
-      !isLg && closeNavigationSidebar();
-    };
+    // const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
 
     return (
       <div
@@ -82,20 +75,20 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, SharedTreeItemHe
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
-                void handleSelect();
+                // void handleSelect();
               }
             }}
-            onClick={handleSelect}
+            // onClick={handleSelect}
             density='fine'
             variant='ghost'
             classNames={['grow gap-1', isBranch && '-mis-6']}
             disabled={disabled}
-            {...(active && { 'aria-current': 'page' })}
+            {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}
           >
             {node.icon && <node.icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
             <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
-              {getTreeItemLabel(node, t)}
+              {Array.isArray(node.label) ? t(...node.label) : node.label}
             </span>
           </Button>
         </TreeItem.Heading>

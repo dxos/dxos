@@ -53,8 +53,10 @@ const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean
             ...item,
             label: item.title,
             children: [],
+            actions: [],
           };
         }),
+        actions: [],
       };
     });
   });

@@ -5302,6 +5302,7 @@ importers:
 
   packages/ui/aurora-navtree:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -5317,6 +5318,7 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     dependencies:
+      '@braneframe/plugin-graph': link:../../apps/plugins/plugin-graph
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-grid': link:../aurora-grid
       '@dxos/aurora-theme': link:../aurora-theme

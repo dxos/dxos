@@ -3,32 +3,21 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, {
-  forwardRef,
-  type ForwardRefExoticComponent,
-  Fragment,
-  type PropsWithChildren,
-  type Ref,
-  type RefAttributes,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { forwardRef, Fragment, useRef, useState } from 'react';
 
-import { type SortableProps } from '@braneframe/plugin-dnd';
-import { type Action, type Node, useGraph, keyString } from '@braneframe/plugin-graph';
+import { keyString } from '@braneframe/plugin-graph';
 import {
   Button,
   DensityProvider,
   DropdownMenu,
-  Popover,
   Tooltip,
-  Tree,
+  Tree as TreeComponent,
+  TreeItem as TreeItemComponent,
   TreeItem,
   useSidebars,
   useTranslation,
 } from '@dxos/aurora';
-import { type DelegatorProps, isStackTile, isTreeItemTile } from '@dxos/aurora-grid';
+import { Mosaic, useContainer, useSortedItems, useMosaic, type MosaicTileComponent } from '@dxos/aurora-grid/next';
 import {
   dropRing,
   focusRing,
@@ -43,118 +32,56 @@ import {
 
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
-import { type SharedTreeItemProps } from './props';
-import { useTreeView } from '../../TreeViewContext';
-import { TREE_VIEW_PLUGIN } from '../../types';
-import { sortActions } from '../../util';
-
-type TreeViewItemProps = PropsWithChildren<SharedTreeItemProps & SortableProps>;
-
-export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorProps<Node> }>(
-  (
-    {
-      data: {
-        tile,
-        data,
-        dragHandleListeners,
-        dragHandleAttributes,
-        style,
-        children,
-        isActive,
-        isOverlay,
-        isMigrationDestination,
-        isPreview,
-      },
-    },
-    forwardedRef,
-  ) => {
-    if (isStackTile(tile)) {
-      return (
-        <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
-          {children}
-        </Tree.Root>
-      );
-    } else if (isTreeItemTile(tile)) {
-      return (
-        <NavTreeItem
-          node={data}
-          level={tile.level}
-          draggableAttributes={dragHandleAttributes}
-          draggableListeners={dragHandleListeners}
-          style={style}
-          rearranging={isActive}
-          isOverlay={isOverlay}
-          isPreview={isPreview}
-          {...(isMigrationDestination && { migrating: 'into' })}
-          ref={forwardedRef}
-        >
-          {children}
-        </NavTreeItem>
-      );
-    } else {
-      return null;
-    }
-  },
-);
+import { type NavTreeItemData, type TreeNode, type TreeNodeAction } from './props';
+import { translationKey } from '../translations';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
-export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
-  HTMLLIElement,
-  TreeViewItemProps
->(
-  (
-    {
-      node,
-      level,
-      children,
-      draggableListeners,
-      draggableAttributes,
-      style,
-      rearranging,
-      migrating,
-      isPreview,
-      isOverlay,
-    },
-    forwardedRef,
-  ) => {
-    const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
+const NavTreeBranch = ({ path, items }: { path: string; items: TreeNode[] }) => {
+  const { Component } = useContainer();
+  const sortedItems = useSortedItems(items);
 
-    const actions = sortActions(node.actions);
-    const { t } = useTranslation(TREE_VIEW_PLUGIN);
+  return (
+    <TreeItemComponent.Body>
+      <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
+        {sortedItems.map((child, index) => (
+          <TreeComponent.Branch key={child.id}>
+            <TreeItemComponent.Root collapsible>
+              <Mosaic.SortableTile item={child} path={path} position={index} Component={Component!} />
+            </TreeItemComponent.Root>
+          </TreeComponent.Branch>
+        ))}
+      </Mosaic.SortableContext>
+    </TreeItemComponent.Body>
+  );
+};
+
+export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
+  ({ item: node, draggableProps, draggableStyle, operation, active, path }, forwardedRef) => {
+    const { overItem } = useMosaic();
+    const level = node.level;
+    const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
+    const isOver = overItem?.path === path && (operation === 'adopt' || operation === 'copy');
+
+    const actions = node.actions;
+    const { t } = useTranslation(translationKey);
     const { navigationSidebarOpen } = useSidebars();
-    const { graph } = useGraph();
-    const { activeId, popoverAnchorId } = useTreeView();
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-    const [open, setOpen] = useState(level < 1);
+    const [open, setOpen] = useState(node.level < 1);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
-    const forceCollapse = isOverlay || isPreview || rearranging || disabled;
-    const active = activeId === node.id;
+    const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
     const testId = node.properties?.['data-testid'];
-
-    useEffect(() => {
-      // TODO(wittjosiah): Factor out as callback so that this doesn't depend on graph context.
-      // Excludes selected node from being opened by selection.
-      if (activeId && graph.getPath(activeId)?.slice(0, -2).includes(node.id)) {
-        setOpen(true);
-      }
-    }, [graph, activeId]);
-
-    const headingAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${node.id}`;
-    const isPopoverAnchor = popoverAnchorId === headingAnchorId;
-
-    const HeadingWithActionsRoot = isPopoverAnchor ? Popover.Anchor : 'div';
 
     // TODO(burdon): Factor out heuristic to group actions.
     const actionGroups =
       level === 1
-        ? actions.reduce<{ id: string; actions: Action[] }[]>((groups, action) => {
+        ? actions.reduce<{ id: string; actions: TreeNodeAction[] }[]>((groups, action) => {
             const id = action.id.split(/[/-]/).at(-1)!;
             let group = groups.find((group) => group.id === id);
             if (!group) {
@@ -176,18 +103,16 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             'rounded block',
             hoverableFocusedKeyboardControls,
             'transition-opacity',
-            isPreview ? 'opacity-50' : rearranging && 'opacity-0',
-            (rearranging || isPreview) && 'opacity-0',
+            active && active !== 'overlay' && 'opacity-0',
             focusRing,
-            migrating === 'into' && dropRing,
-            level === 0 ? 'mbs-4 first:mbs-0' : '',
+            isOver && dropRing,
+            level === 0 && 'mbs-4 first:mbs-0',
           ]}
-          {...draggableAttributes}
-          {...draggableListeners}
-          style={style}
+          {...draggableProps}
+          style={draggableStyle}
           ref={forwardedRef}
         >
-          <HeadingWithActionsRoot
+          <div
             role='none'
             className={mx(
               levelPadding(level),
@@ -195,12 +120,12 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
               hoverableFocusedWithinControls,
               hoverableDescriptionIcons,
               level < 1 && topLevelCollapsibleSpacing,
-              !isOverlay && (active || isPopoverAnchor) && 'bg-neutral-75 dark:bg-neutral-850',
+              active && active !== 'overlay' && 'bg-neutral-75 dark:bg-neutral-850',
               'flex items-start rounded',
             )}
             data-testid={testId}
           >
-            <NavTreeItemHeading {...{ open, node, level, active }} />
+            <NavTreeItemHeading {...{ open, node }} />
             {actionGroups.length > 0 && (
               <Tooltip.Root
                 open={optionsTooltipOpen}
@@ -238,7 +163,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                           'shrink-0 pli-2 pointer-fine:pli-1',
                           hoverableControlItem,
                           hoverableOpenControlItem,
-                          isOverlay && 'invisible',
+                          active === 'overlay' && 'invisible',
                         ]}
                         data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
                         {...(!navigationSidebarOpen && { tabIndex: -1 })}
@@ -292,8 +217,8 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                 </DropdownMenu.Root>
               </Tooltip.Root>
             )}
-          </HeadingWithActionsRoot>
-          {children}
+          </div>
+          {!active && node.children && <NavTreeBranch path={path} items={node.children} />}
         </TreeItem.Root>
       </DensityProvider>
     );
