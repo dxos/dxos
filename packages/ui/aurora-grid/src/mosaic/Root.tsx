@@ -24,7 +24,7 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { MosaicContainerProps, MosaicMoveEvent, MosaicOperation } from './Container';
+import { type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';

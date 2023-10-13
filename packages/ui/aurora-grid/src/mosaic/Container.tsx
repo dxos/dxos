@@ -13,7 +13,7 @@ import React, {
 
 import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
-import { MosaicDataItem, MosaicDraggedItem } from './types';
+import { type MosaicDataItem, type MosaicDraggedItem } from './types';
 
 export type MosaicTileOverlayProps = {
   grow?: boolean;

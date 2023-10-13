@@ -9,8 +9,8 @@ import { type Graph, GraphBuilder, type Node } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { arrayMove } from '@dxos/util';
 
-import { Tree, TreeData, TreeProps } from './Tree';
-import { MosaicDropEvent, MosaicMoveEvent, Path } from '../../mosaic';
+import { Tree, type TreeData, type TreeProps } from './Tree';
+import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '../../mosaic';
 import { TestObjectGenerator, nextRearrangeIndex } from '../../testing';
 
 const fake = faker.helpers.fake;

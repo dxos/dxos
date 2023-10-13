@@ -16,7 +16,7 @@ import {
   useMosaic,
   Path,
   useSortedItems,
-  MosaicCompareDataItem,
+  type MosaicCompareDataItem,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.

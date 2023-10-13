@@ -11,9 +11,9 @@ import { type PublicKey } from '@dxos/react-client';
 import { Schema, type TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
 import { arrayMove } from '@dxos/util';
 
-import { Kanban, KanbanColumn, KanbanProps } from './Kanban';
-import { Mosaic, MosaicDropEvent, Path, swapItems } from '../../mosaic';
-import { TestObjectGenerator, SimpleCard, Priority, Status, TestItem } from '../../testing';
+import { Kanban, type KanbanColumn, type KanbanProps } from './Kanban';
+import { Mosaic, type MosaicDropEvent, Path, swapItems } from '../../mosaic';
+import { TestObjectGenerator, SimpleCard, Priority, Status, type TestItem } from '../../testing';
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
   const generator = new TestObjectGenerator({ types });

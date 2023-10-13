@@ -6,13 +6,13 @@ import { type FC } from 'react';
 
 import {
   MosaicContainer,
-  MosaicContainerProps as NaturalMosaicContainerProps,
-  MosaicMoveEvent as NaturalMosaicMoveEvent,
-  MosaicDropEvent as NaturalMosaicDropEvent,
-  MosaicOperation as NaturalMosaicOperation,
-  MosaicCompareDataItem as NaturalMosaicCompareDataItem,
+  type MosaicContainerProps as NaturalMosaicContainerProps,
+  type MosaicMoveEvent as NaturalMosaicMoveEvent,
+  type MosaicDropEvent as NaturalMosaicDropEvent,
+  type MosaicOperation as NaturalMosaicOperation,
+  type MosaicCompareDataItem as NaturalMosaicCompareDataItem,
 } from './Container';
-import { Debug, DebugProps } from './Debug';
+import { Debug, type DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicDragOverlay, type MosaicDragOverlayProps } from './DragOverlay';
 import { MosaicRoot, type MosaicRootProps as NaturalMosaicRootProps } from './Root';
