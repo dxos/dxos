@@ -19,9 +19,11 @@ import { MosaicRoot, type MosaicRootProps as NaturalMosaicRootProps } from './Ro
 import { MosaicSortableContext, type MosaicSortableProps as NaturalMosaicSortableProps } from './SortableContext';
 import {
   DraggableTile,
+  DroppableTile,
   SortableTile,
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
+  type MosaicActiveType as NaturalMosaicActiveType,
 } from './Tile';
 import { type MosaicDataItem } from './types';
 
@@ -31,6 +33,7 @@ export const Mosaic = {
   DragOverlay: MosaicDragOverlay,
   SortableContext: MosaicSortableContext,
   DraggableTile,
+  DroppableTile,
   SortableTile,
 
   // TODO(wittjosiah): Consider factoring out or using inline styles instead depending on aurora theme/tailwind.
@@ -43,6 +46,7 @@ export const Mosaic = {
   DragOverlay: FC<MosaicOverlayProps>;
   SortableContext: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
+  DroppableTile: FC<MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
 
   DefaultComponent: MosaicTileComponent;
@@ -66,12 +70,16 @@ export type MosaicTileProps<
   TPosition = unknown,
 > = NaturalMosaicTileProps<TData, TPosition>;
 
-export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = NaturalMosaicTileComponent<TData>;
+export type MosaicTileComponent<
+  TData extends MosaicDataItem = MosaicDataItem,
+  TElement extends HTMLElement = HTMLDivElement,
+> = NaturalMosaicTileComponent<TData, TElement>;
 
 export type MosaicDebugProps = DebugProps;
 
 export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
 export type MosaicOperation = NaturalMosaicOperation;
+export type MosaicActiveType = NaturalMosaicActiveType;
 
 export type MosaicCompareDataItem = NaturalMosaicCompareDataItem;
