@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { StandaloneLayout } from './StandaloneLayout';
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const MarkdownMainEmpty = ({
   data: { composer, properties },

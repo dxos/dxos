@@ -3,13 +3,13 @@
 //
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { ClientServices } from '@dxos/client-protocol';
+import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
+import { type DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,12 +19,12 @@ import {
   createLibDataChannelTransportFactory,
   MemoryTransportFactory,
   TransportKind,
-  TransportFactory,
+  type TransportFactory,
   TcpTransportFactory,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Storage } from '@dxos/random-access-storage';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type Storage } from '@dxos/random-access-storage';
+import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
 import { createDefaultModelFactory } from '../echo';

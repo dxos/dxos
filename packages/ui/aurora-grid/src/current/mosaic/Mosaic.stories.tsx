@@ -6,8 +6,8 @@ import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
-import { DeepSignal, deepSignal } from 'deepsignal';
-import React, { FC, forwardRef } from 'react';
+import { type DeepSignal, deepSignal } from 'deepsignal';
+import React, { type FC, forwardRef } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { dropRing, getSize, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';

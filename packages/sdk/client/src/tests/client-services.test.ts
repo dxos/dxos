@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -15,7 +15,7 @@ import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/servi
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
-import { SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy } from '../echo/space-proxy';
 import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.

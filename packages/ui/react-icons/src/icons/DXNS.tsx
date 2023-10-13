@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Icon, IconBase, IconWeight } from '@phosphor-icons/react';
-import React, { forwardRef, ReactElement } from 'react';
+import { type Icon, IconBase, type IconWeight } from '@phosphor-icons/react';
+import React, { forwardRef, type ReactElement } from 'react';
 
 const weights = new Map<IconWeight, ReactElement>([
   [

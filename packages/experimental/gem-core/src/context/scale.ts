@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 
-import { Bounds, Fraction, FractionUtil, ScreenBounds, Point, Vertex } from '../util';
+import { type Bounds, type Fraction, FractionUtil, type ScreenBounds, type Point, type Vertex } from '../util';
 
 /**
  * Scale to map vector space to view (screen) space.

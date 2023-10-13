@@ -6,10 +6,10 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Chain, Credential, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { CredentialProcessor } from './credential-processor';
+import { type CredentialProcessor } from './credential-processor';
 import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
 
 export type DeviceStateMachineParams = {

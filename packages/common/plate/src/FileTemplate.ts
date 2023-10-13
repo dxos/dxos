@@ -3,11 +3,11 @@
 //
 import path from 'node:path';
 
-import { Path } from './util/file';
+import { type Path } from './util/file';
 import { isTemplateFile } from './util/filenames';
-import { LoadModuleOptions, loadModule } from './util/loadModule';
+import { type LoadModuleOptions, loadModule } from './util/loadModule';
 import { promise } from './util/promise';
-import { Slots, Template, FileResults, Options } from './util/template';
+import { type Slots, type Template, type FileResults, type Options } from './util/template';
 
 export type LoadTemplateOptions = LoadModuleOptions;
 

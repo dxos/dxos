@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 
 import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';

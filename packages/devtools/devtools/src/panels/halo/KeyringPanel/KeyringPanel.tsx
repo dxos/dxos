@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
-import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { MasterDetailTable } from '../../../components';

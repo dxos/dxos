@@ -4,7 +4,7 @@
 
 import { arrayMove } from '@dxos/util';
 
-import { MosaicDataItem } from '../types';
+import { type MosaicDataItem } from '../types';
 
 // TODO(wittjosiah): Generalize and expand rearrange utilities.
 

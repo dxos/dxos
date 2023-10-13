@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import { useTranslation } from '@dxos/aurora';
 import { group, hoverColors, focusRing, staticDisabled, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';

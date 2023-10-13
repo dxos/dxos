@@ -5,8 +5,8 @@
 import { useState } from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, ClientServicesProxy, ClientContextProps } from '@dxos/react-client';
-import { RpcPort } from '@dxos/rpc';
+import { Client, ClientServicesProxy, type ClientContextProps } from '@dxos/react-client';
+import { type RpcPort } from '@dxos/rpc';
 
 /**
  * Creates Client with services opened on parent window.__DXOS__ hook.

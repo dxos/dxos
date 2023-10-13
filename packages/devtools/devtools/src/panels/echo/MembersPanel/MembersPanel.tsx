@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';

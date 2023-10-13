@@ -3,11 +3,11 @@
 //
 
 // TODO(wittjosiah): State can be a GraphNode.
-import { Context, createContext, useContext } from 'react';
+import { type Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { GraphContextValue } from './types';
+import { type GraphContextValue } from './types';
 
 export const GraphContext: Context<GraphContextValue | null> = createContext<GraphContextValue | null>(null);
 

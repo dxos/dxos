@@ -7,14 +7,14 @@
 import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
-import { Awaited } from '@dxos/async';
+import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { runTestSignalServer } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
-import { OfferMessage, SignalMessage } from './signal-messenger';
+import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
 describe('SwarmMessenger', () => {

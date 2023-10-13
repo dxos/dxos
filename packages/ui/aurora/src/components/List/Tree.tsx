@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
+import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
 
 import {
   List,
   LIST_ITEM_NAME,
   ListItem,
-  ListItemCollapsibleContentProps,
-  ListItemHeadingProps,
-  ListItemOpenTriggerProps,
-  ListItemRootProps,
-  ListProps,
-  ListScopedProps,
+  type ListItemCollapsibleContentProps,
+  type ListItemHeadingProps,
+  type ListItemOpenTriggerProps,
+  type ListItemRootProps,
+  type ListProps,
+  type ListScopedProps,
   useListItemContext,
 } from './List';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type TreeRootProps = ListProps;
 

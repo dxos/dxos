@@ -3,10 +3,10 @@
 //
 
 import type { ZoomTransform } from 'd3';
-import { RefObject, createRef } from 'react';
+import { type RefObject, createRef } from 'react';
 
 import { Scale } from './scale';
-import { EventEmitter, Point, Size } from '../util';
+import { EventEmitter, type Point, type Size } from '../util';
 
 /**
  * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.

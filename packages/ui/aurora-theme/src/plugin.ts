@@ -6,7 +6,7 @@ import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/types/config';
-import { Plugin } from 'vite';
+import { type Plugin } from 'vite';
 
 import { resolveKnownPeers, tailwindConfig } from './config';
 

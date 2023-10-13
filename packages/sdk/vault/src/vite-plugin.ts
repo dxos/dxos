@@ -5,7 +5,7 @@
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
-import { startVault, StartVaultOptions } from './server';
+import { startVault, type StartVaultOptions } from './server';
 
 let root: string | undefined;
 export const VaultPlugin = ({ config = {} }: StartVaultOptions = {}): Plugin => ({

@@ -8,7 +8,7 @@ import { sleep, Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test/playwright';
 import { ShellManager } from '@dxos/vault/testing';
 
-import { FILTER } from '../constants';
+import { type FILTER } from '../constants';
 
 export class AppManager {
   page!: Page;

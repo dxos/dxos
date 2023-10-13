@@ -5,7 +5,7 @@
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 
-import { LogOptions } from '../../config';
+import { type LogOptions } from '../../config';
 
 /**
  * Node config loader.

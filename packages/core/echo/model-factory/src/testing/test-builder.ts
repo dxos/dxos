@@ -3,16 +3,16 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
-import { createFeedWriter, WriteReceipt } from '@dxos/feed-store';
+import { type Any } from '@dxos/codec-protobuf';
+import { createFeedWriter, type WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { Model } from '../model';
-import { ModelFactory } from '../model-factory';
-import { ModelConstructor, ModelMessage } from '../types';
+import { type Model } from '../model';
+import { type ModelFactory } from '../model-factory';
+import { type ModelConstructor, type ModelMessage } from '../types';
 
 /**
  * Factory for peers to test model replication.

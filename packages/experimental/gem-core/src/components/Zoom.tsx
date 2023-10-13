@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { useZoom, ZoomExtent } from '../hooks';
+import { useZoom, type ZoomExtent } from '../hooks';
 import { defaultGridStyles } from '../styles';
 
 export interface ZoomProps {

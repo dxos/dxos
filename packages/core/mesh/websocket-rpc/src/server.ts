@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IncomingMessage } from 'http';
+import { type IncomingMessage } from 'http';
 import WebSocket from 'isomorphic-ws';
 
 import { log } from '@dxos/log';
-import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
 
 export type ConnectionInfo = {
   request: IncomingMessage;

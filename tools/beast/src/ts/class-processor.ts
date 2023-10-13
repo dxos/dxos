@@ -4,13 +4,13 @@
 
 import assert from 'node:assert';
 import {
-  ClassDeclaration,
+  type ClassDeclaration,
   InterfaceDeclaration,
-  ParameterDeclaration,
+  type ParameterDeclaration,
   Project,
-  PropertyDeclaration,
-  SourceFile,
-  Type,
+  type PropertyDeclaration,
+  type SourceFile,
+  type Type,
 } from 'ts-morph';
 
 import { log } from '@dxos/log';

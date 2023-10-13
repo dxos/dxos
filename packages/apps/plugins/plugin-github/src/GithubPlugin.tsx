@@ -6,15 +6,15 @@ import { GithubLogo } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { DndPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
-import { Node, GraphProvides } from '@braneframe/plugin-graph';
-import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { type DndPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
+import { type Node, type GraphProvides } from '@braneframe/plugin-graph';
+import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Document } from '@braneframe/types';
+import { type TranslationsProvides } from '@braneframe/plugin-theme';
+import { type Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Space, SpaceProxy } from '@dxos/react-client/echo';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
   EmbeddedMain,

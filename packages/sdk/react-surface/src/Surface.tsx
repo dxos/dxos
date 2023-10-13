@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren, createContext, useContext, forwardRef, Ref } from 'react';
+import React, { type FC, type PropsWithChildren, createContext, useContext, forwardRef, type Ref } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
-import { Plugin } from './Plugin';
+import { type Plugin } from './Plugin';
 import { usePlugins } from './PluginContext';
 
 /**

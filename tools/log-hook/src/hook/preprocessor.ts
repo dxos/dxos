@@ -3,22 +3,22 @@
 //
 
 import {
-  CallExpression,
-  Expression,
-  Import,
-  ObjectExpression,
-  Program,
-  Span,
-  Super,
+  type CallExpression,
+  type Expression,
+  type Import,
+  type ObjectExpression,
+  type Program,
+  type Span,
+  type Super,
   transformSync,
-  TsType,
+  type TsType,
 } from '@swc/core';
 import Visitor from '@swc/core/Visitor';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { SourceMapConsumer } from 'source-map';
 
-import { SourcePosition } from './source-map';
+import { type SourcePosition } from './source-map';
 
 export const preprocess = (code: string, filename: string) => {
   return transformSync(code, {

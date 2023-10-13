@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, memo, Ref } from 'react';
+import React, { forwardRef, memo, type Ref } from 'react';
 
 import { YXmlFragment } from '@dxos/text-model';
 
-import { ComposerSlots, useTextModel, UseTextModelOptions } from '../../model';
-import { MarkdownComposer, MarkdownComposerRef } from '../Markdown';
-import { RichTextComposer, TipTapEditor } from '../RichText';
+import { type ComposerSlots, useTextModel, type UseTextModelOptions } from '../../model';
+import { MarkdownComposer, type MarkdownComposerRef } from '../Markdown';
+import { RichTextComposer, type TipTapEditor } from '../RichText';
 
 export type ComposerProps = UseTextModelOptions & {
   slots?: ComposerSlots;

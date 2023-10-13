@@ -10,8 +10,8 @@ import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { Directory } from './directory';
-import { File, wrapFile } from './file';
-import { Storage, StorageType } from './storage';
+import { type File, wrapFile } from './file';
+import { type Storage, type StorageType } from './storage';
 import { getFullPath } from './utils';
 
 /**

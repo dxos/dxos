@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ItemID } from '@dxos/protocols';
-import { Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type ItemID } from '@dxos/protocols';
+import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 export class Reference {
   static fromValue(value: ReferenceValue): Reference {

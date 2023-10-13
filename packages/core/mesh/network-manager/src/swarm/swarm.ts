@@ -8,20 +8,20 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { ListeningHandle, Messenger } from '@dxos/messaging';
+import { type ListeningHandle, type Messenger } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { Connection, ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
+import { type Connection, ConnectionState } from './connection';
+import { type ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
-import { SwarmMessenger, OfferMessage, SignalMessage } from '../signal';
-import { SwarmController, Topology } from '../topology';
-import { TransportFactory } from '../transport';
-import { Topic } from '../types';
-import { WireProtocolProvider } from '../wire-protocol';
+import { SwarmMessenger, type OfferMessage, type SignalMessage } from '../signal';
+import { type SwarmController, type Topology } from '../topology';
+import { type TransportFactory } from '../transport';
+import { type Topic } from '../types';
+import { type WireProtocolProvider } from '../wire-protocol';
 
 const INITIATION_DELAY = 100;
 

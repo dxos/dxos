@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFunction, Theme } from '@dxos/aurora-types';
+import { type ComponentFunction, type Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import { focusRing } from '../fragments';

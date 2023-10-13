@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, createContext, useContext } from 'react';
+import { type Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { SplitViewState } from './types';
+import { type SplitViewState } from './types';
 
 export const SplitViewContext: Context<SplitViewState | null> = createContext<SplitViewState | null>(null);
 

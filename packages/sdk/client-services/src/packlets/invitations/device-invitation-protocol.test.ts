@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 import { createPeers, createServiceContext, performInvitation } from '../testing';
 
 const closeAfterTest = async (peer: ServiceContext) => {

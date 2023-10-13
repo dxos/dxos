@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { asyncTimeout } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { File, Storage, StorageType } from '../common';
+import { type File, type Storage, StorageType } from '../common';
 
 chai.use(chaiAsPromised);
 

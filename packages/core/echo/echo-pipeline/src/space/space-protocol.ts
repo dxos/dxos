@@ -2,26 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type Event } from '@dxos/async';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
-import { FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
-  NetworkManager,
-  SwarmConnection,
-  WireProtocol,
-  WireProtocolParams,
-  WireProtocolProvider,
+  type NetworkManager,
+  type SwarmConnection,
+  type WireProtocol,
+  type WireProtocolParams,
+  type WireProtocolProvider,
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { MuxerStats, Teleport } from '@dxos/teleport';
-import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
+import { type MuxerStats, Teleport } from '@dxos/teleport';
+import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
-import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
+import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;

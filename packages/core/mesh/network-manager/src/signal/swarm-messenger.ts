@@ -2,16 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, MakeOptional } from '@dxos/util';
+import { type Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { ComplexMap, type MakeOptional } from '@dxos/util';
 
-import { OfferMessage, SignalMessage, SignalMessenger } from './signal-messenger';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;

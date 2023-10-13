@@ -4,12 +4,12 @@
 
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { BaseCommand } from '../../base-command';
-import { SupervisorRpcPeer, queryCredentials } from '../../util';
+import { type SupervisorRpcPeer, queryCredentials } from '../../util';
 
 export default class Auth extends BaseCommand<typeof Auth> {
   static override enableJsonFlag = true;

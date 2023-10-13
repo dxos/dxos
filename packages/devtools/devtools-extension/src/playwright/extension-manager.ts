@@ -5,7 +5,7 @@
 import type { Page } from '@playwright/test';
 
 import { asyncTimeout } from '@dxos/async';
-import { setupPage, extensionId, BrowserType, getPersistentContext } from '@dxos/test/playwright';
+import { setupPage, extensionId, type BrowserType, getPersistentContext } from '@dxos/test/playwright';
 
 export class ExtensionManager {
   extensionId!: string;

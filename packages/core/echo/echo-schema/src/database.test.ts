@@ -6,7 +6,7 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
-import { BatchUpdate } from '@dxos/echo-db';
+import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { data } from './defs';

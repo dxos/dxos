@@ -4,20 +4,20 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
-import { CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
-import { DataServiceSubscriptions, MetadataStore, Space, SpaceManager } from '@dxos/echo-pipeline';
-import { FeedStore } from '@dxos/feed-store';
+import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
+import { type DataServiceSubscriptions, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
-import { Timeframe } from '@dxos/timeframe';
+import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace } from './data-space';

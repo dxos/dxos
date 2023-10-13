@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { TreeItem, Tree, TreeRootProps } from '@dxos/aurora';
+import { TreeItem, Tree, type TreeRootProps } from '@dxos/aurora';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);

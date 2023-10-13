@@ -5,7 +5,7 @@
 import express from 'express';
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
-import { FunctionDispatcher } from './dispatcher';
+import { type FunctionDispatcher } from './dispatcher';
 import { AbstractPlugin } from '../plugin';
 
 const DEFAULT_PORT = 7000;

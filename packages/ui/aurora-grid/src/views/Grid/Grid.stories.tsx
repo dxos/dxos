@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { Grid, GridLayout } from './Grid';
+import { Grid, type GridLayout } from './Grid';
 import { DemoGrid } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator } from '../../testing';

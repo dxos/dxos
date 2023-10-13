@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices } from '@dxos/client-protocol';
-import { Any, ServiceHandler, Stream } from '@dxos/codec-protobuf';
+import { type ClientServices } from '@dxos/client-protocol';
+import { type Any, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { parseMethodName, RpcPeer, RpcPeerOptions, ServiceBundle } from '@dxos/rpc';
-import { MaybePromise } from '@dxos/util';
+import { parseMethodName, RpcPeer, type RpcPeerOptions, type ServiceBundle } from '@dxos/rpc';
+import { type MaybePromise } from '@dxos/util';
 
-import { ServiceRegistry } from './service-registry';
+import { type ServiceRegistry } from './service-registry';
 
 export type ClientRpcServerParams = {
   serviceRegistry: ServiceRegistry<ClientServices>;

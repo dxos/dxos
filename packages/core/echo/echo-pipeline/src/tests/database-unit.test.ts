@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { DocumentModel, MutationBuilder, OrderedArray } from '@dxos/document-model';
 import {
   COMMIT_BATCH_INACTIVITY_DEFAULT,
-  Item,
+  type Item,
   createModelMutation,
   encodeModelMutation,
   genesisMutation,

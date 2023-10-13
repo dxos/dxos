@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
 import { isTypedObject } from '@dxos/react-client/echo';

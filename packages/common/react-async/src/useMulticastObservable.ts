@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { MulticastObservable } from '@dxos/async';
+import { type MulticastObservable } from '@dxos/async';
 
 /**
  * Subscribe to a MulticastObservable and return the latest value.

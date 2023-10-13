@@ -3,17 +3,17 @@
 //
 
 import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
-import { Any, Stream } from '@dxos/codec-protobuf';
+import { type Any, type Stream } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { Message as SignalMessage, SignalState, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Message as SignalMessage, SignalState, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalRPCClient } from './signal-rpc-client';
-import { Message, SignalMethods } from '../signal-methods';
+import { type Message, type SignalMethods } from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5000;

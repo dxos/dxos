@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, printModules } from '../../util';
+import { type PublisherRpcPeer, printModules } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

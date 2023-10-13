@@ -6,11 +6,11 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { DevicesService, Device } from '@dxos/protocols/proto/dxos/client/services';
+import { type DevicesService, type Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { DevicesServiceImpl } from './devices-service';
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 
 describe('DevicesService', () => {

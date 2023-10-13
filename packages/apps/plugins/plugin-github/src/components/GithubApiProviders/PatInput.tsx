@@ -3,7 +3,7 @@
 //
 
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';

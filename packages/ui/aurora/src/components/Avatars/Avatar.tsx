@@ -4,22 +4,22 @@
 
 import {
   Root as AvatarRootPrimitive,
-  AvatarProps as AvatarRootPrimitiveProps,
+  type AvatarProps as AvatarRootPrimitiveProps,
   Image as AvatarImagePrimitive,
-  ImageLoadingStatus,
+  type ImageLoadingStatus,
   Fallback as AvatarFallbackPrimitive,
 } from '@radix-ui/react-avatar';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { toSvg } from 'jdenticon';
-import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useMemo } from 'react';
 
-import { Size } from '@dxos/aurora-types';
+import { type Size } from '@dxos/aurora-types';
 import { useId } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type AvatarVariant = 'square' | 'circle';
 type AvatarStatus = 'active' | 'inactive' | 'error' | 'warning';

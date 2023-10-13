@@ -2,10 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
+import {
+  type EncodingOptions,
+  type ServiceDescriptor,
+  type ServiceHandler,
+  type ServiceProvider,
+} from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 
-import { RpcPeer, RpcPeerOptions } from './rpc';
+import { RpcPeer, type RpcPeerOptions } from './rpc';
 
 /**
  * Map of service definitions.

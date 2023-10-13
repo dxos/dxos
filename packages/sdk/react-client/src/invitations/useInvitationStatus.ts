@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
+import { useReducer, type Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
 } from '@dxos/client/invitations';

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { type ChangeEvent, useState } from 'react';
 
 import { Input, useTranslation } from '@dxos/aurora';
 
 import { Actions, Action, Emoji, StepHeading } from '../../../components';
 import { toEmoji } from '../../../util';
-import { JoinStepProps } from '../JoinPanelProps';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
 

@@ -3,9 +3,9 @@
 //
 
 import formatDistance from 'date-fns/formatDistance';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Config } from '@dxos/react-client';
+import { type Config } from '@dxos/react-client';
 
 // TODO(burdon): Factor out.
 export const VersionInfo: FC<{ config: Config }> = ({ config }) => {

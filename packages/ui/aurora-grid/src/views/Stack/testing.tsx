@@ -4,8 +4,14 @@
 
 import React, { useRef, useState } from 'react';
 
-import { Stack, StackProps } from './Stack';
-import { MosaicDataItem, MosaicDropEvent, MosaicMoveEvent, MosaicOperation, Path } from '../../mosaic';
+import { Stack, type StackProps } from './Stack';
+import {
+  type MosaicDataItem,
+  type MosaicDropEvent,
+  type MosaicMoveEvent,
+  type MosaicOperation,
+  Path,
+} from '../../mosaic';
 import { TestObjectGenerator } from '../../testing';
 
 export type DemoStackProps = StackProps & {
@@ -30,7 +36,7 @@ export const DemoStack = ({
 
   const itemsRef = useRef(items);
 
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
     if (behavior === 'reject') {
       return 'reject';

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
-import { ClientServicesProvider, LocalClientServices } from '@dxos/client/services';
-import { ClientServicesHost } from '@dxos/client-services';
+import { type Client } from '@dxos/client';
+import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
+import { type ClientServicesHost } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 
 export type PluginContext = {

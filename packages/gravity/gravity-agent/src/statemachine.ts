@@ -3,12 +3,12 @@
 //
 
 // import { Trigger } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client/echo';
+import { type Client, PublicKey } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { Invitation } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Command } from '@dxos/protocols/proto/dxos/gravity';
+import { type Command } from '@dxos/protocols/proto/dxos/gravity';
 
 import { processSyncClient, processSyncServer } from './process';
 

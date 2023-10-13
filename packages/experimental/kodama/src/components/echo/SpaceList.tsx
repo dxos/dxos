@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/react-client';

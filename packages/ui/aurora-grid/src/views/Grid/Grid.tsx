@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { FC, useState, useMemo, useEffect } from 'react';
+import React, { type FC, useState, useMemo, useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Button, useMediaQuery } from '@dxos/aurora';
@@ -19,11 +19,11 @@ import {
   getBounds,
   getDimension,
   getPanelBounds,
-  Dimension,
-  Position,
-  Size,
+  type Dimension,
+  type Position,
+  type Size,
 } from './layout';
-import { MosaicContainerProps, MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
+import { type MosaicContainerProps, type MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
 
 //
 // Selection

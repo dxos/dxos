@@ -9,7 +9,7 @@
 import { faker } from '@faker-js/faker';
 
 import { Schema as SchemaType } from '@dxos/client/echo';
-import { Expando, TypedObject } from '@dxos/echo-schema';
+import { Expando, type TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>

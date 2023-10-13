@@ -7,9 +7,9 @@ import { Series } from 'danfojs-node';
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
-import { LogReader, TraceEvent, zapPreprocessor } from './logging';
-import { PlanResults, TestParams } from '../plan';
-import { SignalTestSpec } from '../spec';
+import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
+import { type PlanResults, type TestParams } from '../plan';
+import { type SignalTestSpec } from '../spec';
 
 const seriesToJson = (s: Series) => {
   const indexes = s.index;

@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { Teleport } from '@dxos/teleport';
+import { type Teleport } from '@dxos/teleport';
 import { afterTest, describe, test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 

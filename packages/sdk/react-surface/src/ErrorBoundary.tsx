@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Component, FC, PropsWithChildren } from 'react';
+import React, { Component, type FC, type PropsWithChildren } from 'react';
 
 type Props = PropsWithChildren<{ data?: any; fallback: FC<{ error: Error; reset: () => void }> }>;
 type State = { error: Error | undefined };

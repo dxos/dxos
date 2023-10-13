@@ -3,9 +3,9 @@
 //
 
 import { promises as fs } from 'fs';
-import { JSONOutput } from 'typedoc';
+import { type JSONOutput } from 'typedoc';
 
-import { Config } from './config.js';
+import { type Config } from './config.js';
 
 export const loadTypedocJson = async (config: Config): Promise<JSONOutput.Reflection> => {
   const { typedocJsonPath } = config;

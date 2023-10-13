@@ -6,13 +6,13 @@ import { Article, ArticleMedium } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
-import { Document } from '@braneframe/types';
-import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { Space, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
-import { Plugin } from '@dxos/react-surface';
+import { type Node } from '@braneframe/plugin-graph';
+import { type Document } from '@braneframe/types';
+import { type ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
+import { type Space, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { type Plugin } from '@dxos/react-surface';
 
-import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
+import { MARKDOWN_PLUGIN, type MarkdownProperties, type MarkdownProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
 //  Uncaught Error: Type with the name content has already been defined with a different constructor.

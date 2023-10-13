@@ -3,9 +3,9 @@
 //
 
 import { faker } from '@faker-js/faker';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { PublicKey } from '@dxos/react-client';
+import { type PublicKey } from '@dxos/react-client';
 import { Expando } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 

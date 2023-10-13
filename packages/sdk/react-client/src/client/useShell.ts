@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Shell } from '@dxos/client/services';
+import { type Shell } from '@dxos/client/services';
 
 import { useClient } from './ClientContext';
 

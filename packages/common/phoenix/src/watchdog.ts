@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { existsSync, unlinkSync, writeFileSync } from 'node:fs';
-import { FileHandle } from 'node:fs/promises';
+import { type FileHandle } from 'node:fs/promises';
 
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';

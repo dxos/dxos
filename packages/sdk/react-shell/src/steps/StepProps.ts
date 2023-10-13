@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
-import { Event, SingleOrArray } from 'xstate';
+import { type cloneElement } from 'react';
+import { type Event, type SingleOrArray } from 'xstate';
 
 type StepDeselectInvitationEvent = { type: 'deselectInvitation' };
 

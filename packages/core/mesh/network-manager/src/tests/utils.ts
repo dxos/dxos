@@ -3,12 +3,12 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/test';
-import { Provider } from '@dxos/util';
+import { type Provider } from '@dxos/util';
 
-import { TestPeer, TestSwarmConnection } from '../testing';
-import { Topology } from '../topology';
+import { type TestPeer, type TestSwarmConnection } from '../testing';
+import { type Topology } from '../topology';
 
 //
 // NOTE: Don't move to testing directory since not exportable outside of package.

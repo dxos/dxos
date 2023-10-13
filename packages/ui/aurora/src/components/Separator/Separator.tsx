@@ -1,11 +1,14 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { Separator as SeparatorPrimitive, SeparatorProps as SeparatorPrimitiveProps } from '@radix-ui/react-separator';
+import {
+  Separator as SeparatorPrimitive,
+  type SeparatorProps as SeparatorPrimitiveProps,
+} from '@radix-ui/react-separator';
 import React from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type SeparatorProps = ThemedClassName<SeparatorPrimitiveProps>;
 
