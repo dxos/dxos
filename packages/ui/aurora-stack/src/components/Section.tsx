@@ -21,6 +21,8 @@ import {
   surfaceElevation,
 } from '@dxos/aurora-theme';
 
+import { STACK } from '../translations';
+
 export type SectionProps = PropsWithChildren<{
   // Data props.
   id: string;
@@ -35,7 +37,7 @@ export type SectionProps = PropsWithChildren<{
 
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
   ({ id, title, active, draggableProps, draggableStyle, onRemove, children }, forwardedRef) => {
-    const { t } = useTranslation('stack');
+    const { t } = useTranslation(STACK);
 
     return (
       <DensityProvider density='fine'>

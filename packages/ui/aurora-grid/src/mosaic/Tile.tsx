@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DraggableAttributes, useDraggable } from '@dnd-kit/core';
+import { DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
@@ -91,6 +91,39 @@ export const DraggableTile = ({
 };
 
 /**
+ * Basic droppable mosaic tile.
+ */
+export const DroppableTile = ({
+  path: parentPath,
+  item,
+  Component = DefaultComponent,
+  position,
+  ...props
+}: MosaicTileProps<any>) => {
+  const { operation } = useMosaic();
+  const path =
+    parentPath === item.id
+      ? parentPath // If the path is the same as the item id, then this is the root tile.
+      : Path.create(parentPath, item.id);
+  const { setNodeRef, isOver } = useDroppable({
+    id: path,
+    data: { path, item, position } satisfies MosaicDraggedItem,
+  });
+
+  return (
+    <Component
+      ref={setNodeRef}
+      item={item}
+      path={path}
+      position={position}
+      operation={operation}
+      isOver={isOver}
+      {...props}
+    />
+  );
+};
+
+/**
  * Mosaic tile that can be sorted.
  */
 export const SortableTile = ({
@@ -120,8 +153,8 @@ export const SortableTile = ({
     (Path.hasChild(Path.parent(path), overItem.path) || Path.parent(path) === overItem.path || path === overItem.path)
   ) {
     active = 'destination';
-  } else if (activeItem && activeItem.item.id === item.id) {
-    active = operation === 'rearrange' ? 'rearrange' : 'origin';
+  } else if (isDragging && activeItem && activeItem.item.id === item.id) {
+    active = operation === 'rearrange' || operation === 'reject' ? 'rearrange' : 'origin';
   }
 
   return (

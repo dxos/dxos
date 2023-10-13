@@ -19,6 +19,7 @@ import { MosaicRoot, type MosaicRootProps as NaturalMosaicRootProps } from './Ro
 import { MosaicSortableContext, type MosaicSortableProps as NaturalMosaicSortableProps } from './SortableContext';
 import {
   DraggableTile,
+  DroppableTile,
   SortableTile,
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
@@ -32,6 +33,7 @@ export const Mosaic = {
   DragOverlay: MosaicDragOverlay,
   SortableContext: MosaicSortableContext,
   DraggableTile,
+  DroppableTile,
   SortableTile,
 
   // TODO(wittjosiah): Consider factoring out or using inline styles instead depending on aurora theme/tailwind.
@@ -44,6 +46,7 @@ export const Mosaic = {
   DragOverlay: FC<MosaicOverlayProps>;
   SortableContext: FC<MosaicSortableProps>;
   DraggableTile: FC<MosaicTileProps<any, any>>;
+  DroppableTile: FC<MosaicTileProps<any, any>>;
   SortableTile: FC<MosaicTileProps<any, number>>;
 
   DefaultComponent: MosaicTileComponent;

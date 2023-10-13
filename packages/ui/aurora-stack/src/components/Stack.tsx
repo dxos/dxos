@@ -4,19 +4,27 @@
 
 import React, { FC, forwardRef, useMemo } from 'react';
 
-import { List } from '@dxos/aurora';
+import { List, useTranslation } from '@dxos/aurora';
 import {
   Mosaic,
   MosaicContainerProps,
   MosaicDataItem,
   MosaicTileComponent,
+  Path,
+  useContainer,
   useItemsWithPreview,
+  useMosaic,
 } from '@dxos/aurora-grid/next';
-import { mx, textBlockWidth } from '@dxos/aurora-theme';
+import { dropRing, mx, textBlockWidth } from '@dxos/aurora-theme';
 
 import { Section } from './Section';
+import { STACK } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
+
+type StackItem = MosaicDataItem & {
+  items: StackSectionItem[];
+};
 
 export type StackSectionItem = MosaicDataItem & {
   title: string;
@@ -26,29 +34,26 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
   MosaicContainerProps<TData, number>,
   'debug' | 'Component'
 > & {
-  Component?: FC<{ data: TData }>;
+  Component: FC<{ data: TData }>;
   items?: TData[];
-  onRemoveSection?: (id: string) => void;
+  onRemoveSection?: (path: string) => void;
 };
 
-const DefaultComponent = ({ data }: { data: StackSectionItem }) => (
-  <p className='font-mono'>{JSON.stringify(data, null, 2)}</p>
-);
-
-// TODO(burdon): Make generic (and forwardRef).
-export const Stack = <TData extends StackSectionItem = StackSectionItem>({
+export const Stack = ({
   id,
-  Component: SectionContent = DefaultComponent,
+  className,
+  Component: SectionContent,
+  items = [],
   onOver,
   onDrop,
-  items = [],
   onRemoveSection,
-}: StackProps<TData>) => {
+}: StackProps) => {
+  const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
-  const Component: MosaicTileComponent<TData, HTMLLIElement> = useMemo(
+  const Component: MosaicTileComponent<StackSectionItem, HTMLLIElement> = useMemo(
     () =>
-      forwardRef(({ active, draggableStyle, draggableProps, item }, forwardRef) => {
+      forwardRef(({ path, active, draggableStyle, draggableProps, item }, forwardRef) => {
         const section = (
           <Section
             ref={forwardRef}
@@ -57,7 +62,7 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
             active={active}
             draggableProps={draggableProps}
             draggableStyle={draggableStyle}
-            onRemove={() => onRemoveSection?.(id)}
+            onRemove={() => onRemoveSection?.(path)}
           >
             <SectionContent data={item} />
           </Section>
@@ -65,18 +70,41 @@ export const Stack = <TData extends StackSectionItem = StackSectionItem>({
 
         return active === 'overlay' ? <List>{section}</List> : section;
       }),
-    [SectionContent],
+    [id, SectionContent],
   );
 
   return (
     <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <List classNames={mx(textBlockWidth, 'p-1')}>
-        <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
-          {itemsWithPreview.map((item, index) => (
-            <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component} />
-          ))}
-        </Mosaic.SortableContext>
-      </List>
+      <Mosaic.DroppableTile
+        path={id}
+        className={className}
+        item={{ id, items: itemsWithPreview }}
+        Component={StackTile}
+        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'adopt')}
+      />
     </Mosaic.Container>
   );
 };
+
+const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
+  ({ className, path, isOver, item: { items } }, forwardedRef) => {
+    const { t } = useTranslation(STACK);
+    const { Component } = useContainer();
+
+    return (
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-1', isOver && dropRing)}>
+        {items.length > 0 ? (
+          <Mosaic.SortableContext items={items} direction='vertical'>
+            {items.map((item, index) => (
+              <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
+            ))}
+          </Mosaic.SortableContext>
+        ) : (
+          <p className='text-center m-1 p-4 border border-dashed border-neutral-500/50 rounded'>
+            {t('empty stack message')}
+          </p>
+        )}
+      </List>
+    );
+  },
+);

@@ -2,6 +2,8 @@ import React, {createElement, useEffect} from 'react';
 import { ThemeProvider } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 
+import { translations } from '../src';
+
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},
   controls: {
@@ -35,8 +37,12 @@ const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
   useEffect(()=>{
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn), tx: auroraTx})
+  }, [theme]);
+  return createElement(ThemeProvider, {
+    children: createElement(StoryFn),
+    tx: auroraTx,
+    resourceExtensions: translations,
+  });
 }
 
 export const decorators = [withTheme];
