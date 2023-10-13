@@ -13,7 +13,7 @@ export type SimpleCardProps = { id: string; title?: string; body?: string; image
 
 export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    { className, isDragging, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug },
+    { className, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug },
     forwardRef,
   ) => {
     const full = !title;
@@ -21,7 +21,12 @@ export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root
           noPadding={full}
-          classNames={mx(className, 'w-full snap-center', isDragging && 'opacity-20')}
+          classNames={mx(
+            className,
+            'w-full snap-center',
+            (active === 'origin' || active === 'rearrange') && 'opacity-0',
+            active === 'destination' && 'opacity-20',
+          )}
           grow={grow}
         >
           <Card.Header floating={full}>
