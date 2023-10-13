@@ -173,7 +173,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                             hoverableOpenControlItem,
                             active === 'overlay' && 'invisible',
                           ]}
-                          data-testid={`spacePlugin.spaceTreeItemActionsLevel${level}`}
+                          data-testid={`navTree.treeItemActionsLevel${level}`}
                           {...(!navigationSidebarOpen && { tabIndex: -1 })}
                         >
                           <DotsThreeVertical className={getSize(4)} />

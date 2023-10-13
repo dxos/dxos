@@ -56,7 +56,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
             classNames={['-translate-x-2', ghostButtonColors, disabled && staticDisabled]}
             // TODO(wittjosiah): Why space plugin? This is treeview.
-            data-testid={!open ? 'spacePlugin.spaceTreeItemOpenTrigger' : 'spacePlugin.spaceTreeItemCloseTrigger'}
+            data-testid={!open ? 'navTree.treeItem.openTrigger' : 'navTree.treeItem.closeTrigger'}
             onKeyDown={(event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
@@ -66,10 +66,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
-        <TreeItem.Heading data-testid='spacePlugin.spaceTreeItemHeading' asChild>
+        <TreeItem.Heading data-testid='navTree.treeItem.heading' asChild>
           <Button
             role='link'
-            {...(level > 1 && { 'data-testid': 'spacePlugin.documentTreeItemLink' })}
+            {...(level > 1 && { 'data-testid': 'navTree.treeItem.link' })}
             data-itemid={node.id}
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
             onKeyDown={async (event) => {
