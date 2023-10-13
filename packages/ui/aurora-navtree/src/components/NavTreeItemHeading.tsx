@@ -21,17 +21,17 @@ import { translationKey } from '../translations';
 export type NavTreeItemHeadingProps = {
   open?: boolean;
   current?: boolean;
-  node: NavTreeItemData;
+  item: NavTreeItemData;
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-  ({ open, node, current }, forwardedRef) => {
+  ({ open, item, current }, forwardedRef) => {
     // const [isLg] = useMediaQuery('lg', { ssr: false });
     const { navigationSidebarOpen /*, closeNavigationSidebar */ } = useSidebars();
     const { t } = useTranslation(translationKey);
-    const { level } = node;
+    const { level, node } = item;
 
-    const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
+    const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
     const disabled = !!node.properties?.disabled;
     const error = !!node.properties?.error;
     const modified = node.properties?.modified ?? false;

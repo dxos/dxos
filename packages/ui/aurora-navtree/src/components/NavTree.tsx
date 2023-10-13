@@ -12,24 +12,33 @@ import { type TreeNode } from './props';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   const { id, Component } = useContainer();
-  const sortedItems = useSortedItems(node.children);
+  const sortedNodes = useSortedItems(node.children);
 
   return (
-    <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
-      {sortedItems.map((item, index) => (
-        <Mosaic.SortableTile key={item.id} item={item} path={id} position={index} Component={Component!} />
+    <Mosaic.SortableContext id={id} items={sortedNodes} direction='vertical'>
+      {sortedNodes.map((node, index) => (
+        <Mosaic.SortableTile
+          key={node.id}
+          item={{ id: node.id, node, level: 0 }}
+          path={id}
+          position={index}
+          Component={Component!}
+        />
       ))}
     </Mosaic.SortableContext>
   );
 };
 
-export type NavTreeProps = { node: TreeNode } & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component'>;
+export type NavTreeProps = { node: TreeNode } & Omit<
+  MosaicContainerProps<TreeNode, number>,
+  'debug' | 'Component' | 'id'
+>;
 
-export const NavTree = ({ node, id, onOver, onDrop, compare }: NavTreeProps) => {
+export const NavTree = ({ node, onOver, onDrop, compare }: NavTreeProps) => {
   return (
     <Mosaic.Container
       {...{
-        id,
+        id: node.id,
         Component: NavTreeItem,
         onOver,
         onDrop,
