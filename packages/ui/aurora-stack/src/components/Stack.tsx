@@ -31,7 +31,9 @@ export type StackProps<TData extends StackSectionItem = StackSectionItem> = Omit
   onRemoveSection?: (id: string) => void;
 };
 
-const DefaultComponent = ({ data }: { data: StackSectionItem }) => <p>{JSON.stringify(data, null, 2)}</p>;
+const DefaultComponent = ({ data }: { data: StackSectionItem }) => (
+  <p className='font-mono'>{JSON.stringify(data, null, 2)}</p>
+);
 
 // TODO(burdon): Make generic (and forwardRef).
 export const Stack = <TData extends StackSectionItem = StackSectionItem>({
