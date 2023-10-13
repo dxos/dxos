@@ -98,7 +98,7 @@ describe('SearchPlugin', () => {
     const services1 = builder.createLocal();
     const client1 = new Client({
       services: services1,
-      config: new Config({ runtime: { agent: { plugins: { indexing: { enabled: true } } } } }),
+      config: new Config({ runtime: { agent: { plugins: { search: { enabled: true } } } } }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());

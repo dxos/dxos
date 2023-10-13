@@ -31,9 +31,14 @@ export class DashboardPlugin extends AbstractPlugin {
     log('Opening dashboard plugin...');
 
     invariant(this._pluginCtx);
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
+    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.search;
 
     this._options = { ...DEFAULT_OPTIONS, ...config };
+
+    if (!this._options.enabled) {
+      log.info('Dashboard disabled.');
+      return;
+    }
 
     const subscription = this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
@@ -48,10 +53,6 @@ export class DashboardPlugin extends AbstractPlugin {
     });
 
     this._ctx.onDispose(() => subscription.unsubscribe());
-
-    if (!this._options.enabled) {
-      log.info('dashboard disabled');
-    }
   }
 
   async close(): Promise<void> {

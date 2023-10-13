@@ -21,7 +21,7 @@ describe('DashboardPlugin', () => {
     const services1 = builder.createLocal();
     const client1 = new Client({
       services: services1,
-      config: new Config({ runtime: { agent: { plugins: { indexing: { enabled: true } } } } }),
+      config: new Config({ runtime: { agent: { plugins: { dashboard: { enabled: true } } } } }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());

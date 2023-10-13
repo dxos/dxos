@@ -18,7 +18,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Indexing>;
+type Options = Required<Runtime.Agent.Plugins.Search>;
 
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
@@ -57,7 +57,7 @@ export class Search extends AbstractPlugin {
     log('Opening indexing plugin...');
 
     invariant(this._pluginCtx);
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
+    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.search;
     this._options = { ...DEFAULT_OPTIONS, ...config };
 
     if (!this._options.enabled) {
