@@ -9,7 +9,7 @@ import { DashboardResponse } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
-import { JsonView } from '../../../components';
+import { JsonView, PanelContainer } from '../../../components';
 
 export const DashboardPanel = () => {
   const client = useClient();
@@ -36,5 +36,9 @@ export const DashboardPanel = () => {
     return <div>Waiting for Identity...</div>;
   }
 
-  return <JsonView data={agentState} />;
+  return (
+    <PanelContainer>
+      <JsonView data={agentState} />;
+    </PanelContainer>
+  );
 };
