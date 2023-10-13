@@ -65,7 +65,10 @@ export class Search extends AbstractPlugin {
       return;
     }
 
-    this._pluginCtx.client.spaces.isReady.subscribe(async () => {
+    this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
       invariant(this._pluginCtx, 'Client is undefined.');
 
       const space = this._pluginCtx.client.spaces.default;
