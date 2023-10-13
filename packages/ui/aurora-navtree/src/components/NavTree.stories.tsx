@@ -5,6 +5,7 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
+import { Boat, Butterfly, Shrimp, TrainSimple } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { DensityProvider, Tooltip } from '@dxos/aurora';
@@ -48,18 +49,50 @@ const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolea
         id: item.id,
         ...item,
         label: item.title,
+        icon: () => <Shrimp />,
         children: Array.from({ length: 3 }).map(() => {
           const item = generator.createObject();
           return {
             id: item.id,
             ...item,
             label: item.title,
+            icon: () => <Butterfly />,
             children: [],
-            actions: [],
+            actions: [
+              {
+                id: `${item.id}__a1`,
+                label: faker.lorem.words(2),
+                icon: () => <Boat />,
+                invoke: () => {},
+                properties: {},
+              },
+              {
+                id: `${item.id}__a2`,
+                label: faker.lorem.words(2),
+                icon: () => <TrainSimple />,
+                invoke: () => {},
+                properties: {},
+              },
+            ],
             properties: {},
           };
         }),
-        actions: [],
+        actions: [
+          {
+            id: `${item.id}__a1`,
+            label: faker.lorem.words(2),
+            icon: () => <Boat />,
+            invoke: () => {},
+            properties: {},
+          },
+          {
+            id: `${item.id}__a2`,
+            label: faker.lorem.words(2),
+            icon: () => <TrainSimple />,
+            invoke: () => {},
+            properties: {},
+          },
+        ],
         properties: {},
       };
     });
