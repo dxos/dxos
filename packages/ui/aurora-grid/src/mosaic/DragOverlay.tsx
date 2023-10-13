@@ -68,7 +68,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
                 item={activeItem.item}
                 path={activeItem.path}
                 operation={operation}
-                isActive={true}
+                active='overlay'
               />
               {debug && (
                 <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
