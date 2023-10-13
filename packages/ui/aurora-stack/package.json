@@ -21,10 +21,7 @@
   "dependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/aurora-types": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/aurora-theme": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",

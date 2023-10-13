@@ -4,5 +4,3 @@
 
 export * from './decorators';
 export * from './generator';
-
-export * from './Cards';

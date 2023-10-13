@@ -5305,10 +5305,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/aurora-types': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/invariant': workspace:*
-      '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
@@ -5322,9 +5319,6 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-grid': link:../aurora-grid
       '@dxos/aurora-theme': link:../aurora-theme
-      '@dxos/aurora-types': link:../aurora-types
-      '@dxos/invariant': link:../../common/invariant
-      '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@faker-js/faker': 8.0.2
