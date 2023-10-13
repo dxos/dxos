@@ -40,12 +40,14 @@ export type MosaicContainerProps<
   TCustom = any,
 > = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
   id: string;
+
+  // TODO(wittjosiah): Don't expose externally.
   debug?: boolean;
 
   /**
    * Default component used to render tiles.
    */
-  Component?: MosaicTileComponent<TData>;
+  Component?: MosaicTileComponent<TData, any>;
 
   /**
    * Adapter to transform properties while dragging (e.g., constraint axes).
