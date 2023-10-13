@@ -12,7 +12,7 @@ import {
   EchoProxyServer,
   EpochMonitor,
   FunctionsPlugin,
-  IndexingPlugin,
+  Search,
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
@@ -90,8 +90,8 @@ export default class Start extends BaseCommand<typeof Start> {
         // Epoch monitoring.
         new EpochMonitor(),
 
-        // Indexing.
-        new IndexingPlugin(),
+        // Search plugin.
+        new Search(),
 
         // Dashboard.
         new DashboardPlugin(),

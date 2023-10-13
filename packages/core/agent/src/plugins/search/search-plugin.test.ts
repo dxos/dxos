@@ -11,15 +11,15 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
-import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
+import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/search';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { IndexingPlugin } from './indexing-plugin';
+import { Search } from './search-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
-describe('IndexingPlugin', () => {
+describe('SearchPlugin', () => {
   const documents = [
     {
       id: 1,
@@ -111,7 +111,7 @@ describe('IndexingPlugin', () => {
       space.db.add(new Expando(documents[0]));
       await space.db.flush();
     }
-    const index = new IndexingPlugin();
+    const index = new Search();
     await index.initialize({ client: client1, clientServices: services1, plugins: [] });
     await index.open();
     afterTest(() => index.close());
@@ -153,7 +153,7 @@ describe('IndexingPlugin', () => {
 
       await sleep(500);
       await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', {
-        '@type': 'dxos.agent.indexing.SearchRequest',
+        '@type': 'dxos.agent.search.SearchRequest',
         ...searchRequest,
       });
     }
