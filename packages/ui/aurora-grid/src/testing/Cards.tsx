@@ -16,18 +16,7 @@ export type SimpleCardProps = { id: string; title?: string; body?: string; image
 
 export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
   (
-    {
-      className,
-      active,
-      draggableStyle,
-      draggableProps,
-      item: { id, title },
-      path,
-      position,
-      grow,
-      debug,
-      onSelect,
-    },
+    { className, active, draggableStyle, draggableProps, item: { id, title }, path, position, grow, debug, onSelect },
     forwardRef,
   ) => {
     const full = !title;
