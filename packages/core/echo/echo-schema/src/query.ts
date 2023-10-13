@@ -4,15 +4,15 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { QueryOptions, ShowDeletedOption, UpdateEvent } from '@dxos/echo-db';
+import { type QueryOptions, ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
+import { type ComplexMap } from '@dxos/util';
 
-import { EchoObject } from './defs';
+import { type EchoObject } from './defs';
 import { createSignal } from './signal';
-import { isTypedObject, TypedObject } from './typed-object';
+import { isTypedObject, type TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.

@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs, { IConversionOptions } from 'protobufjs';
+import { type IConversionOptions } from 'protobufjs';
+import type protobufjs from 'protobufjs';
 
-import { Any, EncodingOptions, WithTypeUrl } from './common';
-import { BidirectionalMapingDescriptors } from './mapping';
-import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
+import { type Any, type EncodingOptions, type WithTypeUrl } from './common';
+import { type BidirectionalMapingDescriptors } from './mapping';
+import { createMessageMapper, type Mapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
 
 export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {

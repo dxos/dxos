@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { z } from 'zod';
+import { type z } from 'zod';
 
-import { DirectoryTemplate, DirectoryTemplateOptions, ExecuteDirectoryTemplateOptions } from './DirectoryTemplate';
+import {
+  DirectoryTemplate,
+  type DirectoryTemplateOptions,
+  type ExecuteDirectoryTemplateOptions,
+} from './DirectoryTemplate';
 import { logger } from './util/logger';
-import { FileResults } from './util/template';
-import { InquirableZodType, QuestionOptions, inquire, unDefault } from './util/zodInquire';
+import { type FileResults } from './util/template';
+import { type InquirableZodType, type QuestionOptions, inquire, unDefault } from './util/zodInquire';
 
 // export type QuestionOptions<TInput> = {
 //   [K in keyof TInput]?: {

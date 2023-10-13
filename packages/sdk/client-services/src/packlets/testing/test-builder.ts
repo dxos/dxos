@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   SnapshotStore,
-  DataPipeline,
+  type DataPipeline,
   MetadataStore,
   SpaceManager,
   valueEncoding,
@@ -19,11 +19,11 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';
-import { DataSpaceManager, SigningContext } from '../spaces';
+import { DataSpaceManager, type SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.

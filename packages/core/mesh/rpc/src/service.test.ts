@@ -7,10 +7,14 @@ import { expect } from 'earljs';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SystemError, schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import {
+  type TestStreamService,
+  type TestRpcResponse,
+  type TestService,
+} from '@dxos/protocols/proto/example/testing/rpc';
 import { describe, test } from '@dxos/test';
 
-import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
+import { createProtoRpcPeer, type ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.

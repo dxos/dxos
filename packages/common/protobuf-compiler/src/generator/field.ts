@@ -8,7 +8,7 @@ import * as ts from 'typescript';
 import { invariant } from '@dxos/invariant';
 
 import { types } from './types';
-import { SubstitutionsMap } from '../parser';
+import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 

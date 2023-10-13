@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Num, Fraction, FractionUtil } from './fraction';
+import { type Num, type Fraction, FractionUtil } from './fraction';
 
 export type Vertex = { x: Fraction; y: Fraction };
 

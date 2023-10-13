@@ -4,14 +4,14 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
-import { FeedWriter } from '@dxos/feed-store';
+import { tagMutationsInBatch, type ItemDemuxer, type ItemManager, setMetadataOnObject } from '@dxos/echo-db';
+import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoEvent, type MutationReceipt, type WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 /**

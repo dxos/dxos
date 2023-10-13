@@ -4,7 +4,7 @@
 
 import MiniSearch from 'minisearch';
 
-import { Getter } from './matcher';
+import { type Getter } from './matcher';
 
 interface IndexerOptions {
   fields: string[];

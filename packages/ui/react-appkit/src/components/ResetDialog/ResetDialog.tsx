@@ -6,10 +6,10 @@ import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, Message, useTranslation, DropdownMenu } from '@dxos/aurora';
-import { Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
-import { getAsyncValue, Provider } from '@dxos/util';
+import { type Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
+import { getAsyncValue, type Provider } from '@dxos/util';
 
-import { Dialog, DialogProps } from '../Dialog';
+import { Dialog, type DialogProps } from '../Dialog';
 import { Tooltip } from '../Tooltip';
 
 // TODO(burdon): Factor out.

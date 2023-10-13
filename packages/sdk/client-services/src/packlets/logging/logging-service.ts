@@ -4,16 +4,22 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { LogLevel, LogProcessor, LogEntry as NaturalLogEntry, getContextFromEntry, log } from '@dxos/log';
 import {
-  LogEntry,
-  LoggingService,
-  Metrics,
+  type LogLevel,
+  type LogProcessor,
+  type LogEntry as NaturalLogEntry,
+  getContextFromEntry,
+  log,
+} from '@dxos/log';
+import {
+  type LogEntry,
+  type LoggingService,
+  type Metrics,
   QueryLogsRequest,
-  ControlMetricsRequest,
-  ControlMetricsResponse,
-  QueryMetricsRequest,
-  QueryMetricsResponse,
+  type ControlMetricsRequest,
+  type ControlMetricsResponse,
+  type QueryMetricsRequest,
+  type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify, numericalValues, tracer } from '@dxos/util';
 

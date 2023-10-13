@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Point } from '@dxos/gem-core';
-import { GraphData } from '@dxos/gem-spore';
+import { type Point } from '@dxos/gem-core';
+import { type GraphData } from '@dxos/gem-spore';
 
 // TODO(burdon): Conform to gem-spore;
 

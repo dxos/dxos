@@ -10,7 +10,7 @@ import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItemsLocal } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
 

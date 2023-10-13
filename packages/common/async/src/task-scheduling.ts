@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import { trackResource } from './track-leaks';
 

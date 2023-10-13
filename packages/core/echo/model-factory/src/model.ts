@@ -4,7 +4,7 @@
 
 import type { ItemID } from '@dxos/protocols';
 
-import { ModelMeta, MutationWriter, MutationWriteReceipt } from './types';
+import { type ModelMeta, type MutationWriter, type MutationWriteReceipt } from './types';
 
 /**
  * Abstract base class for Models.

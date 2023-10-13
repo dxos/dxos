@@ -25,4 +25,4 @@ export {
   UnknownModelError,
 } from '@dxos/protocols';
 
-export { Client, ClientOptions } from './client';
+export { Client, type ClientOptions } from './client';

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { AuthenticatingInvitation, CancellableInvitation } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 

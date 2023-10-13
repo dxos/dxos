@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { MutableRefObject, PropsWithChildren } from 'react';
+import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
 import {
   baseSurface,
   coarseBlockPaddingStart,
@@ -15,7 +15,7 @@ import {
   textBlockWidth,
 } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const StandaloneLayout = ({
   children,

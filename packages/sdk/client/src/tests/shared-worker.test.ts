@@ -10,7 +10,7 @@ import { IFrameProxyRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
-import { MaybePromise, Provider } from '@dxos/util';
+import { type MaybePromise, type Provider } from '@dxos/util';
 
 import { Client } from '../client';
 import { ClientServicesProxy, fromIFrame } from '../services';

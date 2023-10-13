@@ -7,8 +7,8 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
-import { Button, ButtonProps } from '../Buttons';
+import { type ThemedClassName } from '../../util';
+import { Button, type ButtonProps } from '../Buttons';
 
 type SelectRootProps = SelectPrimitive.SelectProps;
 

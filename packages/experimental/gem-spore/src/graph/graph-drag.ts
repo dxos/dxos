@@ -3,11 +3,11 @@
 //
 
 import * as d3 from 'd3';
-import { Simulation } from 'd3-force';
+import { type Simulation } from 'd3-force';
 
-import { D3DragEvent, Point, SVGContext } from '@dxos/gem-core';
+import { type D3DragEvent, type Point, type SVGContext } from '@dxos/gem-core';
 
-import { GraphLayoutLink, GraphLayoutNode } from './types';
+import { type GraphLayoutLink, type GraphLayoutNode } from './types';
 
 export interface DragOptions<N> {
   dragMod?: string;

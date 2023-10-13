@@ -12,8 +12,8 @@ import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/
 import { defaultMap, range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
-import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
+import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type TransportTestSpec = {

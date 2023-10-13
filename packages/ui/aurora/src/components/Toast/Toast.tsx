@@ -6,24 +6,24 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import {
   ToastProvider as ToastProviderPrimitive,
-  ToastProviderProps as ToastProviderPrimitiveProps,
+  type ToastProviderProps as ToastProviderPrimitiveProps,
   ToastViewport as ToastViewportPrimitive,
-  ToastViewportProps as ToastViewportPrimitiveProps,
+  type ToastViewportProps as ToastViewportPrimitiveProps,
   Root as ToastRootPrimitive,
-  ToastProps as ToastRootPrimitiveProps,
+  type ToastProps as ToastRootPrimitiveProps,
   ToastTitle as ToastTitlePrimitive,
-  ToastTitleProps as ToastTitlePrimitiveProps,
+  type ToastTitleProps as ToastTitlePrimitiveProps,
   ToastDescription as ToastDescriptionPrimitive,
-  ToastDescriptionProps as ToastDescriptionPrimitiveProps,
+  type ToastDescriptionProps as ToastDescriptionPrimitiveProps,
   ToastAction as ToastActionPrimitive,
-  ToastActionProps as ToastActionPrimitiveProps,
+  type ToastActionProps as ToastActionPrimitiveProps,
   ToastClose as ToastClosePrimitive,
-  ToastCloseProps as ToastClosePrimitiveProps,
+  type ToastCloseProps as ToastClosePrimitiveProps,
 } from '@radix-ui/react-toast';
-import React, { ComponentPropsWithRef, forwardRef, FunctionComponent } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 

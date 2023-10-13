@@ -3,19 +3,19 @@
 //
 
 import { batch } from '@preact/signals-react';
-import { RevertDeepSignal } from 'deepsignal';
-import React, { PropsWithChildren, useEffect } from 'react';
+import { type RevertDeepSignal } from 'deepsignal';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
+import { type GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
+import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SplitViewContext, useSplitView } from './SplitViewContext';
 import { Fallback, SplitView, SplitViewMainContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
-import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewPluginProvides, SplitViewState } from './types';
+import { SPLITVIEW_PLUGIN, SplitViewAction, type SplitViewPluginProvides, type SplitViewState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/react-client';
+import { type Client } from '@dxos/react-client';
 import type * as Telemetry from '@dxos/telemetry';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './telemetry';

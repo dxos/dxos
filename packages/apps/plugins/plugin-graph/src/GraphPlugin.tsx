@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, GraphBuilder, NodeBuilder } from './graph';
-import { GraphPluginProvides, WithPlugins } from './types';
+import { type Graph, GraphBuilder, type NodeBuilder } from './graph';
+import { type GraphPluginProvides, type WithPlugins } from './types';
 import { graphPlugins } from './util';
 
 /**

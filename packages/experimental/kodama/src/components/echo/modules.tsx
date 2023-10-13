@@ -3,9 +3,9 @@
 //
 
 import { Box, useFocusManager } from 'ink';
-import React, { FC, ReactNode, useMemo } from 'react';
+import React, { type FC, type ReactNode, useMemo } from 'react';
 
-import { Space, useSpace } from '@dxos/react-client/echo';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 
 import { CreateSpace } from './CreateSpace';
 import { SpaceFeeds } from './SpaceFeeds';
@@ -14,7 +14,7 @@ import { SpaceMembers } from './SpaceMembers';
 import { SpaceView } from './SpaceView';
 import { useAppState } from '../../hooks';
 import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
+import { type MenuItem, Module, Panel } from '../util';
 
 const SpacePanel: FC<{
   children: ReactNode;

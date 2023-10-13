@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation, Tag } from '@dxos/aurora';
-import { PublicKey } from '@dxos/react-client';
+import { type PublicKey } from '@dxos/react-client';
 
 import { Avatar } from '../Avatar';
 import { Group } from '../Group';

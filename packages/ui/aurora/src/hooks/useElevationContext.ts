@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { Elevation } from '@dxos/aurora-types';
+import { type Elevation } from '@dxos/aurora-types';
 
 import { ElevationContext } from '../components';
 

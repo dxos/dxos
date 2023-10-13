@@ -9,12 +9,12 @@ import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Directory } from '@dxos/random-access-storage';
+import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
-import { FeedWriter, WriteReceipt } from './feed-writer';
+import { type FeedWriter, type WriteReceipt } from './feed-writer';
 
 /**
  * Async feed wrapper.

@@ -9,11 +9,11 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
-import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
+import { isThread, THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.

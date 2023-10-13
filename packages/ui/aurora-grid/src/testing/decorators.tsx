@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { DensityProvider } from '@dxos/aurora';

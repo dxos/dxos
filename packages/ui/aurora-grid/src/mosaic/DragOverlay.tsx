@@ -3,15 +3,15 @@
 //
 
 import { DragOverlay } from '@dnd-kit/core';
-import React, { Component, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
+import React, { Component, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
 import { DensityProvider } from '@dxos/aurora';
 import { raise } from '@dxos/debug';
 
-import { MosaicContainerProps } from './Container';
+import { type MosaicContainerProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { MosaicContext } from './Root';
-import { MosaicTileComponent } from './Tile';
+import { type MosaicTileComponent } from './Tile';
 import { Path } from './util';
 
 export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<

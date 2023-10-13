@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, InputScopedProps, useInputContext } from './Root';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from './Root';
 
 type TextAreaProps = Omit<ComponentPropsWithRef<'textarea'>, 'id'>;
 

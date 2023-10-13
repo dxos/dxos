@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 /**
  * Interface for a transport-agnostic port to send/receive binary messages.

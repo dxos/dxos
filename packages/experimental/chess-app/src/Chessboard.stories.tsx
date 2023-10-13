@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Chess } from 'chess.js';
 import React, { useState } from 'react';
 
-import { Chessboard, ChessModel, ChessPanel, ChessMove } from './Chessboard';
+import { Chessboard, type ChessModel, ChessPanel, type ChessMove } from './Chessboard';
 
 export default {
   component: Chessboard,

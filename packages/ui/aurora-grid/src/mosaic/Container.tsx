@@ -2,12 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Modifier } from '@dnd-kit/core';
-import React, { createContext, useEffect, CSSProperties, HTMLAttributes, PropsWithChildren } from 'react';
+import { type Modifier } from '@dnd-kit/core';
+import React, {
+  createContext,
+  useEffect,
+  type CSSProperties,
+  type HTMLAttributes,
+  type PropsWithChildren,
+} from 'react';
 
-import { MosaicTileComponent } from './Tile';
+import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
-import { MosaicDataItem, MosaicDraggedItem } from './types';
+import { type MosaicDataItem, type MosaicDraggedItem } from './types';
 
 export type MosaicTileOverlayProps = {
   grow?: boolean;

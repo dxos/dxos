@@ -4,7 +4,7 @@
 
 import { EventEmitter } from '@dxos/gem-core';
 
-import { defaultIdAccessor, emptyGraph, GraphData, GraphLink } from '../graph';
+import { defaultIdAccessor, emptyGraph, type GraphData, type GraphLink } from '../graph';
 
 /**
  * Utility to build GraphModel, which can be passed into the Graph component.

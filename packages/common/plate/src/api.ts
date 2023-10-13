@@ -7,32 +7,32 @@ import path from 'node:path';
 import {
   BASENAME,
   DirectoryTemplate,
-  DirectoryTemplateLoadOptions,
-  DirectoryTemplateOptions,
+  type DirectoryTemplateLoadOptions,
+  type DirectoryTemplateOptions,
 } from './DirectoryTemplate';
 import {
   InteractiveDirectoryTemplate,
-  InteractiveDirectoryTemplateOptions,
-  ExecuteInteractiveDirectoryTemplateOptions,
+  type InteractiveDirectoryTemplateOptions,
+  type ExecuteInteractiveDirectoryTemplateOptions,
 } from './InteractiveDirectoryTemplate';
-import { FileSlots, FileEffect } from './util/file';
-import { imports, Imports } from './util/imports';
+import { type FileSlots, FileEffect } from './util/file';
+import { imports, type Imports } from './util/imports';
 import { safeLoadModule } from './util/loadModule';
-import { Optional } from './util/optional';
+import { type Optional } from './util/optional';
 import { pretty } from './util/pretty';
 import {
-  Context,
-  Template,
-  Options,
-  Slots,
+  type Context,
+  type Template,
+  type Options,
+  type Slots,
   results,
   renderSlots,
   getOutputNameFromTemplateName,
-  SlotValues,
-  ResultOf,
-  Slot,
+  type SlotValues,
+  type ResultOf,
+  type Slot,
 } from './util/template';
-import { InquirableZodType } from './util/zodInquire';
+import { type InquirableZodType } from './util/zodInquire';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 

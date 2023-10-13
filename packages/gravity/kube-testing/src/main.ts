@@ -7,7 +7,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { PublicKey } from '@dxos/keys';
 
-import { runPlan, RunPlanParams, readYAMLSpecFile, TestPlan, runAgentForPlan } from './plan';
+import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runAgentForPlan } from './plan';
 import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars

@@ -4,7 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
-import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
+import { type ClientServicesProvider, ClientServicesProxy, type ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
 import { Context } from '@dxos/context';

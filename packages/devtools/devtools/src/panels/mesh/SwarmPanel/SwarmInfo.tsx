@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Button } from '@dxos/aurora';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
-import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo;

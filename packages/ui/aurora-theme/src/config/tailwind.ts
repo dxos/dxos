@@ -12,7 +12,7 @@ import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/config.full.js';
-import { Config, ThemeConfig } from 'tailwindcss/types/config';
+import { type Config, type ThemeConfig } from 'tailwindcss/types/config';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 

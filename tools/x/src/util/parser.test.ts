@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { LogParser, LogPrinter, LogReport } from './parser';
+import { LogParser, LogPrinter, type LogReport } from './parser';
 
 const log = `
 Typescript

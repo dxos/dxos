@@ -3,8 +3,8 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { type PublicKey } from '@dxos/keys';
+import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { ComplexSet } from '@dxos/util';
 
 import type { ShellManager } from './shell-manager';

@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ItemID } from '@dxos/protocols';
+import { type ItemID } from '@dxos/protocols';
 
 import { Item } from './item';
-import { coerceToId, OneOrMultiple } from './util';
+import { coerceToId, type OneOrMultiple } from './util';
 
 // TODO(burdon): Are these deprecated? Incl. Item?
 

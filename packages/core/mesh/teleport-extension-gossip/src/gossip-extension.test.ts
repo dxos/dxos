@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 

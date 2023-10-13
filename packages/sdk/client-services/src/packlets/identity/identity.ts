@@ -4,26 +4,30 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import {
   DeviceStateMachine,
-  CredentialSigner,
+  type CredentialSigner,
   createCredentialSignerWithKey,
   createCredentialSignerWithChain,
   ProfileStateMachine,
 } from '@dxos/credentials';
-import { Signer } from '@dxos/crypto';
+import { type Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Space } from '@dxos/echo-pipeline';
+import { type Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import {
+  AdmittedFeed,
+  type DeviceProfileDocument,
+  type ProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
 

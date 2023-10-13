@@ -3,7 +3,7 @@
 //
 
 import * as fc from 'fast-check';
-import { ModelRunSetup } from 'fast-check';
+import { type ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Context } from '@dxos/context';
@@ -11,10 +11,10 @@ import { Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
-import { Doc } from '@dxos/text-model';
+import { type Doc } from '@dxos/text-model';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { Client } from '../client';
+import { type Client } from '../client';
 import { joinCommonSpace, TestBuilder } from '../testing';
 
 // log.config({ filter: 'text.test:debug,error' });

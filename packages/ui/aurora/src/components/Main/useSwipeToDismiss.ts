@@ -4,7 +4,7 @@
 
 // This implementation is based upon https://github.com/hosembafer/react-swipe-to-dismiss, commit d88deafe910a6bd1400cf8fa90459a76cf4f71d3
 
-import { RefObject, useCallback, useEffect, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useState } from 'react';
 
 enum MotionState {
   IDLE,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/react-surface';
+import { type Plugin } from '@dxos/react-surface';
 
 import type { Graph, NodeBuilder } from './graph';
 

@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { Selection, SubscriptionHandle, createSubscription } from '@dxos/client/echo';
+import { type Selection, type SubscriptionHandle, createSubscription } from '@dxos/client/echo';
 
 /**
  * Create reactive selection.

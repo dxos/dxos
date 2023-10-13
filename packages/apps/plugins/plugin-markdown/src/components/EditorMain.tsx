@@ -2,15 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLAttributes, RefCallback } from 'react';
+import React, { type HTMLAttributes, type RefCallback } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
+import {
+  type ComposerModel,
+  MarkdownComposer,
+  type MarkdownComposerProps,
+  type MarkdownComposerRef,
+} from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
 
 // TODO(wittjosiah): Rename aurora-composer to aurora-editor.
 export const EditorMain = ({

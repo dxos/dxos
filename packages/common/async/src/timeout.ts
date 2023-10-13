@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Context, ContextDisposedError } from '@dxos/context';
+import { type Context, ContextDisposedError } from '@dxos/context';
 
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';

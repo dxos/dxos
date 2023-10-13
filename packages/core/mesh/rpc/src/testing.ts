@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { RpcPort } from './rpc';
+import { type RpcPort } from './rpc';
 
 export type CreateLinkedPortsOptions = {
   delay?: number;

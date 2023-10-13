@@ -4,15 +4,15 @@
 
 import { CaretDoubleRight } from '@phosphor-icons/react';
 import differenceInSeconds from 'date-fns/differenceInSeconds';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
-import { Space, useMembers } from '@dxos/react-client/echo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 

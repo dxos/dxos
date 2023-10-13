@@ -4,20 +4,20 @@
 
 import {
   Root as ScrollAreaPrimitiveRoot,
-  ScrollAreaProps as ScrollAreaPrimitiveRootProps,
+  type ScrollAreaProps as ScrollAreaPrimitiveRootProps,
   Viewport as ScrollAreaPrimitiveViewport,
-  ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
+  type ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
   Scrollbar as ScrollAreaPrimitiveScrollbar,
-  ScrollAreaScrollbarProps as ScrollAreaPrimitiveScrollbarProps,
+  type ScrollAreaScrollbarProps as ScrollAreaPrimitiveScrollbarProps,
   Thumb as ScrollAreaPrimitiveThumb,
-  ScrollAreaThumbProps as ScrollAreaPrimitiveThumbProps,
+  type ScrollAreaThumbProps as ScrollAreaPrimitiveThumbProps,
   Corner as ScrollAreaPrimitiveCorner,
-  ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
+  type ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
 } from '@radix-ui/react-scroll-area';
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type ScrollAreaRootProps = ThemedClassName<ScrollAreaPrimitiveRootProps>;
 

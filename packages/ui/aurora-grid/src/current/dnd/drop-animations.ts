@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { defaultDropAnimationSideEffects, DropAnimation } from '@dnd-kit/core';
+import { defaultDropAnimationSideEffects, type DropAnimation } from '@dnd-kit/core';
 
 export type OverlayDropAnimation = 'around' | 'away' | 'into';
 

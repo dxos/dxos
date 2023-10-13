@@ -3,14 +3,14 @@
 //
 
 import { useMachine } from '@xstate/react';
-import { assign, createMachine, InterpreterFrom, StateFrom, Subscribable } from 'xstate';
+import { assign, createMachine, type InterpreterFrom, type StateFrom, type Subscribable } from 'xstate';
 
 import { log } from '@dxos/log';
-import { Client } from '@dxos/react-client';
-import { Identity } from '@dxos/react-client/halo';
-import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { type Client } from '@dxos/react-client';
+import { type Identity } from '@dxos/react-client/halo';
+import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { StepEvent } from '../../steps';
+import { type StepEvent } from '../../steps';
 
 type IdentityMachineContext = {
   invitation?: CancellableInvitationObservable;

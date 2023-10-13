@@ -6,7 +6,7 @@ import { Duplex } from 'node:stream';
 
 import { invariant } from '@dxos/invariant';
 
-import { RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port';
 
 const FRAME_LENGTH_SIZE = 2;
 

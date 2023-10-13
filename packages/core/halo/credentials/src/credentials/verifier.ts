@@ -3,8 +3,8 @@
 //
 
 import { verifySignature } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
-import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type PublicKey } from '@dxos/keys';
+import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { isValidAuthorizedDeviceCredential } from './assertions';
 import { getCredentialProofPayload } from './signing';

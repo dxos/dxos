@@ -3,7 +3,7 @@
 //
 
 import { styleTags, Tag } from '@lezer/highlight';
-import { MarkdownConfig } from '@lezer/markdown';
+import { type MarkdownConfig } from '@lezer/markdown';
 
 export const markdownTags = {
   headingMark: Tag.define(),

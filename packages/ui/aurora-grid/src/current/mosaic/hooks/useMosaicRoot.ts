@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, createContext, useContext } from 'react';
+import { type Context, createContext, useContext } from 'react';
 
 export type MosaicRootContextValue = {
   id: string;

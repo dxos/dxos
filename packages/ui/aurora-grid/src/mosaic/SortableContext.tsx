@@ -3,10 +3,10 @@
 //
 
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { useContainer } from './hooks';
-import { MosaicDataItem } from './types';
+import { type MosaicDataItem } from './types';
 import { Path } from './util';
 
 type Direction = 'horizontal' | 'vertical';

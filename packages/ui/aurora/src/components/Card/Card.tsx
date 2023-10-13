@@ -3,11 +3,11 @@
 //
 
 import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
-import { Primitive } from '@radix-ui/react-primitive';
-import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, FC, forwardRef } from 'react';
+import { type Primitive } from '@radix-ui/react-primitive';
+import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, type FC, forwardRef } from 'react';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   grow?: boolean;
