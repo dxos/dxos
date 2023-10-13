@@ -9,7 +9,7 @@ import React from 'react';
 import { List } from '@dxos/aurora';
 import { groupSurface, mx, textBlockWidth } from '@dxos/aurora-theme';
 
-import { Section, SectionProps } from './Section';
+import { Section, type SectionProps } from './Section';
 
 export default {
   component: Section as any,

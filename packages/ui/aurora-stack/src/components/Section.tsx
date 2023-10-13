@@ -3,10 +3,10 @@
 //
 
 import { DotsSixVertical, X } from '@phosphor-icons/react';
-import React, { PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { Button, DensityProvider, ListItem, useTranslation } from '@dxos/aurora';
-import { MosaicActiveType, MosaicTileProps } from '@dxos/aurora-grid/next';
+import { type MosaicActiveType, type MosaicTileProps } from '@dxos/aurora-grid/next';
 import {
   fineButtonDimensions,
   focusRing,

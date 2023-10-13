@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, forwardRef, useMemo } from 'react';
+import React, { type FC, forwardRef, useMemo } from 'react';
 
 import { List, useTranslation } from '@dxos/aurora';
 import {
   Mosaic,
-  MosaicContainerProps,
-  MosaicDataItem,
-  MosaicTileComponent,
+  type MosaicContainerProps,
+  type MosaicDataItem,
+  type MosaicTileComponent,
   Path,
   useContainer,
   useItemsWithPreview,

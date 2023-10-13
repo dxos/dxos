@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
+import { type DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';

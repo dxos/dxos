@@ -7,9 +7,9 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
-import { Mosaic, MosaicDropEvent, MosaicMoveEvent, MosaicOperation, Path } from '@dxos/aurora-grid/next';
+import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/aurora-grid/next';
 
-import { Stack, StackProps, StackSectionItem } from './Stack';
+import { Stack, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
 
 faker.seed(3);
