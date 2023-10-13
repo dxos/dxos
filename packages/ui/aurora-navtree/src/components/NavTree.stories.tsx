@@ -13,7 +13,7 @@ import { Mosaic } from '@dxos/aurora-grid/next';
 import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
-import { type TreeNode } from './props';
+import { type NavTreeItemData, type TreeNode } from './props';
 import { TestObjectGenerator } from '../testing';
 
 faker.seed(3);
@@ -54,9 +54,11 @@ const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean
             label: item.title,
             children: [],
             actions: [],
+            properties: {},
           };
         }),
         actions: [],
+        properties: {},
       };
     });
   });
@@ -82,7 +84,7 @@ const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean
               children.splice(active.position!, 1);
             }
             if (Path.last(Path.parent(over.path)) === item.id) {
-              children.splice(over.position!, 0, active.item as TreeNode);
+              children.splice(over.position!, 0, (active.item as NavTreeItemData).node);
             }
             return { ...item, children };
           }),
@@ -94,8 +96,7 @@ const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean
 
   return (
     <NavTree
-      id={id}
-      node={{ id: 'root', label: 'root', children: items, actions: [] }}
+      node={{ id: 'root', label: 'root', children: items, actions: [], properties: {} }}
       onOver={handleOver}
       onDrop={handleDrop}
     />
