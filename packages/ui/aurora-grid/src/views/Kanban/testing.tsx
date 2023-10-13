@@ -20,7 +20,7 @@ const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: numb
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: generator.createObjects({ length: 3 + columns - i }),
+    items: generator.createObjects({ length: 3 + columns - i }),
   }));
 };
 
@@ -53,7 +53,7 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
 
     return setColumns((columns) =>
       columns.map((column) => {
-        const children = [...column.children];
+        const children = [...column.items];
         if (Path.last(Path.parent(active.path)) === column.id) {
           // Remove card from current postion.
           invariant(active.position !== undefined);
@@ -142,7 +142,7 @@ export const EchoKanban = ({
     // TODO(wittjosiah): Columns is stale here.
     return (
       kanban.objectPosition[property] ??
-      columnsRef.current.find((column) => column.id === getProperty(property))?.children.map((item) => item.id) ??
+      columnsRef.current.find((column) => column.id === getProperty(property))?.items.map((item) => item.id) ??
       []
     );
   };

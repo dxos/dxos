@@ -48,7 +48,7 @@ export const Copy = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'copy',
+    operation: 'copy',
   },
 };
 
@@ -56,6 +56,6 @@ export const Reject = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'reject',
+    operation: 'reject',
   },
 };

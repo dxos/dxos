@@ -22,7 +22,7 @@ import {
 
 export type KanbanColumn<TData extends MosaicDataItem = MosaicDataItem> = MosaicDataItem & {
   title: string;
-  children: TData[]; // TODO(burdon): Rename items.
+  items: TData[];
 };
 
 export type KanbanProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, number> & {
@@ -92,9 +92,9 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
   ({ path, item, active, draggableStyle, draggableProps, debug }, forwardRef) => {
-    const { id, title, children } = item;
+    const { id, title, items } = item;
     const { Component } = useContainer();
-    const itemsWithPreview = useItemsWithPreview({ path, items: children });
+    const itemsWithPreview = useItemsWithPreview({ path, items });
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>

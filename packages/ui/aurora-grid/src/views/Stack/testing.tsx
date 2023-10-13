@@ -17,7 +17,7 @@ import { TestObjectGenerator } from '../../testing';
 export type DemoStackProps = StackProps & {
   types?: string[];
   count?: number;
-  behavior?: MosaicOperation;
+  operation?: MosaicOperation;
 };
 
 export const DemoStack = ({
@@ -26,7 +26,7 @@ export const DemoStack = ({
   types,
   count = 8,
   direction = 'vertical',
-  behavior = 'adopt',
+  operation = 'adopt',
   debug,
 }: DemoStackProps) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() => {
@@ -38,14 +38,14 @@ export const DemoStack = ({
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-    if (behavior === 'reject') {
+    if (operation === 'reject') {
       return 'reject';
     }
 
     const exists = itemsRef.current.findIndex((item) => item.id === active.item.id) >= 0;
 
     if (!exists) {
-      return behavior;
+      return operation;
     } else {
       return 'reject';
     }
