@@ -36,7 +36,9 @@ export default {
   ],
 };
 
-const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean }) => {
+const ROOT_ID = 'root';
+
+const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolean }) => {
   const [items, setItems] = useState<TreeNode['children']>(() => {
     const generator = new TestObjectGenerator({ types: ['document'] });
     return Array.from({ length: 4 }).map(() => {
@@ -96,7 +98,7 @@ const StorybookNavTree = ({ id = 'tree', debug }: { id?: string; debug?: boolean
 
   return (
     <NavTree
-      node={{ id: 'root', label: 'root', children: items, actions: [], properties: {} }}
+      node={{ id: ROOT_ID, label: 'root', children: items, actions: [], properties: {} }}
       onOver={handleOver}
       onDrop={handleDrop}
     />
