@@ -99,7 +99,7 @@ export class SystemctlRunner implements Runner {
     const result: ProcessInfo = {};
     try {
       const service = this._getServiceName(profile);
-      const { stdout: statusOutput } = await execPromise(`systemctl --user status ${service}`);
+      const { stdout: statusOutput } = await execPromise(`systemctl --user status -n 0 ${service}`);
       if (statusOutput) {
         const pidMatch = /Main PID:\s*(\d+)/.exec(statusOutput);
         if (pidMatch) {
