@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EditorView } from '@codemirror/view';
-import { ComponentProps, useMemo } from 'react';
-import * as awarenessProtocol from 'y-protocols/awareness';
+import { type EditorView } from '@codemirror/view';
+import { type ComponentProps, useMemo } from 'react';
+import type * as awarenessProtocol from 'y-protocols/awareness';
 
-import { Space, Text } from '@dxos/react-client/echo';
-import { Identity } from '@dxos/react-client/halo';
+import { type Space, type Text } from '@dxos/react-client/echo';
+import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
 import { SpaceAwarenessProvider } from './yjs';

@@ -4,15 +4,15 @@
 
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
-import { CredentialProcessor } from '@dxos/credentials';
-import { FeedWriter } from '@dxos/feed-store';
+import { type CredentialProcessor } from '@dxos/credentials';
+import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { NotarizationService, NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
 const DEFAULT_RETRY_TIMEOUT = 1_000;

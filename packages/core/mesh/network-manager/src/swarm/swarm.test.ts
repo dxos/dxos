@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger, type SignalManager } from '@dxos/messaging';
 import { afterTest, describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 

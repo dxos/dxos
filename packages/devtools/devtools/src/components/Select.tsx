@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select as AuroraSelect, SelectRootProps, Toolbar } from '@dxos/aurora';
+import { Select as AuroraSelect, type SelectRootProps, Toolbar } from '@dxos/aurora';
 
 export type SelectProps = SelectRootProps & {
   items?: { value: string; label: string }[];

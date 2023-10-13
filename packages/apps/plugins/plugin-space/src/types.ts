@@ -5,8 +5,8 @@
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { PublicKey } from '@dxos/react-client';
-import { Space } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';

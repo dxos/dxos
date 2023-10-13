@@ -12,13 +12,13 @@ import { EventSubscriptions } from '@dxos/async';
 import { Button, DensityProvider, Input, Select } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Client } from '@dxos/react-client';
-import { Expando, Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
+import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 import { ClientDecorator, TestBuilder } from '@dxos/react-client/testing';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
 import { GraphBuilder } from '../graph-builder';
-import { Node } from '../node';
+import { type Node } from '../node';
 
 export default {
   title: 'Echo Graph',

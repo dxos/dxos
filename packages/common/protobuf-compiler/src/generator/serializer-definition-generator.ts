@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs from 'protobufjs';
+import type protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import { compressSchema } from '@dxos/codec-protobuf';
 
-import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
+import { CODEC_MODULE, type ModuleSpecifier } from '../module-specifier';
 import { serializeSchemaToJson } from '../protobuf-json';
 
 const f = ts.factory;

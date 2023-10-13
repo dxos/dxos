@@ -3,7 +3,7 @@
 //
 
 import ram from 'random-access-memory';
-import { Callback, RandomAccessStorage } from 'random-access-storage';
+import { type Callback, type RandomAccessStorage } from 'random-access-storage';
 
 import { arrayToBuffer } from '@dxos/util';
 

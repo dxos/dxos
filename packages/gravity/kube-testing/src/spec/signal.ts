@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
-import { TestPeer, TestBuilder } from '../test-builder';
+import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
 export type SignalTestSpec = {

@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { Card, Kanban, Stack, TreeItem, isCardTile, isKanbanTile, isStackTile, isTreeItemTile } from './variants';
-import { TileProps } from '../mosaic';
+import { type TileProps } from '../mosaic';
 
 /**
  * Tiles are elements that form a hierarchy of elements that can be dragged and dropped.

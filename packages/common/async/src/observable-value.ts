@@ -4,7 +4,7 @@
 
 import { createSetDispatch } from '@dxos/util';
 
-import { UnsubscribeCallback } from './events';
+import { type UnsubscribeCallback } from './events';
 
 /**
  * Return type for processes that support cancellable subscriptions.

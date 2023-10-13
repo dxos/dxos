@@ -16,11 +16,11 @@ import {
   UnknownProtocolError,
   trace,
 } from '@dxos/protocols';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessenger } from '../signal';
-import { Transport, TransportFactory } from '../transport';
-import { WireProtocol } from '../wire-protocol';
+import { type SignalMessage, type SignalMessenger } from '../signal';
+import { type Transport, type TransportFactory } from '../transport';
+import { type WireProtocol } from '../wire-protocol';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.

@@ -8,7 +8,7 @@ import React from 'react';
 
 import type { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Space, TypedObject } from '@dxos/client/echo';
+import { type Space, type TypedObject } from '@dxos/client/echo';
 
 import { CHESS_PLUGIN } from './types';
 

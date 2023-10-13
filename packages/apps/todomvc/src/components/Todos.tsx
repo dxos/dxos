@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';

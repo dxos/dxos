@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { MutationMetaWithTimeframe } from '@dxos/protocols';
+import { type MutationMetaWithTimeframe } from '@dxos/protocols';
 import { describe } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 

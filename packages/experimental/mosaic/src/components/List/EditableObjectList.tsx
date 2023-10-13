@@ -3,7 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { Button, List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';

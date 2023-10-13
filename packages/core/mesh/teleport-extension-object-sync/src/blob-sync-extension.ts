@@ -9,11 +9,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, schema } from '@dxos/protocols';
-import { BlobChunk, BlobSyncService, WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type BlobChunk, type BlobSyncService, type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
-import { BlobStore } from './blob-store';
+import { type BlobStore } from './blob-store';
 
 export type BlobSyncExtensionParams = {
   blobStore: BlobStore;

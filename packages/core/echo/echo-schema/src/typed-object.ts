@@ -3,19 +3,29 @@
 //
 
 import get from 'lodash.get';
-import { inspect, InspectOptionsStylized } from 'node:util';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
+import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { base, data, proxy, immutable, schema, meta, ObjectMeta, TypedObjectProperties, EchoObject } from './defs';
+import {
+  base,
+  data,
+  proxy,
+  immutable,
+  schema,
+  meta,
+  type ObjectMeta,
+  type TypedObjectProperties,
+  type EchoObject,
+} from './defs';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoObjectBase } from './echo-object-base';
-import { Schema } from './proto'; // NOTE: Keep as type-import.
+import { type Schema } from './proto'; // NOTE: Keep as type-import.
 import { Text } from './text-object';
 import { isReferenceLike } from './util';
 

@@ -6,7 +6,7 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Game } from '@dxos/chess-app';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type TypedObject } from '@dxos/client/echo';
 
 export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 

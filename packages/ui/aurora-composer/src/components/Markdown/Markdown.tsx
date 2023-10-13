@@ -15,7 +15,7 @@ import {
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { EditorState, StateField, Text } from '@codemirror/state';
+import { EditorState, StateField, type Text } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
@@ -32,7 +32,7 @@ import {
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { vim } from '@replit/codemirror-vim';
 import React, {
-  KeyboardEvent,
+  type KeyboardEvent,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -49,7 +49,7 @@ import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';
 import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
-import { ComposerModel, ComposerSlots } from '../../model';
+import { type ComposerModel, type ComposerSlots } from '../../model';
 
 export const EditorModes = ['default', 'vim'] as const;
 export type EditorMode = (typeof EditorModes)[number];

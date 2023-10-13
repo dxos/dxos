@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLProps, PropsWithChildren } from 'react';
+import React, { type HTMLProps, type PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 

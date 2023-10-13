@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex, pipeline } from 'node:stream';
+import { type Duplex, pipeline } from 'node:stream';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

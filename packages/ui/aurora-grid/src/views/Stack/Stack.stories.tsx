@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { Stack, StackProps } from './Stack';
+import { Stack, type StackProps } from './Stack';
 import { DemoStack } from './testing';
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';

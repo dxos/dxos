@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createElement, PropsWithChildren, ReactNode } from 'react';
+import type React from 'react';
+import { type PropsWithChildren, type ReactNode } from 'react';
+import { createElement } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 

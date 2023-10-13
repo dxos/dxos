@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { RefObject, useCallback } from 'react';
+import React, { type RefObject, useCallback } from 'react';
 
 import { Button, Dialog, useTranslation } from '@dxos/aurora';
-import { MarkdownComposerRef } from '@dxos/aurora-composer';
+import { type MarkdownComposerRef } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
 import { useOctokitContext } from './GithubApiProviders';
-import { GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier, type GhIssueIdentifier } from '../props';
 
 export const ImportDialog = ({
   data: [_, docGhId, editorRef],

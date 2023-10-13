@@ -6,9 +6,13 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { AsyncEvents, TimeoutError } from './errors';
+import { type AsyncEvents, TimeoutError } from './errors';
 import { latch } from './latch';
-import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable-value';
+import {
+  type CancellableObservable,
+  type CancellableObservableEvents,
+  CancellableObservableProvider,
+} from './observable-value';
 
 interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
   onConnected(connectionId: string): void;

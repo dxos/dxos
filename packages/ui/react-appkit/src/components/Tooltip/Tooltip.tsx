@@ -4,14 +4,21 @@
 
 import { Root as PortalRoot } from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import React, { ComponentProps, ReactNode, useState, forwardRef, ForwardRefExoticComponent, FC } from 'react';
+import React, {
+  type ComponentProps,
+  type ReactNode,
+  useState,
+  forwardRef,
+  type ForwardRefExoticComponent,
+  type FC,
+} from 'react';
 
 import {
   useId,
   Tooltip as NaturalTooltip,
-  TooltipRootProps,
-  TooltipContentProps,
-  TooltipTriggerProps,
+  type TooltipRootProps,
+  type TooltipContentProps,
+  type TooltipTriggerProps,
 } from '@dxos/aurora';
 
 export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = forwardRef<

@@ -3,14 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { QueryOptions, UpdateEvent } from '@dxos/echo-db';
+import { type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
-import { EchoDatabase } from './database';
-import { Filter, Query, TypeFilter } from './query';
+import { type EchoDatabase } from './database';
+import { type Filter, Query, type TypeFilter } from './query';
 import { TypeCollection } from './type-collection';
-import { TypedObject } from './typed-object';
+import { type TypedObject } from './typed-object';
 
 /**
  * Manages cross-space database interactions.

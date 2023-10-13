@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { type Dispatch, type SetStateAction } from 'react';
 
 import { ServiceWorkerToast } from './ServiceWorkerToast';
 

@@ -5,9 +5,9 @@
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
-import { ShowDeletedOption, TypedObject, useQuery } from '@dxos/react-client/echo';
+import { ShowDeletedOption, type TypedObject, useQuery } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { SpaceSelector } from '../../../containers';

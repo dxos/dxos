@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Editor, Tldraw } from '@tldraw/tldraw';
-import React, { FC, useEffect, useState } from 'react';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
+import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Sketch as SketchType } from '@braneframe/types';
+import { type Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';

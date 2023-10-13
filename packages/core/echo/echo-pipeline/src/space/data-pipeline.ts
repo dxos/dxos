@@ -4,25 +4,30 @@
 
 import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
+import {
+  type CredentialProcessor,
+  type FeedInfo,
+  type SpecificCredential,
+  checkCredentialType,
+} from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager, TYPE_PROPERTIES } from '@dxos/echo-db';
-import { FeedWriter } from '@dxos/feed-store';
+import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log, omit } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { CancelledError, DataPipelineProcessed } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ModelFactory } from '@dxos/model-factory';
+import { CancelledError, type DataPipelineProcessed } from '@dxos/protocols';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { tracer } from '@dxos/util';
 
-import { DatabaseHost, SnapshotManager } from '../db-host';
-import { MetadataStore } from '../metadata';
+import { DatabaseHost, type SnapshotManager } from '../db-host';
+import { type MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
 export interface PipelineFactory {

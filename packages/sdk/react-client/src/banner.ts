@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 // http://patorjk.com/software/taag/#p=testall&f=Patorjk-HeX&t=DXOS
 const BANNER = (client: Client) => {

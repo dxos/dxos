@@ -2,15 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MulticastObservable, UnsubscribeCallback } from '@dxos/async';
-import { DatabaseProxy } from '@dxos/echo-db';
-import { TypedObject, EchoDatabase } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
-import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
+import { type DatabaseProxy } from '@dxos/echo-db';
+import { type TypedObject, type EchoDatabase } from '@dxos/echo-schema';
+import { type PublicKey } from '@dxos/keys';
+import {
+  type Invitation,
+  type Space as SpaceData,
+  type SpaceMember,
+  type SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
-import { CancellableInvitation } from './invitations';
+import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
   get db(): DatabaseProxy;

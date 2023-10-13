@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { todo } from '@dxos/debug';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 import { List } from '../util';
 

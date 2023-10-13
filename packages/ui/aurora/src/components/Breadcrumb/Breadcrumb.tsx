@@ -5,11 +5,11 @@
 import { Dot } from '@phosphor-icons/react';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
-import { Link, LinkProps } from '../Link';
+import { type ThemedClassName } from '../../util';
+import { Link, type LinkProps } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   'aria-label': string;

@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Project, Symbol, TypeChecker } from 'ts-morph';
+import { Project, type Symbol, type TypeChecker } from 'ts-morph';
 import * as ts from 'typescript';
 
-import { ModuleSpecifier } from '../module-specifier';
+import { type ModuleSpecifier } from '../module-specifier';
 
 export interface ImportDescriptor {
   clause: ts.ImportClause;

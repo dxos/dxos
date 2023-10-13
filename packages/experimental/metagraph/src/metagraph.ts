@@ -4,11 +4,11 @@
 
 import fetch from 'cross-fetch';
 
-import { ObservableValue, ObservableProvider } from '@dxos/async';
-import { Config } from '@dxos/config';
+import { type ObservableValue, ObservableProvider } from '@dxos/async';
+import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { ApiError } from '@dxos/protocols';
-import { Module } from '@dxos/protocols/proto/dxos/config';
+import { type Module } from '@dxos/protocols/proto/dxos/config';
 
 export interface QueryEvents<T> {
   onUpdate(result: T[]): void;

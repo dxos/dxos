@@ -6,23 +6,23 @@ import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/asyn
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
-import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
-import { FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { type MetadataStore, type Space, createMappedFeedWriter, type DataPipeline } from '@dxos/echo-pipeline';
+import { type FeedStore } from '@dxos/feed-store';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { SpaceState, Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { SpaceState, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { SigningContext } from './data-space-manager';
+import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
 

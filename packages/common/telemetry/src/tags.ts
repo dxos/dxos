@@ -3,9 +3,9 @@
 //
 
 import { scheduleMicroTask } from '@dxos/async';
-import { ConfigProto } from '@dxos/config';
+import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { log, LogLevel, LogProcessor, getContextFromEntry } from '@dxos/log';
+import { log, LogLevel, type LogProcessor, getContextFromEntry } from '@dxos/log';
 import { humanize } from '@dxos/util';
 
 /**

@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 import update from 'lodash.update';
 
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 // todo(thure): Why is the value that gets set in `ghBind` always undefined by the time this is called?
 const ghMatch = (space: Space, identityHex: string, id: string): boolean => {

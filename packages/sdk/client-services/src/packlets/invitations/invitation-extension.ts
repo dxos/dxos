@@ -9,16 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, schema, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
-  AdmissionRequest,
-  AdmissionResponse,
+  type AdmissionRequest,
+  type AdmissionResponse,
   AuthenticationResponse,
-  IntroductionRequest,
-  InvitationHostService,
+  type IntroductionRequest,
+  type InvitationHostService,
   Options,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFunction, Elevation, MessageValence, Theme } from '@dxos/aurora-types';
+import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import { messageValence, contentElevation } from '../fragments';

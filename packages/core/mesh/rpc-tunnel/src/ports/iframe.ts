@@ -5,9 +5,9 @@
 import { UAParser } from 'ua-parser-js';
 
 import { log } from '@dxos/log';
-import { RpcPort } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
 
-import { MessageData } from '../message';
+import { type MessageData } from '../message';
 
 let browser: string | undefined;
 let os: string | undefined;

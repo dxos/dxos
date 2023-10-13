@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { types as clientSchema, ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
+import { types as clientSchema, type ClientServicesProvider, STATUS_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -16,8 +16,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
-import { GetDiagnosticsRequest, QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, JsonKeyOptions, jsonKeyReplacer, MaybePromise } from '@dxos/util';
+import {
+  GetDiagnosticsRequest,
+  type QueryStatusResponse,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, type JsonKeyOptions, jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
 import type { SpaceList, TypeCollection } from '../echo';

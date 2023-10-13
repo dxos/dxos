@@ -3,7 +3,7 @@
 //
 
 import { Box } from 'ink';
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 /**
  * Focusable panel.

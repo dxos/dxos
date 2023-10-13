@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { BitField, ComplexMap } from '@dxos/util';
 
-import { BlobStore } from './blob-store';
+import { type BlobStore } from './blob-store';
 import { BlobSyncExtension } from './blob-sync-extension';
 
 export type BlobSyncParams = {

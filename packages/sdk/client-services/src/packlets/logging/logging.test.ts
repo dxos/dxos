@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { log, LogLevel } from '@dxos/log';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { beforeEach, describe, test } from '@dxos/test';
 
 import { LoggingServiceImpl } from './logging-service';

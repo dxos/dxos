@@ -6,11 +6,11 @@ import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import { Observable } from 'lib0/observable';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { Doc } from 'yjs';
+import { type Doc } from 'yjs';
 
 import { log } from '@dxos/log';
-import { Space } from '@dxos/react-client/echo';
-import { GossipMessage } from '@dxos/react-client/mesh';
+import { type Space } from '@dxos/react-client/echo';
+import { type GossipMessage } from '@dxos/react-client/mesh';
 
 type Awareness = awarenessProtocol.Awareness;
 

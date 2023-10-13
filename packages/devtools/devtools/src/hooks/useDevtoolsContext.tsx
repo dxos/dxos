@@ -2,10 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
+import React, {
+  type Context,
+  createContext,
+  type Dispatch,
+  type FC,
+  type ReactNode,
+  type SetStateAction,
+  useContext,
+  useState,
+} from 'react';
 
-import { Space } from '@dxos/client/echo';
-import { PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/client/echo';
+import { type PublicKey } from '@dxos/react-client';
 
 export type DevtoolsContextType = {
   space?: Space;

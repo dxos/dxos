@@ -3,7 +3,7 @@
 //
 
 import { BaseCommand } from '../../base-command';
-import { TunnelRpcPeer, printTunnels } from '../../util';
+import { type TunnelRpcPeer, printTunnels } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

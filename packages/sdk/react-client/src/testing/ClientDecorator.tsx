@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 

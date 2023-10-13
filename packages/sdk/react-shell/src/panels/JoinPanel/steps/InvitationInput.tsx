@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { Actions, StepHeading } from '../../../components';
 import { Action } from '../../../components/Panel/Action';
 import { Input } from '../../../components/Panel/Input';
-import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
+import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';

@@ -3,16 +3,16 @@
 //
 
 import { untracked } from '@preact/signals-react';
-import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import Mousetrap from 'mousetrap';
 
-import { DispatchIntent } from '@braneframe/plugin-intent';
+import { type DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-import { Action } from './action';
+import { type Action } from './action';
 import { Graph } from './graph';
-import { Node, NodeBuilder } from './node';
+import { type Node, type NodeBuilder } from './node';
 
 /**
  * The builder...

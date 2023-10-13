@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { type UniqueIdentifier } from '@dnd-kit/core';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 
-import { TileProps } from '../tile';
+import { type TileProps } from '../tile';
 
 export const nextRearrangeIndex = (subtiles: TileProps[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
   const overOrderIndex = subtiles.length > 0 ? subtiles.findIndex(({ id }) => id === overId) : -1;

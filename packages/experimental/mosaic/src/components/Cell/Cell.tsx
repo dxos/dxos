@@ -4,11 +4,11 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { Bounds, Location, Point, serializeLocation } from '../../layout';
+import { type Bounds, type Location, type Point, serializeLocation } from '../../layout';
 
 export type CellSlots = {
   showLocation?: boolean;

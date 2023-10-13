@@ -4,12 +4,12 @@
 
 import {
   closestCorners,
-  CollisionDetection,
+  type CollisionDetection,
   DndContext,
-  DragCancelEvent,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
   KeyboardSensor,
   MouseSensor,
   pointerWithin,
@@ -19,9 +19,9 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDeepSignal } from 'deepsignal/react';
-import React, { createContext, PropsWithChildren, useCallback, useContext } from 'react';
+import React, { createContext, type PropsWithChildren, useCallback, useContext } from 'react';
 
-import { OverlayDropAnimation } from './drop-animations';
+import { type OverlayDropAnimation } from './drop-animations';
 
 export type EventHandler<TEvent> = (event: TEvent) => void;
 

@@ -3,7 +3,7 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
-import React, { FC, useEffect } from 'react';
+import React, { type FC, useEffect } from 'react';
 import { HashRouter, useLocation } from 'react-router-dom';
 
 import {
@@ -12,9 +12,9 @@ import {
   setupTelemetryListeners,
   withTelemetry,
 } from '@braneframe/plugin-telemetry/headless';
-import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/aurora';
 import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
-import { Client, ClientContext, ClientServices, useClient } from '@dxos/react-client';
+import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';

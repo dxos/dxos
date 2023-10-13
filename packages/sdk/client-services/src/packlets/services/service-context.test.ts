@@ -4,9 +4,9 @@
 
 import { expect } from 'chai';
 
-import { DocumentModel, DocumentModelState, MutationBuilder } from '@dxos/document-model';
+import { DocumentModel, type DocumentModelState, MutationBuilder } from '@dxos/document-model';
 import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
-import { WriteReceipt } from '@dxos/feed-store';
+import { type WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManagerContext } from '@dxos/messaging';

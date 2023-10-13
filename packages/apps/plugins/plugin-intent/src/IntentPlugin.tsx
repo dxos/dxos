@@ -5,14 +5,14 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
-  DispatchIntent,
-  Intent,
+  type DispatchIntent,
+  type Intent,
   IntentContextProvider,
-  IntentPluginProvides,
-  IntentProvides,
+  type IntentPluginProvides,
+  type IntentProvides,
   filterPlugins,
 } from './types';
 

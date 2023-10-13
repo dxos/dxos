@@ -4,15 +4,15 @@
 
 import '@dxosTheme';
 
-import { DndContext, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
-import React, { FC, ReactNode, useState } from 'react';
+import React, { type FC, type ReactNode, useState } from 'react';
 
 import { getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 
-import { List, ListItem, ListProps, ListScopedProps } from './List';
+import { List, ListItem, type ListProps, type ListScopedProps } from './List';
 
 export default {
   component: List as FC<ListProps>,

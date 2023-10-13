@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { mx } from '@dxos/aurora-theme';

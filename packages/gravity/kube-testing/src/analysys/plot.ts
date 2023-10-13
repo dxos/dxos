@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChartConfiguration } from 'chart.js';
-import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
+import { type ChartConfiguration } from 'chart.js';
+import { ChartJSNodeCanvas, type ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
 import { exec } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 

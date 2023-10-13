@@ -3,11 +3,18 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentPropsWithRef, Dispatch, forwardRef, ReactNode, SetStateAction, useEffect } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type Dispatch,
+  forwardRef,
+  type ReactNode,
+  type SetStateAction,
+  useEffect,
+} from 'react';
 
-import { ThemedClassName, useForwardedRef } from '@dxos/aurora';
+import { type ThemedClassName, useForwardedRef } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 const VIEWPORT_NAME = 'Viewport';

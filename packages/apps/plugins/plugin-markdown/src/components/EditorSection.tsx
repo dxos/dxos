@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { type HTMLAttributes, useRef } from 'react';
 
-import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../types';
+import { type MarkdownProperties } from '../types';
 
 export const EditorSection = ({
   data: { content: document },

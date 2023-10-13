@@ -12,7 +12,7 @@ import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
 
-import { Runner, RunnerStartOptions } from './runner';
+import { type Runner, type RunnerStartOptions } from './runner';
 
 const SYSTEMD_TEMPLATE_FILE = 'templates/dxos-agent.service.template';
 

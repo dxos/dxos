@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { createIFrame } from '@dxos/rpc-tunnel';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 export class IFrameManager {
   private _iframe?: HTMLIFrameElement;

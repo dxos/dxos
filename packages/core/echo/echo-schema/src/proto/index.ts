@@ -6,6 +6,6 @@ import { dxos } from './gen/schema';
 
 // Re-export namespace & class.
 export import Schema = dxos.schema.Schema;
-export import SchemaProps = dxos.schema.SchemaProps;
+export type SchemaProps = dxos.schema.SchemaProps;
 
 export { types as schemaBuiltin } from './gen/schema';

@@ -13,7 +13,7 @@ import type { Event } from '@sentry/node';
 
 import { log } from '@dxos/log';
 
-import { InitOptions } from './types';
+import { type InitOptions } from './types';
 
 // Polyfill export.
 export { setTag, setTags, setUser } from '@sentry/node';
