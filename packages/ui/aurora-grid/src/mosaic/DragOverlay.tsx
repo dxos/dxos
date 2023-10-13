@@ -57,32 +57,30 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
-    <DragOverlay adjustScale={false} {...overlayProps}>
+    <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }}>
       {activeItem?.path && container && OverlayComponent && (
         <OverlayErrorBoundary>
           {/* TODO(burdon): Configure density via getOverlayProps. */}
           <DensityProvider density='fine'>
-            <div role='none' className='flex w-full' style={{ ...container.getOverlayStyle?.() }}>
-              <OverlayComponent
-                {...container.getOverlayProps?.()}
-                item={activeItem.item}
-                path={activeItem.path}
-                operation={operation}
-                active='overlay'
-              />
-              {debug && (
-                <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
-                  <span className='truncate'>
-                    <span className='text-neutral-400'>container </span>
-                    {container.id}
-                  </span>
-                  <span className='truncate'>
-                    <span className='text-neutral-400'>item </span>
-                    {activeItem.item.id.slice(0, 8)}
-                  </span>
-                </div>
-              )}
-            </div>
+            <OverlayComponent
+              {...container.getOverlayProps?.()}
+              item={activeItem.item}
+              path={activeItem.path}
+              operation={operation}
+              active='overlay'
+            />
+            {debug && (
+              <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
+                <span className='truncate'>
+                  <span className='text-neutral-400'>container </span>
+                  {container.id}
+                </span>
+                <span className='truncate'>
+                  <span className='text-neutral-400'>item </span>
+                  {activeItem.item.id.slice(0, 8)}
+                </span>
+              </div>
+            )}
           </DensityProvider>
         </OverlayErrorBoundary>
       )}
