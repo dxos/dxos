@@ -106,13 +106,11 @@ export class SystemctlRunner implements Runner {
           const pid = parseInt(pidMatch[1]);
           if (!isNaN(pid)) {
             result.pid = pid;
+            const { stdout: psOutput } = await execPromise(`ps -o lstart= -p ${pid}`);
+            if (psOutput) {
+              result.started = new Date(psOutput).getTime();
+            }
           }
-        }
-        const startedMatch = /Started: (.+)/.exec(statusOutput);
-
-        if (startedMatch) {
-          const startedDate = new Date(startedMatch[1]);
-          result.started = startedDate.getTime();
         }
       }
     } catch (err: any) {}
