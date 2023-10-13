@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Signer } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
-import { TypedMessage } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type Signer } from '@dxos/crypto';
+import { type PublicKey } from '@dxos/keys';
+import { type TypedMessage } from '@dxos/protocols';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
-  Credential,
-  DeviceProfileDocument,
-  ProfileDocument,
+  type Credential,
+  type DeviceProfileDocument,
+  type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
-import { createCredential, CredentialSigner } from './credential-factory';
+import { createCredential, type CredentialSigner } from './credential-factory';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.

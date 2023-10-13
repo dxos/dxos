@@ -9,9 +9,9 @@ import { groupSurface, mx } from '@dxos/aurora-theme';
 
 import {
   Mosaic,
-  MosaicContainerProps,
-  MosaicDataItem,
-  MosaicTileComponent,
+  type MosaicContainerProps,
+  type MosaicDataItem,
+  type MosaicTileComponent,
   Path,
   useItemsWithPreview,
   useContainer,

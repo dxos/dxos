@@ -6,7 +6,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { schema } from './proto';
 import type { FeedMessage } from './proto/gen/dxos/echo/feed';
-import { ItemID } from './types';
+import { type ItemID } from './types';
 
 //
 // Testing.

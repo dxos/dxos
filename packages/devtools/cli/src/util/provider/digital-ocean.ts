@@ -8,7 +8,7 @@ import { waitForCondition } from '@dxos/async';
 import type { Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { KUBE_TAG, KubeDeployOptions, MachineryProvider } from './provider';
+import { KUBE_TAG, type KubeDeployOptions, type MachineryProvider } from './provider';
 
 const DEFAULT_REGION = 'nyc3';
 const DEFAULT_MEMORY = 4;

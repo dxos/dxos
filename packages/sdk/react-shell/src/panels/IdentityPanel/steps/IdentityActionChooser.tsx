@@ -12,7 +12,7 @@ import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { Action } from '../../../components';
-import { IdentityPanelStepProps } from '../IdentityPanelProps';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
 

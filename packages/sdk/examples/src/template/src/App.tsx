@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ThemeProvider } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
-import { Client, ClientProvider, PublicKey } from '@dxos/react-client';
+import { type Client, ClientProvider, type PublicKey } from '@dxos/react-client';
 
 import { Demo } from './components';
 

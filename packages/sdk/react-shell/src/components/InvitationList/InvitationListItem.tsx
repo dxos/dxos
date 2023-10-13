@@ -7,13 +7,13 @@ import React, { useCallback } from 'react';
 import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
 import { chromeSurface, getSize } from '@dxos/aurora-theme';
 import {
-  CancellableInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
-  InvitationStatus,
+  type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 
-import { SharedInvitationListProps } from './InvitationListProps';
+import { type SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
 import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragCancelEvent, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import { DependencyList, useContext, useEffect } from 'react';
+import { type DragCancelEvent, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
+import { type DependencyList, useContext, useEffect } from 'react';
 
-import { EventHandler, MosaicDndContext } from '../../dnd';
+import { type EventHandler, MosaicDndContext } from '../../dnd';
 
 export const useDragOver = (callback: EventHandler<DragOverEvent>, dependencies: DependencyList) => {
   const { dragOverSubscriptions } = useContext(MosaicDndContext);

@@ -5,7 +5,7 @@
 import { Writable } from 'node:stream';
 
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -18,11 +18,11 @@ import {
   ConnectivityError,
   UnknownProtocolError,
 } from '@dxos/protocols';
-import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { ConnectionState, type BridgeEvent, type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions } from './transport';
 
 export type SimplePeerTransportProxyParams = {
   initiator: boolean;

@@ -4,14 +4,14 @@
 
 import {
   ToggleGroup as ToggleGroupPrimitive,
-  ToggleGroupSingleProps,
-  ToggleGroupMultipleProps,
-  ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
+  type ToggleGroupSingleProps,
+  type ToggleGroupMultipleProps,
+  type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
   ToggleGroupItem as ToggleGroupItemPrimitive,
 } from '@radix-ui/react-toggle-group';
 import React, { forwardRef } from 'react';
 
-import { Button, ButtonGroup, ButtonGroupProps, ButtonProps } from './Button';
+import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button';
 
 type ToggleGroupProps = Omit<ToggleGroupSingleProps, 'className'> | Omit<ToggleGroupMultipleProps, 'className'>;
 

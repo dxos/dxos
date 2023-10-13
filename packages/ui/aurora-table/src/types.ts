@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ColumnDef, RowData } from '@tanstack/react-table';
+import { type ColumnDef, type RowData } from '@tanstack/react-table';
 
 // Define custom meta definitions.
 declare module '@tanstack/react-table' {

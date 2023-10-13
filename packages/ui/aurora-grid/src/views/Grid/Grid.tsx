@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { useDroppable } from '@dnd-kit/core';
-import React, { FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
+import React, { type FC, createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useMediaQuery } from '@dxos/aurora';
@@ -14,13 +14,13 @@ import { mx } from '@dxos/aurora-theme';
 import {
   calculateCellWidth,
   createMatrix,
-  Dimension,
+  type Dimension,
   getBounds,
   getDimension,
   getPanelBounds,
-  Position,
+  type Position,
 } from './layout';
-import { MosaicContainerProps, MosaicDataItem, Mosaic, Path } from '../../mosaic';
+import { type MosaicContainerProps, type MosaicDataItem, Mosaic, Path } from '../../mosaic';
 
 //
 // Context.

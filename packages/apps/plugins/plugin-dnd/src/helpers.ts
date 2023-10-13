@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AppState } from '@braneframe/types';
+import { type AppState } from '@braneframe/types';
 
 export const getAppStateIndex = (id: string, appState?: AppState): string | undefined => {
   return appState?.indices?.find(({ ref }) => ref === id)?.value;

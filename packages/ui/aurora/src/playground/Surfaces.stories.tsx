@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { baseSurface, chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
 

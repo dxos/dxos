@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
-import React, { FC, PropsWithChildren, useState } from 'react';
+import React, { type FC, type PropsWithChildren, useState } from 'react';
 
 import { chromeSurface, mx } from '@dxos/aurora-theme';
 

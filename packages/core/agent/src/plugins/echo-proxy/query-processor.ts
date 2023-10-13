@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Query } from './query';
+import { type Query } from './query';
 
 export class QueryProcessor {
   query(query: Query): any[] {

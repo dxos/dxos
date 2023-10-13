@@ -5,7 +5,7 @@
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { File as FileType } from '@braneframe/types';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type TypedObject } from '@dxos/client/echo';
 
 export const IPFS_PLUGIN = 'dxos.org/plugin/template';
 

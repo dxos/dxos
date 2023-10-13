@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 
 import { Context } from '@dxos/context';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { TestBuilder, TestConnection, TestPeer } from '@dxos/teleport/testing';
+import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 

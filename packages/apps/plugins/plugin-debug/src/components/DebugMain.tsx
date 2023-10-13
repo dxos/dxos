@@ -20,12 +20,20 @@ import {
   Warning,
 } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
-import React, { FC, PropsWithChildren, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  type FC,
+  type PropsWithChildren,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { type Graph } from '@braneframe/plugin-graph';
 import { Button, DensityProvider, Input, Main, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';

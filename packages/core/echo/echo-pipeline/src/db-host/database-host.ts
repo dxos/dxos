@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EchoProcessor, ItemDemuxer, ItemManager } from '@dxos/echo-db';
-import { FeedWriter } from '@dxos/feed-store';
-import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type EchoProcessor, ItemDemuxer, type ItemManager } from '@dxos/echo-db';
+import { type FeedWriter } from '@dxos/feed-store';
+import { type ModelFactory } from '@dxos/model-factory';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 

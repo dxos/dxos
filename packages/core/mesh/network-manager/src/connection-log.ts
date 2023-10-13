@@ -5,12 +5,12 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { MuxerStats } from '@dxos/teleport';
+import { type SwarmInfo, type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, Swarm } from './swarm';
-import { WireProtocol } from './wire-protocol';
+import { ConnectionState, type Swarm } from './swarm';
+import { type WireProtocol } from './wire-protocol';
 
 export enum EventType {
   CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',

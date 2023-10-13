@@ -2,15 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Any, ProtoCodec } from '@dxos/codec-protobuf';
-import { Item, MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
+import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
+import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
-import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
+import {
+  type Model,
+  type ModelConstructor,
+  type MutationOf,
+  type MutationWriteReceipt,
+  type StateMachine,
+  type StateOf,
+} from '@dxos/model-factory';
+import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { EchoDatabase } from './database';
-import { EchoObject, base, db, subscribe } from './defs';
+import { type EchoDatabase } from './database';
+import { type EchoObject, base, db, subscribe } from './defs';
 import { createSignal } from './signal';
 
 /**

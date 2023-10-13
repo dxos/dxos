@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Toggle as TogglePrimitive, ToggleProps as TogglePrimitiveProps } from '@radix-ui/react-toggle';
+import { Toggle as TogglePrimitive, type ToggleProps as TogglePrimitiveProps } from '@radix-ui/react-toggle';
 import React, { forwardRef } from 'react';
 
-import { Button, ButtonProps } from './Button';
+import { Button, type ButtonProps } from './Button';
 
 type ToggleProps = Omit<TogglePrimitiveProps, 'asChild'> & ButtonProps;
 

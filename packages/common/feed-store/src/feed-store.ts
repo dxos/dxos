@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { FeedFactory, FeedOptions } from './feed-factory';
-import { FeedWrapper } from './feed-wrapper';
+import { type FeedFactory, type FeedOptions } from './feed-factory';
+import { type FeedWrapper } from './feed-wrapper';
 
 export interface FeedStoreOptions<T extends {}> {
   factory: FeedFactory<T>;

@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { DevServer, type FunctionsManifest, TriggerManager } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';

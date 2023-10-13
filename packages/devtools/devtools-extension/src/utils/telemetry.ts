@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 
 export const initSentry = (namespace: string, config: Config) => {

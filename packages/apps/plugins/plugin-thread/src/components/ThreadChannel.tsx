@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useRef } from 'react';
+import React, { type FC, useRef } from 'react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+import { type Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
 import { groupSurface, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 
-import { BlockProperties, ThreadBlock } from './ThreadBlock';
+import { type BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 import { THREAD_PLUGIN } from '../types';
 

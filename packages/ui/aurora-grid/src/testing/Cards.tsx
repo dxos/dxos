@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 import { Card } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
-import { Mosaic, MosaicTileComponent } from '../mosaic';
+import { Mosaic, type MosaicTileComponent } from '../mosaic';
 
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 

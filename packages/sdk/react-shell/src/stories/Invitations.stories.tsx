@@ -11,7 +11,7 @@ import React, { useMemo, useState } from 'react';
 import { Button, ButtonGroup, List, Tooltip } from '@dxos/aurora';
 import { getSize, groupSurface } from '@dxos/aurora-theme';
 import { useClient } from '@dxos/react-client';
-import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';

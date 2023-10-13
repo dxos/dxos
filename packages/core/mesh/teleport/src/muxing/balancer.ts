@@ -4,7 +4,7 @@
 
 import * as varint from 'varint';
 
-import { Trigger, Event } from '@dxos/async';
+import { type Trigger, Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { Framer } from './framer';

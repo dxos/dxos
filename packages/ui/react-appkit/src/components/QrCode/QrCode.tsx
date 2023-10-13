@@ -5,13 +5,13 @@
 import { QrCode as QrCodeIcon, CopySimple } from '@phosphor-icons/react';
 import type { PopoverContentProps } from '@radix-ui/react-popover';
 import { QRCodeSVG } from 'qrcode.react';
-import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
+import React, { useCallback, type ReactHTMLElement, type ComponentProps } from 'react';
 
-import { Button, ButtonGroup, ButtonProps, Size, useId } from '@dxos/aurora';
+import { Button, ButtonGroup, type ButtonProps, type Size, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { Popover } from '../Popover';
-import { TooltipContent, TooltipRoot, TooltipTrigger, TooltipContentProps } from '../Tooltip';
+import { TooltipContent, TooltipRoot, TooltipTrigger, type TooltipContentProps } from '../Tooltip';
 
 interface SharedQrCodeProps extends Pick<ButtonProps, 'density' | 'elevation'> {
   value: string;

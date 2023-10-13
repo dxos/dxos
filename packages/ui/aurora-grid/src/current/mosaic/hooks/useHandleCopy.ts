@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
 import { batch } from '@preact/signals-core';
 import { getIndexAbove } from '@tldraw/indices';
 import { useCallback } from 'react';
 
 import { useMosaic } from './useMosaic';
 import { useMosaicDnd } from '../../dnd';
-import { TileProps } from '../tile';
-import { CopyTileAction, MosaicState } from '../types';
+import { type TileProps } from '../tile';
+import { type CopyTileAction, type MosaicState } from '../types';
 import { getSubtiles, nextRearrangeIndex, managePreview } from '../util';
 
 export const useHandleCopyDragStart = () => {

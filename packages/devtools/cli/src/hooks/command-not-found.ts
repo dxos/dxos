@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Hook } from '@oclif/core';
+import { type Hook } from '@oclif/core';
 import chalk from 'chalk';
 
 const hook: Hook<'command_not_found'> = async (params) => {

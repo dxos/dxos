@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContextScope, Scope } from '@radix-ui/react-context';
-import React, { PropsWithChildren } from 'react';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
+import React, { type PropsWithChildren } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 

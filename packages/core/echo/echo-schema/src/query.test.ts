@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { ShowDeletedOption } from '@dxos/echo-db';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { EchoDatabase } from './database';
+import { type EchoDatabase } from './database';
 import { createDatabase } from './testing';
 import { TypedObject } from './typed-object';
 

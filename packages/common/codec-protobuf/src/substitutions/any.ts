@@ -3,8 +3,8 @@
 //
 
 import { structSubstitutions } from './struct';
-import { EncodingOptions, WithTypeUrl } from '../common';
-import { TypeMapperContext } from '../mapping';
+import { type EncodingOptions, type WithTypeUrl } from '../common';
+import { type TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
 
 export const anySubstitutions = {

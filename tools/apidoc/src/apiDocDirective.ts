@@ -4,7 +4,7 @@
 
 import directive from '@linkedmd/markdown-it-directive';
 import memoize from 'lodash.memoize';
-import MdIt from 'markdown-it';
+import type MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
 import remarkPrettier from 'remark-prettier';

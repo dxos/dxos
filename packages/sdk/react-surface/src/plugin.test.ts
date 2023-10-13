@@ -3,12 +3,12 @@
 //
 
 import { expect } from 'chai';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { Plugin } from './Plugin';
+import { type Plugin } from './Plugin';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 export interface Interface<T> {

@@ -7,8 +7,8 @@ import * as localForage from 'localforage';
 
 import { log } from '@dxos/log';
 import type { Client, Config } from '@dxos/react-client';
-import { InitOptions as SentryInitOptions } from '@dxos/sentry';
-import { InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
+import { type InitOptions as SentryInitOptions } from '@dxos/sentry';
+import { type InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};

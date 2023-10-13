@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
+import React, { type ComponentProps, type ReactNode, useCallback, useState } from 'react';
 
 import { openOutline, focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
 

@@ -8,8 +8,8 @@ import WebSocket from 'isomorphic-ws';
 import { Trigger, Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Tunnel } from '@dxos/protocols/proto/dxos/service/tunnel';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { type Tunnel } from '@dxos/protocols/proto/dxos/service/tunnel';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
 export class TunnelRpcPeer {
   private readonly _socket: WebSocket;

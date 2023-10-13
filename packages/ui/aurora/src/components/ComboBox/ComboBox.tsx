@@ -3,14 +3,14 @@
 //
 
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
-import { createContextScope, Scope } from '@radix-ui/react-context';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { createPopperScope } from '@radix-ui/react-popper';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { useCombobox, UseComboboxReturnValue } from 'downshift';
-import React, { forwardRef, PropsWithChildren } from 'react';
+import { useCombobox, type UseComboboxReturnValue } from 'downshift';
+import React, { forwardRef, type PropsWithChildren } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { Button } from '../Buttons';
 import { Input } from '../Input';
 

@@ -2,18 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Bug, IconProps } from '@phosphor-icons/react';
+import { Bug, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphPluginProvides } from '@braneframe/plugin-graph';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { type GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getPlugin, PluginDefinition } from '@dxos/react-surface';
+import { getPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
-import { DEBUG_PLUGIN, DebugContext, DebugSettingsProps, DebugPluginProvides } from './props';
+import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';

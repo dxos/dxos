@@ -3,7 +3,7 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { KeyboardEventHandler, useState } from 'react';
+import React, { type KeyboardEventHandler, useState } from 'react';
 
 import { Button, Input } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';

@@ -4,9 +4,9 @@
 
 import * as url from 'url';
 
-import { Config } from './config.js';
+import { type Config } from './config.js';
 import { loadTypedocJson } from './loadTypedocJson.js';
-import template, { Input } from './templates/api/template.t.js';
+import template, { type Input } from './templates/api/template.t.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 

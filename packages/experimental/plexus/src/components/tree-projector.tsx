@@ -4,15 +4,15 @@
 
 import defaulstDeep from 'lodash.defaultsdeep';
 
-import { Point, SVGContext } from '@dxos/gem-core';
+import { type Point, type SVGContext } from '@dxos/gem-core';
 import {
-  GraphData,
-  GraphLayout,
-  GraphLayoutLink,
-  GraphLayoutNode,
-  GraphLink,
+  type GraphData,
+  type GraphLayout,
+  type GraphLayoutLink,
+  type GraphLayoutNode,
+  type GraphLink,
   Projector,
-  ProjectorOptions,
+  type ProjectorOptions,
 } from '@dxos/gem-spore';
 
 export type TreeProjectorOptions = ProjectorOptions &

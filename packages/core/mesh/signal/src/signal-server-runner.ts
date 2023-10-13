@@ -3,7 +3,7 @@
 //
 
 import fetch from 'node-fetch';
-import { ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';

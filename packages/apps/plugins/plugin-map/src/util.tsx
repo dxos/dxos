@@ -6,9 +6,9 @@ import { Compass, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Space, TypedObject } from '@dxos/client/echo';
+import { type Space, type TypedObject } from '@dxos/client/echo';
 
 import { MAP_PLUGIN } from './types';
 

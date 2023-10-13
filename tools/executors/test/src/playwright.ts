@@ -2,12 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Browser, devices, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
-import type { BrowserContext, Page } from '@playwright/test';
+import {
+  type Browser,
+  devices,
+  type LaunchOptions,
+  type PlaywrightTestConfig,
+  type Project,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test';
 import { v4 } from 'uuid';
 
 import { getBrowser } from './browser';
-import { BrowserType, MobileType } from './types';
+import { type BrowserType, type MobileType } from './types';
 import { Lock } from './util';
 
 export type { BrowserType } from './types';

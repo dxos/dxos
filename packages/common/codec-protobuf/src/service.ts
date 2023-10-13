@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import pb from 'protobufjs';
+import type pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 import { getAsyncValue } from '@dxos/util';
 
-import { Any, EncodingOptions } from './common';
+import { type Any, type EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 

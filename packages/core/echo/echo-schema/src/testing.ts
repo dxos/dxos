@@ -3,12 +3,12 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy } from '@dxos/echo-db';
+import { type DatabaseProxy } from '@dxos/echo-db';
 import {
   createMemoryDatabase,
   createRemoteDatabaseFromDataServiceHost,
   DatabaseTestBuilder,
-  DatabaseTestPeer as BasePeer,
+  type DatabaseTestPeer as BasePeer,
 } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';

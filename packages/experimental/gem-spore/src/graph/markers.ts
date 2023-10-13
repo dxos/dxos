@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { D3Callable } from '@dxos/gem-core';
+import { type D3Callable } from '@dxos/gem-core';
 
 export type MarkerOptions = {
   arrowSize?: number;

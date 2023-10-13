@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
 import { TextInput, Panel } from '../util';

@@ -6,17 +6,17 @@ import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Messenger, SignalManager } from '@dxos/messaging';
+import { Messenger, type SignalManager } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { SignalConnection } from './signal';
+import { type SignalConnection } from './signal';
 import { Swarm, SwarmMapper, ConnectionLimiter } from './swarm';
-import { Topology } from './topology';
-import { TransportFactory } from './transport';
-import { WireProtocolProvider } from './wire-protocol';
+import { type Topology } from './topology';
+import { type TransportFactory } from './transport';
+import { type WireProtocolProvider } from './wire-protocol';
 /**
  * Represents a single connection to a remote peer.
  */

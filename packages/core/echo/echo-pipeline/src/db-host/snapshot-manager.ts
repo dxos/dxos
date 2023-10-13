@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, cancelWithContext } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
+import { type BlobStore, type BlobSync } from '@dxos/teleport-extension-object-sync';
 
-import { SnapshotStore } from './snapshot-store';
+import { type SnapshotStore } from './snapshot-store';
 
 const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogProcessor } from './context';
+import { type LogProcessor } from './context';
 
 /**
  * Standard levels.

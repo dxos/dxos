@@ -2,9 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel, DocumentModelState } from '@dxos/document-model';
-import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions, UpdateEvent } from '@dxos/echo-db';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
+import {
+  type BatchUpdate,
+  type DatabaseProxy,
+  type Item,
+  type ItemManager,
+  type QueryOptions,
+  UpdateEvent,
+} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,10 +19,10 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
-import { EchoObject, base, db, immutable } from './defs';
-import { HyperGraph } from './hyper-graph';
-import { Schema } from './proto';
-import { Filter, Query, TypeFilter } from './query';
+import { type EchoObject, base, db, immutable } from './defs';
+import { type HyperGraph } from './hyper-graph';
+import { type Schema } from './proto';
+import { type Filter, Query, type TypeFilter } from './query';
 import { Text } from './text-object';
 import { TypedObject, isTypedObject } from './typed-object';
 

@@ -4,26 +4,26 @@
 
 import {
   Root as PopoverRootPrimitive,
-  PopoverProps as PopoverRootPrimitiveProps,
-  PopoverContentProps as PopoverContentPrimitiveProps,
+  type PopoverProps as PopoverRootPrimitiveProps,
+  type PopoverContentProps as PopoverContentPrimitiveProps,
   PopoverContent as PopoverContentPrimitive,
-  PopoverTriggerProps as PopoverTriggerPrimitiveProps,
+  type PopoverTriggerProps as PopoverTriggerPrimitiveProps,
   PopoverTrigger as PopoverTriggerPrimitive,
-  PopoverAnchorProps as PopoverAnchorPrimitiveProps,
+  type PopoverAnchorProps as PopoverAnchorPrimitiveProps,
   PopoverAnchor as PopoverAnchorPrimitive,
-  PopoverPortalProps as PopoverPortalPrimitiveProps,
+  type PopoverPortalProps as PopoverPortalPrimitiveProps,
   PopoverPortal as PopoverPortalPrimitive,
-  PopoverArrowProps as PopoverArrowPrimitiveProps,
+  type PopoverArrowProps as PopoverArrowPrimitiveProps,
   PopoverArrow as PopoverArrowPrimitive,
-  PopoverCloseProps as PopoverClosePrimitiveProps,
+  type PopoverCloseProps as PopoverClosePrimitiveProps,
   PopoverClose as PopoverClosePrimitive,
 } from '@radix-ui/react-popover';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef, FunctionComponent } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 type PopoverRootProps = PopoverRootPrimitiveProps;

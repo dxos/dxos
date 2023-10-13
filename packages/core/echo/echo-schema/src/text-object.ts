@@ -3,7 +3,7 @@
 //
 
 import { log } from '@dxos/log';
-import { TextKind, TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { EchoObjectBase } from './echo-object-base';

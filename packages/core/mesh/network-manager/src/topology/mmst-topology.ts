@@ -5,10 +5,10 @@
 import distance from 'xor-distance';
 
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SwarmController, Topology } from './topology';
+import { type SwarmController, type Topology } from './topology';
 
 export interface MMSTTopologyOptions {
   /**

@@ -5,7 +5,7 @@
 import { Article, ArticleMedium } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Document } from '@braneframe/types';
+import { type Document } from '@braneframe/types';
 import { useTranslation, TreeItem } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';

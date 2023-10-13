@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Device as DeviceType, DeviceKind } from '@dxos/react-client/halo';
+import { type Device as DeviceType, DeviceKind } from '@dxos/react-client/halo';
 
 import { Device } from './Device';
 

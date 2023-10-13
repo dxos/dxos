@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Directory } from './directory';
+import { type Directory } from './directory';
 
 // TODO(burdon): Reconcile with ConfigProto.
 export enum StorageType {

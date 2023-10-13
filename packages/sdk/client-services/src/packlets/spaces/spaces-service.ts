@@ -4,32 +4,32 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { CredentialProcessor } from '@dxos/credentials';
+import { type CredentialProcessor } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { DataServiceSubscriptions, SpaceManager } from '@dxos/echo-pipeline';
+import { type DataServiceSubscriptions, type SpaceManager } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
-  CreateEpochRequest,
-  PostMessageRequest,
-  QueryCredentialsRequest,
-  QuerySpacesResponse,
-  Space,
+  type CreateEpochRequest,
+  type PostMessageRequest,
+  type QueryCredentialsRequest,
+  type QuerySpacesResponse,
+  type Space,
   SpaceMember,
   SpaceState,
-  SpacesService,
-  SubscribeMessagesRequest,
-  UpdateSpaceRequest,
-  WriteCredentialsRequest,
+  type SpacesService,
+  type SubscribeMessagesRequest,
+  type UpdateSpaceRequest,
+  type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { Provider } from '@dxos/util';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type Provider } from '@dxos/util';
 
-import { DataSpace } from './data-space';
-import { DataSpaceManager } from './data-space-manager';
-import { IdentityManager } from '../identity';
+import { type DataSpace } from './data-space';
+import { type DataSpaceManager } from './data-space-manager';
+import { type IdentityManager } from '../identity';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(

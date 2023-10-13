@@ -4,7 +4,7 @@
 
 import { Args, ux } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 // TODO(burdon): Use r-c.
 

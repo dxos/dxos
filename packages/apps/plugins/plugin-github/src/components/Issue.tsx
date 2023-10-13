@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconWeight, Icon, IconBase } from '@phosphor-icons/react';
-import React, { forwardRef, ReactElement } from 'react';
+import { type IconWeight, type Icon, IconBase } from '@phosphor-icons/react';
+import React, { forwardRef, type ReactElement } from 'react';
 
 // TODO(wittjosiah): This is a workaround until we have utilities to compose icons.
 //   This is a combination of the Circle and Dot icons.

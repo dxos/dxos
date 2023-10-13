@@ -2,14 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, Observable, PushStream } from '@dxos/async';
-import { AuthenticatingInvitation, CancellableInvitation, InvitationEncoder, Invitations } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
+import { Event, MulticastObservable, type Observable, PushStream } from '@dxos/async';
+import {
+  AuthenticatingInvitation,
+  CancellableInvitation,
+  InvitationEncoder,
+  type Invitations,
+} from '@dxos/client-protocol';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation, InvitationsService, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Invitation,
+  type InvitationsService,
+  QueryInvitationsResponse,
+} from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Create an observable from an RPC stream.

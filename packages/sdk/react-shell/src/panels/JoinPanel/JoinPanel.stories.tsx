@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { JoinPanelImpl } from './JoinPanel';
-import { JoinPanelImplProps } from './JoinPanelProps';
+import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 

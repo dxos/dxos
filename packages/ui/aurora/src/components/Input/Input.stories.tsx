@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { MessageValence } from '@dxos/aurora-types';
+import { type MessageValence } from '@dxos/aurora-types';
 
 import { Input } from './Input';
 
