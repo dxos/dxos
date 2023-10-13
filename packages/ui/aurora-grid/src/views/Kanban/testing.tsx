@@ -108,7 +108,6 @@ export const EchoKanban = ({
   };
 
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
-  const columnsRef = useRef<KanbanColumn<TypedObject>[]>([]);
   const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
     const objectPosition = kanban.objectPosition[value] ?? [];
     const children =
@@ -123,6 +122,9 @@ export const EchoKanban = ({
       children: children.filter((object: TypedObject) => object[kanban.columnProp] === value),
     };
   });
+
+  // TODO(burdon): Why ref?
+  const columnsRef = useRef<KanbanColumn<TypedObject>[]>([]);
   columnsRef.current = columns;
 
   // TODO(burdon): Called for each object generated (should batch?)

@@ -22,7 +22,7 @@ import {
 
 export type KanbanColumn<TData extends MosaicDataItem = MosaicDataItem> = MosaicDataItem & {
   title: string;
-  children: TData[];
+  children: TData[]; // TODO(burdon): Rename items.
 };
 
 export type KanbanProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, number> & {
