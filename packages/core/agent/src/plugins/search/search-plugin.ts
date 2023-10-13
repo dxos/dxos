@@ -161,7 +161,10 @@ export class Search extends AbstractPlugin {
     const request: SearchRequest = message.payload;
     if (request.query) {
       const response = this._search(request);
-      await this._pluginCtx!.client!.spaces.default.postMessage(SEARCH_CHANNEL, response);
+      await this._pluginCtx!.client!.spaces.default.postMessage(SEARCH_CHANNEL, {
+        '@type': 'dxos.agent.search.SearchResult',
+        ...response,
+      });
     }
   }
 
@@ -171,7 +174,6 @@ export class Search extends AbstractPlugin {
     return {
       results: results.map((result) => {
         return {
-          '@type': 'dxos.agent.search.SearchResult',
           spaceKey: result.id.split(':')[0],
           objectId: result.id.split(':')[1],
           score: result.score,
