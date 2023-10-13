@@ -9,6 +9,9 @@ import { mx } from '@dxos/aurora-theme';
 
 import { Mosaic, MosaicTileComponent } from '../mosaic';
 
+// TODO(burdon): Menu options.
+// TODO(burdon): Margin while dragging.
+
 export type SimpleCardProps = { id: string; title?: string; body?: string; image?: string };
 
 export const SimpleCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
