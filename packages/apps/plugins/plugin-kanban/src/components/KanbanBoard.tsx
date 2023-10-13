@@ -4,23 +4,23 @@
 
 import {
   DndContext,
-  DragEndEvent,
-  DragMoveEvent,
-  DragOverEvent,
+  type DragEndEvent,
+  type DragMoveEvent,
+  type DragOverEvent,
   DragOverlay,
-  DragStartEvent,
-  Modifier,
+  type DragStartEvent,
+  type Modifier,
   MouseSensor,
   useSensor,
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { createSubscription } from '@dxos/echo-schema';
 import { arrayMove } from '@dxos/util';
 
-import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
+import { type ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 import type { Location, KanbanModel } from '../types';

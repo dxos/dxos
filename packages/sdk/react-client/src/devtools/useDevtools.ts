@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { DevtoolsHost } from '@dxos/client/devtools';
+import { type DevtoolsHost } from '@dxos/client/devtools';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 

@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Button, Input, Popover, useTranslation } from '@dxos/aurora';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN } from '../types';
 

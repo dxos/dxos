@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { TextB, TextItalic } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ToggleGroup, ToggleGroupItem, ToggleGroupProps } from './ToggleGroup';
+import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 
 type StorybookToggleGroupProps = {
   type: ToggleGroupProps['type'];

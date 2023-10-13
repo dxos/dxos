@@ -6,14 +6,14 @@ import MiniSearch from 'minisearch';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import { PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Query, Subscription, TypedObject } from '@dxos/echo-schema';
+import { type Query, type Subscription, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { SearchRequest, SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
@@ -54,8 +54,8 @@ export class Indexing extends AbstractPlugin {
   async open(): Promise<void> {
     log('Opening indexing plugin...');
 
-    invariant(this._client);
-    const config = this._client.config.values.runtime?.agent?.plugins?.indexing;
+    invariant(this._pluginCtx);
+    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
     if (!config || config.enabled === false) {
       log.info('indexing disabled from config');
       return;
@@ -63,20 +63,18 @@ export class Indexing extends AbstractPlugin {
 
     this._options = { ...DEFAULT_OPTIONS, ...config };
 
-    this._client!.spaces.isReady.wait()
-      .then(async () => {
-        invariant(this._client, 'Client is undefined.');
+    this._pluginCtx.client.spaces.isReady.subscribe(async () => {
+      invariant(this._pluginCtx, 'Client is undefined.');
 
-        const space = this._client.spaces.default;
+      const space = this._pluginCtx.client.spaces.default;
 
-        const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
-          log('received message', { message });
-          await this._processMessage(message);
-        });
+      const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
+        log('received message', { message });
+        await this._processMessage(message);
+      });
 
-        this._ctx.onDispose(unsubscribe);
-      })
-      .catch((error: Error) => log.catch(error));
+      this._ctx.onDispose(unsubscribe);
+    });
 
     this._indexSpaces().catch((error: Error) => log.catch(error));
   }
@@ -111,11 +109,11 @@ export class Indexing extends AbstractPlugin {
         }),
       );
 
-    invariant(this._client, 'Client is undefined.');
-    await this._client.spaces.isReady.wait();
-    const sub = this._client.spaces.subscribe(process);
+    invariant(this._pluginCtx, 'Client is undefined.');
+    await this._pluginCtx.client.spaces.isReady.wait();
+    const sub = this._pluginCtx.client.spaces.subscribe(process);
     this._ctx.onDispose(() => sub.unsubscribe());
-    await process(this._client.spaces.get());
+    await process(this._pluginCtx.client.spaces.get());
   }
 
   private async _indexSpace(space: Space): Promise<SpaceIndex> {
@@ -151,10 +149,14 @@ export class Indexing extends AbstractPlugin {
   }
 
   private async _processMessage(message: GossipMessage) {
+    if (message.payload['@type'] !== 'dxos.agent.indexing.SearchRequest') {
+      log.warn('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
+      return;
+    }
     const request: SearchRequest = message.payload;
     if (request.query) {
       const response = this._search(request);
-      await this._client!.spaces.default.postMessage('dxos.agent.indexing-plugin', response);
+      await this._pluginCtx!.client!.spaces.default.postMessage('dxos.agent.indexing-plugin', response);
     }
   }
 
@@ -164,6 +166,7 @@ export class Indexing extends AbstractPlugin {
     return {
       results: results.map((result) => {
         return {
+          '@type': 'dxos.agent.indexing.SearchResult',
           spaceKey: result.id.split(':')[0],
           objectId: result.id.split(':')[1],
           score: result.score,

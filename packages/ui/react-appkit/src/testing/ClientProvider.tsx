@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { Config, Defaults, Dynamics, Local, ClientProvider as NaturalClientProvider } from '@dxos/react-client';
 

@@ -8,7 +8,7 @@ import { Input, Select, useTranslation } from '@dxos/aurora';
 import { EditorModes } from '@dxos/aurora-composer';
 import { usePlugin } from '@dxos/react-surface';
 
-import { MARKDOWN_PLUGIN, MarkdownPluginProvides } from '../types';
+import { MARKDOWN_PLUGIN, type MarkdownPluginProvides } from '../types';
 
 export const MarkdownSettings = () => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);

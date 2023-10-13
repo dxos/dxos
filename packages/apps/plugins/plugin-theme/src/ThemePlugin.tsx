@@ -6,9 +6,9 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { ThemeFunction, ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
+import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import compositeEnUs from './translations/en-US';
 import { translationsPlugins } from './util';

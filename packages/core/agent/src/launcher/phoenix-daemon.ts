@@ -10,7 +10,7 @@ import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Phoenix } from '@dxos/phoenix';
 
-import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
+import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';

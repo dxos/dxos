@@ -9,11 +9,11 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Game } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import { ChessMain } from './components';
 import translations from './translations';
-import { isObject, CHESS_PLUGIN, ChessAction, ChessPluginProvides } from './types';
+import { isObject, CHESS_PLUGIN, ChessAction, type ChessPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {

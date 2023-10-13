@@ -4,9 +4,9 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, InputScopedProps, useInputContext } from './Root';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from './Root';
 
 type LabelProps = ComponentPropsWithRef<typeof Primitive.label> & { asChild?: boolean };
 

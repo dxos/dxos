@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MulticastObservable } from '@dxos/async';
-import { Contact, Device, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type MulticastObservable } from '@dxos/async';
+import { type Contact, type Device, type Identity, type Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { AuthenticatingInvitation, CancellableInvitation } from './invitations';
+import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
 
 /**
  * TODO(burdon): Public API (move comments here).

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
+import { type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { type MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 
 export class Batch {
   public readonly timestamp = Date.now();

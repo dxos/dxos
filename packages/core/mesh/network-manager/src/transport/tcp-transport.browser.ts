@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 
-import { Transport, TransportFactory } from './transport';
+import { type Transport, type TransportFactory } from './transport';
 
 // NOTE: Browser stub.
 

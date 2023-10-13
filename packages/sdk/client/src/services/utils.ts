@@ -11,7 +11,7 @@ import { ApiError } from '@dxos/protocols';
 import { getAsyncValue, safariCheck } from '@dxos/util';
 
 import { IFrameClientServicesHost } from './iframe-service-host';
-import { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
+import { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 import { LocalClientServices } from './local-client-services';
 
 /**

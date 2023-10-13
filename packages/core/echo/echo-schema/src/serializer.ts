@@ -7,7 +7,7 @@ import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { EchoDatabase } from './database';
+import { type EchoDatabase } from './database';
 import { base } from './defs';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
@@ -64,7 +64,7 @@ export class Serializer {
 
       switch (model) {
         case DocumentModel.meta.type: {
-          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? TypedObject;
+          const Prototype = (type ? database.graph.types.getPrototype(type) : undefined) ?? TypedObject;
 
           const obj = new Prototype({
             ...data,

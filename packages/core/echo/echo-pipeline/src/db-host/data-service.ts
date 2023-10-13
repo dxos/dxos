@@ -2,22 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  DataService,
-  MutationReceipt,
-  SubscribeRequest,
-  EchoEvent,
-  WriteRequest,
-  FlushRequest,
+  type DataService,
+  type MutationReceipt,
+  type SubscribeRequest,
+  type EchoEvent,
+  type WriteRequest,
+  type FlushRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
-import { DataServiceHost } from './data-service-host';
+import { type DataServiceHost } from './data-service-host';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {

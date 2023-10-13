@@ -7,11 +7,11 @@ import * as fc from 'fast-check';
 import { inspect } from 'util';
 
 import { asyncTimeout } from '@dxos/async';
-import { FeedStore, FeedWrapper } from '@dxos/feed-store';
+import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessageBlock } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessageBlock } from '@dxos/protocols';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';

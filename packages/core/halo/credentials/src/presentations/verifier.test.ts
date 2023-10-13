@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
 import { signPresentation } from './presentation';

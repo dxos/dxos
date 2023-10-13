@@ -3,11 +3,11 @@
 //
 
 import { createKeyborg } from 'keyborg';
-import React, { createContext, PropsWithChildren, useEffect } from 'react';
+import React, { createContext, type PropsWithChildren, useEffect } from 'react';
 
-import { Density, Elevation, ThemeFunction } from '@dxos/aurora-types';
+import { type Density, type Elevation, type ThemeFunction } from '@dxos/aurora-types';
 
-import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
+import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';

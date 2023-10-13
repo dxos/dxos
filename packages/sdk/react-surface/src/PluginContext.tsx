@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, FC, ReactNode, useContext, useEffect, useState } from 'react';
+import React, { createContext, type FC, type ReactNode, useContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
 import { composeContext } from './Context';
-import { Plugin, PluginDefinition, PluginProvides, findPlugin } from './Plugin';
+import { type Plugin, type PluginDefinition, type PluginProvides, findPlugin } from './Plugin';
 
 type PluginContextValue = {
   plugins: Plugin[];

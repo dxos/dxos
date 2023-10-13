@@ -11,11 +11,11 @@ import { SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { SpacePanelImpl } from './SpacePanel';
-import { SpacePanelImplProps } from './SpacePanelProps';
+import { type SpacePanelImplProps } from './SpacePanelProps';
 import { SpaceManagerImpl } from './steps';
 import { InvitationListItemImpl, SpaceMemberListImpl, InvitationList } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
-import { InvitationManager, InvitationManagerProps } from '../../steps';
+import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { inviteWithState } from '../../testing';
 
 const noOpProps: SpacePanelImplProps = {

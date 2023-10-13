@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
-import { Avatar, AvatarRootProps, useAvatarContext } from './Avatar';
+import { Avatar, type AvatarRootProps, useAvatarContext } from './Avatar';
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type AvatarGroupRootProps = Omit<AvatarRootProps, 'status' | 'maskId' | 'inGroup'> &
   ThemedClassName<ComponentPropsWithRef<'div'>>;

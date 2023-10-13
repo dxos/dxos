@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { type Duplex } from 'node:stream';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { Teleport } from '@dxos/teleport';
 
 export type WireProtocolParams = {

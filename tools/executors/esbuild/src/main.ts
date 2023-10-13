@@ -3,7 +3,7 @@
 //
 
 import type { ExecutorContext } from '@nx/devkit';
-import { build, Format, Platform } from 'esbuild';
+import { build, type Format, type Platform } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
+import { type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { JoinSend } from './joinMachine';
-import { IdentityInputProps } from './steps';
-import { StepProps } from '../../steps';
+import { type JoinSend } from './joinMachine';
+import { type IdentityInputProps } from './steps';
+import { type StepProps } from '../../steps';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 

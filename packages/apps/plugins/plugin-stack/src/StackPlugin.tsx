@@ -11,13 +11,13 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
 import { getDndId, parseDndId } from '@dxos/aurora-grid';
-import { SpaceProxy, TypedObject } from '@dxos/client/echo';
-import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
+import { findPlugin, type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionDelegator } from './components';
 import { stackState } from './stores';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, StackModel, StackPluginProvides, StackProvides } from './types';
+import { STACK_PLUGIN, StackAction, type StackModel, type StackPluginProvides, type StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
 const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;
@@ -51,8 +51,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       const graph = graphPlugin?.provides.graph();
       const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
-        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic) => {
-          if (tile.copyClass?.has('stack-section')) {
+        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic, operation) => {
+          if (operation === 'copy' && tile.copyClass?.has('stack-section')) {
             const [_, ...idParts] = parseDndId(originalId);
             tile.id = getDndId(toId, ...idParts);
             tile.variant = 'card';
@@ -141,6 +141,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return null;
             }
           case 'mosaic-delegator':
+            // TODO(burdon): Need stronger typing (vs. 'tile' in)?
             if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
               const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
               return mosaicId === STACK_PLUGIN || mosaicId === STACK_PLUGIN_PREVIEW_SECTION

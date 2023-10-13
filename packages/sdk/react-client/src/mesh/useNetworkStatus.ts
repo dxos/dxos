@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-import { NetworkStatus } from '@dxos/client/mesh';
+import { type NetworkStatus } from '@dxos/client/mesh';
 
 import { useClient } from '../client';
 

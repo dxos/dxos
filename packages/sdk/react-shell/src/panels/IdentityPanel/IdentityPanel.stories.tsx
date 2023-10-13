@@ -14,7 +14,7 @@ import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
-import { InvitationManager, InvitationManagerProps } from '../../steps';
+import { InvitationManager, type InvitationManagerProps } from '../../steps';
 
 faker.seed(1234);
 

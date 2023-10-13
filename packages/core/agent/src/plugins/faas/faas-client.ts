@@ -4,9 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { FunctionListEntry } from './api';
+import { type FunctionListEntry } from './api';
 
 // TODO(burdon): Protobuf.
 export type Trigger = {

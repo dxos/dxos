@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 
 /**
  * Hook that manages state and that can be updated by caller.

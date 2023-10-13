@@ -3,11 +3,11 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import { DeepSignal } from 'deepsignal';
+import { type DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
-import { Intent, IntentProvides } from '@braneframe/plugin-intent';
+import { type Intent, type IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
 export const STACK_PLUGIN = 'dxos.org/plugin/stack';

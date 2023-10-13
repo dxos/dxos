@@ -5,12 +5,12 @@
 import { expect } from 'chai';
 
 import { Event } from '@dxos/async';
-import { ClientServices } from '@dxos/client-protocol';
+import { type ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 import { describe, test } from '@dxos/test';
 

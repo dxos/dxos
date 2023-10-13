@@ -5,16 +5,16 @@
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
-import { FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { type FeedStore } from '@dxos/feed-store';
+import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createSimplePeerTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
@@ -22,7 +22,7 @@ import { ComplexMap } from '@dxos/util';
 import { TestFeedBuilder } from './test-feed-builder';
 import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../space';
 
 export type NetworkManagerProvider = () => NetworkManager;
 

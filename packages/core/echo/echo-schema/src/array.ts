@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect, CustomInspectFunction } from 'node:util';
+import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { base } from './defs';
 import { EchoObjectBase } from './echo-object-base';
-import { TypedObject } from './typed-object';
+import { type TypedObject } from './typed-object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;

@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type PublicKey } from '@dxos/keys';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClientServices } from '@dxos/react-client';
 
 export const useCredentials = ({ spaceKey }: { spaceKey?: PublicKey }) => {

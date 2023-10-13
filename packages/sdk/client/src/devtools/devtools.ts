@@ -4,13 +4,13 @@
 
 import { type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
-import { DocumentModel, DocumentModelState } from '@dxos/document-model';
+import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
+import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { Client } from '../client';
+import { type Client } from '../client';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;

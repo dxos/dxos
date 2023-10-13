@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import MiniSearch, { Options } from 'minisearch';
+import MiniSearch, { type Options } from 'minisearch';
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -12,14 +12,14 @@ import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
 import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Indexing } from './indexing-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
-describe('Indexing', () => {
+describe('IndexingPlugin', () => {
   const documents = [
     {
       id: 1,
@@ -112,7 +112,7 @@ describe('Indexing', () => {
       await space.db.flush();
     }
     const index = new Indexing();
-    await index.initialize(client1, services1);
+    await index.initialize({ client: client1, clientServices: services1, plugins: [] });
     await index.open();
     afterTest(() => index.close());
 
@@ -152,9 +152,12 @@ describe('Indexing', () => {
       };
 
       await sleep(500);
-      await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', searchRequest);
+      await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', {
+        '@type': 'dxos.agent.indexing.SearchRequest',
+        ...searchRequest,
+      });
     }
 
-    await results.wait();
+    await asyncTimeout(results.wait(), 1000);
   }).tag('flaky');
 });

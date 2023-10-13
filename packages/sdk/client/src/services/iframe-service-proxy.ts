@@ -4,25 +4,25 @@
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import {
-  ClientServices,
-  ClientServicesProvider,
+  type ClientServices,
+  type ClientServicesProvider,
   DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   DEFAULT_SHELL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { log, LogFilter, parseFilter } from '@dxos/log';
+import { log, type LogFilter, parseFilter } from '@dxos/log';
 import { RemoteServiceConnectionTimeout, trace } from '@dxos/protocols';
-import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { RpcPort, ServiceBundle } from '@dxos/rpc';
+import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
+import { type RpcPort, type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
 import { ShellManager } from './shell-manager';
-import { Client } from '../client';
+import { type Client } from '../client';
 
 export type IFrameClientServicesProxyOptions = {
   source?: string;

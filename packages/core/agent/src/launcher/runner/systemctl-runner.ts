@@ -12,8 +12,8 @@ import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
 
-import { Runner, RunnerStartOptions } from './runner';
-import { ProcessInfo } from '../../daemon';
+import { type Runner, type RunnerStartOptions } from './runner';
+import { type ProcessInfo } from '../../daemon';
 
 const SYSTEMD_TEMPLATE_FILE = 'templates/dxos-agent.service.template';
 

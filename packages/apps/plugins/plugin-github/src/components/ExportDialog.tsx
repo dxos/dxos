@@ -5,11 +5,11 @@
 import React, { useCallback, useState } from 'react';
 
 import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/aurora';
-import { ComposerModel } from '@dxos/aurora-composer';
+import { type ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
 import { useOctokitContext } from './GithubApiProviders';
-import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
+import { type ExportViewState, GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier } from '../props';
 
 export const ExportDialog = ({
   data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],

@@ -178,9 +178,15 @@ message Runtime {
         optional bool enabled = 1;
       }
 
+      /// Dashboard for agent.
+      message Dashboard {
+        optional bool enabled = 1;
+      }
+
       optional Functions functions = 1;
       optional EpochMontior epoch_monitor = 2;
       optional Indexing indexing = 3;
+      optional Dashboard dashboard = 4;
     }
 
     optional Plugins plugins = 1;

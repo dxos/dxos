@@ -4,7 +4,7 @@
 
 // This tailwind-merge plugin is based upon https://github.com/vltansky/tailwind-merge-logical-plugin
 
-import { Config, mergeConfigs, validators } from 'tailwind-merge';
+import { type Config, mergeConfigs, validators } from 'tailwind-merge';
 
 export const withLogical = (prevConfig: Config): Config => {
   const getLength = () => [validators.isLength] as const;

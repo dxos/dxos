@@ -3,9 +3,9 @@
 //
 
 import { createCredential } from '@dxos/credentials';
-import { Signer } from '@dxos/crypto';
+import { type Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const createMockCredential = async ({
   signer,

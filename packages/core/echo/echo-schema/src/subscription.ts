@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 
-import { EchoObject, subscribe } from './defs';
+import { type EchoObject, subscribe } from './defs';
 import { EchoObjectBase } from './echo-object-base';
 
 export type Selection = any[];

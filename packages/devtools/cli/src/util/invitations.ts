@@ -4,8 +4,8 @@
 
 import { Trigger, Event } from '@dxos/async';
 import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
   Invitation,
 } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';

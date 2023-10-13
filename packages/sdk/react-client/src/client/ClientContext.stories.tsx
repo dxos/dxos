@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { Component, PropsWithChildren } from 'react';
+import React, { Component, type PropsWithChildren } from 'react';
 
 import { fromHost } from '@dxos/client/services';
 import { Config } from '@dxos/config';

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/react-surface';
+import { type Plugin } from '@dxos/react-surface';
 
-import { TranslationsProvides } from './types';
+import { type TranslationsProvides } from './types';
 
 type TranslationsPlugin = Plugin<TranslationsProvides>;
 export const translationsPlugins = (plugins: Plugin[]): TranslationsPlugin[] => {

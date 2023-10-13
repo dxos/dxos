@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TLStore } from '@tldraw/tlschema';
+import { type TLStore } from '@tldraw/tlschema';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';

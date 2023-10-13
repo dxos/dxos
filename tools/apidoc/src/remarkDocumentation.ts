@@ -15,7 +15,7 @@ import { unified } from 'unified';
 import { VFile } from 'vfile';
 
 import { Remark } from './apiDocDirective.js';
-import { Config } from './config.js';
+import { type Config } from './config.js';
 
 export const remarkDocumentation = async (config: Config) => {
   const { include } = config;

@@ -5,9 +5,9 @@
 import { sentenceCase } from 'change-case';
 import format from 'date-fns/format';
 import formatDistance from 'date-fns/formatDistance';
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Factor out styles.
 const styles = {

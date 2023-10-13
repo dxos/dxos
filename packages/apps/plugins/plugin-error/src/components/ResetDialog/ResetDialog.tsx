@@ -11,11 +11,11 @@ import {
   Message,
   useTranslation,
   DropdownMenu,
-  AlertDialogRootProps,
+  type AlertDialogRootProps,
   Tooltip,
 } from '@dxos/aurora';
 import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
-import { Provider, getAsyncValue, safariCheck } from '@dxos/util';
+import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
 
 import { ERROR_PLUGIN } from '../../constants';
 

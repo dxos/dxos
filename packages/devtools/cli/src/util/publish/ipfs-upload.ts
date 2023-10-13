@@ -3,10 +3,10 @@
 //
 
 import fs from 'fs';
-import { CID, create, globSource } from 'ipfs-http-client';
+import { type CID, create, globSource } from 'ipfs-http-client';
 import { join } from 'path';
 
-import { Config } from '@dxos/client';
+import { type Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

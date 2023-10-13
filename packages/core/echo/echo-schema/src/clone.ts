@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ProtoCodec } from '@dxos/codec-protobuf';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { base, EchoObject } from './defs';
-import { EchoObjectBase } from './echo-object-base';
+import { base, type EchoObject } from './defs';
+import { type EchoObjectBase } from './echo-object-base';
 import { TypedObject } from './typed-object';
 
 export type CloneOptions = {

@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DefinePlugin, Compiler } from 'webpack';
+import { DefinePlugin, type Compiler } from 'webpack';
 
 import { definitions } from './definitions';
-import { ConfigPluginOpts } from './types';
+import { type ConfigPluginOpts } from './types';
 
 export class ConfigPlugin {
   constructor(private readonly _options: ConfigPluginOpts = {}) {}

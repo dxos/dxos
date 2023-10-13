@@ -9,7 +9,7 @@ import { descriptionText } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { Action, Actions, StepHeading } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationConnectorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';

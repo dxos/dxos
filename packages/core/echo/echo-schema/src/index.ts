@@ -9,7 +9,7 @@ export * from './database';
 export * from './defs';
 export * from './echo-object-base';
 export * from './query';
-export * from './router';
+export * from './hyper-graph';
 export { TypeCollection } from './type-collection';
 export * from './serializer';
 export * from './subscription';

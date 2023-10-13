@@ -6,8 +6,8 @@ import merge from 'lodash.merge';
 import protobufjs, { Root } from 'protobufjs';
 
 import { ProtoCodec } from './codec';
-import { Substitutions } from './common';
-import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
+import { type Substitutions } from './common';
+import { type BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
 
 export class Schema<T, S extends {} = {}> {

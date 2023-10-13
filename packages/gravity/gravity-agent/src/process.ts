@@ -1,10 +1,10 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { Command, SyncClient, SyncServer } from '@dxos/protocols/proto/dxos/gravity';
+import { type Command, type SyncClient, type SyncServer } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Client } from './rpcclt';
-import { Server, MethodCall, MethodMap, Config, On } from './rpcsrv';
+import { Server, type MethodCall, type MethodMap, type Config, On } from './rpcsrv';
 
 type processCommand = (command: Command) => void;
 

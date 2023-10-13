@@ -4,22 +4,22 @@
 
 import {
   Provider as TooltipProviderPrimitive,
-  TooltipProviderProps as TooltipProviderPrimitiveProps,
+  type TooltipProviderProps as TooltipProviderPrimitiveProps,
   Root as TooltipRootPrimitive,
-  TooltipProps as TooltipRootPrimitiveProps,
-  TooltipContentProps as TooltipContentPrimitiveProps,
+  type TooltipProps as TooltipRootPrimitiveProps,
+  type TooltipContentProps as TooltipContentPrimitiveProps,
   TooltipContent as TooltipContentPrimitive,
-  TooltipTriggerProps as TooltipTriggerPrimitiveProps,
+  type TooltipTriggerProps as TooltipTriggerPrimitiveProps,
   TooltipTrigger as TooltipTriggerPrimitive,
-  TooltipPortalProps as TooltipPortalPrimitiveProps,
+  type TooltipPortalProps as TooltipPortalPrimitiveProps,
   TooltipPortal as TooltipPortalPrimitive,
-  TooltipArrowProps as TooltipArrowPrimitiveProps,
+  type TooltipArrowProps as TooltipArrowPrimitiveProps,
   TooltipArrow as TooltipArrowPrimitive,
 } from '@radix-ui/react-tooltip';
-import React, { forwardRef, FunctionComponent } from 'react';
+import React, { forwardRef, type FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 type TooltipProviderProps = TooltipProviderPrimitiveProps;
 

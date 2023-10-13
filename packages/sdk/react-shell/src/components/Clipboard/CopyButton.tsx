@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, Copy, IconProps } from '@phosphor-icons/react';
+import { Check, Copy, type IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button, ButtonProps, Tooltip, useTranslation } from '@dxos/aurora';
+import { Button, type ButtonProps, Tooltip, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { useClipboardContext } from './ClipboardProvider';

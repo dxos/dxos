@@ -6,7 +6,7 @@ import { schema } from '@dxos/protocols';
 import type { TestListMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { Model } from '../model';
-import { ModelMeta, StateMachine } from '../types';
+import { type ModelMeta, type StateMachine } from '../types';
 
 class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
   private _messages: TestListMutation[] = [];

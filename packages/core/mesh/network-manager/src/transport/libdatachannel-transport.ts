@@ -7,10 +7,10 @@ import { Duplex } from 'stream';
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type PeerConnection } from './datachannel/rtc-peer-connection';
-import { Transport, TransportFactory } from './transport';
+import { type Transport, type TransportFactory } from './transport';
 
 export type LibDataChannelTransportParams = {
   initiator: boolean;

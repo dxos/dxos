@@ -5,8 +5,8 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';

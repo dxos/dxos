@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
+import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { useId, useThemeContext, ButtonProps, useElevationContext } from '@dxos/aurora';
+import { useId, useThemeContext, type ButtonProps, useElevationContext } from '@dxos/aurora';
 import { descriptionText, descriptionTextPrimary, mx } from '@dxos/aurora-theme';
 
 export interface CompoundButtonSlots {

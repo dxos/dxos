@@ -2,19 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel, DocumentModelState } from '@dxos/document-model';
-import { BatchUpdate, DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
+import {
+  type BatchUpdate,
+  type DatabaseProxy,
+  type Item,
+  type ItemManager,
+  type QueryOptions,
+  UpdateEvent,
+} from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
-import { WeakDictionary, getDebugName } from '@dxos/util';
+import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
-import { EchoObject, base, db, immutable } from './defs';
-import { Schema } from './proto';
-import { Filter, Query, TypeFilter } from './query';
-import { DatabaseRouter } from './router';
+import { type EchoObject, base, db, immutable } from './defs';
+import { type HyperGraph } from './hyper-graph';
+import { type Schema } from './proto';
+import { type Filter, Query, type TypeFilter } from './query';
 import { Text } from './text-object';
 import { TypedObject, isTypedObject } from './typed-object';
 
@@ -22,7 +30,10 @@ import { TypedObject, isTypedObject } from './typed-object';
  * Database wrapper.
  */
 export class EchoDatabase {
-  private readonly _objects = new Map<string, EchoObject>();
+  /**
+   * @internal
+   */
+  readonly _objects = new Map<string, EchoObject>();
 
   /**
    * Objects that have been removed from the database.
@@ -32,7 +43,7 @@ export class EchoDatabase {
   /**
    * @internal
    */
-  public readonly _updateEvent = new Event<Item[]>();
+  readonly _updateEvent = new Event<UpdateEvent>();
 
   public readonly pendingBatch: ReadOnlyEvent<BatchUpdate> = this._backend.pendingBatch;
 
@@ -40,12 +51,12 @@ export class EchoDatabase {
     /**
      * @internal
      */
-    public readonly _itemManager: ItemManager,
+    readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _router: DatabaseRouter,
+    private readonly _graph: HyperGraph,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
-    this._update([]);
+    this._update(new UpdateEvent(this._backend.spaceKey)); // TODO: Seems hacky.
   }
 
   get objects() {
@@ -55,8 +66,8 @@ export class EchoDatabase {
   /**
    * @deprecated
    */
-  get router() {
-    return this._router;
+  get graph() {
+    return this._graph;
   }
 
   getObjectById<T extends EchoObject>(id: string): T | undefined {
@@ -84,7 +95,7 @@ export class EchoDatabase {
     if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
       const objectConstructor = Object.getPrototypeOf(obj).constructor;
       invariant(
-        this._router.schema.getPrototype(obj.__typename!) === objectConstructor,
+        this._graph.types.getPrototype(obj.__typename!) === objectConstructor,
         `Prototype invalid or not registered: ${objectConstructor.name}`,
       );
     }
@@ -137,9 +148,9 @@ export class EchoDatabase {
           },
         ],
       });
-      invariant(result.objectsUpdated.length === 1);
+      invariant(result.updateEvent.itemsUpdated.length === 1);
 
-      obj[base]._bind(result.objectsUpdated[0]);
+      obj[base]._bind(result.updateEvent.itemsUpdated[0]);
     } finally {
       if (batchCreated) {
         this._backend.commitBatch();
@@ -197,10 +208,16 @@ export class EchoDatabase {
   query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
   query(filter?: Filter<any>, options?: QueryOptions): Query;
   query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(this._objects, this._updateEvent, filter, options);
+    return new Query(
+      new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
+      this._updateEvent,
+      filter,
+      options,
+    );
   }
 
-  private _update(changed: Item[]) {
+  private _update(updateEvent: UpdateEvent) {
+    // TODO(dmaretskyi): Optimize to not iterate the entire item set.
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
         let obj = this._removed.get(object.id);
@@ -235,14 +252,14 @@ export class EchoDatabase {
     }
 
     // Dispatch update events.
-    for (const item of changed) {
+    for (const item of updateEvent.itemsUpdated) {
       const obj = this._objects.get(item.id);
       if (obj) {
         obj[base]._itemUpdate();
       }
     }
 
-    this._updateEvent.emit(changed);
+    this._updateEvent.emit(updateEvent);
   }
 
   /**
@@ -257,7 +274,7 @@ export class EchoDatabase {
 
       if (state.type.protocol === 'protobuf') {
         const type = state.type.itemId;
-        const Proto = this._router.schema?.getPrototype(type);
+        const Proto = this._graph.types.getPrototype(type);
         if (!Proto) {
           log.warn('Unknown schema type', { type: state.type?.encode() });
           return new TypedObject(); // TODO(burdon): Expando?

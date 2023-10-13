@@ -12,8 +12,8 @@ import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
 
-import { Runner, type RunnerStartOptions } from './runner';
-import { ProcessInfo } from '../../daemon';
+import { type Runner, type RunnerStartOptions } from './runner';
+import { type ProcessInfo } from '../../daemon';
 
 const PLIST_TEMPLATE_FILE = 'templates/org.dxos.agent.plist.template';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 

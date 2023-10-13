@@ -7,15 +7,15 @@ import waitForExpect from 'wait-for-expect';
 
 import { Document as DocumentType, types } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Expando, subscribe } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
@@ -23,7 +23,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState } from '../echo';
-import { SpaceProxy } from '../echo/space-proxy';
+import { type SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -99,7 +99,9 @@ describe('Spaces', () => {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
       const {
-        objectsUpdated: [item],
+        updateEvent: {
+          itemsUpdated: [item],
+        },
       } = await testSpace(space.internal.db);
       itemId = item.id;
       expect(space.members.get()).to.be.length(1);

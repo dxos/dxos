@@ -11,7 +11,7 @@ import { SVGContextProvider } from './SVGContextProvider';
 import { SVGContext, Scale } from '../context';
 import { useGrid, useZoom, useSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
-import { Bounds, Fraction, FractionUtil, Vector, Vertex } from '../util';
+import { type Bounds, type Fraction, FractionUtil, Vector, type Vertex } from '../util';
 
 export default {
   title: 'gem-x/D3',

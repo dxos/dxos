@@ -5,21 +5,26 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Properties, Space, SpaceInternal } from '@dxos/client-protocol';
+import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
+import { type HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
-import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import {
+  Invitation,
+  type Space as SpaceData,
+  type SpaceMember,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
 
@@ -75,7 +80,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    databaseRouter: DatabaseRouter,
+    graph: HyperGraph,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -91,7 +96,7 @@ export class SpaceProxy implements Space {
       itemManager: this._itemManager,
       spaceKey: this.key,
     });
-    this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, graph);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -108,7 +113,7 @@ export class SpaceProxy implements Space {
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
-    databaseRouter.register(this.key, this._db);
+    graph._register(this.key, this._db);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);

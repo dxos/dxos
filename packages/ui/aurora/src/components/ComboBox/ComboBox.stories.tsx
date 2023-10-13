@@ -5,9 +5,9 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
-import { ComboBox, ComboBoxItem } from './ComboBox';
+import { ComboBox, type ComboBoxItem } from './ComboBox';
 
 type TestItem = { id: string; text: string };
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import browser, { Runtime } from 'webextension-polyfill';
+import browser, { type Runtime } from 'webextension-polyfill';
 
 const tabPorts = new Map<number, Runtime.Port>();
 

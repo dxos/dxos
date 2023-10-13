@@ -3,7 +3,7 @@
 //
 
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -12,8 +12,8 @@ import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/proto
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { SignalManager } from './signal-manager';
-import { Message } from './signal-methods';
+import { type SignalManager } from './signal-manager';
+import { type Message } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;

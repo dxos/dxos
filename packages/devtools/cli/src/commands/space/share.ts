@@ -5,7 +5,7 @@
 import { ux, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 

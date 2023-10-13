@@ -8,15 +8,15 @@ import React from 'react';
 import { Button } from '@dxos/aurora';
 import {
   createColumnBuilder,
-  BaseColumnOptions,
+  type BaseColumnOptions,
   ColumnMenu,
-  SelectQueryModel,
-  TableColumnDef,
-  ColumnProps,
-  TableDef,
+  type SelectQueryModel,
+  type TableColumnDef,
+  type ColumnProps,
+  type TableDef,
 } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
-import { EchoDatabase, Space, TypedObject } from '@dxos/client/echo';
+import { type EchoDatabase, type Space, type TypedObject } from '@dxos/client/echo';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { createUniqueProp } from './types';

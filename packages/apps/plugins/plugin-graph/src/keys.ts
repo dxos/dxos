@@ -21,5 +21,5 @@ export type KeyBinding = {
 
 export const keyString = (keyBinding: string) => {
   const parts = keyBinding.split('+');
-  return parts.map((part) => symbols[part] ?? part).join('+');
+  return parts.map((part) => symbols[part] ?? part).join('');
 };

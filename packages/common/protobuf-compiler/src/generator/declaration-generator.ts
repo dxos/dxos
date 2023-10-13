@@ -5,7 +5,7 @@
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
-import { GeneratorContext } from './context';
+import { type GeneratorContext } from './context';
 import { createEnumDeclaration } from './enum';
 import { createMessageDeclaration } from './message';
 import { createServiceDeclaration } from './service';

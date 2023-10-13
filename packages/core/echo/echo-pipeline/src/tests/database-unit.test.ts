@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { DocumentModel, MutationBuilder, OrderedArray } from '@dxos/document-model';
 import {
   COMMIT_BATCH_INACTIVITY_DEFAULT,
-  Item,
+  type Item,
   createModelMutation,
   encodeModelMutation,
   genesisMutation,
@@ -137,8 +137,8 @@ describe('database (unit)', () => {
       const builder = new DatabaseTestBuilder();
       const peer1 = await builder.createPeer();
       const id = PublicKey.random().toHex();
-      const { objectsUpdated } = peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
-      const item = objectsUpdated[0] as Item<DocumentModel>;
+      const { updateEvent } = peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+      const item = updateEvent.itemsUpdated[0] as Item<DocumentModel>;
       const model = new DocumentModel(DocumentModel.meta, item.id, () => item.state);
 
       peer1.proxy.mutate(

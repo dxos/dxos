@@ -129,7 +129,7 @@ describe('static schema', () => {
 
   test('restart with static schema', async () => {
     const builder = new TestBuilder();
-    builder.router.addSchema(types);
+    builder.graph.addTypes(types);
 
     const peer = await builder.createPeer();
     const task = peer.db.add(new Task({ title: 'Task 1' }));

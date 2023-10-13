@@ -4,11 +4,11 @@
 
 import '@dxosTheme';
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { Size } from '@dxos/aurora-types';
+import { type Size } from '@dxos/aurora-types';
 
-import { Avatar, useJdenticonHref, AvatarVariant, AvatarStatus, AvatarAnimation } from './Avatar';
+import { Avatar, useJdenticonHref, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 
 type StorybookAvatarProps = {
   imgSrc?: string;

@@ -5,7 +5,7 @@
 import frontMatter from 'front-matter';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SidebarItem, SidebarGroup } from 'vuepress';
+import { type SidebarItem, type SidebarGroup } from 'vuepress';
 
 import { DOCS_PATH } from '../constants';
 

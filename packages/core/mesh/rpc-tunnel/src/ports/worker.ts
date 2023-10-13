@@ -3,9 +3,9 @@
 //
 
 import { log } from '@dxos/log';
-import { RpcPort } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
 
-import { MessageData } from '../message';
+import { type MessageData } from '../message';
 
 export type WorkerPortOptions = {
   port: MessagePort;
