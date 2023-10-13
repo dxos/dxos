@@ -5,21 +5,26 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Properties, Space, SpaceInternal } from '@dxos/client-protocol';
+import { type ClientServicesProvider, Properties, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
+import { type HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
-import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import {
+  Invitation,
+  type Space as SpaceData,
+  type SpaceMember,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { InvitationsProxy } from '../invitations';
 

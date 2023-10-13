@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 import { X } from '@phosphor-icons/react';
-import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
+import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 
-import { JoinPanelMode } from './JoinPanelProps';
+import { type JoinPanelMode } from './JoinPanelProps';
 import { Heading } from '../../components';
 
 export interface JoinSpaceHeadingProps {

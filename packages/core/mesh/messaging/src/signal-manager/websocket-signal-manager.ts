@@ -3,17 +3,17 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, trace } from '@dxos/protocols';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { SignalManager } from './signal-manager';
-import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
+import { type SignalManager } from './signal-manager';
+import { type CommandTrace, SignalClient, type SignalStatus } from '../signal-client';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;

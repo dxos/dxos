@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
+import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { Mosaic } from '@dxos/aurora-grid';

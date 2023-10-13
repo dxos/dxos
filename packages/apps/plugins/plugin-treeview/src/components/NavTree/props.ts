@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 
 export type SharedTreeItemProps = { node: Node; level: number };
 

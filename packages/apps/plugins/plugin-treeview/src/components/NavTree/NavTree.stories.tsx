@@ -7,12 +7,19 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
-import React, { forwardRef, Ref } from 'react';
+import React, { forwardRef, type Ref } from 'react';
 
 import { GraphContext, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { DensityProvider, Tooltip } from '@dxos/aurora';
-import { DelegatorProps, getDndId, Mosaic, MosaicState, parseDndId, TreeItemTileProps } from '@dxos/aurora-grid';
+import {
+  type DelegatorProps,
+  getDndId,
+  Mosaic,
+  type MosaicState,
+  parseDndId,
+  type TreeItemTileProps,
+} from '@dxos/aurora-grid';
 
 import { NavTreeRoot } from './NavTree';
 import { NavTreeItemDelegator } from './NavTreeItem';

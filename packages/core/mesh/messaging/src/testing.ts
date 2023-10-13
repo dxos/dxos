@@ -5,16 +5,16 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Messenger } from './messenger';
 import {
-  SignalManager,
+  type SignalManager,
   MemorySignalManager,
   MemorySignalManagerContext,
   WebsocketSignalManager,
 } from './signal-manager';
-import { Message } from './signal-methods';
+import { type Message } from './signal-methods';
 
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];

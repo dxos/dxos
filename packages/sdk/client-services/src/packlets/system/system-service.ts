@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import {
   GetDiagnosticsRequest,
-  SystemService,
-  SystemStatus,
-  UpdateStatusRequest,
-  QueryStatusRequest,
-  QueryStatusResponse,
+  type SystemService,
+  type SystemStatus,
+  type UpdateStatusRequest,
+  type QueryStatusRequest,
+  type QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonKeyReplacer, MaybePromise } from '@dxos/util';
+import { jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
-import { Diagnostics } from '../services';
+import { type Diagnostics } from '../services';
 
 export type SystemServiceOptions = {
   config?: Config;

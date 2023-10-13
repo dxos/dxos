@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getAppStateIndex, SetTileHandler } from '@braneframe/plugin-dnd';
-import { Action, Graph, Node } from '@braneframe/plugin-graph';
-import { AppState } from '@braneframe/types';
+import { getAppStateIndex, type SetTileHandler } from '@braneframe/plugin-dnd';
+import { type Action, type Graph, type Node } from '@braneframe/plugin-graph';
+import { type AppState } from '@braneframe/types';
 import type { TFunction } from '@dxos/aurora';
-import { getDndId, MosaicState } from '@dxos/aurora-grid';
+import { getDndId, type MosaicState } from '@dxos/aurora-grid';
 
 import { TREE_VIEW_PLUGIN } from './types';
 

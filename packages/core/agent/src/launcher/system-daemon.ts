@@ -10,8 +10,8 @@ import path from 'node:path';
 import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { LaunchctlRunner, SystemctlRunner, Runner } from './runner';
-import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
+import { LaunchctlRunner, SystemctlRunner, type Runner } from './runner';
+import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';

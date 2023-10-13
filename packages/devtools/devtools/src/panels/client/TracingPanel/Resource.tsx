@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { sanitizeClassName } from '@dxos/tracing';
 
 export const ResourceName: FC<{ className?: string; resource: Resource }> = ({ className, resource }) => (

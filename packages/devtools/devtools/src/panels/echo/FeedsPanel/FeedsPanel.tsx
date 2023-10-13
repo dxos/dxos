@@ -6,10 +6,10 @@ import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
-import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type PublicKey } from '@dxos/keys';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';

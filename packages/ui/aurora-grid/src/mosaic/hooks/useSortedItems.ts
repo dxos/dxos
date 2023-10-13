@@ -3,7 +3,7 @@
 //
 
 import { useContainer } from './useContainer';
-import { MosaicDataItem } from '../types';
+import { type MosaicDataItem } from '../types';
 
 /**
  * Returns a sorted collection of items if a compare function is provided.

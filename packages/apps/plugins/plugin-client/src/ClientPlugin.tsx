@@ -5,15 +5,15 @@
 import React, { useEffect, useState } from 'react';
 
 import { AppState } from '@braneframe/types';
-import { TypeCollection } from '@dxos/client/echo';
+import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-client';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { type PluginDefinition } from '@dxos/react-surface';
 
-import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
+import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: TypeCollection };
 

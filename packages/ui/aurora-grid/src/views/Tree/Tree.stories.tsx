@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Tree } from './Tree';
-import { DemoTree, DemoTreeProps } from './testing';
+import { DemoTree, type DemoTreeProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator } from '../../testing';
 

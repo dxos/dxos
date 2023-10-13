@@ -8,7 +8,7 @@ import { dirname } from 'node:path';
 import { jsonify } from '@dxos/util';
 
 import { LogLevel } from '../config';
-import { LogProcessor, getContextFromEntry } from '../context';
+import { type LogProcessor, getContextFromEntry } from '../context';
 
 export const createFileProcessor = ({ path, levels }: { path: string; levels: LogLevel[] }): LogProcessor => {
   let fd: number | undefined;

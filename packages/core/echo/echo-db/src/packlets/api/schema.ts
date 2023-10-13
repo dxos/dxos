@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DocumentModel } from '@dxos/document-model';
+import { type DocumentModel } from '@dxos/document-model';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/space-properties';
 export const TYPE_SCHEMA = 'dxos.org/type/schema'; // TODO(burdon): Experimental.

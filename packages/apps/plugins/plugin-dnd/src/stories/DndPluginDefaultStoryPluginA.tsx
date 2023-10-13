@@ -11,9 +11,9 @@ import {
   useMosaicDnd,
   SortableContext,
   verticalListSortingStrategy,
-  UniqueIdentifier,
+  type UniqueIdentifier,
 } from '@dxos/aurora-grid';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaultStoryPlugin';

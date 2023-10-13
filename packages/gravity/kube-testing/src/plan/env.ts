@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createClient, RedisClientType } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 
 import { Trigger } from '@dxos/async';
 
-import { AgentParams } from './spec';
+import { type AgentParams } from './spec';
 
 export const REDIS_PORT = 6379;
 export const REDIS_URL = `redis://default:redispw@localhost:${REDIS_PORT}`;

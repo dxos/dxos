@@ -7,10 +7,10 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { sortByIndex } from '@tldraw/indices';
-import React, { forwardRef, Ref } from 'react';
+import React, { forwardRef, type Ref } from 'react';
 
 import { useMosaicDnd } from '../../dnd';
-import { useMosaic, TileProps, DelegatorProps } from '../../mosaic';
+import { useMosaic, type TileProps, type DelegatorProps } from '../../mosaic';
 import { Tile } from '../Tile';
 
 export type StackTileProps = TileProps & {

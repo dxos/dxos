@@ -4,15 +4,22 @@
 
 import { useMachine } from '@xstate/react';
 import { useCallback } from 'react';
-import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
-import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
+import {
+  assign,
+  createMachine,
+  type InterpreterFrom,
+  type StateFrom,
+  type StateNodeConfig,
+  type Subscribable,
+  type Subscription,
+} from 'xstate';
 
 import { log } from '@dxos/log';
 import type { Client } from '@dxos/react-client';
-import { Identity } from '@dxos/react-client/halo';
-import { AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type Identity } from '@dxos/react-client/halo';
+import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { JoinPanelMode } from './JoinPanelProps';
+import { type JoinPanelMode } from './JoinPanelProps';
 
 type FailReason = 'error' | 'timeout' | 'cancelled' | 'badVerificationCode';
 

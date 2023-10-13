@@ -3,9 +3,13 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { SignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
-import { NetworkService, NetworkStatus, UpdateConfigRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { type SignalManager } from '@dxos/messaging';
+import { type NetworkManager } from '@dxos/network-manager';
+import {
+  type NetworkService,
+  type NetworkStatus,
+  type UpdateConfigRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 
 export class NetworkServiceImpl implements NetworkService {
   constructor(private readonly networkManager: NetworkManager, private readonly signalManager: SignalManager) {}

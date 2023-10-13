@@ -5,12 +5,12 @@
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
-import React, { createContext, PropsWithChildren } from 'react';
+import React, { createContext, type PropsWithChildren } from 'react';
 
 import { randomString } from '@dxos/aurora';
 import { useSortable, CSS } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
-import { PluginDefinition, Surface } from '@dxos/react-surface';
+import { type PluginDefinition, Surface } from '@dxos/react-surface';
 
 export type StoryItem = { id: string; title: string; description: string; type: 'fruit' | 'vegetable' };
 

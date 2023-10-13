@@ -3,16 +3,16 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { Check, ClipboardText, Icon, X } from '@phosphor-icons/react';
-import { createColumnHelper, ColumnDef, ColumnMeta, RowData } from '@tanstack/react-table';
+import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
+import { createColumnHelper, type ColumnDef, type ColumnMeta, type RowData } from '@tanstack/react-table';
 import format from 'date-fns/format';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { ComboBox, ComboBoxItem, Input, Tooltip } from '@dxos/aurora';
+import { ComboBox, type ComboBoxItem, Input, Tooltip } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?

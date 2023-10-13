@@ -3,14 +3,14 @@
 //
 
 import { ArrowClockwise } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/aurora-table';
 import { getSize } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';

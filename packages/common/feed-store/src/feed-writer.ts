@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 
 export type WriteReceipt = {
   feedKey: PublicKey;

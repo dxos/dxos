@@ -8,15 +8,15 @@ import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxo
 import { dropRing, mx } from '@dxos/aurora-theme';
 
 import {
-  MosaicContainerProps,
+  type MosaicContainerProps,
   Mosaic,
-  MosaicDataItem,
-  MosaicTileComponent,
+  type MosaicDataItem,
+  type MosaicTileComponent,
   useContainer,
   useMosaic,
   Path,
   useSortedItems,
-  MosaicCompareDataItem,
+  type MosaicCompareDataItem,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.

@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
-import { FeedWrapper } from './feed-wrapper';
-import { FeedBlock } from './types';
+import { type FeedWrapper } from './feed-wrapper';
+import { type FeedBlock } from './types';
 
 /**
  * Base class for an async iterable feed.

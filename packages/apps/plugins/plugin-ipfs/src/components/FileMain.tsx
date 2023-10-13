@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import urlJoin from 'url-join';
 
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { TypedObject } from '@dxos/client/echo';
-import { Config, useConfig } from '@dxos/react-client';
+import { type TypedObject } from '@dxos/client/echo';
+import { type Config, useConfig } from '@dxos/react-client';
 
 import { FilePreview } from './FilePreview';
 

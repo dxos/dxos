@@ -6,10 +6,10 @@ import { faker } from '@faker-js/faker';
 import type { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';
-import { Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
 
-import { FeedWriter } from '../feed-writer';
+import { type FeedWriter } from '../feed-writer';
 
 export type TestItem = {
   id: string;

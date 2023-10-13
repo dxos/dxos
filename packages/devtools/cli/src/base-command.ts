@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Config as OclifConfig, Flags, Interfaces } from '@oclif/core';
+import { Command, type Config as OclifConfig, Flags, type Interfaces } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
@@ -11,9 +11,15 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError, Daemon, PhoenixDaemon, SystemDaemon } from '@dxos/agent';
+import {
+  AgentIsNotStartedByCLIError,
+  AgentWaitTimeoutError,
+  type Daemon,
+  PhoenixDaemon,
+  SystemDaemon,
+} from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import {
   getProfilePath,
@@ -24,7 +30,7 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
-import { ConfigProto } from '@dxos/config';
+import { type ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
@@ -43,7 +49,7 @@ import {
   showTelemetryBanner,
   PublisherRpcPeer,
   SupervisorRpcPeer,
-  TelemetryContext,
+  type TelemetryContext,
   TunnelRpcPeer,
   selectSpace,
   waitForSpace,

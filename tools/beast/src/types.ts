@@ -3,10 +3,10 @@
 //
 
 import {
-  ClassDeclarationStructure,
-  ImportDeclarationStructure,
-  PropertyDeclarationStructure,
-  SourceFile,
+  type ClassDeclarationStructure,
+  type ImportDeclarationStructure,
+  type PropertyDeclarationStructure,
+  type SourceFile,
 } from 'ts-morph';
 
 //

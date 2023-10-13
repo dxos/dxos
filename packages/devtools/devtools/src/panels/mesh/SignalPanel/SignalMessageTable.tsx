@@ -3,13 +3,13 @@
 //
 
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';

@@ -3,7 +3,7 @@
 //
 
 import { FilePlus } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { File as FileType } from '@braneframe/types';

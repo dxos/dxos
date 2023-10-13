@@ -12,7 +12,7 @@ import { promisify } from 'util';
 import type { Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { Logger, PackageModule } from './common';
+import { type Logger, type PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';

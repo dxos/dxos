@@ -3,18 +3,18 @@
 //
 
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
-import React, { RefObject, useCallback } from 'react';
+import React, { type RefObject, useCallback } from 'react';
 
-import { MarkdownProperties } from '@braneframe/plugin-markdown';
+import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { DropdownMenu, useTranslation } from '@dxos/aurora';
-import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';
-import { GITHUB_PLUGIN, GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN, type GhIssueIdentifier } from '../props';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({

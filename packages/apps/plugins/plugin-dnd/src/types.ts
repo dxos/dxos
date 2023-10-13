@@ -2,10 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Node } from '@braneframe/plugin-graph';
-import { AppState } from '@braneframe/types';
-import { ListItemRootProps } from '@dxos/aurora';
-import { useSortable, DraggableAttributes, MosaicChangeHandler, MosaicState, TileProps } from '@dxos/aurora-grid';
+import { type Node } from '@braneframe/plugin-graph';
+import { type AppState } from '@braneframe/types';
+import { type ListItemRootProps } from '@dxos/aurora';
+import {
+  type useSortable,
+  type DraggableAttributes,
+  type MosaicChangeHandler,
+  type MosaicState,
+  type TileProps,
+} from '@dxos/aurora-grid';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 

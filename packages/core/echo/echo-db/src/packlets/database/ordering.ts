@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { Timeframe } from '@dxos/timeframe';
 
 export type MutationInQueue<T = any> = {

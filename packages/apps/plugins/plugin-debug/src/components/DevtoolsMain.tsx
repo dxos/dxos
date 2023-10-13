@@ -7,7 +7,7 @@ import React from 'react';
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Devtools } from '@dxos/devtools';
-import { ClientServices, useClient } from '@dxos/react-client';
+import { type ClientServices, useClient } from '@dxos/react-client';
 
 export const DevtoolsMain = () => {
   const client = useClient();

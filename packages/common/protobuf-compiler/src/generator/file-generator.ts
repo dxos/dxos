@@ -3,16 +3,16 @@
 //
 
 import { dirname, join } from 'path';
-import pb from 'protobufjs';
+import type pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { GeneratorContext } from './context';
+import { type GeneratorContext } from './context';
 import { createDeclarations, createTypeDictionary } from './declaration-generator';
 import { createSerializerDefinition } from './serializer-definition-generator';
 import { createServicesDictionary } from './service';
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
+import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 

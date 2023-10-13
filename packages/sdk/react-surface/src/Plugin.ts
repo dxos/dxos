@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FC, PropsWithChildren, RefAttributes } from 'react';
+import { type FC, type PropsWithChildren, type RefAttributes } from 'react';
 
 import { raise } from '@dxos/debug';
 

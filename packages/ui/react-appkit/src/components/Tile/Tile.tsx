@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { TypedObject } from '@dxos/react-client/echo';
+import { type TypedObject } from '@dxos/react-client/echo';
 
 import { Task, TaskList } from '../../proto';
 import { Group } from '../Group';

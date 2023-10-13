@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Task } from './proto';
+import { type Task } from './proto';
 
 export type TaskListProps = {
   tasks?: Task[];

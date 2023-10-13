@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { TunnelResponse } from '@dxos/protocols/proto/dxos/service/tunnel';
+import { type TunnelResponse } from '@dxos/protocols/proto/dxos/service/tunnel';
 
 export const mapTunnels = (tunnels: TunnelResponse[]) => {
   return tunnels.map((tunnel) => ({

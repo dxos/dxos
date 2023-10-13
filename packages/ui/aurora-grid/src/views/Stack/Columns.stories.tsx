@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Stack } from './Stack';
-import { DemoStack, DemoStackProps } from './testing';
+import { DemoStack, type DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, SimpleCard } from '../../testing';
 

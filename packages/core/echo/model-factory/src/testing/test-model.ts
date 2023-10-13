@@ -7,7 +7,7 @@ import { schema } from '@dxos/protocols';
 import type { TestItemMutation, TestItemSnapshot } from '@dxos/protocols/proto/example/testing/data';
 
 import { Model } from '../model';
-import { ModelMeta, StateMachine } from '../types';
+import { type ModelMeta, type StateMachine } from '../types';
 
 class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();

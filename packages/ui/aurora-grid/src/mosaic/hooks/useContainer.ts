@@ -6,8 +6,8 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { MosaicContainerContext, MosaicContainerProps } from '../Container';
-import { MosaicDataItem } from '../types';
+import { MosaicContainerContext, type MosaicContainerProps } from '../Container';
+import { type MosaicDataItem } from '../types';
 
 export const useContainer = <
   TData extends MosaicDataItem = MosaicDataItem,

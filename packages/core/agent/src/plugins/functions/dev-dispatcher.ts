@@ -5,13 +5,13 @@
 import { randomUUID } from 'node:crypto';
 
 import {
-  FunctionRegistryService,
-  RegisterRequest,
-  RegisterResponse,
-  UnregisterRequest,
+  type FunctionRegistryService,
+  type RegisterRequest,
+  type RegisterResponse,
+  type UnregisterRequest,
 } from '@dxos/protocols/proto/dxos/agent/functions';
 
-import { FunctionDispatcher, FunctionInvocation, FunctionInvocationResult } from './dispatcher';
+import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from './dispatcher';
 
 type Registration = {
   id: string;

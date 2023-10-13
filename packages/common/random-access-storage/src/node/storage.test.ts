@@ -13,7 +13,7 @@ import path from 'path';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { createStorage } from './storage';
-import { File, StorageType } from '../common';
+import { type File, StorageType } from '../common';
 import { randomText, storageTests } from '../testing';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));

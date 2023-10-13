@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as protobufjs from 'protobufjs';
+import type * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import {
@@ -13,7 +13,7 @@ import {
   getSafeNamespaceIdentifier,
   namesEqual,
 } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
+import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 

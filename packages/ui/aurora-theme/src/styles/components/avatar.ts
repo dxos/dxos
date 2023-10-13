@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFunction, Size, Theme } from '@dxos/aurora-types';
+import { type ComponentFunction, type Size, type Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import { descriptionText, getSize, getSizeHeight } from '../fragments';

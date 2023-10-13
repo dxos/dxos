@@ -4,7 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 
-import { Stream } from './stream';
+import { type Stream } from './stream';
 
 export const getFirstStreamValue = async <T extends {}>(
   stream: Stream<T>,

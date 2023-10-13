@@ -4,7 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Diagram } from './diagram';
+import { type Diagram } from './diagram';
 
 // TODO(burdon): Make types relevant to ERD, etc.
 

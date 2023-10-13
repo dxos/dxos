@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext } from '@nx/devkit';
 
 import { execTool, getBin } from './node-util';
-import { BrowserType } from './types';
+import { type BrowserType } from './types';
 import { formatArgs } from './util';
 
 export type PlaywrightOptions = {

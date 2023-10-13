@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import MiniSearch, { Options } from 'minisearch';
+import MiniSearch, { type Options } from 'minisearch';
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -12,7 +12,7 @@ import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
 import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Indexing } from './indexing-plugin';

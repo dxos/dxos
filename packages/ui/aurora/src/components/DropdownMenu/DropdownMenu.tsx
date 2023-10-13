@@ -3,30 +3,30 @@
 //
 import {
   Root as DropdownMenuRootPrimitive,
-  DropdownMenuProps as DropdownMenuRootPrimitiveProps,
+  type DropdownMenuProps as DropdownMenuRootPrimitiveProps,
   DropdownMenuTrigger as DropdownMenuTriggerPrimitive,
-  DropdownMenuTriggerProps as DropdownMenuTriggerPrimitiveProps,
+  type DropdownMenuTriggerProps as DropdownMenuTriggerPrimitiveProps,
   DropdownMenuPortal as DropdownMenuPortalPrimitive,
-  DropdownMenuPortalProps as DropdownMenuPortalPrimitiveProps,
+  type DropdownMenuPortalProps as DropdownMenuPortalPrimitiveProps,
   DropdownMenuContent as DropdownMenuContentPrimitive,
-  DropdownMenuContentProps as DropdownMenuContentPrimitiveProps,
+  type DropdownMenuContentProps as DropdownMenuContentPrimitiveProps,
   DropdownMenuArrow as DropdownMenuArrowPrimitive,
-  DropdownMenuArrowProps as DropdownMenuArrowPrimitiveProps,
+  type DropdownMenuArrowProps as DropdownMenuArrowPrimitiveProps,
   DropdownMenuGroup as DropdownMenuGroupPrimitive,
-  DropdownMenuGroupProps as DropdownMenuGroupPrimitiveProps,
+  type DropdownMenuGroupProps as DropdownMenuGroupPrimitiveProps,
   DropdownMenuItem as DropdownMenuItemPrimitive,
-  DropdownMenuItemProps as DropdownMenuItemPrimitiveProps,
+  type DropdownMenuItemProps as DropdownMenuItemPrimitiveProps,
   DropdownMenuSeparator as DropdownMenuSeparatorPrimitive,
-  DropdownMenuSeparatorProps as DropdownMenuSeparatorPrimitiveProps,
+  type DropdownMenuSeparatorProps as DropdownMenuSeparatorPrimitiveProps,
   DropdownMenuLabel as DropdownMenuLabelPrimitive,
-  DropdownMenuLabelProps as DropdownMenuLabelPrimitiveProps,
+  type DropdownMenuLabelProps as DropdownMenuLabelPrimitiveProps,
 } from '@radix-ui/react-dropdown-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 type DropdownMenuRootProps = DropdownMenuRootPrimitiveProps;

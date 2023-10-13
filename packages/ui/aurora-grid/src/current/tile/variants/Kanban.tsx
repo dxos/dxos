@@ -6,10 +6,10 @@ import { useDroppable } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { sortByIndex } from '@tldraw/indices';
-import React, { forwardRef, Ref } from 'react';
+import React, { forwardRef, type Ref } from 'react';
 
 import { useMosaicDnd } from '../../dnd';
-import { DelegatorProps, TileProps, useMosaic } from '../../mosaic';
+import { type DelegatorProps, type TileProps, useMosaic } from '../../mosaic';
 import { Tile } from '../Tile';
 
 export type KanbanTileProps = TileProps & {

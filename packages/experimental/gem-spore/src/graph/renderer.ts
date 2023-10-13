@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { RefObject } from 'react';
+import { type RefObject } from 'react';
 
-import { SVGContext } from '@dxos/gem-core';
+import { type SVGContext } from '@dxos/gem-core';
 
-import { defaultIdAccessor, IdAccessor } from './types';
+import { defaultIdAccessor, type IdAccessor } from './types';
 
 export type RendererOptions = {
   idAccessor: IdAccessor;

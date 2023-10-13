@@ -8,7 +8,7 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 
-import { AuthChoices, AuthChoicesProps } from './AuthChoices';
+import { AuthChoices, type AuthChoicesProps } from './AuthChoices';
 import { Group } from '../Group';
 
 export default {

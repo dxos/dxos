@@ -8,7 +8,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef } from 'react';
 
 import { useMosaicDnd } from '../../dnd';
-import { useMosaic, TileProps } from '../../mosaic';
+import { useMosaic, type TileProps } from '../../mosaic';
 
 export type CardTileProps = TileProps & {
   // Overrides

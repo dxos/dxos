@@ -4,7 +4,7 @@
 
 import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 
-import { MyInterfaceSubstitution } from '../my-interface';
+import { type MyInterfaceSubstitution } from '../my-interface';
 import { MyKey } from '../my-key';
 
 export default {

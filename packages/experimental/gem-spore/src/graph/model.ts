@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 
-import { defaultIdAccessor, IdAccessor, GraphData } from './types';
+import { defaultIdAccessor, type IdAccessor, type GraphData } from './types';
 
 /**
  * Graph model with subscriptions.

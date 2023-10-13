@@ -6,7 +6,7 @@ import { capitalCase } from 'change-case';
 import matter from 'gray-matter';
 import { promises as fs } from 'node:fs';
 import path from 'path';
-import { SidebarItem } from 'vuepress-theme-hope';
+import { type SidebarItem } from 'vuepress-theme-hope';
 
 import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
 

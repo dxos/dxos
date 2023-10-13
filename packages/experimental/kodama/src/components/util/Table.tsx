@@ -3,7 +3,7 @@
 //
 
 import { Box, Text } from 'ink';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 // TODO(burdon): Truncate.
 const pad = (value: any, width?: number) => String(value ?? '').padEnd(width ?? 20);

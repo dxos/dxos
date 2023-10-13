@@ -10,11 +10,11 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
-import { RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port';
 
 const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
 
