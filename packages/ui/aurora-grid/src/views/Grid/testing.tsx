@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Grid, type GridLayout, type GridProps } from './Grid';
-import { type Position } from './layout';
-import { type MosaicDataItem, type MosaicMoveEvent } from '../../mosaic';
+import { Grid, GridLayout, GridProps } from './Grid';
+import { Position } from './layout';
+import { MosaicDataItem, MosaicDropEvent } from '../../mosaic';
 import { ComplexCard, TestObjectGenerator } from '../../testing';
 
 export type DemoGridProps = GridProps & {
@@ -46,7 +46,7 @@ export const DemoGrid = ({
         }, {})),
   );
 
-  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
     if (over.path !== id) {
       setItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {

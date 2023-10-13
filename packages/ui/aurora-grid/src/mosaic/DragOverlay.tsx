@@ -23,7 +23,8 @@ export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<
  * Render the currently dragged item of the Mosaic.
  */
 export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps }: MosaicDragOverlayProps) => {
-  const { containers, activeItem, overItem } = useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+  const { containers, operation, activeItem, overItem } =
+    useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
 
   // Get the overlay component from the over container, otherwise default to the original.
   const [{ container, OverlayComponent }, setContainer] = useState<{
@@ -66,6 +67,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
                 {...container.getOverlayProps?.()}
                 item={activeItem.item}
                 path={activeItem.path}
+                operation={operation}
                 isActive={true}
               />
               {debug && (

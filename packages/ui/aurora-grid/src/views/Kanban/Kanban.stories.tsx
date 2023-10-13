@@ -34,7 +34,7 @@ export const Default = {
   args: {
     Component: SimpleCard,
     count: 3,
-    debug: false,
+    debug: true,
   },
 };
 

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { Mosaic, type MosaicContainerProps, type MosaicDataItem, useSortedItems } from '../../mosaic';
+import { Mosaic, MosaicContainerProps, MosaicDataItem, useItemsWithPreview } from '../../mosaic';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -26,11 +26,11 @@ export const Stack = ({
   direction = 'vertical',
   debug,
 }: StackProps) => {
-  const sortedItems = useSortedItems({ path: id, items });
+  const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   return (
     <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <Mosaic.SortableContext items={sortedItems} direction={direction}>
+      <Mosaic.SortableContext items={itemsWithPreview} direction={direction}>
         <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
           <div
             className={mx(
@@ -39,7 +39,7 @@ export const Stack = ({
             )}
           >
             <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
-              {sortedItems.map((item, index) => (
+              {itemsWithPreview.map((item, index) => (
                 <Mosaic.SortableTile
                   key={item.id}
                   item={item}
@@ -54,7 +54,7 @@ export const Stack = ({
 
             {debug && (
               <div className='grow'>
-                <Mosaic.Debug data={{ id, items: sortedItems.length }} />
+                <Mosaic.Debug data={{ id, items: itemsWithPreview.length }} />
               </div>
             )}
           </div>

@@ -36,7 +36,7 @@ export default {
   },
 };
 
-export const Move = {
+export const Adopt = {
   args: {
     Component: SimpleCard,
     debug: true,
@@ -52,10 +52,10 @@ export const Copy = {
   },
 };
 
-export const Disallow = {
+export const Reject = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'disallow',
+    behavior: 'reject',
   },
 };
