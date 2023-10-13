@@ -24,6 +24,8 @@ const DEFAULT_OPTIONS: Options = {
   enabled: false,
 };
 
+export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
+
 export class Search extends AbstractPlugin {
   private readonly _ctx = new Context();
   private _options?: Options = undefined;
@@ -56,19 +58,19 @@ export class Search extends AbstractPlugin {
 
     invariant(this._pluginCtx);
     const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
-    if (!config || config.enabled === false) {
-      log.info('indexing disabled from config');
+    this._options = { ...DEFAULT_OPTIONS, ...config };
+
+    if (!this._options.enabled) {
+      log.info('Search disabled.');
       return;
     }
-
-    this._options = { ...DEFAULT_OPTIONS, ...config };
 
     this._pluginCtx.client.spaces.isReady.subscribe(async () => {
       invariant(this._pluginCtx, 'Client is undefined.');
 
       const space = this._pluginCtx.client.spaces.default;
 
-      const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
+      const unsubscribe = space.listen(SEARCH_CHANNEL, async (message) => {
         log('received message', { message });
         await this._processMessage(message);
       });
@@ -156,7 +158,7 @@ export class Search extends AbstractPlugin {
     const request: SearchRequest = message.payload;
     if (request.query) {
       const response = this._search(request);
-      await this._pluginCtx!.client!.spaces.default.postMessage('dxos.agent.indexing-plugin', response);
+      await this._pluginCtx!.client!.spaces.default.postMessage(SEARCH_CHANNEL, response);
     }
   }
 

@@ -15,7 +15,7 @@ import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/search';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Search } from './search-plugin';
+import { SEARCH_CHANNEL, Search } from './search-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
@@ -137,7 +137,7 @@ describe('SearchPlugin', () => {
 
       await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
 
-      const subs = client2.spaces.default.listen('dxos.agent.indexing-plugin', (message) => {
+      const subs = client2.spaces.default.listen(SEARCH_CHANNEL, (message) => {
         expect(message.payload.results).to.have.lengthOf(2);
         results.wake(message);
       });
@@ -152,7 +152,7 @@ describe('SearchPlugin', () => {
       };
 
       await sleep(500);
-      await client2.spaces.default.postMessage('dxos.agent.indexing-plugin', {
+      await client2.spaces.default.postMessage(SEARCH_CHANNEL, {
         '@type': 'dxos.agent.search.SearchRequest',
         ...searchRequest,
       });
