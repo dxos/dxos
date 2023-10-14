@@ -70,8 +70,8 @@ DXOS provides a tool for conveniently generating entity classes (like `Task` abo
 
 ::: details Benefits of schema declarations
 
-- ability to generate type-safe data access code, which makes development faster and safer.
-  :::
+*   ability to generate type-safe data access code, which makes development faster and safer.
+    :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -115,9 +115,7 @@ npm install --save-dev @dxos/echo-typegen
 
 Install base types for the generated code:
 
-```
-npm install @dxos/echo-schema
-```
+    npm install @dxos/echo-schema
 
 Now scripts have access to `dxtype`:
 
@@ -178,18 +176,20 @@ After executing `npm run prebuild`, types are available in `schema/index.ts`:
 
 ```ts file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
-import { Task } from './schema';
+
+import { Task, types } from './schema';
 
 const client = new Client();
 
 async () => {
   await client.initialize();
+  client.addSchema(types);
   // get a list of all spaces
   const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = space.db.query(Task.filter());
+  const tasks: Task[] = space.db.query(Task.filter()).objects;
 };
 ```
 

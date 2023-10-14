@@ -121,7 +121,7 @@ root.render(
 
 Whenever an Identity is created, a Space is automatically created and marked as the **default Space**. In order to get the default space, simply call `useSpace` without any parameters:
 
-```tsx file=./snippets/use-space.tsx#L6-17
+```tsx file=./snippets/use-space.tsx#L16-
 // call useSpace without an argument to get the default space
 const defaultSpace = useSpace();
 ```
