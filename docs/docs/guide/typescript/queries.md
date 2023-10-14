@@ -37,41 +37,12 @@ The result is an iterable collection of objects that can be used like an array.
 
 ## Typed Queries
 
-It's possible to receive strongly typed results from a `query`.
-Pass a type argument to `query<T>` which descends from [`TypedObject`](/api/@dxos/client/classes/TypedObject):
-
-```ts{5,17} file=./snippets/read-items-typed.ts#L5-
-import { Client } from '@dxos/client';
-import { TypedObject } from '@dxos/client/echo';
-
-const client = new Client();
-
-class Task extends TypedObject {
-  public declare type: 'task';
-  public declare isCompleted: boolean;
-}
-
-async () => {
-  await client.initialize();
-  // get a list of all spaces
-  const spaces = client.spaces.get();
-  // grab a space
-  const space = spaces[0];
-  // get items that match a filter
-  // TODO(wittjosiah): Fix type inference.
-  // @ts-ignore
-  const tasks = space.db.query<Task>({ type: 'task' });
-};
-```
-
-The type of the resulting objects must descend from `TypedObject` because ECHO tracks objects returned from `query`.
-
-DXOS provides a tool for conveniently generating entity classes (like `Task` above) that work with the `query<T>` interface.
+It's possible to receive strongly typed results from `query`. This is done by declaring a Protobuf schema for the objects in the space.
 
 ::: details Benefits of schema declarations
 
-*   ability to generate type-safe data access code, which makes development faster and safer.
-    :::
+- ability to generate type-safe data access code, which makes development faster and safer.
+  :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -100,6 +71,8 @@ message TaskList {
 ::: note
 Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 :::
+
+DXOS provides a tool for conveniently generating entity classes that work with the `query` interface.
 
 Using a tool called `dxtype` from `@dxos/echo-typegen` classes can be generated for use with DXOS Client.
 
@@ -193,4 +166,4 @@ async () => {
 };
 ```
 
-The resulting collection is an iterable like `Task[]`.
+Note the `client.addSchema(types)` call which registers the generated types with the client.

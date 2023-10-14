@@ -40,6 +40,7 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
+
 ### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 Create subscription.
@@ -59,7 +60,7 @@ Arguments:
 
 ## Typed Queries
 
-It's possible to obtain strongly typed objects from `useQuery<T>`.
+It's possible to obtain strongly typed objects from `useQuery`.
 
 Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject).
 
@@ -67,8 +68,8 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 ::: details Benefits of schema declarations
 
-*   ability to generate type-safe data access code, which makes development faster and safer.
-    :::
+- ability to generate type-safe data access code, which makes development faster and safer.
+  :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -202,3 +203,5 @@ root.render(
 ```
 
 You can pass `Task.filter` to `useQuery` to locate items that match specific criteria.
+
+Note the `client.addSchema(types)` call which registers the generated types with the client.
