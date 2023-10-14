@@ -2,17 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Modifier } from '@dnd-kit/core';
-import React, { createContext, useEffect, CSSProperties, HTMLAttributes, PropsWithChildren } from 'react';
+import { type Modifier } from '@dnd-kit/core';
+import React, {
+  createContext,
+  useEffect,
+  type CSSProperties,
+  type HTMLAttributes,
+  type PropsWithChildren,
+} from 'react';
 
-import { MosaicTileComponent } from './Tile';
+import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
-import { MosaicDataItem, MosaicDraggedItem, MosaicMoveEvent } from './types';
+import { type MosaicDataItem, type MosaicDraggedItem } from './types';
 
 export type MosaicTileOverlayProps = {
   grow?: boolean;
   debug?: boolean;
 };
+
+// TODO(wittjosiah): Add delete.
+export type MosaicOperation = 'adopt' | 'copy' | 'rearrange' | 'reject';
+
+export type MosaicMoveEvent<TPosition = unknown> = {
+  active: MosaicDraggedItem<TPosition>;
+  over: MosaicDraggedItem<TPosition>;
+};
+
+export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & {
+  operation: MosaicOperation;
+};
+
+export type MosaicCompareDataItem = Parameters<typeof Array.prototype.sort>[0];
 
 export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
@@ -20,12 +40,14 @@ export type MosaicContainerProps<
   TCustom = any,
 > = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
   id: string;
+
+  // TODO(wittjosiah): Don't expose externally.
   debug?: boolean;
 
   /**
    * Default component used to render tiles.
    */
-  Component?: MosaicTileComponent<TData>;
+  Component?: MosaicTileComponent<TData, any>;
 
   /**
    * Adapter to transform properties while dragging (e.g., constraint axes).
@@ -47,13 +69,17 @@ export type MosaicContainerProps<
    * Called when a tile is dragged over the container.
    * Returns true if the tile can be dropped.
    */
-  onOver?: (event: MosaicMoveEvent<TPosition>) => boolean;
+  onOver?: (event: MosaicMoveEvent<TPosition>) => MosaicOperation;
 
   /**
    * Called when a tile is dropped on the container.
    */
-  // TODO(burdon): Handle copy, delete, etc.
-  onDrop?: (event: MosaicMoveEvent<TPosition>) => void;
+  onDrop?: (event: MosaicDropEvent<TPosition>) => void;
+
+  /**
+   * Used to sort items within the container.
+   */
+  compare?: MosaicCompareDataItem;
 
   /**
    * Custom properties (available to event handlers).

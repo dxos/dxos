@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { inspect, InspectOptionsStylized } from 'node:util';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
-import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
+import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 export const PUBLIC_KEY_LENGTH = 32;

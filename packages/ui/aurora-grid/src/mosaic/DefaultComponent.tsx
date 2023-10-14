@@ -6,8 +6,8 @@ import React, { forwardRef } from 'react';
 
 import { Card } from '@dxos/aurora';
 
-import { MosaicTileComponent } from './Tile';
-import { MosaicDataItem } from './types';
+import { type MosaicTileComponent } from './Tile';
+import { type MosaicDataItem } from './types';
 import { Path } from './util';
 
 export const DefaultComponent: MosaicTileComponent<MosaicDataItem> = forwardRef(

@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Kanban } from './Kanban';
-import { DemoKanban, DemoKanbanProps } from './testing';
+import { DemoKanban, type DemoKanbanProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, FullscreenDecorator, SimpleCard } from '../../testing';
 
@@ -34,7 +34,7 @@ export const Default = {
   args: {
     Component: SimpleCard,
     count: 3,
-    debug: false,
+    debug: true,
   },
 };
 

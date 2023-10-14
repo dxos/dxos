@@ -5,7 +5,7 @@
 import expect from 'expect';
 import pick from 'lodash.pick';
 import { join } from 'path';
-import { ClassDeclaration } from 'ts-morph';
+import { type ClassDeclaration } from 'ts-morph';
 
 import { describe, test } from '@dxos/test';
 

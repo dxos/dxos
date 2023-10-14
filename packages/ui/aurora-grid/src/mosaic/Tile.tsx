@@ -2,15 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDraggable } from '@dnd-kit/core';
+import { type DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React, { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
+import React from 'react';
+import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
-import { MosaicTileOverlayProps } from './Container';
+import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { useMosaic } from './hooks';
-import { CompareMosaicDataItem, MosaicDataItem, MosaicDraggedItem } from './types';
+import type { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
+
+export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
 
 /**
  * Props passed to mosaic tile.
@@ -20,27 +23,33 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
   'className'
 > &
   MosaicTileOverlayProps & {
-    Component: MosaicTileComponent<TData>;
+    Component: MosaicTileComponent<TData, any>;
     path: string;
     item: TData;
-
-    compare?: CompareMosaicDataItem;
     position?: TPosition;
-    isActive?: boolean;
+    operation?: MosaicOperation;
+    active?: MosaicActiveType; // TODO(burdon): Rename state?
+
+    // DndKit props.
     isDragging?: boolean;
     isOver?: boolean;
-    draggableStyle?: any;
-    draggableProps?: any;
+    draggableStyle?: CSSProperties;
+    draggableProps?: DraggableAttributes &
+      // TODO(wittjosiah): SyntheticListenerMap.
+      HTMLAttributes<HTMLElement>;
 
-    // TODO(burdon): Generalize tile events (or use intents?)
     onSelect?: () => void;
+    onRemove?: () => void;
   };
 
 /**
  * Mosaic Tile component.
  */
-export type MosaicTileComponent<TData extends MosaicDataItem = MosaicDataItem> = ForwardRefExoticComponent<
-  RefAttributes<HTMLDivElement> & Omit<MosaicTileProps<TData>, 'Component'>
+export type MosaicTileComponent<
+  TData extends MosaicDataItem = MosaicDataItem,
+  TElement extends HTMLElement = HTMLDivElement,
+> = ForwardRefExoticComponent<
+  RefAttributes<TElement> & Omit<MosaicTileProps<TData>, 'Component' | 'operation'> & { operation: MosaicOperation }
 >;
 
 /**
@@ -54,6 +63,7 @@ export const DraggableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any>) => {
+  const { operation } = useMosaic();
   const path = Path.create(parentPath, item.id);
   const { setNodeRef, attributes, listeners, /* transform, */ isDragging } = useDraggable({
     id: path,
@@ -66,6 +76,7 @@ export const DraggableTile = ({
       item={item}
       path={path}
       position={position}
+      operation={operation}
       isDragging={isDragging}
       draggableStyle={{
         // TODO(burdon): Override by container?
@@ -73,6 +84,39 @@ export const DraggableTile = ({
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}
+      {...props}
+    />
+  );
+};
+
+/**
+ * Basic droppable mosaic tile.
+ */
+export const DroppableTile = ({
+  path: parentPath,
+  item,
+  Component = DefaultComponent,
+  position,
+  ...props
+}: MosaicTileProps<any>) => {
+  const { operation } = useMosaic();
+  const path =
+    parentPath === item.id
+      ? parentPath // If the path is the same as the item id, then this is the root tile.
+      : Path.create(parentPath, item.id);
+  const { setNodeRef, isOver } = useDroppable({
+    id: path,
+    data: { path, item, position } satisfies MosaicDraggedItem,
+  });
+
+  return (
+    <Component
+      ref={setNodeRef}
+      item={item}
+      path={path}
+      position={position}
+      operation={operation}
+      isOver={isOver}
       {...props}
     />
   );
@@ -89,34 +133,28 @@ export const SortableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { activeItem, overItem } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   // TODO(wittjosiah): If this is the active item, then use the same id.
   const path = Path.create(parentPath, item.id);
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    isDragging: isDraggingLocal,
-    isOver,
-  } = useSortable({
+  const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
     id: path,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
   });
 
-  // TODO(wittjosiah): Use same id for active item to avoid inference.
-  // If not dragging locally but:
-  // - active item id matches AND
-  // - the over path matches THEN
-  // - this tile is being dragged from another path
-  const isDragging =
-    isDraggingLocal ||
-    (activeItem?.item.id === item.id &&
-      overItem &&
-      (Path.hasChild(Path.parent(path), overItem.path) ||
-        Path.parent(path) === overItem.path ||
-        path === overItem.path));
+  let active: MosaicActiveType | undefined;
+  if (
+    !isDragging &&
+    operation !== 'reject' &&
+    activeItem &&
+    activeItem.item.id === item.id &&
+    overItem &&
+    (Path.hasChild(Path.parent(path), overItem.path) || Path.parent(path) === overItem.path || path === overItem.path)
+  ) {
+    active = 'destination';
+  } else if (isDragging && activeItem && activeItem.item.id === item.id) {
+    active = operation === 'rearrange' || operation === 'reject' ? 'rearrange' : 'origin';
+  }
 
   return (
     <Component
@@ -124,6 +162,8 @@ export const SortableTile = ({
       item={item}
       path={path}
       position={position}
+      operation={operation}
+      active={active}
       isDragging={isDragging}
       isOver={isOver}
       draggableStyle={{

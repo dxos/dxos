@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Stack } from './Stack';
-import { DemoStack, DemoStackProps } from './testing';
+import { DemoStack, type DemoStackProps } from './testing';
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, SimpleCard } from '../../testing';
 
@@ -36,7 +36,7 @@ export default {
   },
 };
 
-export const Move = {
+export const Adopt = {
   args: {
     Component: SimpleCard,
     debug: true,
@@ -48,14 +48,14 @@ export const Copy = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'copy',
+    operation: 'copy',
   },
 };
 
-export const Disallow = {
+export const Reject = {
   args: {
     Component: SimpleCard,
     debug: true,
-    behavior: 'disallow',
+    operation: 'reject',
   },
 };

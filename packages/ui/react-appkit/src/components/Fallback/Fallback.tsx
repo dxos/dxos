@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { Button, useTranslation } from '@dxos/aurora';
-import { SystemStatus, ClientContextProps } from '@dxos/react-client';
+import { SystemStatus, type ClientContextProps } from '@dxos/react-client';
 
 import { Heading } from '../Heading';
 import { Loading } from '../Loading';

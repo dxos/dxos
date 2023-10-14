@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { sleep, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { Keyring, TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
+import { Keyring, type TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TransportKind } from '@dxos/network-manager';
@@ -17,8 +17,8 @@ import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
-import { SerializedLogEntry, getReader } from '../analysys';
-import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
+import { type SerializedLogEntry, getReader } from '../analysys';
+import { type PlanResults, type TestParams, type TestPlan, type AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';

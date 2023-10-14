@@ -14,7 +14,7 @@ import { BrowserTracing } from '@sentry/tracing';
 
 import { log } from '@dxos/log';
 
-import { InitOptions } from './types';
+import { type InitOptions } from './types';
 
 // Browser only feature.
 export * from './tracing';

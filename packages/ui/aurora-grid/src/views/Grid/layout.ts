@@ -2,24 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-export const createMatrix = <TValue>(
-  rangeX: number,
-  rangeY: number,
-  value: (position: Position) => TValue,
-): TValue[][] => {
+export type Size = { x: number; y: number };
+export type Position = { x: number; y: number };
+export type Dimension = { width: number; height: number };
+export type Bounds = { left: number; top: number; width: number; height: number };
+
+export const createMatrix = <TValue>(size: Size, value: (position: Position) => TValue): TValue[][] => {
   const matrix: TValue[][] = [];
-  for (let x = 0; x < rangeX; x++) {
-    matrix.push(Array.from({ length: rangeY }, (_, y) => value({ x, y })));
+  for (let x = 0; x < size.x; x++) {
+    matrix.push(Array.from({ length: size.y }, (_, y) => value({ x, y })));
   }
 
   return matrix;
 };
-
-export type Dimension = { width: number; height: number };
-
-export type Position = { x: number; y: number };
-
-export type Bounds = { left: number; top: number; width: number; height: number };
 
 export const getDimension = ({ width, height }: Dimension, spacing = 0): Dimension => ({
   width: width - spacing * 2,

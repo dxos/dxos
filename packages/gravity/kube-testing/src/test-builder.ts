@@ -8,12 +8,12 @@ import { Context } from '@dxos/context';
 import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message, WebsocketSignalManager } from '@dxos/messaging';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { SignalServerRunner } from '@dxos/signal';
+import { type Message, WebsocketSignalManager } from '@dxos/messaging';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type SignalServerRunner } from '@dxos/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { TraceEvent } from './analysys';
+import { type TraceEvent } from './analysys';
 import { runSignal } from './run-test-signal';
 
 export class TestBuilder {

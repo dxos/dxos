@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import React, { FormEvent, KeyboardEvent, useCallback, useState } from 'react';
+import React, { type FormEvent, type KeyboardEvent, useCallback, useState } from 'react';
 
 export interface TodoItemProps {
   title: string;

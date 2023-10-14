@@ -6,7 +6,7 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Table as TableType } from '@braneframe/types';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type TypedObject } from '@dxos/client/echo';
 
 export const TABLE_PLUGIN = 'dxos.org/plugin/table';
 

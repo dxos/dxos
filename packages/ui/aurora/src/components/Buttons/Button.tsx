@@ -5,12 +5,12 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { Density, Elevation } from '@dxos/aurora-types';
+import { type Density, type Elevation } from '@dxos/aurora-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import protobuf from 'protobufjs';
+import type protobuf from 'protobufjs';
 
 interface ProtobufJson {
   nested?: Record<string, ProtobufJson>;

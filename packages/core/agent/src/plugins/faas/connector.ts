@@ -3,14 +3,14 @@
 //
 
 import { DeferredTask } from '@dxos/async';
-import { Space, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { FaasClient, InvocationContext, Trigger } from './faas-client';
+import { FaasClient, type InvocationContext, type Trigger } from './faas-client';
 import { AbstractPlugin } from '../plugin';
 
 type MountedTrigger = {

@@ -3,13 +3,13 @@
 //
 
 import { Box, Text, useStdout } from 'ink';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
-import { InvitationEncoder, Invitation, CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { InvitationEncoder, Invitation, type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { clear, copyToClipboard } from '../../util';
-import { ActionStatus, StatusState } from '../util';
+import { ActionStatus, type StatusState } from '../util';
 
 export const Share: FC<{
   onCreate: () => CancellableInvitationObservable;

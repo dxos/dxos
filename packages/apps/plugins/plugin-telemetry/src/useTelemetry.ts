@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { SplitViewPluginProvides } from '@braneframe/plugin-splitview';
+import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { useClient } from '@dxos/react-client';
 import { usePlugin } from '@dxos/react-surface';
 

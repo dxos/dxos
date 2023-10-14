@@ -6,8 +6,8 @@ import { Table } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
-import { Space, TypedObject } from '@dxos/client/echo';
+import { type Node } from '@braneframe/plugin-graph';
+import { type Space, type TypedObject } from '@dxos/client/echo';
 
 import { TABLE_PLUGIN } from './types';
 

@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import {
   ThemeProvider as AuroraThemeProvider,
-  ThemeProviderProps as AuroraThemeProviderProps,
+  type ThemeProviderProps as AuroraThemeProviderProps,
   Toast,
   Tooltip,
-  TooltipProviderProps,
-  ToastProviderProps,
-  ToastViewportProps,
+  type TooltipProviderProps,
+  type ToastProviderProps,
+  type ToastViewportProps,
 } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 

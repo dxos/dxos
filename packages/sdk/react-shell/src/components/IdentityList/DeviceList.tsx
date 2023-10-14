@@ -6,7 +6,7 @@ import React from 'react';
 
 import { List, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
-import { Device } from '@dxos/react-client/halo';
+import { type Device } from '@dxos/react-client/halo';
 
 import { IdentityListItem } from './IdentityListItem';
 

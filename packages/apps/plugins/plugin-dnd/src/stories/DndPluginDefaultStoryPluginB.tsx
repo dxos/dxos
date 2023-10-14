@@ -7,9 +7,9 @@ import React, { useContext, useState } from 'react';
 
 import { useMosaicDnd, useDragEnd, useDragOver, useDroppable } from '@dxos/aurora-grid';
 import { mx } from '@dxos/aurora-theme';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
-import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
+import { DndPluginStoryPluginContext, type StoryItem } from './DndPluginDefaultStoryPlugin';
 
 const state = deepSignal<{ items: StoryItem[] }>({ items: [] });
 

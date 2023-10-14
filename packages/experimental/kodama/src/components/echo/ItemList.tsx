@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FC } from 'react';
+import { type FC } from 'react';
 
 import { todo } from '@dxos/debug';
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): To make compatable with kitchen-sink/client-test.
 // const LABEL_PROPERTY = 'name';

@@ -7,10 +7,10 @@ import get from 'lodash.get';
 import React from 'react';
 
 import type { Node } from '@braneframe/plugin-graph';
-import { Kanban as KanbanType } from '@braneframe/types';
-import { Space } from '@dxos/client/echo';
+import { type Kanban as KanbanType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 
-import { KANBAN_PLUGIN, Location } from './types';
+import { KANBAN_PLUGIN, type Location } from './types';
 
 /**
  * Find the column or item within the model.

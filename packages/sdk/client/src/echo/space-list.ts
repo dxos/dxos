@@ -7,24 +7,31 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
-  ClientServicesProvider,
-  Echo,
+  type ClientServicesProvider,
+  type Echo,
   Properties,
-  PropertiesProps,
-  Space,
+  type PropertiesProps,
+  type Space,
   defaultKey,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { QueryOptions } from '@dxos/echo-db';
-import { Filter, HyperGraph, Query, TypeCollection, TypeFilter, TypedObject } from '@dxos/echo-schema';
+import { type QueryOptions } from '@dxos/echo-db';
+import {
+  type Filter,
+  type HyperGraph,
+  type Query,
+  type TypeCollection,
+  type TypeFilter,
+  type TypedObject,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';

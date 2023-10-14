@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 import { readFile, writeFile } from 'fs/promises';
 
 /**

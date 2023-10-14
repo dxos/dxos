@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { Surface } from '@dxos/react-surface';
 
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
-import { LocalFile } from '../types';
+import { type LocalFile } from '../types';
 
 export const LocalFileMain: FC<{ data: LocalFile }> = ({ data }) => {
   const transformedData = useMemo(

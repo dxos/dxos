@@ -3,8 +3,8 @@
 //
 
 import type { EchoDatabase } from './database';
-import { EchoObjectBase } from './echo-object-base';
-import { Schema } from './proto';
+import { type EchoObjectBase } from './echo-object-base';
+import { type Schema } from './proto';
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');

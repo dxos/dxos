@@ -3,24 +3,24 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { FC, useRef, useState } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 
 import { Button, Select, Toolbar } from '@dxos/aurora';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/react-client';
-import { Schema, TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/react-client';
+import { Schema, type TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
 import { arrayMove } from '@dxos/util';
 
-import { Kanban, KanbanColumn, KanbanProps } from './Kanban';
-import { Mosaic, MosaicMoveEvent, Path, swapItems } from '../../mosaic';
-import { TestObjectGenerator, SimpleCard, Priority, Status, TestItem } from '../../testing';
+import { Kanban, type KanbanColumn, type KanbanProps } from './Kanban';
+import { Mosaic, type MosaicDropEvent, Path, swapItems } from '../../mosaic';
+import { TestObjectGenerator, SimpleCard, Priority, Status, type TestItem } from '../../testing';
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
   const generator = new TestObjectGenerator({ types });
   return Array.from({ length: columns }).map((_, i) => ({
     id: `column-${i}`,
     title: `Column ${i}`,
-    children: generator.createObjects({ length: 3 + columns - i }),
+    items: generator.createObjects({ length: 3 + columns - i }),
   }));
 };
 
@@ -44,7 +44,7 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
   // };
 
   // TODO(burdon): Reconcile with DemoKanban.
-  const handleDrop = ({ active, over }: MosaicMoveEvent<number>) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Buggy dragging empty column.
     if (active.path === Path.create(id, active.item.id)) {
@@ -53,7 +53,7 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
 
     return setColumns((columns) =>
       columns.map((column) => {
-        const children = [...column.children];
+        const children = [...column.items];
         if (Path.last(Path.parent(active.path)) === column.id) {
           // Remove card from current postion.
           invariant(active.position !== undefined);
@@ -108,7 +108,6 @@ export const EchoKanban = ({
   };
 
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
-  const columnsRef = useRef<KanbanColumn<TypedObject>[]>([]);
   const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
     const objectPosition = kanban.objectPosition[value] ?? [];
     const children =
@@ -123,6 +122,9 @@ export const EchoKanban = ({
       children: children.filter((object: TypedObject) => object[kanban.columnProp] === value),
     };
   });
+
+  // TODO(burdon): Why ref?
+  const columnsRef = useRef<KanbanColumn<TypedObject>[]>([]);
   columnsRef.current = columns;
 
   // TODO(burdon): Called for each object generated (should batch?)
@@ -140,13 +142,13 @@ export const EchoKanban = ({
     // TODO(wittjosiah): Columns is stale here.
     return (
       kanban.objectPosition[property] ??
-      columnsRef.current.find((column) => column.id === getProperty(property))?.children.map((item) => item.id) ??
+      columnsRef.current.find((column) => column.id === getProperty(property))?.items.map((item) => item.id) ??
       []
     );
   };
 
   // TODO(burdon): Currently broken: factor out with demo story.
-  const handleDrop = ({ active, over }: MosaicMoveEvent) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<number>) => {
     // Reorder columns.
     // TODO(burdon): Factor out util.
     if (active.path === Path.create(id, active.item.id)) {

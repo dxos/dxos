@@ -3,9 +3,9 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 
 export const subscribeToMetadata = ({ context }: { context: ServiceContext }) =>
   new Stream<SubscribeToMetadataResponse>(({ next, ctx }) => {

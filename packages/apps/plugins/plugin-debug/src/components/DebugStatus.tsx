@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { TimeoutError } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';

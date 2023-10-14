@@ -5,7 +5,7 @@
 //
 
 import { MulticastObservable } from '@dxos/async';
-import { PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import { SpaceMember } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 

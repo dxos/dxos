@@ -13,8 +13,8 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
@@ -36,7 +36,7 @@ import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
-import { EditorViewState, GITHUB_PLUGIN } from '../../props';
+import { type EditorViewState, GITHUB_PLUGIN } from '../../props';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,

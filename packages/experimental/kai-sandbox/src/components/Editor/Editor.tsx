@@ -6,7 +6,7 @@ import MonacoEditor from '@monaco-editor/react';
 import React, { useRef } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
-import { Text } from '@dxos/echo-schema';
+import { type Text } from '@dxos/echo-schema';
 
 export type EditorProps = {
   document: Text;

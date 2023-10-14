@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { type TranslationsProvides } from '@braneframe/plugin-theme';
 
 export const TREE_VIEW_PLUGIN = 'dxos.org/plugin/treeview';
 

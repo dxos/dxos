@@ -4,8 +4,8 @@
 
 import { scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Keyring } from '@dxos/keyring';
-import { SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type Keyring } from '@dxos/keyring';
+import { type SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
   new Stream<SubscribeToKeyringKeysResponse>(({ next, ctx }) => {

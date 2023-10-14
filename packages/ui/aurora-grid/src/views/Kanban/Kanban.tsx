@@ -9,11 +9,11 @@ import { groupSurface, mx } from '@dxos/aurora-theme';
 
 import {
   Mosaic,
-  MosaicContainerProps,
-  MosaicDataItem,
-  MosaicTileComponent,
+  type MosaicContainerProps,
+  type MosaicDataItem,
+  type MosaicTileComponent,
   Path,
-  useSortedItems,
+  useItemsWithPreview,
   useContainer,
 } from '../../mosaic';
 
@@ -22,7 +22,7 @@ import {
 
 export type KanbanColumn<TData extends MosaicDataItem = MosaicDataItem> = MosaicDataItem & {
   title: string;
-  children: TData[];
+  items: TData[];
 };
 
 export type KanbanProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicContainerProps<TData, number> & {
@@ -50,7 +50,8 @@ export const Kanban = ({
           path === Path.create(id, item.id) ? { ...transform, y: 0 } : transform,
         // Restrict to objects from other columns.
         // TODO(burdon): Consider objects from other containers.
-        onOver: ({ active, over }) => Path.length(active.path) >= Path.length(over.path),
+        // TODO(wittjosiah): Allow override.
+        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'reject'),
         onDrop,
       }}
     >
@@ -64,7 +65,7 @@ export const Kanban = ({
                 path={id}
                 position={index}
                 Component={Component}
-                // debug={debug}
+                debug={debug}
               />
             ))}
           </Mosaic.SortableContext>
@@ -77,7 +78,7 @@ export const Kanban = ({
 const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): MosaicTileComponent<any> =>
   forwardRef((props, ref) => {
     const isColumn = Path.hasRoot(props.path, id) && Path.length(props.path) === 2;
-    if (isColumn && props.isActive) {
+    if (isColumn && props.active === 'overlay') {
       return (
         // Needs to not override the main kanban path.
         <Mosaic.Container {...{ id: `${id}-active`, Component }}>
@@ -90,10 +91,10 @@ const OverlayComponent = (id: string, Component: MosaicTileComponent<any>): Mosa
   });
 
 const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
-  ({ path, item, isDragging, draggableStyle, draggableProps, debug }, forwardRef) => {
-    const { id, title, children } = item;
+  ({ path, item, active, draggableStyle, draggableProps, debug }, forwardRef) => {
+    const { id, title, items } = item;
     const { Component } = useContainer();
-    const sortedItems = useSortedItems({ path, items: children });
+    const itemsWithPreview = useItemsWithPreview({ path, items });
 
     return (
       <div role='none' className='grow flex flex-col' ref={forwardRef}>
@@ -101,7 +102,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
           className={mx(
             groupSurface,
             'grow flex flex-col w-[300px] snap-center overflow-hidden m-1',
-            isDragging && 'opacity-0',
+            active === 'rearrange' && 'opacity-0',
           )}
           style={draggableStyle}
         >
@@ -115,8 +116,8 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
 
           <div className={mx('flex flex-col grow overflow-y-scroll')}>
             <div className='flex flex-col my-1'>
-              <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-                {sortedItems.map((item, index) => (
+              <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
+                {itemsWithPreview.map((item, index) => (
                   <Mosaic.SortableTile
                     key={item.id}
                     item={item}
@@ -130,7 +131,7 @@ const KanbanColumnComponent: MosaicTileComponent<KanbanColumn> = forwardRef(
               </Mosaic.SortableContext>
             </div>
           </div>
-          {debug && <Mosaic.Debug data={{ path, id, items: sortedItems.length }} />}
+          {debug && <Mosaic.Debug data={{ path, id, items: itemsWithPreview.length }} />}
         </div>
       </div>
     );

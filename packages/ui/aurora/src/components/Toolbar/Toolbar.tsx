@@ -6,10 +6,10 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
-import { Button, ButtonGroup, ButtonGroupProps, ButtonProps, ToggleGroupItemProps } from '../Buttons';
-import { Link, LinkProps } from '../Link';
-import { Separator, SeparatorProps } from '../Separator';
+import { type ThemedClassName } from '../../util';
+import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, type ToggleGroupItemProps } from '../Buttons';
+import { Link, type LinkProps } from '../Link';
+import { Separator, type SeparatorProps } from '../Separator';
 
 type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps>;
 

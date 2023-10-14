@@ -12,7 +12,8 @@ import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
 
-import { Runner, RunnerStartOptions } from './runner';
+import { type Runner, type RunnerStartOptions } from './runner';
+import { type ProcessInfo } from '../../daemon';
 
 const SYSTEMD_TEMPLATE_FILE = 'templates/dxos-agent.service.template';
 
@@ -92,6 +93,29 @@ export class SystemctlRunner implements Runner {
     } catch (err: any) {
       throw new Error(`Failed to check if the service is running: ${err.message}`);
     }
+  }
+
+  async info(profile: string): Promise<ProcessInfo> {
+    const result: ProcessInfo = {};
+    try {
+      const service = this._getServiceName(profile);
+      const { stdout: statusOutput } = await execPromise(`systemctl --user status -n 0 ${service}`);
+      if (statusOutput) {
+        const pidMatch = /Main PID:\s*(\d+)/.exec(statusOutput);
+        if (pidMatch) {
+          const pid = parseInt(pidMatch[1]);
+          if (!isNaN(pid)) {
+            result.pid = pid;
+            const { stdout: psOutput } = await execPromise(`ps -o lstart= -p ${pid}`);
+            if (psOutput) {
+              result.started = new Date(psOutput).getTime();
+            }
+          }
+        }
+      }
+    } catch (err: any) {}
+
+    return result;
   }
 
   private _getServiceName(profile: string): string {

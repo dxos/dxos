@@ -3,10 +3,10 @@
 //
 
 import { expect } from 'chai';
-import { AbstractValueEncoding } from 'hypercore';
+import { type AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
 
-import { Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
 import { describe, test } from '@dxos/test';
 

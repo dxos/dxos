@@ -11,13 +11,13 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
 import { getDndId, parseDndId } from '@dxos/aurora-grid';
-import { SpaceProxy, TypedObject } from '@dxos/client/echo';
-import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
+import { findPlugin, type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionDelegator } from './components';
 import { stackState } from './stores';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, StackModel, StackPluginProvides, StackProvides } from './types';
+import { STACK_PLUGIN, StackAction, type StackModel, type StackPluginProvides, type StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
 const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;

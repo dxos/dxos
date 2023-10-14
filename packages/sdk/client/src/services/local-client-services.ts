@@ -3,10 +3,10 @@
 //
 
 import { synchronized } from '@dxos/async';
-import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { ClientServicesHost, ClientServicesHostParams } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { ServiceBundle } from '@dxos/rpc';
+import { type ServiceBundle } from '@dxos/rpc';
 
 /**
  * Starts a local instance of the service host.

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';

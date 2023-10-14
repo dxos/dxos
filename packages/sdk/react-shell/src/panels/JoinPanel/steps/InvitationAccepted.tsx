@@ -7,7 +7,7 @@ import React, { cloneElement } from 'react';
 import { useTranslation } from '@dxos/aurora';
 
 import { Actions, Action } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';

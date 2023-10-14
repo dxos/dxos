@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File } from './file';
-import { StorageType } from './storage';
+import { type File } from './file';
+import { type StorageType } from './storage';
 import { getFullPath } from './utils';
 
 /**

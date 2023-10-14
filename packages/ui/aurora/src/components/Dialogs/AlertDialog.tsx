@@ -3,30 +3,30 @@
 //
 
 import {
-  AlertDialogProps as AlertDialogRootPrimitiveProps,
+  type AlertDialogProps as AlertDialogRootPrimitiveProps,
   Root as AlertDialogRootPrimitive,
   AlertDialogTrigger as AlertDialogTriggerPrimitive,
-  AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
+  type AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
   AlertDialogPortal as AlertDialogPortalPrimitive,
-  AlertDialogPortalProps as AlertDialogPortalPrimitiveProps,
+  type AlertDialogPortalProps as AlertDialogPortalPrimitiveProps,
   AlertDialogOverlay as AlertDialogOverlayPrimitive,
-  AlertDialogOverlayProps as AlertDialogOverlayPrimitiveProps,
+  type AlertDialogOverlayProps as AlertDialogOverlayPrimitiveProps,
   AlertDialogTitle as AlertDialogTitlePrimitive,
-  AlertDialogTitleProps as AlertDialogTitlePrimitiveProps,
+  type AlertDialogTitleProps as AlertDialogTitlePrimitiveProps,
   AlertDialogDescription as AlertDialogDescriptionPrimitive,
-  AlertDialogDescriptionProps as AlertDialogDescriptionPrimitiveProps,
+  type AlertDialogDescriptionProps as AlertDialogDescriptionPrimitiveProps,
   AlertDialogAction as AlertDialogActionPrimitive,
-  AlertDialogActionProps as AlertDialogActionPrimitiveProps,
+  type AlertDialogActionProps as AlertDialogActionPrimitiveProps,
   AlertDialogCancel as AlertDialogCancelPrimitive,
-  AlertDialogCancelProps as AlertDialogCancelPrimitiveProps,
+  type AlertDialogCancelProps as AlertDialogCancelPrimitiveProps,
   AlertDialogContent as AlertDialogContentPrimitive,
-  AlertDialogContentProps as AlertDialogContentPrimitiveProps,
+  type AlertDialogContentProps as AlertDialogContentPrimitiveProps,
 } from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, ForwardRefExoticComponent, FunctionComponent } from 'react';
+import React, { forwardRef, type ForwardRefExoticComponent, type FunctionComponent } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 type AlertDialogRootProps = AlertDialogRootPrimitiveProps;

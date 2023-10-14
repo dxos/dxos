@@ -4,16 +4,16 @@
 
 import { effect, untracked } from '@preact/signals-react';
 
-import { DndPluginProvides, SetTileHandler } from '@braneframe/plugin-dnd';
-import { Graph, GraphPluginProvides } from '@braneframe/plugin-graph';
-import { AppState } from '@braneframe/types';
+import { type DndPluginProvides, type SetTileHandler } from '@braneframe/plugin-dnd';
+import { Graph, type GraphPluginProvides } from '@braneframe/plugin-graph';
+import { type AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { MosaicChangeEvent, MosaicState, parseDndId } from '@dxos/aurora-grid';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type MosaicChangeEvent, type MosaicState, parseDndId } from '@dxos/aurora-grid';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { NavTreeItemDelegator, TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import translations from './translations';
-import { TREE_VIEW_PLUGIN, TreeViewPluginProvides } from './types';
+import { TREE_VIEW_PLUGIN, type TreeViewPluginProvides } from './types';
 import { computeTreeViewMosaic, getPersistenceParent } from './util';
 
 const TREEVIEW_PLUGIN_PREVIEW_ITEM = `preview--${TREE_VIEW_PLUGIN}`;

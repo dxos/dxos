@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
-import { Plugin } from './Plugin';
+import { type Plugin } from './Plugin';
 
 export const compose = (contexts: FC<PropsWithChildren>[]) => {
   return [...contexts].reduce((Acc, Next) => ({ children }) => (

@@ -17,10 +17,10 @@ export {
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
 
-export { getUnixSocket, fromAgent, FromAgentOptions, AgentClientServiceProvider } from './agent';
+export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProvider } from './agent';
 export { createClientServices, Remote } from './client-services-factory';
-export { IFrameClientServicesHost, IFrameClientServicesHostOptions } from './iframe-service-host';
-export { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
+export { IFrameClientServicesHost, type IFrameClientServicesHostOptions } from './iframe-service-host';
+export { IFrameClientServicesProxy, type IFrameClientServicesProxyOptions } from './iframe-service-proxy';
 export { LocalClientServices } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
 export { Shell } from './shell';

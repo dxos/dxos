@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ItemID } from '@dxos/protocols';
+import { type ItemID } from '@dxos/protocols';
 
-import { Item } from './item';
+import { type Item } from './item';
 
 export type OneOrMultiple<T> = T | T[];
 

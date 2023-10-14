@@ -7,7 +7,7 @@ import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } fro
 
 import { log } from '@dxos/log';
 
-import { StorageType } from './storage';
+import { type StorageType } from './storage';
 
 /**
  * Random access file wrapper.

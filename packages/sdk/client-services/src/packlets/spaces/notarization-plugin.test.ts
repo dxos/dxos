@@ -9,8 +9,8 @@ import { CredentialGenerator } from '@dxos/credentials';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { TestBuilder, TestConnection, TestPeer } from '@dxos/teleport/testing';
+import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { NotarizationPlugin } from './notarization-plugin';

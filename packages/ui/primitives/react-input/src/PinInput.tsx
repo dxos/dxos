@@ -3,11 +3,11 @@
 //
 
 import { CodeInput, getSegmentCssWidth } from 'rci';
-import React, { ComponentProps, ComponentPropsWithRef, forwardRef, useCallback } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, InputScopedProps, useInputContext, Valence } from './Root';
+import { INPUT_NAME, type InputScopedProps, useInputContext, type Valence } from './Root';
 
 type PinInputProps = Omit<
   ComponentPropsWithRef<typeof CodeInput>,

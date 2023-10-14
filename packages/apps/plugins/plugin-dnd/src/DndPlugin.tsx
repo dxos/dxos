@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal, RevertDeepSignal } from 'deepsignal/react';
+import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { Node, useGraph } from '@braneframe/plugin-graph';
-import { Mosaic, parseDndId, TileProps } from '@dxos/aurora-grid';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { Mosaic, parseDndId, type TileProps } from '@dxos/aurora-grid';
+import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN, DndPluginProvides, DndProvides, DndStore } from './types';
+import { DND_PLUGIN, type DndPluginProvides, type DndProvides, type DndStore } from './types';
 
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
   const dnd = deepSignal<DndStore>({

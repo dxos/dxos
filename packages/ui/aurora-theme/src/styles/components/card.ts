@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFunction, Density, Theme } from '@dxos/aurora-types';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import { getSize, inputSurface } from '../fragments';
@@ -42,7 +42,7 @@ export const cardDragHandle: ComponentFunction<CardStyleProps & { position?: 'le
   ...etc
 ) =>
   mx(
-    'flex shrink-0 items-center justify-center',
+    'flex shrink-0 items-center justify-center select-none',
     density === 'fine' ? getSize(8) : getSize(10),
     position === 'left' && 'absolute top-1 left-1',
     position === 'right' && 'absolute top-1 right-1',

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Credential, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { canonicalStringify } from '../credentials/signing';
 

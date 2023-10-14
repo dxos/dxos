@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 import React, { useState } from 'react';
 
-import { Grid, GridLayout, GridProps } from './Grid';
-import { Position } from './layout';
-import { MosaicDataItem, MosaicMoveEvent } from '../../mosaic';
+import { Grid, type GridLayout, type GridProps } from './Grid';
+import { type Position } from './layout';
+import { type MosaicDataItem, type MosaicDropEvent } from '../../mosaic';
 import { ComplexCard, TestObjectGenerator } from '../../testing';
 
 export type DemoGridProps = GridProps & {
@@ -19,7 +19,7 @@ export type DemoGridProps = GridProps & {
 
 export const DemoGrid = ({
   id = 'grid',
-  size = { x: 4, y: 6 },
+  options = { size: { x: 8, y: 8 } },
   Component = ComplexCard,
   initialItems,
   initialLayout,
@@ -27,6 +27,7 @@ export const DemoGrid = ({
   debug,
   className,
 }: DemoGridProps) => {
+  const [selected, setSelected] = useState<string>();
   const [items, setItems] = useState<MosaicDataItem[]>(
     initialItems ??
       (() => {
@@ -39,14 +40,14 @@ export const DemoGrid = ({
       (() =>
         items.reduce<GridLayout>((map, item, i) => {
           map[item.id] = {
-            x: faker.number.int({ min: 0, max: size.x - 1 }),
-            y: faker.number.int({ min: 0, max: size.y - 1 }),
+            x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
+            y: faker.number.int({ min: 0, max: (options.size?.y ?? 1) - 1 }),
           };
           return map;
         }, {})),
   );
 
-  const handleDrop = ({ active, over }: MosaicMoveEvent<Position>) => {
+  const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
     if (over.path !== id) {
       setItems((items) => items.filter((item) => item.id !== active.item.id));
     } else {
@@ -61,16 +62,30 @@ export const DemoGrid = ({
     }
   };
 
+  const handleCreate = (position: Position) => {
+    setItems((items) => {
+      const item = new TestObjectGenerator({ types }).createObject();
+      setTimeout(() => {
+        setSelected(item.id);
+      });
+      setLayout((layout) => ({ ...layout, [item.id]: position }));
+      return [item, ...items];
+    });
+  };
+
   return (
     <Grid
       id={id}
       items={items}
       layout={layout}
-      size={size}
+      options={options}
       Component={Component}
-      onDrop={handleDrop}
       className={className}
       debug={debug}
+      selected={selected}
+      onSelect={setSelected}
+      onDrop={handleDrop}
+      onCreate={handleCreate}
     />
   );
 };

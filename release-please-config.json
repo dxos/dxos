@@ -614,6 +614,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/aurora-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/aurora-table/package.json",
           "jsonpath": "$.version"
         },

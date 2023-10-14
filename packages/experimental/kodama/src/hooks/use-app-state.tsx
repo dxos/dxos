@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactNode, createContext, useContext, useMemo, useReducer } from 'react';
+import React, { type FC, type ReactNode, createContext, useContext, useMemo, useReducer } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 
 export type AppState = {
   debug?: boolean;

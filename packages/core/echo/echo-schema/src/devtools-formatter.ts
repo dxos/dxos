@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { JsonML } from '@dxos/debug';
+import { type JsonML } from '@dxos/debug';
 
 import { base, data } from './defs';
-import { TypedObject } from './typed-object';
+import { type TypedObject } from './typed-object';
 
 const idStyle = { style: 'color: #777' };
 const listStyle = {

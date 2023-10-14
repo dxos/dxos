@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Identity } from '@dxos/client/halo';
+import { type Identity } from '@dxos/client/halo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';

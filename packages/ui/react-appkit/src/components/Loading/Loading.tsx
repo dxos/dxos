@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps } from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { useId } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';

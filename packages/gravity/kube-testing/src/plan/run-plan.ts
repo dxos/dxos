@@ -3,7 +3,7 @@
 //
 
 import yaml from 'js-yaml';
-import { ChildProcess, fork } from 'node:child_process';
+import { type ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentEnv } from './env';
-import { AgentParams, PlanResults, TestPlan } from './spec';
+import { type AgentParams, type PlanResults, type TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;

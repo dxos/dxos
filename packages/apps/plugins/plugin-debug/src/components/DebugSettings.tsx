@@ -7,7 +7,7 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/aurora';
 import { usePlugin } from '@dxos/react-surface';
 
-import { DEBUG_PLUGIN, DebugPluginProvides } from '../props';
+import { DEBUG_PLUGIN, type DebugPluginProvides } from '../props';
 
 export const DebugSettings = () => {
   const { t } = useTranslation(DEBUG_PLUGIN);

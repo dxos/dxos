@@ -4,14 +4,14 @@
 
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
-import { RandomAccessStorage } from 'random-access-storage';
+import { type RandomAccessStorage } from 'random-access-storage';
 
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TimeSeriesCounter, trace } from '@dxos/tracing';
 
-import { Directory, DiskInfo, File, Storage, StorageType, getFullPath } from '../common';
+import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
 
 /**
  * Web file systems.

@@ -4,7 +4,7 @@
 
 import minimist from 'minimist';
 
-import { InputOf } from '@dxos/plate';
+import { type InputOf } from '@dxos/plate';
 import template from '@dxos/tasks-template';
 
 void (async () => {

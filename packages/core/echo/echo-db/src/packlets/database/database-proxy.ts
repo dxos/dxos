@@ -3,20 +3,20 @@
 //
 
 import { asyncTimeout, Event, scheduleTask, synchronized, Trigger } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError } from '@dxos/protocols';
-import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
+import { type EchoObject, type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { type DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Batch } from './batch';
 import { tagMutationsInBatch } from './builder';
-import { Item } from './item';
-import { ItemManager } from './item-manager';
+import { type Item } from './item';
+import { type ItemManager } from './item-manager';
 
 const FLUSH_TIMEOUT = 5_000;
 

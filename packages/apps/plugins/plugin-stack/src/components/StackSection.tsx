@@ -4,11 +4,11 @@
 
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, ForwardRefExoticComponent, RefAttributes } from 'react';
+import React, { forwardRef, type ForwardRefExoticComponent, type RefAttributes } from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
-import { ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { DelegatorProps, getDndId, parseDndId, useMosaic } from '@dxos/aurora-grid';
+import { type Node } from '@braneframe/plugin-graph';
+import { ListItem, Button, useTranslation, DensityProvider, type ListScopedProps } from '@dxos/aurora';
+import { type DelegatorProps, getDndId, parseDndId, useMosaic } from '@dxos/aurora-grid';
 import {
   fineButtonDimensions,
   focusRing,
@@ -24,7 +24,7 @@ import {
 } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
-import { STACK_PLUGIN, StackModel } from '../types';
+import { STACK_PLUGIN, type StackModel } from '../types';
 import { isStack } from '../util';
 
 type StackSectionProps = DelegatorProps<Node<StackModel>>;

@@ -1,0 +1,32 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../aurora"
+    },
+    {
+      "path": "../aurora-grid"
+    },
+    {
+      "path": "../aurora-theme"
+    }
+  ]
+}

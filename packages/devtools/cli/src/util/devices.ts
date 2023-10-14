@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { Device } from '@dxos/client/halo';
+import { type Device } from '@dxos/client/halo';
 
 import { maybeTruncateKey } from './types';
 

@@ -14,7 +14,7 @@ import { createEchoMenu } from './echo';
 import { createHaloMenu } from './halo';
 import { createKubeMenu } from './kube';
 import { createMeshMenu } from './mesh';
-import { MenuItem, Module, Panel } from './util';
+import { type MenuItem, Module, Panel } from './util';
 import { ModuleProvider, useAppState } from '../hooks';
 
 /**

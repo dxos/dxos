@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/aurora-grid/src/index.ts"
+          "packages/ui/aurora-grid/src/index.ts",
+          "packages/ui/aurora-grid/src/mosaic/index.ts"
         ],
         "outputPath": "packages/ui/aurora-grid/dist/lib",
         "platforms": [

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { type UniqueIdentifier } from '@dnd-kit/core';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 
 export const nextRearrangeIndex = (nodes: Node[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
   const overOrderIndex = nodes.length > 0 ? nodes.findIndex(({ id }) => id === overId) : -1;

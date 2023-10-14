@@ -4,7 +4,7 @@
 
 import { deepSignal } from 'deepsignal/react';
 
-import { StackState } from './types';
+import { type StackState } from './types';
 
 // TODO(burdon): REMOVE GLOBAL VARIABLE!
 export const stackState: StackState = deepSignal({

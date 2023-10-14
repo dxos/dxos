@@ -3,10 +3,10 @@
 //
 
 import { ux } from '@oclif/core';
-import { Table } from '@oclif/core/lib/cli-ux';
+import { type Table } from '@oclif/core/lib/cli-ux';
 
 import { asyncTimeout } from '@dxos/async';
-import { Space, SpaceMember } from '@dxos/client/echo';
+import { type Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
 import { maybeTruncateKey } from './types';

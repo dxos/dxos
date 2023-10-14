@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FileHandle } from 'node:fs/promises';
+import { type FileHandle } from 'node:fs/promises';
 
 import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
 
-import { ResourceLock, ResourceLockOptions } from './resource-lock';
+import { type ResourceLock, type ResourceLockOptions } from './resource-lock';
 
 // TODO(mykola): Factor out.
 export class Lock implements ResourceLock {
