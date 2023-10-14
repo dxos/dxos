@@ -69,8 +69,9 @@ The type of the resulting objects must descend from `TypedObject` because ECHO t
 DXOS provides a tool for conveniently generating entity classes (like `Task` above) that work with the `query<T>` interface.
 
 ::: details Benefits of schema declarations
+
 - ability to generate type-safe data access code, which makes development faster and safer.
-:::
+  :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -95,6 +96,7 @@ message TaskList {
   repeated Task tasks = 2;
 }
 ```
+
 ::: note
 Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 :::
@@ -106,53 +108,26 @@ dxtype <input protobuf file> <output typescript file>
 ```
 
 Install the `dxtype` tool as a dev dependency:
+
 ```bash
 npm install --save-dev @dxos/echo-typegen
 ```
+
 Install base types for the generated code:
+
 ```
 npm install @dxos/echo-schema
 ```
+
 Now scripts have access to `dxtype`:
+
 ```bash
 dxtype <input protobuf file> <output typescript file>
 ```
 
-
 ::: info Tip
 If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
-
-::: details See TypeScript output from `dxtype`
-The output is a typescript file that looks roughly like this:
-
-```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from '@dxos/client/echo';
-
-export const schema = EchoSchema.fromJson(
-  '{ "protobuf generated json here": true }'
-);
-
-export class Task extends TypedObject {
-  static readonly type: ReturnType<typeof schema.getType> = schema.getType('example.tasks.Task');
-
-  static filter(opts?: {
-    title?: string;
-    completed?: boolean;
-  }): TypeFilter<Task> {
-    return Task.type.createFilter(opts);
-  }
-
-  constructor(opts?: { title?: string; completed?: boolean }) {
-    super({ ...opts, '@type': Task.type.name }, Task.type);
-  }
-
-  declare title: string;
-  declare completed: boolean;
-}
-```
-
-Declared are the ancestor class and specific fields on the type.
 
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
 :::
@@ -163,6 +138,7 @@ For example, defining types in a folder named `schema`:
 
 The schema protobuf file:
 ::: details schema/schema.proto
+
 ```protobuf{6,13} file=./snippets/schema.proto
 syntax = "proto3";
 
@@ -182,10 +158,12 @@ message TaskList {
   repeated Task tasks = 2;
 }
 ```
+
 :::
 
 The script in package.json:
 ::: details package.json
+
 ```json
 {
   "scripts": {
@@ -193,6 +171,7 @@ The script in package.json:
   }
 }
 ```
+
 :::
 
 After executing `npm run prebuild`, types are available in `schema/index.ts`:

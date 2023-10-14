@@ -40,7 +40,6 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-
 ### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 Create subscription.
@@ -68,8 +67,8 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 ::: details Benefits of schema declarations
 
-- ability to generate type-safe data access code, which makes development faster and safer.
-  :::
+*   ability to generate type-safe data access code, which makes development faster and safer.
+    :::
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -168,28 +167,37 @@ After executing `npm run prebuild`, types are available in `schema/index.ts`:
 ```tsx{7,12} file=./snippets/use-query-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task, type } from './schema';
+import { Task, types } from './schema';
 
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
   const tasks = useQuery<Task>(space, Task.filter());
-  return <>
-    {tasks.map((task) => (
-      <div key={task.id}>{task.title} - {task.completed}</div>
-    ))}
-  </>;
+  return (
+    <>
+      {tasks.map((task) => (
+        <div key={task.id}>
+          {task.title} - {task.completed}
+        </div>
+      ))}
+    </>
+  );
 };
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
-  <ClientProvider>
+  <ClientProvider
+    onInitialized={async (client) => {
+      client.addSchema(types);
+    }}
+  >
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
 ```
 

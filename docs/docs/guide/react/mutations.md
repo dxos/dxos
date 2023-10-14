@@ -76,6 +76,7 @@ In the example below, clicking a task sets `completed = true` in the same way as
 ```tsx{19,28} file=./snippets/mutations-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
