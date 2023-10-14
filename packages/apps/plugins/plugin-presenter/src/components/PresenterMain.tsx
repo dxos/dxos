@@ -17,6 +17,10 @@ import { PRESENTER_PLUGIN, PresenterContext } from '../types';
 export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const [slide, setSlide] = useState(0);
 
+  // TODO(burdon): Current DND requires sorting sections.
+  const sections = [...stack.sections];
+  sections?.sort(({ index: a }, { index: b }) => (a < b ? -1 : a > b ? 1 : 0));
+
   // TODO(burdon): Should not depend on split screen.
   const { fullscreen } = useSplitView();
 
@@ -43,18 +47,18 @@ export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, !fullscreen && coarseBlockPaddingStart]}>
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
-        bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
+        bottomRight={<PageNumber index={slide} count={sections.length} />}
         bottomLeft={
           <Pager
             index={slide}
-            count={stack.sections.length}
+            count={sections.length}
             keys={running}
             onChange={setSlide}
             onExit={() => handleSetRunning(false)}
           />
         }
       >
-        <Surface role='presenter-slide' data={stack.sections[slide].object} />
+        <Surface role='presenter-slide' data={sections[slide].object} />
       </Layout>
     </Main.Content>
   );
