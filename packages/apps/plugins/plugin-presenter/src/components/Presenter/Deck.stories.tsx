@@ -21,7 +21,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
-const Story: FC<Omit<DeckProps, 'onSlideChange'>> = (args) => <Deck {...args} />;
+const Story: FC<Omit<DeckProps, 'onChange'>> = (args) => <Deck {...args} />;
 
 export default {
   component: Story,

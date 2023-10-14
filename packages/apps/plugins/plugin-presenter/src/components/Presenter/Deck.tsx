@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut } from '@phosphor-icons/react';
+import { Play, X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button } from '@dxos/aurora';
@@ -10,34 +10,30 @@ import { getSize, mx } from '@dxos/aurora-theme';
 
 import { PageNumber, Pager } from './Pager';
 import { Presenter } from './Presenter';
-import { useControlledValue } from '../util';
+import { useControlledValue } from '../../util';
 
 export type DeckProps = {
   slides?: string[];
   slide?: number;
-  fullscreen?: boolean;
-  onSlideChange?: (index: number) => void;
-  onToggleFullscreen?: (fullscreen: boolean) => void;
+  running?: boolean;
+  onChange?: (index: number) => void;
+  onStart?: () => void;
+  onStop?: () => void;
 };
 
-// TODO(burdon): Subscribe to fullscreen/index.
-export const Deck = ({
-  slides = [],
-  slide: controlledSlide = 0,
-  fullscreen,
-  onSlideChange,
-  onToggleFullscreen,
-}: DeckProps) => {
+export const Deck = ({ slides = [], slide: controlledSlide = 0, running, onChange, onStart, onStop }: DeckProps) => {
   const [slide, setSlide] = useControlledValue(controlledSlide);
   const handleUpdateSlide = (slide: number) => {
     setSlide(slide);
-    onSlideChange?.(slide);
+    onChange?.(slide);
   };
 
   const Expand = () => {
     return (
-      <Button variant='ghost' onClick={() => onToggleFullscreen?.(!fullscreen)}>
-        <ArrowsOut className={mx(getSize(8), 'mx-2 my-4 text-gray-400')} />
+      <Button variant='ghost' onClick={() => (running ? onStop?.() : onStart?.())}>
+        {(running && <X className={mx(getSize(8), 'text-gray-400')} />) || (
+          <Play className={mx(getSize(8), 'text-gray-400')} />
+        )}
       </Button>
     );
   };
@@ -51,9 +47,9 @@ export const Deck = ({
         <Pager
           index={slide}
           count={slides.length}
-          keys={fullscreen}
+          keys={running}
           onChange={handleUpdateSlide}
-          onClose={() => onToggleFullscreen?.(false)}
+          onExit={() => onStop?.()}
         />
       }
     />

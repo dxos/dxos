@@ -20,6 +20,7 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -109,6 +110,7 @@ const main = async () => {
           GithubPlugin(),
           MarkdownPlugin(),
           SketchPlugin(),
+          PresenterPlugin(), // Before Stack.
           StackPlugin(),
 
           // Labs Apps.

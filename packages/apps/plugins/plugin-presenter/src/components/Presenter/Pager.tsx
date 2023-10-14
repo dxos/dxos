@@ -8,17 +8,17 @@ import React, { useEffect } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { useControlledValue } from '../util';
+import { useControlledValue } from '../../util';
 
 export type PagerProps = {
   index?: number;
   count?: number;
-  keys?: boolean;
+  keys?: boolean; // TODO(burdon): Rename.
   onChange?: (index: number) => void;
-  onClose?: () => void; // TODO(burdon): Remove.
+  onExit?: () => void;
 };
 
-export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, onClose }: PagerProps) => {
+export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
   const [index, setIndex] = useControlledValue(controlledIndex);
   useEffect(() => {
     onChange?.(index);
@@ -40,7 +40,7 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
     const keydownHandler = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Escape': {
-          onClose?.();
+          onExit?.();
           break;
         }
         case 'ArrowLeft': {
@@ -60,11 +60,11 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
           break;
         }
         case 'ArrowUp': {
-          onChange?.(1);
+          onChange?.(0);
           break;
         }
         case 'ArrowDown': {
-          onChange?.(count);
+          onChange?.(count - 1);
           break;
         }
       }
@@ -80,15 +80,15 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
 
   // TODO(burdon): Style colors.
   return (
-    <div className='flex m-4 items-center text-gray-400'>
+    <div className='flex m-2 items-center text-gray-400'>
       <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(0)}>
         <CaretDoubleLeft className={mx(getSize(6))} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(-1)}>
-        <CaretLeft className={mx(getSize(8))} />
+        <CaretLeft className={mx(getSize(6))} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(1)}>
-        <CaretRight className={mx(getSize(8))} />
+        <CaretRight className={mx(getSize(6))} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(count - 1)}>
         <CaretDoubleRight className={mx(getSize(6))} />
@@ -108,7 +108,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex m-4 items-center text-gray-400 text-2xl'>
+    <div className='flex m-2 items-center text-gray-400 text-2xl'>
       <div>
         {index + 1} / {count}
       </div>

@@ -22,6 +22,7 @@
     "@braneframe/plugin-kanban": "workspace:*",
     "@braneframe/plugin-map": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-presenter": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",

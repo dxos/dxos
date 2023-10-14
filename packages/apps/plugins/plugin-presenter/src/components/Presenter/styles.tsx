@@ -15,4 +15,4 @@ export const defaultClasses = {
 
 export const defaultSlideClasses = 'bg-white leading-relaxed font-mono';
 
-export const defaultPadding = 'px-32 py-20';
+export const defaultPadding = 'px-16 py-10';

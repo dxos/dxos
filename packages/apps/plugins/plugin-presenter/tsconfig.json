@@ -45,6 +45,12 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-stack"
+    },
+    {
       "path": "../plugin-theme"
     }
   ]

@@ -111,7 +111,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     plugin: DEBUG_PLUGIN,
                     action: 'open-devtools',
                   },
-                  keyBinding: 'shift+command+\\',
+                  keyBinding: 'shift+meta+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',
                   },

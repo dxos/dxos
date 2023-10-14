@@ -50,7 +50,7 @@ export const Presenter = ({
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-black')}>
+    <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-white')}>
       {width && height && (
         <div className={mx('flex flex-col absolute transition overflow-hidden')} style={props}>
           <Slide content={content} classes={classes} />

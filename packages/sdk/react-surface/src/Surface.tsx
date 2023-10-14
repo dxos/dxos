@@ -101,7 +101,7 @@ const resolveComponents = (
     return props.limit ? components.slice(0, props.limit) : components;
   } else {
     const components = plugins
-      .map((plugin, index) => {
+      .map((plugin) => {
         const Component = plugin.provides.component?.(data, role);
         return (
           Component && (
