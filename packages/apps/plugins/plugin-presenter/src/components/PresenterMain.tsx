@@ -2,24 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, useContext, useState } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, SplitViewAction, useSplitView } from '@braneframe/plugin-splitview';
 import type { StackModel, StackProperties } from '@braneframe/plugin-stack';
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { Surface } from '@dxos/react-surface';
 
-import { Deck } from './Presenter';
-import { PRESENTER_PLUGIN } from '../types';
+import { Layout, PageNumber, Pager, StartButton } from './Presenter';
+import { PRESENTER_PLUGIN, PresenterContext } from '../types';
 
 export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
+  const [slide, setSlide] = useState(0);
+
   // TODO(burdon): Should not depend on split screen.
   const { fullscreen } = useSplitView();
 
-  // TODO(burdon): Handle images and sketches (via surfaces?)
-  // TODO(burdon): Order doesn't currently update when stack re-arranged.
-  const slides = stack.sections.map((section) => String(section.object.content));
+  const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
   const { dispatch } = useIntent();
@@ -27,7 +28,7 @@ export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data
     void dispatch([
       {
         plugin: PRESENTER_PLUGIN,
-        action: 'toggle-presentation',
+        action: 'toggle-presentation', // TODO(burdon): Create const.
         data: { state: running },
       },
       {
@@ -40,12 +41,21 @@ export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, !fullscreen && coarseBlockPaddingStart]}>
-      <Deck
-        slides={slides}
-        running={fullscreen}
-        onStart={() => handleSetRunning(true)}
-        onStop={() => handleSetRunning(false)}
-      />
+      <Layout
+        topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
+        bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
+        bottomLeft={
+          <Pager
+            index={slide}
+            count={stack.sections.length}
+            keys={running}
+            onChange={setSlide}
+            onExit={() => handleSetRunning(false)}
+          />
+        }
+      >
+        <Surface role='presenter-slide' data={stack.sections[slide].object} />
+      </Layout>
     </Main.Content>
   );
 };

@@ -2,6 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Deck';
+export * from './Layout';
 export * from './Pager';
-export * from './Presenter';

@@ -3,14 +3,16 @@
 //
 
 import '@dxosTheme';
+
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { Presenter } from './Presenter';
-import { createSlide } from './testing';
+import { Container } from './Container';
+import { Slide } from './Slide';
+import { createSlide } from '../../testing';
 
 // TODO(burdon): Factor out.
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
@@ -21,8 +23,16 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
+const Story: FC<{ content: string }> = ({ content }) => {
+  return (
+    <Container>
+      <Slide content={content} />
+    </Container>
+  );
+};
+
 export default {
-  component: Presenter,
+  component: Story,
   decorators: [FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',

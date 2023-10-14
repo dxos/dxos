@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { Slide } from './Slide';
-import { createSlide } from './testing';
+import { createSlide } from '../../testing';
 
 export default {
   component: Slide,

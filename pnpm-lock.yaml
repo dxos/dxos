@@ -1215,6 +1215,7 @@ importers:
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
@@ -1240,6 +1241,7 @@ importers:
       remark-parse-frontmatter: ^1.0.3
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-stack': link:../plugin-stack
       deepsignal: 1.3.6

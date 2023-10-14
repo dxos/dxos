@@ -2,38 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useState } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { Slide } from './Slide';
-import { defaultClasses } from './styles';
-
-export type PresenterProps = {
-  content?: string;
+export type ContainerProps = PropsWithChildren<{
   className?: string;
   classes?: { [selector: string]: string };
-  topLeft?: ReactNode;
-  topRight?: ReactNode;
-  bottomLeft?: ReactNode;
-  bottomRight?: ReactNode;
-};
+}>;
 
-export const Presenter = ({
-  content = '',
-  className,
-  classes = defaultClasses,
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-}: PresenterProps) => {
+/**
+ * Scaled markdown container.
+ */
+export const Container = ({ children, className }: ContainerProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,
-    width = 0,
-    height = 0,
+    width,
+    height,
   } = useResizeDetector({
     refreshMode: 'debounce',
     refreshRate: 200,
@@ -50,19 +37,10 @@ export const Presenter = ({
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex flex-1 relative overflow-hidden select-none', className ?? 'bg-white')}>
-      {width && height && (
-        <div className={mx('flex flex-col absolute transition overflow-hidden')} style={props}>
-          <Slide content={content} classes={classes} />
-        </div>
-      )}
-
-      <>
-        <div className='absolute top-0 left-0'>{topLeft}</div>
-        <div className='absolute top-0 right-0'>{topRight}</div>
-        <div className='absolute bottom-0 left-0'>{bottomLeft}</div>
-        <div className='absolute bottom-0 right-0'>{bottomRight}</div>
-      </>
+    <div ref={containerRef} className={mx('flex grow relative overflow-hidden select-none', className ?? 'bg-white')}>
+      <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
+        {width && height && children}
+      </div>
     </div>
   );
 };
@@ -90,7 +68,7 @@ const createLayoutProps = ({ width, height }: { width: number; height: number })
     (window.navigator.platform === 'MacIntel' && height === screen.availHeight - macIntelNotch);
 
   // If not fullscreen then make scale slightly smaller so there's a natural border.
-  const scaleFactor = fullscreen ? 1 : 0.9;
+  const scaleFactor = fullscreen ? 1 : 0.95;
 
   // Compute scaling factor required.
   const scale = Math.min(width / nominalWidth, height / nominalHeight) * scaleFactor;

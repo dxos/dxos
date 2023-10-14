@@ -12,8 +12,6 @@ import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
 import { defaultClasses, defaultPadding, defaultSlideClasses } from './styles';
 
-// TODO(burdon): Define content type. E.g., reference to image.
-
 export type SlideProps = {
   content?: string;
   classes?: { [selector: string]: string };

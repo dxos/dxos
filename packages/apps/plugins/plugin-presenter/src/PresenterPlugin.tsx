@@ -6,18 +6,17 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
+import { isMarkdownContent } from '@braneframe/plugin-markdown';
 import { SPLITVIEW_PLUGIN, SplitViewAction } from '@braneframe/plugin-splitview';
 import { isStack } from '@braneframe/plugin-stack';
 import { type PluginDefinition } from '@dxos/react-surface';
 
-import { PresenterMain } from './components';
+import { PresenterMain, MarkdownSlideMain } from './components';
 import translations from './translations';
 import { PRESENTER_PLUGIN, PresenterContext, type PresenterPluginProvides } from './types';
 
+// TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
-// TODO(burdon): View mode (switch surface from stack via menu/intent).
-//  - Short term create additional graph node?
-// TODO(burdon): Key bindings.
 
 type PresenterState = {
   presenting: boolean;
@@ -40,16 +39,16 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               id: 'toggle-presentation',
               label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
               icon: (props) => <Presentation {...props} />,
+              // TODO(burdon): Allow function so can generate state when activated.
+              //  So can set explicit fullscreen state coordinated with current presenter state.
               intent: [
                 {
                   plugin: PRESENTER_PLUGIN,
                   action: 'toggle-presentation',
-                  data: { state: !state.presenting },
                 },
                 {
                   plugin: SPLITVIEW_PLUGIN,
                   action: SplitViewAction.TOGGLE_FULLSCREEN,
-                  data: { state: !state.presenting },
                 },
               ],
               keyBinding: 'shift+meta+p',
@@ -75,8 +74,20 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           return null;
         }
 
-        if (state.presenting && role === 'main' && isStack(data)) {
-          return PresenterMain;
+        switch (role) {
+          case 'main': {
+            if (isStack(data) && state.presenting) {
+              return PresenterMain;
+            }
+            break;
+          }
+
+          case 'presenter-slide': {
+            if (isMarkdownContent(data)) {
+              return MarkdownSlideMain;
+            }
+            break;
+          }
         }
 
         return null;

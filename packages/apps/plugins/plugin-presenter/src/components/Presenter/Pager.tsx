@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { useEffect } from 'react';
+import { Play, X, CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import React, { type FC, useEffect } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
@@ -78,9 +78,8 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
     return null;
   }
 
-  // TODO(burdon): Style colors.
   return (
-    <div className='flex m-2 items-center text-gray-400'>
+    <div className='flex items-center text-neutral-500'>
       <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(0)}>
         <CaretDoubleLeft className={mx(getSize(6))} />
       </Button>
@@ -108,10 +107,18 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   }
 
   return (
-    <div className='flex m-2 items-center text-gray-400 text-2xl'>
+    <div className='flex items-center text-neutral-500 text-2xl'>
       <div>
         {index + 1} / {count}
       </div>
     </div>
+  );
+};
+
+export const StartButton: FC<{ running?: boolean; onClick?: (start: boolean) => void }> = ({ running, onClick }) => {
+  return (
+    <Button variant='ghost' classNames='p-0' onClick={() => onClick?.(!running)}>
+      {(running && <X className={mx(getSize(6))} />) || <Play className={mx(getSize(6))} />}
+    </Button>
   );
 };
