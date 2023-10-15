@@ -18,7 +18,7 @@ export type LayoutProps = PropsWithChildren<{
 export const Layout = ({ children, className, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => {
   return (
     <div className={mx('flex grow relative overflow-hidden', className ?? 'bg-white dark:bg-black')}>
-      <div className={mx('flex flex-col grow m-16 overflow-hidden')}>{children}</div>
+      <div className={mx('flex flex-col grow overflow-hidden')}>{children}</div>
 
       <div className='z-[200]'>
         <div className='absolute top-4 left-4'>{topLeft}</div>

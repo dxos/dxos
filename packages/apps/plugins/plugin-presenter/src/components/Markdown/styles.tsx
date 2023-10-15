@@ -4,7 +4,7 @@
 
 export const defaultSlideClasses = 'bg-white leading-relaxed font-sans';
 
-export const defaultPadding = 'px-24 py-4 gap-8';
+export const defaultPadding = 'px-40 py-16 gap-8';
 
 export const defaultNodeClasses = {
   h1: 'text-[80px] text-cyan-600',
