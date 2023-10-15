@@ -30,8 +30,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const { showComplementarySidebar = false } = { ...options };
 
-  // TODO(burdon): Rename state.
-  const state = new LocalStorageStore<SplitViewState>('braneframe.plugin-splitview', {
+  const state = new LocalStorageStore<SplitViewState>(SPLITVIEW_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     dialogContent: 'never',

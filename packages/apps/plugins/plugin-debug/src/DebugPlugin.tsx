@@ -19,7 +19,7 @@ import translations from './translations';
 export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const settings = new LocalStorageStore<DebugSettingsProps>('braneframe.plugin-debug');
+  const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
 
   const nodeIds = new Set<string>();
   const isDebug = (data: unknown) =>
