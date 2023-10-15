@@ -3,7 +3,6 @@
 //
 
 import '@dxosTheme';
-
 import React, { type FC, useState } from 'react';
 
 import { PageNumber, Pager, StartButton } from './Pager';
