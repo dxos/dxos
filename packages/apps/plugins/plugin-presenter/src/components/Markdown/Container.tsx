@@ -37,7 +37,7 @@ export const Container = ({ children, className }: ContainerProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden select-none', className ?? 'bg-white')}>
+    <div ref={containerRef} className={mx('flex grow relative overflow-hidden', className ?? 'bg-white')}>
       <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
         {width && height && children}
       </div>
@@ -62,16 +62,16 @@ const createLayoutProps = ({ width, height }: { width: number; height: number })
   const nominalHeight = nominalWidth / aspectRatio;
 
   // NOTE: Hack to detect full height on Macbook Pro due to notch.
-  const macIntelNotch = 1117 - 1080;
-  const fullscreen =
-    height === screen.availHeight ||
-    (window.navigator.platform === 'MacIntel' && height === screen.availHeight - macIntelNotch);
+  // const macIntelNotch = 1117 - 1080;
+  // const fullscreen =
+  //   height === screen.availHeight ||
+  //   (window.navigator.platform === 'MacIntel' && height === screen.availHeight - macIntelNotch);
 
   // If not fullscreen then make scale slightly smaller so there's a natural border.
-  const scaleFactor = fullscreen ? 1 : 0.95;
+  // const scaleFactor = fullscreen ? 1 : 0.95;
 
   // Compute scaling factor required.
-  const scale = Math.min(width / nominalWidth, height / nominalHeight) * scaleFactor;
+  const scale = Math.min(width / nominalWidth, height / nominalHeight);
 
   return {
     left: (width - nominalWidth) / 2,

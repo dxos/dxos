@@ -25,7 +25,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const Story: FC<{ content: string }> = ({ content }) => {
   return (
-    <Container>
+    <Container className='bg-neutral-200'>
       <Slide content={content} />
     </Container>
   );
@@ -41,6 +41,24 @@ export default {
 
 export const Default = {
   args: {
-    content: createSlide(),
+    content: createSlide({ number: 1 }),
+  },
+};
+
+export const Code = {
+  args: {
+    content: createSlide({ code: true }),
+  },
+};
+
+export const List = {
+  args: {
+    content: createSlide({ list: 3 }),
+  },
+};
+
+export const Ordered = {
+  args: {
+    content: createSlide({ ordered: 4 }),
   },
 };

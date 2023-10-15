@@ -4,9 +4,45 @@
 
 import { faker } from '@faker-js/faker';
 
-export const createSlide = (n?: number) => {
-  const num = n === undefined ? '' : `${n}. `;
-  return [`# ${num}${faker.lorem.sentence(3)}`, `${faker.lorem.sentences()}`].join('\n');
+type SlideOptions = {
+  number?: number;
+  code?: boolean;
+  list?: number;
+  ordered?: number;
 };
 
-export const createSlides = (length = 1) => Array.from({ length }).map((_, i) => createSlide(i + 1));
+export const createSlide = (options: SlideOptions = {}) => {
+  const num = options.number === undefined ? '' : `${options.number}. `;
+
+  const code = () =>
+    [
+      '```tsx',
+      'const x = [1, 2, 3];',
+      'const f = (x: number[]) => x.reduce((acc, value) => acc + value, 0)',
+      'const y = f(x)',
+      '```',
+    ].join('\n');
+
+  const list = (length = 3) =>
+    Array.from({ length })
+      .map(() => `- ${faker.lorem.sentence(3)}`)
+      .join('\n');
+
+  const ordered = (length = 3) =>
+    Array.from({ length })
+      .map((_, i) => `${i + 1}. ${faker.lorem.sentence(3)}`)
+      .join('\n');
+
+  return [
+    `# ${num}${faker.lorem.sentence(3)}`,
+    faker.lorem.sentences(),
+    options.code && code(),
+    options.list && list(options.list),
+    options.ordered && ordered(options.ordered),
+    faker.lorem.sentences(),
+  ]
+    .filter(Boolean)
+    .join('\n\r');
+};
+
+export const createSlides = (length = 1) => Array.from({ length }).map((_, i) => createSlide({ number: i + 1 }));

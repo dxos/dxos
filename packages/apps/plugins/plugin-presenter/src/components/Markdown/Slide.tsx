@@ -10,14 +10,16 @@ import highlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
-import { defaultClasses, defaultPadding, defaultSlideClasses } from './styles';
+import 'highlight.js/styles/github.css';
+
+import { defaultNodeClasses, defaultPadding, defaultSlideClasses } from './styles';
 
 export type SlideProps = {
   content?: string;
   classes?: { [selector: string]: string };
 };
 
-export const Slide = ({ content = '', classes = defaultClasses }: SlideProps) => {
+export const Slide = ({ content = '', classes = defaultNodeClasses }: SlideProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (

@@ -2,17 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Custom styles.
-export const defaultClasses = {
-  h1: 'pb-6 text-[120px] text-cyan-600',
-  h2: 'pb-6 text-[80px] text-cyan-600',
-  h3: 'pb-6 text-[60px] text-cyan-600',
-  ul: 'ml-12 list-disc',
-  li: 'pl-6 text-[60px]',
-  p: 'pb-12 text-[60px]',
-  pre: 'w-full my-[16px] p-[32px] text-[40px] bg-zinc-100',
+export const defaultSlideClasses = 'bg-white leading-relaxed font-sans';
+
+export const defaultPadding = 'px-24 py-4 gap-8';
+
+export const defaultNodeClasses = {
+  h1: 'text-[80px] text-cyan-600',
+  h2: 'text-[60px] text-cyan-600',
+  h3: 'text-[48px] text-cyan-600',
+
+  p: 'text-[48px]',
+
+  ul: 'my-[16px] ml-12 list-disc',
+  ol: 'my-[16px] ml-12 list-decimal',
+  li: 'pl-6 py-2 text-[48px]',
+
+  pre: 'w-full mx-0 my-[32px] p-0 __border-l-[16px] bg-neutral-50/50 p-4 whitespace-pre-line',
+  code: 'p-0 text-[40px]',
 };
-
-export const defaultSlideClasses = 'bg-white leading-relaxed font-mono';
-
-export const defaultPadding = 'px-16 py-10';
