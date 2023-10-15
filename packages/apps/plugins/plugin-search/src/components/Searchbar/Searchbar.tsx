@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Button, Input, type TextInputProps } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'placeholder'> & {
   value?: string;
@@ -36,12 +37,13 @@ export const Searchbar: FC<SearchbarProps> = ({ placeholder, value, onChange }) 
           ref={inputRef}
           placeholder={placeholder}
           value={text}
+          classNames='pr-[40px]'
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
-        {/* TODO(burdon): Embedded icon. */}
-        <Button variant='ghost' classNames='bg-red-100' onClick={handleReset}>
-          <X />
+
+        <Button variant='ghost' classNames='-ml-8 p-0 cursor-pointer' onClick={handleReset}>
+          <MagnifyingGlass className={getSize(5)} />
         </Button>
       </Input.Root>
     </div>

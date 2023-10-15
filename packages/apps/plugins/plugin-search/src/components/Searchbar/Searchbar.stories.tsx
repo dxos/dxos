@@ -6,15 +6,14 @@ import '@dxosTheme';
 
 import React, { type FC } from 'react';
 
-import { Button, DensityProvider } from '@dxos/aurora';
+import { DensityProvider } from '@dxos/aurora';
 
 import { Searchbar, type SearchbarProps } from './Searchbar';
 
 const Story: FC<SearchbarProps> = (args) => {
   return (
-    <DensityProvider density='fine'>
+    <DensityProvider density='coarse'>
       <Searchbar {...args} />
-      <Button variant='primary'>Test</Button>
     </DensityProvider>
   );
 };
