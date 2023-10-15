@@ -7,7 +7,7 @@ import { batch } from '@preact/signals-react';
 import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { type GraphPluginProvides, type GraphProvides, useGraph } from '@braneframe/plugin-graph';
+import { type GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
@@ -21,7 +21,7 @@ import { SPLITVIEW_PLUGIN, SplitViewAction, type SplitViewPluginProvides, type S
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
  */
-export type SplitViewPluginOptions = GraphProvides & {
+export type SplitViewPluginOptions = {
   showComplementarySidebar?: boolean;
 };
 
@@ -70,6 +70,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       state.close();
     },
     provides: {
+      // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
         nodes: (parent) => {
           if (parent.id === 'root') {

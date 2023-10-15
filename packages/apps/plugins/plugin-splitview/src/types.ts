@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Node } from '@braneframe/plugin-graph';
+import type { GraphProvides, Node } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
@@ -32,7 +32,8 @@ export type SplitViewState = {
   previousNode: Node | undefined;
 };
 
-export type SplitViewPluginProvides = TranslationsProvides &
+export type SplitViewPluginProvides = GraphProvides &
+  TranslationsProvides &
   IntentProvides & {
     splitView: SplitViewState;
   };
