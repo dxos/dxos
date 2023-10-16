@@ -8,7 +8,7 @@ import { faker } from '@faker-js/faker';
 import { Boat, Butterfly, Shrimp, TrainSimple } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
-import { DensityProvider, Tooltip } from '@dxos/aurora';
+import { Button, DensityProvider, Tooltip } from '@dxos/aurora';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/aurora-grid/next';
 import { Mosaic } from '@dxos/aurora-grid/next';
 import { arrayMove } from '@dxos/util';
@@ -25,34 +25,36 @@ const ROOT_ID = 'root';
 type StorybookNavTreeProps = Omit<NavTreeProps, 'node'> & { id?: string };
 
 const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => {
+  const leafItemPathAcc: string[] = [];
   const [items, setItems] = useState<TreeNode['children']>(() => {
     const generator = new TestObjectGenerator({ types: ['document'] });
     return Array.from({ length: 4 }).map(() => {
-      const item = generator.createObject();
+      const l0 = generator.createObject();
       return {
         // TODO(wittjosiah): Object id isn't included in spread data.
-        id: item.id,
-        ...item,
-        label: item.title,
+        id: l0.id,
+        ...l0,
+        label: l0.title,
         icon: () => <Shrimp />,
         children: Array.from({ length: 3 }).map(() => {
-          const item = generator.createObject();
+          const l1 = generator.createObject();
+          leafItemPathAcc.push(Path.create(ROOT_ID, l0.id, l1.id));
           return {
-            id: item.id,
-            ...item,
-            label: item.title,
+            id: l1.id,
+            ...l1,
+            label: l1.title,
             icon: () => <Butterfly />,
             children: [],
             actions: [
               {
-                id: `${item.id}__a1`,
+                id: `${l1.id}__a1`,
                 label: faker.lorem.words(2),
                 icon: () => <Boat />,
                 invoke: () => {},
                 properties: {},
               },
               {
-                id: `${item.id}__a2`,
+                id: `${l1.id}__a2`,
                 label: faker.lorem.words(2),
                 icon: () => <TrainSimple />,
                 invoke: () => {},
@@ -64,14 +66,14 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
         }),
         actions: [
           {
-            id: `${item.id}__a1`,
+            id: `${l0.id}__a1`,
             label: faker.lorem.words(2),
             icon: () => <Boat />,
             invoke: () => {},
             properties: {},
           },
           {
-            id: `${item.id}__a2`,
+            id: `${l0.id}__a2`,
             label: faker.lorem.words(2),
             icon: () => <TrainSimple />,
             invoke: () => {},
@@ -83,7 +85,9 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
     });
   });
 
-  const [current, setCurrent] = useState<string | undefined>();
+  const [leafItemPaths, _] = useState<string[]>(leafItemPathAcc);
+
+  const [current, setCurrent] = useState<string>(leafItemPaths[0]);
 
   const handleSelect = useCallback(({ path }: { path: string }) => {
     setCurrent(path);
@@ -127,14 +131,26 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
   );
 
   return (
-    <NavTree
-      node={{ id: ROOT_ID, label: 'root', children: items, actions: [], properties: {} }}
-      current={current}
-      onSelect={handleSelect}
-      onOver={handleOver}
-      onDrop={handleDrop}
-      {...props}
-    />
+    <>
+      <Button
+        classNames='fixed block-start-2 inline-end-2'
+        onClick={() => {
+          const index = leafItemPaths.indexOf(current);
+          const nextPath = leafItemPaths[(index + 1) % leafItemPaths.length];
+          setCurrent(nextPath);
+        }}
+      >
+        Change current
+      </Button>
+      <NavTree
+        node={{ id: ROOT_ID, label: 'root', children: items, actions: [], properties: {} }}
+        current={current}
+        onSelect={handleSelect}
+        onOver={handleOver}
+        onDrop={handleDrop}
+        {...props}
+      />
+    </>
   );
 };
 
