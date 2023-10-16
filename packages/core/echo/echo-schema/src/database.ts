@@ -56,6 +56,8 @@ export class EchoDatabase {
     private readonly _graph: HyperGraph,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
+
+    // Load all existing objects.
     this._update(new UpdateEvent(this._backend.spaceKey)); // TODO: Seems hacky.
   }
 
@@ -63,9 +65,6 @@ export class EchoDatabase {
     return Array.from(this._objects.values());
   }
 
-  /**
-   * @deprecated
-   */
   get graph() {
     return this._graph;
   }
