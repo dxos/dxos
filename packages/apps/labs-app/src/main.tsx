@@ -94,7 +94,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: types }),
+          ClientPlugin({ config, services, debugIdentity: debug, types }),
 
           // Core UX.
           DndPlugin(),
