@@ -18,7 +18,7 @@
       "options": {
         "entryPoints": [
           "packages/ui/aurora-grid/src/index.ts",
-          "packages/ui/aurora-grid/src/mosaic/index.ts"
+          "packages/ui/aurora-grid/src/next.ts"
         ],
         "outputPath": "packages/ui/aurora-grid/dist/lib",
         "platforms": [

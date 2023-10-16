@@ -1,20 +1,20 @@
 {
   "name": "@dxos/aurora-grid",
   "version": "0.3.1",
-  "description": "A datagrid component.",
+  "description": "Aurora component framework.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
     ".": "./dist/lib/browser/index.mjs",
-    "./next": "./dist/lib/browser/mosaic/index.mjs"
+    "./next": "./dist/lib/browser/next.mjs"
   },
   "types": "./dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "next": [
-        "dist/types/src/mosaic"
+        "dist/types/src/next"
       ]
     }
   },

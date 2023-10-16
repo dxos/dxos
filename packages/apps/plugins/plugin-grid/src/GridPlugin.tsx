@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import React from 'react';
+
+import { Mosaic } from '@dxos/aurora-grid/next';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 import translations from './translations';
@@ -16,6 +19,9 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       translations,
       graph: {
         withPlugins: (plugins) => (parent) => {},
+      },
+      context: ({ children }) => {
+        return <Mosaic.Root>{children}</Mosaic.Root>;
       },
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
