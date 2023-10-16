@@ -10,6 +10,7 @@ export default [
       [GRID_PLUGIN]: {
         'plugin name': 'Grid',
         'grid title placeholder': 'New grid',
+        'create grid label': 'Create grid',
       },
     },
   },

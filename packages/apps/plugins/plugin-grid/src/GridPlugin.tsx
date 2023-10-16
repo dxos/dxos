@@ -7,7 +7,7 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { Grid as GridType, Kanban as KanbanType } from '@braneframe/types';
+import { Grid as GridType } from '@braneframe/types';
 import { Mosaic } from '@dxos/aurora-grid/next';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
@@ -39,7 +39,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
           parent.addAction({
             id: `${GRID_PLUGIN}/create`,
-            label: ['create kanban label', { ns: GRID_PLUGIN }],
+            label: ['create grid label', { ns: GRID_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             intent: [
               {
@@ -85,7 +85,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case GridAction.CREATE: {
-              return { object: new KanbanType() };
+              return { object: new GridType() };
             }
           }
         },
