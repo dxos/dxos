@@ -447,8 +447,8 @@ describe('Spaces', () => {
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
 
-    host.addSchema(types);
-    guest.addSchema(types);
+    host.addTypes(types);
+    guest.addTypes(types);
 
     await host.initialize();
     await guest.initialize();
