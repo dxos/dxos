@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { Presentation } from '@dxos/kai-types';
+import { type Presentation } from '@dxos/kai-types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { PresenterFrame } from './PresenterFrame';

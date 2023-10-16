@@ -8,6 +8,8 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { type Plugin } from './Plugin';
 import { usePlugins } from './PluginContext';
 
+// TODO(burdon): Split plugin/surface funcionality?
+
 /**
  * Direction determines how multiple components are laid out.
  */
@@ -101,7 +103,7 @@ const resolveComponents = (
     return props.limit ? components.slice(0, props.limit) : components;
   } else {
     const components = plugins
-      .map((plugin, index) => {
+      .map((plugin) => {
         const Component = plugin.provides.component?.(data, role);
         return (
           Component && (

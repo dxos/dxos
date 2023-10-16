@@ -60,7 +60,7 @@ export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
@@ -154,7 +154,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
-      settings.prop(settings.values.$editorMode!, 'editorMode', LocalStorageStore.string);
+      settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
 
       const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
