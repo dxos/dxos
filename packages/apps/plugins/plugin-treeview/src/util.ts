@@ -2,13 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getAppStateIndex, type SetTileHandler } from '@braneframe/plugin-dnd';
-import { type Action, type Graph, type Node } from '@braneframe/plugin-graph';
-import { type AppState } from '@braneframe/types';
+import { type Action, type Node } from '@braneframe/plugin-graph';
 import type { TFunction } from '@dxos/aurora';
-import { getDndId, type MosaicState } from '@dxos/aurora-grid';
-
-import { TREE_VIEW_PLUGIN } from './types';
 
 export const getLevel = (node: Node, level = 0): number => {
   if (!node.parent) {
@@ -62,52 +57,4 @@ export const getPersistenceParent = (node: Node, persistenceClass: string): Node
   } else {
     return getPersistenceParent(node.parent, persistenceClass);
   }
-};
-
-export const computeTreeViewMosaic = (graph: Graph, appState: AppState, onSetTile: SetTileHandler) => {
-  const mosaic: MosaicState = { tiles: {}, relations: {} };
-
-  graph.traverse({
-    visitor: (node) => {
-      const level = getLevel(node, -1);
-      const id = getDndId(TREE_VIEW_PLUGIN, node.id);
-      mosaic.tiles[id] = onSetTile(
-        {
-          id,
-          index:
-            node.properties.persistenceClass === 'appState'
-              ? getAppStateIndex(node.id, appState)
-              : node.properties.index,
-          variant: 'treeitem',
-          sortable: true,
-          expanded: false,
-          level,
-          ...(node.properties.acceptPersistenceClass && {
-            acceptMigrationClass: node.properties.acceptPersistenceClass,
-          }),
-          ...(node.properties.persistenceClass && { migrationClass: node.properties.persistenceClass }),
-        },
-        node,
-      );
-      mosaic.relations[id] = {
-        child: new Set(),
-        parent: new Set(),
-      };
-    },
-  });
-
-  graph.traverse({
-    visitor: (node) => {
-      const id = getDndId(TREE_VIEW_PLUGIN, node.id);
-      if (node.children && node.children.length) {
-        node.children.forEach((child) => {
-          const childId = getDndId(TREE_VIEW_PLUGIN, child.id);
-          mosaic.relations[id].child.add(childId);
-          mosaic.relations[childId].parent.add(id);
-        });
-      }
-    },
-  });
-
-  return mosaic;
 };

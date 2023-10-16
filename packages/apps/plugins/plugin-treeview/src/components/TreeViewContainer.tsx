@@ -8,15 +8,13 @@ import React from 'react';
 import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { Mosaic } from '@dxos/aurora-grid';
+import { NavTree } from '@dxos/aurora-navtree';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { HaloButton } from './HaloButton';
-import { NavTreeRoot } from './NavTree';
 import { VersionInfo } from './VersionInfo';
-import { TreeViewContext } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
 
 export const TreeViewContainer = ({
@@ -101,13 +99,7 @@ export const TreeViewContainer = ({
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>
-            {/* TODO(wittjosiah): Ideally could pass these into items somehow. */}
-            {/*  The context approach doesn't work great because the context isn't available when dragging. */}
-            <TreeViewContext.Provider value={{ activeId, popoverAnchorId }}>
-              <Mosaic.Root id={TREE_VIEW_PLUGIN}>
-                <NavTreeRoot />
-              </Mosaic.Root>
-            </TreeViewContext.Provider>
+            <NavTree node={graph.root} current={activeId} />;
           </div>
           <VersionInfo config={config} />
         </div>
