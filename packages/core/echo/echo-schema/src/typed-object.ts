@@ -487,21 +487,20 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   _linkObject(obj: EchoObjectBase): Reference {
     if (this._database) {
-      if(!obj[base]._database) {
+      if (!obj[base]._database) {
         this._database.add(obj as TypedObject);
-        return new Reference(obj.id)
+        return new Reference(obj.id);
       } else {
-        if(obj[base]._database !== this._database) {
+        if (obj[base]._database !== this._database) {
           return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
         } else {
-          return new Reference(obj.id)
+          return new Reference(obj.id);
         }
       }
-
     } else {
       invariant(this._linkCache);
       this._linkCache.set(obj.id, obj);
-      return new Reference(obj.id)
+      return new Reference(obj.id);
     }
   }
 
@@ -522,7 +521,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   private _onLinkResolved = () => {
     this._signal?.notifyWrite();
     this._emitUpdate();
-  }
+  };
 }
 
 // Set stringified name for constructor.

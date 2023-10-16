@@ -7,9 +7,9 @@ import { expect } from 'chai';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
+import { subscribe } from './defs';
 import { TestBuilder } from './testing';
 import { Expando } from './typed-object';
-import { subscribe } from './defs';
 
 describe('HyperGraph', () => {
   test('cross-space query', async () => {
@@ -92,13 +92,13 @@ describe('HyperGraph', () => {
 
     obj1.link = obj2;
     expect(obj1.link.title).to.eq('B');
-    
+
     await builder.flushAll();
     expect(obj1.link.title).to.eq('B');
 
     await space1.reload();
     expect(obj1.link.title).to.eq('B');
-  })
+  });
 
   test('cross-space references get resolved on database load', async () => {
     const builder = new TestBuilder();
@@ -127,10 +127,12 @@ describe('HyperGraph', () => {
     expect(obj1.link).to.eq(undefined);
 
     let called = false;
-    obj1[subscribe](() => { called = true });
+    obj1[subscribe](() => {
+      called = true;
+    });
 
     await space2.reload();
     expect(obj1.link.title).to.eq('B');
     expect(called).to.eq(true);
-  })
+  });
 });

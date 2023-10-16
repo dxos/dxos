@@ -65,7 +65,11 @@ export class TestBuilder {
 export class TestPeer {
   public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
 
-  constructor(public readonly builder: TestBuilder, public readonly base: BasePeer, public readonly spaceKey: PublicKey) {}
+  constructor(
+    public readonly builder: TestBuilder,
+    public readonly base: BasePeer,
+    public readonly spaceKey: PublicKey,
+  ) {}
 
   async reload() {
     await this.base.reload();

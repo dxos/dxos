@@ -3,19 +3,18 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { type Reference } from '@dxos/document-model';
 import { type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap, defaultMap, entry } from '@dxos/util';
+import { log } from '@dxos/log';
+import { ComplexMap, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
+import { type EchoObject } from './defs';
 import { type Filter, Query, type TypeFilter } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
-import { Reference } from '@dxos/document-model';
-import { EchoObjectBase } from './echo-object-base';
-import { EchoObject, data } from './defs';
-import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 
 /**
  * Manages cross-space database interactions.
@@ -44,7 +43,6 @@ export class HyperGraph {
 
     const map = this._resolveEvents.get(spaceKey);
     if (map) {
-
       for (const [id, event] of map) {
         const obj = database.getObjectById(id);
         if (obj) {
@@ -84,14 +82,15 @@ export class HyperGraph {
    */
   _lookupLink(ref: Reference, from: EchoDatabase, onResolve: (obj: EchoObject) => void): EchoObject | undefined {
     if (ref.host === undefined) {
-      const local = from.getObjectById(ref.itemId)
+      const local = from.getObjectById(ref.itemId);
       if (local) {
         return local;
       }
     }
 
-    if (!ref.host) { // No space key.
-      log('no space key', { ref })
+    if (!ref.host) {
+      // No space key.
+      log('no space key', { ref });
       return undefined;
     }
 
@@ -99,20 +98,22 @@ export class HyperGraph {
     const remoteDb = this._databases.get(spaceKey);
     if (remoteDb) {
       // Resolve remote reference.
-      const remote = remoteDb.getObjectById(ref.itemId)
+      const remote = remoteDb.getObjectById(ref.itemId);
       if (remote) {
         return remote;
       }
     }
 
     log('trap', { spaceKey, itemId: ref.itemId });
-    entry(this._resolveEvents, spaceKey).orInsert(new Map())
-      .deep(ref.itemId).orInsert(new Event())
+    entry(this._resolveEvents, spaceKey)
+      .orInsert(new Map())
+      .deep(ref.itemId)
+      .orInsert(new Event())
       .value.on(new Context(), onResolve, { weak: true });
   }
 
   private _onUpdate(updateEvent: UpdateEvent) {
-    const listenerMap = this._resolveEvents.get(updateEvent.spaceKey)
+    const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
       // TODO(dmaretskyi): We only care about created items.
       for (const item of updateEvent.itemsUpdated) {
@@ -124,7 +125,7 @@ export class HyperGraph {
         if (!db) {
           continue;
         }
-        const obj = db.getObjectById(item.id)
+        const obj = db.getObjectById(item.id);
         if (!obj) {
           continue;
         }
