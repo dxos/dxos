@@ -12,7 +12,7 @@ import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
-import { SketchMain, SketchSection } from './components';
+import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
 import { isSketch, SKETCH_PLUGIN, type SketchPluginProvides, SketchAction } from './types';
 import { objectToGraphNode } from './util';
@@ -107,6 +107,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             return SketchMain;
           case 'section':
             return SketchSection;
+          case 'presenter-slide':
+            return SketchSlide;
         }
       },
       components: {

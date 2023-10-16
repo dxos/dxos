@@ -3,7 +3,7 @@
 //
 
 import { h } from 'hastscript';
-import React, { ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useResizeDetector } from 'react-resize-detector';
 import addClasses from 'rehype-add-classes';

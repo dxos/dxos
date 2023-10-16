@@ -37,6 +37,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const { mosaic } = useMosaic();
+
   const handleAdd = useCallback(
     (sectionObject: StackModel['sections'][0]['object']) => {
       stack.sections.splice(stack.sections.length, 0, {

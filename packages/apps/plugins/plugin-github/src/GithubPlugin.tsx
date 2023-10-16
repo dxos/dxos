@@ -42,8 +42,8 @@ export type GithubPluginProvides = TranslationsProvides &
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
+  const settings = new LocalStorageStore<GithubSettingsProps>(GITHUB_PLUGIN);
   let adapter: GraphNodeAdapter<Document> | undefined;
-  const settings = new LocalStorageStore<GithubSettingsProps>('braneframe.plugin-github');
 
   return {
     meta: {

@@ -13,14 +13,14 @@ import {
   fineButtonDimensions,
   focusRing,
   getSize,
-  mx,
   inputSurface,
-  surfaceElevation,
   hoverableControls,
-  staticHoverableControls,
   hoverableControlItem,
   hoverableFocusedControls,
   hoverableFocusedKeyboardControls,
+  mx,
+  staticHoverableControls,
+  surfaceElevation,
 } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
