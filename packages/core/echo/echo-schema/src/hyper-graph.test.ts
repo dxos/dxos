@@ -9,6 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { TestBuilder } from './testing';
 import { Expando } from './typed-object';
+import { subscribe } from './defs';
 
 describe('HyperGraph', () => {
   test('cross-space query', async () => {
@@ -97,5 +98,39 @@ describe('HyperGraph', () => {
 
     await space1.reload();
     expect(obj1.link.title).to.eq('B');
+  })
+
+  test('cross-space references get resolved on database load', async () => {
+    const builder = new TestBuilder();
+    const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
+
+    const space1 = await builder.createPeer(spaceKey1);
+    const space2 = await builder.createPeer(spaceKey2);
+
+    const obj1 = space1.db.add(
+      new Expando({
+        type: 'task',
+        title: 'A',
+      }),
+    );
+    const obj2 = space2.db.add(
+      new Expando({
+        type: 'task',
+        title: 'B',
+      }),
+    );
+    obj1.link = obj2;
+    await builder.flushAll();
+    expect(obj1.link.title).to.eq('B');
+
+    await space2.unload();
+    expect(obj1.link).to.eq(undefined);
+
+    let called = false;
+    obj1[subscribe](() => { called = true });
+
+    await space2.reload();
+    expect(obj1.link.title).to.eq('B');
+    expect(called).to.eq(true);
   })
 });

@@ -521,6 +521,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
 
   private _onLinkResolved = () => {
     this._signal?.notifyWrite();
+    this._emitUpdate();
   }
 }
 

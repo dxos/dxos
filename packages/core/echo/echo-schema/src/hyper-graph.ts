@@ -13,8 +13,9 @@ import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
 import { Reference } from '@dxos/document-model';
 import { EchoObjectBase } from './echo-object-base';
-import { EchoObject } from './defs';
+import { EchoObject, data } from './defs';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 
 /**
  * Manages cross-space database interactions.
@@ -40,6 +41,23 @@ export class HyperGraph {
   _register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
     database._updateEvent.on(this._onUpdate.bind(this));
+
+    const map = this._resolveEvents.get(spaceKey);
+    if (map) {
+
+      for (const [id, event] of map) {
+        const obj = database.getObjectById(id);
+        if (obj) {
+          log('resolve', { spaceKey, itemId: id });
+          event.emit(obj);
+          map.delete(id);
+        }
+      }
+    }
+  }
+
+  _unregister(spaceKey: PublicKey) {
+    this._databases.delete(spaceKey);
   }
 
   /**
@@ -73,21 +91,21 @@ export class HyperGraph {
     }
 
     if (!ref.host) { // No space key.
+      log('no space key', { ref })
       return undefined;
     }
 
     const spaceKey = PublicKey.from(ref.host);
     const remoteDb = this._databases.get(spaceKey);
-    if (!remoteDb) {
-      return undefined;
+    if (remoteDb) {
+      // Resolve remote reference.
+      const remote = remoteDb.getObjectById(ref.itemId)
+      if (remote) {
+        return remote;
+      }
     }
 
-    // Resolve remote reference.
-    const remote = remoteDb.getObjectById(ref.itemId)
-    if (remote) {
-      return remote;
-    }
-
+    log('trap', { spaceKey, itemId: ref.itemId });
     entry(this._resolveEvents, spaceKey).orInsert(new Map())
       .deep(ref.itemId).orInsert(new Event())
       .value.on(new Context(), onResolve, { weak: true });
@@ -110,6 +128,7 @@ export class HyperGraph {
         if (!obj) {
           continue;
         }
+        log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
         listeners.emit(obj);
         listenerMap.delete(item.id);
       }

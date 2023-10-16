@@ -73,6 +73,10 @@ export class TestPeer {
     this.builder.graph._register(this.spaceKey, this.db);
   }
 
+  async unload() {
+    this.builder.graph._unregister(this.spaceKey);
+  }
+
   async flush() {
     if (this.db._backend.currentBatch) {
       this.db._backend.commitBatch();
