@@ -18,6 +18,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
+    "@dxos/aurora-navtree": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",

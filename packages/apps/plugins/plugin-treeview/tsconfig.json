@@ -42,6 +42,9 @@
       "path": "../../../ui/aurora-grid"
     },
     {
+      "path": "../../../ui/aurora-navtree"
+    },
+    {
       "path": "../../../ui/aurora-theme"
     },
     {
