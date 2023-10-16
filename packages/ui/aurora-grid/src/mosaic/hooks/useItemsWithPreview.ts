@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useEffect, useState } from 'react';
+
 import { useMosaic } from './useMosaic';
 import { type MosaicDataItem } from '../types';
 import { Path } from '../util';
@@ -12,35 +14,49 @@ import { Path } from '../util';
  */
 export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: { path: string; items: T[] }): T[] => {
   const { operation, activeItem, overItem } = useMosaic();
+  const [itemsWithPreview, setItemsWithPreview] = useState(items);
+  const overParent =
+    // If over the sortable context itself & active item is foreign, then treat self as the parent.
+    // This allows items to be appended to the end of the sortable.
+    overItem?.path === path && activeItem && Path.parent(activeItem.path) !== overItem.path
+      ? path
+      : overItem && Path.parent(overItem.path);
+  const [lastOverParent, setLastOverParent] = useState(overParent);
 
-  if (operation !== 'adopt' && operation !== 'copy') {
-    return items;
-  }
+  useEffect(() => {
+    if (operation === 'reject' || !activeItem || !overItem) {
+      setLastOverParent(undefined);
+      setItemsWithPreview(items);
+      return;
+    }
 
-  // Insert placeholder item being dragged in.
-  // TODO(burdon): This currently isn't animated (e.g., dragging into new kanban column vs. same column).
-  if (
-    // Item is being dragged
-    activeItem &&
-    // From a different path
-    !Path.hasChild(path, activeItem.path) &&
-    // Over an item
-    overItem &&
-    // Which is this item (but only if it's not a sibling of the active item which indicates a reorder)
-    ((path === overItem.path && Path.parent(activeItem.path) !== Path.parent(overItem.path)) ||
-      // Or which is a child of this item
-      Path.hasChild(path, overItem.path))
-  ) {
-    const itemsWithPreview = [...items];
-    const position = path === overItem.path ? itemsWithPreview.length : (overItem.position as number);
-    itemsWithPreview.splice(position, 0, activeItem.item as T);
-    return itemsWithPreview;
-  }
+    if (lastOverParent === overParent) {
+      return;
+    }
 
-  // Remove item being dragged out.
-  if (activeItem && Path.hasChild(path, activeItem.path) && overItem && !Path.hasChild(path, overItem.path)) {
-    return items.filter((item) => item.id !== activeItem.item.id);
-  }
+    setLastOverParent(overParent);
 
-  return items;
+    const activeIsChild = Path.hasChild(path, activeItem.path);
+    const overIsChild = Path.hasChild(path, overItem.path);
+    const overSelf = overItem.path === path;
+
+    if (!activeIsChild && overIsChild) {
+      // Insert item into sortable.
+      setItemsWithPreview((items) => {
+        const position = overItem.position as number;
+        return [...items.slice(0, position), activeItem.item as T, ...items.slice(position)];
+      });
+    } else if (!activeIsChild && overSelf) {
+      // Append item to end of sortable.
+      setItemsWithPreview((items) => [...items, activeItem.item as T]);
+    } else if (activeIsChild && !overIsChild) {
+      // Remove item being dragged out.
+      setItemsWithPreview((items) => items.filter((item) => item.id !== activeItem.item.id));
+    } else {
+      // Reset items.
+      setItemsWithPreview(items);
+    }
+  }, [operation, activeItem, overItem, overParent, lastOverParent, path, items]);
+
+  return itemsWithPreview;
 };
