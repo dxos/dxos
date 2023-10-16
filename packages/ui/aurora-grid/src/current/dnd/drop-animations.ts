@@ -11,7 +11,7 @@ export const dropAnimations: Record<OverlayDropAnimation, DropAnimation> = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: {
         active: {
-          opacity: '0',
+          // opacity: '0',
         },
       },
     }),

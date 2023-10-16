@@ -7,22 +7,26 @@ import React, { type FC, useEffect } from 'react';
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Document as DocumentType, type Grid as GridType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import type { MosaicDropEvent } from '@dxos/aurora-grid/dist/types/src/mosaic';
-import { Grid, type Position } from '@dxos/aurora-grid/next';
+import { Grid, type MosaicDropEvent, type Position } from '@dxos/aurora-grid/next';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { type SpaceProxy } from '@dxos/client/echo';
 import { Expando } from '@dxos/client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { GridCard } from './GridCard';
 
-export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
+export const GridMain: FC<{ space: SpaceProxy; data: GridType }> = ({ space: space2, data: grid }) => {
   const { plugins } = usePlugins();
+
+  console.log(space2);
+
+  // TODO(burdon): Get from properties.
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
 
-  // TODO(burdon): Make automatic.
   useEffect(() => {
     if (!grid.layout) {
+      // TODO(burdon): Support expando values in protobuf.
       grid.layout = new Expando({ position: {} });
     }
   }, []);

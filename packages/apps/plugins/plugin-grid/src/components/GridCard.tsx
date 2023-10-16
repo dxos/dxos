@@ -22,7 +22,6 @@ export const GridCard: MosaicTileComponent<SimpleCardProps> = forwardRef(
     // TODO(burdon): Card prop.
     const color = 'bg-green-50';
 
-    // TODO(burdon): Something is setting `opacity-0` on the root div on drop.
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root classNames={mx(className, 'w-full snap-center', color, isDragging && 'opacity-20')} grow={grow}>
