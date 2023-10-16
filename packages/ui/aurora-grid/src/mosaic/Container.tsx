@@ -38,64 +38,67 @@ export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
   TCustom = any,
-> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> & {
-  id: string;
+> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> &
+  PropsWithChildren<{
+    id: string;
 
-  // TODO(wittjosiah): Don't expose externally.
-  debug?: boolean;
+    // TODO(wittjosiah): Don't expose externally.
+    debug?: boolean;
 
-  /**
-   * Default component used to render tiles.
-   */
-  Component?: MosaicTileComponent<TData, any>;
+    /**
+     * Default component used to render tiles.
+     */
+    Component?: MosaicTileComponent<TData, any>;
 
-  /**
-   * Adapter to transform properties while dragging (e.g., constraint axes).
-   * https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
-   */
-  modifier?: (activeItem: MosaicDraggedItem, ...modifierArgs: Parameters<Modifier>) => ReturnType<Modifier>;
+    /**
+     * Adapter to transform properties while dragging (e.g., constraint axes).
+     * https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/modifiers/types.ts
+     */
+    modifier?: (activeItem: MosaicDraggedItem, ...modifierArgs: Parameters<Modifier>) => ReturnType<Modifier>;
 
-  /**
-   * Property overrides for the default overlay.
-   */
-  getOverlayProps?: () => MosaicTileOverlayProps;
+    /**
+     * Property overrides for the default overlay.
+     */
+    getOverlayProps?: () => MosaicTileOverlayProps;
 
-  /**
-   * Style property overrides for the default overlay.
-   */
-  getOverlayStyle?: () => CSSProperties;
+    /**
+     * Style property overrides for the default overlay.
+     */
+    getOverlayStyle?: () => CSSProperties;
 
-  /**
-   * Called when a tile is dragged over the container.
-   * Returns true if the tile can be dropped.
-   */
-  onOver?: (event: MosaicMoveEvent<TPosition>) => MosaicOperation;
+    /**
+     * Called when a tile is dragged over the container.
+     * Returns true if the tile can be dropped.
+     */
+    onOver?: (event: MosaicMoveEvent<TPosition>) => MosaicOperation;
 
-  /**
-   * Called when a tile is dropped on the container.
-   */
-  onDrop?: (event: MosaicDropEvent<TPosition>) => void;
+    /**
+     * Called when a tile is dropped on the container.
+     */
+    onDrop?: (event: MosaicDropEvent<TPosition>) => void;
 
-  /**
-   * Used to sort items within the container.
-   */
-  compare?: MosaicCompareDataItem;
+    /**
+     * Used to sort items within the container.
+     */
+    compare?: MosaicCompareDataItem;
 
-  /**
-   * Custom properties (available to event handlers).
-   */
-  // TODO(burdon): Still used?
-  custom?: TCustom;
-};
+    /**
+     * Custom properties (available to event handlers).
+     *
+     * @deprecated Use custom context instead.
+     */
+    // TODO(burdon): Still used?
+    custom?: TCustom;
+  }>;
 
-export type MosaicContainerContextType = MosaicContainerProps<any>;
+export type MosaicContainerContextType = Omit<MosaicContainerProps<any>, 'children'>;
 
 export const MosaicContainerContext = createContext<MosaicContainerContextType | undefined>(undefined);
 
 /**
  * Root Container that manages the layout of tiles.
  */
-export const MosaicContainer = ({ children, ...container }: PropsWithChildren<MosaicContainerProps>) => {
+export const MosaicContainer = ({ children, ...container }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   useEffect(() => {
     mosaic.setContainer(container.id, container);
