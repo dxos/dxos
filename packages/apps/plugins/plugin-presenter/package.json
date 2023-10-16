@@ -1,0 +1,66 @@
+{
+  "name": "@braneframe/plugin-presenter",
+  "version": "0.3.1",
+  "description": "Braneframe sketch plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
+    "deepsignal": "^1.3.6",
+    "hastscript": "^7.1.0",
+    "highlight.js": "^11.9.0",
+    "react-markdown": "^8.0.5",
+    "react-resize-detector": "^7.1.2",
+    "rehype-add-classes": "^1.0.0",
+    "rehype-highlight": "^6.0.0",
+    "remark-frontmatter": "^4.0.1",
+    "remark-parse-frontmatter": "^1.0.3"
+  },
+  "devDependencies": {
+    "@braneframe/plugin-dnd": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
+    "@faker-js/faker": "^8.0.2",
+    "@phosphor-icons/react": "^2.0.5",
+    "@types/lodash.get": "^4.4.7",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^4.3.9"
+  },
+  "peerDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
