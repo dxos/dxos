@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Tree } from '@dxos/aurora';
 import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/aurora-grid/next';
+import { mx } from '@dxos/aurora-theme';
 
 import { NavTreeItem } from './NavTreeItem';
 import type { TreeNode } from '../types';
@@ -34,7 +35,7 @@ export type NavTreeProps = { node: TreeNode } & Omit<
   'debug' | 'Component' | 'id'
 >;
 
-export const NavTree = ({ node, onOver, onDrop, compare }: NavTreeProps) => {
+export const NavTree = ({ node, onOver, onDrop, compare, className }: NavTreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -45,7 +46,7 @@ export const NavTree = ({ node, onOver, onDrop, compare }: NavTreeProps) => {
         compare,
       }}
     >
-      <Tree.Root classNames='flex flex-col'>
+      <Tree.Root classNames={mx('flex flex-col', className)}>
         <NavTreeImpl node={node} />
       </Tree.Root>
     </Mosaic.Container>

@@ -13,16 +13,18 @@ import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/aurora-g
 import { Mosaic } from '@dxos/aurora-grid/next';
 import { arrayMove } from '@dxos/util';
 
-import { NavTree } from './NavTree';
+import { NavTree, type NavTreeProps } from './NavTree';
 import { type NavTreeItemData } from './NavTreeItem';
-import { TestObjectGenerator } from '../testing';
+import { DropZone, TestObjectGenerator } from '../testing';
 import type { TreeNode } from '../types';
 
 faker.seed(3);
 
 const ROOT_ID = 'root';
 
-const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolean }) => {
+type StorybookNavTreeProps = Omit<NavTreeProps, 'node'> & { id?: string };
+
+const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => {
   const [items, setItems] = useState<TreeNode['children']>(() => {
     const generator = new TestObjectGenerator({ types: ['document'] });
     return Array.from({ length: 4 }).map(() => {
@@ -88,6 +90,10 @@ const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolea
   // NOTE: Does not handle deep operations.
   const handleDrop = useCallback(
     ({ active, over, operation }: MosaicDropEvent<number>) => {
+      if (operation === 'copy') {
+        return;
+      }
+
       if (active.path === Path.create(id, active.item.id)) {
         setItems((items) => {
           const activeIndex = items.findIndex((item) => item.id === active.item.id);
@@ -119,6 +125,7 @@ const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolea
       node={{ id: ROOT_ID, label: 'root', children: items, actions: [], properties: {} }}
       onOver={handleOver}
       onDrop={handleDrop}
+      {...props}
     />
   );
 };
@@ -148,4 +155,18 @@ export const Default = {
       <Mosaic.DragOverlay />
     </Mosaic.Root>
   ),
+};
+
+export const Copy = {
+  render: ({ debug }: { debug?: boolean }) => {
+    return (
+      <Mosaic.Root debug={debug}>
+        <div className='flex'>
+          <StorybookNavTree className='w-[250px]' />
+          <DropZone />
+        </div>
+        <Mosaic.DragOverlay />
+      </Mosaic.Root>
+    );
+  },
 };
