@@ -8,8 +8,8 @@ export default [
   {
     'en-US': {
       [GRID_PLUGIN]: {
-        'plugin name': 'Presenter',
-        'toggle presentation label': 'Present',
+        'plugin name': 'Grid',
+        'grid title placeholder': 'New grid',
       },
     },
   },

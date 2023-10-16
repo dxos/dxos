@@ -105,6 +105,16 @@ message Kanban {
 /**
  *
  */
+message Grid {
+  option (object) = true;
+
+  string title = 1;
+  repeated dxos.schema.TypedObject objects = 2;
+}
+
+/**
+ *
+ */
 message Sketch {
   option (object) = true;
 
