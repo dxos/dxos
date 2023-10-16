@@ -133,27 +133,26 @@ export const SortableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { operation, activeItem, overItem } = useMosaic();
-  // TODO(wittjosiah): If this is the active item, then use the same id.
+  const { operation, activeItem } = useMosaic();
   const path = Path.create(parentPath, item.id);
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
-    id: path,
+    // Re-use the active path if it's the same item.
+    // This helps dndkit understand that the item is being moved and animate it appropriately.
+    id: activeItem && activeItem.item.id === item.id ? activeItem.path : path,
     data: { path, item, position } satisfies MosaicDraggedItem,
-    animateLayoutChanges: (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true }),
+    animateLayoutChanges: (args) =>
+      defaultAnimateLayoutChanges({ ...args, wasDragging: item.id !== activeItem?.item.id }),
   });
 
   let active: MosaicActiveType | undefined;
-  if (
-    !isDragging &&
-    operation !== 'reject' &&
-    activeItem &&
-    activeItem.item.id === item.id &&
-    overItem &&
-    (Path.hasChild(Path.parent(path), overItem.path) || Path.parent(path) === overItem.path || path === overItem.path)
-  ) {
-    active = 'destination';
-  } else if (isDragging && activeItem && activeItem.item.id === item.id) {
-    active = operation === 'rearrange' || operation === 'reject' ? 'rearrange' : 'origin';
+  if (activeItem && activeItem.item.id === item.id) {
+    if (operation === 'rearrange' || operation === 'reject') {
+      active = 'rearrange';
+    } else if (Path.parent(activeItem.path) !== parentPath) {
+      active = 'destination';
+    } else {
+      active = 'origin';
+    }
   }
 
   return (
