@@ -3,7 +3,7 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, Fragment, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
 import { keyString } from '@braneframe/plugin-graph';
 import {
@@ -17,7 +17,14 @@ import {
   useSidebars,
   useTranslation,
 } from '@dxos/aurora';
-import { Mosaic, useContainer, useSortedItems, useMosaic, type MosaicTileComponent } from '@dxos/aurora-grid/next';
+import {
+  Mosaic,
+  useContainer,
+  useSortedItems,
+  useMosaic,
+  type MosaicTileComponent,
+  Path,
+} from '@dxos/aurora-grid/next';
 import {
   dropRing,
   focusRing,
@@ -30,6 +37,7 @@ import {
   mx,
 } from '@dxos/aurora-theme';
 
+import { useNavTree } from './NavTreeContext';
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
@@ -65,7 +73,7 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
 export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: number };
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
-  ({ item, draggableProps, draggableStyle, operation, active, path }, forwardedRef) => {
+  ({ item, draggableProps, draggableStyle, operation, active, path, position }, forwardedRef) => {
     const { node, level } = item;
     const { overItem } = useMosaic();
     const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
@@ -74,12 +82,19 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const actions = node.actions ?? [];
     const { t } = useTranslation(translationKey);
     const { navigationSidebarOpen } = useSidebars();
+    const { current, onSelect } = useNavTree();
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
     const [open, setOpen] = useState(level < 1);
+
+    useEffect(() => {
+      if (current && Path.onPath(Path.parent(path), node.id)) {
+        setOpen(true);
+      }
+    }, [current, path]);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
@@ -131,7 +146,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 hoverableFocusedWithinControls,
                 hoverableDescriptionIcons,
                 level < 1 && topLevelCollapsibleSpacing,
-                active && active !== 'overlay' && 'bg-neutral-75 dark:bg-neutral-850',
+                ((active && active !== 'overlay') || path === current) && 'bg-neutral-75 dark:bg-neutral-850',
                 'flex items-start rounded',
               )}
               data-testid={testId}
@@ -143,12 +158,13 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   label: Array.isArray(node.label) ? t(...node.label) : node.label,
                   icon: node.icon,
                   open,
-                  current: false,
+                  current: path === current,
                   branch: node.properties?.role === 'branch' || node.children?.length > 0,
                   disabled: !!node.properties?.disabled,
                   error: !!node.properties?.error,
                   modified: node.properties?.modified ?? false,
                   palette: node.properties?.palette,
+                  onSelect: () => onSelect?.({ path, node, level, position: position as number }),
                 }}
               />
               {actionGroups.length > 0 && (

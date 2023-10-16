@@ -84,6 +84,8 @@ export type MosaicContainerProps<
 
     /**
      * Custom properties (available to event handlers).
+     *
+     * @deprecated Use custom context instead.
      */
     // TODO(burdon): Still used?
     custom?: TCustom;

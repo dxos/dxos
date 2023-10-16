@@ -83,6 +83,12 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
     });
   });
 
+  const [current, setCurrent] = useState<string | undefined>();
+
+  const handleSelect = useCallback(({ path }: { path: string }) => {
+    setCurrent(path);
+  }, []);
+
   const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
     return !(active.path === id && over.path !== id) ? 'adopt' : 'reject';
   }, []);
@@ -123,6 +129,8 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
   return (
     <NavTree
       node={{ id: ROOT_ID, label: 'root', children: items, actions: [], properties: {} }}
+      current={current}
+      onSelect={handleSelect}
       onOver={handleOver}
       onDrop={handleDrop}
       {...props}

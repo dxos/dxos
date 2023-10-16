@@ -8,6 +8,7 @@ import { Tree } from '@dxos/aurora';
 import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/aurora-grid/next';
 import { mx } from '@dxos/aurora-theme';
 
+import { type NavTreeContextType, NavTreeProvider } from './NavTreeContext';
 import { NavTreeItem } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
@@ -30,12 +31,13 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   );
 };
 
-export type NavTreeProps = { node: TreeNode } & Omit<
-  MosaicContainerProps<TreeNode, number>,
-  'debug' | 'Component' | 'id'
->;
+export type NavTreeProps = {
+  node: TreeNode;
+  current?: NavTreeContextType['current'];
+  onSelect?: NavTreeContextType['onSelect'];
+} & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id'>;
 
-export const NavTree = ({ node, onOver, onDrop, compare, className }: NavTreeProps) => {
+export const NavTree = ({ node, current, onSelect, onOver, onDrop, compare, className }: NavTreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -47,7 +49,9 @@ export const NavTree = ({ node, onOver, onDrop, compare, className }: NavTreePro
       }}
     >
       <Tree.Root classNames={mx('flex flex-col', className)}>
-        <NavTreeImpl node={node} />
+        <NavTreeProvider current={current} onSelect={onSelect}>
+          <NavTreeImpl node={node} />
+        </NavTreeProvider>
       </Tree.Root>
     </Mosaic.Container>
   );

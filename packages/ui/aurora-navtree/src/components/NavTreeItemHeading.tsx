@@ -29,10 +29,14 @@ export type NavTreeItemHeadingProps = {
   modified?: boolean;
   // TODO(burdon): Theme.
   palette?: string;
+  onSelect: () => void;
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-  ({ id, level, label, icon: Icon, open, current, branch, disabled, error, modified, palette }, forwardedRef) => {
+  (
+    { id, level, label, icon: Icon, open, current, branch, disabled, error, modified, palette, onSelect },
+    forwardedRef,
+  ) => {
     // const [isLg] = useMediaQuery('lg', { ssr: false });
     // TODO(wittjosiah): Decouple from sidebars.
     const { navigationSidebarOpen /*, closeNavigationSidebar */ } = useSidebars();
@@ -76,10 +80,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
-                // void handleSelect();
+                onSelect();
               }
             }}
-            // onClick={handleSelect}
+            onClick={onSelect}
             density='fine'
             variant='ghost'
             classNames={['grow gap-1', branch && '-mis-6']}
@@ -89,7 +93,6 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           >
             {Icon && <Icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
             <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
-              {/* {Array.isArray(node.label) ? t(...node.label) : node.label} */}
               {label}
             </span>
           </Button>
