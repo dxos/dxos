@@ -53,23 +53,23 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
 
     return setColumns((columns) =>
       columns.map((column) => {
-        const children = [...column.items];
+        const items = [...column.items];
         if (Path.last(Path.parent(active.path)) === column.id) {
           // Remove card from current postion.
           invariant(active.position !== undefined);
-          children.splice(active.position, 1);
+          items.splice(active.position, 1);
         }
 
         if (over.path === Path.create(id, column.id)) {
-          // Move card into empty column.
-          children.push(active.item as TestItem);
+          // Move card to end of column.
+          items.push(active.item as TestItem);
         } else if (Path.hasDescendent(id, over.path) && Path.last(Path.parent(over.path)) === column.id) {
           // Move card within or between columns.
-          const position = over.position ?? children.length;
-          children.splice(position, 0, active.item as TestItem);
+          const position = over.position ?? items.length;
+          items.splice(position, 0, active.item as TestItem);
         }
 
-        return { ...column, children };
+        return { ...column, items };
       }),
     );
   };
