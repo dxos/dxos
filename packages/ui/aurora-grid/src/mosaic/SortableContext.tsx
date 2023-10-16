@@ -5,7 +5,7 @@
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { type PropsWithChildren } from 'react';
 
-import { useContainer } from './hooks';
+import { useContainer, useMosaic } from './hooks';
 import { type MosaicDataItem } from './types';
 import { Path } from './util';
 
@@ -23,12 +23,21 @@ export type MosaicSortableProps<TData extends MosaicDataItem = MosaicDataItem> =
 // TODO(burdon): Remove since just obfuscates SortableContext unless more deeply integrated with useSortableItem.
 //  Otherwise accept same props as SortableContext (e.g., verticalListSortingStrategy).
 export const MosaicSortableContext = ({ id, items = [], direction = 'vertical', children }: MosaicSortableProps) => {
+  const { activeItem } = useMosaic();
   const container = useContainer();
   const contextId = id ?? container.id;
   const Sortable = direction === 'vertical' ? Column : Row;
 
+  const ids = items.map((item) => {
+    if (activeItem && activeItem.item.id === item.id) {
+      return activeItem.path;
+    } else {
+      return Path.create(contextId, item.id);
+    }
+  });
+
   return (
-    <Sortable id={contextId} items={items.map((item) => Path.create(contextId, item.id))}>
+    <Sortable id={contextId} items={ids}>
       {children}
     </Sortable>
   );
