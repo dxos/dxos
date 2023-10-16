@@ -8,7 +8,7 @@ import { Tree } from '@dxos/aurora';
 import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/aurora-grid/next';
 
 import { NavTreeItem } from './NavTreeItem';
-import { type TreeNode } from './props';
+import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   const { id, Component } = useContainer();

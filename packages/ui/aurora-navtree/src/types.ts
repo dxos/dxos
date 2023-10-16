@@ -10,5 +10,3 @@ export type TreeNode = Pick<Node, 'id' | 'label' | 'properties' | 'icon'> & {
   children: TreeNode[];
   actions: TreeNodeAction[];
 };
-
-export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: number };

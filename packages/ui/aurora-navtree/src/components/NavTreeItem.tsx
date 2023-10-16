@@ -32,8 +32,8 @@ import {
 
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
-import { type NavTreeItemData, type TreeNode, type TreeNodeAction } from './props';
 import { translationKey } from '../translations';
+import type { TreeNode, TreeNodeAction } from '../types';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -60,6 +60,9 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
     </TreeItemComponent.Body>
   );
 };
+
+// TODO(wittjosiah): Spread node?
+export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: number };
 
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, operation, active, path }, forwardedRef) => {
@@ -133,7 +136,21 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               )}
               data-testid={testId}
             >
-              <NavTreeItemHeading {...{ open, item }} />
+              <NavTreeItemHeading
+                {...{
+                  id: node.id,
+                  level,
+                  label: Array.isArray(node.label) ? t(...node.label) : node.label,
+                  icon: node.icon,
+                  open,
+                  current: false,
+                  branch: node.properties?.role === 'branch' || node.children?.length > 0,
+                  disabled: !!node.properties?.disabled,
+                  error: !!node.properties?.error,
+                  modified: node.properties?.modified ?? false,
+                  palette: node.properties?.palette,
+                }}
+              />
               {actionGroups.length > 0 && (
                 <Tooltip.Root
                   open={optionsTooltipOpen}

@@ -14,28 +14,11 @@ import { Mosaic } from '@dxos/aurora-grid/next';
 import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
-import { type NavTreeItemData, type TreeNode } from './props';
+import { type NavTreeItemData } from './NavTreeItem';
 import { TestObjectGenerator } from '../testing';
+import type { TreeNode } from '../types';
 
 faker.seed(3);
-
-export default {
-  component: NavTree,
-  parameters: {
-    layout: 'fullscreen',
-  },
-  decorators: [
-    (Story: any) => (
-      <Tooltip.Provider>
-        <DensityProvider density='fine'>
-          <div role='none' className='p-2'>
-            <Story />
-          </div>
-        </DensityProvider>
-      </Tooltip.Provider>
-    ),
-  ],
-};
 
 const ROOT_ID = 'root';
 
@@ -138,6 +121,24 @@ const StorybookNavTree = ({ id = ROOT_ID, debug }: { id?: string; debug?: boolea
       onDrop={handleDrop}
     />
   );
+};
+
+export default {
+  component: NavTree,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  decorators: [
+    (Story: any) => (
+      <Tooltip.Provider>
+        <DensityProvider density='fine'>
+          <div role='none' className='p-2'>
+            <Story />
+          </div>
+        </DensityProvider>
+      </Tooltip.Provider>
+    ),
+  ],
 };
 
 export const Default = {

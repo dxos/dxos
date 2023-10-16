@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretRight } from '@phosphor-icons/react';
-import React, { forwardRef } from 'react';
+import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
+import React, { type FC, forwardRef } from 'react';
 
-import { Button, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { Button, TreeItem, useSidebars } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import {
@@ -15,26 +15,28 @@ import {
   topLevelText,
   treeItemText,
 } from './navtree-fragments';
-import { type NavTreeItemData } from './props';
-import { translationKey } from '../translations';
 
 export type NavTreeItemHeadingProps = {
+  id: string;
+  level: number;
+  label: string;
+  icon?: FC<IconProps>;
   open?: boolean;
   current?: boolean;
-  item: NavTreeItemData;
+  branch?: boolean;
+  disabled?: boolean;
+  error?: boolean;
+  modified?: boolean;
+  // TODO(burdon): Theme.
+  palette?: string;
 };
 
 export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-  ({ open, item, current }, forwardedRef) => {
+  ({ id, level, label, icon: Icon, open, current, branch, disabled, error, modified, palette }, forwardedRef) => {
     // const [isLg] = useMediaQuery('lg', { ssr: false });
+    // TODO(wittjosiah): Decouple from sidebars.
     const { navigationSidebarOpen /*, closeNavigationSidebar */ } = useSidebars();
-    const { t } = useTranslation(translationKey);
-    const { level, node } = item;
 
-    const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
-    const disabled = !!node.properties?.disabled;
-    const error = !!node.properties?.error;
-    const modified = node.properties?.modified ?? false;
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
     // const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
 
@@ -44,13 +46,12 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
         className={mx(
           'grow flex items-center gap-1 pli-0',
           level < 1 && topLevelText,
-          // TODO(burdon): Theme.
-          level < 1 && topLevelHeadingColor(node.properties?.palette),
-          level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
+          level < 1 && topLevelHeadingColor(palette),
+          level < 1 && topLevelHeadingHoverColor(palette),
           error && valenceColorText('error'),
         )}
       >
-        {isBranch && (
+        {branch && (
           <TreeItem.OpenTrigger
             {...(disabled && { disabled, 'aria-disabled': true })}
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
@@ -70,7 +71,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           <Button
             role='link'
             {...(level > 1 && { 'data-testid': 'navTree.treeItem.link' })}
-            data-itemid={node.id}
+            data-itemid={id}
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
@@ -81,14 +82,15 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             // onClick={handleSelect}
             density='fine'
             variant='ghost'
-            classNames={['grow gap-1', isBranch && '-mis-6']}
+            classNames={['grow gap-1', branch && '-mis-6']}
             disabled={disabled}
             {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}
           >
-            {node.icon && <node.icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
+            {Icon && <Icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
             <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
-              {Array.isArray(node.label) ? t(...node.label) : node.label}
+              {/* {Array.isArray(node.label) ? t(...node.label) : node.label} */}
+              {label}
             </span>
           </Button>
         </TreeItem.Heading>
