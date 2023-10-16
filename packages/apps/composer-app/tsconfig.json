@@ -58,9 +58,6 @@
       "path": "../plugins/plugin-files"
     },
     {
-      "path": "../plugins/plugin-github"
-    },
-    {
       "path": "../plugins/plugin-graph"
     },
     {
@@ -73,16 +70,10 @@
       "path": "../plugins/plugin-pwa"
     },
     {
-      "path": "../plugins/plugin-sketch"
-    },
-    {
       "path": "../plugins/plugin-space"
     },
     {
       "path": "../plugins/plugin-splitview"
-    },
-    {
-      "path": "../plugins/plugin-stack"
     },
     {
       "path": "../plugins/plugin-telemetry"

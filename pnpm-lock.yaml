@@ -342,15 +342,12 @@ importers:
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-error': workspace:*
       '@braneframe/plugin-files': workspace:*
-      '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
-      '@braneframe/plugin-sketch': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
-      '@braneframe/plugin-stack': workspace:*
       '@braneframe/plugin-telemetry': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
@@ -379,15 +376,12 @@ importers:
       '@braneframe/plugin-dnd': link:../plugins/plugin-dnd
       '@braneframe/plugin-error': link:../plugins/plugin-error
       '@braneframe/plugin-files': link:../plugins/plugin-files
-      '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
-      '@braneframe/plugin-sketch': link:../plugins/plugin-sketch
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
-      '@braneframe/plugin-stack': link:../plugins/plugin-stack
       '@braneframe/plugin-telemetry': link:../plugins/plugin-telemetry
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview

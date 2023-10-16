@@ -11,15 +11,15 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
-import { GithubPlugin } from '@braneframe/plugin-github';
+// import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
-import { SketchPlugin } from '@braneframe/plugin-sketch';
+// import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
-import { StackPlugin } from '@braneframe/plugin-stack';
+// import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -73,10 +73,10 @@ const main = async () => {
 
           // Apps.
           MarkdownPlugin(),
-          StackPlugin(),
+          // StackPlugin(),
           FilesPlugin(),
-          GithubPlugin(),
-          SketchPlugin(),
+          // GithubPlugin(),
+          // SketchPlugin(),
         ]}
       />
     </StrictMode>,

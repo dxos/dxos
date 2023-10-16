@@ -256,7 +256,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 </Tooltip.Root>
               )}
             </div>
-            {!active && node.children && <NavTreeBranch path={path} nodes={node.children} level={level + 1} />}
+            {!active && isBranch && <NavTreeBranch path={path} nodes={node.children} level={level + 1} />}
           </TreeItem.Root>
         </Root>
       </DensityProvider>
