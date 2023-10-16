@@ -39,6 +39,9 @@
       "path": "../../../ui/aurora-grid"
     },
     {
+      "path": "../../../ui/aurora-stack"
+    },
+    {
       "path": "../../../ui/aurora-theme"
     },
     {

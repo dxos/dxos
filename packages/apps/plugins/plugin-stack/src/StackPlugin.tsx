@@ -3,21 +3,19 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import type { DndPluginProvides } from '@braneframe/plugin-dnd';
-import type { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
-import { getDndId, parseDndId } from '@dxos/aurora-grid';
-import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
-import { findPlugin, type Plugin, type PluginDefinition } from '@dxos/react-surface';
+import { parseDndId } from '@dxos/aurora-grid';
+import { SpaceProxy } from '@dxos/client/echo';
+import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionDelegator } from './components';
-import { stackState } from './stores';
 import translations from './translations';
-import { STACK_PLUGIN, StackAction, type StackModel, type StackPluginProvides, type StackProvides } from './types';
+import { STACK_PLUGIN, StackAction, type StackState, type StackPluginProvides, type StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
 const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;
@@ -27,6 +25,7 @@ const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;
 (globalThis as any)[StackType.name] = StackType;
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
+  const stackState: StackState = deepSignal({ creators: [] });
   const adapter = new GraphNodeAdapter({ filter: StackType.filter(), adapter: stackToGraphNode });
 
   return {
@@ -42,52 +41,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
-        // TODO(burdon): Remove?
-        if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
-        }
-      }
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const graph = graphPlugin?.provides.graph();
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onCopyTileSubscriptions) {
-        dndPlugin.provides.dnd.onCopyTileSubscriptions.push((tile, originalId, toId, mosaic, operation) => {
-          if (operation === 'copy' && tile.copyClass?.has('stack-section')) {
-            const [_, ...idParts] = parseDndId(originalId);
-            tile.id = getDndId(toId, ...idParts);
-            tile.variant = 'card';
-            tile.sortable = false;
-            tile.acceptCopyClass = undefined;
-            tile.acceptMigrationClass = undefined;
-          }
-          return tile;
-        });
-      }
-      if (dndPlugin && dndPlugin.provides.dnd?.onMosaicChangeSubscriptions) {
-        dndPlugin.provides.dnd.onMosaicChangeSubscriptions.push((event) => {
-          const [_, stackId, entityId] = parseDndId(event.id);
-          const stack = graph?.findNode(stackId)?.data as StackModel | undefined;
-          if (isStack(stack)) {
-            if (event.type === 'copy') {
-              const sectionObject = graph?.findNode(entityId)?.data as TypedObject | undefined;
-              if (stack && sectionObject) {
-                stack.sections.splice(stack.sections.length, 0, {
-                  id: entityId,
-                  index: event.index!,
-                  object: sectionObject,
-                });
-              }
-            } else if (event.type === 'rearrange') {
-              const sectionIndex = stack.sections.findIndex((section) => section.id === entityId);
-              if (sectionIndex >= 0) {
-                stack.sections.splice(sectionIndex, 1, {
-                  ...stack.sections[sectionIndex],
-                  index: event.index,
-                });
-              }
-            }
-          }
-        });
       }
     },
     unload: async () => {

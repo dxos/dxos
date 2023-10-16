@@ -2,32 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
+import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
-import { Mosaic, parseDndId, type TileProps } from '@dxos/aurora-grid';
+import { Mosaic } from '@dxos/aurora-grid/next';
 import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
-import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN, type DndPluginProvides, type DndProvides, type DndStore } from './types';
+import { DND_PLUGIN, type DndStore, type DndProvides } from './types';
 
-export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
-  const dnd = deepSignal<DndStore>({
-    mosaic: {
-      tiles: {},
-      relations: {},
-    },
-    onMosaicChangeSubscriptions: [],
-    onSetTileSubscriptions: [],
-    onCopyTileSubscriptions: [],
-  });
+export const DndPlugin = (): PluginDefinition => {
+  const dnd = deepSignal<DndStore>({});
+  const Overlay = () => <Mosaic.DragOverlay />;
 
   return {
     meta: {
       id: DND_PLUGIN,
     },
     ready: async (plugins) => {
+      // TODO(wittjosiah): Remove?
       const persistorPlugin = (plugins as Plugin<DndProvides>[]).find(
         (plugin) => typeof plugin.provides.dnd?.appState === 'function',
       );
@@ -38,40 +30,10 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
     },
     provides: {
       components: {
-        default: Mosaic.Overlay,
+        default: Overlay,
       },
       context: ({ children }) => {
-        const { graph } = useGraph();
-        return (
-          <Mosaic.Provider
-            mosaic={dnd.mosaic}
-            Delegator={DndDelegator}
-            getData={(dndId) => {
-              const [_, nodeId] = parseDndId(dndId);
-              return graph.findNode(nodeId);
-            }}
-            copyTile={(id, toId, mosaic, operation) => {
-              return dnd.onCopyTileSubscriptions.length
-                ? dnd.onCopyTileSubscriptions.reduce((tile, handler) => handler(tile, id, toId, mosaic, operation), {
-                    ...mosaic.tiles[id],
-                  })
-                : mosaic.tiles[id];
-            }}
-            onMosaicChange={(event) => {
-              dnd.onMosaicChangeSubscriptions.forEach((handler) => {
-                handler(event);
-              });
-            }}
-          >
-            {children}
-          </Mosaic.Provider>
-        );
-      },
-      dnd: dnd as RevertDeepSignal<DndStore>,
-      onSetTile: (tile: TileProps, node: Node): TileProps => {
-        return dnd.onSetTileSubscriptions.length
-          ? dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile)
-          : tile;
+        return <Mosaic.Root>{children}</Mosaic.Root>;
       },
     },
   };

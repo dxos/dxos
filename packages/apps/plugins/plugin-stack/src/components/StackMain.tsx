@@ -3,22 +3,21 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import { getIndexAbove } from '@tldraw/indices';
-import { type DeepSignal } from 'deepsignal';
-import React, { type FC, forwardRef, type Ref, useCallback, useEffect } from 'react';
+import React, { type FC, forwardRef, type Ref } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
-import { type File as FileType } from '@braneframe/types';
+import { type Stack as StackType, type File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { Mosaic, type DelegatorProps, type MosaicState, getDndId, useMosaic, type TileProps } from '@dxos/aurora-grid';
+import { type DelegatorProps } from '@dxos/aurora-grid';
+import { Stack, type StackSectionItem } from '@dxos/aurora-stack';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 import { StackSections } from './StackSections';
 import { defaultFileTypes } from '../hooks';
-import { stackState } from '../stores';
-import { STACK_PLUGIN, type StackModel, type StackProperties } from '../types';
+import { STACK_PLUGIN, type StackPluginProvides } from '../types';
 
 export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorProps }>(
   ({ data: props }, forwardedRef) => {
@@ -33,67 +32,31 @@ export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorPr
   },
 );
 
-export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
+const StackContent = ({ data }: { data: StackSectionItem }) => {
+  return <Surface role='section' data={data} />;
+};
+
+export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const { mosaic } = useMosaic();
+  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
-  const handleAdd = useCallback(
-    (sectionObject: StackModel['sections'][0]['object']) => {
-      stack.sections.splice(stack.sections.length, 0, {
-        id: sectionObject.id,
-        index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
-        object: sectionObject,
-      });
-    },
-    [stack, stack.sections],
-  );
+  // const handleAdd = useCallback(
+  //   (sectionObject: StackType['sections'][0]['object']) => {
+  //     stack.sections.splice(stack.sections.length, 0, {
+  //       id: sectionObject.id,
+  //       index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
+  //       object: sectionObject,
+  //     });
+  //   },
+  //   [stack, stack.sections],
+  // );
 
-  const rootTile: TileProps = {
-    id: getDndId(STACK_PLUGIN, stack.id),
-    sortable: true,
-    acceptCopyClass: 'stack-section',
-    index: 'a0',
-    variant: 'stack',
-  };
-
-  useEffect(() => {
-    const tiles = stack.sections.reduce(
-      (acc: MosaicState['tiles'], section) => {
-        const id = getDndId(STACK_PLUGIN, stack.id, section.id);
-        acc[id] = {
-          id,
-          variant: 'card',
-          index: section.index,
-        };
-        return acc;
-      },
-      { [rootTile.id]: rootTile },
-    );
-
-    const relations = Object.keys(tiles).reduce((acc: MosaicState['relations'], id) => {
-      acc[id] = { child: new Set(), parent: new Set() };
-      if (id === rootTile.id) {
-        Object.keys(tiles)
-          .filter((id) => id !== rootTile.id)
-          .forEach((childId) => {
-            acc[id].child.add(childId);
-          });
-      } else {
-        acc[id].parent.add(rootTile.id);
-      }
-      return acc;
-    }, {});
-
-    mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
-    mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
-  }, [stack, stack.sections]);
+  const items = stack.sections.map(({ object }) => object);
 
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
-      <Mosaic.Root id={STACK_PLUGIN}>
-        <Mosaic.Tile {...rootTile} />
-      </Mosaic.Root>
+      <Stack id={STACK_PLUGIN} Component={StackContent} items={items} />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
@@ -106,7 +69,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
               <DropdownMenu.Viewport>
-                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item
