@@ -27,6 +27,15 @@
       "path": "../../../ui/aurora"
     },
     {
+      "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../../../ui/aurora-composer"
+    },
+    {
+      "path": "../../../ui/aurora-grid"
+    },
+    {
       "path": "../../../ui/aurora-theme"
     },
     {

@@ -23,6 +23,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         }
 
         switch (role) {
+          case 'main':
+            return null;
         }
 
         return null;
