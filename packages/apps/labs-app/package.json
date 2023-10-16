@@ -38,6 +38,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/aurora-grid": "workspace:*",
     "@dxos/aurora-table": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

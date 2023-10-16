@@ -59,6 +59,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Required until integrated with theme.
+        resolve(__dirname, './node_modules/@dxos/aurora-grid/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
       ],

@@ -11,7 +11,7 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 export const GridMain: FC<{ data: any }> = ({ data: grid }) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Grid id='test' />
+      <Grid id='test' onCreate={() => {}} />
     </Main.Content>
   );
 };

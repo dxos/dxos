@@ -513,6 +513,7 @@ importers:
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-table': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
@@ -564,6 +565,7 @@ importers:
       '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
+      '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-table': link:../../ui/aurora-table
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema

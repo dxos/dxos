@@ -49,6 +49,9 @@
       "path": "../../ui/aurora-composer"
     },
     {
+      "path": "../../ui/aurora-grid"
+    },
+    {
       "path": "../../ui/aurora-table"
     },
     {
