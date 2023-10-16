@@ -108,8 +108,11 @@ message Kanban {
 message Grid {
   option (object) = true;
 
+  // TODO(burdon): Create GridCard object (e.g., with color props and text) with optional payload object.
+
   string title = 1;
   repeated dxos.schema.TypedObject objects = 2;
+  dxos.schema.TypedObject layout = 3;
 }
 
 /**

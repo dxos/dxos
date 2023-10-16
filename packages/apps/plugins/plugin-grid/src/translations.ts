@@ -11,6 +11,8 @@ export default [
         'plugin name': 'Grid',
         'grid title placeholder': 'New grid',
         'create grid label': 'Create grid',
+        'title placeholder': 'Enter title...',
+        'content placeholder': 'Enter text...',
       },
     },
   },

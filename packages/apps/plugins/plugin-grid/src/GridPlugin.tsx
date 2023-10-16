@@ -64,7 +64,12 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         },
       },
       context: ({ children }) => {
-        return <Mosaic.Root>{children}</Mosaic.Root>;
+        return (
+          <Mosaic.Root>
+            <Mosaic.DragOverlay />
+            {children}
+          </Mosaic.Root>
+        );
       },
       component: (data, role) => {
         if (!data || typeof data !== 'object' || !isGrid(data)) {

@@ -149,8 +149,8 @@ export const Grid = ({
       }}
     >
       <div className={mx('flex grow overflow-auto', className)}>
-        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}>
-          <div className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-300')}>
+          <div className='group block relative bg-neutral-200' style={{ ...bounds, margin: marginSize }}>
             {matrix && (
               <div style={{ padding: options.spacing }}>
                 <div className='relative'>
@@ -170,7 +170,6 @@ export const Grid = ({
               </div>
             )}
 
-            {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
             <div>
               {items.map((item) => {
                 const position = layout[item.id] ?? { x: 0, y: 0 };
@@ -227,9 +226,9 @@ const GridCell: FC<{
         className={mx(
           'group/cell hidden group-hover:flex w-full h-full items-center justify-center',
           isOverContainer && 'flex',
-          'box-border border-dashed border-4 border-neutral-600/50 rounded-lg',
-          'transition ease-in-out duration-200 bg-neutral-500',
-          isOver && 'flex bg-neutral-600',
+          'box-border border-dashed border-4 border-neutral-300 rounded-lg',
+          'transition ease-in-out duration-200 bg-neutral-200',
+          isOver && 'flex bg-neutral-400 border-neutral-500',
         )}
       >
         <div className={mx('hidden group-hover/cell:flex', isOverContainer && 'hidden')}>
