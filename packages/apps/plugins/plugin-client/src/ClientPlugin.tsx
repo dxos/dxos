@@ -15,12 +15,14 @@ import { type PluginDefinition } from '@dxos/react-surface';
 
 import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: TypeCollection };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
+  // TODO(burdon): Document.
   registerSignalFactory();
+
   const client = new Client(options);
 
   return {
@@ -32,8 +34,8 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
-        if (options.schema) {
-          client.addSchema(options.schema);
+        if (options.types) {
+          client.addTypes(options.types);
         }
 
         await client.initialize();

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { DocumentStack, Presentation } from '@dxos/kai-types';
+import { type DocumentStack, type Presentation } from '@dxos/kai-types';
 import { Stack } from '@dxos/mosaic';
 import { useConfig } from '@dxos/react-client';
 

@@ -50,7 +50,7 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[PublicKey.name] = PublicKey;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>('braneframe.plugin-space');
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -63,10 +63,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      settings.prop(settings.values.$showHidden!, 'showHidden', LocalStorageStore.bool);
+      settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN); // TODO(burdon): Const vs string?
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
       const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, SPLITVIEW_PLUGIN);
       if (!clientPlugin || !splitViewPlugin) {
         return;

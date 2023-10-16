@@ -92,8 +92,8 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this.addSchema(schemaBuiltin);
-    this.addSchema(clientSchema);
+    this.addTypes(schemaBuiltin);
+    this.addTypes(clientSchema);
   }
 
   [inspect.custom]() {
@@ -313,8 +313,14 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
-  // TODO(dmaretskyi): Rename to add types.
-  addSchema(schema: TypeCollection) {
-    this._graph.addTypes(schema);
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+  }
+
+  /**
+   * @deprecated Replaced by addTypes.
+   */
+  addSchema(types: TypeCollection) {
+    this.addTypes(types);
   }
 }

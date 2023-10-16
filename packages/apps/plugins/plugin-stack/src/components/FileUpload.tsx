@@ -18,6 +18,7 @@ export const FileUpload: FC<{
   onUpload: (file: FileType) => void;
 }> = ({ classNames, fileTypes, onUpload }) => {
   const ipfsClient = useIpfsClient();
+
   const handleUpdate = async (file: File) => {
     const info = await ipfsClient?.add(file);
     if (info) {
