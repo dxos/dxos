@@ -89,7 +89,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [open, setOpen] = useState(level < 1);
 
     useEffect(() => {
-      if (current && Path.onPath(Path.parent(path), node.id)) {
+      if (current && Path.onPath(current, node.id)) {
         setOpen(true);
       }
     }, [current, path]);
