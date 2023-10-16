@@ -49,7 +49,7 @@ export class TestBuilder {
 
   async createPeer(spaceKey = this.defaultSpaceKey): Promise<TestPeer> {
     const base = await this.base.createPeer(spaceKey);
-    const peer = new TestPeer(this, base);
+    const peer = new TestPeer(this, base, spaceKey);
     this.peers.set(peer.base.key, peer);
     this.graph._register(spaceKey, peer.db);
     return peer;
@@ -65,11 +65,12 @@ export class TestBuilder {
 export class TestPeer {
   public db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
 
-  constructor(public readonly builder: TestBuilder, public readonly base: BasePeer) {}
+  constructor(public readonly builder: TestBuilder, public readonly base: BasePeer, public readonly spaceKey: PublicKey) {}
 
   async reload() {
     await this.base.reload();
     this.db = new EchoDatabase(this.base.items, this.base.proxy, this.builder.graph);
+    this.builder.graph._register(this.spaceKey, this.db);
   }
 
   async flush() {

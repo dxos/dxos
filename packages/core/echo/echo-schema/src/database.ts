@@ -63,9 +63,6 @@ export class EchoDatabase {
     return Array.from(this._objects.values());
   }
 
-  /**
-   * @deprecated
-   */
   get graph() {
     return this._graph;
   }

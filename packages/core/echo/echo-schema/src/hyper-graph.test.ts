@@ -68,4 +68,34 @@ describe('HyperGraph', () => {
     expect(updated).to.eq(true);
     expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj3.id]);
   });
+
+  test('cross-space references', async () => {
+    const builder = new TestBuilder();
+    const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
+
+    const space1 = await builder.createPeer(spaceKey1);
+    const space2 = await builder.createPeer(spaceKey2);
+
+    const obj1 = space1.db.add(
+      new Expando({
+        type: 'task',
+        title: 'A',
+      }),
+    );
+    const obj2 = space2.db.add(
+      new Expando({
+        type: 'task',
+        title: 'B',
+      }),
+    );
+
+    obj1.link = obj2;
+    expect(obj1.link.title).to.eq('B');
+    
+    await builder.flushAll();
+    expect(obj1.link.title).to.eq('B');
+
+    await space1.reload();
+    expect(obj1.link.title).to.eq('B');
+  })
 });

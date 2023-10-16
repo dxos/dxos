@@ -5,12 +5,16 @@
 import { Event } from '@dxos/async';
 import { type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, defaultMap, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type Filter, Query, type TypeFilter } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
+import { Reference } from '@dxos/document-model';
+import { EchoObjectBase } from './echo-object-base';
+import { EchoObject } from './defs';
+import { Context } from '@dxos/context';
 
 /**
  * Manages cross-space database interactions.
@@ -19,6 +23,7 @@ export class HyperGraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
+  private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
 
   get types(): TypeCollection {
     return this._types;
@@ -34,7 +39,7 @@ export class HyperGraph {
    */
   _register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
-    database._updateEvent.on(this._updateEvent.emit.bind(this._updateEvent));
+    database._updateEvent.on(this._onUpdate.bind(this));
   }
 
   /**
@@ -53,5 +58,63 @@ export class HyperGraph {
       filter,
       options,
     );
+  }
+
+  /**
+   * @internal
+   * @param onResolve will be weakly referenced.
+   */
+  _lookupLink(ref: Reference, from: EchoDatabase, onResolve: (obj: EchoObject) => void): EchoObject | undefined {
+    if (ref.host === undefined) {
+      const local = from.getObjectById(ref.itemId)
+      if (local) {
+        return local;
+      }
+    }
+
+    if (!ref.host) { // No space key.
+      return undefined;
+    }
+
+    const spaceKey = PublicKey.from(ref.host);
+    const remoteDb = this._databases.get(spaceKey);
+    if (!remoteDb) {
+      return undefined;
+    }
+
+    // Resolve remote reference.
+    const remote = remoteDb.getObjectById(ref.itemId)
+    if (remote) {
+      return remote;
+    }
+
+    entry(this._resolveEvents, spaceKey).orInsert(new Map())
+      .deep(ref.itemId).orInsert(new Event())
+      .value.on(new Context(), onResolve, { weak: true });
+  }
+
+  private _onUpdate(updateEvent: UpdateEvent) {
+    const listenerMap = this._resolveEvents.get(updateEvent.spaceKey)
+    if (listenerMap) {
+      // TODO(dmaretskyi): We only care about created items.
+      for (const item of updateEvent.itemsUpdated) {
+        const listeners = listenerMap.get(item.id);
+        if (!listeners) {
+          continue;
+        }
+        const db = this._databases.get(updateEvent.spaceKey);
+        if (!db) {
+          continue;
+        }
+        const obj = db.getObjectById(item.id)
+        if (!obj) {
+          continue;
+        }
+        listeners.emit(obj);
+        listenerMap.delete(item.id);
+      }
+    }
+
+    this._updateEvent.emit(updateEvent);
   }
 }
