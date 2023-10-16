@@ -3,3 +3,4 @@
 //
 
 export * from './generator';
+export * from './next-fractional-index';

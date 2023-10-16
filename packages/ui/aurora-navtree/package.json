@@ -25,10 +25,12 @@
     "@dxos/aurora-theme": "workspace:*"
   },
   "devDependencies": {
+    "@dnd-kit/core": "^6.0.5",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^6.17.0",
