@@ -70,7 +70,6 @@ const main = async () => {
         mx(
           'z-[30] rounded-xl',
           popperMotion,
-          // 'bg-orange-200',
           groupSurface,
           groupBorder,
           surfaceElevation({ elevation: 'group' }),
