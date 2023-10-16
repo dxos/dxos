@@ -24,8 +24,8 @@ export class HyperGraph {
     return this._types;
   }
 
-  addTypes(schema: TypeCollection) {
-    this._types.mergeSchema(schema);
+  addTypes(types: TypeCollection) {
+    this._types.mergeSchema(types);
     return this;
   }
 
