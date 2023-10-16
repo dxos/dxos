@@ -22,7 +22,7 @@ export class TypeCollection {
 
   mergeSchema(schema: TypeCollection) {
     Array.from(schema._prototypes.entries()).forEach(([name, prototype]) => {
-      invariant(!this._prototypes.has(name), 'Names collision');
+      invariant(!this._prototypes.has(name), `Schema already exists: ${name}`);
       this._prototypes.set(name, prototype);
     });
   }
@@ -49,12 +49,12 @@ export class TypeCollection {
     }
 
     if (this._types.size !== 0) {
-      throw new Error('Already linked');
+      throw new Error('Already linked.');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Schema } = require('./proto');
-    invariant(Schema, 'Circular dependency error');
+    invariant(Schema, 'Circular dependency.');
 
     // Create immutable schema objects.
     for (const def of this._schemaDefs.values()) {
