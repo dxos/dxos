@@ -492,6 +492,7 @@ importers:
       '@braneframe/plugin-files': workspace:*
       '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-grid': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-ipfs': workspace:*
       '@braneframe/plugin-kanban': workspace:*
@@ -542,6 +543,7 @@ importers:
       '@braneframe/plugin-files': link:../plugins/plugin-files
       '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-grid': link:../plugins/plugin-grid
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
       '@braneframe/plugin-ipfs': link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
@@ -965,6 +967,69 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/mousetrap': 1.6.12
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-grid:
+    specifiers:
+      '@braneframe/plugin-dnd': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.6
+      hastscript: ^7.1.0
+      highlight.js: ^11.9.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-markdown: ^8.0.5
+      react-resize-detector: ^7.1.2
+      rehype-add-classes: ^1.0.0
+      rehype-highlight: ^6.0.0
+      remark-frontmatter: ^4.0.1
+      remark-parse-frontmatter: ^1.0.3
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-stack': link:../plugin-stack
+      deepsignal: 1.3.6
+      hastscript: 7.1.0
+      highlight.js: 11.9.0
+      react-markdown: 8.0.7_iapumuv4e6jcjznwuxpf4tt22e
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      rehype-add-classes: 1.0.0
+      rehype-highlight: 6.0.0
+      remark-frontmatter: 4.0.1
+      remark-parse-frontmatter: 1.0.3
+    devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0

@@ -15,6 +15,7 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -115,6 +116,7 @@ const main = async () => {
           // Labs Apps.
           ChessPlugin(),
           DebugPlugin(),
+          GridPlugin(),
           IpfsPlugin(),
           KanbanPlugin(),
           MapPlugin(),
