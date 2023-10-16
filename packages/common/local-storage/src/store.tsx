@@ -64,7 +64,7 @@ export class LocalStorageStore<T extends object> {
 
   public readonly values: DeepSignal<T>;
 
-  constructor(private readonly _prefix?: string, defaults?: T) {
+  constructor(private readonly _prefix: string, defaults?: T) {
     this.values = deepSignal<T>(defaults ?? ({} as T));
   }
 
@@ -74,7 +74,7 @@ export class LocalStorageStore<T extends object> {
    * Binds signal property to local storage key.
    */
   prop<T>(prop: Signal<T | undefined>, lkey: string, type: PropType<T>) {
-    const key = this._prefix + '.' + lkey;
+    const key = this._prefix + '/' + lkey;
     if (this._subscriptions.has(key)) {
       return this;
     }

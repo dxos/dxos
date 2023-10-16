@@ -25,5 +25,5 @@ runtime:
         username: dxos
         credential: dxos
     ipfs:
-      server: http://dx.dev.kube.dxos.org:5001
-      gateway: http://dx.dev.kube.dxos.org:8888/ipfs
+      server: https://dev.kube.dxos.org/ipfs/api
+      gateway: https://dev.kube.dxos.org/ipfs/gateway

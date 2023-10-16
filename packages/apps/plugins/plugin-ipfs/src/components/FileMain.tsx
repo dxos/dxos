@@ -44,7 +44,22 @@ export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
 
   return (
     <div style={{ height }} className='p-2'>
-      <FilePreview type={file.type} url={url} />
+      <FilePreview type={file.type} url={url} className='object-contain' />
+    </div>
+  );
+};
+
+export const FileSlide: FC<{ data: TypedObject }> = ({ data: file }) => {
+  const config = useConfig();
+  if (!file.cid) {
+    return null;
+  }
+
+  const url = getIpfsUrl(config, file.cid);
+
+  return (
+    <div className='h-full'>
+      <FilePreview type={file.type} url={url} className='object-cover' />
     </div>
   );
 };

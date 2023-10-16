@@ -57,7 +57,7 @@ export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
   id: string;
-  index: string;
+  index: string; // TODO(burdon): Remove should just be ordered array.
   object: T;
 };
 
