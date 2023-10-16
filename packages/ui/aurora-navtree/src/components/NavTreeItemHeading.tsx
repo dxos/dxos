@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
-import { Button, TreeItem, useSidebars } from '@dxos/aurora';
+import { Button, TreeItem } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
 import {
@@ -38,8 +38,6 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
     forwardedRef,
   ) => {
     // const [isLg] = useMediaQuery('lg', { ssr: false });
-    // TODO(wittjosiah): Decouple from sidebars.
-    const { navigationSidebarOpen /*, closeNavigationSidebar */ } = useSidebars();
 
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
     // const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
@@ -58,9 +56,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
         {branch && (
           <TreeItem.OpenTrigger
             {...(disabled && { disabled, 'aria-disabled': true })}
-            {...(!navigationSidebarOpen && { tabIndex: -1 })}
             classNames={['-translate-x-2', ghostButtonColors, disabled && staticDisabled]}
-            // TODO(wittjosiah): Why space plugin? This is treeview.
             data-testid={!open ? 'navTree.treeItem.openTrigger' : 'navTree.treeItem.closeTrigger'}
             onKeyDown={(event) => {
               if (event.key === ' ' || event.key === 'Enter') {
@@ -76,7 +72,6 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             role='link'
             {...(level > 1 && { 'data-testid': 'navTree.treeItem.link' })}
             data-itemid={id}
-            {...(!navigationSidebarOpen && { tabIndex: -1 })}
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();

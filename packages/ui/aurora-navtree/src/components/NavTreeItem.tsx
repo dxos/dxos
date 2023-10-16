@@ -14,7 +14,6 @@ import {
   Tree,
   TreeItem as TreeItemComponent,
   TreeItem,
-  useSidebars,
   useTranslation,
 } from '@dxos/aurora';
 import {
@@ -81,7 +80,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const actions = node.actions ?? [];
     const { t } = useTranslation(translationKey);
-    const { navigationSidebarOpen } = useSidebars();
     const { current, onSelect } = useNavTree();
 
     const suppressNextTooltip = useRef<boolean>(false);
@@ -207,7 +205,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                             active === 'overlay' && 'invisible',
                           ]}
                           data-testid={`navTree.treeItemActionsLevel${level}`}
-                          {...(!navigationSidebarOpen && { tabIndex: -1 })}
                         >
                           <DotsThreeVertical className={getSize(4)} />
                         </Button>
