@@ -114,6 +114,10 @@ export abstract class EchoObjectBase<T extends Model = any> implements EchoObjec
    * @internal
    */
   _itemUpdate(): void {
+    this._emitUpdate();
+  }
+
+  protected _emitUpdate(): void {
     for (const callback of this._callbacks) {
       callback(this);
     }

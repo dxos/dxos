@@ -341,7 +341,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
-      return this._object!._lookupLink(value.itemId) as T | undefined;
+      return this._object!._lookupLink(value) as T | undefined;
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       return decodeRecords(value, this._object!);
     } else {
@@ -351,8 +351,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _encode(value: T) {
     if (value instanceof EchoObjectBase) {
-      void this._object!._linkObject(value);
-      return new Reference(value.id);
+      return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
       value !== null &&
@@ -427,8 +426,7 @@ export class EchoArray<T> implements Array<T> {
 
 const encodeRecords = (value: any, document: TypedObject): any => {
   if (value instanceof EchoObjectBase) {
-    void document!._linkObject(value);
-    return new Reference(value.id);
+    return document!._linkObject(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => encodeRecords(value, document));
   } else if (typeof value === 'object') {
@@ -441,7 +439,7 @@ const encodeRecords = (value: any, document: TypedObject): any => {
 
 const decodeRecords = (value: any, document: TypedObject): any => {
   if (value instanceof Reference) {
-    return document._lookupLink(value.itemId);
+    return document._lookupLink(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => decodeRecords(value, document));
   } else if (typeof value === 'object') {
