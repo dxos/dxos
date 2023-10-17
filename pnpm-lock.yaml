@@ -3498,6 +3498,7 @@ importers:
 
   packages/devtools/cli:
     specifiers:
+      '@braneframe/types': workspace:*
       '@dxos/agent': workspace:*
       '@dxos/async': workspace:*
       '@dxos/bare-template': workspace:*
@@ -3551,6 +3552,7 @@ importers:
       uuid: ^8.3.2
       ws: ^7.4.4
     dependencies:
+      '@braneframe/types': link:../../apps/types
       '@dxos/agent': link:../../core/agent
       '@dxos/async': link:../../common/async
       '@dxos/bare-template': link:../../apps/templates/bare-template
