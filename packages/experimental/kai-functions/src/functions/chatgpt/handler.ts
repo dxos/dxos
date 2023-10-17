@@ -3,12 +3,12 @@
 //
 
 import { Thread } from '@braneframe/types';
-import { FunctionContext } from '@dxos/functions';
+import { type FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { parseMessage } from './parser';
-import { ChatModel } from '../../bots';
+import { ChatModel } from '../../bots/kai-bot/chat-model';
 import { getKey } from '../../bots/util';
 
 type HandlerProps = {
