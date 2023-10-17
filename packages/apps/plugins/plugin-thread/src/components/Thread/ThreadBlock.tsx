@@ -85,6 +85,7 @@ const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onD
         <Mosaic.Container id={id} Component={Pill}>
           <Mosaic.DraggableTile path={id} item={message.ref} Component={Pill} />
         </Mosaic.Container>
+
         {/* <div className='grow overflow-hidden break-words mr-2 text-sm m-2 border-1'>Reference [{message.ref.__typename}] to {name}M</div> */}
 
         {onDelete && (
