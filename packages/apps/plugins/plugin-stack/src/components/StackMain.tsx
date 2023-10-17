@@ -75,7 +75,7 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
       <Stack
-        id={stack.id}
+        id={`stack-${stack.id}`}
         Component={StackContent}
         items={items}
         onOver={handleOver}
