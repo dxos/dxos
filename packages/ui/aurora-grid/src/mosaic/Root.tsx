@@ -24,7 +24,7 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
+import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -34,7 +34,7 @@ import { Path } from './util';
 const DEFAULT_COMPONENT_ID = '__default';
 
 export type MosaicContextType = {
-  containers: Map<string, MosaicContainerProps<any>>;
+  containers: Record<string, MosaicContainerProps<any> | undefined>;
   setContainer: (id: string, container?: MosaicContainerProps<any>) => void;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
@@ -55,19 +55,18 @@ export type MosaicRootProps = PropsWithChildren<{
  * Root context provider.
  */
 export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, debug, children }) => {
-  const [containers, setContainers] = useState(
-    new Map<string, MosaicContainerProps<any>>([[DEFAULT_COMPONENT_ID, { id: DEFAULT_COMPONENT_ID, Component }]]),
-  );
+  const [containers, setContainers] = useState<MosaicContextType['containers']>({
+    [DEFAULT_COMPONENT_ID]: { id: DEFAULT_COMPONENT_ID, Component },
+  });
 
   const handleSetContainer = (id: string, container?: MosaicContainerProps<any>) => {
     setContainers((containers) => {
-      const copy = new Map(containers);
       if (container) {
-        copy.set(id, container);
+        return { ...containers, [id]: container };
       } else {
-        copy.delete(id);
+        const { [id]: _, ...rest } = containers;
+        return rest;
       }
-      return copy;
     });
   };
 
@@ -102,7 +101,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   const modifiers: Modifier = (props) => {
     const { transform } = props;
     if (activeItem) {
-      const container = containers.get(Path.first(activeItem.path));
+      const container = containers[Path.first(activeItem.path)];
       return container?.modifier?.(activeItem, props) ?? transform;
     } else {
       return transform;
@@ -148,8 +147,8 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       return;
     }
 
-    const activeContainer = activeItem && containers.get(Path.first(activeItem.path));
-    const overContainer = overItem?.path && containers.get(Path.first(overItem.path));
+    const activeContainer = activeItem && containers[Path.first(activeItem.path)];
+    const overContainer = overItem?.path && containers[Path.first(overItem.path)];
     if (!event.over || !overItem || !overContainer || !activeItem || !activeContainer) {
       setOperation('reject');
       setOverItem(undefined);
@@ -177,28 +176,30 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     setOverItem(undefined);
   };
 
-  // TODO(burdon): Add event type (e.g., copy vs. move).
   const handleDragEnd = (event: DragEndEvent) => {
+    const overContainer = overItem && containers[Path.first(overItem.path)];
+
     if (
       operation !== 'reject' &&
       activeItem &&
       overItem &&
       (activeItem.path !== overItem.path || activeItem.position !== overItem.position)
     ) {
-      const activeContainer = containers.get(Path.first(activeItem.path));
+      const activeContainer = containers[Path.first(activeItem.path)];
       if (activeContainer) {
         activeContainer.onDrop?.({ operation, active: activeItem, over: overItem });
 
-        const overContainer = containers.get(Path.first(overItem.path));
         if (overContainer && overContainer !== activeContainer) {
           overContainer.onDrop?.({ operation, active: activeItem, over: overItem });
         }
       }
     }
 
-    setOperation('reject');
-    setActiveItem(undefined);
-    setOverItem(undefined);
+    setTimeout(() => {
+      setOperation('reject');
+      setOverItem(undefined);
+      setActiveItem(undefined);
+    }, overContainer?.transitionDuration ?? DEFAULT_TRANSITION);
   };
 
   return (
@@ -227,7 +228,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
 };
 
 const MosaicDebug: FC<{
-  containers: Map<string, MosaicContainerProps<any>>;
+  containers: MosaicContextType['containers'];
   operation: MosaicOperation;
   activeItem?: MosaicDraggedItem;
   overItem?: MosaicDraggedItem;
@@ -236,7 +237,7 @@ const MosaicDebug: FC<{
     <Debug
       position='bottom-right'
       data={{
-        containers: Array.from(containers.keys()).map((id) => id),
+        containers: Object.keys(containers).map((id) => id),
         operation,
         active: {
           id: activeItem?.item?.id,

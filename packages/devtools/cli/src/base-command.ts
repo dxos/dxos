@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
@@ -242,6 +243,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       });
     }
 
+    if (this._telemetryContext?.mode === 'full') {
+      Telemetry.addTag('hostname', os.hostname());
+    }
     this.addToTelemetryContext({ command: this.id });
 
     try {
