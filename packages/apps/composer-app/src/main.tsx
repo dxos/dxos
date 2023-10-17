@@ -19,7 +19,7 @@ import { PwaPlugin } from '@braneframe/plugin-pwa';
 // import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
-// import { StackPlugin } from '@braneframe/plugin-stack';
+import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -73,7 +73,7 @@ const main = async () => {
 
           // Apps.
           MarkdownPlugin(),
-          // StackPlugin(),
+          StackPlugin(),
           FilesPlugin(),
           // GithubPlugin(),
           // SketchPlugin(),

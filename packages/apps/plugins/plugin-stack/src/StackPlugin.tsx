@@ -9,16 +9,13 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
-import { parseDndId } from '@dxos/aurora-grid';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
-import { StackMain, StackSectionDelegator } from './components';
+import { StackMain } from './components';
 import translations from './translations';
 import { STACK_PLUGIN, StackAction, type StackState, type StackPluginProvides, type StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
-
-const STACK_PLUGIN_PREVIEW_SECTION = `preview--${STACK_PLUGIN}`;
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -82,27 +79,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        if (!isStack(data)) {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if (isStack(data)) {
-              return StackMain;
-            } else {
-              return null;
-            }
-          case 'mosaic-delegator':
-            // TODO(burdon): Need stronger typing (vs. 'tile' in)?
-            if ('tile' in data && typeof data.tile === 'object' && !!data.tile && 'id' in data.tile) {
-              const mosaicId = parseDndId((data.tile.id as string) ?? '')[0];
-              return mosaicId === STACK_PLUGIN || mosaicId === STACK_PLUGIN_PREVIEW_SECTION
-                ? StackSectionDelegator
-                : null;
-            } else {
-              return null;
-            }
+            return StackMain;
+
           default:
             return null;
         }
@@ -116,7 +100,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
         },
       },
-      // TODO(burdon): Review with @thure (same variable used by other plugins to define the stack).
       stack: stackState,
     },
   };

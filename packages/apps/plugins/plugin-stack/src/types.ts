@@ -41,33 +41,3 @@ export type StackState = DeepSignal<{
 }>;
 
 export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };
-
-// // TODO(burdon): Rename StackSectionObject?
-// export type StackObject = { id: string };
-
-// export type GenericStackObject = StackObject & { [key: string]: any };
-
-// export type StackSectionModel<T extends StackObject = GenericStackObject> = {
-//   id: string;
-//   index: string; // TODO(burdon): Remove should just be ordered array.
-//   object: T;
-// };
-
-// export type StackSections<T extends StackObject = GenericStackObject> = StackSectionModel<T>[];
-
-// export type StackModel = {
-//   id: string;
-//   title: string;
-//   sections: StackSectionItem;
-// };
-
-// // TODO(burdon): Why is this separate from StackModel?
-// export type StackProperties = {
-//   title?: string;
-// };
-
-// export const getSectionModel = (object: GenericStackObject, index: string): StackSectionModel => ({
-//   id: object.id,
-//   index,
-//   object,
-// });

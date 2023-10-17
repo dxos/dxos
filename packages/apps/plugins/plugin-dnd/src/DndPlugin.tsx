@@ -33,7 +33,7 @@ export const DndPlugin = (): PluginDefinition => {
         default: Overlay,
       },
       context: ({ children }) => {
-        return <Mosaic.Root>{children}</Mosaic.Root>;
+        return <Mosaic.Root debug>{children}</Mosaic.Root>;
       },
     },
   };

@@ -3,34 +3,19 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import React, { type FC, forwardRef, type Ref } from 'react';
+import React, { useCallback, type FC } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { type DelegatorProps } from '@dxos/aurora-grid';
 import { Stack, type StackSectionItem } from '@dxos/aurora-stack';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { TypedObject } from '@dxos/react-client/echo';
 import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { FileUpload } from './FileUpload';
-import { StackSection } from './StackSection';
-import { StackSections } from './StackSections';
 import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN, type StackPluginProvides } from '../types';
-
-export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorProps }>(
-  ({ data: props }, forwardedRef) => {
-    switch (props.tile.variant) {
-      case 'stack':
-        return <StackSections {...props} ref={forwardedRef as Ref<HTMLDivElement>} />;
-      case 'card':
-        return <StackSection {...props} ref={forwardedRef as Ref<HTMLLIElement>} />;
-      default:
-        return null;
-    }
-  },
-);
 
 const StackContent = ({ data }: { data: StackSectionItem }) => {
   return <Surface role='section' data={data} />;
@@ -41,18 +26,19 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
-  // const handleAdd = useCallback(
-  //   (sectionObject: StackType['sections'][0]['object']) => {
-  //     stack.sections.splice(stack.sections.length, 0, {
-  //       id: sectionObject.id,
-  //       index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
-  //       object: sectionObject,
-  //     });
-  //   },
-  //   [stack, stack.sections],
-  // );
+  const handleAdd = useCallback(
+    (sectionObject: StackType['sections'][0]['object']) => {
+      stack.sections.push(
+        new TypedObject({
+          id: sectionObject.id,
+          object: sectionObject,
+        }),
+      );
+    },
+    [stack, stack.sections],
+  );
 
-  const items = stack.sections.map(({ object }) => object);
+  const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
 
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
