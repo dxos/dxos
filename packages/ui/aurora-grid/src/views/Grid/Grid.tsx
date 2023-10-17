@@ -21,8 +21,14 @@ import {
   type Position,
   type Size,
 } from './layout';
-import { type MosaicContainerProps, type MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
-import { type MosaicTileAction } from '../../mosaic/Tile';
+import {
+  Mosaic,
+  Path,
+  useMosaic,
+  type MosaicContainerProps,
+  type MosaicDataItem,
+  type MosaicTileAction,
+} from '../../mosaic';
 
 //
 // Selection

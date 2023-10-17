@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useRef } from 'react';
+import React, { useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
@@ -11,7 +11,9 @@ import { type PublicKey } from '@dxos/client';
 
 import { type BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
-import { THREAD_PLUGIN } from '../types';
+import { THREAD_PLUGIN } from '../../types';
+
+// TODO(burdon): Create storybook.
 
 // type DailyBlock = {
 //   date?: Date;
@@ -31,20 +33,24 @@ import { THREAD_PLUGIN } from '../types';
 // return dailyBlocks;
 // };
 
-export const ThreadChannel: FC<{
-  identityKey: PublicKey;
+export type ThreadChannelProps = {
   thread: ThreadType;
+  identityKey: PublicKey;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-  onAddMessage: (text: string) => boolean | undefined;
-}> = ({ identityKey, thread, getBlockProperties, onAddMessage }) => {
+  onSubmit: (text: string) => boolean | undefined;
+  onDelete?: (blockId: string, idx: number) => void;
+};
+
+export const ThreadChannel = ({ thread, identityKey, getBlockProperties, onSubmit, onDelete }: ThreadChannelProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const handleAddMessage = (text: string) => {
-    if (onAddMessage(text)) {
+  const handleSubmit = (text: string) => {
+    if (onSubmit(text)) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+
       return true;
     }
   };
@@ -69,6 +75,7 @@ export const ThreadChannel: FC<{
           />
         </Input.Root>
       </div>
+
       <div className='flex flex-grow overflow-hidden'>
         {/* TODO(burdon): Scroll panel. */}
         {/* TODO(burdon): Break into days. */}
@@ -78,14 +85,19 @@ export const ThreadChannel: FC<{
           {(thread.blocks ?? [])
             .map((block) => (
               <div key={block.id} className='my-1'>
-                <ThreadBlock identityKey={identityKey} block={block} getBlockProperties={getBlockProperties} />
+                <ThreadBlock
+                  block={block}
+                  identityKey={identityKey}
+                  getBlockProperties={getBlockProperties}
+                  onDelete={onDelete}
+                />
               </div>
             ))
             .reverse()}
         </div>
       </div>
       <div className='flex px-2 py-2'>
-        <ThreadInput onMessage={handleAddMessage} />
+        <ThreadInput onMessage={handleSubmit} />
       </div>
     </div>
   );

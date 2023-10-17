@@ -4,25 +4,27 @@
 
 import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
 import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 
-import { useSubscription } from './util';
+import { useSubscription } from '../util';
 
 export type BlockProperties = {
   displayName?: string;
   classes: string;
 };
 
-export const ThreadBlock: FC<{
-  identityKey: PublicKey;
+export type ThreadBlockProps = {
   block: ThreadType.Block;
+  identityKey: PublicKey;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-  onDeleteMessage?: (blockId: string, idx: number) => void;
-}> = ({ identityKey, block, getBlockProperties, onDeleteMessage }) => {
+  onDelete?: (blockId: string, idx: number) => void;
+};
+
+export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlockProps) => {
   useSubscription(block.messages); // TODO(burdon): Not updated.
   if (!block.messages.length || !block.identityKey) {
     return null;
@@ -32,6 +34,7 @@ export const ThreadBlock: FC<{
   const { classes, displayName } = getBlockProperties(PublicKey.from(block.identityKey!));
   const date = message.timestamp ? new Date(message.timestamp) : undefined;
 
+  // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
     <div
@@ -67,8 +70,8 @@ export const ThreadBlock: FC<{
                     <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
                   </pre>
                 )}
-                {onDeleteMessage && (
-                  <button className='invisible group-hover:visible' onClick={() => onDeleteMessage(block.id, i)}>
+                {onDelete && (
+                  <button className='invisible group-hover:visible' onClick={() => onDelete(block.id, i)}>
                     <X />
                   </button>
                 )}
