@@ -3,15 +3,14 @@
 //
 
 import { DragOverlay } from '@dnd-kit/core';
-import React, { Component, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
+import React, { Component, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { DensityProvider } from '@dxos/aurora';
-import { raise } from '@dxos/debug';
 
 import { type MosaicContainerProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
-import { MosaicContext } from './Root';
 import { type MosaicTileComponent } from './Tile';
+import { useMosaic } from './hooks';
 import { Path } from './util';
 
 export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<
@@ -23,13 +22,12 @@ export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<
  * Render the currently dragged item of the Mosaic.
  */
 export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps }: MosaicDragOverlayProps) => {
-  const { containers, operation, activeItem, overItem } =
-    useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
+  const { containers, operation, activeItem, overItem } = useMosaic();
 
   // Get the overlay component from the over container, otherwise default to the original.
   const [{ container, OverlayComponent }, setContainer] = useState<{
-    container?: MosaicContainerProps<any> | undefined;
-    OverlayComponent?: MosaicTileComponent<any> | undefined;
+    container?: MosaicContainerProps<any>;
+    OverlayComponent?: MosaicTileComponent<any>;
   }>({});
 
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -39,12 +37,12 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
       let container: MosaicContainerProps<any> | undefined;
       let OverlayComponent: MosaicTileComponent<any> | undefined;
       if (overItem?.path) {
-        container = containers.get(Path.first(overItem.path));
+        container = containers[Path.first(overItem.path)];
         OverlayComponent = container?.Component;
       }
 
       if (!OverlayComponent) {
-        container = containers.get(Path.first(activeItem.path));
+        container = containers[Path.first(activeItem.path)];
         OverlayComponent = container?.Component ?? DefaultComponent;
       }
 

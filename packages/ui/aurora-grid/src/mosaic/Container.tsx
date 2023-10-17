@@ -15,6 +15,8 @@ import { type MosaicTileComponent } from './Tile';
 import { useMosaic } from './hooks';
 import { type MosaicDataItem, type MosaicDraggedItem } from './types';
 
+export const DEFAULT_TRANSITION = 200;
+
 export type MosaicTileOverlayProps = {
   grow?: boolean;
   debug?: boolean;
@@ -49,6 +51,13 @@ export type MosaicContainerProps<
      * Default component used to render tiles.
      */
     Component?: MosaicTileComponent<TData, any>;
+
+    /**
+     * Length of transition when moving tiles in milliseconds.
+     *
+     * @default 200
+     */
+    transitionDuration?: number;
 
     /**
      * Adapter to transform properties while dragging (e.g., constraint axes).
@@ -98,8 +107,10 @@ export const MosaicContainerContext = createContext<MosaicContainerContextType |
 /**
  * Root Container that manages the layout of tiles.
  */
-export const MosaicContainer = ({ children, ...container }: MosaicContainerProps) => {
+export const MosaicContainer = ({ children, ...values }: MosaicContainerProps) => {
   const mosaic = useMosaic();
+  const container = { transitionDuration: DEFAULT_TRANSITION, ...values };
+
   useEffect(() => {
     mosaic.setContainer(container.id, container);
     return () => {
