@@ -167,6 +167,19 @@ export class Client {
     return this._runtime.shell;
   }
 
+  // TODO(dmaretskyi): Expose `graph` directly?
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+    return this;
+  }
+
+  /**
+   * @deprecated Replaced by addTypes.
+   */
+  addSchema(types: TypeCollection) {
+    return this.addTypes(types);
+  }
+
   /**
    * Get client diagnostics data.
    */
@@ -310,17 +323,5 @@ export class Client {
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
-  }
-
-  // TODO(dmaretskyi): Expose `graph` directly?
-  addTypes(types: TypeCollection) {
-    this._graph.addTypes(types);
-  }
-
-  /**
-   * @deprecated Replaced by addTypes.
-   */
-  addSchema(types: TypeCollection) {
-    this.addTypes(types);
   }
 }

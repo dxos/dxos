@@ -40,7 +40,9 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
       // TODO(wittjosiah): SyntheticListenerMap.
       HTMLAttributes<HTMLElement>;
 
+    // TODO(burdon): Generalize events via onAction?
     onSelect?: () => void;
+    onRemove?: () => void;
     onAction?: (action: MosaicTileAction) => void;
   };
 

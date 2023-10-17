@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { types } from '@braneframe/types';
+import { types } from '@braneframe/types'; // TODO(burdon): Remove.
 import {
   AgentIsNotStartedByCLIError,
   AgentWaitTimeoutError,
