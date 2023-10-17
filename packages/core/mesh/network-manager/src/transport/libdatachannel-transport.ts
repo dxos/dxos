@@ -80,7 +80,7 @@ export class LibDataChannelTransport implements Transport {
               },
             });
           } catch (err) {
-            log.warn('signaling errror', { err });
+            log.info('signaling errror', { err });
           }
         }
       };
