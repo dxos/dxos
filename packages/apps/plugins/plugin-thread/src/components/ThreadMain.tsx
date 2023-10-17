@@ -68,10 +68,10 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
   const getBlockProperties = (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
-      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
+      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
     return {
-      displayName: author.profile?.displayName ?? generateName(identityKey.toHex()),
-      classes: colorHash(author.identityKey),
+      displayName: author?.profile?.displayName ?? generateName(identityKey.toHex()),
+      classes: colorHash(author?.identityKey ?? identityKey),
     };
   };
 
