@@ -5,14 +5,14 @@
 import React, { type FC, useEffect } from 'react';
 
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
-import { Document as DocumentType, type Grid as GridType } from '@braneframe/types';
+import { Grid as GridType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { Grid, type MosaicDropEvent, type Position } from '@dxos/aurora-grid/next';
+import { type MosaicTileAction, Grid, type MosaicDropEvent, type Position } from '@dxos/aurora-grid/next';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando } from '@dxos/client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
-import { GridCard } from './GridCard';
+import { colors, GridCard } from './GridCard';
 
 export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
   const { plugins } = usePlugins();
@@ -32,22 +32,44 @@ export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
     return null;
   }
 
+  const handleAction = ({ id, action }: MosaicTileAction) => {
+    switch (action) {
+      case 'delete': {
+        const idx = grid.items.findIndex((item) => item.id === id);
+        if (idx !== -1) {
+          const [item] = grid.items.splice(idx, 1);
+          space.db.remove(item);
+        }
+        break;
+      }
+      case 'set-color': {
+        const item = grid.items.find((item) => item.id === id);
+        if (item) {
+          item.color = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
+        }
+      }
+    }
+  };
+
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
     grid.layout.position[active.item.id] = over.position;
   };
 
   const handleCreate = (position: Position) => {
-    const document = new DocumentType(); // TODO(burdon): Hide from sidebar; or create Card/Note subtype like kanban.
-    grid.objects.push(document);
-    grid.layout.position[document.id] = position;
+    // const document = new DocumentType();
+    const item = new GridType.Item();
+    grid.layout.position[item.id] = position;
+    grid.items.push(item);
   };
 
+  // TODO(burdon): Accessor to get card values.
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <Grid
-        id='test'
-        items={grid.objects}
+        id='grid' // TODO(burdon): Namespace.
+        items={grid.items}
         layout={grid.layout?.position}
+        onAction={handleAction}
         onCreate={handleCreate}
         onDrop={handleDrop}
         Component={GridCard}

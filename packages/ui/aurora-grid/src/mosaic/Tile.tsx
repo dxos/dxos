@@ -15,6 +15,8 @@ import { getTransformCSS, Path } from './util';
 
 export type MosaicActiveType = 'overlay' | 'rearrange' | 'origin' | 'destination';
 
+export type MosaicTileAction = { id: string; action: string; data?: any };
+
 /**
  * Props passed to mosaic tile.
  */
@@ -39,7 +41,8 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
       HTMLAttributes<HTMLElement>;
 
     onSelect?: () => void;
-    onRemove?: () => void;
+    // TODO(burdon): Generalize events (replace onSelect).
+    onAction?: (action: MosaicTileAction) => void;
   };
 
 /**

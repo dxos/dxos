@@ -21,6 +21,7 @@ import {
   DraggableTile,
   DroppableTile,
   SortableTile,
+  type MosaicTileAction,
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
   type MosaicActiveType as NaturalMosaicActiveType,
@@ -65,6 +66,8 @@ export type MosaicOverlayProps = MosaicDragOverlayProps;
 
 export type MosaicSortableProps = NaturalMosaicSortableProps;
 
+export type MosaicTileAction = MosaicTileAction;
+
 export type MosaicTileProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
@@ -75,11 +78,12 @@ export type MosaicTileComponent<
   TElement extends HTMLElement = HTMLDivElement,
 > = NaturalMosaicTileComponent<TData, TElement>;
 
-export type MosaicDebugProps = DebugProps;
-
 export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosition>;
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
 export type MosaicOperation = NaturalMosaicOperation;
 export type MosaicActiveType = NaturalMosaicActiveType;
 
 export type MosaicCompareDataItem = NaturalMosaicCompareDataItem;
+
+// TODO(burdon): Remove.
+export type MosaicDebugProps = DebugProps;

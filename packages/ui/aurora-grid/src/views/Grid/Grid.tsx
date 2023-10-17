@@ -22,6 +22,7 @@ import {
   type Size,
 } from './layout';
 import { type MosaicContainerProps, type MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
+import { type MosaicTileAction } from '../../mosaic/Tile';
 
 //
 // Selection
@@ -64,6 +65,7 @@ export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCon
     square?: boolean;
     debug?: boolean;
     onCreate?: (position: Position) => void;
+    onAction?: (action: MosaicTileAction) => void; // TODO(burdon): Standardize across mosaics?
   };
 
 /**
@@ -84,6 +86,7 @@ export const Grid = ({
   onDrop,
   onSelect,
   onCreate,
+  onAction,
 }: GridProps) => {
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const options = defaultsDeep({}, opts, defaultGridOptions);
@@ -185,6 +188,7 @@ export const Grid = ({
                       ...getBounds(position, cellBounds, options.spacing),
                     }}
                     onSelect={() => handleSelect(item.id)}
+                    onAction={onAction}
                     // debug={debug}
                   />
                 );
@@ -224,9 +228,9 @@ const GridCell: FC<{
     >
       <div
         className={mx(
-          'group/cell hidden group-hover:flex w-full h-full items-center justify-center',
-          isOverContainer && 'flex',
-          'box-border border-dashed border-4 border-neutral-300 rounded-lg',
+          'group/cell flex group-hover:flex w-full h-full items-center justify-center',
+          // isOverContainer && 'flex',
+          'box-border border-dashed border-4 border-neutral-300/50 rounded-lg',
           'transition ease-in-out duration-200 bg-neutral-200',
           isOver && 'flex bg-neutral-400 border-neutral-500',
         )}
