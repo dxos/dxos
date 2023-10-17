@@ -9,11 +9,10 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { DND_PLUGIN, type DndPluginProvides, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { type Node, type GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
-import { type AppState } from '@braneframe/types';
+import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -33,6 +32,7 @@ import {
   PopoverRenameSpace,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
+import { setAppStateIndex } from './helpers';
 import translations from './translations';
 import {
   SPACE_PLUGIN,
@@ -56,6 +56,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
   let handleKeyDown: (event: KeyboardEvent) => void;
+  let appState: AppState | undefined;
 
   return {
     meta: {
@@ -74,6 +75,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
       const client = clientPlugin.provides.client;
       const splitView = splitViewPlugin.provides.splitView;
+
+      // Find or initialize `appState`
+      const defaultSpace = client.spaces.default;
+      const appStates = defaultSpace.db.query(AppState.filter()).objects;
+      if (appStates.length < 1) {
+        const nextAppState = new AppState();
+        defaultSpace.db.add(nextAppState);
+        appState = nextAppState;
+      } else {
+        appState = (appStates as AppState[])[0];
+      }
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
@@ -267,7 +279,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          const dndPlugin = findPlugin<DndPluginProvides>(plugins, DND_PLUGIN);
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
           if (!clientPlugin) {
             return;
@@ -289,20 +300,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               'data-testid': 'spacePlugin.allSpaces',
-              acceptPersistenceClass: new Set(['appState']),
-              childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
-                child.properties.index = setAppStateIndex(
-                  child.id,
-                  nextIndex,
-                  dndPlugin?.provides.dnd?.appState as AppState | undefined,
-                );
+                child.properties.index = setAppStateIndex(child.id, nextIndex, appState);
               },
             },
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {
-            const appState = dndPlugin?.provides.dnd?.appState;
             client.spaces.default.key.equals(space.key)
               ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
               : spaceToGraphNode({
