@@ -110,7 +110,7 @@ export const EchoKanban = ({
   const objects = useQuery<TypedObject>(space, (object) => object.__schema === kanban.schema, {}, [kanban.schema]);
   const columns: KanbanColumn<TypedObject>[] = kanban.columnValues.map((value: string) => {
     const objectPosition = kanban.objectPosition[value] ?? [];
-    const children =
+    const items =
       objectPosition.length > 0
         ? objectPosition.map((id: string) => objects.find((object) => object.id === id))
         : objects;
@@ -119,7 +119,7 @@ export const EchoKanban = ({
     return {
       id: getProperty(value),
       title: value,
-      children: children.filter((object: TypedObject) => object[kanban.columnProp] === value),
+      items: items.filter((object: TypedObject) => object[kanban.columnProp] === value),
     };
   });
 

@@ -4,4 +4,4 @@
 
 import * as echo from '@dxos/echo-schema';
 
-export const schema = new echo.TypeCollection();
+export const types = new echo.TypeCollection();

@@ -9,7 +9,7 @@ import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttri
 
 import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
-import { useMosaic } from './hooks';
+import { useContainer, useMosaic } from './hooks';
 import type { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
@@ -23,9 +23,9 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
   'className'
 > &
   MosaicTileOverlayProps & {
-    Component: MosaicTileComponent<TData, any>;
     path: string;
     item: TData;
+    Component?: MosaicTileComponent<TData, any>;
     position?: TPosition;
     operation?: MosaicOperation;
     active?: MosaicActiveType; // TODO(burdon): Rename state?
@@ -128,32 +128,43 @@ export const DroppableTile = ({
 export const SortableTile = ({
   path: parentPath,
   item,
-  Component = DefaultComponent,
+  Component: OverrideComponent,
   position,
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { operation, activeItem } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
+  const { transitionDuration, Component: ContainerComponent } = useContainer();
+
   const path = Path.create(parentPath, item.id);
+  // Re-use the active path if it's the same item and the item is a preview.
+  // This helps dndkit understand that the item is being moved and animate it appropriately.
+  const isPreview =
+    activeItem &&
+    activeItem.item.id === item.id &&
+    overItem &&
+    (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
+    operation !== 'reject';
+
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
-    // Re-use the active path if it's the same item.
-    // This helps dndkit understand that the item is being moved and animate it appropriately.
-    id: activeItem && activeItem.item.id === item.id ? activeItem.path : path,
+    id: isPreview ? activeItem.path : path,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) =>
       defaultAnimateLayoutChanges({ ...args, wasDragging: item.id !== activeItem?.item.id }),
   });
 
   let active: MosaicActiveType | undefined;
-  if (activeItem && activeItem.item.id === item.id) {
+  if (isDragging) {
     if (operation === 'rearrange' || operation === 'reject') {
       active = 'rearrange';
-    } else if (Path.parent(activeItem.path) !== parentPath) {
+    } else if (activeItem && Path.parent(activeItem.path) !== parentPath) {
       active = 'destination';
     } else {
       active = 'origin';
     }
   }
+
+  const Component = OverrideComponent ?? ContainerComponent ?? DefaultComponent;
 
   return (
     <Component
@@ -167,7 +178,7 @@ export const SortableTile = ({
       isOver={isOver}
       draggableStyle={{
         transform: getTransformCSS(transform),
-        transition: activeItem ? 'transform 200ms ease' : 'none',
+        transition: activeItem ? `transform ${transitionDuration}ms ease` : 'none',
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}

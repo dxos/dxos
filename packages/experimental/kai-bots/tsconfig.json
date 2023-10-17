@@ -24,7 +24,7 @@
       "path": "../../sdk/client-services"
     },
     {
-      "path": "../kai-functions"
+      "path": "../labs-functions"
     }
   ]
 }

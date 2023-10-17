@@ -9,6 +9,7 @@
           "assert",
           "available-typed-arrays",
           "call-bind",
+          "define-data-property",
           "define-properties",
           "es-abstract",
           "es6-object-assign",
