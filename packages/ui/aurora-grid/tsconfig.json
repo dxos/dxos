@@ -48,6 +48,9 @@
     },
     {
       "path": "../aurora-types"
+    },
+    {
+      "path": "../primitives/react-hooks"
     }
   ]
 }

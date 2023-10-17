@@ -4,8 +4,10 @@
 
 import { type DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
+
+import { useId } from '@dxos/react-hooks';
 
 import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
@@ -133,23 +135,41 @@ export const SortableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { operation, activeItem } = useMosaic();
+  const { operation, activeItem, overItem, tiles, setTile } = useMosaic();
   const { transitionDuration, Component: ContainerComponent } = useContainer();
+
   const path = Path.create(parentPath, item.id);
+  // Re-use the active path if it's the same item and the item is a preview.
+  // This helps dndkit understand that the item is being moved and animate it appropriately.
+  const isPreview =
+    activeItem &&
+    activeItem.item.id === item.id &&
+    overItem &&
+    (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
+    operation !== 'reject';
+  const existingId = isPreview ? tiles[activeItem.path] : tiles[path];
+  const id = useId('mosaic-tile', existingId);
+
+  useEffect(() => {
+    setTile(isPreview ? `active-${path}` : path, id);
+
+    return () => {
+      isPreview && setTile(`active-${path}`);
+    };
+  }, [isPreview]);
+
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
-    // Re-use the active path if it's the same item.
-    // This helps dndkit understand that the item is being moved and animate it appropriately.
-    id: activeItem && activeItem.item.id === item.id ? activeItem.path : path,
+    id,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) =>
       defaultAnimateLayoutChanges({ ...args, wasDragging: item.id !== activeItem?.item.id }),
   });
 
   let active: MosaicActiveType | undefined;
-  if (activeItem && activeItem.item.id === item.id) {
+  if (isDragging) {
     if (operation === 'rearrange' || operation === 'reject') {
       active = 'rearrange';
-    } else if (Path.parent(activeItem.path) !== parentPath) {
+    } else if (activeItem && Path.parent(activeItem.path) !== parentPath) {
       active = 'destination';
     } else {
       active = 'origin';

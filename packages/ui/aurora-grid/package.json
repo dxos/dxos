@@ -36,6 +36,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
