@@ -12,12 +12,6 @@ import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { ThreadContainer } from './ThreadContainer';
 
-// TODO(burdon): Goals.
-// - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
-// - Create and navigate between threads.
-// - Lightweight threads for document comments, inline AI, etc.
-//    (Similar reusable components everywhere; same data structure).
-
 export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
