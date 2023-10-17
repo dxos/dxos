@@ -4,10 +4,8 @@
 
 import { type DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
-
-import { useId } from '@dxos/react-hooks';
 
 import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
@@ -135,7 +133,7 @@ export const SortableTile = ({
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
-  const { operation, activeItem, overItem, tiles, setTile } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   const { transitionDuration, Component: ContainerComponent } = useContainer();
 
   const path = Path.create(parentPath, item.id);
@@ -147,19 +145,9 @@ export const SortableTile = ({
     overItem &&
     (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
     operation !== 'reject';
-  const existingId = isPreview ? tiles[activeItem.path] : tiles[path];
-  const id = useId('mosaic-tile', existingId);
-
-  useEffect(() => {
-    setTile(isPreview ? `active-${path}` : path, id);
-
-    return () => {
-      isPreview && setTile(`active-${path}`);
-    };
-  }, [isPreview]);
 
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
-    id,
+    id: isPreview ? activeItem.path : path,
     data: { path, item, position } satisfies MosaicDraggedItem,
     animateLayoutChanges: (args) =>
       defaultAnimateLayoutChanges({ ...args, wasDragging: item.id !== activeItem?.item.id }),

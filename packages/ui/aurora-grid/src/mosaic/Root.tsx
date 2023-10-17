@@ -36,8 +36,6 @@ const DEFAULT_COMPONENT_ID = '__default';
 export type MosaicContextType = {
   containers: Record<string, MosaicContainerProps<any> | undefined>;
   setContainer: (id: string, container?: MosaicContainerProps<any>) => void;
-  tiles: Record<string, string>;
-  setTile: (path: string, id?: string) => void;
   activeItem: MosaicDraggedItem | undefined;
   overItem: MosaicDraggedItem | undefined;
   operation: MosaicOperation;
@@ -70,17 +68,6 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
         return rest;
       }
     });
-  };
-
-  const [tiles, setTiles] = useState<MosaicContextType['tiles']>({});
-
-  const handleSetTile = (path: string, id?: string) => {
-    if (id) {
-      setTiles((tiles) => ({ ...tiles, [path]: id }));
-    } else {
-      const { [path]: _, ...rest } = tiles;
-      setTiles(rest);
-    }
   };
 
   const [activeItem, setActiveItem] = useState<MosaicDraggedItem>();
@@ -216,17 +203,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
   };
 
   return (
-    <MosaicContext.Provider
-      value={{
-        containers,
-        setContainer: handleSetContainer,
-        tiles,
-        setTile: handleSetTile,
-        activeItem,
-        overItem,
-        operation,
-      }}
-    >
+    <MosaicContext.Provider value={{ containers, setContainer: handleSetContainer, activeItem, overItem, operation }}>
       <DndContext
         collisionDetection={collisionDetection}
         modifiers={[modifiers]}

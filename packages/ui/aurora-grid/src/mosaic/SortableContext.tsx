@@ -23,7 +23,7 @@ export type MosaicSortableProps<TData extends MosaicDataItem = MosaicDataItem> =
 // TODO(burdon): Remove since just obfuscates SortableContext unless more deeply integrated with useSortableItem.
 //  Otherwise accept same props as SortableContext (e.g., verticalListSortingStrategy).
 export const MosaicSortableContext = ({ id, items = [], direction = 'vertical', children }: MosaicSortableProps) => {
-  const { operation, activeItem, overItem, tiles } = useMosaic();
+  const { operation, activeItem, overItem } = useMosaic();
   const container = useContainer();
   const contextId = id ?? container.id;
   const Sortable = direction === 'vertical' ? Column : Row;
@@ -37,7 +37,7 @@ export const MosaicSortableContext = ({ id, items = [], direction = 'vertical', 
       overItem &&
       (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
       operation !== 'reject';
-    return isPreview ? tiles[activeItem.path] : tiles[path];
+    return isPreview ? activeItem.path : path;
   });
 
   return (

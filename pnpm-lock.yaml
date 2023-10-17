@@ -5396,7 +5396,6 @@ importers:
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-hooks': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
@@ -5429,7 +5428,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
-      '@dxos/react-hooks': link:../primitives/react-hooks
       '@dxos/util': link:../../common/util
       '@preact/signals-core': 1.5.0
       '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
