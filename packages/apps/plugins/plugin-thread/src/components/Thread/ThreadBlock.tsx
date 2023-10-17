@@ -66,7 +66,7 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
                 {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
                 {message.data && (
                   // TODO(burdon): Colorize (reuse codemirror or hljs?)
-                  <pre className='overflow-x-auto mr-2 py-2 text-sm font-thin'>
+                  <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
                     <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
                   </pre>
                 )}

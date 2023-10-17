@@ -38,7 +38,14 @@ const Story = () => {
   }
 
   const handleDelete = (id: string, index: number) => {
-    thread.blocks.splice(index, 1);
+    const blockIndex = thread.blocks.findIndex((block) => block.id === id);
+    if (blockIndex !== -1) {
+      const block = thread.blocks[blockIndex];
+      block.messages.splice(index, 1);
+      if (block.messages.length === 0) {
+        thread.blocks.splice(blockIndex, 1);
+      }
+    }
   };
 
   const handleSubmit = (text: string) => {
@@ -49,6 +56,9 @@ const Story = () => {
           {
             timestamp: new Date().toISOString(),
             text,
+          },
+          {
+            data: JSON.stringify({ items: Array.from({ length: text.length }).map((_, i) => i) }),
           },
         ],
       }),
