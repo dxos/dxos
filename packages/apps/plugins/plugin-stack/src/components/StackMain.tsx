@@ -19,7 +19,9 @@ import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN, type StackPluginProvides } from '../types';
 
 const StackContent = ({ data }: { data: StackSectionItem }) => {
-  return <Surface role='section' data={data} />;
+  // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+  const object = (data as any).node?.data ?? data;
+  return <Surface role='section' data={object} />;
 };
 
 export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
@@ -47,10 +49,12 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
       stack.sections.splice(active.position!, 1);
     }
 
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
     if (over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new TypedObject({ object: active.item as TypedObject }));
+      stack.sections.splice(over.position!, 0, new TypedObject({ object }));
     } else if (over.path === id) {
-      stack.sections.push(new TypedObject({ object: active.item as TypedObject }));
+      stack.sections.push(new TypedObject({ object }));
     }
   };
 
