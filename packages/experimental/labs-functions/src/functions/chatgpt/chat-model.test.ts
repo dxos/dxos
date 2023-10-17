@@ -4,12 +4,12 @@
 
 import { expect } from 'chai';
 
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { describe, test } from '@dxos/test';
 
 import { ChatModel } from './chat-model';
-import { Entity, SchemaMap } from './schema';
-import { getConfig, loadJson } from '../util';
+import { type Entity, type SchemaMap } from './schema';
+import { getConfig, loadJson } from '../../util';
 
 // TODO(burdon): Move to config.
 const getKey = (config: Config, name: string) => {

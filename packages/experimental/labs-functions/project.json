@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/kai-functions/src",
+  "sourceRoot": "packages/experimental/labs-functions/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/experimental/kai-functions/src/index.ts",
-        "outputPath": "packages/experimental/kai-functions/dist/types",
-        "tsConfig": "packages/experimental/kai-functions/tsconfig.json"
+        "main": "packages/experimental/labs-functions/src/index.ts",
+        "outputPath": "packages/experimental/labs-functions/dist/types",
+        "tsConfig": "packages/experimental/labs-functions/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/kai-functions/src/index.ts"
+          "packages/experimental/labs-functions/src/index.ts"
         ],
-        "outputPath": "packages/experimental/kai-functions/dist/lib"
+        "outputPath": "packages/experimental/labs-functions/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/kai-functions/**/!(*.d).{ts,js}"
+          "packages/experimental/labs-functions/**/!(*.d).{ts,js}"
         ],
         "quiet": true
       },
@@ -44,14 +44,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai-functions",
-        "outputPath": "tmp/mocha/packages/experimental/kai-functions",
-        "resultsPath": "test-results/packages/experimental/kai-functions",
+        "coveragePath": "coverage/packages/experimental/labs-functions",
+        "outputPath": "tmp/mocha/packages/experimental/labs-functions",
+        "resultsPath": "test-results/packages/experimental/labs-functions",
         "testPatterns": [
-          "packages/experimental/kai-functions/src/**/*.test.{ts,js}"
+          "packages/experimental/labs-functions/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/kai-functions/src/**/*"
+          "packages/experimental/labs-functions/src/**/*"
         ]
       },
       "outputs": [

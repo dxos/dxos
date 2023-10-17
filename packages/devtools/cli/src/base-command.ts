@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
+import { types } from '@braneframe/types';
 import {
   AgentIsNotStartedByCLIError,
   AgentWaitTimeoutError,
@@ -385,6 +386,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         await this.maybeStartDaemon();
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
+
+      this._client.addTypes(types);
 
       await this._client.initialize();
       log('Client initialized', { profile: this.flags.profile });
