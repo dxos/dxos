@@ -118,7 +118,7 @@ export const SENTRY_LOG_PROCESSOR = (config: any, entry: any) => {
     scope.setLevel(convertLevel(level));
     scope.setContext('dxoslog', entry.context);
     if (meta) {
-      scope.setTransactionName(getRelativeFilename(meta.F));
+      scope.setTransactionName(`${getRelativeFilename(meta.F)}:${meta.L}`);
     }
     // Is this ever used?
     if (error) {
