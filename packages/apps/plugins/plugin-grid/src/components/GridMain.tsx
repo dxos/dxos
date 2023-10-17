@@ -52,7 +52,7 @@ export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
   };
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
-    if(!grid.items.includes(active.item as any)) {
+    if (!grid.items.includes(active.item as any)) {
       grid.items.push(active.item as any);
     }
     grid.layout.position[active.item.id] = over.position;

@@ -172,8 +172,8 @@ export class Client {
     return {
       get types() {
         return self._graph.types;
-      }
-    }
+      },
+    };
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?

@@ -3,10 +3,10 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import type { SchemaProps, Schema as SchemaProto } from './proto';
 import { dangerouslyMutateImmutableObject } from './typed-object';
-import { log } from '@dxos/log';
 
 type Prototype = {
   new (...args: any): any;
@@ -22,7 +22,11 @@ export class TypeCollection {
   private readonly _schemaDefs = new Map<string, SchemaProps>();
 
   get schemas(): SchemaProto[] {
-    log.info('schemas', { types: this._types.size, prototypes: this._prototypes.size, schemaDefs: this._schemaDefs.size });
+    log.info('schemas', {
+      types: this._types.size,
+      prototypes: this._prototypes.size,
+      schemaDefs: this._schemaDefs.size,
+    });
     return Array.from(this._types.values());
   }
 
