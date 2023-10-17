@@ -514,6 +514,16 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/labs-functions/functions/chess/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/labs-functions/functions/hello/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
