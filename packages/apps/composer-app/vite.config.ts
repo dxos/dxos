@@ -61,6 +61,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/aurora-navtree/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),
