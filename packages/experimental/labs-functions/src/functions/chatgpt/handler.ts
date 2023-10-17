@@ -80,6 +80,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           Include "@type" field with the exact name of one of the provided schema types.
           In structured mode do not include any other text in your replies, just a single JSON block.
           Include real data in your replies, not just the schema.
+          Try to fill all fields if reasonable data can be provided.
 
           Example:
 
