@@ -20,13 +20,13 @@ export default {
   render: (args: DemoStackProps) => {
     return (
       <Mosaic.Root debug={args.debug}>
-        <Mosaic.DragOverlay />
         <div className='flex grow justify-center p-4'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
             <DemoStack {...args} id='stack-2' />
           </div>
         </div>
+        <Mosaic.DragOverlay debug={args.debug} />
       </Mosaic.Root>
     );
   },
