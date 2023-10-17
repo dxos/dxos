@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
+import { type ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 
 import { log } from '@dxos/log';
 
