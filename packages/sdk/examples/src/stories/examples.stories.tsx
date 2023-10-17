@@ -15,6 +15,7 @@ import { ConnectionState } from '@dxos/react-client/mesh';
 import { ClientDecorator, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';
 
 import { EditorExample, TaskListExample } from '../examples';
+import { types } from '../proto/gen/schema';
 
 export default {
   title: 'DXOS Examples',
@@ -29,6 +30,7 @@ export const TaskList = {
 
 const editor = await setupPeersInSpace({
   count: 2,
+  schema: types,
   onCreateSpace: (space) => {
     space.db.add(new Document());
   },
