@@ -9,18 +9,15 @@ import { Document as DocumentType, type Grid as GridType } from '@braneframe/typ
 import { Main } from '@dxos/aurora';
 import { Grid, type MosaicDropEvent, type Position } from '@dxos/aurora-grid/next';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { type SpaceProxy } from '@dxos/client/echo';
 import { Expando } from '@dxos/client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { GridCard } from './GridCard';
 
-export const GridMain: FC<{ space: SpaceProxy; data: GridType }> = ({ space: space2, data: grid }) => {
+export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
   const { plugins } = usePlugins();
 
-  console.log(space2);
-
-  // TODO(burdon): Get from properties.
+  // TODO(burdon): Get from properties?
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
 

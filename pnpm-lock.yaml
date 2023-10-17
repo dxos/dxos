@@ -5426,6 +5426,45 @@ importers:
       vite: 4.3.9
       vite-plugin-turbosnap: 1.0.2
 
+  packages/ui/aurora-navtree:
+    specifiers:
+      '@braneframe/plugin-graph': workspace:*
+      '@dnd-kit/core': ^6.0.5
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chromatic: ^6.17.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    dependencies:
+      '@braneframe/plugin-graph': link:../../apps/plugins/plugin-graph
+      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-grid': link:../aurora-grid
+      '@dxos/aurora-theme': link:../aurora-theme
+    devDependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/util': link:../../common/util
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@tldraw/indices': 2.0.0-alpha.14
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
+
   packages/ui/aurora-stack:
     specifiers:
       '@dxos/aurora': workspace:*
