@@ -499,6 +499,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kai-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kai-sandbox/package.json",
           "jsonpath": "$.version"
         },
