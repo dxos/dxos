@@ -22,7 +22,7 @@ const App = () => {
   const client = useClient();
   const space = useSpaces();
   return (
-    <pre>{JSON.stringify(client.info())}</pre>
+    <pre>{JSON.stringify(client)}</pre>
   );
 };
 
