@@ -346,6 +346,7 @@ importers:
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
+      '@braneframe/plugin-sketch': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
@@ -381,6 +382,7 @@ importers:
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
+      '@braneframe/plugin-sketch': link:../plugins/plugin-sketch
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
