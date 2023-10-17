@@ -229,13 +229,14 @@ const GridCell: FC<{
       <div
         className={mx(
           'group/cell flex group-hover:flex w-full h-full items-center justify-center',
-          // isOverContainer && 'flex',
           'box-border border-dashed border-4 border-neutral-300/50 rounded-lg',
           'transition ease-in-out duration-200 bg-neutral-200',
           isOver && 'flex bg-neutral-400 border-neutral-500',
         )}
       >
-        <div className={mx('hidden group-hover/cell:flex', isOverContainer && 'hidden')}>
+        <div
+          className={mx('opacity-10 transition duration-300 group-hover/cell:opacity-100', isOverContainer && 'hidden')}
+        >
           {onCreate && (
             // TODO(burdon): Style button.
             <Button variant='ghost' onClick={() => onCreate(position)}>
