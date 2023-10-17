@@ -8,9 +8,4 @@ import { raise } from '@dxos/debug';
 
 import { MosaicContext } from '../Root';
 
-export const useMosaic = () => {
-  // NOTE: Omit `containers`, for internal use only.
-  const { setContainer, operation, activeItem, overItem } =
-    useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));
-  return { setContainer, operation, activeItem, overItem };
-};
+export const useMosaic = () => useContext(MosaicContext) ?? raise(new Error('Missing MosaicContext'));

@@ -8,6 +8,7 @@ import React, { useCallback, type FC } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
 import { Stack, type StackSectionItem } from '@dxos/aurora-stack';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/react-client/echo';
@@ -26,6 +27,39 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
+  const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
+
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+    const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
+    if (!exists) {
+      return 'copy';
+    } else {
+      return 'reject';
+    }
+  };
+
+  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+    if (
+      (active.path === Path.create(stack.id, active.item.id) || active.path === stack.id) &&
+      (operation !== 'copy' || over.path === Path.create(stack.id, over.item.id) || over.path === stack.id)
+    ) {
+      stack.sections.splice(active.position!, 1);
+    }
+
+    if (over.path === Path.create(stack.id, over.item.id)) {
+      stack.sections.splice(over.position!, 0, new TypedObject({ object: active.item as TypedObject }));
+    } else if (over.path === stack.id) {
+      stack.sections.push(new TypedObject({ object: active.item as TypedObject }));
+    }
+  };
+
+  const handleRemove = (path: string) => {
+    const index = stack.sections.findIndex(({ object }) => object.id === Path.last(path));
+    if (index >= 0) {
+      stack.sections.splice(index, 1);
+    }
+  };
+
   const handleAdd = useCallback(
     (sectionObject: StackType['sections'][0]['object']) => {
       stack.sections.push(
@@ -38,11 +72,16 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
     [stack, stack.sections],
   );
 
-  const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
-
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
-      <Stack id={STACK_PLUGIN} Component={StackContent} items={items} />
+      <Stack
+        id={stack.id}
+        Component={StackContent}
+        items={items}
+        onOver={handleOver}
+        onDrop={handleDrop}
+        onRemoveSection={handleRemove}
+      />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>

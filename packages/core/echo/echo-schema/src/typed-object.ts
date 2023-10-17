@@ -175,7 +175,15 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Fully qualified name of the object type for objects created from the schema.
    */
   get __typename(): string | undefined {
-    return this.__schema?.typename;
+    if (this._schema) {
+      return this.__schema?.typename;
+    }
+    const typeRef = this[base]._getState().type;
+    if (typeRef?.protocol === 'protobuf') {
+      return typeRef?.itemId;
+    } else {
+      return undefined;
+    }
   }
 
   get __meta(): ObjectMeta {
