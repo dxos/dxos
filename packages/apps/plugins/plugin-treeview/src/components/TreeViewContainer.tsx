@@ -3,12 +3,14 @@
 //
 
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { type Graph } from '@braneframe/plugin-graph';
+import { type Graph, type Node } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
+import { Path } from '@dxos/aurora-grid/next';
 import { NavTree } from '@dxos/aurora-navtree';
+import { type NavTreeContextType } from '@dxos/aurora-navtree';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -16,6 +18,15 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
 import { TREE_VIEW_PLUGIN } from '../types';
+
+const getNodePathParts = (node: Node, parts: string[] = []): string[] => {
+  parts.unshift(node.id);
+  if (!node.parent) {
+    return parts;
+  } else {
+    return getNodePathParts(node.parent, parts);
+  }
+};
 
 export const TreeViewContainer = ({
   data: { graph, activeId, popoverAnchorId },
@@ -29,6 +40,24 @@ export const TreeViewContainer = ({
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const { dispatch } = useIntent();
+
+  const handleSelect: NavTreeContextType['onSelect'] = async ({ node }) => {
+    await dispatch({
+      action: 'dxos.org/plugin/splitview/action/activate',
+      data: {
+        id: node.id,
+      },
+    });
+    // void defaultAction?.invoke();
+    // !isLg && closeNavigationSidebar();
+  };
+
+  const currentPath: string = useMemo(() => {
+    const currentNode = graph.findNode(activeId);
+    const nodePathParts = currentNode ? getNodePathParts(currentNode) : 'never';
+    console.log('[node path parts]', nodePathParts);
+    return Path.create(...nodePathParts);
+  }, [graph, activeId]);
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -99,7 +128,7 @@ export const TreeViewContainer = ({
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>
-            <NavTree node={graph.root} current={activeId} />;
+            <NavTree node={graph.root} current={currentPath} onSelect={handleSelect} />
           </div>
           <VersionInfo config={config} />
         </div>
