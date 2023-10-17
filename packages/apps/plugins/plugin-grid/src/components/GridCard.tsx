@@ -29,7 +29,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     // TODO(burdon): Accessor.
     const model = useTextModel({ text: item.content });
 
-    const color = (item.color && colors[item.color]) ?? colors.red;
+    const color = (item.color && colors[item.color]) ?? colors.gray;
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>

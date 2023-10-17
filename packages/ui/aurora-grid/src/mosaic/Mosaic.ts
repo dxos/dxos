@@ -21,7 +21,7 @@ import {
   DraggableTile,
   DroppableTile,
   SortableTile,
-  type MosaicTileAction,
+  type MosaicTileAction as NaturalMosaicTileAction,
   type MosaicTileProps as NaturalMosaicTileProps,
   type MosaicTileComponent as NaturalMosaicTileComponent,
   type MosaicActiveType as NaturalMosaicActiveType,
@@ -66,7 +66,7 @@ export type MosaicOverlayProps = MosaicDragOverlayProps;
 
 export type MosaicSortableProps = NaturalMosaicSortableProps;
 
-export type MosaicTileAction = MosaicTileAction;
+export type MosaicTileAction = NaturalMosaicTileAction;
 
 export type MosaicTileProps<
   TData extends MosaicDataItem = MosaicDataItem,
