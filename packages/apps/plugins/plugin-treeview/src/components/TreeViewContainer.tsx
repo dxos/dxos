@@ -45,7 +45,6 @@ export const TreeViewContainer = ({
 
   const currentPath: string = useMemo(() => {
     const nodePathParts = (activeId && graph.getPath(activeId)?.filter((part) => part !== 'childrenMap')) ?? ['never'];
-    console.log('[node path parts]', nodePathParts);
     return Path.create('root', ...nodePathParts);
   }, [graph, activeId]);
 
