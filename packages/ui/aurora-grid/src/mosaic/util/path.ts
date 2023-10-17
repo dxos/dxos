@@ -16,5 +16,6 @@ export const Path = {
   hasRoot: (path: string, id: string) => Path.first(path) === id,
   hasChild: (path: string, compare: string) => Path.parent(compare) === path,
   hasDescendent: (path: string, compare: string) => compare !== path && compare.startsWith(path),
+  siblings: (path: string, compare: string) => Path.parent(path) === Path.parent(compare),
   onPath: (path: string, id: string) => Path.parts(path).includes(id),
 };
