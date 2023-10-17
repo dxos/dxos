@@ -16,7 +16,7 @@ import { ClientProvider, Config, Dynamics, Local, Defaults, useShell } from '@dx
 import { useSpace, useQuery } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
-import { Task } from './proto';
+import { Task, types } from './proto';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE.
 const config = async () => new Config(await Dynamics(), Local(), Defaults());
@@ -105,6 +105,9 @@ export const App = () => {
     <ClientProvider
       config={config}
       onInitialized={async (client) => {
+        // TODO(wittjosiah): ClientProvider should support adding schemas.
+        client.addSchema(types);
+
         const searchParams = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
