@@ -9,7 +9,7 @@ import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttri
 
 import type { MosaicOperation, MosaicTileOverlayProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
-import { useMosaic } from './hooks';
+import { useContainer, useMosaic } from './hooks';
 import type { MosaicDataItem, MosaicDraggedItem } from './types';
 import { getTransformCSS, Path } from './util';
 
@@ -23,9 +23,9 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
   'className'
 > &
   MosaicTileOverlayProps & {
-    Component: MosaicTileComponent<TData, any>;
     path: string;
     item: TData;
+    Component?: MosaicTileComponent<TData, any>;
     position?: TPosition;
     operation?: MosaicOperation;
     active?: MosaicActiveType; // TODO(burdon): Rename state?
@@ -128,12 +128,13 @@ export const DroppableTile = ({
 export const SortableTile = ({
   path: parentPath,
   item,
-  Component = DefaultComponent,
+  Component: OverrideComponent,
   position,
   draggableStyle,
   ...props
 }: MosaicTileProps<any, number>) => {
   const { operation, activeItem } = useMosaic();
+  const { transitionDuration, Component: ContainerComponent } = useContainer();
   const path = Path.create(parentPath, item.id);
   const { setNodeRef, attributes, listeners, transform, isDragging, isOver } = useSortable({
     // Re-use the active path if it's the same item.
@@ -155,6 +156,8 @@ export const SortableTile = ({
     }
   }
 
+  const Component = OverrideComponent ?? ContainerComponent ?? DefaultComponent;
+
   return (
     <Component
       ref={setNodeRef}
@@ -167,7 +170,7 @@ export const SortableTile = ({
       isOver={isOver}
       draggableStyle={{
         transform: getTransformCSS(transform),
-        transition: activeItem ? 'transform 200ms ease' : 'none',
+        transition: activeItem ? `transform ${transitionDuration}ms ease` : 'none',
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}

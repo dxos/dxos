@@ -24,7 +24,7 @@ import pick from 'lodash.pick';
 import React, { createContext, type FC, type PropsWithChildren, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
+import { DEFAULT_TRANSITION, type MosaicContainerProps, type MosaicMoveEvent, type MosaicOperation } from './Container';
 import { Debug } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -177,8 +177,9 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
     setOverItem(undefined);
   };
 
-  // TODO(burdon): Add event type (e.g., copy vs. move).
   const handleDragEnd = (event: DragEndEvent) => {
+    const overContainer = overItem && containers.get(Path.first(overItem.path));
+
     if (
       operation !== 'reject' &&
       activeItem &&
@@ -189,16 +190,17 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       if (activeContainer) {
         activeContainer.onDrop?.({ operation, active: activeItem, over: overItem });
 
-        const overContainer = containers.get(Path.first(overItem.path));
         if (overContainer && overContainer !== activeContainer) {
           overContainer.onDrop?.({ operation, active: activeItem, over: overItem });
         }
       }
     }
 
-    setOperation('reject');
-    setActiveItem(undefined);
-    setOverItem(undefined);
+    setTimeout(() => {
+      setOperation('reject');
+      setOverItem(undefined);
+      setActiveItem(undefined);
+    }, overContainer?.transitionDuration ?? DEFAULT_TRANSITION);
   };
 
   return (

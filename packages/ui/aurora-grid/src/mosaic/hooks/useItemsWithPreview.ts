@@ -58,5 +58,5 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
     }
   }, [operation, activeItem, overItem, overParent, lastOverParent, path, items]);
 
-  return itemsWithPreview;
+  return items.length === itemsWithPreview.length ? items : itemsWithPreview;
 };
