@@ -15,12 +15,12 @@ import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
 export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
-  const [thread, setThread] = useState<ThreadType | null>(object);
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
   const space = spacePlugin?.provides.space.active;
+  const [thread, setThread] = useState<ThreadType | null>(object);
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.

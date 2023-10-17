@@ -8,10 +8,10 @@ import React, { type FC } from 'react';
 import { Thread as ThreadType } from '@braneframe/types';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { type SpaceMember, type Space, useMembers } from '@dxos/react-client/echo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 
-import { ThreadChannel } from './Thread';
+import { type BlockProperties, ThreadChannel } from './Thread';
 
 // TODO(burdon): Goals.
 // - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
@@ -36,23 +36,22 @@ const colorHash = (key: PublicKey) => {
   return colors[num % colors.length];
 };
 
-export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
-  // TODO(burdon): Requires context for storybook? No profile in personal space?
-  const identity = useIdentity();
-  const members = useMembers(space.key);
-  if (!identity || !members) {
-    return null;
-  }
-
-  const getBlockProperties = (identityKey: PublicKey) => {
+export const blockPropertiesProvider = (identity: Identity, members: SpaceMember[]) => {
+  return (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
       : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
+
     return {
       displayName: author?.profile?.displayName ?? generateName(identityKey.toHex()),
       classes: colorHash(author?.identityKey ?? identityKey),
-    };
+    } satisfies BlockProperties;
   };
+};
+
+export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
+  const identity = useIdentity()!;
+  const members = useMembers(space.key);
 
   // TODO(burdon): Change to model.
   const handleSubmit = (text: string) => {
@@ -94,7 +93,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
     <ThreadChannel
       identityKey={identity.identityKey}
       thread={thread}
-      getBlockProperties={getBlockProperties}
+      getBlockProperties={blockPropertiesProvider(identity, members)}
       onSubmit={handleSubmit}
       onDelete={handleDelete}
     />

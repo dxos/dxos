@@ -37,7 +37,7 @@ export type ThreadChannelProps = {
   thread: ThreadType;
   identityKey: PublicKey;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-  onSubmit: (text: string) => boolean | undefined;
+  onSubmit: (text: string) => boolean | void;
   onDelete?: (blockId: string, idx: number) => void;
 };
 
