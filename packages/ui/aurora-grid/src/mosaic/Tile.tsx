@@ -41,7 +41,6 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
       HTMLAttributes<HTMLElement>;
 
     onSelect?: () => void;
-    // TODO(burdon): Generalize events (replace onSelect).
     onAction?: (action: MosaicTileAction) => void;
   };
 

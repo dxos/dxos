@@ -23,7 +23,7 @@ export const dropdownMenuViewport: ComponentFunction<DropdownMenuStyleProps> = (
   mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
 export const dropdownMenuContent: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
-  mx('is-48 rounded-md md:is-56', popperMotion, chromeSurface, surfaceElevation({ elevation: 'group' }), ...etc);
+  mx('is-48 rounded-md md:is-56 z-[30]', popperMotion, chromeSurface, surfaceElevation({ elevation: 'group' }), ...etc);
 
 export const dropdownMenuItem: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
   mx(
