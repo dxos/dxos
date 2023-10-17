@@ -4,10 +4,13 @@
 
 import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
-import React from 'react';
+import React, { forwardRef, useId } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
+import { Card } from '@dxos/aurora';
+import { Mosaic, type MosaicTileComponent } from '@dxos/aurora-grid/next';
 import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
+import { type Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 
 import { useSubscription } from '../util';
@@ -62,20 +65,7 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
 
           <div className='overflow-hidden pb-1'>
             {block.messages.map((message, i) => (
-              <div key={i} className='flex overflow-hidden px-2 py-1 group'>
-                {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
-                {message.data && (
-                  // TODO(burdon): Colorize (reuse codemirror or hljs?)
-                  <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
-                    <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
-                  </pre>
-                )}
-                {onDelete && (
-                  <button className='invisible group-hover:visible' onClick={() => onDelete(block.id, i)}>
-                    <X />
-                  </button>
-                )}
-              </div>
+              <ThreadMessage key={i} message={message} onDelete={onDelete && (() => onDelete(block.id, i))} />
             ))}
           </div>
         </div>
@@ -83,6 +73,70 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
     </div>
   );
 };
+
+const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onDelete?: () => void }) => {
+  console.log(message);
+
+  const id = useId();
+
+  if (message.ref) {
+    return (
+      <div className='flex overflow-hidden px-2 py-1 group'>
+        <Mosaic.Container id={id} Component={Pill}>
+          <Mosaic.DraggableTile path={id} item={message.ref} Component={Pill} />
+        </Mosaic.Container>
+        {/* <div className='grow overflow-hidden break-words mr-2 text-sm m-2 border-1'>Reference [{message.ref.__typename}] to {name}M</div> */}
+
+        {onDelete && (
+          <button className='invisible group-hover:visible' onClick={onDelete}>
+            <X />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex overflow-hidden px-2 py-1 group'>
+      {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
+      {message.data && (
+        // TODO(burdon): Colorize (reuse codemirror or hljs?)
+        <pre className='grow overflow-x-auto mr-2 py-2 text-sm font-thin'>
+          <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
+        </pre>
+      )}
+      {onDelete && (
+        <button className='invisible group-hover:visible' onClick={onDelete}>
+          <X />
+        </button>
+      )}
+    </div>
+  );
+};
+
+const colors: Record<string, string> = {
+  gray: 'bg-neutral-50',
+  red: 'bg-red-50',
+  orange: 'bg-orange-50',
+  green: 'bg-green-50',
+  blue: 'bg-blue-50',
+};
+
+const Pill: MosaicTileComponent<Expando> = forwardRef(({ draggableStyle, draggableProps, item, path }, forwardRef) => {
+  let title = item.name ?? item.title ?? item.__typename ?? 'Object';
+  if (title instanceof Text) {
+    title = title.text;
+  }
+  const color = (item.color && colors[item.color]) ?? colors.gray;
+  return (
+    <Card.Root ref={forwardRef} style={draggableStyle} classNames={color}>
+      <Card.Header>
+        <Card.DragHandle {...draggableProps} />
+        <Card.Title title={title} classNames='truncate font-mono text-xs' />
+      </Card.Header>
+    </Card.Root>
+  );
+});
 
 // TODO(burdon): Move to util.
 export const safeParseJson = (data: string) => {

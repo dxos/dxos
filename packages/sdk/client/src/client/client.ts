@@ -167,6 +167,15 @@ export class Client {
     return this._runtime.shell;
   }
 
+  get experimental() {
+    const self = this;
+    return {
+      get types() {
+        return self._graph.types;
+      },
+    };
+  }
+
   // TODO(dmaretskyi): Expose `graph` directly?
   addTypes(types: TypeCollection) {
     this._graph.addTypes(types);

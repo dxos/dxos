@@ -51,6 +51,7 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-grid": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
