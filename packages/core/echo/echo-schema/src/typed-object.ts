@@ -175,7 +175,15 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Fully qualified name of the object type for objects created from the schema.
    */
   get __typename(): string | undefined {
-    return this.__schema?.typename;
+    if (this._schema) {
+      return this.__schema?.typename;
+    }
+    const typeRef = this[base]._getState().type;
+    if (typeRef?.protocol === 'protobuf') {
+      return typeRef?.itemId;
+    } else {
+      return undefined;
+    }
   }
 
   get __meta(): ObjectMeta {
@@ -227,7 +235,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     if (value instanceof EchoObjectBase) {
       return visitorsWithDefaults.onRef!(value.id, value);
     } else if (value instanceof Reference) {
-      return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value.itemId));
+      return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value));
     } else if (value instanceof OrderedArray) {
       return value.toArray().map(convert);
     } else if (value instanceof EchoArray) {
@@ -292,7 +300,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
 
     switch (type) {
       case 'ref':
-        return this._lookupLink((value as Reference).itemId);
+        return this._lookupLink(value as Reference);
       case 'object':
         return this._createProxy({}, key, meta);
       case 'array':
@@ -324,13 +332,12 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
       if (value instanceof EchoObjectBase) {
-        this._linkObject(value);
-        this._mutate(this._model.builder().set(key, new Reference(value.id)).build(meta));
+        const ref = this._linkObject(value);
+        this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
           if (item instanceof EchoObjectBase) {
-            this._linkObject(item);
-            return new Reference(item.id);
+            return this._linkObject(item);
           } else if (isReferenceLike(item)) {
             return new Reference(item['@id']);
           } else {
@@ -486,12 +493,22 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: EchoObjectBase) {
+  _linkObject(obj: EchoObjectBase): Reference {
     if (this._database) {
-      this._database.add(obj as TypedObject);
+      if (!obj[base]._database) {
+        this._database.add(obj as TypedObject);
+        return new Reference(obj.id);
+      } else {
+        if (obj[base]._database !== this._database) {
+          return new Reference(obj.id, undefined, obj[base]._database._backend.spaceKey.toHex());
+        } else {
+          return new Reference(obj.id);
+        }
+      }
     } else {
       invariant(this._linkCache);
       this._linkCache.set(obj.id, obj);
+      return new Reference(obj.id);
     }
   }
 
@@ -499,14 +516,20 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Lookup referenced object.
    * @internal
    */
-  _lookupLink(id: string): EchoObject | undefined {
+  _lookupLink(ref: Reference): EchoObject | undefined {
     if (this._database) {
-      return this._database.getObjectById(id);
+      // This doesn't cleanup properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      return this._database.graph._lookupLink(ref, this._database, this._onLinkResolved);
     } else {
       invariant(this._linkCache);
-      return this._linkCache.get(id);
+      return this._linkCache.get(ref.itemId);
     }
   }
+
+  private _onLinkResolved = () => {
+    this._signal?.notifyWrite();
+    this._emitUpdate();
+  };
 }
 
 // Set stringified name for constructor.

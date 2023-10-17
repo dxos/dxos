@@ -13,14 +13,18 @@ import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
 
 export type SplitViewProps = {
+  fullscreen?: boolean;
   showComplementarySidebar?: boolean;
 };
 
-export const SplitView = (props: SplitViewProps) => {
+export const SplitView = ({ fullscreen, showComplementarySidebar = true }: SplitViewProps) => {
   const context = useSplitView();
-  const { showComplementarySidebar = true } = props;
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
+
+  if (fullscreen) {
+    return <Surface name='main' role='main' limit={1} />;
+  }
 
   return (
     <Popover.Root
@@ -100,7 +104,7 @@ export const SplitView = (props: SplitViewProps) => {
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface name='main' role='main' />
+        <Surface name='main' role='main' limit={1} />
 
         {/* Global popovers. */}
         {/* TODO(burdon): Doesn't allow client to control the popover. */}

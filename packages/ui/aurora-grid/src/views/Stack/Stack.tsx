@@ -29,37 +29,31 @@ export const Stack = ({
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   return (
-    <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <Mosaic.SortableContext items={itemsWithPreview} direction={direction}>
-        <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
-          <div
-            className={mx(
-              'flex flex-col w-full my-1',
-              direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto',
-            )}
-          >
-            <div className={mx('flex', direction === 'vertical' && 'flex-col')}>
-              {itemsWithPreview.map((item, index) => (
-                <Mosaic.SortableTile
-                  key={item.id}
-                  item={item}
-                  path={id}
-                  position={index}
-                  Component={Component}
-                  className='m-1'
-                  // debug={debug}
-                />
-              ))}
-            </div>
-
-            {debug && (
-              <div className='grow'>
-                <Mosaic.Debug data={{ id, items: itemsWithPreview.length }} />
-              </div>
-            )}
+    <div className={mx('flex overflow-hidden', direction === 'vertical' && 'w-[300px]')}>
+      <div
+        className={mx('flex flex-col w-full my-1', direction === 'vertical' ? 'overflow-y-auto' : 'overflow-x-auto')}
+      >
+        <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
+          <Mosaic.SortableContext items={itemsWithPreview} direction={direction}>
+            {itemsWithPreview.map((item, index) => (
+              <Mosaic.SortableTile
+                key={item.id}
+                item={item}
+                path={id}
+                position={index}
+                Component={Component}
+                className='m-1'
+                // debug={debug}
+              />
+            ))}
+          </Mosaic.SortableContext>
+        </Mosaic.Container>
+        {debug && (
+          <div className='grow'>
+            <Mosaic.Debug data={{ id, items: itemsWithPreview.length }} />
           </div>
-        </div>
-      </Mosaic.SortableContext>
-    </Mosaic.Container>
+        )}
+      </div>
+    </div>
   );
 };
