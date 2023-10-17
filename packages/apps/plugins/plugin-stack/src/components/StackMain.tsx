@@ -27,6 +27,7 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
+  const id = `stack-${stack.id}`;
   const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
@@ -40,15 +41,15 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
 
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
     if (
-      (active.path === Path.create(stack.id, active.item.id) || active.path === stack.id) &&
-      (operation !== 'copy' || over.path === Path.create(stack.id, over.item.id) || over.path === stack.id)
+      (active.path === Path.create(id, active.item.id) || active.path === id) &&
+      (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
     ) {
       stack.sections.splice(active.position!, 1);
     }
 
-    if (over.path === Path.create(stack.id, over.item.id)) {
+    if (over.path === Path.create(id, over.item.id)) {
       stack.sections.splice(over.position!, 0, new TypedObject({ object: active.item as TypedObject }));
-    } else if (over.path === stack.id) {
+    } else if (over.path === id) {
       stack.sections.push(new TypedObject({ object: active.item as TypedObject }));
     }
   };
@@ -75,7 +76,7 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
       <Stack
-        id={`stack-${stack.id}`}
+        id={id}
         Component={StackContent}
         items={items}
         onOver={handleOver}
