@@ -11,7 +11,7 @@ import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
-import { ThreadContainer } from './ThreadMain';
+import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
 export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
