@@ -10,6 +10,7 @@
           "available-typed-arrays",
           "call-bind",
           "define-properties",
+          "define-data-property",
           "es-abstract",
           "es6-object-assign",
           "events",
