@@ -3,6 +3,7 @@
 //
 
 import { Thread } from '@braneframe/types';
+import { sleep } from '@dxos/async';
 import { type FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,7 +33,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const query = space.db.query(Thread.filter());
-  const threads: Thread[] = query.objects as Thread[]; // TODO(burdon): Infer type?
+  const threads: Thread[] = query.objects; // TODO(burdon): Infer type?
   const activeThreads = blockIds.reduce((set, blockId) => {
     const thread = threads.find((thread) => thread.blocks.some((block) => block.id === blockId));
     if (thread) {
@@ -44,10 +45,12 @@ export default async (event: HandlerProps, context: FunctionContext) => {
   // Process threads.
   await Promise.all(
     Array.from(activeThreads).map(async (thread) => {
+      // Wait for block to be added.
+      await sleep(500);
       // TODO(burdon): Create set of messages.
       const block = thread.blocks[thread.blocks.length - 1];
 
-      if (Object.keys(block.__meta).length !== 0) {
+      if (block.__meta.keys.length === 0) {
         const model = new ChatModel({
           // TODO(burdon): Normalize env.
           orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(config, 'openai.com/org_id')!,
@@ -84,24 +87,20 @@ export default async (event: HandlerProps, context: FunctionContext) => {
               text: content,
             });
           }
-          try {
-            thread.blocks.push(
-              new Thread.Block(
-                {
-                  identityKey,
-                  messages,
+
+          thread.blocks.push(
+            new Thread.Block(
+              {
+                identityKey,
+                messages,
+              },
+              {
+                meta: {
+                  keys: [{ source: 'openai.com' }],
                 },
-                {
-                  meta: {
-                    keys: [{ source: 'openai.com' }],
-                  },
-                },
-              ),
-            );
-            log.info('added');
-          } catch (err) {
-            log.catch(err);
-          }
+              },
+            ),
+          );
         }
       }
     }),
