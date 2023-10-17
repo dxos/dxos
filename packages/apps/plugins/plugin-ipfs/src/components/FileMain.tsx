@@ -43,7 +43,7 @@ export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <div style={{ height }} className='p-2'>
+    <div style={{ height }} className='p-2 flex justify-center align-center'>
       <FilePreview type={file.type} url={url} className='object-contain' />
     </div>
   );
@@ -58,8 +58,8 @@ export const FileSlide: FC<{ data: TypedObject }> = ({ data: file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <div className='h-full'>
-      <FilePreview type={file.type} url={url} className='object-cover' />
+    <div className='h-full flex justify-center align-center'>
+      <FilePreview type={file.type} url={url} />
     </div>
   );
 };
