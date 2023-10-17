@@ -56,9 +56,6 @@
     },
     {
       "path": "../chess-app"
-    },
-    {
-      "path": "../kai-types"
     }
   ]
 }

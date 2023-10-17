@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FunctionContext } from '@dxos/functions';
+import { type FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 
 type HandlerProps = {
