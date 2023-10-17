@@ -4016,7 +4016,7 @@ importers:
       '@types/react-dom': 18.0.6
       postcss: 8.4.24
 
-  packages/experimental/kai-functions:
+  packages/experimental/labs-functions:
     specifiers:
       '@braneframe/types': workspace:*
       '@dxos/async': workspace:*

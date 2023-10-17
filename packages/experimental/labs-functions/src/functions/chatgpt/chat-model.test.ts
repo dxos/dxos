@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { ChatModel } from './chat-model';
 import { type Entity, type SchemaMap } from './schema';
-import { getConfig, loadJson } from '../util';
+import { getConfig, loadJson } from '../../util';
 
 // TODO(burdon): Move to config.
 const getKey = (config: Config, name: string) => {
