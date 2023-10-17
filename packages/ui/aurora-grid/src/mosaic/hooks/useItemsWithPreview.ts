@@ -58,5 +58,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
     }
   }, [operation, activeItem, overItem, overParent, lastOverParent, path, items]);
 
+  // In order to avoid render glitching, rather than waiting for the effect to run,
+  // immediately return the new items after dropping an item into a new path.
   return items.length === itemsWithPreview.length ? items : itemsWithPreview;
 };
