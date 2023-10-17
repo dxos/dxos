@@ -162,7 +162,7 @@ export class Search extends AbstractPlugin {
     if (request.query) {
       const response = this._search(request);
       await this._pluginCtx!.client!.spaces.default.postMessage(SEARCH_CHANNEL, {
-        '@type': 'dxos.agent.search.SearchResult',
+        '@type': 'dxos.agent.search.SearchResponse',
         ...response,
       });
     }
