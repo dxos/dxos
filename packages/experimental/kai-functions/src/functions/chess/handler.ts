@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FunctionContext } from '@dxos/functions';
+import { FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 
 type HandlerProps = {
@@ -20,7 +20,7 @@ export default (event: HandlerProps, context: FunctionContext) => {
     const { Chess } = await import('chess.js');
 
     for (const objectId of event.objects) {
-      const game = space.db.query({ id: objectId }).objects[0];
+      const game = space.db.getObjectById(objectId);
       if (game && game.pgn) {
         const chess = new Chess();
         // TODO(burdon): Rename pgn (isn't pgn).

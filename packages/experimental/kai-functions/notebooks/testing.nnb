@@ -1,0 +1,131 @@
+{
+    "cells": [
+        {
+            "language": "typescript",
+            "source": [
+                "import { Client, fromAgent, } from '@dxos/client'\n\n// Create client from default profile.\n// NOTE: Start daemon:\n// DX_PROFILE=test dx daemon run --listen=unix:///tmp/dx/run/agent/test.sock --listen=ws://localhost:4567\nconst client = new Client({ services: fromAgent()})\nawait client.initialize()\n\n// Create identity.\nif (!client.halo.identity.get()) {\n  await client.halo.createIdentity();\n}\n\n// Verify HALO.\nconsole.log('identity =', client.halo.identity.get().identityKey.toHex())\n\n// List spaces.\nconsole.log('spaces =', client.spaces.get().map(space => space.key.toHex()))"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "identity = 041d763e6bc5f9da4b11940935a6b09322b5ec87897a99822c67a5a54fe6a67f24fd50b09278e3e0b8a9fb51a861fab336b82844b84a6a42574ad901382a0c90b9",
+                                "spaces = [",
+                                "  '044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2'",
+                                "]",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client\n\n// Create space.\nconst space = await client.createSpace({ name: 'Testing' })\nconsole.log('space =', space.key.toHex());"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "space = 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client;\nimport { Expando } from '@dxos/client';\n\n// TODO(burdon): Delete triggers.\n// TODO(burdon): Idempotency/strong consistency?\n\n// Create subscription.\nconst space = client.spaces.get()[0]\nspace.db.add(new Expando({\n  '__type': 'dxos.function.Trigger',\n  spaceKey: space.key.toHex(),\n  function: {\n    name: 'hello',\n    // name: 'chess',\n  },\n  subscription: {\n    params: {\n      type: 'dxos.experimental.test.Test',\n    }\n    // type: 'dxos.experimental.chess.Game'\n  }\n}))\n\nawait space.db.flush()"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "database-proxy.ts:128 WARN Connection closed {",
+                                "  error: \u001b[32m'Error: Request was terminated because the RPC endpoint is closed.\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.close (/Users/burdon/Code/dxos/dxos/packages/core/mesh/rpc/src/rpc.ts:146:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at ProtoRpcPeer.close (/Users/burdon/Code/dxos/dxos/packages/core/mesh/rpc/src/service.ts:43:22)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebsocketRpcClient.close (/Users/burdon/Code/dxos/dxos/packages/core/mesh/websocket-rpc/src/client.ts:88:24)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket._socket.onclose (/Users/burdon/Code/dxos/dxos/packages/core/mesh/websocket-rpc/src/client.ts:73:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.onClose (/Users/burdon/Code/dxos/dxos/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/event-target.js:136:16)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:domain:489:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emitClose (/Users/burdon/Code/dxos/dxos/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:246:10)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.socketOnClose (/Users/burdon/Code/dxos/dxos/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:1148:15)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'\\n'\u001b[39m +",
+                                "    \u001b[32m'Error happened in the stream at:\\n'\u001b[39m +",
+                                "    \u001b[32m'    at producer (/Users/burdon/Code/dxos/dxos/packages/core/mesh/rpc/src/rpc.ts:329:21)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at new Stream (/Users/burdon/Code/dxos/dxos/packages/common/codec-protobuf/src/stream.ts:168:31)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.callStream (/Users/burdon/Code/dxos/dxos/packages/core/mesh/rpc/src/rpc.ts:313:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Object.callStream (/Users/burdon/Code/dxos/dxos/packages/core/mesh/rpc/src/service.ts:128:45)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Service.subscribe (/Users/burdon/Code/dxos/dxos/packages/common/codec-protobuf/src/service.ts:76:34)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at DatabaseProxy.open (/Users/burdon/Code/dxos/dxos/packages/core/echo/echo-db/src/packlets/database/database-proxy.ts:87:36)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at SpaceProxy._initialize (/Users/burdon/Code/dxos/dxos/packages/sdk/client/src/packlets/proxies/space-proxy.ts:233:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at async SpaceProxy._processSpaceUpdate (/Users/burdon/Code/dxos/dxos/packages/sdk/client/src/packlets/proxies/space-proxy.ts:205:7)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at async SpaceProxy._processSpaceUpdate$synchronized (/Users/burdon/Code/dxos/dxos/packages/common/async/src/lock.ts:99:14)'\u001b[39m",
+                                "}",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client;\n\n// List subscriptions.\nconst space = client.spaces.get()[0]\nspace.db.query({ '__type': 'dxos.function.Trigger' })\n  .objects.map(trigger => {\n    // space.db.remove(trigger);\n    return trigger.toJSON()\n  })"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client;\nimport { Expando } from '@dxos/client';\n\nconst space = client.spaces.get()[0]\nconsole.log('space =', space.key.toHex());\n\n// Create/update object.\nspace.db.add(new Expando({ type: 'dxos.experimental.test.Test', message: 'Hello World!' }))\n\n// Create/update chess game.\n// TODO(burdon): Implement way to create TypedObject like this.\n// space.db.add(new Expando({ type: 'dxos.experimental.chess.Game', fen: '1. f3 Nh6 2. Nh3 g6 3. Ng5' }))\n// const game = space.db.getObjectById('b31fc6a20789fc1c650d7e6f3451488b241a42c85288e284b03596fbc3ff7f26');\n// game.fen = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\nawait space.db.flush()\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "space = 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client;\n\nconst space = client.spaces.get()[0]\n// Create/update object.\n\nconst [obj] = space.db.query({ type: 'dxos.experimental.test.Test' }).objects\n\n// Create/update chess game.\n// TODO(burdon): Implement way to create TypedObject like this.\n// space.db.add(new Expando({ type: 'dxos.experimental.chess.Game', fen: '1. f3 Nh6 2. Nh3 g6 3. Ng5' }))\n// const game = space.db.getObjectById('b31fc6a20789fc1c650d7e6f3451488b241a42c85288e284b03596fbc3ff7f26');\n// game.fen = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\nobj.count ??= 0\nobj.count++"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[33m9\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
