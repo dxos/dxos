@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Subscription } from '@dxos/echo-schema';
+import { type Subscription } from '@dxos/echo-schema';
 import { DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 

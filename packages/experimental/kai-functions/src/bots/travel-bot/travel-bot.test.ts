@@ -10,7 +10,7 @@ import { debounce, Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { fromHost } from '@dxos/client/services';
 import { Config } from '@dxos/config';
-import { TravelProfile, Trip } from '@dxos/kai-types';
+import { type TravelProfile, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
