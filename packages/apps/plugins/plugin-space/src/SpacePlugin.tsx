@@ -51,12 +51,11 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
+  const state = deepSignal<SpaceState>({ active: undefined, viewers: [], appState: undefined });
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
   let handleKeyDown: (event: KeyboardEvent) => void;
-  let appState: AppState | undefined;
 
   return {
     meta: {
@@ -82,9 +81,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       if (appStates.length < 1) {
         const nextAppState = new AppState();
         defaultSpace.db.add(nextAppState);
-        appState = nextAppState;
+        state.appState = nextAppState;
       } else {
-        appState = (appStates as AppState[])[0];
+        state.appState = (appStates as AppState[])[0];
       }
 
       // Check if opening app from invitation code.
@@ -303,19 +302,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
-                child.properties.index = setAppStateIndex(child.id, nextIndex, appState);
+                child.properties.index = setAppStateIndex(child.id, nextIndex, state.appState);
               },
             },
           });
 
           const updateSpace = (space: Space, indices: string[], index: number) => {
             client.spaces.default.key.equals(space.key)
-              ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
+              ? spaceToGraphNode({ space, parent, settings: settings.values, appState: state.appState })
               : spaceToGraphNode({
                   space,
                   parent: groupNode,
                   settings: settings.values,
-                  appState,
+                  appState: state.appState,
                   defaultIndex: indices[index],
                 });
           };
