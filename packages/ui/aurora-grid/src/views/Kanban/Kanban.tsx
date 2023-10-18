@@ -51,7 +51,7 @@ export const Kanban = ({
         // Restrict to objects from other columns.
         // TODO(burdon): Consider objects from other containers.
         // TODO(wittjosiah): Allow override.
-        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'adopt' : 'reject'),
+        onOver: ({ active, over }) => (Path.length(active.path) >= Path.length(over.path) ? 'transfer' : 'reject'),
         onDrop,
       }}
     >

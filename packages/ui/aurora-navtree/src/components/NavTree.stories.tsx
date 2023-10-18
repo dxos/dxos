@@ -94,7 +94,7 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
   }, []);
 
   const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
-    return !(active.path === id && over.path !== id) ? 'adopt' : 'reject';
+    return !(active.path === id && over.path !== id) ? 'transfer' : 'reject';
   }, []);
 
   // NOTE: Does not handle deep operations.

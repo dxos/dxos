@@ -112,7 +112,7 @@ export type DemoStackProps = StackProps & {
   behavior?: MosaicOperation;
 };
 
-const DemoStack = ({ id = 'stack', Component, types, count = 8, behavior = 'adopt', className }: DemoStackProps) => {
+const DemoStack = ({ id = 'stack', Component, types, count = 8, behavior = 'transfer', className }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
     return generator.createObjects({ length: count });
