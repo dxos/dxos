@@ -81,7 +81,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           ENABLE_SCHEMA && {
             role: 'system',
             content: `
-          In your replies you can choose to output data in a structured format.
+          Side note:
+          In your replies you can choose to output lists and only lists in a structured format.
           Structured data is formatted as an array of JSON objects conforming to the schema.
           Include "@type" field with the exact name of one of the provided schema types.
           In structured mode do not include any other text in your replies, just a single JSON block.
@@ -103,9 +104,19 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           ${schemas.map(({ config, schema }) => (schema ? formatSchema(schema, config) : '')).join('\n')}
           `,
           },
-          ...block.messages.map(
-            (message): ChatCompletionRequestMessage => ({ role: 'user', content: message.text ?? '' }),
-          ),
+          ...block.messages.map((message): ChatCompletionRequestMessage => {
+            let content = '';
+            const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
+            if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
+              content += '\n' + 'I am playing chess. And current game history is: ' + contextObject.pgn + '.\n';
+            }
+
+            if (message.text) {
+              content += message.text + '\n';
+            }
+
+            return { role: 'user', content };
+          }),
         ];
 
         log.info('request', { chatContents });

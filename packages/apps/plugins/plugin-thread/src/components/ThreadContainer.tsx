@@ -49,7 +49,11 @@ export const blockPropertiesProvider = (identity: Identity, members: SpaceMember
   };
 };
 
-export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ space, thread }) => {
+export const ThreadContainer: FC<{ space: Space; thread: ThreadType; activeObjectId?: string }> = ({
+  space,
+  thread,
+  activeObjectId,
+}) => {
   const identity = useIdentity()!;
   const members = useMembers(space.key);
 
@@ -58,6 +62,7 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
     const message = {
       timestamp: new Date().toISOString(),
       text,
+      data: activeObjectId,
     };
 
     // Update current block if same user and time > 3m.
