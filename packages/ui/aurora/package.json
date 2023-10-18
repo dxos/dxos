@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Opinionated, styled, low-level React components for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
