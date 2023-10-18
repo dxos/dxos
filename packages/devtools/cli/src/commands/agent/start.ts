@@ -18,10 +18,12 @@ import {
   parseAddress,
 } from '@dxos/agent';
 import { Event, runInContext, scheduleTaskInterval } from '@dxos/async';
+import { type LocalClientServices } from '@dxos/client/services';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { ConnectionState } from '@dxos/network-manager';
 import * as Datadog from '@dxos/observability/datadog';
 import * as Telemetry from '@dxos/telemetry';
 
@@ -30,6 +32,8 @@ import { mapSpaces } from '../../util';
 
 // Do not report metrics more frequently than this.
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
+
+const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -167,6 +171,7 @@ export default class Start extends BaseCommand<typeof Start> {
     // caller should have ensured agent is running
     invariant(this._agent?.client);
 
+    // Spaces.
     const spaceMetricsCtx = new Context();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
 
@@ -209,6 +214,50 @@ export default class Start extends BaseCommand<typeof Start> {
             subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
           });
       },
+    });
+
+    scheduleTaskInterval(this._ctx, async () => update.emit(), DATADOG_IDLE_INTERVAL);
+
+    // Networking.
+    // TODO(nf): debounce
+    this._agent.client.services.services.NetworkService?.queryStatus().subscribe((status) => {
+      status.signaling?.forEach((signaling) => {
+        Datadog.gauge('dxos.agent.network.signal.connectionState', signaling.state, { server: signaling.server });
+      });
+    });
+
+    // TODO(nf): debounce
+    const lcsh = (this._agent.clientServices as LocalClientServices).host;
+    invariant(lcsh, 'LocalClientServices is not available.');
+    lcsh.context.networkManager.connectionLog?.update.on(() => {
+      let swarmCount = 0;
+      const connectionStates = new Map<string, number>();
+      for (const state in ConnectionState) {
+        connectionStates.set(state, 0);
+      }
+      let totalReadBufferSize = 0;
+      let totalWriteBufferSize = 0;
+      let totalChannelBufferSize = 0;
+      for (const swarm of lcsh.context.networkManager.connectionLog?.swarms ?? []) {
+        swarmCount++;
+
+        for (const conn of swarm.connections ?? []) {
+          connectionStates.set(conn.state, (connectionStates.get(conn.state) ?? 0) + 1);
+          totalReadBufferSize += conn.readBufferSize ?? 0;
+          totalWriteBufferSize += conn.writeBufferSize ?? 0;
+
+          for (const stream of conn.streams ?? []) {
+            totalChannelBufferSize += stream.bufferSize ?? 0;
+          }
+        }
+      }
+      Datadog.gauge('dxos.agent.network.swarm.count', swarmCount);
+      for (const state in ConnectionState) {
+        Datadog.gauge('dxos.agent.network.connection.count', connectionStates.get(state) ?? 0, { state });
+      }
+      Datadog.gauge('dxox.agent.network.totalReadBufferSize', totalReadBufferSize);
+      Datadog.gauge('dxos.agent.network.totalWriteBufferSize', totalWriteBufferSize);
+      Datadog.gauge('dxos.agent.network.totalChannelBufferSize', totalChannelBufferSize);
     });
   }
 }
