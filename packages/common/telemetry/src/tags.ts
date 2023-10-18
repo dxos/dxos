@@ -32,6 +32,10 @@ export const tags: any = {};
 
 const ctx = new Context();
 
+export const addTag = (k: any, v: any) => {
+  tags[k] = v;
+};
+
 const TAGS_PROCESSOR: LogProcessor = (config, entry) => {
   const { message, level } = entry;
   const context = getContextFromEntry(entry);
