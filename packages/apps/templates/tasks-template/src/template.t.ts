@@ -9,5 +9,6 @@ export default interactiveDirectory({
   options: inherits.options.options,
   defaultInput: {
     proto: true,
+    dxosUi: false
   },
 });
