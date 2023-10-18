@@ -17,14 +17,19 @@ import {
   QueryPlugin,
   parseAddress,
 } from '@dxos/agent';
-import { runInContext, scheduleTaskInterval } from '@dxos/async';
+import { Event, runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import * as Datadog from '@dxos/observability/datadog';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
 import { mapSpaces } from '../../util';
+
+// Do not report metrics more frequently than this.
+const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -100,7 +105,7 @@ export default class Start extends BaseCommand<typeof Start> {
     await this._agent.start();
     this.log('Agent started... (ctrl-c to exit)');
 
-    this._sendTelemetry();
+    await this._sendTelemetry();
 
     if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
@@ -130,7 +135,7 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private _sendTelemetry() {
+  private async _sendTelemetry() {
     const sendTelemetry = async () => {
       Telemetry.event({
         installationId: this._telemetryContext?.installationId,
@@ -159,21 +164,51 @@ export default class Start extends BaseCommand<typeof Start> {
     runInContext(this._ctx, sendDatadog);
     scheduleTaskInterval(this._ctx, sendDatadog, 1000 * 60);
 
-    const sendDatadogDiagnostics = async () => {
-      if (!this._agent?.client) {
-        return;
-      }
-      const spaces = await this.getSpaces(this._agent.client);
+    // caller should have ensured agent is running
+    invariant(this._agent?.client);
+
+    const spaceMetricsCtx = new Context();
+    const subscriptions = new Map<string, { unsubscribe: () => void }>();
+
+    spaceMetricsCtx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
+
+    const update = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
+    update.on(spaceMetricsCtx, async () => {
+      this.log('send space update', { spaces });
+      // TODO(nf): observe and send metrics individually
+      // TODO(nf): emit metric for epoch generation/application
+      // TODO(nf): emit metric on space readiness
+
       for (const sp of mapSpaces(spaces, { truncateKeys: true })) {
         Datadog.gauge('dxos.agent.space.members', sp.members, { key: sp.key });
         Datadog.gauge('dxos.agent.space.objects', sp.objects, { key: sp.key });
         Datadog.gauge('dxos.agent.space.epoch', sp.epoch, { key: sp.key });
         Datadog.gauge('dxos.agent.space.currentDataMutations', sp.currentDataMutations, { key: sp.key });
       }
-      Datadog.flush();
-    };
+    });
 
-    runInContext(this._ctx, sendDatadogDiagnostics);
-    scheduleTaskInterval(this._ctx, sendDatadogDiagnostics, 1000 * 5);
+    const subscribeToSpaceUpdate = (space: Space) =>
+      space.pipeline.subscribe({
+        next: () => {
+          update.emit();
+        },
+      });
+
+    let spaces = await this.getSpaces(this._agent.client);
+    spaces.forEach((space) => {
+      subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
+    });
+
+    this._agent.client.spaces.subscribe({
+      next: async () => {
+        invariant(this._agent?.client);
+        spaces = await this.getSpaces(this._agent.client);
+        spaces
+          .filter((space) => !subscriptions.has(space.key.toHex()))
+          .forEach((space) => {
+            subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
+          });
+      },
+    });
   }
 }
