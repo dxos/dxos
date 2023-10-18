@@ -10,8 +10,8 @@ import { type PluginDefinition } from '@dxos/react-surface';
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
 // TODO(wittjosiah): Roll into layout plugin?
-export const DndPlugin = (): PluginDefinition => {
-  const Overlay = () => <Mosaic.DragOverlay debug />;
+export const DndPlugin = ({ debug }: { debug?: boolean } = {}): PluginDefinition => {
+  const Overlay = () => <Mosaic.DragOverlay debug={debug} />;
 
   return {
     meta: {
@@ -22,7 +22,7 @@ export const DndPlugin = (): PluginDefinition => {
         default: Overlay,
       },
       context: ({ children }) => {
-        return <Mosaic.Root debug>{children}</Mosaic.Root>;
+        return <Mosaic.Root debug={debug}>{children}</Mosaic.Root>;
       },
     },
   };
