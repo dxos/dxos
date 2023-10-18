@@ -113,7 +113,7 @@ export const TreeViewContainer = ({
           const originParent = getPersistenceParent(activeNode, activeClass);
           if (destinationParent && originParent) {
             destinationParent.properties.onMigrateStartChild(activeNode, nextIndex);
-            originParent.properties.onMigrationEndChild(activeNode);
+            originParent.properties.onMigrateEndChild(activeNode);
           }
         }
       }

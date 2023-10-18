@@ -93,6 +93,9 @@ export const spaceToGraphNode = ({
             additional: [child.data.content],
           });
           space.db.add(object);
+          if (!object.properties) {
+            object.properties = {};
+          }
           object.properties.index = nextIndex;
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
