@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.3.2](https://github.com/dxos/dxos/compare/v0.3.1...v0.3.2) (2023-10-18)
+
+
+### Features
+
+* Ability to add tiles to mosaic grid. ([#4427](https://github.com/dxos/dxos/issues/4427)) ([c536b5f](https://github.com/dxos/dxos/commit/c536b5f3efcd709498de6054ee4bf6c939c458a2))
+* add example systemd unit for agent ([#4391](https://github.com/dxos/dxos/issues/4391)) ([988f99c](https://github.com/dxos/dxos/commit/988f99c57ac7941b13afabeb07af543eee4b92ba))
+* add hostname to agent telemetry tags ([#4439](https://github.com/dxos/dxos/issues/4439)) ([0f6af28](https://github.com/dxos/dxos/commit/0f6af288109446f20092493137866aa9ddafb65e))
+* add operations to mosaic ([#4417](https://github.com/dxos/dxos/issues/4417)) ([220594a](https://github.com/dxos/dxos/commit/220594ad61652844a817ba31d0eb9645b9e30f96))
+* **agent:** Add indexing config ([#4386](https://github.com/dxos/dxos/issues/4386)) ([648180e](https://github.com/dxos/dxos/commit/648180e5c542107929c45d5d363c15b41c10e238))
+* **agent:** Add indexing plugin ([#3969](https://github.com/dxos/dxos/issues/3969)) ([de57e73](https://github.com/dxos/dxos/commit/de57e73bce57934b7ec8b34403d3fae095a2f9a9))
+* **aurora-navtree:** `NavTree` ([#4437](https://github.com/dxos/dxos/issues/4437)) ([45ce889](https://github.com/dxos/dxos/commit/45ce8893d0510a779fcdca96fb5fd121071a9cbd))
+* Cross-space queries ([#4415](https://github.com/dxos/dxos/issues/4415)) ([224d3c3](https://github.com/dxos/dxos/commit/224d3c3d0b7e3aa45111f0d5f8d055f03a1023b7))
+* Cross-space references ([#4435](https://github.com/dxos/dxos/issues/4435)) ([f938553](https://github.com/dxos/dxos/commit/f938553547258dcfdc9405cab8370627a40a5728))
+* **devtools:** Add Agent dashboard ([#4416](https://github.com/dxos/dxos/issues/4416)) ([d3a33b8](https://github.com/dxos/dxos/commit/d3a33b895a741a5c81995eb7825ebc7a128ac2cd))
+* ECHO database API improvements ([#4401](https://github.com/dxos/dxos/issues/4401)) ([428886c](https://github.com/dxos/dxos/commit/428886ca6647a01aa0a71887663a00db0b08967f))
+* Fix schema for chess plugin. ([#4433](https://github.com/dxos/dxos/issues/4433)) ([e5374ab](https://github.com/dxos/dxos/commit/e5374ab476632b28354567371278884c51fa95dc))
+* **functions:** Revive functions experiment ([#4442](https://github.com/dxos/dxos/issues/4442)) ([5292d27](https://github.com/dxos/dxos/commit/5292d270bf11e9b52f5f4b58e9652879aa6de9ec))
+* **identity:** Add device metadata to device profile ([#4405](https://github.com/dxos/dxos/issues/4405)) ([4a1f4da](https://github.com/dxos/dxos/commit/4a1f4dabdc869a8a6c88978ad1557581716dd6a4))
+* **identity:** Add device profiles ([#4390](https://github.com/dxos/dxos/issues/4390)) ([ce2190e](https://github.com/dxos/dxos/commit/ce2190e3243fcd68e2d83b247c14247eff5a6da0))
+* introduce stack package ([#4419](https://github.com/dxos/dxos/issues/4419)) ([774ebb6](https://github.com/dxos/dxos/commit/774ebb6bc901ca60060b7b12d7641d61ad4944fc))
+* Mosaic grid ([#4342](https://github.com/dxos/dxos/issues/4342)) ([ec06501](https://github.com/dxos/dxos/commit/ec0650106f1e253230448121ae5bf579423b9a67))
+* Presenter plugin. ([#4431](https://github.com/dxos/dxos/issues/4431)) ([98b13d7](https://github.com/dxos/dxos/commit/98b13d7272b5f6fcf4b90b2733d68a471563eb20))
+* read default telemetry group from env var ([#4396](https://github.com/dxos/dxos/issues/4396)) ([bc9cb77](https://github.com/dxos/dxos/commit/bc9cb771469ac42e60e57e97d062812dcc828929))
+* **segment:** Add tags ([#4412](https://github.com/dxos/dxos/issues/4412)) ([1fea52c](https://github.com/dxos/dxos/commit/1fea52cada6a835cb05d6a94c55b37689d64827f))
+* **sentry:** Add user information ([#4397](https://github.com/dxos/dxos/issues/4397)) ([14bd43d](https://github.com/dxos/dxos/commit/14bd43d1f85198e60aba33c84a67b271e1b2d590))
+
+
+### Bug Fixes
+
+* add launchctl launcher for the agent ([#4375](https://github.com/dxos/dxos/issues/4375)) ([4291678](https://github.com/dxos/dxos/commit/429167876bdaee20d05a1502b618ebbd77021430))
+* add stats for system daemons ([#4414](https://github.com/dxos/dxos/issues/4414)) ([85a9e4b](https://github.com/dxos/dxos/commit/85a9e4b1f097f45c352412ed73540091d6229970))
+* align active with drop transition ([#4441](https://github.com/dxos/dxos/issues/4441)) ([3d933cf](https://github.com/dxos/dxos/commit/3d933cfee29f8f99f788e13c36f81f8102a12f5a))
+* cli - read stdin for specific commands only ([#4406](https://github.com/dxos/dxos/issues/4406)) ([d77d2bc](https://github.com/dxos/dxos/commit/d77d2bc25eec8081616e2eb31fca9ab3baf12499))
+* crash testbench run on plan or agent failure ([#4332](https://github.com/dxos/dxos/issues/4332)) ([4164ba3](https://github.com/dxos/dxos/commit/4164ba3889b864eb3c83526ab9b5eea32397f462))
+* **examples:** demo schema ([#4373](https://github.com/dxos/dxos/issues/4373)) ([9928d98](https://github.com/dxos/dxos/commit/9928d9877cc751562c183f8332a4fce8764d7e8e))
+* start of systemctl launcher ([#4400](https://github.com/dxos/dxos/issues/4400)) ([3e3dd7a](https://github.com/dxos/dxos/commit/3e3dd7a4050a422da1c9f0e4b7255ef9d48ab9dd))
+* tasks and todomvc examples ([#4424](https://github.com/dxos/dxos/issues/4424)) ([05033b7](https://github.com/dxos/dxos/commit/05033b72e2bc9473a36d3f78a435076a430c396b))
+* tasks template supports new schema feature ([#4446](https://github.com/dxos/dxos/issues/4446)) ([46a9f6a](https://github.com/dxos/dxos/commit/46a9f6a9ab6ac72eae9a276985e932582f420539))
+
 ## [0.3.1](https://github.com/dxos/dxos/compare/v0.3.0...v0.3.1) (2023-10-02)
 
 

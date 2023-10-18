@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-surface",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A react framework for making extensible interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
