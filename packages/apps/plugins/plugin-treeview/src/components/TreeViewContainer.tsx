@@ -112,6 +112,7 @@ export const TreeViewContainer = ({
             : getPersistenceParent(overNode, activeClass);
           const originParent = getPersistenceParent(activeNode, activeClass);
           if (destinationParent && originParent) {
+            // TODO(wittjosiah): Rename migrate to transfer.
             destinationParent.properties.onMigrateStartChild(activeNode, nextIndex);
             originParent.properties.onMigrateEndChild(activeNode);
           }

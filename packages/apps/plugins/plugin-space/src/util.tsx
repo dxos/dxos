@@ -81,7 +81,7 @@ export const spaceToGraphNode = ({
         error,
         index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
         onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(thure): reconcile with `TypedObject`’s `meta` record.
+          // TODO(thure): Reconcile with `TypedObject`’s `meta` record.
           child.properties.index = nextIndex;
           if (child.data.meta) {
             child.data.meta.index = nextIndex;
@@ -89,17 +89,19 @@ export const spaceToGraphNode = ({
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
+        // TODO(wittjosiah): Rename migrate to transfer.
         onMigrateStartChild: (child: Node<TypedObject>, nextIndex: string) => {
-          // create clone of child and add to migration destination
+          // Create clone of child and add to migration destination.
           const object = clone(child.data, {
             retainId: true,
             additional: [child.data.content],
           });
-          object.meta.index = nextIndex;
+          // TODO(wittjosiah): Use separate object to store graph/tree order.
+          // object.meta.index = nextIndex;
           space.db.add(object);
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
-          // remove child being replicated from migration origin
+          // Remove child being replicated from migration origin.
           space.db.remove(child.data);
         },
       },
