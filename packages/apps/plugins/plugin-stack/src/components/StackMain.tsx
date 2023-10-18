@@ -17,6 +17,7 @@ import { Surface, usePlugin } from '@dxos/react-surface';
 import { FileUpload } from './FileUpload';
 import { defaultFileTypes } from '../hooks';
 import { STACK_PLUGIN, type StackPluginProvides } from '../types';
+import { isStack } from '../util';
 
 const StackContent = ({ data }: { data: StackSectionItem }) => {
   // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
@@ -35,6 +36,12 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
     if (!isTypedObject(active.item) && !isTypedObject((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
+    // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
+    //  Perhaps stack plugin should just provide a fallback section renderer.
+    if (isStack(active.item) || isStack((active.item as any).node?.data)) {
       return 'reject';
     }
 
