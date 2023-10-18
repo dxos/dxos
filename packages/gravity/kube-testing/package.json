@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
