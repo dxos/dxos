@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentFragment } from '@dxos/aurora-types';
+import { type ComponentFragment } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ProtoCodec } from '@dxos/codec-protobuf';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { base } from './defs';
-import { EchoObject } from './object';
+import { base, type EchoObject } from './defs';
+import { type EchoObjectBase } from './echo-object-base';
 import { TypedObject } from './typed-object';
 
 export type CloneOptions = {
@@ -67,7 +67,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
   return clone;
 };
 
-const cloneInner = (obj: EchoObject, id: string): EchoObject => {
+const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
   const prototype = Object.getPrototypeOf(obj);
   const snapshot = getObjectSnapshot(obj);
 
@@ -78,7 +78,7 @@ const cloneInner = (obj: EchoObject, id: string): EchoObject => {
   return clone;
 };
 
-const getObjectSnapshot = (obj: EchoObject): EchoObjectProto => {
+const getObjectSnapshot = (obj: EchoObjectBase): EchoObjectProto => {
   if (obj._item) {
     return obj._item.createSnapshot();
   } else {

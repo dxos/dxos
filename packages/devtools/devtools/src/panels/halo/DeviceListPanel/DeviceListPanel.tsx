@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createColumnBuilder, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import type { Device } from '@dxos/client/halo';
 import { useDevices } from '@dxos/react-client/halo';
 

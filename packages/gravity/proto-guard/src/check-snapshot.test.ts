@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { Text } from '@dxos/client/echo';
+import { type Text } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

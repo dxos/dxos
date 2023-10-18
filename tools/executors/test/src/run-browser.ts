@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext } from '@nx/devkit';
 import chalk from 'chalk';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
 import { resolveFiles } from './node-util';
-import { BrowserType } from './types';
+import { type BrowserType } from './types';
 import { mochaComment } from './util';
 
 export type BrowserOptions = {

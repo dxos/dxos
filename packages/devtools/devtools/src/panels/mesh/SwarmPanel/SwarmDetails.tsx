@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type PublicKey } from '@dxos/keys';
+import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
 import { SwarmInfoView } from './SwarmInfo';

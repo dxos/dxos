@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ConfigProto } from '@dxos/config';
+import { type ConfigProto } from '@dxos/config';
 
 export const DEFAULT_INTERNAL_CHANNEL = 'dxos:vault';
 export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';

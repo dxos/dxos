@@ -4,9 +4,9 @@
 
 import { subtleCrypto } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
-import { StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Directory } from '@dxos/random-access-storage';
+import { type Directory } from '@dxos/random-access-storage';
 
 const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 /**

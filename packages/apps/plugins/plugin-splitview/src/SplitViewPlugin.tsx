@@ -2,20 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ArrowsOut } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
-import { RevertDeepSignal } from 'deepsignal';
-import React, { PropsWithChildren, useEffect } from 'react';
+import { type RevertDeepSignal } from 'deepsignal';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
+import { type GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Plugin, PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
+import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SplitViewContext, useSplitView } from './SplitViewContext';
 import { Fallback, SplitView, SplitViewMainContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
-import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewPluginProvides, SplitViewState } from './types';
+import { SPLITVIEW_PLUGIN, SplitViewAction, type SplitViewPluginProvides, type SplitViewState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
@@ -24,18 +25,22 @@ export type SplitViewPluginOptions = {
   showComplementarySidebar?: boolean;
 };
 
+// TODO(burdon): Rename LayoutPlugin.
 export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinition<SplitViewPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const { showComplementarySidebar = false } = { ...options };
-  const settings = new LocalStorageStore<SplitViewState>('braneframe.plugin-splitview', {
+
+  const state = new LocalStorageStore<SplitViewState>(SPLITVIEW_PLUGIN, {
+    fullscreen: false,
     sidebarOpen: true,
     dialogContent: 'never',
     dialogOpen: false,
     active: undefined,
     previous: undefined,
+
     get activeNode() {
       if (!graphPlugin) {
-        throw new Error('Graph plugin not found.');
+        throw new Error('Graph plugin not found.'); // TODO(burdon): Replace with invariant throughout?
       }
 
       return this.active && graphPlugin.provides.graph().findNode(this.active);
@@ -56,21 +61,39 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
     ready: async (plugins) => {
       graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
 
-      settings
-        .prop(settings.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(settings.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+      state
+        .prop(state.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
+        .prop(state.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
     },
     unload: async () => {
-      settings.close();
+      state.close();
     },
     provides: {
+      // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
+      graph: {
+        nodes: (parent) => {
+          if (parent.id === 'root') {
+            // TODO(burdon): Root menu isn't visible so nothing bound.
+            parent.addAction({
+              id: SplitViewAction.TOGGLE_FULLSCREEN,
+              label: ['toggle fullscreen label', { ns: SPLITVIEW_PLUGIN }],
+              icon: (props) => <ArrowsOut {...props} />,
+              intent: {
+                plugin: SPLITVIEW_PLUGIN,
+                action: 'toggle-fullscreen',
+              },
+              keyBinding: 'ctrl+meta+f',
+            });
+          }
+        },
+      },
       context: (props: PropsWithChildren) => (
-        <SplitViewContext.Provider value={settings.values as RevertDeepSignal<SplitViewState>}>
+        <SplitViewContext.Provider value={state.values as RevertDeepSignal<SplitViewState>}>
           {props.children}
         </SplitViewContext.Provider>
       ),
       components: {
-        SplitView: () => <SplitView {...{ showComplementarySidebar }} />,
+        SplitView: () => <SplitView fullscreen={state.values.fullscreen} {...{ showComplementarySidebar }} />,
         SplitViewMainContentEmpty,
         default: () => {
           const { plugins } = usePlugins();
@@ -96,7 +119,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
               });
             };
 
-            if (!settings.values.active && window.location.pathname.length > 1) {
+            if (!state.values.active && window.location.pathname.length > 1) {
               void handleNavigation();
             }
 
@@ -108,16 +131,27 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
 
           // Update URL when selection changes.
           useEffect(() => {
-            const selectedPath = activeToUri(settings.values.active);
+            const selectedPath = activeToUri(state.values.active);
             if (window.location.pathname !== selectedPath) {
               // TODO(wittjosiah): Better support for search params?
               history.pushState(null, '', `${selectedPath}${window.location.search}`);
             }
-          }, [settings.values.active]);
+          }, [state.values.active]);
 
           if (plugin && plugin.provides.components?.[component]) {
             return <Surface component={`${plugin.meta.id}/${component}`} />;
           } else if (splitView.activeNode) {
+            if (state.values.fullscreen) {
+              return (
+                <Surface
+                  component='dxos.org/plugin/splitview/SplitView'
+                  surfaces={{
+                    main: { data: splitView.activeNode.data, fallback: Fallback },
+                  }}
+                />
+              );
+            }
+
             return (
               <Surface
                 component='dxos.org/plugin/splitview/SplitView'
@@ -153,28 +187,33 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
+            case SplitViewAction.TOGGLE_FULLSCREEN: {
+              state.values.fullscreen = intent.data?.state ?? !state.values.fullscreen;
+              return true;
+            }
+
             case SplitViewAction.TOGGLE_SIDEBAR: {
-              settings.values.sidebarOpen = intent.data.state ?? !settings.values.sidebarOpen;
+              state.values.sidebarOpen = intent.data?.state ?? !state.values.sidebarOpen;
               return true;
             }
 
             case SplitViewAction.OPEN_DIALOG: {
-              settings.values.dialogOpen = true;
-              settings.values.dialogContent = intent.data.content;
+              state.values.dialogOpen = true;
+              state.values.dialogContent = intent.data.content;
               return true;
             }
 
             case SplitViewAction.CLOSE_DIALOG: {
-              settings.values.dialogOpen = false;
-              settings.values.dialogContent = null;
+              state.values.dialogOpen = false;
+              state.values.dialogContent = null;
               return true;
             }
 
             case SplitViewAction.ACTIVATE: {
               if (intent.data && typeof intent.data.id === 'string') {
                 batch(() => {
-                  settings.values.previous = settings.values.active;
-                  settings.values.active = intent.data.id;
+                  state.values.previous = state.values.active;
+                  state.values.active = intent.data.id;
                 });
                 return true;
               }
@@ -183,7 +222,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
           }
         },
       },
-      splitView: settings.values as RevertDeepSignal<SplitViewState>,
+      splitView: state.values as RevertDeepSignal<SplitViewState>,
       translations,
     },
   };

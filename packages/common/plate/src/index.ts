@@ -6,9 +6,9 @@ export * from 'zod';
 export * from './api';
 export * from './util/templateLiterals';
 export {
-  InputOf,
+  type InputOf,
   InteractiveDirectoryTemplate,
-  InteractiveDirectoryTemplateOptions,
+  type InteractiveDirectoryTemplateOptions,
 } from './InteractiveDirectoryTemplate';
 export * from './util/template';
 export * from './util/file';

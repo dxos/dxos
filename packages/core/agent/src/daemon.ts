@@ -16,6 +16,7 @@ export type StartOptions = {
   config?: string;
   metrics?: boolean;
   ws?: number;
+  timeout?: number;
 };
 
 export type StopOptions = {

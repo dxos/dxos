@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { useSvgContext } from '../hooks';
 
@@ -15,9 +15,9 @@ export interface SVGProps {
  * SVG wrapper.
  */
 export const SVG = ({ children, className }: SVGProps) => {
-  const context = useSvgContext();
+  const { ref } = useSvgContext();
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' ref={context.ref} className={className}>
+    <svg xmlns='http://www.w3.org/2000/svg' ref={ref} className={className}>
       {children}
     </svg>
   );

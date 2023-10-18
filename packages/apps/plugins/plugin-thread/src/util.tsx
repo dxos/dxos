@@ -6,10 +6,10 @@ import { Chat, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Thread as ThreadType } from '@braneframe/types';
-import { Space } from '@dxos/client/echo';
+import { type Thread as ThreadType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 
 import { THREAD_PLUGIN } from './types';
 

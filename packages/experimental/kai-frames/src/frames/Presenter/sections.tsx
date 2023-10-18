@@ -3,20 +3,20 @@
 //
 
 import { Article, Image, Trash } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
 import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { Config, useConfig } from '@dxos/react-client';
-import { Text, TypedObject } from '@dxos/react-client/echo';
+import { type Config, useConfig } from '@dxos/react-client';
+import { Text, type TypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
-import { CustomStackAction, FileSelector } from '../Stack';
+import { type CustomStackAction, FileSelector } from '../Stack';
 
 // TODO(burdon): Generalize with Stack.
 export const sectionActions = (config: Config, section?: DocumentStack.Section) => {

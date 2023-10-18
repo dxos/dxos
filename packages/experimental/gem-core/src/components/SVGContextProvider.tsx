@@ -3,25 +3,19 @@
 //
 
 import * as d3 from 'd3';
-import React, { ReactNode, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { SVGContext } from '../context';
 import { SVGContextDef } from '../hooks';
 
-export interface SVGCOntextProviderProps {
-  context?: SVGContext;
-  children?: ReactNode;
-}
+export type SVGContextProviderProps = PropsWithChildren<{ context?: SVGContext }>;
 
 /**
  * Makes the SVG context available to child nodes.
  * Automatically resizes the SVG element, which expands to fit the container.
- * @param context
- * @param children
- * @constructor
  */
-export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
+export const SVGContextProvider = ({ context: provided, children }: SVGContextProviderProps) => {
   const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
@@ -40,8 +34,8 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
 
   return (
     <SVGContextDef.Provider value={context}>
-      {/* Flex is important otherwise div has extra padding.  */}
-      <div ref={resizeRef} style={{ display: 'flex', width: '100%', height: '100%' }}>
+      {/* Flex is important otherwise div has extra padding. */}
+      <div ref={resizeRef} className='flex w-full h-full'>
         {width !== 0 && height !== 0 && children}
       </div>
     </SVGContextDef.Provider>

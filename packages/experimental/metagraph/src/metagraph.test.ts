@@ -8,7 +8,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Module } from '@dxos/protocols/proto/dxos/config';
+import { type Module } from '@dxos/protocols/proto/dxos/config';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { MetagraphClient } from './metagraph';

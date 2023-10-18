@@ -4,13 +4,13 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Signer, subtleCrypto } from '@dxos/crypto';
+import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import type { HypercoreOptions } from '@dxos/hypercore';
 import { createCrypto, hypercore } from '@dxos/hypercore';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Directory } from '@dxos/random-access-storage';
+import { type Directory } from '@dxos/random-access-storage';
 
 import { FeedWrapper } from './feed-wrapper';
 

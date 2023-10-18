@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { AppContextRequest, LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { type Event } from '@dxos/async';
+import { type PublicKey } from '@dxos/keys';
+import { type AppContextRequest, type LayoutRequest, type ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;

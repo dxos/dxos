@@ -4,7 +4,7 @@
 
 import { renderHook, screen, render, act } from '@testing-library/react';
 import expect from 'expect';
-import React, { Component, PropsWithChildren } from 'react';
+import React, { Component, type PropsWithChildren } from 'react';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';

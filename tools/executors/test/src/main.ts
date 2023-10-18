@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext, logger, runExecutor } from '@nx/devkit';
+import { type ExecutorContext, logger, runExecutor } from '@nx/devkit';
 import chalk from 'chalk';
 import { resolve } from 'node:path';
 
-import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
-import { NodeOptions, runNode } from './run-node';
-import { PlaywrightOptions, runPlaywright } from './run-playwright';
-import { BrowserType, BrowserTypes, TestEnvironment, TestEnvironments } from './types';
+import { type BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
+import { type NodeOptions, runNode } from './run-node';
+import { type PlaywrightOptions, runPlaywright } from './run-playwright';
+import { type BrowserType, BrowserTypes, type TestEnvironment, TestEnvironments } from './types';
 import { runSetup } from './util';
 
 export type MochaExecutorOptions = NodeOptions &

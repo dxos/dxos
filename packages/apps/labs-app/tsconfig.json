@@ -94,6 +94,9 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-presenter"
+    },
+    {
       "path": "../plugins/plugin-pwa"
     },
     {

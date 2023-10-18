@@ -16,7 +16,7 @@ import {
   topLevelText,
   treeItemText,
 } from './navtree-fragments';
-import { SharedTreeItemHeadingProps } from './props';
+import { type SharedTreeItemHeadingProps } from './props';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { getTreeItemLabel } from '../../util';
 

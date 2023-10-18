@@ -8,15 +8,15 @@ import {
   defaultShapes,
   DocumentRecordType,
   PageRecordType,
-  TLDocument,
-  TLPageId,
-  TLRecord,
+  type TLDocument,
+  type TLPageId,
+  type TLRecord,
 } from '@tldraw/tldraw';
-import { TLStore } from '@tldraw/tlschema';
+import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useMemo } from 'react';
-import { Transaction, YEvent } from 'yjs';
+import { type Transaction, type YEvent } from 'yjs';
 
-import { Text } from '@dxos/client/echo';
+import { type Text } from '@dxos/client/echo';
 
 type Unsubscribe = () => void;
 

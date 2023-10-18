@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Page, test } from '@playwright/test';
+import { type Page, test } from '@playwright/test';
 import { expect } from 'chai';
 
 import { setupPage } from '@dxos/test/playwright';

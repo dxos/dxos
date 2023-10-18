@@ -3,7 +3,7 @@
 //
 
 import update from 'immutability-helper';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 
 /**
  * Partially updates state without copying complex (expensive) objects.

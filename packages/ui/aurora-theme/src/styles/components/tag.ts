@@ -2,7 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChromaticPalette, ComponentFunction, MessageValence, NeutralPalette, Theme } from '@dxos/aurora-types';
+import {
+  type ChromaticPalette,
+  type ComponentFunction,
+  type MessageValence,
+  type NeutralPalette,
+  type Theme,
+} from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 

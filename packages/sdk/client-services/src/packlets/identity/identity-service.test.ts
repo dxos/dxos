@@ -8,11 +8,11 @@ import chaiAsPromised from 'chai-as-promised';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Identity, IdentityService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { IdentityServiceImpl } from './identity-service';
-import { ServiceContext } from '../services';
+import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 
 chai.use(chaiAsPromised);

@@ -7,10 +7,10 @@ import React from 'react';
 
 import { Document } from '@braneframe/types';
 import { DocumentStack, Presentation } from '@dxos/kai-types';
-import { Space, Text } from '@dxos/react-client/echo';
+import { type Space, Text } from '@dxos/react-client/echo';
 
 import { slides } from './slides';
-import { FrameRuntime } from '../../registry';
+import { type FrameRuntime } from '../../registry';
 
 export const PresenterFrame = React.lazy(() => import('./PresenterFrame'));
 

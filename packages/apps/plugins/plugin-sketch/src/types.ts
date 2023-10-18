@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TLStore } from '@tldraw/tlschema';
+import { type TLStore } from '@tldraw/tlschema';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
@@ -30,5 +30,5 @@ export interface SketchModel {
 (globalThis as any)[SketchType.name] = SketchType;
 
 export const isSketch = (data: unknown): data is SketchType => {
-  return isTypedObject(data) && SketchType.type.name === data.__typename;
+  return isTypedObject(data) && SketchType.schema.typename === data.__typename;
 };

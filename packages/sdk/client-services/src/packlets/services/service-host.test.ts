@@ -10,10 +10,10 @@ import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
-import { Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 import { isNode } from '@dxos/util';
 

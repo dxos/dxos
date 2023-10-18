@@ -4,8 +4,8 @@
 
 import * as d3 from 'd3';
 
-import { Projector, ProjectorOptions } from './projector';
-import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
+import { Projector, type ProjectorOptions } from './projector';
+import { emptyGraph, type GraphData, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.

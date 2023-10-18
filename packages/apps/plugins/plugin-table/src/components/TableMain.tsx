@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo, useState } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
-import { Table, TableDef } from '@dxos/aurora-table';
+import { Table, type TableDef } from '@dxos/aurora-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { Expando, TypedObject, Schema as SchemaType } from '@dxos/client/echo';
+import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
@@ -32,6 +32,8 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     {},
     [table.schema],
   );
+
+  console.log(table);
 
   const rows = [...objects, {} as any];
 

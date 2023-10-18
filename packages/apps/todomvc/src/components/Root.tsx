@@ -8,6 +8,7 @@ import { generatePath, useNavigate } from 'react-router-dom';
 import { Config, Defaults, Dynamics, Envs, Local, fromIFrame, fromHost, ClientProvider } from '@dxos/react-client';
 
 import { Main } from './Main';
+import { types } from '../proto';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Local(), Defaults());
 const servicesProvider = (config?: Config) =>
@@ -20,6 +21,8 @@ export const Root = () => {
       config={configProvider}
       services={servicesProvider}
       onInitialized={async (client) => {
+        client.addSchema(types);
+
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {

@@ -6,9 +6,9 @@ import del from 'del';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import raf from 'random-access-file';
-import { RandomAccessStorage } from 'random-access-storage';
+import { type RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, DiskInfo, Storage, StorageType } from '../common';
+import { AbstractStorage, type DiskInfo, type Storage, StorageType } from '../common';
 
 /**
  * Storage interface implementation for Node.

@@ -3,13 +3,13 @@
 //
 
 import { scheduleTask } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import { Space } from '@dxos/client-protocol';
+import { type Client, PublicKey } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
@@ -41,9 +41,9 @@ export class EpochMonitor extends AbstractPlugin {
    * Monitor spaces for which the agent is the leader.
    */
   async open() {
-    invariant(this._client);
+    invariant(this._pluginCtx);
 
-    const config = this._client.config.values.runtime?.agent?.plugins?.epochMonitor;
+    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.epochMonitor;
     if (!config || config.enabled === false) {
       log.info('epoch monitor disabled from config');
       return;
@@ -56,7 +56,7 @@ export class EpochMonitor extends AbstractPlugin {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
           invariant(this._options);
-          const monitor = new SpaceMonitor(this._client!, space, this._options);
+          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._options);
           this._monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
@@ -69,8 +69,8 @@ export class EpochMonitor extends AbstractPlugin {
       });
     };
 
-    const sub = this._client.spaces.subscribe(process);
-    process(this._client.spaces.get());
+    const sub = this._pluginCtx.client.spaces.subscribe(process);
+    process(this._pluginCtx.client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
   }
 

@@ -8,7 +8,7 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 
-import { FILES_PLUGIN, LocalEntity } from '../types';
+import { FILES_PLUGIN, type LocalEntity } from '../types';
 
 export const LocalFileMainPermissions = ({ data }: { data: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);

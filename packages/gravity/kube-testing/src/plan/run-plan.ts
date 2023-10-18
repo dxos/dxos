@@ -3,19 +3,19 @@
 //
 
 import yaml from 'js-yaml';
-import { ChildProcess, fork } from 'node:child_process';
+import { type ChildProcess, fork } from 'node:child_process';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
-import { Event, sleep } from '@dxos/async';
+import { sleep, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
 import { AgentEnv } from './env';
-import { AgentParams, PlanResults, TestPlan } from './spec';
+import { type AgentParams, type PlanResults, type TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
@@ -47,9 +47,18 @@ export type RunPlanParams<S, C> = {
   options: PlanOptions;
 };
 
-export const runAgentForPlan = async <S, C>(planName: string, agentParamsJSON: string, plan: TestPlan<S, C>) => {
-  const params: AgentParams<S, C> = JSON.parse(agentParamsJSON);
-  await runAgent(plan, params);
+// TODO(nf): merge with defaults
+export const readYAMLSpecFile = async <S, C>(
+  path: string,
+  plan: TestPlan<S, C>,
+  options: PlanOptions,
+): Promise<() => RunPlanParams<any, any>> => {
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
+  return () => ({
+    plan,
+    spec: yamlSpec,
+    options,
+  });
 };
 
 // TODO(mykola): Introduce Executor class.
@@ -66,20 +75,6 @@ export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPl
   }
   // Planner mode.
   await runPlanner(name, { plan, spec, options });
-};
-
-// TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <S, C>(
-  path: string,
-  plan: TestPlan<S, C>,
-  options: PlanOptions,
-): Promise<() => RunPlanParams<any, any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
-  return () => ({
-    plan,
-    spec: yamlSpec,
-    options,
-  });
 };
 
 const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
@@ -102,6 +97,22 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
   const promises: Promise<void>[] = [];
 
   {
+    // stop the test when the plan fails (e.g. signal server dies)
+    // TODO(nf): add timeout for plan completion
+    const [allAgentsComplete, agentComplete] = latch({ count: agentsArray.length });
+
+    promises.push(
+      Promise.race([
+        new Promise<void>((resolve, reject) => {
+          plan.onError = (err) => {
+            log.info('got plan error, stopping agents', { err });
+            reject(err);
+          };
+        }),
+        allAgentsComplete().then(() => {}),
+      ]),
+    );
+
     //
     // Start agents
     //
@@ -152,19 +163,45 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
 
       children.push(childProcess);
       promises.push(
-        Event.wrap<number>(childProcess, 'exit')
-          .waitForCount(1)
-          .then((exitCode) => {
+        new Promise<void>((resolve, reject) => {
+          childProcess.on('error', (err) => {
+            log.info('child process error', { err });
+            reject(err);
+          });
+          childProcess.on('exit', async (exitCode, signal) => {
+            if (exitCode == null) {
+              log.warn('agent exited with signal', { signal });
+              reject(new Error(`agent exited with signal ${signal}`));
+            }
+
+            if (exitCode !== 0) {
+              log.warn('agent exited with non-zero exit code', { exitCode });
+              reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
+            }
+
             planResults.agents[agentId] = {
-              exitCode,
+              result: exitCode ?? -1,
               outDir: agentParams.outDir,
               logFile: join(agentParams.outDir, AGENT_LOG_FILE),
             };
-          }),
+
+            agentComplete();
+            resolve();
+            log.info('agent process exited successfully', { agentId });
+          });
+          // TODO(nf): add timeout for agent completion
+        }),
       );
     }
 
-    await Promise.all(promises);
+    await Promise.all(promises).catch((err) => {
+      log.warn('test plan or agent failed, killing remaining test agents', err);
+      for (const child of children) {
+        log.warn('killing child', { pid: child.pid });
+        child.kill();
+      }
+      throw new Error('plan failed');
+    });
 
     log.info('test complete', {
       summary: join(outDir, SUMMARY_FILENAME),
@@ -193,6 +230,15 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
+};
+
+/**
+ * entry point for process running in agent mode
+ */
+
+export const runAgentForPlan = async <S, C>(planName: string, agentParamsJSON: string, plan: TestPlan<S, C>) => {
+  const params: AgentParams<S, C> = JSON.parse(agentParamsJSON);
+  await runAgent(plan, params);
 };
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {

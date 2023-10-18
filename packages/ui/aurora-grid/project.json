@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/aurora-grid/src/index.ts"
+          "packages/ui/aurora-grid/src/index.ts",
+          "packages/ui/aurora-grid/src/mosaic/index.ts"
         ],
         "outputPath": "packages/ui/aurora-grid/dist/lib",
         "platforms": [
@@ -65,6 +66,25 @@
       },
       "outputs": [
         "{options.outputDir}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/ui/aurora-grid",
+        "outputPath": "tmp/mocha/packages/ui/aurora-grid",
+        "resultsPath": "test-results/packages/ui/aurora-grid",
+        "testPatterns": [
+          "packages/ui/aurora-grid/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/ui/aurora-grid/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ]
     }
   },

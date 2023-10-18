@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Dialog, DialogContentProps, useId } from '@dxos/aurora';
+import { Dialog, type DialogContentProps, useId } from '@dxos/aurora';
 
 import { ClipboardProvider } from '../../components';
-import { SpacePanel, SpacePanelProps } from '../../panels';
+import { SpacePanel, type SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
   extends Omit<DialogContentProps, 'children'>,

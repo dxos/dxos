@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
-import { TestPeer, TestBuilder } from '../test-builder';
+import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
 export type SignalTestSpec = {
@@ -44,6 +44,7 @@ export type SignalAgentConfig = {
 
 export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
   builder = new TestBuilder();
+  onError?: (err: Error) => void;
 
   defaultSpec(): SignalTestSpec {
     return {
@@ -69,7 +70,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
 
   async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<SignalAgentConfig[]> {
     await Promise.all(
-      range(spec.servers).map((num) => this.builder.createSignalServer(num, outDir, spec.signalArguments)),
+      range(spec.servers).map((num) =>
+        this.builder.createSignalServer(num, outDir, spec.signalArguments, (err) => {
+          log.error('error in signal server', { err });
+          this.onError?.(err);
+        }),
+      ),
     );
 
     const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());

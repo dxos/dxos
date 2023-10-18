@@ -8,8 +8,8 @@ import React from 'react';
 
 import type { Node } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { Kanban as KanbanType } from '@braneframe/types';
-import { Space } from '@dxos/client/echo';
+import { type Kanban as KanbanType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 
 import { IPFS_PLUGIN } from './types';
 

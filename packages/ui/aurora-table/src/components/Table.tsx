@@ -7,23 +7,23 @@ import {
   getCoreRowModel,
   getGroupedRowModel,
   useReactTable,
-  ColumnSizingInfoState,
-  ColumnSizingState,
-  GroupingState,
-  HeaderGroup,
-  Row,
-  RowData,
-  RowSelectionState,
-  TableState,
-  VisibilityState,
+  type ColumnSizingInfoState,
+  type ColumnSizingState,
+  type GroupingState,
+  type HeaderGroup,
+  type Row,
+  type RowData,
+  type RowSelectionState,
+  type TableState,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { groupBorder, inputSurface, mx } from '@dxos/aurora-theme';
 
-import { defaultTableSlots, TableSlots } from '../theme';
-import { TableColumnDef, KeyValue } from '../types';
+import { defaultTableSlots, type TableSlots } from '../theme';
+import { type TableColumnDef, type KeyValue } from '../types';
 
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Drag-and-drop.

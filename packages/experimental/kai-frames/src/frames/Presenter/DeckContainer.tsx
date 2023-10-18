@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 
-import { Presentation } from '@dxos/kai-types';
-import { Text, TextKind, useSubscription } from '@dxos/react-client/echo';
+import { type Presentation } from '@dxos/kai-types';
+import { type Text, TextKind, useSubscription } from '@dxos/react-client/echo';
 
-import { Deck, DeckProps } from '../../components';
+import { Deck, type DeckProps } from '../../components';
 import { useFrameRouter, useFrameContext } from '../../hooks';
 
 export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 'slide' | 'onSlideChange'>> = ({

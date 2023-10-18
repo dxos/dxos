@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { JSONOutput as Schema } from 'typedoc';
+import { type JSONOutput as Schema } from 'typedoc';
 
 // type AnyTypeName = keyof Schema.TypeKindMap;
 

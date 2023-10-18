@@ -9,13 +9,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
 import {
-  D3Callable,
-  D3Selection,
-  Fraction,
+  type D3Callable,
+  type D3Selection,
+  type Fraction,
   FullScreen,
   Grid,
   SVG,
-  SVGContext,
+  type SVGContext,
   SVGContextProvider,
   useSvgContext,
   useZoom,

@@ -4,8 +4,8 @@
 
 import chalk from 'chalk';
 
-import { ModuleSpecifier } from './module-specifier';
-import { SubstitutionsMap } from './parser';
+import { type ModuleSpecifier } from './module-specifier';
+import { type SubstitutionsMap } from './parser';
 
 type LoggerOptions = {
   verbose?: boolean;

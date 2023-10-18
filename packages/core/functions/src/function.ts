@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 export interface Response {
   status(code: number): Response;

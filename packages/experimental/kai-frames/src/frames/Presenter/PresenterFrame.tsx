@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Presentation } from '@dxos/kai-types';
+import { type Presentation } from '@dxos/kai-types';
 
 import { DeckContainer } from './DeckContainer';
 import { DeckEditor } from './DeckEditor';

@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
 import { definitions } from './definitions';
-import { ConfigPluginOpts } from './types';
+import { type ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
   name: 'dxos-config',

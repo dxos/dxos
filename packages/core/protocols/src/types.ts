@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { TypedProtoMessage } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/timeframe';
+import { type TypedProtoMessage } from '@dxos/codec-protobuf';
+import { type PublicKey } from '@dxos/keys';
+import { type Timeframe } from '@dxos/timeframe';
 
-import { TYPES } from './proto';
-import { FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
-import { EchoObjectBatch } from './proto/gen/dxos/echo/object';
+import { type TYPES } from './proto';
+import { type FeedMessage, type CredentialsMessage } from './proto/gen/dxos/echo/feed';
+import { type EchoObjectBatch } from './proto/gen/dxos/echo/object';
 
 // TODO(burdon): Rename ProtocolMessage.
 export type TypedMessage = TypedProtoMessage<TYPES>;

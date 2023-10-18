@@ -4,7 +4,7 @@
 
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 export type StatusState = {
   processing?: string;

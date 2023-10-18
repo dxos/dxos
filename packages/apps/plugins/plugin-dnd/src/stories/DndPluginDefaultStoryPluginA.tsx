@@ -5,15 +5,15 @@
 import React, { useContext, useState } from 'react';
 
 import {
-  useDnd,
   useDragEnd,
   useDragOver,
   useDragStart,
+  useMosaicDnd,
   SortableContext,
   verticalListSortingStrategy,
-  UniqueIdentifier,
+  type UniqueIdentifier,
 } from '@dxos/aurora-grid';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaultStoryPlugin';
@@ -21,7 +21,7 @@ import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaul
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
   const store = useContext(DndPluginStoryPluginContext);
-  const dnd = useDnd();
+  const dnd = useMosaicDnd();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   useDragStart(({ active: { id } }) => {
     setActiveId(id);

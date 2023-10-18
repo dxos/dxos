@@ -11,14 +11,14 @@ import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgConte
 import { defaultGraphStyles, defaultStyles } from './styles';
 import {
   GraphForceProjector,
-  GraphLayoutNode,
-  GraphLayoutLink,
+  type GraphLayoutNode,
+  type GraphLayoutLink,
   GraphRenderer,
   createMarkers,
   createSimulationDrag,
   linkerRenderer,
 } from '../graph';
-import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
+import { convertTreeToGraph, createTree, styles, TestGraphModel, type TestNode } from '../testing';
 
 export default {
   title: 'gem-spore/hooks',

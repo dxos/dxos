@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { D3Callable, D3Selection } from '@dxos/gem-core';
+import { type D3Callable, type D3Selection } from '@dxos/gem-core';
 
 interface BulletOptions {
   max?: number;

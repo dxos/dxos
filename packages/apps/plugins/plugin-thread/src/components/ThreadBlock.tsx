@@ -4,9 +4,9 @@
 
 import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+import { type Thread as ThreadType } from '@braneframe/types';
 import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 

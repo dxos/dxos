@@ -4,9 +4,9 @@
 
 import * as d3 from 'd3';
 
-import { Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/gem-core';
 
-import { GraphLayoutNode } from './types';
+import { type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 const line = d3.line();

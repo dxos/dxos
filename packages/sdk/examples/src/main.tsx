@@ -8,7 +8,7 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Document } from '@braneframe/types';
+import { types, Document } from '@braneframe/types';
 import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/aurora';
 import { auroraTx } from '@dxos/aurora-theme';
 import { ClientContext } from '@dxos/react-client';
@@ -24,6 +24,7 @@ const root = createRoot(document.getElementById('root')!);
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
+    schema: types,
     onCreateSpace: (space) => {
       space.db.add(
         new Document({

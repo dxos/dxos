@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,7 +14,8 @@
   "files": [
     "/bin",
     "/config",
-    "/dist"
+    "/dist",
+    "/templates"
   ],
   "scripts": {
     "echo-proxy": "ts-node --esm ./src/proxy/proxy.ts"
@@ -39,6 +40,8 @@
     "date-fns": "^2.29.3",
     "express": "^4.17.1",
     "isomorphic-ws": "^4.0.1",
+    "minisearch": "^3.0.2",
+    "pkg-up": "^3.1.0",
     "ws": "^7.4.4"
   },
   "devDependencies": {

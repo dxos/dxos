@@ -5,7 +5,7 @@
 import CRC32 from 'crc-32';
 
 import { synchronized, Event } from '@dxos/async';
-import { Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,14 +13,14 @@ import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   EchoMetadata,
-  SpaceMetadata,
-  IdentityRecord,
-  SpaceCache,
-  ControlPipelineSnapshot,
+  type SpaceMetadata,
+  type IdentityRecord,
+  type SpaceCache,
+  type ControlPipelineSnapshot,
   LargeSpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { Directory, File } from '@dxos/random-access-storage';
-import { Timeframe } from '@dxos/timeframe';
+import { type Directory, type File } from '@dxos/random-access-storage';
+import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNotNullOrUndefined } from '@dxos/util';
 
 export interface AddSpaceOptions {

@@ -5,15 +5,18 @@
 import { CaptureConsole } from '@sentry/integrations';
 import {
   init as naturalInit,
+  setTag,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
-  setTag,
 } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
 import { log } from '@dxos/log';
 
-import { InitOptions } from './types';
+import { type InitOptions } from './types';
+
+// Polyfill export.
+export { setTag, setTags, setUser } from '@sentry/node';
 
 /**
  * To use this SDK, call the init function as early as possible in the main entry module.

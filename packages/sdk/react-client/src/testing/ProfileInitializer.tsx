@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 
 import { useClient } from '../client';
-import { Identity, useIdentity } from '../halo';
+import { type Identity, useIdentity } from '../halo';
 
 let didInit = false;
 

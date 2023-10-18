@@ -4,15 +4,15 @@
 
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { FeedIterator, FeedStore, FeedWrapper } from '@dxos/feed-store';
+import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import {
-  SubscribeToFeedsRequest,
-  SubscribeToFeedsResponse,
-  SubscribeToFeedBlocksRequest,
-  SubscribeToFeedBlocksResponse,
+  type SubscribeToFeedsRequest,
+  type SubscribeToFeedsResponse,
+  type SubscribeToFeedBlocksRequest,
+  type SubscribeToFeedBlocksResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
 export const subscribeToFeeds = (

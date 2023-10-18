@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Effect } from './effect';
-import { Path, FileSlots, FileEffect } from './file';
-import { MaybePromise, promise } from './promise';
+import { type Effect } from './effect';
+import { type Path, type FileSlots, type FileEffect } from './file';
+import { type MaybePromise, promise } from './promise';
 
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
 /** Do not process files that are compilation noise like .map and .t.d.ts */

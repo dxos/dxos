@@ -2,7 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentPropsWithoutRef } from 'react';
+import React, {
+  type ChangeEvent,
+  useCallback,
+  useState,
+  type KeyboardEvent,
+  type ComponentPropsWithoutRef,
+} from 'react';
 
 import { useId, randomString } from '@dxos/aurora';
 

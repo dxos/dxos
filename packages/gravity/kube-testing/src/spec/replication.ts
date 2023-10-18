@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { sleep, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { Keyring, TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
+import { Keyring, type TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TransportKind } from '@dxos/network-manager';
@@ -17,8 +17,8 @@ import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
-import { SerializedLogEntry, getReader } from '../analysys';
-import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
+import { type SerializedLogEntry, getReader } from '../analysys';
+import { type PlanResults, type TestParams, type TestPlan, type AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
@@ -90,6 +90,7 @@ export type ReplicationAgentConfig = {
  */
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
   signalBuilder = new SignalTestBuilder();
+  onError?: (err: Error) => void;
 
   defaultSpec(): ReplicationTestSpec {
     return {
@@ -114,7 +115,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
     }
 
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const swarmTopicsIds = range(spec.swarmsPerAgent).map(() => PublicKey.random());
     const feedsBySwarm = new Map<number, Map<PublicKey, FeedConfig[]>>();

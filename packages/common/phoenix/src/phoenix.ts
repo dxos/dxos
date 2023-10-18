@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
-import { ProcessInfo, WatchDogParams } from './watchdog';
+import { type ProcessInfo, type WatchDogParams } from './watchdog';
 
 /**
  * Utils to start/stop detached process with errors and logs handling.

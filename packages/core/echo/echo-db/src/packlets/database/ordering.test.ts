@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
+import { getInsertionIndex, type MutationInQueue, MutationQueue } from './ordering';
 
 describe('Ordering', () => {
   // feedA < feedB

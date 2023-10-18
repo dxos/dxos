@@ -3,7 +3,7 @@
 //
 
 import { Clipboard } from '@phosphor-icons/react';
-import React, { Component, PropsWithChildren, useCallback } from 'react';
+import React, { Component, type PropsWithChildren, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button, Message } from '@dxos/aurora';

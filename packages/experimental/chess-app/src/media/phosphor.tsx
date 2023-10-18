@@ -3,7 +3,7 @@
 //
 
 import { Flame, Crown, ShieldStar, Plus, Asterisk, User } from '@phosphor-icons/react';
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 const style = {
   white: { width: undefined, height: undefined, color: 'darkred' },

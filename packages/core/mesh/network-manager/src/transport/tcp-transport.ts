@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { AddressInfo, Socket, type Server } from 'node:net';
+import { type AddressInfo, Socket, type Server } from 'node:net';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions } from './transport';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: (params) => new TcpTransport(params),

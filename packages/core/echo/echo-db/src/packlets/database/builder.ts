@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Any, ProtoCodec, WithTypeUrl } from '@dxos/codec-protobuf';
-import { ModelMeta } from '@dxos/model-factory';
-import { EchoObject, EchoObjectBatch, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
+import { type Any, type ProtoCodec, type WithTypeUrl } from '@dxos/codec-protobuf';
+import { type ModelMeta } from '@dxos/model-factory';
+import { type EchoObject, type EchoObjectBatch, type MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
 
 /**
  * Assigns a unique tag to each mutation in a batch with proper indexing.

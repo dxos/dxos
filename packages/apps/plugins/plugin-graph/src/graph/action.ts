@@ -3,7 +3,7 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 // TODO(burdon): Consider making intents part of graph.
 //  (does it make sense to have trivially decomposed plugins that require each other)? Circular deps.
@@ -42,6 +42,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
 
   /**
    * Key binding.
+   * NOTE: Alphanumeric characters should be declared in lowercase.
    */
   keyBinding?: string;
 

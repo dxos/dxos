@@ -6,7 +6,7 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Game } from '@dxos/chess-app';
-import { isTypedObject, TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type TypedObject } from '@dxos/client/echo';
 
 export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 
@@ -25,5 +25,5 @@ export type ChessPluginProvides = GraphProvides & IntentProvides & TranslationsP
 (globalThis as any)[Game.name] = Game;
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && object.__typename === Game.type.name;
+  return isTypedObject(object) && object.__typename === Game.schema.typename;
 };

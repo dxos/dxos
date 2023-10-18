@@ -20,6 +20,7 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -30,7 +31,7 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
-import { schema$ } from '@braneframe/types';
+import { types } from '@braneframe/types';
 import {
   auroraTheme,
   bindTheme,
@@ -69,7 +70,6 @@ const main = async () => {
         mx(
           'z-[30] rounded-xl',
           popperMotion,
-          // 'bg-orange-200',
           groupSurface,
           groupBorder,
           surfaceElevation({ elevation: 'group' }),
@@ -94,7 +94,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: schema$ }),
+          ClientPlugin({ config, services, debugIdentity: debug, types }),
 
           // Core UX.
           DndPlugin(),
@@ -109,6 +109,7 @@ const main = async () => {
           GithubPlugin(),
           MarkdownPlugin(),
           SketchPlugin(),
+          PresenterPlugin(), // Before Stack.
           StackPlugin(),
 
           // Labs Apps.

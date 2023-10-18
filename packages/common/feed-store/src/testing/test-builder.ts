@@ -5,9 +5,9 @@
 import type { ValueEncoding } from 'hypercore';
 
 import { Keyring } from '@dxos/keyring';
-import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
+import { createStorage, type Directory, type Storage, StorageType } from '@dxos/random-access-storage';
 
-import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
+import { defaultTestGenerator, defaultValueEncoding, type TestGenerator, type TestItem } from './test-generator';
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
 

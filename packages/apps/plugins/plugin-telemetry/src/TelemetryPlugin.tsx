@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
-import { AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
+import { type AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
 import { useTelemetry } from './useTelemetry';
 
 export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition => {

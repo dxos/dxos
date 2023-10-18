@@ -5,15 +5,16 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { Game } from '@dxos/chess-app';
+import { Game, types } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { ChessMain } from './components';
 import translations from './translations';
-import { isObject, CHESS_PLUGIN, ChessAction, ChessPluginProvides } from './types';
+import { isObject, CHESS_PLUGIN, ChessAction, type ChessPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
@@ -22,6 +23,11 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
     meta: {
       id: CHESS_PLUGIN,
+    },
+    ready: async (plugins) => {
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
+      const client = clientPlugin?.provides?.client;
+      client?.addSchema(types);
     },
     unload: async () => {
       adapter.clear();
