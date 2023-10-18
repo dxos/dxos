@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type ChatCompletionRequestMessage } from 'openai';
+
 import { Thread } from '@braneframe/types';
 import { sleep } from '@dxos/async';
+import { type Schema, Text } from '@dxos/echo-schema';
 import { type FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -11,8 +14,6 @@ import { log } from '@dxos/log';
 import { ChatModel } from './chat-model';
 import { parseMessage } from './parser';
 import { getKey } from '../../util';
-import { ChatCompletionRequestMessage } from 'openai';
-import { Schema, Text } from '@dxos/echo-schema';
 
 type HandlerProps = {
   space: string;
@@ -66,15 +67,20 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           meta: block.__meta, // TODO(burdon): Use to distinguish generated messages.
         });
 
-        const schemas = SCHEMA_CONFIG.map(config => ({ config, schema: context.client.experimental.types.getSchema(config.typename) }))
+        const schemas = SCHEMA_CONFIG.map((config) => ({
+          config,
+          schema: context.client.experimental.types.getSchema(config.typename),
+        }));
 
         // Kill switch.
-        const ENABLE_SCHEMA: true = true;
+        const ENABLE_SCHEMA: boolean = true;
 
         // TODO(burdon): Pass in history.
         // TODO(burdon): Error handling (e.g., 401);
         const chatContents: ChatCompletionRequestMessage[] = [
-          ENABLE_SCHEMA && { role: 'system', content: `
+          ENABLE_SCHEMA && {
+            role: 'system',
+            content: `
           In your replies you can choose to output data in a structured format.
           Structured data is formatted as an array of JSON objects conforming to the schema.
           Include "@type" field with the exact name of one of the provided schema types.
@@ -94,16 +100,17 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
           Available schema types:
 
-          ${schemas.map(({ config, schema }) =>schema ? formatSchema(schema, config) : '').join('\n')}
-          `
+          ${schemas.map(({ config, schema }) => (schema ? formatSchema(schema, config) : '')).join('\n')}
+          `,
           },
-          ...block.messages.map((message): ChatCompletionRequestMessage => ({ role: 'user', content: message.text ?? '' })),
-        ] 
+          ...block.messages.map(
+            (message): ChatCompletionRequestMessage => ({ role: 'user', content: message.text ?? '' }),
+          ),
+        ];
 
-        log.info('request', { chatContents })
+        log.info('request', { chatContents });
 
-        const { content } =
-          (await model.request(chatContents)) ?? {};
+        const { content } = (await model.request(chatContents)) ?? {};
 
         log.info('response', { content });
 
@@ -115,35 +122,35 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           if (result) {
             const { pre, data, post } = result;
             pre && messages.push({ timestamp, text: pre });
-            
-            const datas = Array.isArray(data) ? data : [data];
-            
-            messages.push(...datas.map((data): Thread.Message => {
-              if(typeof data['@type'] === 'string') {
-                const Proto = context.client.experimental.types.getPrototype(data['@type'])
-                const schema = context.client.experimental.types.getSchema(data['@type'])
 
-                
-                if(Proto && schema) {
-                  // Pre-processing according to schema
-                  delete data['@type'];
-                  for(const prop of schema.props) {
-                    if(data[prop.id!]) {
-                      if(prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
-                        data[prop.id!] = new Text(data[prop.id!])
+            const datas = Array.isArray(data) ? data : [data];
+
+            messages.push(
+              ...datas.map((data): Thread.Message => {
+                if (typeof data['@type'] === 'string') {
+                  const Proto = context.client.experimental.types.getPrototype(data['@type']);
+                  const schema = context.client.experimental.types.getSchema(data['@type']);
+
+                  if (Proto && schema) {
+                    // Pre-processing according to schema
+                    delete data['@type'];
+                    for (const prop of schema.props) {
+                      if (data[prop.id!]) {
+                        if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
+                          data[prop.id!] = new Text(data[prop.id!]);
+                        }
                       }
                     }
-                  }
-                  
-                  const ref = new Proto(data);
 
-                  return { timestamp, ref: ref }
+                    const ref = new Proto(data);
+
+                    return { timestamp, ref };
+                  }
                 }
-              }
-              
-              return { timestamp, data: JSON.stringify(data) }
-              
-            }));
+
+                return { timestamp, data: JSON.stringify(data) };
+              }),
+            );
 
             post && messages.push({ timestamp, text: post }); // TODO(burdon): Skip TS.
           } else {
@@ -175,29 +182,27 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 };
 
 type SchemaConfig = {
-  typename: string
-  allowedFields: string[]
-}
+  typename: string;
+  allowedFields: string[];
+};
 
 const SCHEMA_CONFIG: SchemaConfig[] = [
   {
     typename: 'braneframe.Grid.Item',
-    allowedFields: [
-      'title',
-      'content',
-      'color'
-    ]
+    allowedFields: ['title', 'content', 'color'],
   },
-]
-
+];
 
 const formatSchema = (schema: Schema, config?: SchemaConfig) => {
-  const props = !config || config.allowedFields.length === 0 ? schema.props : schema.props.filter(prop => config?.allowedFields.includes(prop.id!))
+  const props =
+    !config || config.allowedFields.length === 0
+      ? schema.props
+      : schema.props.filter((prop) => config?.allowedFields.includes(prop.id!));
 
   return `
     @type: ${schema.typename}
     fields:
-      ${props.map(prop => `${prop.id}: ${prop.type}`).join('\n      ')}
+      ${props.map((prop) => `${prop.id}: ${prop.type}`).join('\n      ')}
     \n
-  `
-}
+  `;
+};

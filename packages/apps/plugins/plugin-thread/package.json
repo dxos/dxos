@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-grid": "workspace:*",
     "@dxos/display-name": "workspace:*",
