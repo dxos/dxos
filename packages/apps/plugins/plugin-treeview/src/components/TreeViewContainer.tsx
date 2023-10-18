@@ -73,7 +73,12 @@ export const TreeViewContainer = ({
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
     const overNode = overItem && graph.findNode(Path.last(overItem.path));
-    if (!overNode || !activeNode || (operation !== 'adopt' && operation !== 'copy')) {
+    if (
+      !activeNode ||
+      !overNode ||
+      !Path.hasRoot(overItem.path, graph.root.id) ||
+      (operation !== 'adopt' && operation !== 'copy')
+    ) {
       return false;
     }
 
