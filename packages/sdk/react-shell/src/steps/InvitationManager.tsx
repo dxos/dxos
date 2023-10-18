@@ -10,7 +10,7 @@ import { useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { StepProps } from './StepProps';
+import { type StepProps } from './StepProps';
 import {
   Actions,
   Action,
@@ -19,7 +19,7 @@ import {
   Centered,
   Label,
   Viewport,
-  ViewportViewProps,
+  type ViewportViewProps,
   CopyButton,
 } from '../components';
 import { invitationStatusValue, toEmoji } from '../util';

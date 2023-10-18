@@ -6,13 +6,13 @@ import { randomBytes } from 'node:crypto';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { Space, Text } from '@dxos/client/echo';
+import { type Space, Text } from '@dxos/client/echo';
 import { Invitation } from '@dxos/client/invitations';
-import { LocalClientServices } from '@dxos/client/services';
+import { type LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { Space as EchoSpace } from '@dxos/echo-pipeline';
+import { type Space as EchoSpace } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,8 +22,8 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
+import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type EchoTestSpec = {
@@ -66,6 +66,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   client!: Client;
   space!: Space;
   spaceKey?: PublicKey;
+  onError?: (err: Error) => void;
 
   defaultSpec(): EchoTestSpec {
     return {
@@ -87,7 +88,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({

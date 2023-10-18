@@ -11,10 +11,10 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
-import { ThemePlugin, TranslationsProvides } from '@braneframe/plugin-theme';
+import { ThemePlugin, type TranslationsProvides } from '@braneframe/plugin-theme';
 import { Config, Defaults } from '@dxos/config';
 import { TypedObject } from '@dxos/echo-schema';
-import { PluginDefinition, PluginProvider } from '@dxos/react-surface';
+import { type PluginDefinition, PluginProvider } from '@dxos/react-surface';
 
 import { OpenVault, ProgressBar } from './components';
 import translations from './translations';

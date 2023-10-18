@@ -6,17 +6,17 @@ import { Stream } from '@dxos/codec-protobuf';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { type Keyring } from '@dxos/keyring';
 import {
-  Identity,
-  IdentityService,
-  QueryIdentityResponse,
-  RecoverIdentityRequest,
-  SignPresentationRequest,
+  type Identity,
+  type IdentityService,
+  type QueryIdentityResponse,
+  type RecoverIdentityRequest,
+  type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { CreateIdentityOptions, IdentityManager } from './identity-manager';
+import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 
 export class IdentityServiceImpl implements IdentityService {
   constructor(

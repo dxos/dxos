@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 
 import { scheduleMicroTask } from './task-scheduling';
 

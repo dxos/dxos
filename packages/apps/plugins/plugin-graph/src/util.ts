@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/react-surface';
+import { type Plugin } from '@dxos/react-surface';
 
-import { Node } from './graph';
-import { GraphProvides } from './types';
+import { type Node } from './graph';
+import { type GraphProvides } from './types';
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' ? 'id' in data && 'label' in data : false;

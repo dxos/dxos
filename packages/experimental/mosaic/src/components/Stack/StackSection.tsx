@@ -5,11 +5,11 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 
 import { getSize } from '@dxos/aurora-theme';
 
-import { StackRow, StackRowProps } from './StackRow';
+import { StackRow, type StackRowProps } from './StackRow';
 
 export const DraggableStackRow: FC<StackRowProps & { section: any }> = ({ section, ...rest }) => {
   // https://docs.dndkit.com/presets/sortable/usesortable

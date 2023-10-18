@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import i18Next, { Resource } from 'i18next';
-import React, { ReactNode, useEffect, createContext, useState, Suspense } from 'react';
+import i18Next, { type Resource } from 'i18next';
+import React, { type ReactNode, useEffect, createContext, useState, Suspense } from 'react';
 import { initReactI18next } from 'react-i18next';
 
 const initialLng = 'en-US';

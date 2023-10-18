@@ -10,7 +10,7 @@ import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
 
 import { Action, Actions, StepHeading } from '../../../components';
-import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
+import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;

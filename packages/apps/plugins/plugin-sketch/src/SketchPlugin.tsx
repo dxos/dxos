@@ -5,16 +5,16 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
+import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
-import { SketchMain, SketchSection } from './components';
+import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
-import { isSketch, SKETCH_PLUGIN, SketchPluginProvides, SketchAction } from './types';
+import { isSketch, SKETCH_PLUGIN, type SketchPluginProvides, SketchAction } from './types';
 import { objectToGraphNode } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
@@ -107,6 +107,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             return SketchMain;
           case 'section':
             return SketchSection;
+          case 'presenter-slide':
+            return SketchSlide;
         }
       },
       components: {

@@ -15,6 +15,10 @@ export default class Stop extends BaseCommand<typeof Stop> {
     ...BaseCommand.flags,
     all: Flags.boolean({ description: 'Stop all agents.' }),
     force: Flags.boolean({ description: 'Force stop.' }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -36,7 +40,7 @@ export default class Stop extends BaseCommand<typeof Stop> {
       if (this.flags.all) {
         const processes = await daemon.list();
         await Promise.all(
-          processes.map(async (process) => {
+          processes.map(async (process: any) => {
             if (await daemon.isRunning(process.profile!)) {
               await stop(process.profile!);
             }
@@ -45,6 +49,6 @@ export default class Stop extends BaseCommand<typeof Stop> {
       } else {
         await stop(this.flags.profile);
       }
-    });
+    }, this.flags.system);
   }
 }

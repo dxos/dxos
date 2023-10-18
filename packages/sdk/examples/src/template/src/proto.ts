@@ -4,6 +4,4 @@
 
 import * as echo from '@dxos/echo-schema';
 
-const schemaJson = '{}';
-
-export const schema = echo.EchoSchema.fromJson(schemaJson);
+export const types = new echo.TypeCollection();

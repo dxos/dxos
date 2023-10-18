@@ -3,10 +3,10 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { StreamTraceEvent, TracingService } from '@dxos/protocols/proto/dxos/tracing';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type StreamTraceEvent, type TracingService } from '@dxos/protocols/proto/dxos/tracing';
 
-import { TraceProcessor, TraceSubscription } from './trace-processor';
+import { type TraceProcessor, type TraceSubscription } from './trace-processor';
 
 export class TraceSender implements TracingService {
   constructor(private _traceProcessor: TraceProcessor) {}

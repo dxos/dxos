@@ -8,7 +8,7 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 
-import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
+import { SingleInputStep, type SingleInputStepProps } from './SingleInputStep';
 import { Group } from '../Group';
 
 export default {

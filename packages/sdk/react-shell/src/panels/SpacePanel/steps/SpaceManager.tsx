@@ -8,17 +8,17 @@ import React, { useCallback } from 'react';
 import { ScrollArea, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import {
   InvitationList,
-  InvitationListProps,
+  type InvitationListProps,
   Actions,
   Action,
   SpaceMemberList,
-  SpaceMemberListProps,
+  type SpaceMemberListProps,
 } from '../../../components';
-import { SpacePanelStepProps } from '../SpacePanelProps';
+import { type SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
+import React, { type FC, type PropsWithChildren, createContext, useContext } from 'react';
 
-import { Plugin } from '@dxos/react-surface';
+import { type Plugin } from '@dxos/react-surface';
 
 /**
  * An intent is an abstract description of an operation to be performed.

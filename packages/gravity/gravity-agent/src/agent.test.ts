@@ -5,17 +5,17 @@
 import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
-import { Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Invitation } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
-import { ConfigProto } from '@dxos/config';
+import { type ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
+import { type AgentSpec, type Command } from '@dxos/protocols/proto/dxos/gravity';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Agent } from './agent';
-import { AgentStateMachine, StateMachineFactory } from './statemachine';
+import { AgentStateMachine, type StateMachineFactory } from './statemachine';
 
 // TODO(burdon): Run local signal server for tests.
 describe('Agent', () => {

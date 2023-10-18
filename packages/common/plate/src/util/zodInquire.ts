@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import inquirer, { Question } from 'inquirer';
+import inquirer, { type Question } from 'inquirer';
 import { z } from 'zod';
 
 // type MaybePromise<T> = T | Promise<T>;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComponentFragment, Elevation } from '@dxos/aurora-types';
+import { type ComponentFragment, type Elevation } from '@dxos/aurora-types';
 
 export const contentElevation: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
   elevation === 'group' ? 'shadow-sm' : elevation === 'chrome' ? 'shadow-none' : 'shadow',

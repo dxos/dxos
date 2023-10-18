@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
 
 // TODO(wittjosiah): @dxos/log.
 const log = console.log;

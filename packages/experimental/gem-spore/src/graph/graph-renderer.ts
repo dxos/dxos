@@ -4,11 +4,11 @@
 
 import * as d3 from 'd3';
 
-import { D3Callable, D3Selection, Point } from '@dxos/gem-core';
+import { type D3Callable, type D3Selection, type Point } from '@dxos/gem-core';
 
 import { createBullets } from './bullets';
-import { Renderer, RendererOptions } from './renderer';
-import { GraphGuide, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
+import { Renderer, type RendererOptions } from './renderer';
+import { type GraphGuide, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 export type LabelOptions<N> = {

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 
 export type ResourceState = {
   resource: Resource;

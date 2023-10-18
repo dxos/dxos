@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { Frame } from '../../proto';
+import { type Frame } from '../../proto';
 
 // import frameSrc from './frame.html?raw';
 // import mainUrl from './main?url';

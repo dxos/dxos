@@ -9,21 +9,21 @@ import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { Node, GraphPluginProvides } from '@braneframe/plugin-graph';
-import { MarkdownProvides } from '@braneframe/plugin-markdown';
-import { SplitViewAction, SplitViewPluginProvides } from '@braneframe/plugin-splitview';
+import { type Node, type GraphPluginProvides } from '@braneframe/plugin-graph';
+import { type MarkdownProvides } from '@braneframe/plugin-markdown';
+import { SplitViewAction, type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { LocalFileMain } from './components';
 import translations from './translations';
 import {
   FILES_PLUGIN,
   FILES_PLUGIN_SHORT_ID,
-  LocalEntity,
-  LocalFile,
+  type LocalEntity,
+  type LocalFile,
   LocalFilesAction,
-  LocalFilesPluginProvides,
+  type LocalFilesPluginProvides,
 } from './types';
 import {
   findFile,

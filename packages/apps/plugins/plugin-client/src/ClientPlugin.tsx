@@ -5,22 +5,24 @@
 import React, { useEffect, useState } from 'react';
 
 import { AppState } from '@braneframe/types';
-import { EchoSchema } from '@dxos/client/echo';
+import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { Client, ClientContext, ClientOptions, SystemStatus } from '@dxos/react-client';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
+import { type PluginDefinition } from '@dxos/react-surface';
 
-import { ClientPluginProvides, CLIENT_PLUGIN } from './types';
+import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
-export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; schema?: EchoSchema };
+export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
+  // TODO(burdon): Document.
   registerSignalFactory();
+
   const client = new Client(options);
 
   return {
@@ -32,8 +34,8 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
-        if (options.schema) {
-          client.addSchema(options.schema);
+        if (options.types) {
+          client.addTypes(options.types);
         }
 
         await client.initialize();

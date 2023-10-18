@@ -7,7 +7,8 @@ import snippet from '@segment/snippet';
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
-import { EventOptions, InitOptions, PageOptions } from './types';
+import { tags } from './tags';
+import { type EventOptions, type InitOptions, type PageOptions } from './types';
 
 export const init = ({ apiKey, enable = true }: InitOptions) => {
   if (!enable) {
@@ -42,6 +43,7 @@ export const page = ({ identityId: userId, ...options }: PageOptions = {}) => {
 export const event = ({ identityId: userId, name: event, ...options }: EventOptions) => {
   try {
     (window as any).analytics?.track({
+      context: tags,
       ...options,
       event,
     });

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Dispatch, SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction } from 'react';
 
-import { Document } from '@braneframe/types';
-import { Space } from '@dxos/react-client/echo';
+import { type Document } from '@braneframe/types';
+import { type Space } from '@dxos/react-client/echo';
 
 export type SpaceResolverProps = {
   space: Space | null;

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { useNavigate, Link, generatePath } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import { Space, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { TodoList } from '../proto';

@@ -104,6 +104,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-presenter/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },
@@ -504,6 +509,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/labs-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
@@ -610,6 +620,16 @@
         {
           "type": "json",
           "path": "packages/ui/aurora-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-stack/package.json",
           "jsonpath": "$.version"
         },
         {

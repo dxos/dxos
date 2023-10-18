@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { SystemService, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService, SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { beforeEach, describe, test } from '@dxos/test';
 
 import { SystemServiceImpl } from './system-service';

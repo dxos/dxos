@@ -14,9 +14,9 @@ import {
   generatePackageExports,
 } from './generator';
 import { Logger } from './logger';
-import { ModuleSpecifier } from './module-specifier';
+import { type ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
-import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
+import { parseSubstitutionsFile, type SubstitutionsMap } from './parser';
 
 // TODO(dmaretskyi): Move all parsing into `generateSchema` and remove this function.
 export const parseAndGenerateSchema = async (

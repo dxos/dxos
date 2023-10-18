@@ -4,6 +4,8 @@
 
 import { faker } from '@faker-js/faker';
 
+// TODO(burdon): Standardize with mosaic.
+
 type CardType = 'document' | 'message' | 'contact' | 'image' | 'event' | 'project' | 'task' | 'result' | 'table';
 
 // https://unsplash.com
@@ -27,6 +29,7 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
     title: faker.lorem.sentence(),
     body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
+
   // TODO(burdon): Timestamp.
   message: () => ({
     type: 'message',
@@ -34,6 +37,7 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
     from: faker.internet.userName(),
     body: faker.lorem.sentence(),
   }),
+
   // TODO(burdon): Avatar.
   contact: () => ({
     type: 'contact',
@@ -42,18 +46,21 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
     username: faker.internet.userName(),
     email: faker.internet.email(),
   }),
+
   image: () => ({
     type: 'image',
     id: faker.string.uuid(),
-    src: faker.helpers.arrayElement(testImages),
+    image: faker.helpers.arrayElement(testImages),
     body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
   }),
+
   event: () => ({
     type: 'event',
     id: faker.string.uuid(),
     name: faker.commerce.productName(),
     date: faker.date.recent(),
   }),
+
   project: () => ({
     type: 'project',
     id: faker.string.uuid(),
@@ -61,6 +68,7 @@ export const generators: Record<CardType, () => Data & Record<string, any>> = {
     body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
     tasks: Array.from({ length: faker.number.int(5) }).map(() => generators.task()),
   }),
+
   task: () => ({
     type: 'task',
     id: faker.string.uuid(),

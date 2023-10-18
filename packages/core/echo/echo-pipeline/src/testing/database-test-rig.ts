@@ -5,14 +5,14 @@
 import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, ItemManager, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
-import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
+import { type WriteOptions, type WriteReceipt } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { FeedMessageBlock, schema } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type FeedMessageBlock, schema } from '@dxos/protocols';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -24,8 +24,8 @@ const SPACE_KEY = PublicKey.random();
 export class DatabaseTestBuilder {
   public readonly peers = new ComplexMap<PublicKey, DatabaseTestPeer>(PublicKey.hash);
 
-  async createPeer(): Promise<DatabaseTestPeer> {
-    const peer = new DatabaseTestPeer(this);
+  async createPeer(spaceKey = SPACE_KEY): Promise<DatabaseTestPeer> {
+    const peer = new DatabaseTestPeer(this, spaceKey);
     this.peers.set(peer.key, peer);
     await peer.open();
     return peer;
@@ -74,7 +74,7 @@ export class DatabaseTestPeer {
 
   private readonly _writes = new Set<WriteRequest>();
 
-  constructor(public readonly rig: DatabaseTestBuilder) {}
+  constructor(public readonly rig: DatabaseTestBuilder, public readonly spaceKey: PublicKey) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
@@ -116,7 +116,7 @@ export class DatabaseTestPeer {
     this.proxy = new DatabaseProxy({
       service: this.host.createDataServiceHost(),
       itemManager: this.items,
-      spaceKey: SPACE_KEY,
+      spaceKey: this.spaceKey,
     });
     await this.proxy.open(this.modelFactory);
   }

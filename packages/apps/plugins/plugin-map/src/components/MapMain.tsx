@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
-import { SpacePluginProvides } from '@braneframe/plugin-space';
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { TypedObject } from '@dxos/client/echo';
+import { type TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { MapControl } from './MapControl';

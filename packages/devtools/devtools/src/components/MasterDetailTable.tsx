@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Table, TableColumnDef } from '@dxos/aurora-table';
+import { Table, type TableColumnDef } from '@dxos/aurora-table';
 import { mx } from '@dxos/aurora-theme';
 
 import { JsonView } from './JsonView';

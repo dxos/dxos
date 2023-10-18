@@ -13,14 +13,20 @@ import {
   ObservableProvider,
   Trigger,
 } from '@dxos/async';
-import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace } from '@dxos/protocols';
-import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Contact,
+  type Device,
+  DeviceKind,
+  type Identity,
+  Invitation,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from '../invitations';
 
@@ -118,6 +124,11 @@ export class HaloProxy implements Halo {
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
+        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        log.trace('dxos.halo.device', {
+          deviceKey: current?.deviceKey,
+          profile: current?.profile,
+        });
       }
     });
 

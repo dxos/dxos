@@ -3,10 +3,10 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
-import { PublicKey } from '@dxos/keys';
+import { type Space } from '@dxos/client-protocol';
+import { type PublicKey } from '@dxos/keys';
 
-import { Client } from '../client';
+import { type Client } from '../client';
 
 type Options = {
   timeout?: number;

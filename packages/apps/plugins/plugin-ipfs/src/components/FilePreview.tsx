@@ -2,32 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
+
+import { mx } from '@dxos/aurora-theme';
 
 export type FilePreviewProps = {
   type: string;
   url: string;
+  className?: string;
 };
 
 /**
  * File/content preview iframe.
  */
-export const FilePreview: FC<FilePreviewProps> = ({ type, url }) => {
+export const FilePreview: FC<FilePreviewProps> = ({ type, url, className }) => {
   if (!type.startsWith('image')) {
-    return <iframe className='w-full h-full overflow-auto' src={url} />;
+    return <iframe className={mx('w-full h-full overflow-auto', className)} src={url} />;
   }
 
-  // TODO(burdon): Use Radix AspectRatio?
-  // https://www.radix-ui.com/primitives/docs/components/aspect-ratio
-  const styles = [
-    'margin: 0',
-    'height: 100vh',
-    `background-image: url(${url})`,
-    'background-repeat: no-repeat',
-    'background-position: center center',
-    'background-size: contain',
-  ];
-
-  const doc = `<html><body style="${styles.join(';')}" /></html>`;
-  return <iframe className='w-full h-full' srcDoc={doc} />;
+  return <img className={mx('w-full h-full object-contain', className)} src={url} />;
 };

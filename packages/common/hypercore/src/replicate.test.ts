@@ -15,7 +15,7 @@ import { range, sum } from '@dxos/util';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
-import { batch, createDataItem, TestDataItem } from './testing';
+import { batch, createDataItem, type TestDataItem } from './testing';
 
 const noop = () => {};
 

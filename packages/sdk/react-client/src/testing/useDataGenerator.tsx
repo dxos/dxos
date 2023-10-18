@@ -6,9 +6,9 @@ import { faker } from '@faker-js/faker';
 import { useEffect } from 'react';
 import { XmlElement, XmlText } from 'yjs';
 
-import { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
-import { YText, YXmlFragment } from '@dxos/text-model';
+import { YText, type YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?
 type DataGenerator<T = { space: Space }> = (options: T) => UnsubscribeCallback;

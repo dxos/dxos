@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type PublicKey } from '@dxos/keys';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { useDevtoolsState } from './useDevtoolsContext';

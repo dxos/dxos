@@ -3,16 +3,16 @@
 //
 
 import {
-  FlameChartNodes,
-  FlameChartSettings,
-  Marks,
-  Waterfall,
+  type FlameChartNodes,
+  type FlameChartSettings,
+  type Marks,
+  type Waterfall,
   FlameChart as FlameChartJs,
-  WaterfallItem,
-  Mark,
-  UIPlugin,
-  FlatTreeNode,
-  Timeseries,
+  type WaterfallItem,
+  type Mark,
+  type UIPlugin,
+  type FlatTreeNode,
+  type Timeseries,
 } from 'flame-chart-js';
 import React, { useCallback, useEffect, useRef } from 'react';
 import useResizeObserver from 'use-resize-observer';

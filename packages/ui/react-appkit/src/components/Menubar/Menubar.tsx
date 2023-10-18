@@ -4,7 +4,7 @@
 
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import throttle from 'lodash.throttle';
-import React, { PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 

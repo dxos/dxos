@@ -3,10 +3,10 @@
 //
 
 import { Box, Text } from 'ink';
-import React, { FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { Identity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/react-client/halo';
 
 import { TextInput, Panel } from '../util';
 

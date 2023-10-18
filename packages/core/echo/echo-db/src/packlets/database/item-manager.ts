@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ProtoCodec } from '@dxos/codec-protobuf';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
-import { ItemID } from '@dxos/protocols';
-import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { type Model, type ModelFactory, type ModelType } from '@dxos/model-factory';
+import { type ItemID } from '@dxos/protocols';
+import { type EchoObject, type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Item } from './item';
 

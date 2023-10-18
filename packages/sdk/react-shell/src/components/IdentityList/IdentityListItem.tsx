@@ -8,7 +8,7 @@ import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
-import { Identity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/react-client/halo';
 
 type IdentityListItemProps = {
   identity: Identity;

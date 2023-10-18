@@ -3,13 +3,13 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { SimplePeerTransportProxyFactory } from '@dxos/network-manager';
-import { RpcPort } from '@dxos/rpc';
-import { MaybePromise } from '@dxos/util';
+import { type RpcPort } from '@dxos/rpc';
+import { type MaybePromise } from '@dxos/util';
 
 import { WorkerSession } from './worker-session';
 import { ClientServicesHost } from '../services';

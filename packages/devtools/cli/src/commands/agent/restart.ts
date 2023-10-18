@@ -13,6 +13,10 @@ export default class Restart extends BaseCommand<typeof Restart> {
   static override flags = {
     ...BaseCommand.flags,
     force: Flags.boolean({ description: 'Force restart.' }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -21,6 +25,6 @@ export default class Restart extends BaseCommand<typeof Restart> {
       if (process && this.flags.verbose) {
         this.log('Restarted:', process);
       }
-    });
+    }, this.flags.system);
   }
 }

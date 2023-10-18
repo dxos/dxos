@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import { render } from 'ink';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { App } from '../../components';

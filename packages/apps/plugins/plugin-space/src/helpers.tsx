@@ -7,10 +7,10 @@ import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
-import { Filter } from '@dxos/echo-schema';
-import { Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
+import { type Filter } from '@dxos/echo-schema';
+import { type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 

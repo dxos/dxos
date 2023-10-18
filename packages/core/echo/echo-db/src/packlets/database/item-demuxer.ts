@@ -5,13 +5,13 @@
 import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { IEchoStream, ItemID } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type ModelFactory } from '@dxos/model-factory';
+import { type IEchoStream, type ItemID } from '@dxos/protocols';
+import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { setMetadataOnObject } from './builder';
-import { ItemManager } from './item-manager';
+import { type ItemManager } from './item-manager';
 
 export type EchoProcessor = (message: IEchoStream) => void;
 

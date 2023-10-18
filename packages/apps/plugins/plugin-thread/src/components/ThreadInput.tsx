@@ -3,7 +3,7 @@
 //
 
 import { PaperPlaneRight } from '@phosphor-icons/react';
-import React, { FC, KeyboardEvent, useState } from 'react';
+import React, { type FC, type KeyboardEvent, useState } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, inputSurface, mx } from '@dxos/aurora-theme';

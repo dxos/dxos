@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { LayoutRequest, ShellDisplay, ShellLayout, ShellRuntime } from '@dxos/react-client';
+import { type LayoutRequest, ShellDisplay, ShellLayout, type ShellRuntime } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 
 import { IdentityDialog } from '../IdentityDialog';

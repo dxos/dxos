@@ -6,10 +6,10 @@ import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { createColumnBuilder, Table, TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/aurora-table';
 import { Context } from '@dxos/context';
-import { SignalStatus } from '@dxos/messaging';
-import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalStatus } from '@dxos/messaging';
+import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 

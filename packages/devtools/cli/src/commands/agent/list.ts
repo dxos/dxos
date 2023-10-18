@@ -17,6 +17,10 @@ export default class List extends BaseCommand<typeof List> {
       description: 'Live update.',
       default: false,
     }),
+    system: Flags.boolean({
+      description: 'Run as system daemon.',
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -37,6 +41,6 @@ export default class List extends BaseCommand<typeof List> {
           printAgents(result, this.flags);
         }
       }
-    });
+    }, this.flags.system);
   }
 }

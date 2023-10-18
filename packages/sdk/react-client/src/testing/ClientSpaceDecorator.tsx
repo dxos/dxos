@@ -3,15 +3,15 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
-import React, { PropsWithChildren, ReactNode, useState } from 'react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
+import React, { type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Client, PublicKey } from '@dxos/client';
-import { EchoSchema, SpaceProxy, Space } from '@dxos/client/echo';
+import { Client, type PublicKey } from '@dxos/client';
+import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals';
-import { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
 
@@ -19,15 +19,18 @@ const testBuilder = new TestBuilder();
 const services = () => testBuilder.createLocal();
 
 // TODO(wittjosiah): Generates warning `No peers to notarize with` during invitation, but retry succeeds.
-const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
+const ChildClient = ({
+  rootSpace,
+  schema,
+  children,
+}: PropsWithChildren<{ rootSpace: Space; schema?: TypeCollection }>) => {
   return (
     <ClientProvider
-      fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.person.firstName() });
         schema && client.spaces.addSchema(schema);
-        await performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
+        performInvitation({ host: rootSpace as SpaceProxy, guest: client.spaces });
       }}
     >
       {children}
@@ -38,7 +41,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
 export type PeersInSpaceProps = {
   count?: number;
   registerSignalFactory?: boolean;
-  schema?: EchoSchema;
+  schema?: TypeCollection;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
 };
@@ -54,7 +57,6 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
   return (
     <div className='flex' style={{ display: 'flex' }}>
       <ClientProvider
-        fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
           await client.halo.createIdentity();

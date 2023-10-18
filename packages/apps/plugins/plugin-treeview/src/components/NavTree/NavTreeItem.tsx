@@ -5,18 +5,18 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, {
   forwardRef,
-  ForwardRefExoticComponent,
+  type ForwardRefExoticComponent,
   Fragment,
-  PropsWithChildren,
-  Ref,
-  RefAttributes,
+  type PropsWithChildren,
+  type Ref,
+  type RefAttributes,
   useEffect,
   useRef,
   useState,
 } from 'react';
 
-import { SortableProps } from '@braneframe/plugin-dnd';
-import { Action, Node, useGraph, keyString } from '@braneframe/plugin-graph';
+import { type SortableProps } from '@braneframe/plugin-dnd';
+import { type Action, type Node, useGraph, keyString } from '@braneframe/plugin-graph';
 import {
   Button,
   DensityProvider,
@@ -28,7 +28,7 @@ import {
   useSidebars,
   useTranslation,
 } from '@dxos/aurora';
-import { DelegatorProps } from '@dxos/aurora-grid';
+import { type DelegatorProps, isStackTile, isTreeItemTile } from '@dxos/aurora-grid';
 import {
   dropRing,
   focusRing,
@@ -43,7 +43,7 @@ import {
 
 import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
-import { SharedTreeItemProps } from './props';
+import { type SharedTreeItemProps } from './props';
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
@@ -63,35 +63,36 @@ export const NavTreeItemDelegator = forwardRef<HTMLElement, { data: DelegatorPro
         isActive,
         isOverlay,
         isMigrationDestination,
+        isPreview,
       },
     },
     forwardedRef,
   ) => {
-    switch (tile.variant) {
-      case 'stack':
-        return (
-          <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
-            {children}
-          </Tree.Root>
-        );
-      case 'treeitem':
-        return (
-          <NavTreeItem
-            node={data}
-            level={tile.level}
-            draggableAttributes={dragHandleAttributes}
-            draggableListeners={dragHandleListeners}
-            style={style}
-            rearranging={isActive}
-            isOverlay={isOverlay}
-            {...(isMigrationDestination && { migrating: 'into' })}
-            ref={forwardedRef}
-          >
-            {children}
-          </NavTreeItem>
-        );
-      default:
-        return null;
+    if (isStackTile(tile)) {
+      return (
+        <Tree.Root role='tree' classNames='pbs-1 pbe-4 pli-1' ref={forwardedRef as Ref<HTMLOListElement>}>
+          {children}
+        </Tree.Root>
+      );
+    } else if (isTreeItemTile(tile)) {
+      return (
+        <NavTreeItem
+          node={data}
+          level={tile.level}
+          draggableAttributes={dragHandleAttributes}
+          draggableListeners={dragHandleListeners}
+          style={style}
+          rearranging={isActive}
+          isOverlay={isOverlay}
+          isPreview={isPreview}
+          {...(isMigrationDestination && { migrating: 'into' })}
+          ref={forwardedRef}
+        >
+          {children}
+        </NavTreeItem>
+      );
+    } else {
+      return null;
     }
   },
 );
@@ -175,6 +176,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             'rounded block',
             hoverableFocusedKeyboardControls,
             'transition-opacity',
+            isPreview ? 'opacity-50' : rearranging && 'opacity-0',
             (rearranging || isPreview) && 'opacity-0',
             focusRing,
             migrating === 'into' && dropRing,

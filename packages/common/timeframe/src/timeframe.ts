@@ -4,8 +4,8 @@
 
 import { inspect } from 'node:util';
 
-import { equalsSymbol, Equatable } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { equalsSymbol, type Equatable } from '@dxos/debug';
+import { type PublicKey } from '@dxos/keys';
 
 type Entry = {
   key: PublicKey;
