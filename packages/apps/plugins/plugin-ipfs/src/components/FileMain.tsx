@@ -57,9 +57,10 @@ export const FileSlide: FC<{ data: TypedObject }> = ({ data: file }) => {
 
   const url = getIpfsUrl(config, file.cid);
 
+  // TODO(burdon): Config object-container/-fit.
   return (
     <div className='h-full'>
-      <FilePreview type={file.type} url={url} className='object-cover' />
+      <FilePreview type={file.type} url={url} className='object-fit' />
     </div>
   );
 };
