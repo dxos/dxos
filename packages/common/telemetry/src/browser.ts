@@ -5,9 +5,9 @@
 import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
+import { tags } from '@dxos/observability';
 import { captureException } from '@dxos/sentry';
 
-import { tags } from './tags';
 import { type EventOptions, type InitOptions, type PageOptions } from './types';
 
 export const init = ({ apiKey, enable = true }: InitOptions) => {

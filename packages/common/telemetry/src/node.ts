@@ -6,9 +6,9 @@ import Analytics from 'analytics-node';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { tags } from '@dxos/observability';
 import { captureException } from '@dxos/sentry';
 
-import { tags } from './tags';
 import { type EventOptions, type InitOptions, type PageOptions } from './types';
 
 let analytics: Analytics | undefined;

@@ -1,0 +1,67 @@
+{
+  "sourceRoot": "packages/common/observability/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/common/observability/src/index.ts",
+        "outputPath": "packages/common/observability/dist/types",
+        "tsConfig": "packages/common/observability/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/observability/src/datadog/index.ts",
+          "packages/common/observability/src/index.ts"
+        ],
+        "outputPath": "packages/common/observability/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/observability/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "checkLeaks": false,
+        "coveragePath": "coverage/packages/common/observability/datadog",
+        "outputPath": "tmp/mocha/packages/common/observability/datadog",
+        "resultsPath": "test-results/packages/common/observability/datadog",
+        "testPatterns": [
+          "packages/common/observability/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/observability/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

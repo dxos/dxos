@@ -22,6 +22,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@segment/snippet": "^4.15.3",

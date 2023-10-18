@@ -42,6 +42,7 @@
     "@dxos/hello-template": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/process": "workspace:*",
     "@dxos/protocols": "workspace:*",

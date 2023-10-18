@@ -128,12 +128,6 @@ export const initializeAppTelemetry = async ({
     BASE_TELEMETRY_PROPERTIES.environment = environment;
     const telemetryDisabled = await isTelemetryDisabled(namespace);
 
-    // Add telemetry tags.
-    const tags = await Telemetry.getLocalTelemetryTags();
-    if (tags) {
-      BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
-    }
-
     const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
     Sentry.init({
       enable: Boolean(SENTRY_DESTINATION) && !telemetryDisabled,

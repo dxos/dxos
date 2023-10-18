@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/observability",
+  "version": "0.3.1",
+  "description": "Provides a common interface for app and platform observability",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./datadog": {
+      "browser": "./dist/lib/browser/datadog/index.mjs",
+      "import": "./dist/lib/browser/datadog/index.mjs",
+      "require": "./dist/lib/node/datadog/index.cjs",
+      "node": "./dist/lib/node/datadog/index.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "datadog": [
+        "dist/types/src/datadog/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "datadog-metrics": "^0.11.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "outDir": "dist/types",
     "types": [
       "@dxos/test",
@@ -25,16 +21,16 @@
       "path": "../context"
     },
     {
+      "path": "../debug"
+    },
+    {
       "path": "../invariant"
     },
     {
       "path": "../log"
     },
     {
-      "path": "../observability"
-    },
-    {
-      "path": "../sentry"
+      "path": "../node-std"
     },
     {
       "path": "../util"
