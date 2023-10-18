@@ -165,6 +165,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
             return groups;
           }, [])
         : [{ id: '', actions }];
+    // actionGroups.
 
     return (
       <DensityProvider density='fine'>

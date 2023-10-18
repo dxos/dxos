@@ -105,23 +105,24 @@ const main = async () => {
           // TODO(burdon): Remove need to come after SplitView.
           SpacePlugin(),
 
-          // Composer Apps.
+          DebugPlugin(),
           FilesPlugin(),
           GithubPlugin(),
-          MarkdownPlugin(),
-          SketchPlugin(),
-          PresenterPlugin(), // Before Stack.
-          StackPlugin(),
-
-          // Labs Apps.
-          ChessPlugin(),
-          DebugPlugin(),
-          GridPlugin(),
           IpfsPlugin(),
+
+          // Presentation plugins.
+          MarkdownPlugin(),
+          GridPlugin(),
           KanbanPlugin(),
           MapPlugin(),
+          PresenterPlugin(), // Before Stack.
+          SketchPlugin(),
+          StackPlugin(),
           TablePlugin(),
           ThreadPlugin(),
+
+          // Experimental.
+          ChessPlugin(),
         ]}
       />
     </StrictMode>,
