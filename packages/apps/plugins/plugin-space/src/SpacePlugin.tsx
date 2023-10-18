@@ -423,9 +423,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.popoverOpen = true;
                 splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${createNodId(
-                  spaceKey,
-                )}`;
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/ui/navtree/${createNodId(spaceKey)}`;
                 return true;
               }
               break;

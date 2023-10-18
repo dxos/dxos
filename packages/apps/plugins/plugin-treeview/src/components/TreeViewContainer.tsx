@@ -230,6 +230,7 @@ export const TreeViewContainer = ({
               onOver={handleOver}
               onDrop={handleDrop}
               compare={graphNodeCompare}
+              popoverAnchorId={popoverAnchorId}
             />
           </div>
           <VersionInfo config={config} />

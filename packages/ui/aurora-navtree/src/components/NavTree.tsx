@@ -37,6 +37,7 @@ const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overIt
 export type NavTreeProps = {
   node: TreeNode;
   current?: NavTreeProviderProps['current'];
+  popoverAnchorId?: NavTreeProviderProps['popoverAnchorId'];
   onSelect?: NavTreeProviderProps['onSelect'];
   isOver?: NavTreeProviderProps['isOver'];
 } & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id'>;
@@ -44,6 +45,7 @@ export type NavTreeProps = {
 export const NavTree = ({
   node,
   current,
+  popoverAnchorId,
   onSelect,
   isOver = defaultIsOver,
   onOver,
@@ -51,6 +53,7 @@ export const NavTree = ({
   compare,
   className,
 }: NavTreeProps) => {
+  console.log('[popover anchor id]', popoverAnchorId);
   return (
     <Mosaic.Container
       {...{
@@ -62,7 +65,7 @@ export const NavTree = ({
       }}
     >
       <Tree.Root classNames={mx('flex flex-col', className)}>
-        <NavTreeProvider current={current} onSelect={onSelect} isOver={isOver}>
+        <NavTreeProvider current={current} popoverAnchorId={popoverAnchorId} onSelect={onSelect} isOver={isOver}>
           <NavTreeImpl node={node} />
         </NavTreeProvider>
       </Tree.Root>
