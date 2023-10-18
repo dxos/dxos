@@ -20,7 +20,7 @@ export default (event: HandlerProps, context: FunctionContext) => {
     const { Chess } = await import('chess.js');
 
     for (const objectId of event.objects) {
-      const game = space.db.getObjectById(objectId);
+      const game = space.db.query({ id: objectId }).objects[0];
       if (game && game.pgn) {
         const chess = new Chess();
         // TODO(burdon): Rename pgn (isn't pgn).
