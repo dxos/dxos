@@ -51,7 +51,11 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<SpaceState>({ active: undefined, viewers: [], appState: undefined });
+  const state = deepSignal<SpaceState>({
+    active: undefined,
+    viewers: [],
+    appState: undefined,
+  }) as RevertDeepSignal<SpaceState>;
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
@@ -213,7 +217,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
-      space: state as RevertDeepSignal<SpaceState>,
+      space: state,
       settings: settings.values,
       translations,
       component: (data, role) => {

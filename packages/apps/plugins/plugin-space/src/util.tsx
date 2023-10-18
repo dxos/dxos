@@ -7,13 +7,13 @@ import { batch } from '@preact/signals-react';
 import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { type Node } from '@braneframe/plugin-graph';
 import { type AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
+import { getAppStateIndex, setAppStateIndex } from './helpers';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
@@ -84,7 +84,7 @@ export const spaceToGraphNode = ({
           // TODO(thure): reconcile with `TypedObject`’s `meta` record.
           child.properties.index = nextIndex;
           if (child.data.meta) {
-            child.data.meta.index = ndextIndex;
+            child.data.meta.index = nextIndex;
           }
         },
         persistenceClass: 'appState',
