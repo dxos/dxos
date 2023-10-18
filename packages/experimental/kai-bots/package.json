@@ -24,7 +24,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/labs-functions": "workspace:*",
+    "@dxos/kai-functions": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
