@@ -143,6 +143,7 @@ export const SortableTile = ({
     activeItem &&
     activeItem.item.id === item.id &&
     overItem &&
+    !Path.siblings(activeItem.path, overItem.path) &&
     (Path.siblings(overItem.path, path) || Path.hasChild(overItem.path, path)) &&
     operation !== 'reject';
 
@@ -178,7 +179,7 @@ export const SortableTile = ({
       isOver={isOver}
       draggableStyle={{
         transform: getTransformCSS(transform),
-        transition: activeItem ? `transform ${transitionDuration}ms ease` : 'none',
+        transition: transform ? `transform ${transitionDuration}ms ease` : 'none',
         ...draggableStyle,
       }}
       draggableProps={{ ...attributes, ...listeners }}
