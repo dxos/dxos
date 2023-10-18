@@ -3,16 +3,16 @@
 //
 
 import { Event, scheduleTask } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import type { FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { ItemID } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { type PublicKey } from '@dxos/keys';
+import { type ItemID } from '@dxos/protocols';
+import { type EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
+import { type ModelType, type ModelMeta, type ModelConstructor, validateModelClass } from './types';
 
 /**
  * Creates Model instances from a registered collection of Model types.

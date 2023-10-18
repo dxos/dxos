@@ -6,7 +6,7 @@ import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { mapFromKeyValues } from '../config';
 import { FILE_DEFAULTS, FILE_ENVS } from '../types';

@@ -5,9 +5,9 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { MessageValence, Elevation } from '@dxos/aurora-types';
+import { type MessageValence, type Elevation } from '@dxos/aurora-types';
 import { useId } from '@dxos/react-hooks';
 
 import { useElevationContext, useThemeContext } from '../../hooks';

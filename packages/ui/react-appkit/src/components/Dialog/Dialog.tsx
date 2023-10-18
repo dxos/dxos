@@ -4,16 +4,16 @@
 
 import { X } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentProps, ReactNode } from 'react';
+import React, { type ComponentProps, type ReactNode } from 'react';
 
 import {
   Dialog as NaturalDialog,
-  DialogCloseProps,
-  DialogContentProps,
-  DialogDescriptionProps,
-  DialogOverlayProps,
-  DialogRootProps,
-  DialogTitleProps,
+  type DialogCloseProps,
+  type DialogContentProps,
+  type DialogDescriptionProps,
+  type DialogOverlayProps,
+  type DialogRootProps,
+  type DialogTitleProps,
 } from '@dxos/aurora';
 import { focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
 

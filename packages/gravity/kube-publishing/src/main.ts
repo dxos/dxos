@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PublishTestSpec } from './spec';
+import { type PublishTestSpec } from './spec';
 import { TestRunner } from './test-runner';
 
 const main = async () => {

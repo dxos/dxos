@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { printDevices } from '../../util';
@@ -19,6 +19,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
+      await client.spaces.isReady.wait();
       const devices = client.halo.devices.get();
       printDevices(devices, this.flags);
       return devices;

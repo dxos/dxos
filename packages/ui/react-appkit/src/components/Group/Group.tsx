@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { useId, Elevation, ElevationProvider } from '@dxos/aurora';
+import { useId, type Elevation, ElevationProvider } from '@dxos/aurora';
 import { group, mx } from '@dxos/aurora-theme';
 
-import { Heading, HeadingProps } from '../Heading';
+import { Heading, type HeadingProps } from '../Heading';
 
 export interface GroupProps extends React.ComponentProps<'div'> {
   label: HeadingProps;

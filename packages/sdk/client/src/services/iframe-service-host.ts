@@ -4,16 +4,16 @@
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 import {
-  ClientServices,
-  ClientServicesProvider,
+  type ClientServices,
+  type ClientServicesProvider,
   DEFAULT_VAULT_URL,
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
-import { ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
+import { type ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { IFrameManager } from './iframe-manager';

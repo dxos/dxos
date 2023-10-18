@@ -25,6 +25,7 @@ import {
   StoragePanel,
   SwarmPanel,
   TracingPanel,
+  DashboardPanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -128,6 +129,15 @@ export const useRoutes = () => {
             {
               path: '/mesh/network',
               element: <NetworkPanel />,
+            },
+          ],
+        },
+        {
+          path: '/agent',
+          children: [
+            {
+              path: '/agent/dashboard',
+              element: <DashboardPanel />,
             },
           ],
         },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -30,6 +30,7 @@
     "readme": "oclif readme"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",

@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
-import { AdmittedFeed, Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
 import { SpaceStateMachine } from './space-state-machine';

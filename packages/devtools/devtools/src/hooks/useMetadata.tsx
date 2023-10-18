@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 export const useMetadata = () => {

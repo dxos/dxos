@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Breadcrumb, Button, useTranslation } from '@dxos/aurora';
 

@@ -3,14 +3,14 @@
 //
 
 import { Check, CaretDown, Trash, X } from '@phosphor-icons/react';
-import { HeaderContext, RowData } from '@tanstack/react-table';
-import React, { FC, PropsWithChildren, useRef, useState } from 'react';
+import { type HeaderContext, type RowData } from '@tanstack/react-table';
+import React, { type FC, type PropsWithChildren, useRef, useState } from 'react';
 
 import { Button, DensityProvider, Input, Popover, Select, Separator } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { TableDef, ColumnProps, columnTypes } from '../schema';
+import { type TableDef, type ColumnProps, columnTypes } from '../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;

@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Event } from '@dxos/async';
+import { type PublicKey } from '@dxos/keys';
+import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { CommandTrace, SignalStatus } from '../signal-client';
-import { Message, SignalMethods } from '../signal-methods';
+import { type CommandTrace, type SignalStatus } from '../signal-client';
+import { type Message, type SignalMethods } from '../signal-methods';
 
 /**
  *

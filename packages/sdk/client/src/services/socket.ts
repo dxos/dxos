@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 /**

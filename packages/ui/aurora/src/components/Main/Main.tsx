@@ -8,11 +8,11 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  ComponentPropsWithRef,
-  Dispatch,
+  type ComponentPropsWithRef,
+  type Dispatch,
   forwardRef,
-  PropsWithChildren,
-  SetStateAction,
+  type PropsWithChildren,
+  type SetStateAction,
   useCallback,
   useRef,
 } from 'react';
@@ -21,7 +21,7 @@ import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
 const MAIN_ROOT_NAME = 'MainRoot';

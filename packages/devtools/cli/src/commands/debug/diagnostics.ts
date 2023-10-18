@@ -7,8 +7,8 @@ import rev from 'git-rev-sync';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { ConfigProto } from '@dxos/config';
+import { type Client } from '@dxos/client';
+import { type ConfigProto } from '@dxos/config';
 
 import { BaseCommand } from '../../base-command';
 

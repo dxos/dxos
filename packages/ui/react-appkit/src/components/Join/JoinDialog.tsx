@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 
-import { JoinPanel, JoinPanelProps } from './JoinPanel';
-import { Dialog, DialogProps } from '../Dialog';
+import { JoinPanel, type JoinPanelProps } from './JoinPanel';
+import { Dialog, type DialogProps } from '../Dialog';
 
 export interface JoinSpaceDialogProps extends JoinPanelProps {
   dialogProps?: Partial<DialogProps>;

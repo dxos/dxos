@@ -13,8 +13,8 @@ import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
-import { FeedWrapper } from './feed-wrapper';
-import { FeedBlock } from './types';
+import { type FeedWrapper } from './feed-wrapper';
+import { type FeedBlock } from './types';
 
 /**
  * Select next block.

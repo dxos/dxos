@@ -4,8 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
+import { type AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 

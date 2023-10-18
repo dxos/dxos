@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { InputOf } from '@dxos/plate';
+import { type InputOf } from '@dxos/plate';
 
-import template from '../src/template.t';
+import type template from '../src/template.t';
 
 export const scenarios: InputOf<typeof template>[] = [
   {

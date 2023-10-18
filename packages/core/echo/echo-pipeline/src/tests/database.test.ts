@@ -9,7 +9,7 @@ import { createModelMutation, DatabaseProxy, encodeModelMutation, genesisMutatio
 import { TestBuilder as FeedTestBuilder } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
 import { createMappedFeedWriter } from '../common';
@@ -58,12 +58,12 @@ describe('database', () => {
       const database = await createDatabase();
 
       const result = database.backend.mutate(genesisMutation(PublicKey.random().toHex(), DocumentModel.meta.type));
-      expect(result.objectsUpdated.length).toEqual(1);
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(result.updateEvent.itemsUpdated.length).toEqual(1);
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
       database.backend.commitBatch();
 
       await result.batch.waitToBeProcessed();
-      expect(database.itemManager.entities.has(result.objectsUpdated[0].id));
+      expect(database.itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
     });
 
     test('mutate document', async () => {

@@ -3,7 +3,7 @@
 //
 
 import { FilePlus } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { File as FileType } from '@braneframe/types';
@@ -18,6 +18,7 @@ export const FileUpload: FC<{
   onUpload: (file: FileType) => void;
 }> = ({ classNames, fileTypes, onUpload }) => {
   const ipfsClient = useIpfsClient();
+
   const handleUpdate = async (file: File) => {
     const info = await ipfsClient?.add(file);
     if (info) {

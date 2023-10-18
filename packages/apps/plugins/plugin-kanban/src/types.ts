@@ -47,7 +47,7 @@ export interface KanbanModel {
 (globalThis as any)[KanbanType.name] = KanbanType;
 
 export const isKanban = (data: unknown): data is KanbanType => {
-  return isTypedObject(data) && KanbanType.type.name === data.__typename;
+  return isTypedObject(data) && KanbanType.schema.typename === data.__typename;
 };
 
 export type Location = {

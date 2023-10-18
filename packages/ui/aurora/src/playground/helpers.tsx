@@ -4,9 +4,9 @@
 
 import '@dxosTheme';
 
-import React, { FunctionComponent } from 'react';
+import React, { type FunctionComponent } from 'react';
 
-import { Density } from '@dxos/aurora-types';
+import { type Density } from '@dxos/aurora-types';
 
 import { DensityProvider, ElevationProvider } from '../components';
 

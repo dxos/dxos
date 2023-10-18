@@ -2,7 +2,7 @@
 // Copyright 2018 DXOS.org.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 /**
  * Fullscreen container.

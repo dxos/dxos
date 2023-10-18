@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
-import { SingleOrArray, Event } from 'xstate';
+import { type cloneElement } from 'react';
+import { type SingleOrArray, type Event } from 'xstate';
 
-import { Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 
-import { SpaceManagerProps } from './steps';
-import { InvitationManagerProps } from '../../steps';
+import { type SpaceManagerProps } from './steps';
+import { type InvitationManagerProps } from '../../steps';
 
 export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & { properties: { name?: string } };
 

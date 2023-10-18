@@ -7,20 +7,20 @@ import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import Heading from '@tiptap/extension-heading';
 import ListItem from '@tiptap/extension-list-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
+import { type Editor, EditorContent, useEditor as useNaturalEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 
-import { ComposerModel, ComposerSlots } from '../../model';
+import { type ComposerModel, type ComposerSlots } from '../../model';
 import {
   blockquote,
   bold,
   codeBlock,
   heading,
-  HeadingLevel,
+  type HeadingLevel,
   horizontalRule,
   italic,
   listItem,

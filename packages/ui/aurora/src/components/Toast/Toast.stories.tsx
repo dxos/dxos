@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React, { ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 
 import { Toast } from './Toast';
 import { Button } from '../Buttons';

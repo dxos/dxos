@@ -7,7 +7,7 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/aurora';
 import { usePlugin } from '@dxos/react-surface';
 
-import { SPACE_PLUGIN, SpacePluginProvides } from '../types';
+import { SPACE_PLUGIN, type SpacePluginProvides } from '../types';
 
 export const SpaceSettings = () => {
   const { t } = useTranslation(SPACE_PLUGIN);

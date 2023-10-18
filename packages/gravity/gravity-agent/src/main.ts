@@ -9,11 +9,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { TestBuilder } from '@dxos/client/testing';
-import { ProtoCodec } from '@dxos/codec-protobuf';
-import { Config, ConfigProto } from '@dxos/config';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
+import { Config, type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
+import { type AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 import { testStateMachineFactory } from './statemachine';

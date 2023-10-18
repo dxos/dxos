@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps, ReactNode } from 'react';
+import React, { type ComponentProps, type ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
-import { Heading, HeadingProps } from '../Heading';
+import { Heading, type HeadingProps } from '../Heading';
 
 export interface HeadingWithActionsProps extends ComponentProps<'div'> {
   heading: HeadingProps;

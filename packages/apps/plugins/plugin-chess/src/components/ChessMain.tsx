@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
+import { Chessboard, type ChessModel, type ChessMove, type Game } from '@dxos/chess-app';
 import { invariant } from '@dxos/invariant';
 
 export const ChessMain = ({ data: object }: { data: Game }) => {

@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DecoratorFunction } from '@storybook/csf';
-import { ReactRenderer } from '@storybook/react';
+import { type DecoratorFunction } from '@storybook/csf';
+import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { Input } from '@dxos/aurora';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { ConnectionState } from '@dxos/client/mesh';
 
 export type ToggleNetworkDecoratorOptions = {

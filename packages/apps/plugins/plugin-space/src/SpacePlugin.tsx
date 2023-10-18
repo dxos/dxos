@@ -5,21 +5,21 @@
 import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
-import { RevertDeepSignal, deepSignal } from 'deepsignal/react';
+import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { CLIENT_PLUGIN, ClientPluginProvides } from '@braneframe/plugin-client';
-import { DND_PLUGIN, DndPluginProvides, setAppStateIndex } from '@braneframe/plugin-dnd';
-import { Node, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { SPLITVIEW_PLUGIN, SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
-import { AppState } from '@braneframe/types';
+import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
+import { DND_PLUGIN, type DndPluginProvides, setAppStateIndex } from '@braneframe/plugin-dnd';
+import { type Node, type GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
+import { type AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
-import { Space, SpaceProxy } from '@dxos/react-client/echo';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import {
@@ -38,9 +38,9 @@ import {
   SPACE_PLUGIN,
   SPACE_PLUGIN_SHORT_ID,
   SpaceAction,
-  SpacePluginProvides,
-  SpaceSettingsProps,
-  SpaceState,
+  type SpacePluginProvides,
+  type SpaceSettingsProps,
+  type SpaceState,
 } from './types';
 import { createNodId, isSpace, spaceToGraphNode } from './util';
 
@@ -50,7 +50,7 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[PublicKey.name] = PublicKey;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>('braneframe.plugin-space');
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -63,10 +63,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      settings.prop(settings.values.$showHidden!, 'showHidden', LocalStorageStore.bool);
+      settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
       const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN); // TODO(burdon): Const vs string?
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
       const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, SPLITVIEW_PLUGIN);
       if (!clientPlugin || !splitViewPlugin) {
         return;

@@ -3,18 +3,18 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { PROXY_CONNECTION_TIMEOUT, ShellRuntime } from '@dxos/client-protocol';
-import { Config } from '@dxos/config';
+import { PROXY_CONNECTION_TIMEOUT, type ShellRuntime } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createSimplePeerTransportFactory, TransportFactory } from '@dxos/network-manager';
-import { RpcPort } from '@dxos/rpc';
-import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
+import { createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { type RpcPort } from '@dxos/rpc';
+import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
 
 import { ShellRuntimeImpl } from './shell-runtime';
 import { ClientServicesHost } from '../services';
-import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
+import { ClientRpcServer, type ClientRpcServerParams } from '../services/client-rpc-server';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 

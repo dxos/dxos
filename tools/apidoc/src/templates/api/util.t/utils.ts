@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { JSONOutput as S, ReflectionKind } from 'typedoc';
+import { type JSONOutput as S, ReflectionKind } from 'typedoc';
 
 export const findReflection = (
   root: S.ContainerReflection,

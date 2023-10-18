@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, PropsWithChildren } from 'react';
+import React, { createContext, type PropsWithChildren } from 'react';
 
-import { Elevation } from '@dxos/aurora-types';
+import { type Elevation } from '@dxos/aurora-types';
 
 export interface ElevationContextValue {
   elevation?: Elevation;

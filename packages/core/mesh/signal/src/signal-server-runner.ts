@@ -3,7 +3,7 @@
 //
 
 import fetch from 'node-fetch';
-import { ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -20,6 +20,7 @@ interface TestBrokerOptions {
   timeout?: number;
   env?: Record<string, string>;
   killExisting?: boolean;
+  onError?: (err: any) => void;
 
   /**
    * Allows arbitrary commands. WARNING: It stalls on Linux machine if `true`.
@@ -35,6 +36,7 @@ export class SignalServerRunner {
   private readonly _env: Record<string, string>;
   private readonly _shell: boolean;
   private readonly _killExisting: boolean;
+  private readonly onError?: (err: any) => void;
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
@@ -51,6 +53,7 @@ export class SignalServerRunner {
     env = {},
     shell = false,
     killExisting = false,
+    onError,
   }: TestBrokerOptions) {
     this._binCommand = binCommand;
     this._signalArguments = signalArguments;
@@ -60,6 +63,7 @@ export class SignalServerRunner {
     this._env = env;
     this._shell = shell;
     this._killExisting = killExisting;
+    this.onError = onError;
 
     this._serverProcess = this.startProcess();
   }
@@ -120,13 +124,19 @@ export class SignalServerRunner {
 
     server.on('error', (err) => {
       log.error(`TestServer ERROR: ${err}`);
+      this.onError?.(err);
     });
 
     server.on('close', (code) => {
       if ((code! -= 0)) {
-        throw new Error(`TestServer exited with code ${code}`);
+        if (this.onError) {
+          this.onError?.(new Error(`TestServer exited with code ${code}`));
+        } else {
+          throw new Error(`TestServer exited with code ${code}`);
+        }
+      } else {
+        log.info(`TestServer exited with code ${code}`);
       }
-      log.info(`TestServer exited with code ${code}`);
     });
 
     this._serverProcess = server;

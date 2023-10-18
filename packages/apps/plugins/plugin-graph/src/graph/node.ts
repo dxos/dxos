@@ -3,11 +3,11 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 
-import { Action, Label } from './action';
+import { type Action, type Label } from './action';
 
 /**
  * Called when a node is added to the graph, allowing other node builders to add children, actions or properties.

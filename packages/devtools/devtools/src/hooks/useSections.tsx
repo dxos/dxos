@@ -4,6 +4,7 @@
 
 import {
   ChartLine,
+  ComputerTower,
   CreditCard,
   Database,
   Devices,
@@ -12,13 +13,14 @@ import {
   Graph,
   HardDrive,
   HardDrives,
-  Icon,
+  type Icon,
   IdentificationBadge,
   Key,
   Planet,
   Polygon,
   Queue,
   Receipt,
+  Robot,
   Users,
   UsersThree,
   WifiHigh,
@@ -159,32 +161,17 @@ export const useSections = (): SectionItem[] => {
         },
       ],
     },
-    // {
-    //   id: '/dmg',
-    //   title: 'DMG',
-    //   items: [
-    //     {
-    //       id: '/dmg/registry',
-    //       title: 'Registry',
-    //       icon: <RegistryIcon />
-    //     }
-    //   ]
-    // },
-    // {
-    //   id: '/debug',
-    //   title: 'Debug',
-    //   items: [
-    //     {
-    //       id: '/debug/logging',
-    //       title: 'Logging',
-    //       icon: <LoggingIcon />
-    //     },
-    //     {
-    //       id: '/debug/rpc',
-    //       title: 'RPC Trace',
-    //       icon: <MessagesIcon />
-    //     }
-    //   ]
-    // }
+    {
+      id: 'agent',
+      title: 'AGENT',
+      Icon: Robot,
+      items: [
+        {
+          id: '/agent/dashboard',
+          title: 'Dashboard',
+          Icon: ComputerTower,
+        },
+      ],
+    },
   ];
 };

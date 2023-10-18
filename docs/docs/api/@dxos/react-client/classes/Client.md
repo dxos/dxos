@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.3.1"</code>
+Type: <code>"0.3.2"</code>
 
 The version of this client API.
 
@@ -78,7 +78,7 @@ Arguments: none
 
 
 
-### [addSchema(schema)]()
+### [addSchema(types)]()
 
 
 
@@ -87,7 +87,19 @@ Returns: <code>void</code>
 
 Arguments: 
 
-`schema`: <code>EchoSchema</code>
+`types`: <code>TypeCollection</code>
+
+
+### [addTypes(types)]()
+
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
 
 
 ### [destroy()]()

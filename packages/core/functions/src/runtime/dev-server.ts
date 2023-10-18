@@ -3,15 +3,15 @@
 //
 
 import express from 'express';
-import http from 'http';
+import type http from 'http';
 import { join } from 'node:path';
 import { getPortPromise } from 'portfinder';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { FunctionContext, FunctionHandler, FunctionsManifest, Response } from '../function';
+import { type FunctionContext, type FunctionHandler, type FunctionsManifest, type Response } from '../function';
 
 const DEFAULT_PORT = 7000;
 

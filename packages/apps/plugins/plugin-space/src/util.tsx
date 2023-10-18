@@ -4,17 +4,17 @@
 
 import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
-import { getIndices } from '@tldraw/indices';
+import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
-import { Node } from '@braneframe/plugin-graph';
-import { AppState } from '@braneframe/types';
+import { type Node } from '@braneframe/plugin-graph';
+import { type AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
+import { PublicKey, type PublicKeyLike } from '@dxos/keys';
+import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceSettingsProps } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
 

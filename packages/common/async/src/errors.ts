@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ObservableProvider } from './observable-value';
+import { type ObservableProvider } from './observable-value';
 
 // TODO(burdon): Move to debug.
 //  Use: https://nodejs.org/api/errors.html

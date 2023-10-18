@@ -9,10 +9,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
-import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
+import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { SignalMessage } from './signal-messenger';
+import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
 describe('Signal Integration Test', () => {

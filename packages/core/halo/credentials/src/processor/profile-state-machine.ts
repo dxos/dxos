@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { CredentialProcessor } from './credential-processor';
+import { type CredentialProcessor } from './credential-processor';
 import { getCredentialAssertion } from '../credentials';
 
 export type ProfileStateMachineParams = {

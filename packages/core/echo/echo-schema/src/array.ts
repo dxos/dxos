@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect, CustomInspectFunction } from 'node:util';
+import { inspect, type CustomInspectFunction } from 'node:util';
 
-import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { base } from './defs';
-import { EchoObject } from './object';
-import { TypedObject } from './typed-object';
+import { EchoObjectBase } from './echo-object-base';
+import { type TypedObject } from './typed-object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -341,7 +341,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
-      return this._object!._lookupLink(value.itemId) as T | undefined;
+      return this._object!._lookupLink(value) as T | undefined;
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       return decodeRecords(value, this._object!);
     } else {
@@ -350,9 +350,8 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof EchoObject) {
-      void this._object!._linkObject(value);
-      return new Reference(value.id);
+    if (value instanceof EchoObjectBase) {
+      return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
       value !== null &&
@@ -426,9 +425,8 @@ export class EchoArray<T> implements Array<T> {
 }
 
 const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof EchoObject) {
-    void document!._linkObject(value);
-    return new Reference(value.id);
+  if (value instanceof EchoObjectBase) {
+    return document!._linkObject(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => encodeRecords(value, document));
   } else if (typeof value === 'object') {
@@ -441,7 +439,7 @@ const encodeRecords = (value: any, document: TypedObject): any => {
 
 const decodeRecords = (value: any, document: TypedObject): any => {
   if (value instanceof Reference) {
-    return document._lookupLink(value.itemId);
+    return document._lookupLink(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => decodeRecords(value, document));
   } else if (typeof value === 'object') {

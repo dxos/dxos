@@ -3,23 +3,23 @@
 //
 
 import React, {
-  ReactNode,
+  type ReactNode,
   useState,
-  Context,
+  type Context,
   createContext,
   useContext,
   useEffect,
-  FunctionComponent,
+  type FunctionComponent,
   useMemo,
 } from 'react';
 
 import { Client } from '@dxos/client';
 import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
-import { Config } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { getAsyncValue, MaybePromise, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
+import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
 

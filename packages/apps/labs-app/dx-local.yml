@@ -11,7 +11,6 @@ runtime:
   services:
     signaling:
       - server: ws://localhost:8888/.well-known/dx/signal
-
     ipfs:
-      server: http://dx.dev.kube.dxos.org:5001
-      gateway: http://dx.dev.kube.dxos.org:8888/ipfs
+      server: https://dev.kube.dxos.org/ipfs/api
+      gateway: https://dev.kube.dxos.org/ipfs/gateway

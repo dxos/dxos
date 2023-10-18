@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { JoinHeading } from './JoinHeading';
-import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodChooser,

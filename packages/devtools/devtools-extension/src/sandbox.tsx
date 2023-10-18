@@ -12,8 +12,8 @@ import { Defaults } from '@dxos/config';
 import { Devtools } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, ClientServicesProxy, Config, ClientServices } from '@dxos/react-client';
-import { RpcPort } from '@dxos/rpc';
+import { Client, ClientServicesProxy, Config, type ClientServices } from '@dxos/react-client';
+import { type RpcPort } from '@dxos/rpc';
 
 import { initSentry } from './utils';
 

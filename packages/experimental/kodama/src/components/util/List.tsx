@@ -4,7 +4,7 @@
 
 import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
-import React, { FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { Panel } from './Panel';
 import { useAppState } from '../../hooks';

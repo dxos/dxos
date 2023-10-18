@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { SerializedSpace, Serializer } from './serializer';
+import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { Input as AuroraInput, TextInputProps } from '@dxos/aurora';
+import { Input as AuroraInput, type TextInputProps } from '@dxos/aurora';
 
 export type LargeInputProps = TextInputProps & {
   validationMessage?: string;

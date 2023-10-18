@@ -12,8 +12,8 @@ import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/
 import { defaultMap, range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
-import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
+import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
+import { type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type TransportTestSpec = {
@@ -44,6 +44,7 @@ export type TransportAgentConfig = {
 
 export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportAgentConfig> {
   signalBuilder = new SignalTestBuilder();
+  onError?: (err: Error) => void;
 
   defaultSpec(): TransportTestSpec {
     return {
@@ -64,7 +65,10 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
   }
 
   async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
+      log.error('error in signal server', { err });
+      this.onError?.(err);
+    });
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
     return range(spec.agents).map((agentIdx) => ({

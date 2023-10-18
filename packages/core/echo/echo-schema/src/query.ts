@@ -4,11 +4,15 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Item, QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
+import { type QueryOptions, ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { type ComplexMap } from '@dxos/util';
 
-import { EchoObject } from './object';
+import { type EchoObject } from './defs';
 import { createSignal } from './signal';
-import { isTypedObject, TypedObject } from './typed-object';
+import { isTypedObject, type TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -32,14 +36,20 @@ export type Subscription = () => void;
  * Predicate based query.
  */
 export class Query<T extends TypedObject = TypedObject> {
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+    },
+  });
+
   private readonly _filters: Filter<any>[] = [];
   private _cache: T[] | undefined = undefined;
   private _signal = createSignal?.();
   private _event = new Event<Query<T>>();
 
   constructor(
-    private readonly _objects: Map<string, EchoObject>,
-    private readonly _updateEvent: Event<Item[]>,
+    private readonly _objectMaps: ComplexMap<PublicKey, Map<string, EchoObject>>,
+    private readonly _updateEvent: Event<UpdateEvent>,
     filter: Filter<any> | Filter<any>[],
     options?: QueryOptions,
   ) {
@@ -48,7 +58,7 @@ export class Query<T extends TypedObject = TypedObject> {
 
     // Weak listener to allow queries to be garbage collected.
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+    this._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
   }
 
   get objects(): T[] {
@@ -57,15 +67,17 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 
   // Hold a reference to the listener to prevent it from being garbage collected.
-  private _onUpdate = (updated: Item[]) => {
-    const changed = updated.some((object) => {
-      const exists = this._cache?.find((obj) => obj.id === object.id);
-      if (this._objects.has(object.id) || exists) {
-        const match = this._match(this._objects.get(object.id)! as T);
-        return match || (exists && !match);
-      } else {
-        return false;
-      }
+  private _onUpdate = (updateEvent: UpdateEvent) => {
+    const objectMap = this._objectMaps.get(updateEvent.spaceKey);
+    invariant(objectMap, 'Invalid update routed.');
+
+    // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const changed = updateEvent.itemsUpdated.some((object) => {
+      return (
+        !this._cache ||
+        this._cache.find((obj) => obj.id === object.id) ||
+        (objectMap.has(object.id) && this._match(objectMap.get(object.id)! as T))
+      );
     });
 
     if (changed) {
@@ -77,7 +89,9 @@ export class Query<T extends TypedObject = TypedObject> {
 
   private _getObjects() {
     if (!this._cache) {
-      this._cache = Array.from(this._objects.values()).filter((object): object is T => this._match(object as T));
+      this._cache = Array.from(this._objectMaps.values()).flatMap((objects) =>
+        Array.from(objects.values()).filter((object): object is T => this._match(object as T)),
+      );
     }
 
     return this._cache;
@@ -88,7 +102,7 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._event.on(callback);
   }
 
-  _match(object: T) {
+  private _match(object: T) {
     return isTypedObject(object) && this._filters.every((filter) => match(object, filter));
   }
 }

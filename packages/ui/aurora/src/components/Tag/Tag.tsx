@@ -4,12 +4,12 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { ChromaticPalette, MessageValence, NeutralPalette } from '@dxos/aurora-types';
+import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/aurora-types';
 
 import { useThemeContext } from '../../hooks';
-import { ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 
 export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.span>> & {
   palette?: NeutralPalette | ChromaticPalette | MessageValence;

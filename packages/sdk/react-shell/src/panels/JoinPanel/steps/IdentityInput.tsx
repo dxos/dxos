@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import fs from 'node:fs';
-import { FileHandle } from 'node:fs/promises';
+import type fs from 'node:fs';
+import { type FileHandle } from 'node:fs/promises';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';

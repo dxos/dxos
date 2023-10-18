@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Info } from '@phosphor-icons/react';
 import React from 'react';
 
-import { MessageValence } from '@dxos/aurora-types';
+import { type MessageValence } from '@dxos/aurora-types';
 
 import { Message } from './Message';
 

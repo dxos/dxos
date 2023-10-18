@@ -3,7 +3,7 @@
 //
 import { useEffect } from 'react';
 
-import { Node } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { useTranslation } from '@dxos/aurora';
 
 import { getTreeItemLabel } from '../util';

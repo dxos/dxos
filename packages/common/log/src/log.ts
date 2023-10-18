@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogConfig, LogLevel, LogOptions } from './config';
-import { LogContext, LogProcessor } from './context';
-import { CallMetadata } from './meta';
+import { type LogConfig, LogLevel, type LogOptions } from './config';
+import { type LogContext, type LogProcessor } from './context';
+import { type CallMetadata } from './meta';
 import { getConfig, DEFAULT_PROCESSORS } from './options';
 
 /**
@@ -23,6 +23,7 @@ interface LogMethods {
   error: LogFunction;
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
   break: () => void;
+  stack: (message?: string, context?: never, meta?: CallMetadata) => void;
 }
 
 /**
@@ -73,6 +74,9 @@ const createLog = (): LogImp => {
   // Show break.
   log.break = () => log.info('——————————————————————————————————————————————————');
 
+  log.stack = (message, context, meta) =>
+    processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
+
   /**
    * Process the current log call.
    */
@@ -101,3 +105,5 @@ declare global {
   // eslint-disable-next-line camelcase
   const dx_log: Log;
 }
+
+const getFormattedStackTrace = () => new Error().stack!.split('\n').slice(3).join('\n');

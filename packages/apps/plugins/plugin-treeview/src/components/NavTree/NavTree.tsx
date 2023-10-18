@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { getDndId, Mosaic, StackTile, useMosaic, useMosaicRoot } from '@dxos/aurora-grid';
+import { getDndId, Mosaic, useMosaic, useMosaicRoot } from '@dxos/aurora-grid';
 
 export const NavTreeRoot = () => {
   const { id } = useMosaicRoot();
@@ -14,5 +14,5 @@ export const NavTreeRoot = () => {
     },
   } = useMosaic();
 
-  return root ? <Mosaic.Stack {...(root as StackTile)} variant='stack' /> : null;
+  return root ? <Mosaic.Tile {...root} variant='stack' /> : null;
 };

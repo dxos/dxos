@@ -6,7 +6,7 @@ import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
-import { Schema as SchemaType, Space, Text } from '@dxos/client/echo';
+import { Schema as SchemaType, type Space, Text } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -154,10 +154,10 @@ export class Generator {
     log('created objects', { organizations: organizations.length, projects: projects.length, people: people.length });
   }
 
-  createObject({ type = DocumentType.type.name } = {}) {
+  createObject({ type = DocumentType.schema.typename } = {}) {
     log('creating object', { type });
     switch (type) {
-      case DocumentType.type.name: {
+      case DocumentType.schema.typename: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
         const content = range(this._faker!.number.int({ min: 2, max: 8 }))
@@ -170,9 +170,9 @@ export class Generator {
     }
   }
 
-  async updateObject(type = DocumentType.type.name) {
+  async updateObject(type = DocumentType.schema.typename) {
     switch (type) {
-      case DocumentType.type.name: {
+      case DocumentType.schema.typename: {
         const { objects } = this._space.db.query(DocumentType.filter());
         if (objects.length) {
           // TODO(burdon): Standardize faker deps.

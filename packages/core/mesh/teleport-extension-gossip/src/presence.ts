@@ -3,16 +3,16 @@
 //
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { type WithTypeUrl } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { Gossip } from './gossip';
+import { type Gossip } from './gossip';
 
 export type PresenceParams = {
   /**

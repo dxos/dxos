@@ -5,20 +5,25 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React, { FC, MutableRefObject, RefCallback, useCallback } from 'react';
+import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
-import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { DndPluginProvides } from '@braneframe/plugin-dnd';
-import { Node } from '@braneframe/plugin-graph';
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
+import { type ClientPluginProvides } from '@braneframe/plugin-client';
+import { type DndPluginProvides } from '@braneframe/plugin-dnd';
+import { type Node } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
+import {
+  type ComposerModel,
+  type MarkdownComposerProps,
+  type MarkdownComposerRef,
+  useTextModel,
+} from '@dxos/aurora-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
 
 import {
   EditorMain,
@@ -34,9 +39,9 @@ import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
   MarkdownAction,
-  MarkdownPluginProvides,
-  MarkdownProperties,
-  MarkdownSettingsProps,
+  type MarkdownPluginProvides,
+  type MarkdownProperties,
+  type MarkdownSettingsProps,
 } from './types';
 import {
   documentToGraphNode,
@@ -52,10 +57,10 @@ import {
 (globalThis as any)[Document.name] = Document;
 
 export const isDocument = (data: unknown): data is Document =>
-  isTypedObject(data) && Document.type.name === data.__typename;
+  isTypedObject(data) && Document.schema.typename === data.__typename;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const settings = new LocalStorageStore<MarkdownSettingsProps>('braneframe.plugin-markdown');
+  const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN);
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
 
   // TODO(burdon): Document.
@@ -149,7 +154,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
-      settings.prop(settings.values.$editorMode!, 'editorMode', LocalStorageStore.string);
+      settings.prop(settings.values.$editorMode!, 'editor-mode', LocalStorageStore.string);
 
       const filters: ((document: Document) => boolean)[] = [];
       markdownPlugins(plugins).forEach((plugin) => {
@@ -163,7 +168,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
 
       const filter = (document: Document) =>
-        document.__typename === Document.type.name && filters.every((filter) => filter(document));
+        document.__typename === Document.schema.typename && filters.every((filter) => filter(document));
       adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode });
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');

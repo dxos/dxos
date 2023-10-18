@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogConfig, LogFilter, LogLevel } from './config';
-import { CallMetadata } from './meta';
+import { type LogConfig, type LogFilter, type LogLevel } from './config';
+import { type CallMetadata } from './meta';
 import { gatherLogInfoFromScope } from './scope';
 
 /**

@@ -5,7 +5,7 @@
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type Expando, type TypedObject } from '@dxos/client/echo';
 
 // TODO(burdon): Copy pattern to other plugins.
 export const TEMPLATE_PLUGIN = 'dxos.org/plugin/template';

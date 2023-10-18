@@ -6,10 +6,10 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Contact, Container, Task } from './proto';
+import { Contact, Container, Task, types } from './proto';
 import { immutable } from '../defs';
 import { Schema } from '../proto';
-import { createDatabase } from '../testing';
+import { TestBuilder, createDatabase } from '../testing';
 import { Expando } from '../typed-object';
 
 // TODO(burdon): Test with database.
@@ -89,67 +89,59 @@ describe('static schema', () => {
     expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
   });
 
-  test('fields', () => {
-    expect(Contact.type.fields).to.deep.eq([
-      {
-        name: 'name',
-        type: {
-          kind: 'string',
-        },
-        options: {
-          default: 'Anonymous',
-          required: true,
-        },
-      },
-      { name: 'username', type: { kind: 'string' } },
-      { name: 'email', type: { kind: 'string' } },
-      { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },
-      {
-        name: 'tasks',
-        type: {
-          kind: 'array',
-          elementType: { kind: 'ref', objectType: 'example.test.Task', modelType: 'dxos.org/model/document' },
-        },
-      },
-      { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } },
-    ]);
-  });
-
   test('enums', () => {
     const container = new Container({ records: [{ type: Container.Record.Type.PERSONAL }] });
     expect(container.records[0].type).to.eq(Container.Record.Type.PERSONAL);
   });
-});
 
-test('runtime schema', async () => {
-  const { db: database } = await createDatabase();
+  test('runtime schema', async () => {
+    const { db: database } = await createDatabase();
 
-  const orgSchema = new Schema({
-    typename: 'example.Org',
-    props: [
+    const orgSchema = new Schema({
+      typename: 'example.Org',
+      props: [
+        {
+          id: 'name',
+          type: Schema.PropType.STRING,
+        },
+        {
+          id: 'website',
+          type: Schema.PropType.STRING,
+        },
+      ],
+    });
+    database.add(orgSchema);
+
+    const org = new Expando(
       {
-        id: 'name',
-        type: Schema.PropType.STRING,
+        name: 'DXOS',
+        website: 'dxos.org',
       },
-      {
-        id: 'website',
-        type: Schema.PropType.STRING,
-      },
-    ],
+      { schema: orgSchema },
+    );
+    database.add(org);
+
+    expect(org.name).to.eq('DXOS');
+    expect(org.website).to.eq('dxos.org');
+    expect(org.__schema).to.eq(orgSchema);
+    expect(org.__schema?.[immutable]).to.eq(false);
   });
-  database.add(orgSchema);
 
-  const org = new Expando(
+  test('restart with static schema', async () => {
+    const builder = new TestBuilder();
+    builder.graph.addTypes(types);
+
+    const peer = await builder.createPeer();
+    const task = peer.db.add(new Task({ title: 'Task 1' }));
+    await peer.base.confirm();
+    expect(task).to.be.instanceOf(Task);
+
+    await peer.reload();
     {
-      name: 'DXOS',
-      website: 'dxos.org',
-    },
-    { schema: orgSchema },
-  );
-  database.add(org);
-
-  expect(org.name).to.eq('DXOS');
-  expect(org.website).to.eq('dxos.org');
-  expect(org.__schema).to.eq(orgSchema);
-  expect(org.__schema?.[immutable]).to.eq(false);
+      const task2 = peer.db.getObjectById<Task>(task.id);
+      expect(task2).to.be.instanceOf(Task);
+      expect(task2!.__typename).to.eq('example.test.Task');
+      expect(task2!.__schema?.typename).to.eq('example.test.Task');
+    }
+  });
 });

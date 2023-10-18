@@ -5,8 +5,8 @@
 import { Flags, ux } from '@oclif/core';
 
 import { Event } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { Space } from '@dxos/client-protocol';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
 import { BaseCommand } from '../../base-command';
