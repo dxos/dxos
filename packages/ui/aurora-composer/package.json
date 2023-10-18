@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-composer",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
