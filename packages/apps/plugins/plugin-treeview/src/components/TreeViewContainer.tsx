@@ -9,7 +9,13 @@ import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
-import { NavTree, type NavTreeContextType, nextRearrangeIndex, type TreeNode } from '@dxos/aurora-navtree';
+import {
+  NavTree,
+  type NavTreeContextType,
+  nextRearrangeIndex,
+  type TreeNode,
+  type NavTreeProps,
+} from '@dxos/aurora-navtree';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -29,6 +35,11 @@ const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
     return 0;
   }
   return 0;
+};
+
+const getMosaicPath = (graph: Graph, id: string) => {
+  const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
+  return parts ? Path.create('root', ...parts) : undefined;
 };
 
 export const TreeViewContainer = ({
@@ -56,9 +67,24 @@ export const TreeViewContainer = ({
   };
 
   const currentPath: string = useMemo(() => {
-    const nodePathParts = (activeId && graph.getPath(activeId)?.filter((part) => part !== 'childrenMap')) ?? ['never'];
-    return Path.create('root', ...nodePathParts);
+    return (activeId && getMosaicPath(graph, activeId)) ?? 'never';
   }, [graph, activeId]);
+
+  const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
+    const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));
+    const overNode = overItem && graph.findNode(Path.last(overItem.path));
+    if (!overNode || !activeNode || (operation !== 'adopt' && operation !== 'copy')) {
+      return false;
+    }
+
+    const activeClass = activeNode.properties.persistenceClass;
+    if (overNode.properties.acceptPersistenceClass?.has(activeClass)) {
+      return overItem.path === path;
+    } else {
+      const overAcceptParent = getPersistenceParent(overNode, activeClass);
+      return overAcceptParent ? getMosaicPath(graph, overAcceptParent.id) === path : false;
+    }
+  };
 
   const handleOver = useCallback(
     ({ active, over }: MosaicMoveEvent<number>) => {
@@ -195,8 +221,9 @@ export const TreeViewContainer = ({
               node={graph.root}
               current={currentPath}
               onSelect={handleSelect}
-              onDrop={handleDrop}
+              isOver={isOver}
               onOver={handleOver}
+              onDrop={handleDrop}
               compare={graphNodeCompare}
             />
           </div>

@@ -16,14 +16,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/aurora';
-import {
-  Mosaic,
-  useContainer,
-  useSortedItems,
-  useMosaic,
-  type MosaicTileComponent,
-  Path,
-} from '@dxos/aurora-grid/next';
+import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/aurora-grid/next';
 import {
   dropRing,
   focusRing,
@@ -74,13 +67,11 @@ export type NavTreeItemData = { id: TreeNode['id']; node: TreeNode; level: numbe
 export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = forwardRef(
   ({ item, draggableProps, draggableStyle, operation, active, path, position }, forwardedRef) => {
     const { node, level } = item;
-    const { overItem } = useMosaic();
     const isBranch = node.properties?.role === 'branch' || node.children?.length > 0;
-    const isOver = overItem?.path === path && (operation === 'adopt' || operation === 'copy');
 
     const actions = node.actions ?? [];
     const { t } = useTranslation(translationKey);
-    const { current, onSelect } = useNavTree();
+    const { current, onSelect, isOver } = useNavTree();
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -128,7 +119,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               'transition-opacity',
               active && active !== 'overlay' && 'opacity-0',
               focusRing,
-              isOver && dropRing,
+              isOver(path) && dropRing,
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
