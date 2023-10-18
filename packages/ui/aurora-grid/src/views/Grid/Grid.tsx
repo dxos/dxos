@@ -22,12 +22,12 @@ import {
   type Size,
 } from './layout';
 import {
-  Mosaic,
-  Path,
-  useMosaic,
   type MosaicContainerProps,
   type MosaicDataItem,
   type MosaicTileAction,
+  Mosaic,
+  Path,
+  useMosaic,
 } from '../../mosaic';
 
 //
@@ -158,8 +158,8 @@ export const Grid = ({
       }}
     >
       <div className={mx('flex grow overflow-auto', className)}>
-        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-300')}>
-          <div className='group block relative bg-neutral-200' style={{ ...bounds, margin: marginSize }}>
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none')}>
+          <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
             {matrix && (
               <div style={{ padding: options.spacing }}>
                 <div className='relative'>
@@ -235,13 +235,16 @@ const GridCell: FC<{
       <div
         className={mx(
           'group/cell flex group-hover:flex w-full h-full items-center justify-center',
-          'box-border border-dashed border-4 border-neutral-300/50 rounded-lg',
-          'transition ease-in-out duration-200 bg-neutral-200',
-          isOver && 'flex bg-neutral-400 border-neutral-500',
+          'box-border border-dashed border-4 border-neutral-100 rounded-lg',
+          'transition ease-in-out duration-300',
+          isOver && 'flex bg-neutral-200 border-neutral-400',
         )}
       >
         <div
-          className={mx('opacity-10 transition duration-300 group-hover/cell:opacity-100', isOverContainer && 'hidden')}
+          className={mx(
+            'opacity-10 transition ease-in-out duration-300 group-hover/cell:opacity-100',
+            isOverContainer && 'hidden',
+          )}
         >
           {onCreate && (
             // TODO(burdon): Style button.

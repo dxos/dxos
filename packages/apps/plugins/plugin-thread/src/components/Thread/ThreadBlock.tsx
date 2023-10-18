@@ -75,8 +75,6 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
 };
 
 const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onDelete?: () => void }) => {
-  console.log(message);
-
   const id = useId();
 
   if (message.ref) {

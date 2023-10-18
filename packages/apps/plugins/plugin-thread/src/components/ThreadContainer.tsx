@@ -85,8 +85,15 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
     return true;
   };
 
-  const handleDelete = (block: string, i: number) => {
-    console.log('delete', block, i);
+  const handleDelete = (id: string, index: number) => {
+    const blockIndex = thread.blocks.findIndex((block) => block.id === id);
+    if (blockIndex !== -1) {
+      const block = thread.blocks[blockIndex];
+      block.messages.splice(index, 1);
+      if (block.messages.length === 0) {
+        thread.blocks.splice(blockIndex, 1);
+      }
+    }
   };
 
   return (

@@ -14,10 +14,10 @@ import { GRID_PLUGIN } from '../types';
 
 export const colors: Record<string, string> = {
   gray: 'bg-neutral-50',
-  red: 'bg-red-50',
+  red: 'bg-indigo-50',
   orange: 'bg-orange-50',
-  green: 'bg-green-50',
-  blue: 'bg-blue-50',
+  green: 'bg-teal-50',
+  blue: 'bg-cyan-50',
 };
 
 export type GridCardProps = { id: string; title?: string; content?: Text; image?: string; color?: string };

@@ -75,7 +75,7 @@ export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> 
 ) =>
   mx(
     'grow overflow-auto',
-    !noPadding && 'px-4',
+    !noPadding && 'px-2',
     // TODO(burdon): Create density-specific constants.
     gutter && (density === 'fine' ? 'pl-0 ml-[32px]' : 'pl-0 ml-[40px]'),
     ...etc,
