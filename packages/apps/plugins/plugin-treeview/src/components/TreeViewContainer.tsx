@@ -3,14 +3,13 @@
 //
 
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { type Graph, type Node } from '@braneframe/plugin-graph';
+import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { Path } from '@dxos/aurora-grid/next';
-import { NavTree } from '@dxos/aurora-navtree';
-import { type NavTreeContextType } from '@dxos/aurora-navtree';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
+import { NavTree, type NavTreeContextType, nextRearrangeIndex, type TreeNode } from '@dxos/aurora-navtree';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -18,6 +17,19 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
 import { TREE_VIEW_PLUGIN } from '../types';
+import { getPersistenceParent } from '../util';
+
+const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
+  if (a.properties.index && b.properties.index) {
+    if (a.properties.index < b.properties.index) {
+      return -1;
+    } else if (a.properties.index > b.properties.index) {
+      return 1;
+    }
+    return 0;
+  }
+  return 0;
+};
 
 export const TreeViewContainer = ({
   data: { graph, activeId, popoverAnchorId },
@@ -32,7 +44,7 @@ export const TreeViewContainer = ({
   const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const { dispatch } = useIntent();
 
-  const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: Node }) => {
+  const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
     await dispatch({
       action: 'dxos.org/plugin/splitview/action/activate',
       data: {
@@ -47,6 +59,67 @@ export const TreeViewContainer = ({
     const nodePathParts = (activeId && graph.getPath(activeId)?.filter((part) => part !== 'childrenMap')) ?? ['never'];
     return Path.create('root', ...nodePathParts);
   }, [graph, activeId]);
+
+  const handleOver = useCallback(
+    ({ active, over }: MosaicMoveEvent<number>) => {
+      // Reject all operations that don’t match the graph’s root id
+      if (Path.first(active.path) !== graph.root.id || Path.first(over.path) !== Path.first(active.path)) {
+        return 'reject';
+      }
+      // Rearrange if rearrange is supported and active and over are siblings
+      else if (Path.siblings(over.path, active.path)) {
+        return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
+      }
+      // Rearrange if rearrange is supported and active is or would be a child of over
+      else if (Path.hasChild(over.path, active.path)) {
+        return graph.findNode(Path.last(over.path))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
+      }
+      // Check if adopt is supported
+      else {
+        const overNode = graph.findNode(Path.last(over.path));
+        const activeNode = graph.findNode(Path.last(active.path));
+        if (overNode && activeNode && activeNode.properties.persistenceClass) {
+          const activeClass = activeNode.properties.persistenceClass;
+          const overAcceptParent = overNode.properties.acceptPersistenceClass?.has(activeClass)
+            ? overNode
+            : getPersistenceParent(overNode, activeClass);
+          return overAcceptParent ? 'adopt' : 'reject';
+        } else {
+          return 'reject';
+        }
+      }
+    },
+    [graph],
+  );
+
+  const handleDrop = useCallback(
+    ({ operation, active, over }: MosaicDropEvent<number>) => {
+      const activeNode = graph.findNode(Path.last(active.path));
+      const overNode = graph.findNode(Path.last(over.path));
+      if (activeNode && overNode) {
+        const activeClass = activeNode.properties.persistenceClass;
+        const nextIndex = nextRearrangeIndex(
+          activeNode.parent!.children.sort(graphNodeCompare),
+          activeNode.id,
+          overNode.id,
+        );
+        if (operation === 'rearrange') {
+          activeNode.parent!.properties.onRearrangeChild(activeNode, nextIndex);
+        }
+        if (operation === 'adopt') {
+          const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
+            ? overNode
+            : getPersistenceParent(overNode, activeClass);
+          const originParent = getPersistenceParent(activeNode, activeClass);
+          if (destinationParent && originParent) {
+            destinationParent.properties.onMigrateStartChild(activeNode, nextIndex);
+            originParent.properties.onMigrationEndChild(activeNode);
+          }
+        }
+      }
+    },
+    [graph],
+  );
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -117,7 +190,14 @@ export const TreeViewContainer = ({
             </>
           )}
           <div role='none' className='grow min-bs-0 overflow-y-auto'>
-            <NavTree node={graph.root} current={currentPath} onSelect={handleSelect} />
+            <NavTree
+              node={graph.root}
+              current={currentPath}
+              onSelect={handleSelect}
+              onDrop={handleDrop}
+              onOver={handleOver}
+              compare={graphNodeCompare}
+            />
           </div>
           <VersionInfo config={config} />
         </div>

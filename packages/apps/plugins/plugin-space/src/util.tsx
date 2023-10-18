@@ -86,7 +86,7 @@ export const spaceToGraphNode = ({
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
-        onMigrateStartChild: (child: Node<TypedObject>, nextParent: Node<Space>, nextIndex: string) => {
+        onMigrateStartChild: (child: Node<TypedObject>, nextIndex: string) => {
           // create clone of child and add to migration destination
           const object = clone(child.data, {
             retainId: true,

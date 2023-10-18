@@ -300,6 +300,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               // TODO(burdon): Factor out palette constants.
               palette: 'pink',
               'data-testid': 'spacePlugin.allSpaces',
+              acceptPersistenceClass: new Set(['appState']),
+              childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
                 child.properties.index = setAppStateIndex(child.id, nextIndex, appState);
               },
