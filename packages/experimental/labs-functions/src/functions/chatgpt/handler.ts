@@ -106,10 +106,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           },
           ...block.messages.map((message): ChatCompletionRequestMessage => {
             let content = '';
-            log.info('message', { message });
             const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
             if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
-              log.info('context', { contextObject: contextObject.toJSON() });
               content += '\n' + 'I am playing chess. And current game history is: ' + contextObject.pgn + '.\n';
             }
 
