@@ -81,8 +81,11 @@ export const spaceToGraphNode = ({
         error,
         index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
         onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(burdon): Decouple from object's data structure.
+          // TODO(thure): reconcile with `TypedObject`’s `meta` record.
           child.properties.index = nextIndex;
+          if (child.data.meta) {
+            child.data.meta.index = ndextIndex;
+          }
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
@@ -92,11 +95,8 @@ export const spaceToGraphNode = ({
             retainId: true,
             additional: [child.data.content],
           });
+          object.meta.index = nextIndex;
           space.db.add(object);
-          if (!object.properties) {
-            object.properties = {};
-          }
-          object.properties.index = nextIndex;
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
           // remove child being replicated from migration origin
