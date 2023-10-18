@@ -61,6 +61,8 @@ export default defineConfig({
         // TODO(burdon): Required until integrated with theme.
         resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/aurora-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/aurora-navtree/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

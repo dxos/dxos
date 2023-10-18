@@ -51,9 +51,11 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
+  // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
   const state = deepSignal<SpaceState>({
     active: undefined,
     viewers: [],
+    // TODO(wittjosiah): Don't expose this. Plugins should manage their own state.
     appState: undefined,
   }) as RevertDeepSignal<SpaceState>;
   const graphSubscriptions = new EventSubscriptions();

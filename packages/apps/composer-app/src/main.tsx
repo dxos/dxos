@@ -11,7 +11,7 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
-// import { GithubPlugin } from '@braneframe/plugin-github';
+import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
@@ -75,7 +75,7 @@ const main = async () => {
           MarkdownPlugin(),
           StackPlugin(),
           FilesPlugin(),
-          // GithubPlugin(),
+          GithubPlugin(),
           SketchPlugin(),
         ]}
       />

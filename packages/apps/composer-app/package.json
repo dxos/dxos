@@ -13,6 +13,7 @@
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
+    "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
