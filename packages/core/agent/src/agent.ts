@@ -57,6 +57,10 @@ export class Agent {
     }
   }
 
+  get client() {
+    return this._client;
+  }
+
   async start() {
     invariant(!this._clientServices);
     log('starting...');

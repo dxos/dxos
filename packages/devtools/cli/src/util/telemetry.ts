@@ -20,6 +20,8 @@ export const DX_RELEASE = config.DX_RELEASE ?? undefined;
 export const SENTRY_DESTINATION = config.SENTRY_DESTINATION ?? undefined;
 export const TELEMETRY_API_KEY = config.TELEMETRY_API_KEY ?? undefined;
 export const IPDATA_API_KEY = config.IPDATA_API_KEY ?? undefined;
+export const DATADOG_API_KEY = config.DATADOG_API_KEY ?? undefined;
+export const DATADOG_APP_KEY = config.DATADOG_APP_KEY ?? undefined;
 
 // TODO(nf): read initial values from config or seed file
 const DX_TELEMETRY_GROUP = process.env.DX_TELEMETRY_GROUP ?? undefined;

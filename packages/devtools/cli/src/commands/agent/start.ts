@@ -5,6 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { rmSync } from 'node:fs';
+import process from 'node:process';
 
 import {
   Agent,
@@ -19,9 +20,11 @@ import {
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
+import * as Datadog from '@dxos/observability/datadog';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
+import { mapSpaces } from '../../util';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -55,6 +58,7 @@ export default class Start extends BaseCommand<typeof Start> {
   ];
 
   private readonly _ctx = new Context();
+  private _agent?: Agent;
 
   async run(): Promise<any> {
     if (this.flags.foreground) {
@@ -73,7 +77,9 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
-    const agent = new Agent({
+    // TODO(burdon): Option to start metrics recording (via config).
+
+    this._agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,
@@ -91,7 +97,7 @@ export default class Start extends BaseCommand<typeof Start> {
       ],
     });
 
-    await agent.start();
+    await this._agent.start();
     this.log('Agent started... (ctrl-c to exit)');
 
     this._sendTelemetry();
@@ -139,5 +145,35 @@ export default class Start extends BaseCommand<typeof Start> {
 
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
+
+    const sendDatadog = async () => {
+      const memUsage = process.memoryUsage();
+      Datadog.gauge('dxos.agent.run.duration', this.duration);
+      Datadog.gauge('memory.rss', memUsage.rss);
+      Datadog.gauge('memory.heapTotal', memUsage.heapTotal);
+      Datadog.gauge('memory.heapUsed', memUsage.heapUsed);
+
+      Datadog.flush();
+    };
+
+    runInContext(this._ctx, sendDatadog);
+    scheduleTaskInterval(this._ctx, sendDatadog, 1000 * 60);
+
+    const sendDatadogDiagnostics = async () => {
+      if (!this._agent?.client) {
+        return;
+      }
+      const spaces = await this.getSpaces(this._agent.client);
+      for (const sp of mapSpaces(spaces, { truncateKeys: true })) {
+        Datadog.gauge('dxos.agent.space.members', sp.members, { key: sp.key });
+        Datadog.gauge('dxos.agent.space.objects', sp.objects, { key: sp.key });
+        Datadog.gauge('dxos.agent.space.epoch', sp.epoch, { key: sp.key });
+        Datadog.gauge('dxos.agent.space.currentDataMutations', sp.currentDataMutations, { key: sp.key });
+      }
+      Datadog.flush();
+    };
+
+    runInContext(this._ctx, sendDatadogDiagnostics);
+    scheduleTaskInterval(this._ctx, sendDatadogDiagnostics, 1000 * 5);
   }
 }

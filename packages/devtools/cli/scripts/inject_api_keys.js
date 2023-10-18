@@ -15,6 +15,8 @@ const injectApiKeys = async () => {
     SENTRY_DESTINATION: process.env.DX_SENTRY_DESTINATION ?? null,
     TELEMETRY_API_KEY: process.env.DX_TELEMETRY_API_KEY ?? null,
     IPDATA_API_KEY: process.env.DX_IPDATA_API_KEY ?? null,
+    DATADOG_API_KEY: process.env.DX_DATADOG_API_KEY ?? null,
+    DATADOG_APP_KEY: process.env.DX_DATADOG_APP_KEY ?? null,
   };
 
   await writeFile(TELEMETRY_PATH, JSON.stringify(telemetryrc, null, 2), 'utf-8');

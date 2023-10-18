@@ -38,6 +38,7 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
 import { addTag } from '@dxos/observability';
+import * as Datadog from '@dxos/observability/datadog';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -48,6 +49,7 @@ import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
   TELEMETRY_API_KEY,
+  DATADOG_API_KEY,
   disableTelemetry,
   getTelemetryContext,
   showTelemetryBanner,
@@ -150,6 +152,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   private _failing = false;
 
   protected _telemetryContext?: TelemetryContext;
+  protected _datadogMetrics?: any;
 
   protected flags!: Flags<T>;
   protected args!: Args<T>;
@@ -178,7 +181,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async init(): Promise<void> {
     await super.init();
-    await this._initTelemetry();
+    await this._initObservability();
 
     const { args, flags } = await this.parse({
       flags: this.ctor.flags,
@@ -209,7 +212,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  private async _initTelemetry() {
+  private async _initObservability() {
     this._telemetryContext = await getTelemetryContext(DX_DATA);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
 
@@ -246,8 +249,17 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       });
     }
 
+    if (DATADOG_API_KEY && mode !== 'disabled') {
+
+      Datadog.init({
+        apiKey: DATADOG_API_KEY,
+        // TODO(nf): move/refactor from telementryContext
+        host: os.hostname(),
+      });
+    }
+
     if (this._telemetryContext?.mode === 'full') {
-      Telemetry.addTag('hostname', os.hostname());
+      addTag('hostname', os.hostname());
     }
     this.addToTelemetryContext({ command: this.id });
 
