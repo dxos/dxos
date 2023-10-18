@@ -53,7 +53,6 @@ export const NavTree = ({
   compare,
   className,
 }: NavTreeProps) => {
-  console.log('[popover anchor id]', popoverAnchorId);
   return (
     <Mosaic.Container
       {...{

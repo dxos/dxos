@@ -24,7 +24,7 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 // TODO(burdon): Factor out.
-export const createNodId = (spaceKey: PublicKeyLike) => {
+export const createNodeId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
     spaceKey = spaceKey.toHex();
   }
@@ -54,7 +54,7 @@ export const spaceToGraphNode = ({
   appState?: AppState;
   defaultIndex?: string;
 }): Node<Space> => {
-  const id = createNodId(space.key);
+  const id = createNodeId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;
