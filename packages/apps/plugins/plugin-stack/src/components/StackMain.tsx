@@ -11,7 +11,7 @@ import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/a
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
 import { Stack, type StackSectionItem } from '@dxos/aurora-stack';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
-import { TypedObject } from '@dxos/react-client/echo';
+import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
 import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { FileUpload } from './FileUpload';
@@ -33,6 +33,11 @@ export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    if (!isTypedObject(active.item) && !isTypedObject((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
     const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
     if (!exists) {
       return 'copy';

@@ -16,7 +16,7 @@ import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
-// import { SketchPlugin } from '@braneframe/plugin-sketch';
+import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
@@ -76,7 +76,7 @@ const main = async () => {
           StackPlugin(),
           FilesPlugin(),
           // GithubPlugin(),
-          // SketchPlugin(),
+          SketchPlugin(),
         ]}
       />
     </StrictMode>,
