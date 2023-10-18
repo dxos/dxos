@@ -11,7 +11,7 @@ export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
 // TODO(wittjosiah): Roll into layout plugin?
 export const DndPlugin = (): PluginDefinition => {
-  const Overlay = () => <Mosaic.DragOverlay />;
+  const Overlay = () => <Mosaic.DragOverlay debug />;
 
   return {
     meta: {
