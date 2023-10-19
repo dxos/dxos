@@ -17,8 +17,14 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { ExplorerMain } from './ExplorerMain';
 
-// TODO(burdon): Async load fails and crashes app when offline.
+// Plugins
+// TODO(burdon): Search context.
+// TODO(burdon): Get space from active node (not graph).
 // TODO(burdon): Plugin utils (e.g., create object).
+
+// Tools
+// TODO(burdon): Async load fails and crashes app when offline.
+
 // TODO(burdon): Standardize ViewType for Explorer, Table, Kanban, Grid, etc.
 // TODO(burdon): Standardize surfaces (i.e., PluginComponentProps); rename react-surface => react-plugin; framework naming.
 // TODO(burdon): Standardize plugin surface binding (fooMain pattern vs. pure components).

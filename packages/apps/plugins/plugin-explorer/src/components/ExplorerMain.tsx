@@ -24,7 +24,7 @@ export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
   const client = useClient();
   const space = client.spaces.default; // TODO(burdon): Get from data object.
 
-  // TODO(burdon): Model.
+  // TODO(burdon): Model; anchor on selected item.
   const { objects } = space.db.query();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
