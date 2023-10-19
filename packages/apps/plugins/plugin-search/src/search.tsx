@@ -52,8 +52,11 @@ export const mapObjectToTextFields = (object: any): TextFields => {
   return Object.keys(object).reduce<TextFields>((fields, key) => {
     const value = object[key];
     if (key !== 'id' && (typeof value === 'string' || value instanceof Text)) {
-      // TODO(burdon): Check actual text (e.g., not Sketch).
-      fields[key] = String(value);
+      try {
+        fields[key] = String(value);
+      } catch (err) {
+        // TODO(burdon): Exception when parsing sketch document.
+      }
     }
 
     return fields;
