@@ -10,7 +10,7 @@ export default template.define.script({
   content: ({ input, imports }) => {
     const { react, name, dxosUi, pwa, monorepo } = input;
     const reactPlugin = imports.use('react', '@vitejs/plugin-react', { isDefault: true });
-    const ThemePlugin = imports.use('ThemePlugin', '@dxos/aurora-theme/plugin');
+    const ThemePlugin = imports.use('ThemePlugin', '@dxos/react-ui-theme/plugin');
     const VitePWA = imports.use('VitePWA', 'vite-plugin-pwa');
     const resolve = imports.use('resolve', monorepo ? 'node:path' : 'path');
 
@@ -19,7 +19,7 @@ export default template.define.script({
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/aurora', '@dxos/aurora-theme'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-ui', '@dxos/react-ui-theme'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -79,8 +79,8 @@ export default template.define.script({
           ${
             dxosUi &&
             plate`
-          ${resolve}(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
-          ${resolve}(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+          ${resolve}(__dirname, 'node_modules/@dxos/react-ui/dist/**/*.mjs'),
+          ${resolve}(__dirname, 'node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
           ${resolve}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
           }
         ]

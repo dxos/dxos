@@ -7,7 +7,7 @@ import { Chess, type Color } from 'chess.js';
 import React, { type FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { customPieces, phosphorPieces, riohachaPieces } from './media';
 

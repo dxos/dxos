@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { AlertDialog, type AlertDialogContentProps, useId, useVisualViewport } from '@dxos/aurora';
+import { AlertDialog, type AlertDialogContentProps, useId, useVisualViewport } from '@dxos/react-ui';
 
 import { JoinPanel, type JoinPanelProps } from '../../panels';
 

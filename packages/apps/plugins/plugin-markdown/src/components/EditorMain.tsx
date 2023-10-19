@@ -4,20 +4,20 @@
 
 import React, { type HTMLAttributes, type RefCallback } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 import {
   type ComposerModel,
   MarkdownComposer,
   type MarkdownComposerProps,
   type MarkdownComposerRef,
-} from '@dxos/aurora-composer';
-import { focusRing, mx } from '@dxos/aurora-theme';
+} from '@dxos/react-ui-composer';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
 
-// TODO(wittjosiah): Rename aurora-composer to aurora-editor.
+// TODO(wittjosiah): Rename react-ui-composer to react-ui-editor.
 export const EditorMain = ({
   model,
   properties,

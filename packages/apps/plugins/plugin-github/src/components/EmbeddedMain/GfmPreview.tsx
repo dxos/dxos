@@ -6,7 +6,7 @@ import 'github-markdown-css/github-markdown.css';
 import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { GITHUB_PLUGIN } from '../../props';
 import { PatInput, useOctokitContext } from '../GithubApiProviders';

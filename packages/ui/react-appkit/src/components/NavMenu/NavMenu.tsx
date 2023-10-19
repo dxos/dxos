@@ -5,7 +5,7 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { type ComponentProps, type ForwardedRef, forwardRef, type ReactNode } from 'react';
 
-import { Tooltip, type TooltipContentProps } from '@dxos/aurora';
+import { Tooltip, type TooltipContentProps } from '@dxos/react-ui';
 import {
   focusRing,
   hoverColors,
@@ -14,7 +14,7 @@ import {
   defaultAppButtonColors,
   primaryAppButtonColors,
   surfaceElevation,
-} from '@dxos/aurora-theme';
+} from '@dxos/react-ui-theme';
 
 interface NavMenuItemSharedProps {
   children: ReactNode;

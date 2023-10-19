@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { TableColumn, Table } from '@dxos/mosaic';
+import { type TableColumn, Table } from '@dxos/mosaic';
+import { Button } from '@dxos/react-ui';
 import { compareObject, compareString } from '@dxos/util';
 
 import { Toolbar } from '../../components';

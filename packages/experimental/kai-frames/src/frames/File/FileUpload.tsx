@@ -6,7 +6,7 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { getSize } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/react-ui-theme';
 import { File } from '@dxos/kai-types';
 
 export const FileUpload: FC<{ fileTypes: string[]; onUpload: (file: File) => void }> = ({ fileTypes, onUpload }) => {

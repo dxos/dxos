@@ -7,8 +7,8 @@ import format from 'date-fns/format';
 import React, { type FC } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { useSubscription } from './util';
 

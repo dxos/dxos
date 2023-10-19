@@ -1,5 +1,5 @@
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
 import { osTranslations } from '../src';
 
 export const parameters = {

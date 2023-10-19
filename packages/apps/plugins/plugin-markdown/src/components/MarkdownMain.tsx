@@ -7,10 +7,10 @@ import React, { type FC } from 'react';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
-import { useTextModel } from '@dxos/aurora-composer';
 import { isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, Surface, usePlugins } from '@dxos/react-surface';
+import { useTextModel } from '@dxos/react-ui-composer';
 
 export const isDocument = (data: unknown): data is Document =>
   isTypedObject(data) && Document.schema.typename === data.__typename;
