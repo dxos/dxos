@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/ui/aurora-stack/src",
+  "sourceRoot": "packages/ui/react-ui-stack/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/ui/aurora-stack/src/index.ts",
-        "outputPath": "packages/ui/aurora-stack/dist/types",
-        "tsConfig": "packages/ui/aurora-stack/tsconfig.json"
+        "main": "packages/ui/react-ui-stack/src/index.ts",
+        "outputPath": "packages/ui/react-ui-stack/dist/types",
+        "tsConfig": "packages/ui/react-ui-stack/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/aurora-stack/src/index.ts"
+          "packages/ui/react-ui-stack/src/index.ts"
         ],
-        "outputPath": "packages/ui/aurora-stack/dist/lib",
+        "outputPath": "packages/ui/react-ui-stack/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/aurora-stack/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-ui-stack/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -49,7 +49,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/aurora-stack/.storybook"
+        "configDir": "packages/ui/react-ui-stack/.storybook"
       }
     },
     "storybook-build": {
@@ -60,8 +60,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "packages/ui/aurora-stack/.storybook",
-        "outputDir": "packages/ui/aurora-stack/out/aurora"
+        "configDir": "packages/ui/react-ui-stack/.storybook",
+        "outputDir": "packages/ui/react-ui-stack/out/react-ui"
       },
       "outputs": [
         "{options.outputDir}"

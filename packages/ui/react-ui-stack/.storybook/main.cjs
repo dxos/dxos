@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
+const { ThemePlugin } = require('@dxos/react-ui-theme/plugin');
 const turbosnap = require('vite-plugin-turbosnap');
 
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
         root: __dirname,
         content: [
           resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-          resolve(__dirname, '../node_modules/@dxos/aurora-grid/dist') + '/**/*.mjs'
+          resolve(__dirname, '../node_modules/@dxos/react-ui-grid/dist') + '/**/*.mjs'
         ]
       }),
       turbosnap({ rootDir: config.root }),
