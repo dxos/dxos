@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC } from 'react';
 
-import { DensityProvider } from '@dxos/aurora';
+import { DensityProvider } from '@dxos/react-ui';
 
 import { Searchbar, type SearchbarProps } from './Searchbar';
 

@@ -5,8 +5,8 @@
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { Button, Input, type TextInputProps } from '@dxos/aurora';
-import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
+import { Button, Input, type TextInputProps } from '@dxos/react-ui';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   className?: string;

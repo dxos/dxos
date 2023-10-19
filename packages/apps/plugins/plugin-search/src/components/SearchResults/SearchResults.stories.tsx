@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { type FC, useState } from 'react';
 
-import { DensityProvider } from '@dxos/aurora';
+import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
 import { filterObjects } from '../../search';

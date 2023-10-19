@@ -5,8 +5,8 @@
 import { Circle } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { List, ListItem, ScrollArea } from '@dxos/aurora';
-import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
+import { List, ListItem, ScrollArea } from '@dxos/react-ui';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
 

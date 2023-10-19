@@ -5,8 +5,8 @@
 import React, { useState } from 'react';
 
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
-import { DensityProvider } from '@dxos/aurora';
 import { usePlugin } from '@dxos/react-surface';
+import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';

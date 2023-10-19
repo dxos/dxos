@@ -21,13 +21,19 @@
   ],
   "references": [
     {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
