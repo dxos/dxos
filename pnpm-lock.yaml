@@ -822,6 +822,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/echo-generator': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
       '@dxos/react-client': workspace:*
@@ -853,6 +854,7 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types
+      '@dxos/echo-generator': link:../../../core/echo/echo-generator
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -2829,6 +2831,16 @@ importers:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/text-model': link:../text-model
       '@dxos/typings': link:../../../common/typings
+
+  packages/core/echo/echo-generator:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/node-std': workspace:*
+      '@faker-js/faker': ^8.0.2
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/node-std': link:../../../common/node-std
+      '@faker-js/faker': 8.0.2
 
   packages/core/echo/echo-pipeline:
     specifiers:

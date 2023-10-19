@@ -349,6 +349,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-pipeline/package.json",
           "jsonpath": "$.version"
         },
