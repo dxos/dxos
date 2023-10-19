@@ -10,10 +10,10 @@ import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
-import { mx } from '@dxos/aurora-theme';
 import { range, TestObjectGenerator } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ExplorerMain } from './ExplorerMain';
 

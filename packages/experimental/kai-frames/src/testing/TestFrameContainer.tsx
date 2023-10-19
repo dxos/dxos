@@ -4,7 +4,7 @@
 
 import React, { ReactNode, useEffect, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { Space, TypedObject, useSpaces } from '@dxos/react-client/echo';
 import { MetagraphProvider } from '@dxos/react-metagraph';

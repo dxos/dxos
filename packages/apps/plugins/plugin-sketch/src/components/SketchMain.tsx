@@ -8,8 +8,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type Sketch as SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
-import { Main, useThemeContext } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
+import { Main, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 

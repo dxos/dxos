@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-shell",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,13 +29,13 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/aurora-types": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.12.0",
     "@radix-ui/react-accordion": "^1.1.1",
@@ -50,9 +50,9 @@
     "xstate": "^4.37.0"
   },
   "devDependencies": {
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/react-async": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.toarray": "^4.4.7",

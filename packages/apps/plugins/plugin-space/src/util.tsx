@@ -7,13 +7,13 @@ import { batch } from '@preact/signals-react';
 import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { type Node } from '@braneframe/plugin-graph';
 import { type AppState } from '@braneframe/types';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
+import { getAppStateIndex, setAppStateIndex } from './helpers';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
@@ -24,7 +24,7 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 // TODO(burdon): Factor out.
-export const createNodId = (spaceKey: PublicKeyLike) => {
+export const createNodeId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
     spaceKey = spaceKey.toHex();
   }
@@ -54,7 +54,7 @@ export const spaceToGraphNode = ({
   appState?: AppState;
   defaultIndex?: string;
 }): Node<Space> => {
-  const id = createNodId(space.key);
+  const id = createNodeId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;
@@ -81,22 +81,27 @@ export const spaceToGraphNode = ({
         error,
         index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
         onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(burdon): Decouple from object's data structure.
-          child.data.meta.index = nextIndex;
+          // TODO(thure): Reconcile with `TypedObject`’s `meta` record.
+          child.properties.index = nextIndex;
+          if (child.data.meta) {
+            child.data.meta.index = nextIndex;
+          }
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
-        onMigrateStartChild: (child: Node<TypedObject>, nextParent: Node<Space>, nextIndex: string) => {
-          // create clone of child and add to migration destination
+        // TODO(wittjosiah): Rename migrate to transfer.
+        onMigrateStartChild: (child: Node<TypedObject>, nextIndex: string) => {
+          // Create clone of child and add to migration destination.
           const object = clone(child.data, {
             retainId: true,
             additional: [child.data.content],
           });
+          // TODO(wittjosiah): Use separate object to store graph/tree order.
+          // object.meta.index = nextIndex;
           space.db.add(object);
-          object.meta.index = nextIndex;
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
-          // remove child being replicated from migration origin
+          // Remove child being replicated from migration origin.
           space.db.remove(child.data);
         },
       },

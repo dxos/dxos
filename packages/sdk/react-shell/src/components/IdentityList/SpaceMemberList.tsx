@@ -4,11 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { useTranslation, List } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
+import { useTranslation, List } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';
 

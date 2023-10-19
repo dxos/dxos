@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-debug",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,9 +44,9 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
@@ -58,9 +58,9 @@
   },
   "peerDependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

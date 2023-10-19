@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { ElevationProvider, useThemeContext } from '@dxos/aurora';
+import { ElevationProvider, useThemeContext } from '@dxos/react-ui';
 
 import { ClipboardProvider } from './Clipboard';
 

@@ -6,9 +6,9 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useId, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
+import { useId, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type StepProps } from './StepProps';
 import {

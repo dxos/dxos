@@ -1,0 +1,74 @@
+{
+  "sourceRoot": "packages/ui/react-ui-table/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/ui/react-ui-table/src/index.ts",
+        "outputPath": "packages/ui/react-ui-table/dist/types",
+        "tsConfig": "packages/ui/react-ui-table/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-table/src/index.ts"
+        ],
+        "outputPath": "packages/ui/react-ui-table/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/react-ui-table/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-ui-table/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "packages/ui/react-ui-table/.storybook",
+        "outputDir": "packages/ui/react-ui-table/out/react-ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

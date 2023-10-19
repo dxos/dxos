@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
+// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
 
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 

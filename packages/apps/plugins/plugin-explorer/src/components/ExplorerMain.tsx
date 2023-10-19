@@ -5,13 +5,13 @@
 import React, { useMemo } from 'react';
 
 import { type View as ViewType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, Markers } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
 import { useClient } from '@dxos/react-client';
 import { type PluginComponentProps } from '@dxos/react-surface';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 type Slots = {
   root?: { className?: string };

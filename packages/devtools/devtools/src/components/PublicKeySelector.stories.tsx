@@ -6,8 +6,8 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { Toolbar } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
+import { Toolbar } from '@dxos/react-ui';
 
 import { PublicKeySelector } from './PublicKeySelector';
 

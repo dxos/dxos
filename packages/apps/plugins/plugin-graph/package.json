@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-graph",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,10 +45,10 @@
   },
   "devDependencies": {
     "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@tldraw/indices": "2.0.0-alpha.14",
@@ -63,9 +63,9 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

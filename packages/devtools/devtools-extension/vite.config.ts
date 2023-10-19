@@ -10,7 +10,7 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 import packageJson from './package.json';

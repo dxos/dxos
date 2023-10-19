@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Dialog, type DialogContentProps, useId } from '@dxos/aurora';
+import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
 
 import { ClipboardProvider } from '../../components';
 import { SpacePanel, type SpacePanelProps } from '../../panels';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Avatar, type Size, useJdenticonHref } from '@dxos/aurora';
+import { Avatar, type Size, useJdenticonHref } from '@dxos/react-ui';
 
 export type HaloButtonProps = {
   size?: Size;

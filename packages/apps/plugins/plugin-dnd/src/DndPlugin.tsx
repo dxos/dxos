@@ -2,76 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
-import { Mosaic, parseDndId, type TileProps } from '@dxos/aurora-grid';
-import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { DndDelegator } from './DndDelegator';
-import { DND_PLUGIN, type DndPluginProvides, type DndProvides, type DndStore } from './types';
+export const DND_PLUGIN = 'dxos.org/plugin/dnd';
 
-export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
-  const dnd = deepSignal<DndStore>({
-    mosaic: {
-      tiles: {},
-      relations: {},
-    },
-    onMosaicChangeSubscriptions: [],
-    onSetTileSubscriptions: [],
-    onCopyTileSubscriptions: [],
-  });
+// TODO(wittjosiah): Roll into layout plugin?
+export const DndPlugin = ({ debug }: { debug?: boolean } = {}): PluginDefinition => {
+  const Overlay = () => <Mosaic.DragOverlay debug={debug} />;
 
   return {
     meta: {
       id: DND_PLUGIN,
     },
-    ready: async (plugins) => {
-      const persistorPlugin = (plugins as Plugin<DndProvides>[]).find(
-        (plugin) => typeof plugin.provides.dnd?.appState === 'function',
-      );
-
-      if (persistorPlugin) {
-        dnd.appState = persistorPlugin.provides.dnd.appState();
-      }
-    },
     provides: {
       components: {
-        default: Mosaic.Overlay,
+        default: Overlay,
       },
       context: ({ children }) => {
-        const { graph } = useGraph();
-        return (
-          <Mosaic.Provider
-            mosaic={dnd.mosaic}
-            Delegator={DndDelegator}
-            getData={(dndId) => {
-              const [_, nodeId] = parseDndId(dndId);
-              return graph.findNode(nodeId);
-            }}
-            copyTile={(id, toId, mosaic, operation) => {
-              return dnd.onCopyTileSubscriptions.length
-                ? dnd.onCopyTileSubscriptions.reduce((tile, handler) => handler(tile, id, toId, mosaic, operation), {
-                    ...mosaic.tiles[id],
-                  })
-                : mosaic.tiles[id];
-            }}
-            onMosaicChange={(event) => {
-              dnd.onMosaicChangeSubscriptions.forEach((handler) => {
-                handler(event);
-              });
-            }}
-          >
-            {children}
-          </Mosaic.Provider>
-        );
-      },
-      dnd: dnd as RevertDeepSignal<DndStore>,
-      onSetTile: (tile: TileProps, node: Node): TileProps => {
-        return dnd.onSetTileSubscriptions.length
-          ? dnd.onSetTileSubscriptions.reduce((nextTile, handler) => handler(nextTile, node), tile)
-          : tile;
+        return <Mosaic.Root debug={debug}>{children}</Mosaic.Root>;
       },
     },
   };

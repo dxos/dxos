@@ -33,8 +33,14 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
+import { createClientServices, Remote } from '@dxos/client/services';
+import { Config, Envs, Local } from '@dxos/config';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
+import { Defaults } from '@dxos/react-client';
+import { PluginProvider } from '@dxos/react-surface';
 import {
-  auroraTheme,
+  defaultTheme,
   bindTheme,
   focusRing,
   groupBorder,
@@ -42,13 +48,7 @@ import {
   mx,
   popperMotion,
   surfaceElevation,
-} from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
-import { createClientServices, Remote } from '@dxos/client/services';
-import { Config, Envs, Local } from '@dxos/config';
-import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { Defaults } from '@dxos/react-client';
-import { PluginProvider } from '@dxos/react-surface';
+} from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -64,9 +64,9 @@ const main = async () => {
 
   // TODO(burdon): Custom theme (e.g., primary).
   const labsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     popover: {
-      ...auroraTheme.popover,
+      ...defaultTheme.popover,
       content: (_props, ...etc) =>
         mx(
           'z-[30] rounded-xl',

@@ -8,22 +8,21 @@ import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { type Node } from '@braneframe/plugin-graph';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
+import { LocalStorageStore } from '@dxos/local-storage';
+import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
 import {
   type ComposerModel,
   type MarkdownComposerProps,
   type MarkdownComposerRef,
   useTextModel,
-} from '@dxos/aurora-composer';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
+} from '@dxos/react-ui-composer';
 
 import {
   EditorMain,
@@ -185,15 +184,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       }
 
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-          if (isMarkdownContent(node.data)) {
-            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-          }
-          return tile;
-        });
-      }
+      // TODO(wittjosiah): Replace? Remove?
+      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+      //     if (isMarkdownContent(node.data)) {
+      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+      //     }
+      //     return tile;
+      //   });
+      // }
     },
     unload: async () => {
       adapter?.clear();

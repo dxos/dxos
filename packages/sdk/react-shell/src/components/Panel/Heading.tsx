@@ -4,7 +4,7 @@
 
 import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
 
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 export type PanelHeadingProps = PropsWithChildren<{
   titleId: string;

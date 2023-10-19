@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/aurora';
 import { PublicKey } from '@dxos/react-client';
+import { Select } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
