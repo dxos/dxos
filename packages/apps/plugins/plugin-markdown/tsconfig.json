@@ -51,19 +51,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-intent"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"

@@ -6,7 +6,7 @@ import React, { type FC, useContext, useState } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, SplitViewAction, useSplitView } from '@braneframe/plugin-splitview';
-import type { StackModel, StackProperties } from '@braneframe/plugin-stack';
+import { type Stack as StackType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
@@ -14,12 +14,8 @@ import { Surface } from '@dxos/react-surface';
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN, PresenterContext } from '../types';
 
-export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
+export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const [slide, setSlide] = useState(0);
-
-  // TODO(burdon): Current DND requires sorting sections.
-  const sections = [...stack.sections];
-  sections?.sort(({ index: a }, { index: b }) => (a < b ? -1 : a > b ? 1 : 0));
 
   // TODO(burdon): Should not depend on split screen.
   const { fullscreen } = useSplitView();
@@ -47,18 +43,18 @@ export const PresenterMain: FC<{ data: StackModel & StackProperties }> = ({ data
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, !fullscreen && coarseBlockPaddingStart]}>
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
-        bottomRight={<PageNumber index={slide} count={sections.length} />}
+        bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
         bottomLeft={
           <Pager
             index={slide}
-            count={sections.length}
+            count={stack.sections.length}
             keys={running}
             onChange={setSlide}
             onExit={() => handleSetRunning(false)}
           />
         }
       >
-        <Surface role='presenter-slide' data={sections[slide].object} />
+        <Surface role='presenter-slide' data={stack.sections[slide].object} />
       </Layout>
     </Main.Content>
   );

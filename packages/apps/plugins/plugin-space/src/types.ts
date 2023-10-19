@@ -5,6 +5,7 @@
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { AppState } from '@braneframe/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -48,6 +49,11 @@ export type SpaceState = {
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
+
+  /**
+   * The active AppState object, when ready.
+   */
+  appState: AppState | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

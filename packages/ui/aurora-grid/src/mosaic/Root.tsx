@@ -240,13 +240,13 @@ const MosaicDebug: FC<{
         containers: Object.keys(containers).map((id) => id),
         operation,
         active: {
-          id: activeItem?.item?.id,
-          path: activeItem?.path,
+          id: activeItem?.item?.id.slice(0, 16),
+          path: activeItem?.path && Path.create(...Path.parts(activeItem.path).map((part) => part.slice(0, 16))),
           position: activeItem?.position,
         },
         over: {
-          id: overItem?.item?.id,
-          path: overItem?.path,
+          id: overItem?.item?.id.slice(0, 16),
+          path: overItem?.path && Path.create(...Path.parts(overItem.path).map((part) => part.slice(0, 16))),
           position: overItem?.position,
         },
       }}

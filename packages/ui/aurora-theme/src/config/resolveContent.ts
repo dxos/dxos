@@ -13,6 +13,7 @@ const knownPeerPackages = [
   '@dxos/react-shell',
   '@dxos/react-surface',
   '@dxos/aurora-composer',
+  '@dxos/aurora-navtree',
 ];
 
 const getPackageRootFromResolvedModule = (resolvedPath: string, packageName: string) => {

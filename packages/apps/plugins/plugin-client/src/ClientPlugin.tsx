@@ -4,7 +4,6 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { AppState } from '@braneframe/types';
 import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
@@ -85,20 +84,6 @@ export const ClientPlugin = (
       return {
         client,
         firstRun,
-        // TODO(wittjosiah): Is there a better place for this?
-        dnd: {
-          appState: () => {
-            const defaultSpace = client.spaces.default;
-            const appStates = defaultSpace.db.query(AppState.filter()).objects;
-            if (appStates.length < 1) {
-              const appState = new AppState();
-              defaultSpace.db.add(appState);
-              return appState;
-            } else {
-              return (appStates as AppState[])[0];
-            }
-          },
-        },
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
 

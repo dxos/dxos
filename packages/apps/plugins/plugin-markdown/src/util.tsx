@@ -69,28 +69,15 @@ const getFallbackTitle = (document: Document) => {
 };
 
 export const documentToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
-  const fallbackProps = document.title
-    ? {}
-    : (() => {
-        const fallbackTitle = getFallbackTitle(document);
-        return fallbackTitle?.length && fallbackTitle?.length > 0
-          ? {
-              fallbackTitle,
-              preferFallbackTitle: true,
-            }
-          : {};
-      })();
-
   const [child] = parent.addNode(MARKDOWN_PLUGIN, {
     id: document.id,
-    label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+    label: document.title ?? getFallbackTitle(document) ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) =>
       document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
     data: document,
     properties: {
       index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
-      ...fallbackProps,
     },
   });
 

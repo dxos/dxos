@@ -14,8 +14,8 @@ import { type MosaicDropEvent, Path } from '@dxos/aurora-grid/next';
 import { Mosaic } from '@dxos/aurora-grid/next';
 
 import { NavTree } from './NavTree';
-import { nextRearrangeIndex } from '../testing';
 import type { TreeNode } from '../types';
+import { nextRearrangeIndex } from '../util';
 
 faker.seed(3);
 const fake = faker.helpers.fake;

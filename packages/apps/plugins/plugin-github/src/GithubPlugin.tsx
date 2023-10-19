@@ -6,10 +6,15 @@ import { GithubLogo } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { type DndPluginProvides, getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { type Node, type GraphProvides } from '@braneframe/plugin-graph';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
+import {
+  type SpacePluginProvides,
+  GraphNodeAdapter,
+  getIndices,
+  getAppStateIndex,
+  setAppStateIndex,
+} from '@braneframe/plugin-space';
 import { type TranslationsProvides } from '@braneframe/plugin-theme';
 import { type Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -53,8 +58,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
 
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      const appState = dndPlugin?.provides.dnd.appState;
+      const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+      const appState = spacePlugin?.provides.space.appState;
       const defaultIndices = getIndices(plugins.length);
 
       const createGroup = (parent: Node) => {
