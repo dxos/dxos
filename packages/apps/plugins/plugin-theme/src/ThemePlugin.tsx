@@ -6,9 +6,9 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
+import { type PluginDefinition } from '@dxos/react-surface';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type PluginDefinition } from '@dxos/react-surface';
 
 import compositeEnUs from './translations/en-US';
 import { translationsPlugins } from './util';

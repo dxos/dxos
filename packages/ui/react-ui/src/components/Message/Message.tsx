@@ -7,8 +7,8 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { type MessageValence, type Elevation } from '@dxos/react-ui-types';
 import { useId } from '@dxos/react-hooks';
+import { type MessageValence, type Elevation } from '@dxos/react-ui-types';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
 

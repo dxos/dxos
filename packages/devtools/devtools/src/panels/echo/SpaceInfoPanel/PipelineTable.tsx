@@ -5,10 +5,10 @@
 import React, { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 

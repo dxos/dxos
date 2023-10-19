@@ -16,6 +16,8 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Surface, usePlugin } from '@dxos/react-surface';
 import {
   Avatar,
   Button,
@@ -31,8 +33,6 @@ import {
 } from '@dxos/react-ui';
 import { useTextModel } from '@dxos/react-ui-composer';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, usePlugin } from '@dxos/react-surface';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';

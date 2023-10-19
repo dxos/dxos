@@ -5,10 +5,10 @@
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
-import { valenceColorText, mx } from '@dxos/react-ui-theme';
 import { useClient } from '@dxos/react-client';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
+import { Button } from '@dxos/react-ui';
+import { valenceColorText, mx } from '@dxos/react-ui-theme';
 
 import { Tooltip } from '../Tooltip';
 

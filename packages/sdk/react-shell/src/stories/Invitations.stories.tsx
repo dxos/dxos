@@ -8,14 +8,14 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
-import { getSize, groupSurface } from '@dxos/react-ui-theme';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientDecorator } from '@dxos/react-client/testing';
+import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
+import { getSize, groupSurface } from '@dxos/react-ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';

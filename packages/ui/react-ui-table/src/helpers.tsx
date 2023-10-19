@@ -10,9 +10,9 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { type PublicKey } from '@dxos/keys';
 import { ComboBox, type ComboBoxItem, Input, Tooltip } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { type PublicKey } from '@dxos/keys';
 import { stripUndefinedValues } from '@dxos/util';
 
 // TODO(burdon): Factor out hack to find next focusable element (extend useFocusFinders)?

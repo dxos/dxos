@@ -5,6 +5,7 @@
 import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
+import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
 import {
   AlertDialog,
   Button,
@@ -14,7 +15,6 @@ import {
   type AlertDialogRootProps,
   Tooltip,
 } from '@dxos/react-ui';
-import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
 import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
 
 import { ERROR_PLUGIN } from '../../constants';

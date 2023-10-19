@@ -6,7 +6,6 @@ import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
 
-import { type Density } from '@dxos/react-ui-types';
 import {
   List as ListPrimitive,
   type ListProps as ListPrimitiveProps,
@@ -25,6 +24,7 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
+import { type Density } from '@dxos/react-ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

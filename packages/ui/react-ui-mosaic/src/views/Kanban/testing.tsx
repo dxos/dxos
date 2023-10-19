@@ -5,10 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { type FC, useRef, useState } from 'react';
 
-import { Button, Select, Toolbar } from '@dxos/react-ui';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/react-client';
 import { Schema, type TypedObject, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Button, Select, Toolbar } from '@dxos/react-ui';
 import { arrayMove } from '@dxos/util';
 
 import { Kanban, type KanbanColumn, type KanbanProps } from './Kanban';

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
+import { Toolbar } from '@dxos/react-ui';
 
 import { JsonView, PanelContainer } from '../../../components';
 import { VaultSelector } from '../../../containers';

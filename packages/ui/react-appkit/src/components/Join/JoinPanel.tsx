@@ -4,7 +4,6 @@
 
 import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
@@ -13,6 +12,7 @@ import {
   type InvitationResult,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
+import { useTranslation } from '@dxos/react-ui';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';

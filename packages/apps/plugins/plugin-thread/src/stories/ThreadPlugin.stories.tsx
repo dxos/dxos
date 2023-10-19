@@ -11,9 +11,9 @@ import React from 'react';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { mx } from '@dxos/react-ui-theme';
 import { Config } from '@dxos/client';
 import { PluginProvider, Surface } from '@dxos/react-surface';
+import { mx } from '@dxos/react-ui-theme';
 
 import { createThread } from './testing';
 import { ThreadPlugin } from '../ThreadPlugin';

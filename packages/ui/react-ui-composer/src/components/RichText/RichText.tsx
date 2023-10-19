@@ -11,8 +11,8 @@ import { type Editor, EditorContent, useEditor as useNaturalEditor } from '@tipt
 import StarterKit from '@tiptap/starter-kit';
 import React, { forwardRef, useImperativeHandle, useMemo } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
 import { generateName } from '@dxos/display-name';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type ComposerModel, type ComposerSlots } from '../../model';
 import {

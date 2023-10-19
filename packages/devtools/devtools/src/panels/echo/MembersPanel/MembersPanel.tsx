@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
-import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';

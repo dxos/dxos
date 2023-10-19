@@ -9,12 +9,12 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { types, Document } from '@braneframe/types';
-import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { ClientContext } from '@dxos/react-client';
 import { Text } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
+import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { EditorExample } from './examples';
 

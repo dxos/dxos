@@ -4,10 +4,10 @@
 
 import React, { cloneElement } from 'react';
 
-import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
+import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { Action, Actions, StepHeading } from '../../../components';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';

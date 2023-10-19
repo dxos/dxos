@@ -4,14 +4,14 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItem, useTranslation, Avatar } from '@dxos/react-ui';
-import { chromeSurface, getSize } from '@dxos/react-ui-theme';
 import {
   type CancellableInvitationObservable,
   Invitation,
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
+import { Button, ListItem, useTranslation, Avatar } from '@dxos/react-ui';
+import { chromeSurface, getSize } from '@dxos/react-ui-theme';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';

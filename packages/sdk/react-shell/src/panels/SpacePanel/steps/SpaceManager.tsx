@@ -5,10 +5,10 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import {
   InvitationList,

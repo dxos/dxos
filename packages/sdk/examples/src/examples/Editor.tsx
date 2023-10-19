@@ -7,10 +7,10 @@ import './Editor.css';
 import React, { useEffect } from 'react';
 
 import { Document } from '@braneframe/types';
-import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
 
 const Editor = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const identity = useIdentity();

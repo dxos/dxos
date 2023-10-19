@@ -15,8 +15,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { toSvg } from 'jdenticon';
 import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useMemo } from 'react';
 
-import { type Size } from '@dxos/react-ui-types';
 import { useId } from '@dxos/react-hooks';
+import { type Size } from '@dxos/react-ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

@@ -42,9 +42,9 @@ import React, {
 } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
+import { generateName } from '@dxos/display-name';
 import { useThemeContext } from '@dxos/react-ui';
 import { configColors } from '@dxos/react-ui-theme';
-import { generateName } from '@dxos/display-name';
 import { YText } from '@dxos/text-model';
 
 import { markdownTagsExtension } from './markdownTags';

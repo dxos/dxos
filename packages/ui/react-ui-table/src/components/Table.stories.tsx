@@ -9,8 +9,8 @@ import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React, { useEffect, useState } from 'react';
 
-import { DensityProvider } from '@dxos/react-ui';
 import { PublicKey } from '@dxos/keys';
+import { DensityProvider } from '@dxos/react-ui';
 import { range } from '@dxos/util';
 
 import { Table } from './Table';

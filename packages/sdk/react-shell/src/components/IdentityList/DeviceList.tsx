@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { type Device } from '@dxos/react-client/halo';
 import { List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { type Device } from '@dxos/react-client/halo';
 
 import { IdentityListItem } from './IdentityListItem';
 

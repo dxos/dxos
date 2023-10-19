@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText } from '@dxos/react-ui-theme';
-import { Invitation } from '@dxos/react-client/invitations';
 
 import { Action, Actions, StepHeading } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';

@@ -6,11 +6,11 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { useId } from '@dxos/react-ui';
 import { type PublicKey } from '@dxos/react-client';
 import { Text, TextKind, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { useId } from '@dxos/react-ui';
 
 import { Composer, type ComposerProps } from './Composer';
 import { ComposerDocument, types as schema } from '../../testing';

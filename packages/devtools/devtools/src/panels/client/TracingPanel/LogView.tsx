@@ -4,9 +4,9 @@
 
 import React, { type FC } from 'react';
 
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { levels, LogLevel } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 
 // Deliberately not using the common components export to aid in code-splitting.
 

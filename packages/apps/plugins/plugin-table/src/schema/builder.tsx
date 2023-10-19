@@ -5,6 +5,7 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
+import { type EchoDatabase, type Space, type TypedObject } from '@dxos/client/echo';
 import { Button } from '@dxos/react-ui';
 import {
   createColumnBuilder,
@@ -16,7 +17,6 @@ import {
   type TableDef,
 } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
-import { type EchoDatabase, type Space, type TypedObject } from '@dxos/client/echo';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { createUniqueProp } from './types';

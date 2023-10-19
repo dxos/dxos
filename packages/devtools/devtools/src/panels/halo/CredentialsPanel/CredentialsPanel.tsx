@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';

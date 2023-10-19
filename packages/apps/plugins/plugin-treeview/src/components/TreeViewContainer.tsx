@@ -7,6 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
+import { useClient, useConfig } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -17,8 +19,6 @@ import {
   type NavTreeProps,
 } from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { useClient, useConfig } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';

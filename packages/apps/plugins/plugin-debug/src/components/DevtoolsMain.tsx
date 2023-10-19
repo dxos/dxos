@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 import { Devtools } from '@dxos/devtools';
 import { type ClientServices, useClient } from '@dxos/react-client';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const DevtoolsMain = () => {
   const client = useClient();

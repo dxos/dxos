@@ -16,7 +16,6 @@ import {
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, type ForwardRefExoticComponent, Fragment, useCallback } from 'react';
 
-import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/react-ui-types';
 import {
   InputRoot,
   type InputRootProps,
@@ -38,6 +37,7 @@ import {
   Validation as ValidationPrimitive,
   type ValidationProps as ValidationPrimitiveProps,
 } from '@dxos/react-input';
+import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/react-ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

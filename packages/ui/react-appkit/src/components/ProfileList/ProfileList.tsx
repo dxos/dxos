@@ -3,9 +3,9 @@
 //
 import React from 'react';
 
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { Tag, useTranslation } from '@dxos/react-ui';
 import { staticDisabled, group, mx } from '@dxos/react-ui-theme';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';

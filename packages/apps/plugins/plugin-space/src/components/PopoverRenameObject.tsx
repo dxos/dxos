@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { type TypedObject } from '@dxos/react-client/echo';
+import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../types';
 

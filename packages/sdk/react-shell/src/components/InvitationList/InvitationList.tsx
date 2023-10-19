@@ -3,9 +3,9 @@
 //
 import React from 'react';
 
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { List } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem';
 import { type SharedInvitationListProps } from './InvitationListProps';

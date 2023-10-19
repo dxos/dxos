@@ -5,13 +5,13 @@
 import { Trash } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
-import { getSize } from '@dxos/react-ui-theme';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
+import { Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 

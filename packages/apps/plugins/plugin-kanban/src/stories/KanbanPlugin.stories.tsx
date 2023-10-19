@@ -10,8 +10,8 @@ import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { mx } from '@dxos/react-ui-theme';
 import { PluginProvider, Surface } from '@dxos/react-surface';
+import { mx } from '@dxos/react-ui-theme';
 
 import { createKanban } from './testing';
 import { KanbanPlugin } from '../KanbanPlugin';

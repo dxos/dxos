@@ -5,10 +5,10 @@
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 
-import { Main } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 import { Chessboard, type ChessModel, type ChessMove, type Game } from '@dxos/chess-app';
 import { invariant } from '@dxos/invariant';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const ChessMain = ({ data: object }: { data: Game }) => {
   const [model, setModel] = useState<ChessModel>();

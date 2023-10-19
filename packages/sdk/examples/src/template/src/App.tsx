@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { type Client, ClientProvider, type PublicKey } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type Client, ClientProvider, type PublicKey } from '@dxos/react-client';
 
 import { Demo } from './components';
 

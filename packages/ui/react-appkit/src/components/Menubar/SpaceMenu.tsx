@@ -5,9 +5,9 @@
 import { Gear, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React from 'react';
 
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { inlineSeparator, getSize, mx, defaultTx } from '@dxos/react-ui-theme';
-import { type Space, useMembers } from '@dxos/react-client/echo';
 
 import { Popover } from '../Popover';
 

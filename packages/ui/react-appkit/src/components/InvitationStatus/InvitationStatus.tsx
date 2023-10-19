@@ -4,9 +4,9 @@
 
 import React, { type ComponentProps, useMemo } from 'react';
 
+import { Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 import { strongShimmer, getSize, mx } from '@dxos/react-ui-theme';
-import { Invitation } from '@dxos/react-client/invitations';
 
 const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));

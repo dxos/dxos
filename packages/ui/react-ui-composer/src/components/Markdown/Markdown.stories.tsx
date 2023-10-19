@@ -6,10 +6,10 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { useId } from '@dxos/react-ui';
 import { PublicKey } from '@dxos/react-client';
 import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { useId } from '@dxos/react-ui';
 
 import { MarkdownComposer } from './Markdown';
 import { Replicator, useYjsModel } from '../../testing';
