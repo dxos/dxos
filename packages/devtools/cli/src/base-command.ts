@@ -232,6 +232,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           group,
         },
       });
+      Sentry.enableSentryLogProcessor();
     }
 
     if (TELEMETRY_API_KEY) {
