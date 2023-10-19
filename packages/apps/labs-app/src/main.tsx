@@ -21,6 +21,7 @@ import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
@@ -119,6 +120,8 @@ const main = async () => {
           MapPlugin(),
           TablePlugin(),
           ThreadPlugin(),
+
+          SearchPlugin(),
         ]}
       />
     </StrictMode>,

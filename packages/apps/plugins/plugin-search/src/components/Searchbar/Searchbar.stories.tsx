@@ -19,7 +19,8 @@ const Story: FC<SearchbarProps> = (args) => {
 };
 
 export default {
-  component: Story,
+  component: Searchbar,
+  render: Story,
   parameters: {
     layout: 'centered',
   },

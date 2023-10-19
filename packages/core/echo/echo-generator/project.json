@@ -1,0 +1,73 @@
+{
+  "sourceRoot": "packages/core/echo/echo-generator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/core/echo/echo-generator/src/index.ts",
+        "outputPath": "packages/core/echo/echo-generator/dist/types",
+        "tsConfig": "packages/core/echo/echo-generator/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-generator/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-generator/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/echo/echo-generator/src/packlets/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/echo/echo-generator",
+        "envVariables": {
+          "SIGNAL_PORT": 12000
+        },
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/echo/echo-generator",
+        "resultsPath": "test-results/packages/core/echo/echo-generator",
+        "setupOptions": {
+          "port": 12000
+        },
+        "testPatterns": [
+          "packages/core/echo/echo-generator/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-generator/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

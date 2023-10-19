@@ -4,6 +4,7 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
+import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
 import { DensityProvider, Main } from '@dxos/aurora';
@@ -33,9 +34,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
-  console.log(table);
-
-  const rows = [...objects, {} as any];
+  const rows = useFilteredObjects(objects);
 
   const updateSchemaProp = (update: SchemaType.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);

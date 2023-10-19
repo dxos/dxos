@@ -9,7 +9,9 @@ import { type PluginDefinition } from '@dxos/react-surface';
 
 import { SearchMain } from './components';
 import translations from './translations';
-import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction } from './types';
+import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction, SearchContextProvider } from './types';
+
+// TODO(burdon): Key accelerator (to open sidebar).
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {
@@ -39,6 +41,13 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
             },
           });
         },
+      },
+      context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
+      component: (data, role) => {
+        switch (role) {
+          case 'complementary':
+            return SearchMain;
+        }
       },
       components: {
         SearchMain,
