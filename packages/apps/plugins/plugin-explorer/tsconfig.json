@@ -21,6 +21,12 @@
   ],
   "references": [
     {
+      "path": "../../../experimental/gem-core"
+    },
+    {
+      "path": "../../../experimental/gem-spore"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {
