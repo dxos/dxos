@@ -78,32 +78,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
         // TODO(burdon): Pass in history.
         // TODO(burdon): Error handling (e.g., 401);
         const chatContents: ChatCompletionRequestMessage[] = [
-          ENABLE_SCHEMA && {
-            role: 'system',
-            content: `
-          Side note:
-          In your replies you can choose to output lists and only lists in a structured format.
-          Structured data is formatted as an array of JSON objects conforming to the schema.
-          Include "@type" field with the exact name of one of the provided schema types.
-          In structured mode do not include any other text in your replies, just a single JSON block.
-          Include real data in your replies, not just the schema.
-          Try to fill all fields if reasonable data can be provided.
-
-          Example:
-
-          [
-           {
-             "@type": "project.Example.Type",
-             "title": "hypercore",
-             "content": "hypercore is a protocol and network for distributing and replicating static feeds"
-           }
-          ]
-
-          Available schema types:
-
-          ${schemas.map(({ config, schema }) => (schema ? formatSchema(schema, config) : '')).join('\n')}
-          `,
-          },
+          ENABLE_SCHEMA && createPrompt(schemas),
           ...block.messages.map((message): ChatCompletionRequestMessage => {
             let content = '';
             const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
@@ -120,11 +95,9 @@ export default async (event: HandlerProps, context: FunctionContext) => {
         ];
 
         log.info('request', { chatContents });
-
         const { content } = (await model.request(chatContents)) ?? {};
 
         log.info('response', { content });
-
         if (content) {
           const timestamp = new Date().toISOString();
           const messages = [];
@@ -135,7 +108,6 @@ export default async (event: HandlerProps, context: FunctionContext) => {
             pre && messages.push({ timestamp, text: pre });
 
             const datas = Array.isArray(data) ? data : [data];
-
             messages.push(
               ...datas.map((data): Thread.Message => {
                 if (typeof data['@type'] === 'string') {
@@ -216,4 +188,33 @@ const formatSchema = (schema: Schema, config?: SchemaConfig) => {
       ${props.map((prop) => `${prop.id}: ${prop.type}`).join('\n      ')}
     \n
   `;
+};
+
+const createPrompt = (schemas): ChatCompletionRequestMessage[] => {
+  return [
+    {
+      role: 'system',
+      content: `
+        Side note:
+        In your replies you can choose to output lists and only lists in a structured format.
+        Structured data is formatted as an array of JSON objects conforming to the schema.
+        Include "@type" field with the exact name of one of the provided schema types.
+        In structured mode do not include any other text in your replies, just a single JSON block.
+        Include real data in your replies, not just the schema.
+        Try to fill all fields if reasonable data can be provided.
+
+        Example:
+        [
+         {
+           "@type": "project.Example.Type",
+           "title": "hypercore",
+           "content": "hypercore is a protocol and network for distributing and replicating static feeds"
+         }
+        ]
+
+        Available schema types:
+        ${schemas.map(({ config, schema }) => (schema ? formatSchema(schema, config) : '')).join('\n')}
+        `,
+    },
+  ];
 };
