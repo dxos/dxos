@@ -5,12 +5,9 @@
 syntax = "proto3";
 
 package dxos.agent.dashboard;
+import "google/protobuf/empty.proto";
 
-message DashboardRequest {
-
-}
-
-message DashboardResponse {
+message AgentStatus {
   enum Status {
     ON = 0;
     OFF = 1;
@@ -23,4 +20,8 @@ message DashboardResponse {
   
   Status status = 1;
   repeated Plugin plugins = 2;
+}
+
+service DashboardService {
+  rpc status(google.protobuf.Empty) returns (stream AgentStatus);
 }

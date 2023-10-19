@@ -7,14 +7,15 @@ import { expect } from 'chai';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { DashboardResponse } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { log } from '@dxos/log';
+import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { CHANNEL_NAME, DashboardPlugin } from './dashboard-plugin';
+import { Dashboard } from './dashboard';
+import { DashboardPlugin } from './dashboard-plugin';
 
 describe('DashboardPlugin', () => {
-  test('request/response', async () => {
+  test('Dashboard proxy', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
@@ -27,10 +28,10 @@ describe('DashboardPlugin', () => {
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
-    const dashboard = new DashboardPlugin();
-    await dashboard.initialize({ client: client1, clientServices: services1, plugins: [] });
-    await dashboard.open();
-    afterTest(() => dashboard.close());
+    const dashboardPlugin = new DashboardPlugin();
+    await dashboardPlugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+    await dashboardPlugin.open();
+    afterTest(() => dashboardPlugin.close());
 
     const services2 = builder.createLocal();
     const client2 = new Client({ services: services2 });
@@ -39,26 +40,29 @@ describe('DashboardPlugin', () => {
 
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
-    // Subscribe for response.
-    const results = new Trigger<GossipMessage>();
-    {
-      await asyncTimeout(client2.spaces.isReady.wait(), 1000);
+    await asyncTimeout(client2.spaces.isReady.wait(), 1000);
+    await asyncTimeout(client1.spaces.default.waitUntilReady(), 1000);
+    const dashboardProxy = new Dashboard({ client: client2 });
+    await dashboardProxy.open();
+    afterTest(() => dashboardProxy.close());
 
-      await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
+    const result = new Trigger<AgentStatus>();
 
-      const subs = client2.spaces.default.listen(CHANNEL_NAME, (message) => results.wake(message));
-      afterTest(() => subs());
-    }
+    const stream = dashboardProxy.services.DashboardService.status();
+    afterTest(() => stream.close());
 
-    // Send request.
-    {
-      await client2.spaces.default.postMessage(CHANNEL_NAME, {
-        '@type': 'dxos.agent.dashboard.DashboardRequest',
-      });
-    }
+    stream.subscribe((msg) => {
+      log.info('Got message:', { msg });
+      result.wake(msg);
+    });
+    await stream.waitUntilReady();
 
-    const message = await asyncTimeout(results.wait(), 1000);
-    expect(message.payload['@type']).to.equal('dxos.agent.dashboard.DashboardResponse');
-    expect(message.payload.status === DashboardResponse.Status.ON);
+    const message = await asyncTimeout(result.wait(), 1000);
+    expect(message.status === AgentStatus.Status.ON);
+  });
+
+  test('id', async () => {
+    const plugin = new DashboardPlugin();
+    expect(plugin.id).to.equal('DashboardPlugin');
   });
 });

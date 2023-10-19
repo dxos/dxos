@@ -6,13 +6,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DashboardResponse } from '@dxos/protocols/proto/dxos/agent/dashboard';
+import { schema } from '@dxos/protocols';
+import { AgentStatus, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
+import { getGossipRPCPort } from './utils';
 import { AbstractPlugin } from '../plugin';
 
 type Options = Required<Runtime.Agent.Plugins.Dashboard>;
@@ -23,9 +26,14 @@ const DEFAULT_OPTIONS: Options = {
 
 export const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
 
+export type ServiceBundle = {
+  DashboardService: DashboardService;
+};
+
 export class DashboardPlugin extends AbstractPlugin {
   private readonly _ctx = new Context();
   private _options?: Options = undefined;
+  private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   async open(): Promise<void> {
     log('Opening dashboard plugin...');
@@ -46,10 +54,24 @@ export class DashboardPlugin extends AbstractPlugin {
       }
       invariant(this._pluginCtx);
       await this._pluginCtx.client.spaces.default.waitUntilReady();
-      const unsubscribe = this._pluginCtx.client.spaces.default.listen(CHANNEL_NAME, (msg) =>
-        this._handleDashboardRequest(msg),
-      );
-      this._ctx.onDispose(unsubscribe);
+
+      this._rpc = createProtoRpcPeer({
+        exposed: {
+          DashboardService: schema.getService('dxos.agent.dashboard.DashboardService'),
+        },
+        handlers: {
+          DashboardService: {
+            status: () => this._handleStatus(),
+          },
+        },
+        noHandshake: true,
+        port: getGossipRPCPort({ space: this._pluginCtx.client.spaces.default, channelName: CHANNEL_NAME }),
+        encodingOptions: {
+          preserveAny: true,
+        },
+      });
+      await this._rpc.open();
+      this._ctx.onDispose(() => this._rpc!.close());
     });
 
     this._ctx.onDispose(() => subscription.unsubscribe());
@@ -59,22 +81,29 @@ export class DashboardPlugin extends AbstractPlugin {
     void this._ctx.dispose();
   }
 
-  private async _handleDashboardRequest(message: GossipMessage) {
-    if (message.payload['@type'] !== 'dxos.agent.dashboard.DashboardRequest') {
-      return;
-    }
-
+  private _handleStatus(): Stream<AgentStatus> {
     invariant(this._pluginCtx, 'Client is undefined.');
+    return new Stream<AgentStatus>(({ ctx, next, close, ready }) => {
+      const update = () => {
+        next({
+          status: AgentStatus.Status.ON,
+          plugins: this._pluginCtx!.plugins.map((plugin) => ({
+            name: Object.getPrototypeOf(plugin).constructor.name,
+            status: 'OK',
+          })),
+        });
+      };
+      ready();
 
-    await this._pluginCtx.client?.spaces.isReady.wait();
-    await this._pluginCtx.client.spaces.default.waitUntilReady();
-    await this._pluginCtx.client.spaces.default.postMessage(CHANNEL_NAME, {
-      '@type': 'dxos.agent.dashboard.DashboardResponse',
-      status: DashboardResponse.Status,
-      plugins: this._pluginCtx.plugins.map((plugin) => ({
-        name: Object.getPrototypeOf(plugin).constructor.name,
-        status: 'OK',
-      })),
+      this._pluginCtx!.plugins.forEach((plugin) => {
+        plugin.statusUpdate.on(ctx, () => update());
+      });
+
+      update();
+
+      this._ctx.onDispose(() => {
+        close();
+      });
     });
   }
 }
