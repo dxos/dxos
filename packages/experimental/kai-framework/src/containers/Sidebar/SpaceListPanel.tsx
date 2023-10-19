@@ -5,15 +5,15 @@
 import { CaretCircleDoubleDown, PlusCircle, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, Input } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { ShellLayout, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useShell } from '@dxos/react-shell';
+import { Button, Input } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
-import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';
+import { SpaceList, type SpaceListAction, SpaceSettings } from '../../components';
 import { createPath, defaultFrameId, useAppReducer, useAppRouter, useAppState } from '../../hooks';
-import { Intent } from '../../util';
+import { type Intent } from '../../util';
 
 export const Separator = () => {
   return <div role='separator' className='bs-px bg-neutral-400/20 mlb-2 mli-2' />;
@@ -57,7 +57,7 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
       </div>
 
       <div className='flex flex-col px-4 py-2'>
-        {/* TODO(burdon): Not aligned with buttons. Checkbox not part of Aurora? */}
+        {/* TODO(burdon): Not aligned with buttons. Checkbox not part of DXOS UI? */}
         <div className='flex px-0.5 py-1 items-center'>
           <Input.Root id='sidebar.showDeleted'>
             <Input.Checkbox checked={showDeletedObjects} onCheckedChange={setShowDeletedObjects} />

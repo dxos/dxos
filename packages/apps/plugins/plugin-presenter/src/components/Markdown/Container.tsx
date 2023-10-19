@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export type ContainerProps = PropsWithChildren<{
   className?: string;

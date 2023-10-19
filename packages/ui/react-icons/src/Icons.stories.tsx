@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 

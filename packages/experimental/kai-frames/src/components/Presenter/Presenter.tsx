@@ -11,7 +11,7 @@ import highlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { defaultClasses, defaultPadding, defaultSlideClasses } from './styles';
 

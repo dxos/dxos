@@ -6,9 +6,9 @@ import { Article, ArticleMedium } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Document } from '@braneframe/types';
-import { useTranslation, TreeItem } from '@dxos/aurora';
-import { TextKind } from '@dxos/aurora-composer';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { useTranslation, TreeItem } from '@dxos/react-ui';
+import { TextKind } from '@dxos/react-ui-composer';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { GITHUB_PLUGIN } from '../../props';
 

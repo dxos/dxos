@@ -36,16 +36,16 @@
       "path": "../../sdk/react-shell"
     },
     {
-      "path": "../../ui/aurora"
-    },
-    {
-      "path": "../../ui/aurora-theme"
-    },
-    {
-      "path": "../../ui/aurora-theme"
-    },
-    {
       "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
     }
   ],
   "ts-node": {

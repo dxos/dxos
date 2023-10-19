@@ -5,8 +5,8 @@
 import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

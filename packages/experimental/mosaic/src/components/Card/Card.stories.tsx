@@ -12,8 +12,8 @@ import React from 'react';
 // storybook config (files and modules)
 // dxosTheme import
 
-import { Button, DensityProvider } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, DensityProvider } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { Card } from './Card';
 import { CardActions } from './CardActions';

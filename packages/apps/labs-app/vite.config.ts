@@ -9,7 +9,7 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 // import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
@@ -59,11 +59,11 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Required until integrated with theme.
-        resolve(__dirname, './node_modules/@dxos/aurora-table/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/aurora-grid/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/aurora-stack/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/aurora-navtree/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269

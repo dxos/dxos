@@ -5,23 +5,23 @@
 import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useEffect, useState, Suspense } from 'react';
 
-import { Button, DensityProvider, Main, ClassNameValue, useSidebars } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { TypedObject, useSpaces } from '@dxos/react-client/echo';
+import { type TypedObject, useSpaces } from '@dxos/react-client/echo';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
+import { Button, DensityProvider, Main, type ClassNameValue, useSidebars } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { FrameList } from './FrameList';
-import { ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
+import { type ObjectAction, ObjectActionType, ObjectList } from './ObjectList';
 import { Separator, SpaceListPanel } from './SpaceListPanel';
-import { SpaceListAction } from '../../components';
+import { type SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
 import {
   Section,
-  SearchResults,
+  type SearchResults,
   createPath,
   getIcon,
   useAppRouter,
@@ -29,7 +29,7 @@ import {
   useCreateInvitation,
   useTheme,
 } from '../../hooks';
-import { Intent, IntentAction } from '../../util';
+import { type Intent, IntentAction } from '../../util';
 import { MemberList } from '../MembersList';
 import { SearchPanel } from '../SearchPanel';
 

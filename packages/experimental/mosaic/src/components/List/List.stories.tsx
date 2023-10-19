@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Circle, X } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/react-ui-theme';
 import { range } from '@dxos/util';
 
 import { List, ListItem, IconButton, ListItemText } from './List';

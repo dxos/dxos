@@ -7,9 +7,9 @@ import React, { type FC, useContext, useState } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, SplitViewAction, useSplitView } from '@braneframe/plugin-splitview';
 import { type Stack as StackType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN, PresenterContext } from '../types';

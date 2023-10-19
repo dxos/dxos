@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@types/d3": "^7.1.0",
     "@types/react": "^18.0.21",

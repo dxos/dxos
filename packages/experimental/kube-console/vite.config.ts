@@ -9,7 +9,7 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import mkcert from 'vite-plugin-mkcert';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore

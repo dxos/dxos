@@ -4,7 +4,7 @@
 
 import React, { cloneElement } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { Actions, Action } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';

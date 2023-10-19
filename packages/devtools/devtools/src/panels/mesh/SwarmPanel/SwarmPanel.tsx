@@ -6,11 +6,11 @@ import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import bytes from 'bytes';
 import React, { useMemo, useState } from 'react';
 
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionInfoView } from './ConnectionInfoView';

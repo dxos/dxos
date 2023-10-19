@@ -5,11 +5,11 @@
 import React, { type FC } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { type TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePlugins();

@@ -9,8 +9,8 @@ import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type Kanban as KanbanType } from '@braneframe/types';
-import { Button, Input, useTranslation } from '@dxos/aurora';
-import { chromeSurface, getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { chromeSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
