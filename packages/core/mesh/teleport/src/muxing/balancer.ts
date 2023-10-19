@@ -94,7 +94,7 @@ export class Balancer {
     // Start processing calls if this is the first call.
     if (noCalls) {
       try {
-        await this._sendChunks()
+        await this._sendChunks();
       } catch (err: any) {
         log.catch(err);
       }
