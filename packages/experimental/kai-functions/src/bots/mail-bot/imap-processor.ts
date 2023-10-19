@@ -4,9 +4,9 @@
 
 import sub from 'date-fns/sub';
 import { convert } from 'html-to-text';
-import { Config as ImapConfig } from 'imap';
-import imaps, { Message as ImapMessage, ImapSimple } from 'imap-simple';
-import { simpleParser, EmailAddress } from 'mailparser';
+import { type Config as ImapConfig } from 'imap';
+import imaps, { type Message as ImapMessage, type ImapSimple } from 'imap-simple';
+import { simpleParser, type EmailAddress } from 'mailparser';
 
 import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/kai-types';

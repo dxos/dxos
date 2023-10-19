@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,7 +13,6 @@
   "dependencies": {
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -23,6 +22,7 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-shell": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@emotion/react": "^11.9.0",
@@ -35,9 +35,9 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@crxjs/vite-plugin": "^1.0.14",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/chrome": "^0.0.125",
     "@types/react": "^18.0.21",

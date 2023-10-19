@@ -10,8 +10,8 @@ import startOfWeek from 'date-fns/startOfWeek';
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Contact, Event as EventType } from '@dxos/kai-types';
 import { useQuery } from '@dxos/react-client/echo';
 

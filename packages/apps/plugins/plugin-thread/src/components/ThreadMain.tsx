@@ -8,13 +8,13 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { Button, Main, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { ThreadChannel } from './ThreadChannel';
 import { THREAD_PLUGIN } from '../types';
@@ -68,10 +68,10 @@ export const ThreadContainer: FC<{ space: Space; thread: ThreadType }> = ({ spac
   const getBlockProperties = (identityKey: PublicKey) => {
     const author = PublicKey.equals(identityKey, identity.identityKey)
       ? identity
-      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))!.identity;
+      : members.find((member) => PublicKey.equals(member.identity.identityKey, identityKey))?.identity;
     return {
-      displayName: author.profile?.displayName ?? generateName(identityKey.toHex()),
-      classes: colorHash(author.identityKey),
+      displayName: author?.profile?.displayName ?? generateName(identityKey.toHex()),
+      classes: colorHash(author?.identityKey ?? identityKey),
     };
   };
 

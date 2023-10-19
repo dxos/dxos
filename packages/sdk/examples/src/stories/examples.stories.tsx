@@ -9,12 +9,13 @@ import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { Input } from '@dxos/aurora';
 import { type Client, type PublicKey } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { ClientDecorator, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';
+import { Input } from '@dxos/react-ui';
 
 import { EditorExample, TaskListExample } from '../examples';
+import { types } from '../proto/gen/schema';
 
 export default {
   title: 'DXOS Examples',
@@ -29,6 +30,7 @@ export const TaskList = {
 
 const editor = await setupPeersInSpace({
   count: 2,
+  schema: types,
   onCreateSpace: (space) => {
     space.db.add(new Document());
   },

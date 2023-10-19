@@ -5,14 +5,14 @@
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
+import { Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
 

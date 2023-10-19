@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { Address } from '@dxos/kai-types';
 import { Space, TypedObject } from '@dxos/react-client/echo';
 

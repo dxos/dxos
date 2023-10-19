@@ -3,16 +3,16 @@
 //
 
 import startCase from 'lodash.startcase';
-import { ChatCompletionRequestMessage } from 'openai';
+import { type ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
-import { Space, Text, TextKind } from '@dxos/client/echo';
+import { type Space, Text, TextKind } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
-import { Contact, DocumentStack } from '@dxos/kai-types';
+import { type Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 
-import { Resolver } from '../../resolver';
-import { ChatModel } from '../chat-model';
+import { type Resolver } from '../../resolver';
+import { type ChatModel } from '../chat-model';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const parseJson = (content: string) => {

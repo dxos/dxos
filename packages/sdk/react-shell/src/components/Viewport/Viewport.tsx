@@ -14,8 +14,8 @@ import React, {
   useEffect,
 } from 'react';
 
-import { type ThemedClassName, useForwardedRef } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 const VIEWPORT_NAME = 'Viewport';
 const VIEWS_NAME = 'ViewportViews';

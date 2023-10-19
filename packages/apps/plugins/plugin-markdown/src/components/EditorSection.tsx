@@ -4,8 +4,8 @@
 
 import React, { type HTMLAttributes, useRef } from 'react';
 
-import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/aurora-composer';
-import { focusRing, mx } from '@dxos/aurora-theme';
+import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/react-ui-composer';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 

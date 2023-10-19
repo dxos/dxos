@@ -20,7 +20,7 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
       "path": "../gem-core"

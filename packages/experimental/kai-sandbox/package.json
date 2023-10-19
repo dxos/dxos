@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-sandbox",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "Frame sandbox",
   "homepage": "https://dxos.org",
@@ -43,7 +43,7 @@
     "yjs": "^13.6.7"
   },
   "devDependencies": {
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

@@ -33,13 +33,16 @@
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-grid"
+      "path": "../../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"

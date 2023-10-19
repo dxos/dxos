@@ -20,6 +20,7 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
@@ -32,8 +33,14 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
+import { createClientServices, Remote } from '@dxos/client/services';
+import { Config, Envs, Local } from '@dxos/config';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
+import { Defaults } from '@dxos/react-client';
+import { PluginProvider } from '@dxos/react-surface';
 import {
-  auroraTheme,
+  defaultTheme,
   bindTheme,
   focusRing,
   groupBorder,
@@ -41,13 +48,7 @@ import {
   mx,
   popperMotion,
   surfaceElevation,
-} from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
-import { createClientServices, Remote } from '@dxos/client/services';
-import { Config, Envs, Local } from '@dxos/config';
-import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { Defaults } from '@dxos/react-client';
-import { PluginProvider } from '@dxos/react-surface';
+} from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -63,14 +64,13 @@ const main = async () => {
 
   // TODO(burdon): Custom theme (e.g., primary).
   const labsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     popover: {
-      ...auroraTheme.popover,
+      ...defaultTheme.popover,
       content: (_props, ...etc) =>
         mx(
           'z-[30] rounded-xl',
           popperMotion,
-          // 'bg-orange-200',
           groupSurface,
           groupBorder,
           surfaceElevation({ elevation: 'group' }),
@@ -95,7 +95,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
-          ClientPlugin({ config, services, debugIdentity: debug, schema: types }),
+          ClientPlugin({ config, services, debugIdentity: debug, types }),
 
           // Core UX.
           DndPlugin(),
@@ -110,6 +110,7 @@ const main = async () => {
           GithubPlugin(),
           MarkdownPlugin(),
           SketchPlugin(),
+          PresenterPlugin(), // Before Stack.
           StackPlugin(),
 
           // Labs Apps.

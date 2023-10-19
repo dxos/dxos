@@ -5,11 +5,11 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { ComponentProps, FC, ReactNode } from 'react';
+import React, { type ComponentProps, type FC, type ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { range, type MinMax } from '@dxos/kai-types';
+import { mx } from '@dxos/react-ui-theme';
 // @ts-ignore
-import { range, MinMax } from '@dxos/kai-types';
 
 const Frame: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8'>{children}</div>;

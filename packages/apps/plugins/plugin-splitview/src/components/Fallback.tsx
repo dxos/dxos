@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { errorText, mx } from '@dxos/aurora-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { SPLITVIEW_PLUGIN } from '../types';
 

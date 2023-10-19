@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
 import { useShell } from '@dxos/react-client';
+import { Button, useTranslation } from '@dxos/react-ui';
 
 export const OpenVault = () => {
   const { t } = useTranslation('halo');

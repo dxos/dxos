@@ -5,14 +5,13 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
-import { SketchMain, SketchSection } from './components';
+import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
 import { isSketch, SKETCH_PLUGIN, type SketchPluginProvides, SketchAction } from './types';
 import { objectToGraphNode } from './util';
@@ -25,15 +24,16 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       id: SKETCH_PLUGIN,
     },
     ready: async (plugins) => {
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-          if (isSketch(node.data)) {
-            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-          }
-          return tile;
-        });
-      }
+      // TODO(wittjosiah): Replace? Remove?
+      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+      //     if (isSketch(node.data)) {
+      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+      //     }
+      //     return tile;
+      //   });
+      // }
     },
     unload: async () => {
       adapter.clear();
@@ -86,15 +86,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             },
           },
         ],
-        choosers: [
-          {
-            id: 'choose-stack-section-sketch', // TODO(burdon): Standardize.
-            testId: 'sketchPlugin.createSectionSpaceSketch',
-            label: ['choose stack section label', { ns: SKETCH_PLUGIN }],
-            icon: (props: any) => <CompassTool {...props} />,
-            filter: isSketch,
-          },
-        ],
       },
       component: (data, role) => {
         // TODO(burdon): SurfaceResolver error if component not defined.
@@ -107,6 +98,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             return SketchMain;
           case 'section':
             return SketchSection;
+          case 'presenter-slide':
+            return SketchSlide;
         }
       },
       components: {

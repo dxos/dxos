@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 const PACKAGE_VERSION = require('./package.json').version;
 
@@ -52,7 +52,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/aurora-table/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/**/*.mjs'),
       ],
       extensions: []
     }),

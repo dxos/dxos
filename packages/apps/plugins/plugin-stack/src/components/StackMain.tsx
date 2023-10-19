@@ -3,96 +3,102 @@
 //
 
 import { Plus, Placeholder } from '@phosphor-icons/react';
-import { getIndexAbove } from '@tldraw/indices';
-import { type DeepSignal } from 'deepsignal';
-import React, { type FC, forwardRef, type Ref, useCallback, useEffect } from 'react';
+import React, { useCallback, type FC } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
-import { type File as FileType } from '@braneframe/types';
-import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { Mosaic, type DelegatorProps, type MosaicState, getDndId, useMosaic, type TileProps } from '@dxos/aurora-grid';
-import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { type Stack as StackType, type File as FileType } from '@braneframe/types';
+import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
+import { Surface, usePlugin } from '@dxos/react-surface';
+import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
+import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
+import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 
 import { FileUpload } from './FileUpload';
-import { StackSection } from './StackSection';
-import { StackSections } from './StackSections';
 import { defaultFileTypes } from '../hooks';
-import { stackState } from '../stores';
-import { STACK_PLUGIN, type StackModel, type StackProperties } from '../types';
+import { STACK_PLUGIN, type StackPluginProvides } from '../types';
+import { isStack } from '../util';
 
-export const StackSectionDelegator = forwardRef<HTMLElement, { data: DelegatorProps }>(
-  ({ data: props }, forwardedRef) => {
-    switch (props.tile.variant) {
-      case 'stack':
-        return <StackSections {...props} ref={forwardedRef as Ref<HTMLDivElement>} />;
-      case 'card':
-        return <StackSection {...props} ref={forwardedRef as Ref<HTMLLIElement>} />;
-      default:
-        return null;
-    }
-  },
-);
+const StackContent = ({ data }: { data: StackSectionItem }) => {
+  // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+  const object = (data as any).node?.data ?? data;
+  return <Surface role='section' data={object} />;
+};
 
-export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
+export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const { mosaic } = useMosaic();
+  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
+
+  const id = `stack-${stack.id}`;
+  const items = stack.sections.map(({ object }) => object as TypedObject<StackSectionItem>);
+
+  const handleOver = ({ active }: MosaicMoveEvent<number>) => {
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    if (!isTypedObject(active.item) && !isTypedObject((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
+    // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
+    //  Perhaps stack plugin should just provide a fallback section renderer.
+    if (isStack(active.item) || isStack((active.item as any).node?.data)) {
+      return 'reject';
+    }
+
+    const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
+    if (!exists) {
+      return 'copy';
+    } else {
+      return 'reject';
+    }
+  };
+
+  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+    if (
+      (active.path === Path.create(id, active.item.id) || active.path === id) &&
+      (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
+    ) {
+      stack.sections.splice(active.position!, 1);
+    }
+
+    // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
+    const object = ((active.item as any).node?.data ?? active.item) as TypedObject;
+    if (over.path === Path.create(id, over.item.id)) {
+      stack.sections.splice(over.position!, 0, new TypedObject({ object }));
+    } else if (over.path === id) {
+      stack.sections.push(new TypedObject({ object }));
+    }
+  };
+
+  const handleRemove = (path: string) => {
+    const index = stack.sections.findIndex(({ object }) => object.id === Path.last(path));
+    if (index >= 0) {
+      stack.sections.splice(index, 1);
+    }
+  };
+
   const handleAdd = useCallback(
-    (sectionObject: StackModel['sections'][0]['object']) => {
-      stack.sections.splice(stack.sections.length, 0, {
-        id: sectionObject.id,
-        index: stack.sections.length > 0 ? getIndexAbove(stack.sections[stack.sections.length - 1].index) : 'a0',
-        object: sectionObject,
-      });
+    (sectionObject: StackType['sections'][0]['object']) => {
+      stack.sections.push(
+        new TypedObject({
+          id: sectionObject.id,
+          object: sectionObject,
+        }),
+      );
     },
     [stack, stack.sections],
   );
 
-  const rootTile: TileProps = {
-    id: getDndId(STACK_PLUGIN, stack.id),
-    sortable: true,
-    acceptCopyClass: 'stack-section',
-    index: 'a0',
-    variant: 'stack',
-  };
-
-  useEffect(() => {
-    const tiles = stack.sections.reduce(
-      (acc: MosaicState['tiles'], section) => {
-        const id = getDndId(STACK_PLUGIN, stack.id, section.id);
-        acc[id] = {
-          id,
-          variant: 'card',
-          index: section.index,
-        };
-        return acc;
-      },
-      { [rootTile.id]: rootTile },
-    );
-
-    const relations = Object.keys(tiles).reduce((acc: MosaicState['relations'], id) => {
-      acc[id] = { child: new Set(), parent: new Set() };
-      if (id === rootTile.id) {
-        Object.keys(tiles)
-          .filter((id) => id !== rootTile.id)
-          .forEach((childId) => {
-            acc[id].child.add(childId);
-          });
-      } else {
-        acc[id].parent.add(rootTile.id);
-      }
-      return acc;
-    }, {});
-
-    mosaic.tiles = { ...mosaic.tiles, ...tiles } as DeepSignal<MosaicState['tiles']>;
-    mosaic.relations = { ...mosaic.relations, ...relations } as DeepSignal<MosaicState['relations']>;
-  }, [stack, stack.sections]);
-
   return (
     <Main.Content bounce classNames={[baseSurface, coarseBlockPaddingStart]}>
-      <Mosaic.Root id={STACK_PLUGIN}>
-        <Mosaic.Tile {...rootTile} />
-      </Mosaic.Root>
+      <Stack
+        id={id}
+        Component={StackContent}
+        items={items}
+        onOver={handleOver}
+        onDrop={handleDrop}
+        onRemoveSection={handleRemove}
+      />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
@@ -105,7 +111,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
               <DropdownMenu.Viewport>
-                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
+                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item

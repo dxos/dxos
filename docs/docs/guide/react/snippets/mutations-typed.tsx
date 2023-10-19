@@ -4,11 +4,12 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { Task } from './schema';
+import { Task, types } from './schema';
 
 export const App = () => {
   useIdentity();
@@ -27,7 +28,7 @@ export const App = () => {
         </div>
       ))}
       <button
-        name="add"
+        name='add'
         onClick={() => {
           const task = new Task({ title: 'buy milk' });
           space?.db.add(task);
@@ -41,7 +42,11 @@ export const App = () => {
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
-  <ClientProvider>
+  <ClientProvider
+    onInitialized={async (client) => {
+      client.addSchema(types);
+    }}
+  >
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );

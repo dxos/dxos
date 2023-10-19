@@ -7,10 +7,12 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
+import { types } from '@braneframe/types';
 import {
   AgentIsNotStartedByCLIError,
   AgentWaitTimeoutError,
@@ -230,6 +232,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           group,
         },
       });
+      Sentry.enableSentryLogProcessor();
     }
 
     if (TELEMETRY_API_KEY) {
@@ -241,6 +244,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       });
     }
 
+    if (this._telemetryContext?.mode === 'full') {
+      Telemetry.addTag('hostname', os.hostname());
+    }
     this.addToTelemetryContext({ command: this.id });
 
     try {
@@ -385,6 +391,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         await this.maybeStartDaemon();
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
+
+      this._client.addTypes(types);
 
       await this._client.initialize();
       log('Client initialized', { profile: this.flags.profile });

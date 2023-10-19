@@ -5,8 +5,8 @@
 import { Chat, Chats, List, User } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, DropdownMenu, DensityProvider } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, DropdownMenu, DensityProvider } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/kai-types';
 import { ShellLayout } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';

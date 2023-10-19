@@ -24,12 +24,12 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
-import { ProgressBar } from '@dxos/aurora';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { PluginProvider } from '@dxos/react-surface';
+import { ProgressBar } from '@dxos/react-ui';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -61,8 +61,7 @@ const main = async () => {
           ErrorPlugin(),
           IntentPlugin(),
           GraphPlugin(),
-          // TODO(burdon): Broken if services are not provided.
-          ClientPlugin({ config, services, schema: types }),
+          ClientPlugin({ config, services, types }),
 
           // Core UX.
           DndPlugin(),

@@ -3,7 +3,7 @@
 //
 
 import { Game } from '@dxos/chess-app/proto';
-import { Subscription } from '@dxos/echo-schema';
+import { type Subscription } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { Bot } from '../bot';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import AmadeusApi, { Config, Geolocation, Location, FlightQuery, FlightOffer } from 'amadeus';
+import AmadeusApi, { type Config, type Geolocation, type Location, type FlightQuery, type FlightOffer } from 'amadeus';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { log } from '@dxos/log';
