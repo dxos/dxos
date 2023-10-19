@@ -22,7 +22,6 @@ describe('Search', () => {
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
-
     Array.from({ length: 20 }).forEach(() =>
       space.db.add(new Expando({ title: faker.lorem.sentence(), content: faker.lorem.sentences() })),
     );
