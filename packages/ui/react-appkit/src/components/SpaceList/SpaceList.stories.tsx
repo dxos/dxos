@@ -8,7 +8,7 @@ import type { StoryFn } from '@storybook/react';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { Button } from '@dxos/aurora';
+import { Button } from '@dxos/react-ui';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ProfileInitializer } from '@dxos/react-client/testing';

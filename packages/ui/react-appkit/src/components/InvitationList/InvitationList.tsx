@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { staticDisabled, mx } from '@dxos/aurora-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { staticDisabled, mx } from '@dxos/react-ui-theme';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { PendingInvitation, type PendingInvitationProps } from './PendingInvitation';

@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC, type ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { DXOSType, DXOSHorizontalType, DXOSVerticalType } from './logotypes';
 

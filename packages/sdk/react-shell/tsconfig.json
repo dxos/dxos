@@ -48,7 +48,7 @@
       "path": "../../ui/aurora-theme"
     },
     {
-      "path": "../../ui/aurora-types"
+      "path": "../../ui/react-ui-types"
     },
     {
       "path": "../config"

@@ -3,8 +3,8 @@
 //
 import React from 'react';
 
-import { Tag, useTranslation } from '@dxos/aurora';
-import { staticDisabled, group, mx } from '@dxos/aurora-theme';
+import { Tag, useTranslation } from '@dxos/react-ui';
+import { staticDisabled, group, mx } from '@dxos/react-ui-theme';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 

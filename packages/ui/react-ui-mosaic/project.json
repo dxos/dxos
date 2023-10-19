@@ -1,0 +1,94 @@
+{
+  "sourceRoot": "packages/ui/react-ui-grid/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/ui/react-ui-grid/src/index.ts",
+        "outputPath": "packages/ui/react-ui-grid/dist/types",
+        "tsConfig": "packages/ui/react-ui-grid/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-ui-grid/src/index.ts",
+          "packages/ui/react-ui-grid/src/mosaic/index.ts"
+        ],
+        "outputPath": "packages/ui/react-ui-grid/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/react-ui-grid/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-ui-grid/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:build",
+      "options": {
+        "configDir": "packages/ui/react-ui-grid/.storybook",
+        "outputDir": "packages/ui/react-ui-grid/out/react-ui"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/ui/react-ui-grid",
+        "outputPath": "tmp/mocha/packages/ui/react-ui-grid",
+        "resultsPath": "test-results/packages/ui/react-ui-grid",
+        "testPatterns": [
+          "packages/ui/react-ui-grid/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/ui/react-ui-grid/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

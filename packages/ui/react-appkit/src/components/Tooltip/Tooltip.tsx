@@ -19,7 +19,7 @@ import {
   type TooltipRootProps,
   type TooltipContentProps,
   type TooltipTriggerProps,
-} from '@dxos/aurora';
+} from '@dxos/react-ui';
 
 export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = forwardRef<
   HTMLDivElement,
@@ -54,7 +54,7 @@ type TooltipProps = {
 };
 
 /**
- * @deprecated please use Tooltip from @dxos/aurora directly.
+ * @deprecated please use Tooltip from @dxos/react-ui directly.
  */
 export const Tooltip = ({
   content,

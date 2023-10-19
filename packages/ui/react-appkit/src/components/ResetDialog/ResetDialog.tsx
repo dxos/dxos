@@ -5,7 +5,7 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, Message, useTranslation, DropdownMenu } from '@dxos/aurora';
+import { Button, Message, useTranslation, DropdownMenu } from '@dxos/react-ui';
 import { type Config, DEFAULT_VAULT_URL } from '@dxos/react-client';
 import { getAsyncValue, type Provider } from '@dxos/util';
 

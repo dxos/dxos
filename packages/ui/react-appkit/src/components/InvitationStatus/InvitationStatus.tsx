@@ -4,8 +4,8 @@
 
 import React, { type ComponentProps, useMemo } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { strongShimmer, getSize, mx } from '@dxos/aurora-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { strongShimmer, getSize, mx } from '@dxos/react-ui-theme';
 import { Invitation } from '@dxos/react-client/invitations';
 
 const pip = mx('rounded-full flex-none', getSize(2));

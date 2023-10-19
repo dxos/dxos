@@ -7,8 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client/echo';
 import type { Identity } from '@dxos/react-client/halo';
 

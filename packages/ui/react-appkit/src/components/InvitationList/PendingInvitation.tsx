@@ -5,8 +5,8 @@
 import { ProhibitInset, XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { group, getSize, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { group, getSize, mx } from '@dxos/react-ui-theme';
 import { Invitation, type CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
 
 import { Avatar } from '../Avatar';
