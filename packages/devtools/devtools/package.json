@@ -18,9 +18,9 @@
   "dependencies": {
     "@braneframe/plugin-telemetry": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-table": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -61,7 +61,7 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-shell": "workspace:*",

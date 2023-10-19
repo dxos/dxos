@@ -4,7 +4,7 @@
 
 import React, { useCallback, useContext } from 'react';
 
-import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
+import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/react-ui';
 import { useClient } from '@dxos/react-client';
 import { useSpaces, type Space } from '@dxos/react-client/echo';
 

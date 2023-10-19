@@ -7,10 +7,10 @@ import React, { useCallback, type FC } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
-import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
-import { Stack, type StackSectionItem } from '@dxos/aurora-stack';
-import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-grid/next';
+import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
+import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
 import { Surface, usePlugin } from '@dxos/react-surface';
 

@@ -15,8 +15,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/sentry": "workspace:*"
   },

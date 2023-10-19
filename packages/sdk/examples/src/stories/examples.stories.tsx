@@ -9,7 +9,7 @@ import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { Input } from '@dxos/aurora';
+import { Input } from '@dxos/react-ui';
 import { type Client, type PublicKey } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { ClientDecorator, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';

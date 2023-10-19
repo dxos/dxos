@@ -5,8 +5,8 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, type RefObject } from 'react';
 
-import { Button, DropdownMenu } from '@dxos/aurora';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
+import { Button, DropdownMenu } from '@dxos/react-ui';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-composer';
 import { fineButtonDimensions, getSize } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 

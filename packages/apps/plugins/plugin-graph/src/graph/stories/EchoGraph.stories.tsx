@@ -9,8 +9,8 @@ import { effect } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
-import { Button, DensityProvider, Input, Select } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Client } from '@dxos/react-client';
 import { Expando, type Space, SpaceProxy, SpaceState } from '@dxos/react-client/echo';
 import { ClientDecorator, TestBuilder } from '@dxos/react-client/testing';

@@ -3,7 +3,7 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { auroraTx } from '@dxos/aurora-theme';
+import { defaultTx } from '@dxos/aurora-theme';
 import { ThemeProvider } from '@dxos/aurora';
 
 export const parameters = {
@@ -43,7 +43,7 @@ const withTheme = (StoryFn, context) => {
 
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
-    tx: auroraTx
+    tx: defaultTx
   });
 }
 

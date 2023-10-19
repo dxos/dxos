@@ -6,7 +6,7 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { type Document } from '@braneframe/types';
-import { type EditorMode, type MarkdownComposerProps } from '@dxos/aurora-composer';
+import { type EditorMode, type MarkdownComposerProps } from '@dxos/react-ui-composer';
 import { type ObjectMeta } from '@dxos/client/echo';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';

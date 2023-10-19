@@ -5,8 +5,8 @@
 import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { DensityProvider, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { DensityProvider, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';

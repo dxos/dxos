@@ -18,7 +18,7 @@ import {
   type MarkdownComposerProps,
   type MarkdownComposerRef,
   useTextModel,
-} from '@dxos/aurora-composer';
+} from '@dxos/react-ui-composer';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

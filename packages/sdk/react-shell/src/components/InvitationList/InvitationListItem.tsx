@@ -4,8 +4,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
-import { chromeSurface, getSize } from '@dxos/aurora-theme';
+import { Button, ListItem, useTranslation, Avatar } from '@dxos/react-ui';
+import { chromeSurface, getSize } from '@dxos/react-ui-theme';
 import {
   type CancellableInvitationObservable,
   Invitation,

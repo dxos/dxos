@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
-    "@dxos/aurora-types": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -50,7 +50,7 @@
     "xstate": "^4.37.0"
   },
   "devDependencies": {
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@faker-js/faker": "^8.0.2",

@@ -6,8 +6,8 @@ import React, { type FC } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { Main } from '@dxos/react-ui';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { KanbanBoard } from './KanbanBoard';

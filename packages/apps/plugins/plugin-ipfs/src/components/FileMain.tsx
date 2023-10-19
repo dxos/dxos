@@ -5,8 +5,8 @@
 import React, { type FC, useState } from 'react';
 import urlJoin from 'url-join';
 
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 import { type TypedObject } from '@dxos/client/echo';
 import { type Config, useConfig } from '@dxos/react-client';
 

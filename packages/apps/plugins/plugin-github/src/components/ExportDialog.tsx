@@ -4,8 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/aurora';
-import { type ComposerModel } from '@dxos/aurora-composer';
+import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/react-ui';
+import { type ComposerModel } from '@dxos/react-ui-composer';
 import { log } from '@dxos/log';
 
 import { useOctokitContext } from './GithubApiProviders';

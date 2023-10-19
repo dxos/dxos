@@ -33,7 +33,7 @@ import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
 import {
-  auroraTheme,
+  defaultTheme,
   bindTheme,
   focusRing,
   groupBorder,
@@ -63,9 +63,9 @@ const main = async () => {
 
   // TODO(burdon): Custom theme (e.g., primary).
   const labsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     popover: {
-      ...auroraTheme.popover,
+      ...defaultTheme.popover,
       content: (_props, ...etc) =>
         mx(
           'z-[30] rounded-xl',

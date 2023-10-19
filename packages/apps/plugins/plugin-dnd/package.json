@@ -18,14 +18,14 @@
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora-grid": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
     "deepsignal": "^1.3.6"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",

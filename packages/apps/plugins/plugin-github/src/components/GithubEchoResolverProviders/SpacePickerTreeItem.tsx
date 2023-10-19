@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 
 import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
-import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
-import { staticDisabled } from '@dxos/aurora-theme';
+import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/react-ui';
+import { staticDisabled } from '@dxos/react-ui-theme';
 import { useMulticastObservable } from '@dxos/react-client';
 import { type Space, SpaceState, useQuery } from '@dxos/react-client/echo';
 

@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
-import { useTextModel } from '@dxos/aurora-composer';
+import { useTextModel } from '@dxos/react-ui-composer';
 import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface } from '@dxos/react-surface';

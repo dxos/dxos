@@ -13,7 +13,7 @@ import {
   withTelemetry,
 } from '@braneframe/plugin-telemetry/headless';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/aurora';
-import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
+import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
 import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
@@ -66,7 +66,7 @@ export const Devtools: FC<{ client: Client; services: ClientServices; namespace?
 }) => {
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   const devtoolsTx = bindTheme({
-    ...auroraTheme,
+    ...defaultTheme,
     toolbar: {
       root: (props, ...etc) => {
         return toolbarRoot(props, 'p-2', ...etc);

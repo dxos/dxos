@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
 

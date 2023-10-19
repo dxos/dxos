@@ -28,9 +28,9 @@ import {
   DropdownMenu,
   Tooltip,
   useJdenticonHref,
-} from '@dxos/aurora';
-import { useTextModel } from '@dxos/aurora-composer';
-import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
+} from '@dxos/react-ui';
+import { useTextModel } from '@dxos/react-ui-composer';
+import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface, usePlugin } from '@dxos/react-surface';
 
@@ -262,10 +262,10 @@ const EmbeddedLayoutImpl = () => {
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
-            <div role='none' className={auroraTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+            <div role='none' className={defaultTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
               <div
                 role='none'
-                className={auroraTx(
+                className={defaultTx(
                   'dialog.content',
                   'dialog--resolver__content',
                   {},

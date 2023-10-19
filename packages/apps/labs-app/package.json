@@ -35,9 +35,9 @@
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-composer": "workspace:*",
-    "@dxos/aurora-table": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -48,7 +48,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/react-shell": "workspace:*",
     "@dxos/vault": "workspace:*",

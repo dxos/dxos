@@ -7,8 +7,8 @@ import React, { type FC } from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
-import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { usePlugin } from '@dxos/react-surface';

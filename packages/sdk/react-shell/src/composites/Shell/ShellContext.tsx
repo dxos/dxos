@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { type PublicKey, ShellDisplay, ShellLayout, useClient, type LayoutRequest } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

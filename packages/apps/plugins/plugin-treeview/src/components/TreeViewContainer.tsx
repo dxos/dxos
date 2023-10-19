@@ -7,16 +7,16 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
-import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
+import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-grid/next';
 import {
   NavTree,
   type NavTreeContextType,
   nextRearrangeIndex,
   type TreeNode,
   type NavTreeProps,
-} from '@dxos/aurora-navtree';
-import { getSize, mx } from '@dxos/aurora-theme';
+} from '@dxos/react-ui-navtree';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 

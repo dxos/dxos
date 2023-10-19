@@ -11,7 +11,7 @@ import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Sketch as SketchType } from '@braneframe/types';
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { PluginProvider, Surface } from '@dxos/react-surface';
 
 import { SketchPlugin } from '../SketchPlugin';

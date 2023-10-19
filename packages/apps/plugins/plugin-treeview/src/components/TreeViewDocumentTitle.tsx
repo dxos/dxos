@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { getTreeItemLabel } from '../util';
 

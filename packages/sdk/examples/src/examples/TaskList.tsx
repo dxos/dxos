@@ -5,8 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { type KeyboardEventHandler, useState } from 'react';
 
-import { Button, Input } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, Input } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 

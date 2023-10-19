@@ -3,7 +3,7 @@
 //
 
 import { type Table as TableType } from '@braneframe/types';
-import { type ColumnProps, type TableDef } from '@dxos/aurora-table';
+import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 import { Schema as SchemaType } from '@dxos/client/echo';
 import { PublicKey } from '@dxos/keys';
 

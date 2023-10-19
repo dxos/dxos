@@ -4,8 +4,8 @@
 
 import React, { type ForwardedRef, forwardRef } from 'react';
 
-import { Avatar, useId, useJdenticonHref } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Avatar, useId, useJdenticonHref } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import type { Space } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 

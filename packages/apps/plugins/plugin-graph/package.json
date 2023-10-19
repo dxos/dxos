@@ -45,8 +45,8 @@
   },
   "devDependencies": {
     "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@faker-js/faker": "^8.0.2",
@@ -63,8 +63,8 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",

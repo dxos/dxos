@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 

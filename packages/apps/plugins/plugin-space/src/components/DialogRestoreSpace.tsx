@@ -7,8 +7,8 @@ import React from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { useSplitView } from '@braneframe/plugin-splitview';
-import { Button, Dialog, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { type Space } from '@dxos/react-client/echo';
 
 import { restoreSpace } from '../backup';

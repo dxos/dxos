@@ -5,7 +5,7 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button } from '@dxos/react-ui';
 import {
   createColumnBuilder,
   type BaseColumnOptions,
@@ -14,8 +14,8 @@ import {
   type TableColumnDef,
   type ColumnProps,
   type TableDef,
-} from '@dxos/aurora-table';
-import { getSize } from '@dxos/aurora-theme';
+} from '@dxos/react-ui-table';
+import { getSize } from '@dxos/react-ui-theme';
 import { type EchoDatabase, type Space, type TypedObject } from '@dxos/client/echo';
 import { stripUndefinedValues } from '@dxos/util';
 

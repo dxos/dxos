@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { ThemeProvider } from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { type Client, ClientProvider, type PublicKey } from '@dxos/react-client';
 
 import { Demo } from './components';
 
 const App = ({ spaceKey, clients }: { spaceKey: PublicKey; clients: Client[] }) => {
   return (
-    <ThemeProvider tx={auroraTx}>
+    <ThemeProvider tx={defaultTx}>
       <div className='flex place-content-evenly'>
         {clients.map((client, id) => (
           <ClientProvider key={id} client={client}>

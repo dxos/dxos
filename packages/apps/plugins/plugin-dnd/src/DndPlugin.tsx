@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Mosaic } from '@dxos/aurora-grid/next';
+import { Mosaic } from '@dxos/react-ui-grid/next';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';

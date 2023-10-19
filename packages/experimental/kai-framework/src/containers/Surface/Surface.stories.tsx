@@ -10,7 +10,7 @@ import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams
 
 import { Event } from '@dxos/async';
 import { Button, Main, ThemeProvider, useSidebars } from '@dxos/aurora';
-import { getSize, mx, auroraTx } from '@dxos/aurora-theme';
+import { getSize, mx, defaultTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
@@ -333,7 +333,7 @@ const TestApp = () => {
       appNs='kai'
       rootDensity='fine'
       resourceExtensions={[osTranslations, appkitTranslations]}
-      tx={auroraTx}
+      tx={defaultTx}
     >
       <SurfaceControllerContextProvider components={components}>
         <Layout />

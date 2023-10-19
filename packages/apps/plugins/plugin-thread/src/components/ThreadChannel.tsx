@@ -5,7 +5,7 @@
 import React, { type FC, useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { Input, useTranslation } from '@dxos/aurora';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { groupSurface, mx } from '@dxos/aurora-theme';
 import { type PublicKey } from '@dxos/client';
 

@@ -8,8 +8,8 @@ import { faker } from '@faker-js/faker';
 import { Intersect, Laptop, Planet, Plus, PlusCircle, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
-import { Button, ButtonGroup, List, Tooltip } from '@dxos/aurora';
-import { getSize, groupSurface } from '@dxos/aurora-theme';
+import { Button, ButtonGroup, List, Tooltip } from '@dxos/react-ui';
+import { getSize, groupSurface } from '@dxos/react-ui-theme';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

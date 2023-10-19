@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, cloneElement } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 import { log } from '@dxos/log';
 
 import { Actions, StepHeading } from '../../../components';

@@ -13,7 +13,7 @@ import {
   DropdownMenu,
   type AlertDialogRootProps,
   Tooltip,
-} from '@dxos/aurora';
+} from '@dxos/react-ui';
 import { Config, DEFAULT_VAULT_URL, Defaults } from '@dxos/react-client';
 import { type Provider, getAsyncValue, safariCheck } from '@dxos/util';
 

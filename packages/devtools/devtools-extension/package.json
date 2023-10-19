@@ -13,7 +13,7 @@
   "dependencies": {
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@crxjs/vite-plugin": "^1.0.14",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",

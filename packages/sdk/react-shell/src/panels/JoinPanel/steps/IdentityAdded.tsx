@@ -4,8 +4,8 @@
 
 import React, { cloneElement } from 'react';
 
-import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
 

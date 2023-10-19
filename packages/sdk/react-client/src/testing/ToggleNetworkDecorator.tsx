@@ -6,7 +6,7 @@ import { type DecoratorFunction } from '@storybook/csf';
 import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { Input } from '@dxos/aurora';
+import { Input } from '@dxos/react-ui';
 import { type Client } from '@dxos/client';
 import { ConnectionState } from '@dxos/client/mesh';
 

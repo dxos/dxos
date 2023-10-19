@@ -3,7 +3,7 @@
 //
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
+import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Input, useTranslation } from '@dxos/aurora';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { usePlugin } from '@dxos/react-surface';
 
 import { SPACE_PLUGIN, type SpacePluginProvides } from '../types';

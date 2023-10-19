@@ -14,9 +14,9 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-composer": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client": "workspace:*",
