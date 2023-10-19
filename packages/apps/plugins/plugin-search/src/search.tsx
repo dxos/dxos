@@ -6,9 +6,8 @@ import { type Icon } from '@phosphor-icons/react';
 
 import { Text } from '@dxos/client/echo';
 
-// TODO(burdon): Reconcile with agent index.
-
 // Plain text fields.
+// TODO(burdon): Reconcile with agent index.
 export type TextFields = Record<string, string>;
 
 export type SearchResult = {
@@ -16,16 +15,14 @@ export type SearchResult = {
   label: string;
   match?: RegExp;
   snippet?: string;
-  Icon?: Icon;
+  Icon?: Icon; // TODO(burdon): Registry.
   object?: any;
 };
-
-// TODO(burdon): Unit test.
 
 export const filterObjects = <T extends Record<string, any>>(objects: T[], match: RegExp): SearchResult[] => {
   return objects.reduce<SearchResult[]>((results, object) => {
     const fields = mapObjectToTextFields(object);
-    Object.entries(fields).some(([, value]) => {
+    Object.entries(fields).some(([key, value]) => {
       const result = value.match(match);
       if (result) {
         const label = object.label ?? object.name ?? object.title;
@@ -51,7 +48,8 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
 export const mapObjectToTextFields = (object: any): TextFields => {
   return Object.keys(object).reduce<TextFields>((fields, key) => {
     const value = object[key];
-    if (key !== 'id' && (typeof value === 'string' || value instanceof Text)) {
+    // TODO(burdon): Filter system fields.
+    if (key !== 'id' && key[0] !== '_' && (typeof value === 'string' || value instanceof Text)) {
       try {
         fields[key] = String(value);
       } catch (err) {
