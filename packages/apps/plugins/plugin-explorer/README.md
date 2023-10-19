@@ -1,4 +1,3 @@
-# @braneframe/plugin-draw
+# @braneframe/plugin-explorer
 
-Surface plugin for sketch entities using Tldraw.
-
+Surface plugin for data visualization.

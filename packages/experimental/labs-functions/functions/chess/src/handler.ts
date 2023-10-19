@@ -5,6 +5,7 @@
 // import { log } from '@dxos/log';
 import { Client, Config, PublicKey } from '@dxos/client';
 import { fromSocket } from '@dxos/client/services';
+import { Expando } from '@dxos/client/echo';
 
 module.exports = async (event: any, context: any) => {
   const clientUrl = event?.body?.context?.clientUrl;
@@ -27,7 +28,7 @@ module.exports = async (event: any, context: any) => {
   await Promise.all(
     objectIds.map(async (objectId: string) => {
       console.log('processing', JSON.stringify({ objectId }));
-      const game = space.db.getObjectById(objectId);
+      const game = space.db.getObjectById<Expando>(objectId);
       console.log('state', JSON.stringify({ pgn: game.pgn }));
       const chess = new Chess();
       chess.loadPgn(game.pgn);

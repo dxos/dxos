@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-explorer",
   "version": "0.3.1",
-  "description": "Braneframe sketch plugin",
+  "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
