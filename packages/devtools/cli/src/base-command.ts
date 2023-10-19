@@ -38,7 +38,6 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
 import { addTag } from '@dxos/observability';
-import * as Datadog from '@dxos/observability/datadog';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -49,7 +48,6 @@ import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
   TELEMETRY_API_KEY,
-  DATADOG_API_KEY,
   disableTelemetry,
   getTelemetryContext,
   showTelemetryBanner,
@@ -148,11 +146,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   private _clientConfig?: Config;
   private _client?: Client;
-  private _startTime: Date;
+  protected _startTime: Date;
   private _failing = false;
 
   protected _telemetryContext?: TelemetryContext;
-  protected _datadogMetrics?: any;
 
   protected flags!: Flags<T>;
   protected args!: Args<T>;
@@ -246,15 +243,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         apiKey: TELEMETRY_API_KEY,
         batchSize: 20,
         enable: Boolean(TELEMETRY_API_KEY) && mode !== 'disabled',
-      });
-    }
-
-    if (DATADOG_API_KEY && mode !== 'disabled') {
-
-      Datadog.init({
-        apiKey: DATADOG_API_KEY,
-        // TODO(nf): move/refactor from telementryContext
-        host: os.hostname(),
       });
     }
 
