@@ -64,7 +64,7 @@ export class Balancer {
     this._channels.push(channel);
   }
 
-  pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
+  async pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
     const noCalls = this._sendBuffers.size === 0;
 
     if (!this._channels.includes(channelId)) {
@@ -93,7 +93,11 @@ export class Balancer {
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      this._sendChunks().catch((err) => log.catch(err));
+      try {
+        await this._sendChunks()
+      } catch (err: any) {
+        log.catch(err);
+      }
     }
   }
 
