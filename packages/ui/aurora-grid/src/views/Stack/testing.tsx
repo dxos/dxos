@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Stack, type StackProps } from './Stack';
 import {
@@ -34,15 +34,12 @@ export const DemoStack = ({
     return generator.createObjects({ length: count });
   });
 
-  const itemsRef = useRef(items);
-
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
-    // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
     if (operation === 'reject') {
       return 'reject';
     }
 
-    const exists = itemsRef.current.findIndex((item) => item.id === active.item.id) >= 0;
+    const exists = items.findIndex((item) => item.id === active.item.id) >= 0;
 
     if (!exists) {
       return operation;
@@ -62,9 +59,7 @@ export const DemoStack = ({
       if (over.item && over.path === Path.create(id, over.item.id)) {
         items.splice(over.position!, 0, active.item);
       }
-      const i = [...items];
-      itemsRef.current = i;
-      return i;
+      return [...items];
     });
   };
 

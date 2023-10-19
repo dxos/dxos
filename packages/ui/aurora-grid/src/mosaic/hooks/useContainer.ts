@@ -12,6 +12,5 @@ import { type MosaicDataItem } from '../types';
 export const useContainer = <
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-  TCustom = any,
->(): MosaicContainerProps<TData, TPosition, TCustom> =>
+>(): MosaicContainerProps<TData, TPosition> =>
   useContext(MosaicContainerContext) ?? raise(new Error('Missing MosaicContainerContext'));

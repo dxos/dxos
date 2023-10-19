@@ -8,7 +8,6 @@ import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { type Node } from '@braneframe/plugin-graph';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
@@ -185,15 +184,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       }
 
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-          if (isMarkdownContent(node.data)) {
-            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-          }
-          return tile;
-        });
-      }
+      // TODO(wittjosiah): Replace? Remove?
+      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+      //     if (isMarkdownContent(node.data)) {
+      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+      //     }
+      //     return tile;
+      //   });
+      // }
     },
     unload: async () => {
       adapter?.clear();

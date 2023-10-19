@@ -24,7 +24,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
   const [lastOverParent, setLastOverParent] = useState(overParent);
 
   useEffect(() => {
-    if (operation === 'reject' || !activeItem || !overItem) {
+    if (operation === 'reject' || operation === 'rearrange' || !activeItem || !overItem) {
       setLastOverParent(undefined);
       setItemsWithPreview(items);
       return;

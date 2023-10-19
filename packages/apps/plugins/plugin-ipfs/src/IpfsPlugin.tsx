@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type DndPluginProvides } from '@braneframe/plugin-dnd';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection, FileSlide } from './components';
 import translations from './translations';
@@ -20,15 +19,16 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       id: IPFS_PLUGIN,
     },
     ready: async (plugins) => {
-      const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-        dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-          if (isFile(node.data)) {
-            tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-          }
-          return tile;
-        });
-      }
+      // TODO(wittjosiah): Replace? Remove?
+      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
+      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
+      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
+      //     if (isFile(node.data)) {
+      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
+      //     }
+      //     return tile;
+      //   });
+      // }
     },
     unload: async () => {
       adapter.clear();
