@@ -10,6 +10,7 @@ import {
   Button,
   DensityProvider,
   DropdownMenu,
+  Popover,
   Tooltip,
   Tree,
   TreeItem as TreeItemComponent,
@@ -71,7 +72,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const actions = node.actions ?? [];
     const { t } = useTranslation(translationKey);
-    const { current, onSelect, isOver } = useNavTree();
+    const { current, popoverAnchorId, onSelect, isOver } = useNavTree();
 
     const suppressNextTooltip = useRef<boolean>(false);
     const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -90,6 +91,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const testId = node.properties?.['data-testid'];
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
+
+    const ActionRoot = popoverAnchorId === `dxos.org/ui/navtree/${node.id}` ? Popover.Anchor : Fragment;
 
     // TODO(burdon): Factor out heuristic to group actions.
     const actionGroups =
@@ -157,94 +160,96 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 }}
               />
               {actionGroups.length > 0 && (
-                <Tooltip.Root
-                  open={optionsTooltipOpen}
-                  onOpenChange={(nextOpen) => {
-                    if (suppressNextTooltip.current) {
-                      setOptionsTooltipOpen(false);
-                      suppressNextTooltip.current = false;
-                    } else {
-                      setOptionsTooltipOpen(nextOpen);
-                    }
-                  }}
-                >
-                  <Tooltip.Portal>
-                    <Tooltip.Content classNames='z-[31]' side='bottom'>
-                      {t('tree branch options label')}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                  <DropdownMenu.Root
-                    {...{
-                      open: optionsMenuOpen,
-                      onOpenChange: (nextOpen: boolean) => {
-                        if (!nextOpen) {
-                          suppressNextTooltip.current = true;
-                        }
-                        return setOptionsMenuOpen(nextOpen);
-                      },
+                <ActionRoot>
+                  <Tooltip.Root
+                    open={optionsTooltipOpen}
+                    onOpenChange={(nextOpen) => {
+                      if (suppressNextTooltip.current) {
+                        setOptionsTooltipOpen(false);
+                        suppressNextTooltip.current = false;
+                      } else {
+                        setOptionsTooltipOpen(nextOpen);
+                      }
                     }}
                   >
-                    <DropdownMenu.Trigger asChild>
-                      <Tooltip.Trigger asChild>
-                        <Button
-                          variant='ghost'
-                          classNames={[
-                            'shrink-0 pli-2 pointer-fine:pli-1',
-                            hoverableControlItem,
-                            hoverableOpenControlItem,
-                            active === 'overlay' && 'invisible',
-                          ]}
-                          data-testid={`navTree.treeItemActionsLevel${level}`}
-                        >
-                          <DotsThreeVertical className={getSize(4)} />
-                        </Button>
-                      </Tooltip.Trigger>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Portal>
-                      <DropdownMenu.Content classNames='z-[31]'>
-                        <DropdownMenu.Viewport>
-                          {actionGroups.map(({ id, actions }, i) => (
-                            <Fragment key={id}>
-                              {actions.map((action) => (
-                                <DropdownMenu.Item
-                                  key={action.id}
-                                  onClick={(event) => {
-                                    if (action.properties.disabled) {
-                                      return;
-                                    }
-                                    event.stopPropagation();
-                                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                                    suppressNextTooltip.current = true;
-                                    setOptionsMenuOpen(false);
-                                    void action.invoke();
-                                  }}
-                                  classNames='gap-2'
-                                  disabled={action.properties.disabled}
-                                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                                >
-                                  {action.icon && (
-                                    <div className='shrink-0'>
-                                      <action.icon className={getSize(4)} />
+                    <Tooltip.Portal>
+                      <Tooltip.Content classNames='z-[31]' side='bottom'>
+                        {t('tree branch options label')}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                    <DropdownMenu.Root
+                      {...{
+                        open: optionsMenuOpen,
+                        onOpenChange: (nextOpen: boolean) => {
+                          if (!nextOpen) {
+                            suppressNextTooltip.current = true;
+                          }
+                          return setOptionsMenuOpen(nextOpen);
+                        },
+                      }}
+                    >
+                      <DropdownMenu.Trigger asChild>
+                        <Tooltip.Trigger asChild>
+                          <Button
+                            variant='ghost'
+                            classNames={[
+                              'shrink-0 pli-2 pointer-fine:pli-1',
+                              hoverableControlItem,
+                              hoverableOpenControlItem,
+                              active === 'overlay' && 'invisible',
+                            ]}
+                            data-testid={`navTree.treeItemActionsLevel${level}`}
+                          >
+                            <DotsThreeVertical className={getSize(4)} />
+                          </Button>
+                        </Tooltip.Trigger>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content classNames='z-[31]'>
+                          <DropdownMenu.Viewport>
+                            {actionGroups.map(({ id, actions }, i) => (
+                              <Fragment key={id}>
+                                {actions.map((action) => (
+                                  <DropdownMenu.Item
+                                    key={action.id}
+                                    onClick={(event) => {
+                                      if (action.properties.disabled) {
+                                        return;
+                                      }
+                                      event.stopPropagation();
+                                      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                                      suppressNextTooltip.current = true;
+                                      setOptionsMenuOpen(false);
+                                      void action.invoke();
+                                    }}
+                                    classNames='gap-2'
+                                    disabled={action.properties.disabled}
+                                    {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                                  >
+                                    {action.icon && (
+                                      <div className='shrink-0'>
+                                        <action.icon className={getSize(4)} />
+                                      </div>
+                                    )}
+                                    <div className='grow truncate'>
+                                      {Array.isArray(action.label) ? t(...action.label) : action.label}
                                     </div>
-                                  )}
-                                  <div className='grow truncate'>
-                                    {Array.isArray(action.label) ? t(...action.label) : action.label}
-                                  </div>
-                                  {action.keyBinding && (
-                                    <div className='shrink-0 opacity-50'>{keyString(action.keyBinding)}</div>
-                                  )}
-                                </DropdownMenu.Item>
-                              ))}
-                              {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
-                            </Fragment>
-                          ))}
-                        </DropdownMenu.Viewport>
-                        <DropdownMenu.Arrow />
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
-                </Tooltip.Root>
+                                    {action.keyBinding && (
+                                      <div className='shrink-0 opacity-50'>{keyString(action.keyBinding)}</div>
+                                    )}
+                                  </DropdownMenu.Item>
+                                ))}
+                                {i < actionGroups.length - 1 && <DropdownMenu.Separator />}
+                              </Fragment>
+                            ))}
+                          </DropdownMenu.Viewport>
+                          <DropdownMenu.Arrow />
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
+                  </Tooltip.Root>
+                </ActionRoot>
               )}
             </div>
             {!active && isBranch && <NavTreeBranch path={path} nodes={node.children} level={level + 1} />}

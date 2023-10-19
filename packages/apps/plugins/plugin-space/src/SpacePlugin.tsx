@@ -42,7 +42,7 @@ import {
   type SpaceSettingsProps,
   type SpaceState,
 } from './types';
-import { createNodId, isSpace, spaceToGraphNode } from './util';
+import { createNodeId, isSpace, spaceToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -111,7 +111,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           await intentPlugin?.provides.intent.dispatch({
             action: SplitViewAction.ACTIVATE,
-            data: { id: createNodId(space.key) },
+            data: { id: createNodeId(space.key) },
           });
         });
       }
@@ -299,7 +299,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           // Shared spaces section.
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
-            id: createNodId('all-spaces'),
+            id: createNodeId('all-spaces'),
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
               // TODO(burdon): Factor out palette constants.
@@ -390,7 +390,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const space = await clientPlugin.provides.client.spaces.create(intent.data);
-              return { space, id: createNodId(space.key) };
+              return { space, id: createNodeId(space.key) };
             }
 
             case SpaceAction.JOIN: {
@@ -398,7 +398,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: createNodId(space.key) };
+              return space && { space, id: createNodeId(space.key) };
             }
           }
 
@@ -423,9 +423,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.popoverOpen = true;
                 splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${createNodId(
-                  spaceKey,
-                )}`;
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/ui/navtree/${createNodeId(spaceKey)}`;
                 return true;
               }
               break;
