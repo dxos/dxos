@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
@@ -14,12 +15,16 @@ export type PluginContext = {
 };
 
 export interface Plugin {
+  id: string;
+  statusUpdate: Event<void>;
   initialize(pluginCtx: PluginContext): Promise<void>;
   open(): Promise<void>;
   close(): Promise<void>;
 }
 
 export abstract class AbstractPlugin implements Plugin {
+  public id: string = this.constructor.name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+  public statusUpdate = new Event();
   protected _pluginCtx?: PluginContext;
 
   get host(): ClientServicesHost {
