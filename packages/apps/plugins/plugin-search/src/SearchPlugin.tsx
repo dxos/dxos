@@ -8,8 +8,9 @@ import React from 'react';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 import { SearchMain } from './components';
+import { SearchContextProvider } from './context';
 import translations from './translations';
-import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction, SearchContextProvider } from './types';
+import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction } from './types';
 
 // TODO(burdon): Key accelerator (to open sidebar).
 

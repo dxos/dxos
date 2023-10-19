@@ -10,6 +10,7 @@ import React, { type FC, useState } from 'react';
 import { DensityProvider } from '@dxos/aurora';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
+import { filterObjects } from '../../search';
 import { FullscreenDecorator } from '../util';
 
 faker.seed(1);
@@ -37,14 +38,19 @@ export default {
   },
 };
 
-const line = 'Snippet for the first item in the results.';
+const word = 'hello';
+
+const objects = Array.from({ length: 100 }).map((_, i) => ({
+  id: faker.string.uuid(),
+  name: faker.lorem.sentence(4),
+  content: faker.lorem.sentence() + ` ${word} ` + faker.lorem.sentence(),
+}));
+
+const match = new RegExp(word, 'i');
+
 export const Default = {
   args: {
-    items: Array.from({ length: 40 }).map((_, i) => ({
-      id: faker.string.uuid(),
-      label: faker.lorem.sentence(4),
-      snippet: i === 0 ? line : faker.lorem.sentences(2),
-    })),
-    match: new RegExp(line.split(' ')[3].slice(0, 4), 'i'),
+    items: filterObjects(objects, match),
+    match,
   },
 };

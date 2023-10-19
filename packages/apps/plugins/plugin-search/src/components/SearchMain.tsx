@@ -10,7 +10,7 @@ import { usePlugin } from '@dxos/react-surface';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { useSearchResults, useSearch } from '../types';
+import { useSearch, useSearchResults } from '../context';
 
 export const SearchMain = () => {
   const { setMatch } = useSearch();
