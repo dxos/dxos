@@ -15,8 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
@@ -30,7 +28,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",

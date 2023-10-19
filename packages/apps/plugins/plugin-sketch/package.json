@@ -15,7 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-stack": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@tldraw/assets": "2.0.0-alpha.14",
@@ -30,11 +29,11 @@
     "yjs": "^13.6.7"
   },
   "devDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
@@ -54,6 +53,8 @@
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",

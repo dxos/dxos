@@ -36,11 +36,10 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
 
 export type MosaicCompareDataItem = Parameters<typeof Array.prototype.sort>[0];
 
-export type MosaicContainerProps<
-  TData extends MosaicDataItem = MosaicDataItem,
-  TPosition = unknown,
-  TCustom = any,
-> = Pick<HTMLAttributes<HTMLDivElement>, 'className'> &
+export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
+  HTMLAttributes<HTMLDivElement>,
+  'className'
+> &
   PropsWithChildren<{
     id: string;
 
@@ -90,14 +89,6 @@ export type MosaicContainerProps<
      * Used to sort items within the container.
      */
     compare?: MosaicCompareDataItem;
-
-    /**
-     * Custom properties (available to event handlers).
-     *
-     * @deprecated Use custom context instead.
-     */
-    // TODO(burdon): Still used?
-    custom?: TCustom;
   }>;
 
 export type MosaicContainerContextType = Omit<MosaicContainerProps<any>, 'children'>;
@@ -107,9 +98,32 @@ export const MosaicContainerContext = createContext<MosaicContainerContextType |
 /**
  * Root Container that manages the layout of tiles.
  */
-export const MosaicContainer = ({ children, ...values }: MosaicContainerProps) => {
+export const MosaicContainer = ({
+  children,
+  id,
+  debug,
+  Component,
+  transitionDuration = DEFAULT_TRANSITION,
+  modifier,
+  getOverlayProps,
+  getOverlayStyle,
+  onOver,
+  onDrop,
+  compare,
+}: MosaicContainerProps) => {
   const mosaic = useMosaic();
-  const container = { transitionDuration: DEFAULT_TRANSITION, ...values };
+  const container = {
+    id,
+    debug,
+    Component,
+    transitionDuration,
+    modifier,
+    getOverlayProps,
+    getOverlayStyle,
+    onOver,
+    onDrop,
+    compare,
+  };
 
   useEffect(() => {
     mosaic.setContainer(container.id, container);
@@ -117,7 +131,7 @@ export const MosaicContainer = ({ children, ...values }: MosaicContainerProps) =
       // TODO(burdon): The overlay unregisters the container after the tile has re-rendered (removing it).
       // mosaic.setContainer(container.id);
     };
-  }, []);
+  }, Object.values(container));
 
   return <MosaicContainerContext.Provider value={container}>{children}</MosaicContainerContext.Provider>;
 };

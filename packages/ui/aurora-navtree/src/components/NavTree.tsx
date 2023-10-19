@@ -8,7 +8,7 @@ import { Tree } from '@dxos/aurora';
 import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/aurora-grid/next';
 import { mx } from '@dxos/aurora-theme';
 
-import { type NavTreeContextType, NavTreeProvider } from './NavTreeContext';
+import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
 import { NavTreeItem } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
@@ -31,13 +31,28 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   );
 };
 
+const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overItem }) =>
+  overItem?.path === path && (operation === 'adopt' || operation === 'copy');
+
 export type NavTreeProps = {
   node: TreeNode;
-  current?: NavTreeContextType['current'];
-  onSelect?: NavTreeContextType['onSelect'];
+  current?: NavTreeProviderProps['current'];
+  popoverAnchorId?: NavTreeProviderProps['popoverAnchorId'];
+  onSelect?: NavTreeProviderProps['onSelect'];
+  isOver?: NavTreeProviderProps['isOver'];
 } & Omit<MosaicContainerProps<TreeNode, number>, 'debug' | 'Component' | 'id'>;
 
-export const NavTree = ({ node, current, onSelect, onOver, onDrop, compare, className }: NavTreeProps) => {
+export const NavTree = ({
+  node,
+  current,
+  popoverAnchorId,
+  onSelect,
+  isOver = defaultIsOver,
+  onOver,
+  onDrop,
+  compare,
+  className,
+}: NavTreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -49,7 +64,7 @@ export const NavTree = ({ node, current, onSelect, onOver, onDrop, compare, clas
       }}
     >
       <Tree.Root classNames={mx('flex flex-col', className)}>
-        <NavTreeProvider current={current} onSelect={onSelect}>
+        <NavTreeProvider current={current} popoverAnchorId={popoverAnchorId} onSelect={onSelect} isOver={isOver}>
           <NavTreeImpl node={node} />
         </NavTreeProvider>
       </Tree.Root>

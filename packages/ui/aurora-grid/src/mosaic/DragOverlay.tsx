@@ -25,7 +25,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   const { containers, operation, activeItem, overItem } = useMosaic();
 
   // Get the overlay component from the over container, otherwise default to the original.
-  const [{ container, OverlayComponent }, setContainer] = useState<{
+  const [state, setState] = useState<{
     container?: MosaicContainerProps<any>;
     OverlayComponent?: MosaicTileComponent<any>;
   }>({});
@@ -48,18 +48,36 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
 
       // Prevent jitter when transitioning across containers.
       clearTimeout(timer.current);
-      timer.current = setTimeout(() => setContainer({ container, OverlayComponent }), timer.current ? delay : 0);
+      timer.current = setTimeout(() => setState({ container, OverlayComponent }), timer.current ? delay : 0);
+    } else {
+      setState({});
     }
   }, [activeItem, overItem]);
+
+  // Ensure the overlay is rendered as soon as there's an active item, then use local state.
+  const container = state.container ?? (activeItem && containers[Path.first(activeItem.path)]);
+  const OverlayComponent = state.OverlayComponent ?? container?.Component;
+  // Fallback is always to the active (origin) container.
+  const FallbackComponent = (activeItem && containers[Path.first(activeItem.path)])?.Component ?? DefaultComponent;
 
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
     <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }}>
+      {/* TODO(burdon): Configure density via getOverlayProps. */}
       {activeItem?.path && container && OverlayComponent && (
-        <OverlayErrorBoundary>
-          {/* TODO(burdon): Configure density via getOverlayProps. */}
-          <DensityProvider density='fine'>
+        <DensityProvider density='fine'>
+          <OverlayErrorBoundary
+            fallback={
+              <FallbackComponent
+                {...container.getOverlayProps?.()}
+                item={activeItem.item}
+                path={activeItem.path}
+                operation={operation}
+                active='overlay'
+              />
+            }
+          >
             <OverlayComponent
               {...container.getOverlayProps?.()}
               item={activeItem.item}
@@ -68,7 +86,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
               active='overlay'
             />
             {debug && (
-              <div className='flex mt-1 p-1 bg-neutral-50 text-xs border rounded overflow-hidden gap-1'>
+              <div className='flex flex-wrap mt-1 p-1 bg-neutral-50 dark:bg-neutral-700 text-xs border rounded overflow-hidden gap-1'>
                 <span className='truncate'>
                   <span className='text-neutral-400'>container </span>
                   {container.id}
@@ -79,14 +97,23 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
                 </span>
               </div>
             )}
-          </DensityProvider>
-        </OverlayErrorBoundary>
+          </OverlayErrorBoundary>
+        </DensityProvider>
       )}
     </DragOverlay>
   );
 };
 
-class OverlayErrorBoundary extends Component<PropsWithChildren> {
+type OverlayErrorBoundaryProps = PropsWithChildren<{ fallback?: React.ReactNode }>;
+
+class OverlayErrorBoundary extends Component<OverlayErrorBoundaryProps> {
+  private readonly fallback: React.ReactNode;
+
+  constructor(props: OverlayErrorBoundaryProps) {
+    super(props);
+    this.fallback = props.fallback ?? <p>ERROR: ${String(this.state.error)}</p>;
+  }
+
   static getDerivedStateFromError(error: Error) {
     return { error };
   }
@@ -99,10 +126,9 @@ class OverlayErrorBoundary extends Component<PropsWithChildren> {
     console.warn(error, info);
   }
 
-  // TODO(burdon): Fallback to using active item's original container.
   override render() {
     if (this.state.error) {
-      return <p>ERROR: ${String(this.state.error)}</p>;
+      return this.fallback;
     }
 
     return this.props.children;

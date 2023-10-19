@@ -58,8 +58,7 @@ export type MosaicRootProps = NaturalMosaicRootProps;
 export type MosaicContainerProps<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-  TCustom = any,
-> = NaturalMosaicContainerProps<TData, TPosition, TCustom>;
+> = NaturalMosaicContainerProps<TData, TPosition>;
 
 export type MosaicOverlayProps = MosaicDragOverlayProps;
 
