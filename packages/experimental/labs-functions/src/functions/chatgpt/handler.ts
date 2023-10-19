@@ -69,8 +69,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
         const schemas = SCHEMA_CONFIG.map((config) => ({
           config,
-          schema: context.client.experimental.types.getSchema(config.typename),
-        }));
+          schema: context.client.experimental.types.getSchema(config.typename)!,
+        })).filter(Boolean);
 
         // Kill switch.
         const ENABLE_SCHEMA: boolean = true;
@@ -78,7 +78,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
         // TODO(burdon): Pass in history.
         // TODO(burdon): Error handling (e.g., 401);
         const chatContents: ChatCompletionRequestMessage[] = [
-          ENABLE_SCHEMA && createPrompt(schemas),
+          ENABLE_SCHEMA ? createPrompt(schemas) : undefined,
           ...block.messages.map((message): ChatCompletionRequestMessage => {
             let content = '';
             const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
@@ -92,7 +92,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
             return { role: 'user', content };
           }),
-        ];
+        ].filter(Boolean) as ChatCompletionRequestMessage[];
 
         log.info('request', { chatContents });
         const { content } = (await model.request(chatContents)) ?? {};
@@ -169,6 +169,11 @@ type SchemaConfig = {
   allowedFields: string[];
 };
 
+type SchemaDef = {
+  config: SchemaConfig;
+  schema: Schema;
+};
+
 const SCHEMA_CONFIG: SchemaConfig[] = [
   {
     typename: 'braneframe.Grid.Item',
@@ -176,7 +181,7 @@ const SCHEMA_CONFIG: SchemaConfig[] = [
   },
 ];
 
-const formatSchema = (schema: Schema, config?: SchemaConfig) => {
+const formatSchema = ({ schema, config }: SchemaDef) => {
   const props =
     !config || config.allowedFields.length === 0
       ? schema.props
@@ -190,7 +195,7 @@ const formatSchema = (schema: Schema, config?: SchemaConfig) => {
   `;
 };
 
-const createPrompt = (schemas): ChatCompletionRequestMessage[] => {
+const createPrompt = (schemaDefs: SchemaDef[]): ChatCompletionRequestMessage[] => {
   return [
     {
       role: 'system',
@@ -213,7 +218,7 @@ const createPrompt = (schemas): ChatCompletionRequestMessage[] => {
         ]
 
         Available schema types:
-        ${schemas.map(({ config, schema }) => (schema ? formatSchema(schema, config) : '')).join('\n')}
+        ${schemaDefs.map(({ config, schema }) => (schema ? formatSchema({ schema, config }) : '')).join('\n')}
         `,
     },
   ];
