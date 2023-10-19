@@ -11,6 +11,7 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Config } from '@dxos/client';
 import { PluginProvider, Surface } from '@dxos/react-surface';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 import { FullscreenDecorator, createThread } from '../testing';

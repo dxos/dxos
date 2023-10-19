@@ -5,10 +5,10 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/aurora-table';
-import { mx } from '@dxos/aurora-theme';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import { LogView } from './LogView';

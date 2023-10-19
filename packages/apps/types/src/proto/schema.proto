@@ -73,8 +73,7 @@ message Stack {
     // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    string index = 1;
-    dxos.schema.TypedObject object = 2;
+    dxos.schema.TypedObject object = 1;
   }
 
   string title = 1;

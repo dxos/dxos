@@ -5,8 +5,8 @@
 import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { type FC, type KeyboardEvent, useState } from 'react';
 
-import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../types';
 

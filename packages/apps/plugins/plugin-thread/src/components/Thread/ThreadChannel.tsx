@@ -5,9 +5,9 @@
 import React, { useRef } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { Input, useTranslation } from '@dxos/aurora';
-import { groupSurface, mx } from '@dxos/aurora-theme';
 import { type PublicKey } from '@dxos/client';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { type BlockProperties, ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';

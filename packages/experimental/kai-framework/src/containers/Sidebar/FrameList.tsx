@@ -5,9 +5,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { List, ListItem } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { useFrameRegistry } from '@dxos/kai-frames';
+import { List, ListItem } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { createPath, useAppRouter, useAppState } from '../../hooks';
 

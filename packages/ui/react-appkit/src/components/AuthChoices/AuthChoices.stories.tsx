@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { AuthChoices, type AuthChoicesProps } from './AuthChoices';
 import { Group } from '../Group';

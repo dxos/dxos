@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type DialogContentProps, Dialog, useId } from '@dxos/aurora';
+import { type DialogContentProps, Dialog, useId } from '@dxos/react-ui';
 
 import { ClipboardProvider } from '../../components';
 import { IdentityPanel, type IdentityPanelProps } from '../../panels';

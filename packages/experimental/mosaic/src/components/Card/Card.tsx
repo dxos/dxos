@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Remove.
 import { styles } from './util';

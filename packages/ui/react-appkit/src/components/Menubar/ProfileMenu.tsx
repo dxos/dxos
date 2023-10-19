@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Avatar, useJdenticonHref } from '@dxos/aurora';
 import { type Identity as IdentityType } from '@dxos/react-client/halo';
+import { Avatar, useJdenticonHref } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import { Popover } from '../Popover';

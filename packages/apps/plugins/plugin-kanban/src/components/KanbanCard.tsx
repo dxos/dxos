@@ -8,9 +8,9 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { Button, useTranslation } from '@dxos/aurora';
-import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
-import { getSize, mx, inputSurface } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
+import { getSize, mx, inputSurface } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../types';
 
