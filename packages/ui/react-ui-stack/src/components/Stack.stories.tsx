@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React, { useRef, useState } from 'react';
 
-import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-grid/next';
+import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 
 import { Stack, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';

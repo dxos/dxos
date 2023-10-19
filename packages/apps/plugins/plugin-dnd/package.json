@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
-    "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "deepsignal": "^1.3.6"
   },
   "devDependencies": {

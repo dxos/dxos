@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-grid/next';
+import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/react-ui-mosaic';
 
 import type { TreeNode } from '../types';
 

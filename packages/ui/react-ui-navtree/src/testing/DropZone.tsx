@@ -4,7 +4,7 @@
 import React, { forwardRef, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-grid/next';
+import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type NavTreeItemData } from '../components';

@@ -17,7 +17,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/react-ui-grid/next';
+import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,

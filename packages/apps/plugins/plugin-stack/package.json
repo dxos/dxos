@@ -19,7 +19,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tldraw/indices": "2.0.0-alpha.14",

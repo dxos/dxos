@@ -6,7 +6,7 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { Button, DensityProvider, ListItem, useTranslation } from '@dxos/react-ui';
-import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-grid/next';
+import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import {
   fineButtonDimensions,
   focusRing,

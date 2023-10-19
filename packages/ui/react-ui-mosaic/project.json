@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/ui/react-ui-grid/src",
+  "sourceRoot": "packages/ui/react-ui-mosaic/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/ui/react-ui-grid/src/index.ts",
-        "outputPath": "packages/ui/react-ui-grid/dist/types",
-        "tsConfig": "packages/ui/react-ui-grid/tsconfig.json"
+        "main": "packages/ui/react-ui-mosaic/src/index.ts",
+        "outputPath": "packages/ui/react-ui-mosaic/dist/types",
+        "tsConfig": "packages/ui/react-ui-mosaic/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-grid/src/index.ts",
-          "packages/ui/react-ui-grid/src/mosaic/index.ts"
+          "packages/ui/react-ui-mosaic/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-grid/dist/lib",
+        "outputPath": "packages/ui/react-ui-mosaic/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -34,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/react-ui-grid/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-ui-mosaic/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -50,7 +49,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/react-ui-grid/.storybook"
+        "configDir": "packages/ui/react-ui-mosaic/.storybook"
       }
     },
     "storybook-build": {
@@ -61,8 +60,8 @@
       },
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "packages/ui/react-ui-grid/.storybook",
-        "outputDir": "packages/ui/react-ui-grid/out/react-ui"
+        "configDir": "packages/ui/react-ui-mosaic/.storybook",
+        "outputDir": "packages/ui/react-ui-mosaic/out/react-ui"
       },
       "outputs": [
         "{options.outputDir}"
@@ -71,14 +70,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/ui/react-ui-grid",
-        "outputPath": "tmp/mocha/packages/ui/react-ui-grid",
-        "resultsPath": "test-results/packages/ui/react-ui-grid",
+        "coveragePath": "coverage/packages/ui/react-ui-mosaic",
+        "outputPath": "tmp/mocha/packages/ui/react-ui-mosaic",
+        "resultsPath": "test-results/packages/ui/react-ui-mosaic",
         "testPatterns": [
-          "packages/ui/react-ui-grid/src/**/*.test.{ts,js}"
+          "packages/ui/react-ui-mosaic/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/ui/react-ui-grid/src/**/*"
+          "packages/ui/react-ui-mosaic/src/**/*"
         ]
       },
       "outputs": [

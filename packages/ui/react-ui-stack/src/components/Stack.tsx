@@ -14,7 +14,7 @@ import {
   useContainer,
   useItemsWithPreview,
   useMosaic,
-} from '@dxos/react-ui-grid/next';
+} from '@dxos/react-ui-mosaic';
 import { dropRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { Section } from './Section';

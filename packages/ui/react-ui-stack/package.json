@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*"
   },
   "devDependencies": {

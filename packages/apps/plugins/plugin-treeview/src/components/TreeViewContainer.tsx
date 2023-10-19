@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-grid/next';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
   type NavTreeContextType,

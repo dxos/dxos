@@ -10,8 +10,8 @@ import React from 'react';
 import { type Graph as GraphType, GraphBuilder } from '@braneframe/plugin-graph';
 import { buildGraph } from '@braneframe/plugin-graph/testing';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
-import { type MosaicDropEvent, Path } from '@dxos/react-ui-grid/next';
-import { Mosaic } from '@dxos/react-ui-grid/next';
+import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { NavTree } from './NavTree';
 import type { TreeNode } from '../types';

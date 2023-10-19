@@ -1,23 +1,15 @@
 {
-  "name": "@dxos/react-ui-grid",
+  "name": "@dxos/react-ui-mosaic",
   "version": "0.3.2",
-  "description": "A datagrid component.",
+  "description": "An intermediate interface for drag-and-drop interactions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./next": "./dist/lib/browser/mosaic/index.mjs"
+    ".": "./dist/lib/browser/index.mjs"
   },
   "types": "./dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "next": [
-        "dist/types/src/mosaic"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Tree } from '@dxos/react-ui';
-import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-grid/next';
+import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';

@@ -8,7 +8,7 @@ import React, { useCallback, type FC } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-grid/next';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
 import { baseSurface, chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/react-ui-theme';
 import { TypedObject, isTypedObject } from '@dxos/react-client/echo';

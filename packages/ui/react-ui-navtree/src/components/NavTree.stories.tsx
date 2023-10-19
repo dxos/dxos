@@ -9,8 +9,8 @@ import { Boat, Butterfly, Shrimp, TrainSimple } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 
 import { Button, DensityProvider, Tooltip } from '@dxos/react-ui';
-import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-grid/next';
-import { Mosaic } from '@dxos/react-ui-grid/next';
+import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { arrayMove } from '@dxos/util';
 
 import { NavTree, type NavTreeProps } from './NavTree';
