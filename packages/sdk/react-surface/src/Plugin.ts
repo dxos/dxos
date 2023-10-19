@@ -9,8 +9,9 @@ import { raise } from '@dxos/debug';
 /**
  * Props passed to a component by the `Surface` resolver.
  */
-export type PluginComponentProps = PropsWithChildren<{
-  data: any;
+// TODO(burdon): Rename SurfaceComponentProps.
+export type PluginComponentProps<T = any> = PropsWithChildren<{
+  data: T;
   role?: string;
 }> &
   RefAttributes<HTMLElement>;

@@ -13,7 +13,7 @@ import { type PluginDefinition } from '@dxos/react-surface';
 
 import { ExplorerMain } from './components';
 import translations from './translations';
-import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides } from './types';
+import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
 import { objectToGraphNode } from './util';
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
@@ -58,6 +58,18 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
           return adapter.createNodes(space, parent);
         },
+      },
+      component: (data, role) => {
+        if (!data || typeof data !== 'object' || !isExplorer(data)) {
+          return null;
+        }
+
+        switch (role) {
+          case 'main':
+            return ExplorerMain;
+          default:
+            return null;
+        }
       },
       components: {
         ExplorerMain,

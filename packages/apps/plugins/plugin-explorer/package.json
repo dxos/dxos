@@ -23,6 +23,7 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "d3": "^7.4.4",
     "lodash.get": "^4.4.2"
   },
@@ -34,7 +35,6 @@
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/d3": "^7.1.0",
