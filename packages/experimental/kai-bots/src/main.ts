@@ -7,7 +7,7 @@ import sortKeys from 'sort-keys';
 import { Client, PublicKey } from '@dxos/client';
 import { Space, SpaceState } from '@dxos/client/echo';
 import { ClientServices, fromHost } from '@dxos/client/services';
-import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/labs-functions';
+import { Bot, ChessBot, KaiBot, MailBot, StoreBot, TravelBot } from '@dxos/kai-functions';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
