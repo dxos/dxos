@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-splitview",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DXOS Surface plugin for a split view application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
