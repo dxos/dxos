@@ -24,7 +24,7 @@ export const SearchResults = ({ match, items, selected, onSelect }: SearchResult
     <ScrollArea.Root classNames={['grow', inputSurface]}>
       <ScrollArea.Viewport>
         <List>
-          {items.map(({ id, label, snippet, Icon = Circle }) => (
+          {items.map(({ id, label, match, snippet, Icon = Circle }) => (
             <ListItem.Root
               key={id}
               // TODO(burdon): Standardize select/hover colors.
@@ -40,7 +40,6 @@ export const SearchResults = ({ match, items, selected, onSelect }: SearchResult
                   )}
                 />
               </ListItem.Endcap>
-              {/* TODO(burdon): ListItem doesn't work here (cannot have div as child). */}
               <ListItem.Heading classNames='grow pbs-2'>
                 <div className='flex flex-col overflow-hidden'>
                   <div className='truncate'>{label}</div>
@@ -69,7 +68,7 @@ const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
       let before = text.slice(0, result.index);
       if (before.length > maxOffset) {
         const idx = before.indexOf(' ', result.index - maxOffset);
-        before = '... ' + before.slice(idx);
+        before = '... ' + before.slice(idx); // TODO(burdon): Use ellipsis symbol.
       }
 
       const after = text.slice(result.index + result[0].length);
@@ -77,7 +76,7 @@ const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
       content = (
         <>
           {before}
-          <span className='text-black'>{result[0]}</span>
+          <span className='text-blue-500'>{result[0]}</span>
           {after}
         </>
       );

@@ -5,44 +5,29 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { type FC, useMemo, useState } from 'react';
+import type { DecoratorFunction } from '@storybook/csf';
+import type { ReactRenderer } from '@storybook/react';
+import React, { type FC, useState } from 'react';
 
 import { DensityProvider } from '@dxos/aurora';
 
-import { SearchResults, type SearchResultsProps } from './SearchResults';
+import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
 import { FullscreenDecorator } from './util';
+import { SearchContextProvider, useSearch, useSearchResults } from '../context';
 
 faker.seed(1);
 
-const Story: FC<SearchResultsProps> = (args) => {
-  const items = useMemo(
-    () =>
-      Array.from({ length: 40 }).map(() => ({
-        id: faker.string.uuid(),
-        label: faker.lorem.sentence(4).replace(/\./g, ''),
-      })),
-    [],
-  );
-
-  const [match, setMatch] = useState<RegExp>();
+const Story: FC<{ objects: any[] }> = ({ objects }) => {
   const [selected, setSelected] = useState<string>();
-  const filteredItems = useMemo(() => items.filter((item) => match && item.label.match(match)), [items, match]);
-
-  const handleChange = (text: string) => {
-    setMatch(text.length ? new RegExp(text, 'i') : undefined);
-  };
+  const { setMatch } = useSearch();
+  const filteredItems = useSearchResults(objects);
 
   return (
     <DensityProvider density='fine'>
       <div className='flex grow justify-center overflow-hidden'>
         <div className='flex flex-col w-[300px] m-4 overflow-hidden'>
-          <Searchbar
-            className='pl-3'
-            variant='subdued'
-            placeholder='Enter regular expression...'
-            onChange={handleChange}
-          />
+          <Searchbar className='pl-3' variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
           <SearchResults items={filteredItems} selected={selected} onSelect={setSelected} />
         </div>
       </div>
@@ -50,13 +35,29 @@ const Story: FC<SearchResultsProps> = (args) => {
   );
 };
 
+const SearchContextDecorator = (): DecoratorFunction<ReactRenderer> => {
+  return (Story) => (
+    <SearchContextProvider>
+      <Story />
+    </SearchContextProvider>
+  );
+};
+
 export default {
   component: Searchbar,
   render: Story,
-  decorators: [FullscreenDecorator()],
+  decorators: [FullscreenDecorator(), SearchContextDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
-export const Default = {};
+export const Default = {
+  args: {
+    objects: Array.from({ length: 8 }).map(() => ({
+      id: faker.string.uuid(),
+      label: faker.lorem.sentence(4).replace(/\./g, ''),
+      content: faker.lorem.sentences(3),
+    })),
+  },
+};

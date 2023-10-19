@@ -51,6 +51,21 @@
       "options": {
         "configDir": "packages/apps/plugins/plugin-search/.storybook"
       }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/plugins/plugin-search",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-search",
+        "resultsPath": "test-results/packages/apps/plugins/plugin-search",
+        "testPatterns": [
+          "packages/apps/plugins/plugin-search/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/plugins/plugin-search/src/**/*"
+        ]
+      }
     }
   },
   "implicitDependencies": [

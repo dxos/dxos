@@ -18,6 +18,8 @@ import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
 
 const EMPTY_ROW_ID = '__new';
 
+// TODO(burdon): Hanging edit missing if no initial rows.
+
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const [, forceUpdate] = useState({});
   const { plugins } = usePlugins();
