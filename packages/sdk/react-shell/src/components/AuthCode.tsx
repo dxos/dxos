@@ -4,7 +4,7 @@
 
 import React, { type HTMLProps, type PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export type AuthCodeProps = HTMLProps<HTMLSpanElement> & {
   code?: string;

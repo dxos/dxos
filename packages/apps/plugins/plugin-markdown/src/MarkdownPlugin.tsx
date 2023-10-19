@@ -13,16 +13,16 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
+import { LocalStorageStore } from '@dxos/local-storage';
+import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
 import {
   type ComposerModel,
   type MarkdownComposerProps,
   type MarkdownComposerRef,
   useTextModel,
-} from '@dxos/aurora-composer';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { type PluginDefinition, findPlugin, usePlugin } from '@dxos/react-surface';
+} from '@dxos/react-ui-composer';
 
 import {
   EditorMain,

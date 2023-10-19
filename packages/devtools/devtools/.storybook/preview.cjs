@@ -3,8 +3,8 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -43,7 +43,7 @@ const withTheme = (StoryFn, context) => {
 
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
-    tx: auroraTx
+    tx: defaultTx
   });
 };
 

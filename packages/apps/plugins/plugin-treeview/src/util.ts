@@ -3,7 +3,7 @@
 //
 
 import { type Action, type Node } from '@braneframe/plugin-graph';
-import type { TFunction } from '@dxos/aurora';
+import type { TFunction } from '@dxos/react-ui';
 
 export const getLevel = (node: Node, level = 0): number => {
   if (!node.parent) {

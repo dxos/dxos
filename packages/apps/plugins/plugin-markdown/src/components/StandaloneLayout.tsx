@@ -4,8 +4,8 @@
 
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
-import { Main } from '@dxos/aurora';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
+import { Main } from '@dxos/react-ui';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-composer';
 import {
   baseSurface,
   coarseBlockPaddingStart,
@@ -13,7 +13,7 @@ import {
   mx,
   surfaceElevation,
   textBlockWidth,
-} from '@dxos/aurora-theme';
+} from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';
 

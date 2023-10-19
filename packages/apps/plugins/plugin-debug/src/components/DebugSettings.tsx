@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Input, useTranslation } from '@dxos/aurora';
 import { usePlugin } from '@dxos/react-surface';
+import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN, type DebugPluginProvides } from '../props';
 

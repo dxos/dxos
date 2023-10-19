@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { Button, useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN, type LocalEntity } from '../types';
 

@@ -4,8 +4,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { type JoinPanelMode } from './JoinPanelProps';
 import { Heading } from '../../components';

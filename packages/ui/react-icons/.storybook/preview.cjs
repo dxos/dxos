@@ -3,7 +3,7 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
