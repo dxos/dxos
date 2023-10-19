@@ -38,6 +38,8 @@ export type MuxerStats = {
   bytesReceived: number;
   bytesSentRate?: number;
   bytesReceivedRate?: number;
+  readBufferSize?: number;
+  writeBufferSize?: number;
 };
 
 const STATS_INTERVAL = 1_000;
@@ -416,6 +418,7 @@ export class Muxer {
           id: channel.id,
           tag: channel.tag,
           contentType: channel.contentType,
+          writeBufferSize: channel.buffer.length,
           bytesSent: channel.stats.bytesSent,
           bytesReceived: channel.stats.bytesReceived,
           ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
@@ -427,6 +430,8 @@ export class Muxer {
       bytesSent,
       bytesReceived,
       ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
+      readBufferSize: this._balancer.stream.readableLength,
+      writeBufferSize: this._balancer.stream.writableLength,
     };
 
     this.statsUpdated.emit(this._lastStats);
