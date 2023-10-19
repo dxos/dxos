@@ -21,7 +21,7 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';

@@ -21,12 +21,6 @@
   ],
   "references": [
     {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
-    },
-    {
       "path": "../primitives/react-hooks"
     },
     {
@@ -34,6 +28,12 @@
     },
     {
       "path": "../primitives/react-list"
+    },
+    {
+      "path": "../react-ui-theme"
+    },
+    {
+      "path": "../react-ui-types"
     }
   ]
 }

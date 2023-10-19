@@ -5,17 +5,17 @@
 import '@dxosTheme';
 
 import { Circle, List, MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, Suspense, useContext, useEffect, useState } from 'react';
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import { Button, Main, ThemeProvider, useSidebars } from '@dxos/aurora';
-import { getSize, mx, defaultTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
 import { appkitTranslations, Input } from '@dxos/react-appkit';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { osTranslations } from '@dxos/react-shell';
+import { Button, Main, ThemeProvider, useSidebars } from '@dxos/react-ui';
+import { getSize, mx, defaultTx } from '@dxos/react-ui-theme';
 
 // type Action = {
 //   type: 'select';

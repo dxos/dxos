@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
+const { ThemePlugin } = require('@dxos/react-ui-theme/plugin');
 const turbosnap = require('vite-plugin-turbosnap');
 
 module.exports = {

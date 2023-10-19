@@ -15,9 +15,9 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/sentry": "workspace:*"
   },
   "devDependencies": {

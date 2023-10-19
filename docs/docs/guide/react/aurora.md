@@ -2,26 +2,26 @@
 order: 20
 ---
 
-# Aurora UI
+# DXOS UI
 
 There are several open-source packages of UI components available:
 
-| Package                 | Description                                                                                                    | Audience                                          |
-| :---------------------- | :------------------------------------------------------------------------------------------------------------- | :------------------------------------------------ |
-| `@dxos/aurora`          | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`.             | Any react application.                            |
-| `@dxos/aurora-theme`    | A default theme for aurora                                                                                     | Any react application.                            |
-| `@dxos/aurora-types`    | TypeScript types for the UI system.                                                                            | Any react application using Aurora.               |
-| `@dxos/aurora-composer` | A collaborative rich text editor component.                                                                    | Any react application using Aurora (and/or ECHO). |
-| `@dxos/aurora-grid`     | A data grid component.                                                                                        | Any react application using Aurora (and/or ECHO). |
-| `@dxos/aurora-table`    | A data table component.                                                                              | Any react application using Aurora (and/or ECHO). |
+| Package                 | Description                                                                                                   | Audience                                          |
+| :---------------------- |:--------------------------------------------------------------------------------------------------------------|:--------------------------------------------------|
+| `@dxos/react-ui`          | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`.            | Any react application.                            |
+| `@dxos/react-ui-theme`    | A default theme for DXOS UI                                                                                   | Any react application.                            |
+| `@dxos/react-ui-types`    | TypeScript types for the UI system.                                                                           | Any react application using DXOS UI.              |
+| `@dxos/react-ui-composer` | A collaborative rich text editor component.                                                                   | Any react application using DXOS UI (and/or ECHO). |
+| `@dxos/react-ui-grid`     | A data grid component.                                                                                        | Any react application using DXOS UI (and/or ECHO). |
+| `@dxos/react-ui-table`    | A data table component.                                                                                       | Any react application using DXOS UI (and/or ECHO). |
 | [`@dxos/react-shell`](./shell)     | A set of components and specific UI flows for managing [ECHO](../platform) spaces, invitations, and identity. | Any react application using ECHO and HALO.        |
 
-## Aurora Installation
+## DXOS UI Installation
 
-Install the `@dxos/aurora` package with your package manager and follow steps below.
+Install the `@dxos/react-ui` package with your package manager and follow steps below.
 
 ::: note
-Apps based on the DXOS [application templates](../cli/app-templates) have Aurora configured by default, which can be turned off with `--interactive` mode.
+Apps based on the DXOS [application templates](../cli/app-templates) have DXOS UI configured by default, which can be turned off with `--interactive` mode.
 :::
 
 ### With [Vite](https://vitejs.dev)
@@ -33,7 +33,7 @@ Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
 ```ts file=./snippets/vite-config.ts#L5-
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -71,7 +71,7 @@ For best results, load `@dxosTheme` ahead of any other stylesheets.
 
 The special `@dxosTheme` import will not be a available. Include the following stylesheet in your `index.html`:
 
-    node_modules/@dxos/aurora/dist/plugin/node/theme.css
+    node_modules/@dxos/react-ui/dist/plugin/node/theme.css
 
 This package exports both CJS and ESM builds of its components, though these are styled with Tailwind as the design token system. Any build stack can use the component builds in this package, you’ll just need to configure your build to handle Tailwind so that styles are applied correctly.
 
@@ -92,7 +92,7 @@ tailwindcss(
 // ...
 ```
 
-*   Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/aurora/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
+*   Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
 *   This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
 
 :::
@@ -101,19 +101,19 @@ tailwindcss(
 
 This package uses icons from `phosphor-icons`, but lists them as a peer dependency to avoid re-exporting that package; use your project’s package manager to add `phosphor-icons` as a dependency.
 
-## Using Aurora
+## Using DXOS UI
 
-To use aurora components, wrap your app with a `<ThemeProvider />` component:
+To use DXOS UI components, wrap your app with a `<ThemeProvider />` component:
 
 ```tsx file=./snippets/theme-provider.tsx#L5-
 import React from 'react';
 import { render } from 'react-dom';
 
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
 
 render(
   <ThemeProvider>
-    {/* your components using aurora here */}
+    {/* your components using react-ui here */}
   </ThemeProvider>,
   document.getElementById('root'),
 );
@@ -147,5 +147,5 @@ Note that you can apply this classname selectively further down the DOM tree if 
 
 [Storybook](https://storybook.js.org/) is used to browse and test components.
 
-*   [aurora storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
+*   [react-ui storybook](https://609d2a9c8202250039083fbb-owiqnnxehq.chromatic.com/).
 *   [react-shell storybook](https://64c18b27fca920629f846e5b-qdjdssmfjl.chromatic.com/)

@@ -6,10 +6,10 @@ import { CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Button, useSidebars } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
-import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
+import { type FrameDef, useFrameRegistry } from '@dxos/kai-frames';
 import { SpaceState } from '@dxos/react-client/echo';
+import { Button, useSidebars } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SpaceLoading } from './SpaceLoading';
 import { AppMenu, BotManager, Surface, MetagraphPanel } from '../containers';

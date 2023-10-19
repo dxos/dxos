@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.12.0",
     "@tanstack/react-table": "^8.9.3",

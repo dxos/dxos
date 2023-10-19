@@ -5,7 +5,7 @@
 import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
 
 import { ErrorBoundary } from '../components';

@@ -24,9 +24,9 @@
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",

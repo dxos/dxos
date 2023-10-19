@@ -5,8 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { Button, List, ListItem } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, List, ListItem } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Input } from '@dxos/react-appkit';
 
 // TODO(burdon): Reconcile with Item.

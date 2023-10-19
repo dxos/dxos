@@ -7,8 +7,8 @@ import formatDistance from 'date-fns/formatDistance';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Select } from '@dxos/react-appkit';
 import { PublicKey } from '@dxos/react-client';

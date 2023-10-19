@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';

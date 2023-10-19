@@ -18,10 +18,10 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-appkit"
     },
     {
-      "path": "../../ui/react-appkit"
+      "path": "../../ui/react-ui-theme"
     }
   ]
 }

@@ -12,9 +12,9 @@ import {
   setupTelemetryListeners,
   withTelemetry,
 } from '@braneframe/plugin-telemetry/headless';
-import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/aurora';
-import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
 import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
+import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';

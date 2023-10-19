@@ -21,9 +21,9 @@
   },
   "devDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
@@ -32,9 +32,9 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0"
   },

@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { StackRow, type StackRowProps } from './StackRow';
 

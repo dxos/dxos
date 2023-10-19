@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/aurora-table';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { levels, LogLevel } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 

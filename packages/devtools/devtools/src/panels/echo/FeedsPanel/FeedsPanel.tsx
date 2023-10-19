@@ -5,9 +5,9 @@
 import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
-import { getSize } from '@dxos/aurora-theme';
+import { Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { getSize } from '@dxos/react-ui-theme';
 import { type PublicKey } from '@dxos/keys';
 import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';

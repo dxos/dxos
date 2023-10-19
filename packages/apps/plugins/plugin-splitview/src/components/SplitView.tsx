@@ -5,9 +5,9 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
+import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
+import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
 
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';

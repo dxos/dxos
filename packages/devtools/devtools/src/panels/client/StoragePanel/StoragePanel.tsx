@@ -6,7 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Tree, TreeItem, Toolbar } from '@dxos/aurora';
+import { Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,

@@ -4,8 +4,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
 import {
   Graph,

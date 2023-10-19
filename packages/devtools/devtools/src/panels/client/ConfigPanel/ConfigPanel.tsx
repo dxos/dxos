@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Toolbar } from '@dxos/aurora';
+import { Toolbar } from '@dxos/react-ui';
 import { useConfig } from '@dxos/react-client';
 
 import { JsonView, PanelContainer } from '../../../components';

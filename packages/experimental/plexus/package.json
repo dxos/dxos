@@ -13,10 +13,10 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "assert": "^2.0.0",

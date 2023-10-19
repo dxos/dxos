@@ -18,10 +18,10 @@
     "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/react-ui --exit-zero-on-changes"
   },
   "dependencies": {
-    "@dxos/react-ui-types": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@radix-ui/react-avatar": "^1.0.2",
     "@radix-ui/react-checkbox": "^1.0.3",

@@ -5,13 +5,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { List, ListItem } from '@dxos/aurora';
 import { useConfig } from '@dxos/react-client';
 import { DXOS } from '@dxos/react-icons';
+import { List, ListItem } from '@dxos/react-ui';
 
 import { Toolbar } from './Toolbar';
 import { ListItemButton, ListItemText } from './util';
-import { Module } from '../hooks';
+import { type Module } from '../hooks';
 
 export type SidebarProps = {
   modules: Module[];

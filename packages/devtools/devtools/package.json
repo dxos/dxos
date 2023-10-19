@@ -18,9 +18,6 @@
   "dependencies": {
     "@braneframe/plugin-telemetry": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -33,6 +30,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/timeframe": "workspace:*",
@@ -61,10 +61,10 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-shell": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

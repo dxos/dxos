@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button } from '@dxos/react-ui';
 import { type PublicKey } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
