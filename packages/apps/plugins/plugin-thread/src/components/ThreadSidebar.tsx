@@ -34,7 +34,7 @@ export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
 
   // TODO(burdon): Get current context.
   const splitviewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-  console.log('splitView:', splitviewPlugin?.provides?.splitView?.active);
+  // console.log('splitView:', splitviewPlugin?.provides?.splitView?.active);
 
   if (!space || !thread) {
     return null;
