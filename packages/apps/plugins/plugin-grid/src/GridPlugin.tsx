@@ -8,9 +8,9 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Grid as GridType } from '@braneframe/types';
-import { Mosaic } from '@dxos/aurora-grid/next';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { GridMain } from './components';
 import translations from './translations';

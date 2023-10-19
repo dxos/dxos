@@ -987,6 +987,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-mosaic': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
@@ -1016,6 +1018,8 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@dxos/react-ui': link:../../../ui/react-ui
+      '@dxos/react-ui-composer': link:../../../ui/react-ui-composer
+      '@dxos/react-ui-mosaic': link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -1758,6 +1762,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/react-ui-mosaic': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
@@ -1788,6 +1793,7 @@ importers:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types
       '@dxos/react-ui': link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic': link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y

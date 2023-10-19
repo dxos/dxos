@@ -4,11 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import { Card, DropdownMenu, Input, useTranslation } from '@dxos/aurora';
-import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
-import { type MosaicTileComponent } from '@dxos/aurora-grid/next';
-import { mx } from '@dxos/aurora-theme';
 import { type Text } from '@dxos/client/echo';
+import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
+import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
+import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/react-ui-theme';
 
 import { GRID_PLUGIN } from '../types';
 

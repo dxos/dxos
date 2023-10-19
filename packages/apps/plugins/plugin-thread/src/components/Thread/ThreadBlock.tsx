@@ -7,11 +7,11 @@ import format from 'date-fns/format';
 import React, { forwardRef, useId } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { Card } from '@dxos/aurora';
-import { Mosaic, type MosaicTileComponent } from '@dxos/aurora-grid/next';
-import { getSize, inputSurface, mx } from '@dxos/aurora-theme';
 import { type Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
+import { Card } from '@dxos/react-ui';
+import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { useSubscription } from '../util';
 

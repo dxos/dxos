@@ -8,9 +8,9 @@ import React, { type FC, useEffect, useState } from 'react';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
-import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';

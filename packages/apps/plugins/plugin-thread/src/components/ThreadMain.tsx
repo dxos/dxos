@@ -6,9 +6,9 @@ import React, { type FC } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type Thread as ThreadType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { ThreadContainer } from './ThreadContainer';
 
