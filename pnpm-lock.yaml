@@ -839,6 +839,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/client': link:../../../sdk/client
@@ -853,7 +854,6 @@ importers:
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/types': link:../../types
       '@dxos/echo-generator': link:../../../core/echo/echo-generator
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@faker-js/faker': 8.0.2

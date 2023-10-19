@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useMemo } from 'react';
 
+import { type View as ViewType } from '@braneframe/types';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { Markers } from '@dxos/gem-spore';
-
-export type ExplorerMainParams = {};
+import { Graph, Markers } from '@dxos/gem-spore';
+import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
+import { useClient } from '@dxos/react-client';
 
 type Slots = {
   root?: { className?: string };
@@ -16,22 +17,26 @@ type Slots = {
 
 const slots: Slots = {};
 
-export const ExplorerMain: FC<ExplorerMainParams> = () => {
-  return (
-    <div className='flex grow ring m-2'>
-      <SVGContextProvider>
-        <SVG className={slots?.root?.className}>
-          <Markers arrowSize={6} />
-          <Grid className={slots?.grid?.className} />
-          <Zoom extent={[1, 4]}>
-            <View />
-          </Zoom>
-        </SVG>
-      </SVGContextProvider>
-    </div>
-  );
-};
+// TODO(burdon): Surface type.
+export type ExplorerMainParams = { data?: ViewType };
 
-const View = () => {
-  return <g />;
+export const ExplorerMain = ({ data }: ExplorerMainParams) => {
+  const client = useClient();
+  const space = client.spaces.default; // TODO(burdon): Get from data object.
+
+  // TODO(burdon): Model.
+  const { objects } = space.db.query();
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+
+  return (
+    <SVGContextProvider>
+      <SVG className={slots?.root?.className}>
+        <Markers arrowSize={6} />
+        <Grid className={slots?.grid?.className} />
+        <Zoom extent={[1, 4]}>
+          <Graph model={model} drag arrows />
+        </Zoom>
+      </SVG>
+    </SVGContextProvider>
+  );
 };
