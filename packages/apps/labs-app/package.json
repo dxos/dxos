@@ -14,6 +14,7 @@
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-error": "workspace:*",
+    "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",

@@ -27,6 +27,12 @@
       "path": "../../../experimental/gem-spore"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {
@@ -49,6 +55,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

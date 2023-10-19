@@ -10,6 +10,8 @@ export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
 
 const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
 
-export enum ExplorerAction {}
+export enum ExplorerAction {
+  CREATE = `${EXPLORER_ACTION}/create`,
+}
 
 export type ExplorerPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;

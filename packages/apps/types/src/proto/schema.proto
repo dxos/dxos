@@ -141,6 +141,17 @@ message Thread {
   repeated Block blocks = 2;
 }
 
+//
+// Generic data view.
+//
+message View {
+  option (object) = true;
+
+  string title = 1;
+  string type = 2;
+}
+
+// TODO(burdon): ???
 message AppState {
   option (object) = true;
 
