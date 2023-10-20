@@ -5,7 +5,7 @@
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/react-ui';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-composer';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
 import {
   baseSurface,
   coarseBlockPaddingStart,

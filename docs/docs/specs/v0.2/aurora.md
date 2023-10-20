@@ -17,7 +17,7 @@ packages/ui/react-ui
 packages/ui/react-ui-theme
 
 ## DXOS UI X
-> Other big pieces that are congruent with DXOS UI and separately packaged. e.g.: react-ui-composer, react-ui-datagrid.
+> Other big pieces that are congruent with DXOS UI and separately packaged. e.g.: react-ui-editor, react-ui-datagrid.
 > These are always provided in pure form, and with an "optional" ECHO adapter if necessary.
 @dxos/react-ui-* 
 packages/ui/react-ui-*

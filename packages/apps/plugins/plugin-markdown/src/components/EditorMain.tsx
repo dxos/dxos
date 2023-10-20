@@ -10,14 +10,13 @@ import {
   MarkdownComposer,
   type MarkdownComposerProps,
   type MarkdownComposerRef,
-} from '@dxos/react-ui-composer';
+} from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 import { MARKDOWN_PLUGIN, type MarkdownProperties } from '../types';
 
-// TODO(wittjosiah): Rename react-ui-composer to react-ui-editor.
 export const EditorMain = ({
   model,
   properties,

@@ -1,4 +1,4 @@
-# @dxos/react-ui-composer
+# @dxos/react-ui-editor
 
 Document editing experience within a DXOS shell.
 
@@ -20,8 +20,8 @@ subgraph apps [apps]
 
   subgraph patterns [patterns]
     style patterns fill:transparent
-    dxos/react-ui-composer("@dxos/react-ui-composer"):::root
-    click dxos/react-ui-composer "dxos/dxos/tree/main/packages/ui/react-ui-composer/docs"
+    dxos/react-ui-editor("@dxos/react-ui-editor"):::root
+    click dxos/react-ui-editor "dxos/dxos/tree/main/packages/ui/react-ui-editor/docs"
   end
 end
 
@@ -178,9 +178,9 @@ dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-ui-composer --> dxos/react-components
+dxos/react-ui-editor --> dxos/react-components
 dxos/react-components --> dxos/react-client
-dxos/react-ui-composer --> dxos/vite-plugin
+dxos/react-ui-editor --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```
 
