@@ -62,7 +62,7 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: docker build -t job-image . -f .circleci/Dockerfile
-      - run: docker run --name job-container job-image 
+      - run: docker run -d --name job-container job-image 
       - run: docker exec -t job-container ls -la
 
   #
