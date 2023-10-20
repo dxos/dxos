@@ -153,7 +153,8 @@ message Runtime {
   message Agent {
     message Plugins {
       message Functions {
-        int32 port = 1;
+        optional bool enabled = 1;
+        int32 port = 2;
       }
 
       /// Automatic epoch creation.

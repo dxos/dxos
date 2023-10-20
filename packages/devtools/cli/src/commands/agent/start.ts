@@ -94,17 +94,16 @@ export default class Start extends BaseCommand<typeof Start> {
         new Search(),
 
         // Dashboard.
-        new DashboardPlugin(),
+        new DashboardPlugin({ configPath: this.flags.config }),
 
         // ECHO API.
         // TODO(burdon): Config.
         this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.plugins?.functions &&
-          new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
-          }),
+        new FunctionsPlugin({
+          port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
+        }),
       ],
     });
 

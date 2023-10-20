@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import yaml from 'yaml';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -15,7 +16,7 @@ import { DashboardPlugin } from './dashboard-plugin';
 import { DashboardProxy } from './dashboard-proxy';
 
 describe('DashboardPlugin', () => {
-  test('Dashboard proxy', async () => {
+  test('Query status', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
@@ -28,7 +29,7 @@ describe('DashboardPlugin', () => {
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
-    const dashboardPlugin = new DashboardPlugin();
+    const dashboardPlugin = new DashboardPlugin('');
     await dashboardPlugin.initialize({ client: client1, clientServices: services1, plugins: [] });
     await dashboardPlugin.open();
     afterTest(() => dashboardPlugin.close());
@@ -62,7 +63,22 @@ describe('DashboardPlugin', () => {
   });
 
   test('id', async () => {
-    const plugin = new DashboardPlugin();
-    expect(plugin.id).to.equal('dashboardPlugin');
+    const plugin = new DashboardPlugin('');
+    expect(plugin.id).to.equal('dashboard');
+  });
+
+  test('yaml parsing preserves comments', async () => {
+    const yamlObject = yaml.parseDocument(yamlString);
+    yamlObject.setIn(['nested', 'b'], 3);
+    expect(yamlObject.toString()).to.equal(yamlString.replace('b: 2', 'b: 3'));
   });
 });
+
+const yamlString = `\
+# Comment1
+a: 1
+# Comment2
+nested:
+  # Comment3
+  b: 2 # Comment4
+`;

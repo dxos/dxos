@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-//
-// Copyright 2023 DXOS.org
-//
+import { readFile, writeFile } from 'node:fs/promises';
+import yaml from 'yaml';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { AgentStatus, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
+import { AgentStatus, type PluginState, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
@@ -30,18 +29,26 @@ export type ServiceBundle = {
   DashboardService: DashboardService;
 };
 
+export type DashboardPluginParams = {
+  configPath: string;
+};
+
 export class DashboardPlugin extends AbstractPlugin {
+  public readonly id = 'dashboard';
   private readonly _ctx = new Context();
-  private _options?: Options = undefined;
+  private _options?: Options;
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
+
+  constructor(private readonly _params: DashboardPluginParams) {
+    super();
+  }
 
   async open(): Promise<void> {
     log('Opening dashboard plugin...');
 
     invariant(this._pluginCtx);
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.search;
 
-    this._options = { ...DEFAULT_OPTIONS, ...config };
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
 
     if (!this._options.enabled) {
       log.info('Dashboard disabled.');
@@ -62,6 +69,7 @@ export class DashboardPlugin extends AbstractPlugin {
         handlers: {
           DashboardService: {
             status: () => this._handleStatus(),
+            changePluginConfig: (msg) => this._handleChangePluginConfig(msg),
           },
         },
         noHandshake: true,
@@ -88,7 +96,7 @@ export class DashboardPlugin extends AbstractPlugin {
         next({
           status: AgentStatus.Status.ON,
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
-            name: Object.getPrototypeOf(plugin).constructor.name,
+            id: plugin.id,
             status: 'OK',
           })),
         });
@@ -105,5 +113,26 @@ export class DashboardPlugin extends AbstractPlugin {
         close();
       });
     });
+  }
+
+  private async _handleChangePluginConfig(request: PluginState): Promise<void> {
+    // Change config file.
+    {
+      // Note: After changing the config file, client config and config file will be out of sync until agent restart.
+      //       We are changing only config of specific plugin, it should not cause problems.
+      const configAsString = await readFile(this._params.configPath, { encoding: 'utf-8' });
+      const yamlConfig = yaml.parseDocument(configAsString);
+      yamlConfig.setIn(['runtime', 'agent', 'plugins', request.pluginId], request.pluginConfig);
+      await writeFile(this._params.configPath, yamlConfig.toString(), { encoding: 'utf-8' });
+    }
+
+    // Restart plugin for which config was changed.
+    {
+      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.pluginId);
+      invariant(plugin, `Plugin ${request.pluginId} not found.`);
+      await plugin.close();
+      await plugin.setConfig(request.pluginConfig);
+      await plugin.open();
+    }
   }
 }

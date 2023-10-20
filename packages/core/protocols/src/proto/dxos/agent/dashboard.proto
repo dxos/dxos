@@ -6,6 +6,9 @@ syntax = "proto3";
 
 package dxos.agent.dashboard;
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+import "dxos/config.proto";
 
 message AgentStatus {
   enum Status {
@@ -14,7 +17,7 @@ message AgentStatus {
   }
 
   message Plugin {
-    string name = 1;
+    string id = 1;
     string status = 2;
   }
   
@@ -22,6 +25,12 @@ message AgentStatus {
   repeated Plugin plugins = 2;
 }
 
+message PluginState {
+  string plugin_id = 1;
+  google.protobuf.Struct plugin_config = 2;
+}
+
 service DashboardService {
   rpc status(google.protobuf.Empty) returns (stream AgentStatus);
+  rpc changePluginConfig(PluginState) returns (google.protobuf.Empty);
 }

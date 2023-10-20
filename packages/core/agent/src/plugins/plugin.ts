@@ -17,7 +17,11 @@ export type PluginContext = {
 export interface Plugin {
   id: string;
   statusUpdate: Event<void>;
+  config: Record<string, any>;
+
   initialize(pluginCtx: PluginContext): Promise<void>;
+  setConfig(config: any): Promise<void>;
+
   open(): Promise<void>;
   close(): Promise<void>;
 }
@@ -28,15 +32,25 @@ export abstract class AbstractPlugin implements Plugin {
    */
   abstract id: string;
   public statusUpdate = new Event();
+  protected _pluginConfig?: Record<string, any>;
   protected _pluginCtx?: PluginContext;
 
   get host(): ClientServicesHost {
     return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
+  get config(): Record<string, any> {
+    return this._pluginConfig ?? failUndefined();
+  }
+
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     this._pluginCtx = pluginCtx;
+    await this.setConfig((this._pluginCtx.client.config.values.runtime?.agent?.plugins as any)[this.id]);
+  }
+
+  async setConfig(config: Record<string, any>) {
+    this._pluginConfig = config;
   }
 
   abstract open(): Promise<void>;

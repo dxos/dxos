@@ -27,6 +27,7 @@ const DEFAULT_OPTIONS: Options = {
 export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
 
 export class Search extends AbstractPlugin {
+  public readonly id = 'search';
   private readonly _ctx = new Context();
   private _options?: Options = undefined;
   private _index?: MiniSearch;
@@ -56,15 +57,14 @@ export class Search extends AbstractPlugin {
   async open(): Promise<void> {
     log('Opening indexing plugin...');
 
-    invariant(this._pluginCtx);
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.search;
-    this._options = { ...DEFAULT_OPTIONS, ...config };
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
 
     if (!this._options.enabled) {
       log.info('Search disabled.');
       return;
     }
 
+    invariant(this._pluginCtx);
     this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;

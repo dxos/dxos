@@ -32,6 +32,7 @@ const DEFAULT_OPTIONS: Options = {
  */
 // TODO(burdon): Create test.
 export class EpochMonitor extends AbstractPlugin {
+  public readonly id = 'epochMonitor';
   private _ctx = new Context();
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
@@ -43,13 +44,13 @@ export class EpochMonitor extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.epochMonitor;
-    if (!config || config.enabled === false) {
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+
+    if (!this._options || this._options.enabled === false) {
       log.info('epoch monitor disabled from config');
       return;
     }
 
-    this._options = { ...DEFAULT_OPTIONS, ...config };
     log.info('epoch monitor open', { options: this._options });
 
     const process = (spaces: Space[]) => {
