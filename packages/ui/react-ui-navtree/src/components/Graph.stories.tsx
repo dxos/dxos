@@ -7,8 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { type Graph as GraphType, GraphBuilder } from '@braneframe/plugin-graph';
-import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { type Graph as GraphType, GraphBuilder } from '@dxos/app-graph';
+import { buildGraph } from '@dxos/app-graph/testing';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';

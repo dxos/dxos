@@ -10,6 +10,7 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node, type GraphPluginProvides } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { type MarkdownProvides } from '@braneframe/plugin-markdown';
 import { SplitViewAction, type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
@@ -136,10 +137,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         return null;
       },
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (parent.id !== 'root') {
             return;
           }
+
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
 
           const [groupNode] = parent.addNode(FILES_PLUGIN, {
             id: 'all-files',
@@ -152,7 +155,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             id: 'open-file-handle',
             label: ['open file label', { ns: FILES_PLUGIN }],
             icon: (props) => <FilePlus {...props} />,
-            intent: [
+            invoke: () => [
               {
                 plugin: FILES_PLUGIN,
                 action: LocalFilesAction.OPEN_FILE,
@@ -166,19 +169,25 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               id: 'open-directory',
               label: ['open directory label', { ns: FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
-              intent: [
-                {
-                  plugin: FILES_PLUGIN,
-                  action: LocalFilesAction.OPEN_DIRECTORY,
-                },
-                { action: SplitViewAction.ACTIVATE },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: FILES_PLUGIN,
+                    action: LocalFilesAction.OPEN_DIRECTORY,
+                  },
+                  { action: SplitViewAction.ACTIVATE },
+                ]),
             });
           }
 
           const fileIndices = getIndices(state.files.length);
           onFilesUpdate = () => {
-            state.files.forEach((entity, index) => localEntityToGraphNode(entity, fileIndices[index], groupNode));
+            const dispatch = intentPlugin?.provides.intent.dispatch;
+            if (dispatch) {
+              state.files.forEach((entity, index) =>
+                localEntityToGraphNode(entity, fileIndices[index], groupNode, dispatch),
+              );
+            }
           };
           onFilesUpdate();
 

@@ -8,7 +8,7 @@ import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type GraphPluginProvides, useGraph } from '@braneframe/plugin-graph';
-import { useIntent } from '@braneframe/plugin-intent';
+import { type IntentPluginProvides, useIntent } from '@braneframe/plugin-intent';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
@@ -71,17 +71,19 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
     provides: {
       // TODO(burdon): Should provides keys be indexed by plugin id (i.e., FQ)?
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
               id: SplitViewAction.TOGGLE_FULLSCREEN,
               label: ['toggle fullscreen label', { ns: SPLITVIEW_PLUGIN }],
               icon: (props) => <ArrowsOut {...props} />,
-              intent: {
-                plugin: SPLITVIEW_PLUGIN,
-                action: 'toggle-fullscreen',
-              },
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: SPLITVIEW_PLUGIN,
+                  action: 'toggle-fullscreen',
+                }),
               keyBinding: 'ctrl+meta+f',
             });
           }

@@ -5,11 +5,12 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
@@ -17,7 +18,7 @@ import { isSketch, SKETCH_PLUGIN, type SketchPluginProvides, SketchAction } from
 import { objectToGraphNode } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: SketchType.filter(), adapter: objectToGraphNode });
+  let adapter: GraphNodeAdapter<SketchType> | undefined;
 
   return {
     meta: {
@@ -34,43 +35,50 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       //     return tile;
       //   });
       // }
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const dispatch = intentPlugin?.provides.intent.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter: SketchType.filter(), adapter: objectToGraphNode });
+      }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
 
           parent.addAction({
             id: `${SKETCH_PLUGIN}/create`,
             label: ['create object label', { ns: SKETCH_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: SKETCH_PLUGIN,
-                action: SketchAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: SKETCH_PLUGIN,
+                  action: SketchAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: SplitViewAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'sketchPlugin.createSketch',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
       stack: {

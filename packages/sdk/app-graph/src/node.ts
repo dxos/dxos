@@ -95,7 +95,7 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   removeNode(id: string): Node;
 
   addAction<TActionProperties extends Record<string, any> = Record<string, any>>(
-    ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
+    ...action: (Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TActionProperties>>)[]
   ): Action<TActionProperties>[];
   removeAction(id: string): Action;
 };
