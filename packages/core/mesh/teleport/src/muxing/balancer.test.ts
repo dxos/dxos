@@ -23,11 +23,11 @@ const createStuckStream = (): any => {
       });
     },
 
-    read(size) {},
+    read: (size) => {},
   });
 
   return { stream, callbacks };
-}
+};
 
 const createStream = (): any => {
   const stream = new Duplex({
@@ -36,12 +36,11 @@ const createStream = (): any => {
       callback();
     },
 
-    read(size) {},
+    read: (size) => {},
   });
 
   return { stream };
-}
-
+};
 
 describe('Balancer', () => {
   test.skip('varints', () => {
@@ -91,11 +90,7 @@ describe('Balancer', () => {
     balancer.addChannel(2);
     balancer.addChannel(3);
 
-    pipeline(
-      balancer.stream,
-      stream,
-      () => {},
-    );
+    pipeline(balancer.stream, stream, () => {});
 
     for (let i = 1; i <= 3; i++) {
       for (let j = 0; j < 10; j++) {
@@ -123,11 +118,7 @@ describe('Balancer', () => {
     balancer.addChannel(2);
     balancer.addChannel(3);
 
-    pipeline(
-      balancer.stream,
-      stream,
-      () => {},
-    );
+    pipeline(balancer.stream, stream, () => {});
 
     for (let i = 1; i <= 3; i++) {
       for (let j = 0; j < 10; j++) {

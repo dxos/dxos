@@ -106,7 +106,7 @@ export class Balancer {
   }
 
   destroy() {
-    this._sendCtx.dispose();
+    void this._sendCtx.dispose();
     this._sendBuffers.clear();
     this._framer.destroy();
   }
