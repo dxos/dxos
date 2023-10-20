@@ -7,7 +7,9 @@ export const translationKey = 'react-ui-navtree';
 export default [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'tree item options label': 'More options',
+      },
     },
   },
 ];

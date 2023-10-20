@@ -174,7 +174,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   >
                     <Tooltip.Portal>
                       <Tooltip.Content classNames='z-[31]' side='bottom'>
-                        {t('tree branch options label')}
+                        {t('tree item options label')}
                         <Tooltip.Arrow />
                       </Tooltip.Content>
                     </Tooltip.Portal>
