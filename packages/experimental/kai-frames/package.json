@@ -20,7 +20,7 @@
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/context": "workspace:*",

@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/ui/react-ui-composer/src",
+  "sourceRoot": "packages/ui/react-ui-editor/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/ui/react-ui-composer/src/index.ts",
-        "outputPath": "packages/ui/react-ui-composer/dist/types",
-        "tsConfig": "packages/ui/react-ui-composer/tsconfig.json"
+        "main": "packages/ui/react-ui-editor/src/index.ts",
+        "outputPath": "packages/ui/react-ui-editor/dist/types",
+        "tsConfig": "packages/ui/react-ui-editor/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/ui/react-ui-composer/src/index.ts"
+          "packages/ui/react-ui-editor/src/index.ts"
         ],
-        "outputPath": "packages/ui/react-ui-composer/dist/lib",
+        "outputPath": "packages/ui/react-ui-editor/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/ui/react-ui-composer/src/**/*.{js,jsx,ts,tsx}"
+          "packages/ui/react-ui-editor/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -47,7 +47,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/ui/react-ui-composer/src/testing/proto/gen"
+        "packages/ui/react-ui-editor/src/testing/proto/gen"
       ]
     },
     "storybook": {
@@ -58,7 +58,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/react-ui-composer/.storybook"
+        "configDir": "packages/ui/react-ui-editor/.storybook"
       }
     },
     "storybook:html": {
@@ -77,7 +77,7 @@
         "production"
       ],
       "options": {
-        "configDir": "packages/ui/react-ui-composer/.storybook/html"
+        "configDir": "packages/ui/react-ui-editor/.storybook/html"
       }
     }
   },
