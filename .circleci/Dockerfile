@@ -19,3 +19,5 @@ RUN sudo apt-get update \
   && npm install -g pnpm@7.17.0
 
 # TODO(wittjosiah): Add CI job to publish this automatically.
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
