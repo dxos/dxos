@@ -13,10 +13,6 @@ import { AbstractPlugin } from '../plugin';
 
 type Options = Required<Runtime.Agent.Plugins.Functions>;
 
-export type FunctionsPluginOptions = {
-  port?: number;
-};
-
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
   port: 7000,
@@ -29,13 +25,8 @@ export class FunctionsPlugin extends AbstractPlugin {
   private _options?: Options;
 
   private _server?: ReturnType<typeof express>;
-
-  constructor(private readonly _params: FunctionsPluginOptions) {
-    super();
-  }
-
   async open() {
-    this._options = { ...DEFAULT_OPTIONS, ...this._params, ...this._pluginConfig };
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
 
     if (!this._options.enabled) {
       log.info('Functions disabled.');

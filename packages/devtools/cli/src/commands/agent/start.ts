@@ -101,9 +101,7 @@ export default class Start extends BaseCommand<typeof Start> {
         this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
 
         // Functions.
-        new FunctionsPlugin({
-          port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
-        }),
+        new FunctionsPlugin(),
       ],
     });
 
