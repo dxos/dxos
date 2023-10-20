@@ -137,14 +137,7 @@ export const createDiagnostics = async (
 
     // Networking.
 
-    const swarmInfoDone = new Trigger();
-    serviceContext.networkManager.connectionLog?.update.on(async () => {
-      const swarms = serviceContext.networkManager.connectionLog?.swarms;
-      diagnostics.swarms = swarms;
-      await swarmInfoDone.wake();
-    });
-
-    await swarmInfoDone.wait({ timeout: DEFAULT_TIMEOUT });
+    diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
   }
 
   diagnostics.config = config.values;
