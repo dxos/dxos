@@ -89,6 +89,12 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
     );
   }
 
+  if (metric.multiCounter) {
+    const records = metric.multiCounter.records ?? [];
+    records.sort((a, b) => a.key.localeCompare(b.key));
+    return <JsonTreeView data={{ [metric.name]: Object.fromEntries(records.map(({ key, value }) => [key, `${value.toString()} ${metric.multiCounter?.units ?? ''}`])) }} />
+  }
+
   if (metric.custom) {
     return <JsonTreeView data={{ [metric.name]: metric.custom.payload }} />;
   }
