@@ -59,6 +59,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
 
         // TODO(burdon): Required until integrated with theme.
+        resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),

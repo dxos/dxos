@@ -1,0 +1,69 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-surface"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-composer"
+    },
+    {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-dnd"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-intent"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}
