@@ -168,7 +168,7 @@ export const TreeViewContainer = ({
                   identityKey={identity?.identityKey.toHex()}
                   onClick={() => client.shell.shareIdentity()}
                 />
-                <div className='grow'></div>
+                <div className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Button
@@ -221,7 +221,7 @@ export const TreeViewContainer = ({
               {/* <Separator orientation='horizontal' /> */}
             </>
           )}
-          <div role='none' className='grow min-bs-0 overflow-y-auto'>
+          <div role='none' className='grow min-bs-0 overflow-y-auto p-0.5'>
             <NavTree
               node={graph.root}
               current={currentPath}

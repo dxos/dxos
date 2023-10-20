@@ -27,7 +27,7 @@ export const dropdownMenuContent: ComponentFunction<DropdownMenuStyleProps> = (_
 
 export const dropdownMenuItem: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
   mx(
-    'flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-2 text-sm whitespace-nowrap overflow-hidden',
+    'flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-2 text-sm',
     'text-neutral-900 data-[highlighted]:bg-neutral-50 dark:text-neutral-100 dark:data-[highlighted]:bg-neutral-900',
     subduedFocus,
     dataDisabled,
