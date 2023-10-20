@@ -48,7 +48,7 @@ const pipe = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream): (() => void
   };
 };
 
-describe.skip('Framer', () => {
+describe('Framer', () => {
   test('frame encoding', () => {
     const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 60];
     for (const size of sizes) {

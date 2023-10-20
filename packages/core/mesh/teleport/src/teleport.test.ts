@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { TestBuilder, TestPeer } from './testing';
 import { TestExtension } from './testing/test-extension';
 
-describe.skip('Teleport', () => {
+describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());

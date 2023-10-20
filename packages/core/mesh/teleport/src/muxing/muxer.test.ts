@@ -55,7 +55,7 @@ const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
     port,
   });
 
-describe.skip('Muxer', () => {
+describe('Muxer', () => {
   test('rpc calls on 1 port', async () => {
     const { peer1, peer2 } = setupPeers();
 

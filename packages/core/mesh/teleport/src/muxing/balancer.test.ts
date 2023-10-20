@@ -43,7 +43,7 @@ const createStream = (): any => {
 };
 
 describe('Balancer', () => {
-  test.skip('varints', () => {
+  test('varints', () => {
     const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
     for (const value of values) {
       const encoded = varint.encode(value, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
@@ -56,7 +56,7 @@ describe('Balancer', () => {
     }
   });
 
-  it.skip('should correctly encode and decode a chunk without dataLength', () => {
+  it('should correctly encode and decode a chunk without dataLength', () => {
     const channelId = 1;
     const chunk = Uint8Array.from([0x11, 0x22, 0x33]);
 
@@ -68,7 +68,7 @@ describe('Balancer', () => {
     expect(decoded.chunk).to.deep.equal(chunk);
   });
 
-  it.skip('should correctly encode and decode a chunk with dataLength', () => {
+  it('should correctly encode and decode a chunk with dataLength', () => {
     const channelId = 2;
     const chunk = Uint8Array.from([0x44, 0x55, 0x66]);
     const dataLength = chunk.length;
