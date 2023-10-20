@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { MaybePromise } from '@dxos/util';
 import type { IconProps } from '@phosphor-icons/react';
 import type { FC } from 'react';
+
+import type { MaybePromise } from '@dxos/util';
 
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
 export type Label = string | [string, { ns: string; count?: number }];
