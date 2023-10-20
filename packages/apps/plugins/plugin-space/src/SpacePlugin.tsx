@@ -49,7 +49,7 @@ import { createNodeId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
 
-const hasIndex = (object: EchoObject): object is TypedObject => !!(object as any)?.meta?.index;
+const hasIndex = (object: EchoObject): object is TypedObject => object instanceof TypedObject && object.meta.index !== undefined;
 
 const echoObjectCompare = (a: EchoObject, b: EchoObject) => {
   if (hasIndex(a) && hasIndex(b)) {
