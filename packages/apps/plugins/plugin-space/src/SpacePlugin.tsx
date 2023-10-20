@@ -4,7 +4,7 @@
 
 import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { getIndexBelow, getIndices } from '@tldraw/indices';
+import { getIndices } from '@tldraw/indices';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -14,7 +14,7 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { type EchoObject, subscribe, TypedObject } from '@dxos/echo-schema';
+import { subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -32,7 +32,7 @@ import {
   PopoverRenameSpace,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
-import { getAppStateIndex, setAppStateIndex } from './helpers';
+import { setAppStateIndex } from './helpers';
 import translations from './translations';
 import {
   SPACE_PLUGIN,
@@ -48,47 +48,6 @@ import { createNodeId, isSpace, spaceToGraphNode } from './util';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
-
-const hasIndex = (object: EchoObject): object is TypedObject =>
-  object instanceof TypedObject && (object as TypedObject).meta.index !== undefined;
-
-const echoObjectCompare = (a: EchoObject, b: EchoObject) => {
-  if (hasIndex(a) && hasIndex(b)) {
-    if (a.meta.index < b.meta.index) {
-      return -1;
-    } else if (a.meta.index > b.meta.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
-
-const getNextSpaceIndex = (appState: AppState | undefined, client: ClientPluginProvides['client']) => {
-  const spaceCompare = (a: Space, b: Space) => {
-    const aIndex = getAppStateIndex(createNodeId(a.key), appState);
-    const bIndex = getAppStateIndex(createNodeId(b.key), appState);
-    if (aIndex && bIndex) {
-      if (aIndex < bIndex) {
-        return -1;
-      } else if (aIndex > bIndex) {
-        return 1;
-      }
-      return 0;
-    }
-    return 0;
-  };
-  const sortedSpaces = client.spaces
-    .get()
-    .filter((space) => getAppStateIndex(createNodeId(space.key)), appState)
-    .sort(spaceCompare);
-  return getIndexBelow(getAppStateIndex(createNodeId(sortedSpaces[0]?.key ?? 'never'), appState) ?? 'a0');
-};
-
-const getNextSpaceObjectIndex = (space: Space) => {
-  const sortedIndexedObjects = space.db.objects.filter(hasIndex).sort(echoObjectCompare);
-  return getIndexBelow(sortedIndexedObjects[0]?.meta.index ?? 'a0');
-};
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
@@ -431,11 +390,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const space = await clientPlugin.provides.client.spaces.create(intent.data);
-              setAppStateIndex(
-                createNodeId(space.key),
-                getNextSpaceIndex(state.appState, clientPlugin.provides.client),
-                state.appState,
-              );
               return { space, id: createNodeId(space.key) };
             }
 
@@ -514,14 +468,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.ADD_OBJECT: {
               if (space && intent.data.object) {
-                const nextIndex = getNextSpaceObjectIndex(space);
-                const addedObject = space.db.add(intent.data.object);
-                // TODO(thure): is `meta` not always already set by ECHO?
-                if (!addedObject.meta) {
-                  addedObject.meta = {};
-                }
-                addedObject.meta.index = nextIndex;
-                return addedObject;
+                return space.db.add(intent.data.object);
               }
               break;
             }
