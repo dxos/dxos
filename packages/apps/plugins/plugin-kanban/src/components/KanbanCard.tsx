@@ -24,7 +24,7 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const KanbanItemComponent: FC<{
+export const KanbanCardComponent: FC<{
   column?: KanbanType.Column;
   item: KanbanType.Item;
   debug?: boolean;
