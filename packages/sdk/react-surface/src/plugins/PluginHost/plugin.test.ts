@@ -8,7 +8,7 @@ import { type FC } from 'react';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { type Plugin } from './Plugin';
+import { type Plugin } from './plugin';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 export interface Interface<T> {
@@ -66,6 +66,7 @@ export const Section: Interface<Section> = { key: 'list' };
 //
 // Plugin defs
 //
+
 // TODO(burdon): Tie to declarative manifest.
 // {
 //   Printable: { print: (data: any) => console.log(data) }

@@ -512,9 +512,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugins/plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
@@ -733,9 +730,6 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugins/plugin-intent
       '@braneframe/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugins/plugin-ipfs
@@ -891,9 +885,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-splitview':
         specifier: workspace:*
         version: link:../plugin-splitview
@@ -979,9 +970,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1217,9 +1205,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1287,9 +1272,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -1369,9 +1351,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -1482,9 +1461,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1534,25 +1510,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-intent:
-    dependencies:
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
-    devDependencies:
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
   packages/apps/plugins/plugin-ipfs:
     dependencies:
       '@braneframe/plugin-graph':
@@ -1586,9 +1543,6 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1665,9 +1619,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -1747,9 +1698,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-splitview':
         specifier: workspace:*
         version: link:../plugin-splitview
@@ -1829,9 +1777,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1917,9 +1862,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2021,9 +1963,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2109,9 +2048,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2221,9 +2157,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-splitview':
         specifier: workspace:*
         version: link:../plugin-splitview
@@ -2279,9 +2212,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2361,9 +2291,6 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -2449,9 +2376,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-splitview':
         specifier: workspace:*
         version: link:../plugin-splitview
@@ -2553,9 +2477,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-splitview':
         specifier: workspace:*
         version: link:../plugin-splitview
@@ -2660,9 +2581,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -2754,9 +2672,6 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -7510,9 +7425,18 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: ^1.3.6
+        version: 1.3.6(@preact/signals-react@1.3.6)
     devDependencies:
       '@types/react':
         specifier: ^18.0.21

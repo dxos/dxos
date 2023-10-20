@@ -4,8 +4,6 @@
 
 import { type FC, type PropsWithChildren, type RefAttributes } from 'react';
 
-import { raise } from '@dxos/debug';
-
 /**
  * Props passed to a component by the `Surface` resolver.
  */
@@ -26,19 +24,10 @@ export type PluginProvides<TProvides> = TProvides & {
    */
   context?: FC<PropsWithChildren>;
 
-  /**
-   * Used by the `Surface` resolver to find a component to render when presented with data but no component name.
+  /*
+   * React component which is rendered at the root of the application.
    */
-  component?: <P extends PropsWithChildren = PropsWithChildren>(
-    data: unknown,
-    role?: string,
-    props?: Partial<P>,
-  ) => FC<PluginComponentProps> | undefined | null | false | 0;
-
-  /**
-   * Used by the `Surface` resolver to find a component by name.
-   */
-  components?: Record<string, FC<PluginComponentProps>> & { default?: FC };
+  root?: FC<PropsWithChildren>;
 };
 
 /**
@@ -100,17 +89,4 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    * This is the place to do any cleanup required by the plugin.
    */
   unload?: () => Promise<void>;
-};
-
-/**
- * Find a plugin by ID.
- */
-export const findPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> | undefined => {
-  return plugins.find(
-    (plugin) => plugin.meta.id === id || (typeof plugin.meta.shortId === 'string' && plugin.meta.shortId === id),
-  ) as Plugin<T>;
-};
-
-export const getPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> => {
-  return findPlugin(plugins, id) ?? raise(new Error(`Plugin not found: ${id}`));
 };

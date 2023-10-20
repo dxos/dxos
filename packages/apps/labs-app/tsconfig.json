@@ -85,9 +85,6 @@
       "path": "../plugins/plugin-grid"
     },
     {
-      "path": "../plugins/plugin-intent"
-    },
-    {
       "path": "../plugins/plugin-ipfs"
     },
     {

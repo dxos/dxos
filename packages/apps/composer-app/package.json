@@ -15,7 +15,6 @@
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-sketch": "workspace:*",

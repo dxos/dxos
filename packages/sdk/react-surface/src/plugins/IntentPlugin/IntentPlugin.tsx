@@ -5,23 +5,30 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type IntentContext, IntentProvider } from './IntentContext';
+import { type Intent } from './intent';
+import { type PluginDefinition, type Plugin } from '../PluginHost';
+import { filterPlugins, findPlugin } from '../helpers';
 
-import {
-  type DispatchIntent,
-  type Intent,
-  IntentContextProvider,
-  type IntentPluginProvides,
-  type IntentProvides,
-  filterPlugins,
-} from './types';
+export type IntentProvides = {
+  intent: {
+    resolver: (intent: Intent, plugins: Plugin[]) => any;
+  };
+};
+
+export type IntentPluginProvides = {
+  intent: IntentContext;
+};
+
+export const isIntentPlugin = (plugin: Plugin): plugin is Plugin<IntentPluginProvides> =>
+  Boolean((plugin.provides as IntentPluginProvides).intent);
 
 /**
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
 export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<{ dispatch: DispatchIntent }>({ dispatch: async () => {} });
+  const state = deepSignal<IntentContext>({ dispatch: async () => {} });
 
   return {
     meta: {
@@ -36,7 +43,10 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
         }
 
         // Return resolved value from first plugin that handles the intent.
-        return filterPlugins(plugins).reduce((acc, plugin) => {
+        return filterPlugins<IntentProvides>(
+          plugins,
+          (plugin) => typeof plugin.provides.intent?.resolver === 'function',
+        ).reduce((acc, plugin) => {
           return acc ?? plugin.provides.intent.resolver(intent, plugins);
         }, undefined);
       };
@@ -53,7 +63,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     },
     provides: {
       intent: state,
-      context: ({ children }) => <IntentContextProvider dispatch={state.dispatch}>{children}</IntentContextProvider>,
+      context: ({ children }) => <IntentProvider value={state}>{children}</IntentProvider>,
     },
   };
 };

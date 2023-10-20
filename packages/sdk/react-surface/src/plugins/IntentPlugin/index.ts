@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
-
+export * from './intent';
+export * from './IntentContext';
 export * from './IntentPlugin';

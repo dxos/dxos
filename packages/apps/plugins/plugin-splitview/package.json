@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -36,7 +35,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
     "@dxos/react-ui": "workspace:*",

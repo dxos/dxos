@@ -23,7 +23,6 @@
   "devDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
@@ -41,7 +40,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/types": "workspace:*",

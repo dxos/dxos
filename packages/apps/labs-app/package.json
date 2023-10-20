@@ -19,7 +19,6 @@
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-grid": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-ipfs": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",
     "@braneframe/plugin-map": "workspace:*",
