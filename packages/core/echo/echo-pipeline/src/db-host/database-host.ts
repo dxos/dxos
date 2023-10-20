@@ -51,7 +51,7 @@ export class DatabaseHost {
     return this._itemDemuxer.createSnapshot();
   }
 
-  createDataServiceHost(opts: DataServiceHostOptions) {
+  createDataServiceHost(opts: DataServiceHostOptions = {}) {
     return new DataServiceHost(
       this._itemManager,
       this._itemDemuxer,
