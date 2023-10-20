@@ -4,7 +4,7 @@
 
 import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { getIndices } from '@tldraw/indices';
+import { getIndexBelow, getIndices } from '@tldraw/indices';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -14,7 +14,7 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { subscribe } from '@dxos/echo-schema';
+import { type EchoObject, subscribe, type TypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -48,6 +48,25 @@ import { createNodeId, isSpace, spaceToGraphNode } from './util';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
+
+const hasIndex = (object: EchoObject): object is TypedObject => !!(object as any)?.meta?.index;
+
+const echoObjectCompare = (a: EchoObject, b: EchoObject) => {
+  if (hasIndex(a) && hasIndex(b)) {
+    if (a.meta.index < b.meta.index) {
+      return -1;
+    } else if (a.meta.index > b.meta.index) {
+      return 1;
+    }
+    return 0;
+  }
+  return 0;
+};
+
+const getNextSpaceObjectIndex = (space: Space) => {
+  const sortedIndexedObjects = space.db.objects.filter(hasIndex).sort(echoObjectCompare);
+  return getIndexBelow(sortedIndexedObjects[0]?.meta.index ?? 'a0');
+};
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
@@ -468,7 +487,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.ADD_OBJECT: {
               if (space && intent.data.object) {
-                return space.db.add(intent.data.object);
+                const nextIndex = getNextSpaceObjectIndex(space);
+                const addedObject = space.db.add(intent.data.object);
+                // TODO(thure): is `meta` not always already set by ECHO?
+                if (!addedObject.meta) {
+                  addedObject.meta = {};
+                }
+                addedObject.meta.index = nextIndex;
+                return addedObject;
               }
               break;
             }
