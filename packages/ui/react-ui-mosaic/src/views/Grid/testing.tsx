@@ -11,8 +11,8 @@ import { type MosaicDataItem, type MosaicDropEvent } from '../../mosaic';
 import { ComplexCard, TestObjectGenerator } from '../../testing';
 
 export type DemoGridProps = GridProps & {
-  initialItems?: MosaicDataItem[];
-  initialLayout?: GridLayout;
+  initialItems?: MosaicDataItem[]; // TODO(burdon): Remove or convert to controlled.
+  initialLayout?: GridLayout; // TODO(burdon): Remove or convert to controlled.
   types?: string[];
   debug?: boolean;
 };
