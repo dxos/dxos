@@ -8,7 +8,7 @@ import { type ModelFactory } from '@dxos/model-factory';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataServiceHost, DataServiceHostOptions } from './data-service-host';
+import { DataServiceHost, type DataServiceHostOptions } from './data-service-host';
 
 /**
  * Database backend that operates on two streams: read and write.
@@ -52,6 +52,12 @@ export class DatabaseHost {
   }
 
   createDataServiceHost(opts: DataServiceHostOptions) {
-    return new DataServiceHost(this._itemManager, this._itemDemuxer, this._flush, this._outboundStream ?? undefined, opts);
+    return new DataServiceHost(
+      this._itemManager,
+      this._itemDemuxer,
+      this._flush,
+      this._outboundStream ?? undefined,
+      opts,
+    );
   }
 }

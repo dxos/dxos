@@ -217,7 +217,7 @@ export class DatabaseTestPeer {
       .filter(isNotNullOrUndefined);
   }
 
-  private async _processMessages(to: Timeframe) {
+  private _processMessages(to: Timeframe) {
     let run = true;
     while (run) {
       run = false;
@@ -251,7 +251,6 @@ export class DatabaseTestPeer {
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }
     }
-    this.host.createDataServiceHost
   }
 
   getModel(id: string): DocumentModel | TextModel | undefined {

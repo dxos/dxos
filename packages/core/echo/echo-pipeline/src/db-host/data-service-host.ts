@@ -23,7 +23,7 @@ export type DataServiceHostOptions = {
    * @default true
    */
   deferEvents?: boolean;
-}
+};
 
 /**
  * Provides methods for DataService for a single space.
@@ -163,7 +163,7 @@ export class DataServiceHost {
             }
           }
 
-          if(this._deferEvents) {
+          if (this._deferEvents) {
             updateScheduler.trigger();
           } else {
             flushPendingUpdate();
