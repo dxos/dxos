@@ -40,8 +40,8 @@ const ChildClient = ({
 
 export type PeersInSpaceProps = {
   count?: number;
-  registerSignalFactory?: boolean;
-  schema?: TypeCollection;
+  schema?: TypeCollection; // TODO(burdon): Rename types.
+  registerSignalFactory?: boolean; // TODO(burdon): Document.
   onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
 };

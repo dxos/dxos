@@ -39,6 +39,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-splitview"

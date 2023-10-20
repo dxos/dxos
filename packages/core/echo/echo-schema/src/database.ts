@@ -275,7 +275,7 @@ export class EchoDatabase {
         const type = state.type.itemId;
         const Proto = this._graph.types.getPrototype(type);
         if (!Proto) {
-          log.warn('Unknown schema type', { type: state.type?.encode() });
+          log('Unknown schema type', { type: state.type?.encode() });
           return new TypedObject(); // TODO(burdon): Expando?
         } else {
           return new Proto();
