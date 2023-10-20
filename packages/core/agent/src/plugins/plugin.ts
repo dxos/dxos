@@ -23,7 +23,10 @@ export interface Plugin {
 }
 
 export abstract class AbstractPlugin implements Plugin {
-  public id: string = this.constructor.name.replace(/^[A-Z]/, (letter) => `${letter.toLowerCase()}`);
+  /**
+   * Unique plugin identifier. Should be equal to the value in DXOS yaml config file.
+   */
+  abstract id: string;
   public statusUpdate = new Event();
   protected _pluginCtx?: PluginContext;
 
