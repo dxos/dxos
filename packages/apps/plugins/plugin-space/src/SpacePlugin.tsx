@@ -14,7 +14,7 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
 import { AppState } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { type EchoObject, subscribe, type TypedObject } from '@dxos/echo-schema';
+import { type EchoObject, subscribe, TypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -49,7 +49,8 @@ import { createNodeId, isSpace, spaceToGraphNode } from './util';
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
 
-const hasIndex = (object: EchoObject): object is TypedObject => object instanceof TypedObject && object.meta.index !== undefined;
+const hasIndex = (object: EchoObject): object is TypedObject =>
+  object instanceof TypedObject && (object as TypedObject).meta.index !== undefined;
 
 const echoObjectCompare = (a: EchoObject, b: EchoObject) => {
   if (hasIndex(a) && hasIndex(b)) {
