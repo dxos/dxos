@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { MaybePromise } from '@dxos/util';
 import type { IconProps } from '@phosphor-icons/react';
-import { type FC } from 'react';
-
-// TODO(burdon): Consider making intents part of graph.
-//  (does it make sense to have trivially decomposed plugins that require each other)? Circular deps.
-import type { Intent } from '@braneframe/plugin-intent';
+import type { FC } from 'react';
 
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
 export type Label = string | [string, { ns: string; count?: number }];
@@ -36,11 +33,6 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   icon?: FC<IconProps>;
 
   /**
-   * Intent(s) to be invoked when the action is invoked.
-   */
-  intent?: Intent | Intent[];
-
-  /**
    * Key binding.
    * NOTE: Alphanumeric characters should be declared in lowercase.
    */
@@ -64,13 +56,13 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   // TODO(burdon): Why get vs. prop?
   get actions(): Action[];
 
-  invoke: () => Promise<any>;
+  invoke: () => MaybePromise<any>;
 
   addProperty(key: string, value: any): void;
   removeProperty(key: string): void;
 
   addAction<TActionProperties extends Record<string, any> = Record<string, any>>(
-    ...action: (Pick<Action, 'id' | 'label'> & Partial<Action<TActionProperties>>)[]
+    ...action: (Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TActionProperties>>)[]
   ): Action<TActionProperties>[];
   removeAction(id: string): Action;
 };

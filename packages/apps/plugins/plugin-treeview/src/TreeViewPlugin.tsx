@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph } from '@braneframe/plugin-graph';
+import { Graph } from '@dxos/app-graph';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 import { TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';

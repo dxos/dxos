@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection, FileSlide } from './components';
 import translations from './translations';
@@ -12,7 +13,7 @@ import { isFile, IPFS_PLUGIN, type IpfsPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: (object: TypedObject) => isFile(object), adapter: objectToGraphNode });
+  let adapter: GraphNodeAdapter<TypedObject> | undefined;
 
   return {
     meta: {
@@ -29,9 +30,18 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       //     return tile;
       //   });
       // }
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: (object: TypedObject) => isFile(object),
+          adapter: objectToGraphNode,
+        });
+      }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
@@ -43,7 +53,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
 
           const space = parent.data;
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
       component: (data, role) => {

@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-graph/src",
+  "sourceRoot": "packages/sdk/app-graph/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-graph/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-graph/tsconfig.json"
+        "main": "packages/sdk/app-graph/src/index.ts",
+        "outputPath": "packages/sdk/app-graph/dist/types",
+        "tsConfig": "packages/sdk/app-graph/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-graph/src/index.ts"
+          "packages/sdk/app-graph/src/index.ts",
+          "packages/sdk/app-graph/src/testing.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
+        "outputPath": "packages/sdk/app-graph/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.{js,jsx,ts,tsx}"
+          "packages/sdk/app-graph/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -46,20 +47,20 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-graph/.storybook"
+        "configDir": "packages/sdk/app-graph/.storybook"
       }
     },
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-graph",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-graph",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-graph",
+        "coveragePath": "coverage/packages/sdk/app-graph",
+        "outputPath": "tmp/mocha/packages/sdk/app-graph",
+        "resultsPath": "test-results/packages/sdk/app-graph",
         "testPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.test.{ts,js}"
+          "packages/sdk/app-graph/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*"
+          "packages/sdk/app-graph/src/**/*"
         ]
       },
       "outputs": [

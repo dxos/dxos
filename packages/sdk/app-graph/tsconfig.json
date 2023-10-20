@@ -5,11 +5,16 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
     ]
   },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
@@ -17,37 +22,28 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../experimental/gem-core"
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../sdk/app-graph"
+      "path": "../react-client"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
+      "path": "../react-surface"
     }
   ]
 }

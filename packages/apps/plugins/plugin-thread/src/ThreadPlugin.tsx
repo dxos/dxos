@@ -5,11 +5,12 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
@@ -21,47 +22,57 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: ThreadType.filter(), adapter: objectToGraphNode });
+  let adapter: GraphNodeAdapter<ThreadType> | undefined;
 
   return {
     meta: {
       id: THREAD_PLUGIN,
     },
+    ready: async (plugins) => {
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter: ThreadType.filter(), adapter: objectToGraphNode });
+      }
+    },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
 
           parent.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: THREAD_PLUGIN,
-                action: ThreadAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: THREAD_PLUGIN,
+                  action: ThreadAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: SplitViewAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'threadPlugin.createObject',
             },
           });
-          return adapter.createNodes(space, parent);
+
+          return adapter?.createNodes(space, parent);
         },
       },
       component: (data, role) => {
