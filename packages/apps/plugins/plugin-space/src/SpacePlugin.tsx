@@ -32,7 +32,7 @@ import {
   PopoverRenameSpace,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
-import { setAppStateIndex } from './helpers';
+import { getAppStateIndex, setAppStateIndex } from './helpers';
 import translations from './translations';
 import {
   SPACE_PLUGIN,
@@ -61,6 +61,27 @@ const echoObjectCompare = (a: EchoObject, b: EchoObject) => {
     return 0;
   }
   return 0;
+};
+
+const getNextSpaceIndex = (appState: AppState | undefined, client: ClientPluginProvides['client']) => {
+  const spaceCompare = (a: Space, b: Space) => {
+    const aIndex = getAppStateIndex(createNodeId(a.key), appState);
+    const bIndex = getAppStateIndex(createNodeId(b.key), appState);
+    if (aIndex && bIndex) {
+      if (aIndex < bIndex) {
+        return -1;
+      } else if (aIndex > bIndex) {
+        return 1;
+      }
+      return 0;
+    }
+    return 0;
+  };
+  const sortedSpaces = client.spaces
+    .get()
+    .filter((space) => getAppStateIndex(createNodeId(space.key)), appState)
+    .sort(spaceCompare);
+  return getIndexBelow(getAppStateIndex(createNodeId(sortedSpaces[0]?.key ?? 'never'), appState) ?? 'a0');
 };
 
 const getNextSpaceObjectIndex = (space: Space) => {
@@ -409,6 +430,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const space = await clientPlugin.provides.client.spaces.create(intent.data);
+              setAppStateIndex(
+                createNodeId(space.key),
+                getNextSpaceIndex(state.appState, clientPlugin.provides.client),
+                state.appState,
+              );
               return { space, id: createNodeId(space.key) };
             }
 
