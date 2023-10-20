@@ -114,7 +114,7 @@ export class DatabaseTestPeer {
 
     this.items = new ItemManager(this.modelFactory);
     this.proxy = new DatabaseProxy({
-      service: this.host.createDataServiceHost(),
+      service: this.host.createDataServiceHost({ deferEvents: false }),
       itemManager: this.items,
       spaceKey: this.spaceKey,
     });
