@@ -62,8 +62,8 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run: docker build -t job-image . -f .circleci/Dockerfile
-      - run: docker start job-image --name job-container
-      - run: docker exec job-container ls -la
+      - run: docker run --name job-container job-image 
+      - run: docker exec -t job-container ls -la
 
   #
   # NOTE: This job is required to complete before ALL PRs can be merged to main.
