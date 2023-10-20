@@ -7,7 +7,6 @@ import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import Mousetrap from 'mousetrap';
 
 import { EventSubscriptions } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 
 import { type Action } from './action';
 import { Graph } from './graph';
