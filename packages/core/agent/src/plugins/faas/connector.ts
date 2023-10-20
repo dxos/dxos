@@ -43,11 +43,13 @@ export class FaasConnector extends AbstractPlugin {
   async open() {
     await this._watchTriggers();
     this._remountTask.schedule();
+    this.statusUpdate.emit();
   }
 
   async close() {
     await this._ctx.dispose();
     await this._unmountTriggers();
+    this.statusUpdate.emit();
   }
 
   private async _watchTriggers() {

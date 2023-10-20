@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { type SearchResponse } from '@dxos/protocols/proto/dxos/agent/search';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
+import { Toolbar } from '@dxos/react-ui';
 
 import { JsonView, PanelContainer, Searchbar } from '../../../components';
 

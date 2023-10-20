@@ -82,22 +82,28 @@ export class DashboardPlugin extends AbstractPlugin {
       this._ctx.onDispose(() => this._rpc!.close());
     });
 
+    this.statusUpdate.emit();
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
 
   async close(): Promise<void> {
+    this.statusUpdate.emit();
     void this._ctx.dispose();
   }
 
   private _handleStatus(): Stream<AgentStatus> {
     invariant(this._pluginCtx, 'Client is undefined.');
+    log.info('Dashboard status request.');
+
     return new Stream<AgentStatus>(({ ctx, next, close, ready }) => {
+      log.info('Dashboard status stream opened.');
+
       const update = () => {
         next({
           status: AgentStatus.Status.ON,
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
             id: plugin.id,
-            status: 'OK',
+            config: plugin.config,
           })),
         });
       };

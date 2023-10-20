@@ -72,9 +72,11 @@ export class FunctionsPlugin extends AbstractPlugin {
     this._server.listen(port, () => {
       console.log('functions server listening', { port });
     });
+    this.statusUpdate.emit();
   }
 
   async close() {
     this.host.serviceRegistry.removeService('FunctionRegistryService');
+    this.statusUpdate.emit();
   }
 }

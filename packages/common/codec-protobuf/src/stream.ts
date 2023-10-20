@@ -307,6 +307,7 @@ export class Stream<T> {
    * Close the stream and dispose of any resources.
    */
   async close() {
+    log.info('Closing stream...');
     if (this._isClosed) {
       return;
     }

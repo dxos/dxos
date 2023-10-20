@@ -93,10 +93,12 @@ export class EchoProxyServer extends AbstractPlugin {
     this._server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
+    this.statusUpdate.emit();
   }
 
   async close() {
     this._server?.close();
     this._server = undefined;
+    this.statusUpdate.emit();
   }
 }

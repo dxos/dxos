@@ -36,7 +36,7 @@ export abstract class AbstractPlugin implements Plugin {
    */
   abstract id: string;
   public statusUpdate = new Event();
-  protected _pluginConfig?: Record<string, any>;
+  protected _pluginConfig!: Record<string, any>;
   protected _pluginCtx?: PluginContext;
 
   get host(): ClientServicesHost {
@@ -44,13 +44,13 @@ export abstract class AbstractPlugin implements Plugin {
   }
 
   get config(): Record<string, any> {
-    return this._pluginConfig ?? failUndefined();
+    return this._pluginConfig;
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     this._pluginCtx = pluginCtx;
-    await this.setConfig((this._pluginCtx.client.config.values.runtime?.agent?.plugins as any)[this.id]);
+    await this.setConfig((this._pluginCtx.client.config.values.runtime?.agent?.plugins as any)?.[this.id] ?? {});
   }
 
   async setConfig(config: Record<string, any>) {

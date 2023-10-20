@@ -82,6 +82,7 @@ export class Search extends AbstractPlugin {
     });
 
     this._indexSpaces().catch((error: Error) => log.catch(error));
+    this.statusUpdate.emit();
   }
 
   async close(): Promise<void> {
@@ -89,6 +90,7 @@ export class Search extends AbstractPlugin {
     this._spaceIndexes.clear();
     this._indexedObjects.clear();
     void this._ctx.dispose();
+    this.statusUpdate.emit();
   }
 
   // TODO(mykola): Save index periodically.

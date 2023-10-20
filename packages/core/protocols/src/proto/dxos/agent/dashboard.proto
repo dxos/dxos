@@ -18,7 +18,7 @@ message AgentStatus {
 
   message Plugin {
     string id = 1;
-    string status = 2;
+    optional google.protobuf.Struct config = 3;
   }
   
   Status status = 1;
