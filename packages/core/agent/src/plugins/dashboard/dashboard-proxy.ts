@@ -9,7 +9,7 @@ import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { CHANNEL_NAME, type ServiceBundle } from './dashboard-plugin';
 import { getGossipRPCPort } from './utils';
 
-export class Dashboard {
+export class DashboardProxy {
   private readonly client: Client;
   private readonly _rpc: ProtoRpcPeer<ServiceBundle>;
 

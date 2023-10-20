@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Dashboard } from './dashboard';
 import { DashboardPlugin } from './dashboard-plugin';
+import { DashboardProxy } from './dashboard-proxy';
 
 describe('DashboardPlugin', () => {
   test('Dashboard proxy', async () => {
@@ -42,7 +42,7 @@ describe('DashboardPlugin', () => {
 
     await asyncTimeout(client2.spaces.isReady.wait(), 1000);
     await asyncTimeout(client1.spaces.default.waitUntilReady(), 1000);
-    const dashboardProxy = new Dashboard({ client: client2 });
+    const dashboardProxy = new DashboardProxy({ client: client2 });
     await dashboardProxy.open();
     afterTest(() => dashboardProxy.close());
 
