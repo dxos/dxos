@@ -23,7 +23,7 @@ export interface Plugin {
 }
 
 export abstract class AbstractPlugin implements Plugin {
-  public id: string = this.constructor.name;
+  public id: string = this.constructor.name.replace(/^[A-Z]/, (letter) => `${letter.toLowerCase()}`);
   public statusUpdate = new Event();
   protected _pluginCtx?: PluginContext;
 
