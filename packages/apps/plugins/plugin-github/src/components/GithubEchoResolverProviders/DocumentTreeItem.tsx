@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type Document } from '@braneframe/types';
 import { useTranslation, TreeItem } from '@dxos/react-ui';
-import { TextKind } from '@dxos/react-ui-composer';
+import { TextKind } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { GITHUB_PLUGIN } from '../../props';
