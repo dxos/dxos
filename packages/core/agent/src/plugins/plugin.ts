@@ -17,6 +17,10 @@ export type PluginContext = {
 export interface Plugin {
   id: string;
   statusUpdate: Event<void>;
+
+  /**
+   * Plugin DXOS config defined in `runtime.agent.plugin.<plugin_id>`. Inside plugin only that config should be used.
+   */
   config: Record<string, any>;
 
   initialize(pluginCtx: PluginContext): Promise<void>;
