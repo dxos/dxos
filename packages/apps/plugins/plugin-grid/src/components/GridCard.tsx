@@ -6,7 +6,7 @@ import React, { forwardRef } from 'react';
 
 import { type Text } from '@dxos/client/echo';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
-import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
+import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 

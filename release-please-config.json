@@ -644,7 +644,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-composer/package.json",
+          "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
         {

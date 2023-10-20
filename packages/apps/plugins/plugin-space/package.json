@@ -23,7 +23,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-react": "^1.3.6",
