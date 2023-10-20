@@ -4,6 +4,7 @@
 
 import { Duplex } from 'node:stream';
 
+import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 import { type RpcPort } from './rpc-port';
@@ -23,6 +24,10 @@ export class Framer {
 
   private _bytesSent = 0;
   private _bytesReceived = 0;
+
+  private _writable = true;
+
+  readonly drain = new Event();
 
   private readonly _stream = new Duplex({
     objectMode: false,
@@ -60,8 +65,8 @@ export class Framer {
       return new Promise<void>((resolve) => {
         const frame = encodeFrame(message);
         this._bytesSent += frame.length;
-        const canContinue = this._stream.push(frame);
-        if (!canContinue) {
+        this._writable = this._stream.push(frame);
+        if (!this._writable) {
           this._sendCallbacks.push(resolve);
         } else {
           resolve();
@@ -90,9 +95,15 @@ export class Framer {
     return this._bytesReceived;
   }
 
+  get writable() {
+    return this._writable;
+  }
+
   private _processResponseQueue() {
     const responseQueue = this._sendCallbacks;
     this._sendCallbacks = [];
+    this._writable = true;
+    this.drain.emit();
     responseQueue.forEach((cb) => cb());
   }
 

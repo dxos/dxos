@@ -327,7 +327,7 @@ export class Muxer {
   private async _sendCommand(cmd: Command, channelId = -1) {
     try {
       const trigger = new Trigger<void>();
-      await this._balancer.pushData(Command.encode(cmd), trigger, channelId);
+      this._balancer.pushData(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
       await this.destroy(err);

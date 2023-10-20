@@ -4,8 +4,8 @@
 
 import * as varint from 'varint';
 
-import { type Trigger, Event } from '@dxos/async';
-import { log } from '@dxos/log';
+import { type Trigger, Event, DeferredTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 
 import { Framer } from './framer';
 
@@ -42,6 +42,8 @@ export class Balancer {
   private readonly _sendBuffers: Map<number, ChunkEnvelope[]> = new Map();
   private readonly _receiveBuffers = new Map<number, ChannelBuffer>();
 
+  private _sendChunkTask: DeferredTask;
+
   public incomingData = new Event<Uint8Array>();
   public readonly stream = this._framer.stream;
 
@@ -50,6 +52,7 @@ export class Balancer {
 
     // Handle incoming messages.
     this._framer.port.subscribe(this._processIncomingMessage.bind(this));
+    this._sendChunkTask = new DeferredTask(new Context(), () => this._sendChunks());
   }
 
   get bytesSent() {
@@ -60,11 +63,15 @@ export class Balancer {
     return this._framer.bytesReceived;
   }
 
+  get buffersCount() {
+    return this._sendBuffers.size;
+  }
+
   addChannel(channel: number) {
     this._channels.push(channel);
   }
 
-  async pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
+  pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
     const noCalls = this._sendBuffers.size === 0;
 
     if (!this._channels.includes(channelId)) {
@@ -93,11 +100,7 @@ export class Balancer {
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      try {
-        await this._sendChunks();
-      } catch (err: any) {
-        log.catch(err);
-      }
+      this._sendChunkTask.schedule();
     }
   }
 
@@ -162,6 +165,10 @@ export class Balancer {
       return;
     }
 
+    if (!this._framer.writable) {
+      await this._framer.drain.waitForCount(1);
+    }
+
     const chunk = this._getNextChunk();
 
     try {
@@ -171,7 +178,7 @@ export class Balancer {
       chunk.trigger?.throw(err);
     }
 
-    await this._sendChunks();
+    this._sendChunkTask.schedule();
   }
 }
 
