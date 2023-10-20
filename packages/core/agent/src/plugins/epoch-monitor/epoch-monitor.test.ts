@@ -54,6 +54,6 @@ describe('EpochMonitor', () => {
   }).tag('flaky');
 
   test('id', async () => {
-    expect(monitor.id).to.equal('EpochMonitor');
+    expect(monitor.id).to.equal('epochMonitor');
   });
 });

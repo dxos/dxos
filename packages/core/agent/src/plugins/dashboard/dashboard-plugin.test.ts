@@ -63,6 +63,6 @@ describe('DashboardPlugin', () => {
 
   test('id', async () => {
     const plugin = new DashboardPlugin();
-    expect(plugin.id).to.equal('DashboardPlugin');
+    expect(plugin.id).to.equal('dashboardPlugin');
   });
 });
