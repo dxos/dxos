@@ -23,6 +23,7 @@ type MountedTrigger = {
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
  */
 export class FaasConnector extends AbstractPlugin {
+  public readonly id = 'faasConnector';
   private readonly _ctx = new Context();
 
   // TODO(burdon): Factor out triggers.

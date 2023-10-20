@@ -18,6 +18,7 @@ export type ProxyServerOptions = {
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
 export class EchoProxyServer extends AbstractPlugin {
+  public readonly id = 'echoProxyServer';
   private _server?: http.Server;
 
   constructor(private readonly _options: ProxyServerOptions) {
