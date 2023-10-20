@@ -10,7 +10,6 @@ import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Grid as GridType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { GridMain } from './components';
 import translations from './translations';
@@ -62,14 +61,6 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
           return adapter.createNodes(space, parent);
         },
-      },
-      context: ({ children }) => {
-        return (
-          <Mosaic.Root>
-            <Mosaic.DragOverlay />
-            {children}
-          </Mosaic.Root>
-        );
       },
       component: (data, role) => {
         if (!data || typeof data !== 'object' || !isGrid(data)) {
