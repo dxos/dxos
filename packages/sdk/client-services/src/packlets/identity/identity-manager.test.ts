@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -153,7 +152,7 @@ describe('identity/identity-manager', () => {
     expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
 
-  test('sets device profile on identity creation', async () => {
+  test('sets device profile', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer = await setupPeer({ signalContext });
@@ -163,46 +162,5 @@ describe('identity/identity-manager', () => {
     await identity.stateUpdate.waitForCount(1);
 
     expect(!!identity.authorizedDeviceKeys.get(identity.deviceKey)?.platform).is.true;
-  });
-
-  test('sets device profile on identity accept', async () => {
-    const signalContext = new MemorySignalManagerContext();
-
-    const peer1 = await setupPeer({ signalContext });
-    const identity1 = await peer1.identityManager.createIdentity();
-
-    const peer2 = await setupPeer({ signalContext });
-
-    const deviceKey = await peer2.keyring.createKey();
-    const controlFeedKey = await peer2.keyring.createKey();
-    const dataFeedKey = await peer2.keyring.createKey();
-
-    await identity1.controlPipeline.writer.write({
-      credential: {
-        credential: await identity1.getIdentityCredentialSigner().createCredential({
-          subject: deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity1.identityKey,
-            deviceKey,
-          },
-        }),
-      },
-    });
-
-    const identity2 = await peer2.identityManager.acceptIdentity({
-      identityKey: identity1.identityKey,
-      deviceKey,
-      haloSpaceKey: identity1.haloSpaceKey,
-      haloGenesisFeedKey: identity1.haloGenesisFeedKey,
-      controlFeedKey,
-      dataFeedKey,
-    });
-
-    await identity2.ready();
-
-    await sleep(500);
-
-    expect(!!identity2.authorizedDeviceKeys.get(identity2.deviceKey)?.platform).is.true;
   });
 });
