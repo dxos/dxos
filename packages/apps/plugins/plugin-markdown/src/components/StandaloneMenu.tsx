@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, type RefObject } from 'react';
 
 import { Surface } from '@dxos/react-surface';
 import { Button, DropdownMenu } from '@dxos/react-ui';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-composer';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
 import { fineButtonDimensions, getSize } from '@dxos/react-ui-theme';
 
 import { type MarkdownProperties } from '../types';

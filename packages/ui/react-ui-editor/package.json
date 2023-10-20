@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-composer",
+  "name": "@dxos/react-ui-editor",
   "version": "0.3.2",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",

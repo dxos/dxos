@@ -6,7 +6,7 @@ import React from 'react';
 
 import { usePlugin } from '@dxos/react-surface';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { EditorModes } from '@dxos/react-ui-composer';
+import { EditorModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN, type MarkdownPluginProvides } from '../types';
 

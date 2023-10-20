@@ -22,7 +22,7 @@ import {
   type MarkdownComposerProps,
   type MarkdownComposerRef,
   useTextModel,
-} from '@dxos/react-ui-composer';
+} from '@dxos/react-ui-editor';
 
 import {
   EditorMain,

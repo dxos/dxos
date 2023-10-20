@@ -10,7 +10,7 @@ import { type Node } from '@braneframe/plugin-graph';
 import { type Document } from '@braneframe/types';
 import { type Space, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { type Plugin } from '@dxos/react-surface';
-import { type ComposerModel, TextKind, YText } from '@dxos/react-ui-composer';
+import { type ComposerModel, TextKind, YText } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN, type MarkdownProperties, type MarkdownProvides } from './types';
 
