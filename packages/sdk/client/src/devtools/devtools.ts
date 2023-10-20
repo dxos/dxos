@@ -26,6 +26,8 @@ export interface DevtoolsHook {
   feeds?: Accessor<FeedWrapper>;
 
   openClientRpcServer: () => Promise<boolean>;
+
+  openDevtoolsApp?: () => void;
 }
 
 export type MountOptions = {
@@ -81,6 +83,24 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
           ]),
         ),
     });
+
+    hook.openDevtoolsApp = async () => {
+      const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+
+      // Check if we're serving devtools locally on the usual port.
+      let hasLocalDevtools = false;
+      try {
+        await fetch('http://localhost:5174/');
+        hasLocalDevtools = true;
+      } catch {}
+
+      const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
+      const devtoolsApp = hasLocalDevtools
+        ? 'http://localhost:5174/'
+        : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
+      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      window.open(devtoolsUrl, '_blank');
+    };
   }
   if (host) {
     hook.spaces = createAccessor({
