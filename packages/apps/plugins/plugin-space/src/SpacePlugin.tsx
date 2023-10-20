@@ -493,7 +493,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   'dxos.org/plugin/space/RenameObjectPopover',
                   object,
                 ];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${intent.data.objectId}`;
+                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/ui/navtree/${intent.data.objectId}`;
                 return true;
               }
               break;
