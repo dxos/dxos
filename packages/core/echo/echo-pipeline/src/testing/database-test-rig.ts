@@ -114,7 +114,7 @@ export class DatabaseTestPeer {
 
     this.items = new ItemManager(this.modelFactory);
     this.proxy = new DatabaseProxy({
-      service: this.host.createDataServiceHost(),
+      service: this.host.createDataServiceHost({ deferEvents: false }),
       itemManager: this.items,
       spaceKey: this.spaceKey,
     });
@@ -217,7 +217,7 @@ export class DatabaseTestPeer {
       .filter(isNotNullOrUndefined);
   }
 
-  private _processMessages(to: Timeframe) {
+  private async _processMessages(to: Timeframe) {
     let run = true;
     while (run) {
       run = false;
@@ -251,6 +251,7 @@ export class DatabaseTestPeer {
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }
     }
+    this.host.createDataServiceHost
   }
 
   getModel(id: string): DocumentModel | TextModel | undefined {

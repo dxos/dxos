@@ -18,6 +18,13 @@ import { ComplexMap } from '@dxos/util';
 // After this limit the incremental object updates will be replaced with the full snapshot of the object.
 const MUTATION_LIMIT_PER_OBJECT = 10;
 
+export type DataServiceHostOptions = {
+  /**
+   * @default true
+   */
+  deferEvents?: boolean;
+}
+
 /**
  * Provides methods for DataService for a single space.
  * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on space id.
@@ -34,13 +41,18 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _flush: () => Promise<void>,
-    private readonly _writeStream?: FeedWriter<DataMessage>,
+    private readonly _writeStream: FeedWriter<DataMessage> | undefined,
+    private readonly _opts: DataServiceHostOptions = {},
   ) {}
 
   async open() {}
 
   async close() {
     await this._ctx.dispose();
+  }
+
+  private get _deferEvents(): boolean {
+    return this._opts.deferEvents ?? true;
   }
 
   /**
@@ -151,7 +163,11 @@ export class DataServiceHost {
             }
           }
 
-          updateScheduler.trigger();
+          if(this._deferEvents) {
+            updateScheduler.trigger();
+          } else {
+            flushPendingUpdate();
+          }
         }
       });
     });
