@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject, type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { type EchoObject, type EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, type MutationReceipt, type WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
-import { ComplexMap, defaultMap, entry } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
-// After this limit the incremental object updates will be replaced with the full snapshot of the object. 
+// After this limit the incremental object updates will be replaced with the full snapshot of the object.
 const MUTATION_LIMIT_PER_OBJECT = 10;
 
 /**
@@ -59,46 +59,50 @@ export class DataServiceHost {
         },
       });
 
-      const updateScheduler = new UpdateScheduler(ctx, async () => {
-        flushPendingUpdate();
-      }, {
-        maxFrequency: 10,
-      })
+      const updateScheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          flushPendingUpdate();
+        },
+        {
+          maxFrequency: 10,
+        },
+      );
 
-      let pendingUpdates: EchoObject[] = [];
+      const pendingUpdates: EchoObject[] = [];
       const mutationsPerObject = new Map<string, number>();
 
       const clearPendingUpdates = () => {
         pendingUpdates.length = 0;
         mutationsPerObject.clear();
-      }
+      };
 
       const flushPendingUpdate = () => {
-        const stagedEvents: EchoObject[] = []
+        const stagedEvents: EchoObject[] = [];
         const objectsWithSnapshots = new Set<string>();
-        for(const [id, count] of mutationsPerObject) {
-          if(count >= MUTATION_LIMIT_PER_OBJECT) {
+        for (const [id, count] of mutationsPerObject) {
+          if (count >= MUTATION_LIMIT_PER_OBJECT) {
             objectsWithSnapshots.add(id);
             const entity = this._itemManager.entities.get(id);
-            if(entity) {
+            if (entity) {
               stagedEvents.push(entity.createSnapshot());
             }
           }
         }
-        
-        for(const obj of pendingUpdates) {
-          if(!objectsWithSnapshots.has(obj.objectId)) {
+
+        for (const obj of pendingUpdates) {
+          if (!objectsWithSnapshots.has(obj.objectId)) {
             stagedEvents.push(obj);
           }
         }
 
         next({
           batch: {
-            objects: stagedEvents
+            objects: stagedEvents,
           },
         });
         clearPendingUpdates();
-      }
+      };
 
       // Subscribe to clear events on Epoch processing.
       this._itemDemuxer.snapshot.on(ctx, (snapshot) => {
@@ -128,7 +132,7 @@ export class DataServiceHost {
           flushPendingUpdate();
 
           tagMutationsInBatch(batch, clientTag, 0);
-          
+
           next({
             clientTag,
             feedKey: message.meta.feedKey,
@@ -136,13 +140,13 @@ export class DataServiceHost {
             batch,
           });
         } else {
-          for(const obj of batch.objects ?? []) {
+          for (const obj of batch.objects ?? []) {
             const newCount = (mutationsPerObject.get(obj.objectId) ?? 0) + 1;
             mutationsPerObject.set(obj.objectId, newCount);
           }
 
-          for(const obj of batch.objects ?? []) {
-            if((mutationsPerObject.get(obj.objectId) ?? 0) < MUTATION_LIMIT_PER_OBJECT) {
+          for (const obj of batch.objects ?? []) {
+            if ((mutationsPerObject.get(obj.objectId) ?? 0) < MUTATION_LIMIT_PER_OBJECT) {
               pendingUpdates.push(obj);
             }
           }

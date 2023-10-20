@@ -29,7 +29,7 @@ export class MapCounter extends BaseCounter {
           value,
         })),
         units: this.units,
-      }
+      },
     };
   }
 }
