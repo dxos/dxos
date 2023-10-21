@@ -1434,6 +1434,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/react-ui-mosaic': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
@@ -1446,8 +1447,6 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/debug': link:../../../common/debug
-      '@dxos/react-ui': link:../../../ui/react-ui
-      '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
@@ -1457,6 +1456,9 @@ importers:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@dxos/react-ui': link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic': link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21

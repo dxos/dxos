@@ -2,12 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, forwardRef } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
+
+export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
+
+export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
+  ({ draggableStyle, draggableProps, item }, forwardRef) => {
+    const { id, label, snippet, match, selected, onSelect } = item;
+    return (
+      <Card.Root
+        ref={forwardRef}
+        style={draggableStyle}
+        classNames={mx('shadow-none rounded-none cursor-pointer hover:bg-neutral-50', selected && 'bg-teal-100')}
+        onClick={() => onSelect?.(id)}
+      >
+        <Card.Header>
+          <Card.DragHandle {...draggableProps} />
+          <Card.Title title={label ?? 'Untitled'} />
+        </Card.Header>
+        {snippet && (
+          <Card.Body gutter>
+            <Snippet text={snippet} match={match} />
+          </Card.Body>
+        )}
+      </Card.Root>
+    );
+  },
+);
 
 export type SearchResultsProps = {
   match?: RegExp;
@@ -18,31 +45,22 @@ export type SearchResultsProps = {
 
 // TODO(burdon): Key cursor up/down.
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
+  const path = 'search';
   return (
     <ScrollArea.Root classNames={['grow', inputSurface]}>
       <ScrollArea.Viewport>
         <div className='flex flex-col divide-y'>
-          {items.map(({ id, label, match, snippet }) => (
-            // TODO(burdon): Draggable.
-            <Card.Root
-              key={id}
-              classNames={mx(
-                'shadow-none rounded-none cursor-pointer hover:bg-neutral-50',
-                selected === id && 'bg-teal-100',
-              )}
-              onClick={() => onSelect?.(id)}
-            >
-              <Card.Header>
-                <Card.DragHandle />
-                <Card.Title title={label ?? 'Untitled'} />
-              </Card.Header>
-              {snippet && (
-                <Card.Body gutter>
-                  <Snippet text={snippet} match={match} />
-                </Card.Body>
-              )}
-            </Card.Root>
-          ))}
+          {/* TODO(burdon): ID. */}
+          <Mosaic.Container id={path} Component={SearchItem}>
+            {items.map((item) => (
+              <Mosaic.DraggableTile
+                key={item.id}
+                path={path}
+                item={{ ...item, selected: selected === item.id, onSelect }}
+                Component={SearchItem}
+              />
+            ))}
+          </Mosaic.Container>
         </div>
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
@@ -53,7 +71,7 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
   );
 };
 
-const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
+export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
   let content = <>{text}</>;
   if (match) {
     const result = text.match(match);
@@ -63,7 +81,7 @@ const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
       let before = text.slice(0, result.index);
       if (before.length > maxOffset) {
         const idx = before.indexOf(' ', result.index - maxOffset);
-        before = '... ' + before.slice(idx); // TODO(burdon): Use ellipsis symbol.
+        before = '… ' + before.slice(idx);
       }
 
       const after = text.slice(result.index + result[0].length);
