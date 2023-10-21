@@ -139,7 +139,6 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await openAndCloseAfterTest([peer1, peer2]);
 
     const topic = PublicKey.random();
-
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
     await exchangeMessages(swarm1, swarm2);
 
@@ -167,7 +166,6 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await waitForExpect(() => {
       expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
-
       expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
     }, 2_000);
 

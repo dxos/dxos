@@ -4,6 +4,7 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
+import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
 import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
@@ -16,6 +17,8 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
 
 const EMPTY_ROW_ID = '__new';
+
+// TODO(burdon): Hanging edit missing if no initial rows.
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const [, forceUpdate] = useState({});
@@ -33,9 +36,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
-  console.log(table);
-
-  const rows = [...objects, {} as any];
+  const rows = useFilteredObjects(objects);
 
   const updateSchemaProp = (update: SchemaType.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);

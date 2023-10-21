@@ -21,19 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../../common/util"
+      "path": "../../../common/debug"
     },
     {
       "path": "../../../sdk/client"
-    },
-    {
-      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"
@@ -42,19 +33,13 @@
       "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/react-ui-table"
-    },
-    {
       "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
+      "path": "../plugin-dnd"
     },
     {
       "path": "../plugin-graph"
@@ -63,16 +48,7 @@
       "path": "../plugin-intent"
     },
     {
-      "path": "../plugin-search"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

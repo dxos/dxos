@@ -131,8 +131,6 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   side: 'inline-start' | 'inline-end';
 };
 
-// TODO(burdon): Factor out Sidebar?
-// TODO(burdon): Style left/right sidebar differently.
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ({ classNames, children, swipeToDismiss, onOpenAutoFocus, open, setOpen, side, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -259,9 +257,9 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
 });
 
 export const Main = {
+  Root: MainRoot,
   Content: MainContent,
   Overlay: MainOverlay,
-  Root: MainRoot,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
 };
