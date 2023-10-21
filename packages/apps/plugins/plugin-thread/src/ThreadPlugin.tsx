@@ -67,14 +67,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       component: (data, role) => {
         switch (role) {
           case 'main': {
-            if (!data || typeof data !== 'object' || !isThread(data)) {
+            if (!isThread(data)) {
               return null;
             }
 
             return ThreadMain;
           }
 
-          case 'complementary':
+          case 'context-thread':
             return ThreadSidebar;
         }
       },
