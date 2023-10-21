@@ -77,14 +77,19 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
         // TODO(burdon): Pass in history.
         // TODO(burdon): Error handling (e.g., 401);
-        const chatContents: ChatCompletionRequestMessage[] = [
-          ENABLE_SCHEMA ? createPrompt(schemas) : undefined,
+        const chatContents: ChatCompletionRequestMessage[] = [];
+
+        if (ENABLE_SCHEMA) {
+          chatContents.push(...createPrompt(schemas));
+        }
+
+        chatContents.push(
           ...block.messages.map((message): ChatCompletionRequestMessage => {
             let content = '';
-            const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
-            if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
-              content += '\n' + 'I am playing chess. And current game history is: ' + contextObject.pgn + '.\n';
-            }
+            // const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
+            // if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
+            //   content += '\n' + 'I am playing chess. And current game history is: ' + contextObject.pgn + '.\n';
+            // }
 
             if (message.text) {
               content += message.text + '\n';
@@ -92,12 +97,14 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
             return { role: 'user', content };
           }),
-        ].filter(Boolean) as ChatCompletionRequestMessage[];
+        );
 
         log.info('request', { chatContents });
+        console.log('request', chatContents);
         const { content } = (await model.request(chatContents)) ?? {};
 
         log.info('response', { content });
+        console.log('response', content);
         if (content) {
           const timestamp = new Date().toISOString();
           const messages = [];
@@ -107,9 +114,9 @@ export default async (event: HandlerProps, context: FunctionContext) => {
             const { pre, data, post } = result;
             pre && messages.push({ timestamp, text: pre });
 
-            const datas = Array.isArray(data) ? data : [data];
+            const dataArray = Array.isArray(data) ? data : [data];
             messages.push(
-              ...datas.map((data): Thread.Message => {
+              ...dataArray.map((data): Thread.Message => {
                 if (typeof data['@type'] === 'string') {
                   const Proto = context.client.experimental.types.getPrototype(data['@type']);
                   const schema = context.client.experimental.types.getSchema(data['@type']);

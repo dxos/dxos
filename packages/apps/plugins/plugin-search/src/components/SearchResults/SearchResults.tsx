@@ -15,6 +15,7 @@ export type SearchItemProps = SearchResult & { selected: boolean } & Pick<Search
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
   ({ draggableStyle, draggableProps, item }, forwardRef) => {
     const { id, label, snippet, match, selected, onSelect } = item;
+
     return (
       <Card.Root
         ref={forwardRef}
