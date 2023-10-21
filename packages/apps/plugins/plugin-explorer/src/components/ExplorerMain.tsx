@@ -5,9 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { type View as ViewType } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { Graph, Markers } from '@dxos/gem-spore';
-import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
+import { Graph, type GraphData, GraphModel, Markers } from '@dxos/gem-spore';
+import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '@dxos/gem-spore/testing';
 import { useClient } from '@dxos/react-client';
 import { type PluginComponentProps } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
@@ -23,10 +24,7 @@ const slots: Slots = {};
 export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
   const client = useClient();
   const space = client.spaces.default; // TODO(burdon): Get from data object.
-
-  // TODO(burdon): Model; anchor on selected item.
-  const { objects } = space.db.query();
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+  const model = useMemo(() => new EchoGraphModel(space), [space]);
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
@@ -42,3 +40,15 @@ export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
     </Main.Content>
   );
 };
+
+export class EchoGraphModel extends GraphModel<TestNode> {
+  private _model = new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })));
+
+  constructor(private readonly _space: Space) {
+    super();
+  }
+
+  override get graph(): GraphData<TestNode> {
+    return this._model.graph;
+  }
+}
