@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { List, ListItem, ScrollArea } from '@dxos/react-ui';
-import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
+import { Card, ScrollArea } from '@dxos/react-ui';
+import { inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
 
@@ -18,37 +17,33 @@ export type SearchResultsProps = {
 };
 
 // TODO(burdon): Key cursor up/down.
-export const SearchResults = ({ match, items, selected, onSelect }: SearchResultsProps) => {
+export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   return (
-    // TODO(burdon): Truncate doesn't work with ScrollArea (since display:table).
     <ScrollArea.Root classNames={['grow', inputSurface]}>
       <ScrollArea.Viewport>
-        <List>
-          {items.map(({ id, label, match, snippet, Icon = Circle }) => (
-            <ListItem.Root
+        <div className='flex flex-col divide-y'>
+          {items.map(({ id, label, match, snippet }) => (
+            // TODO(burdon): Draggable.
+            <Card.Root
               key={id}
-              // TODO(burdon): Standardize select/hover colors.
-              classNames={mx('group cursor-pointer hover:bg-neutral-50', selected === id && '!bg-teal-200')}
+              classNames={mx(
+                'shadow-none rounded-none cursor-pointer hover:bg-neutral-50',
+                selected === id && 'bg-teal-100',
+              )}
               onClick={() => onSelect?.(id)}
             >
-              <ListItem.Endcap>
-                <Icon
-                  className={mx(
-                    getSize(5),
-                    'mbs-2.5 text-neutral-500 group-hover:text-red-500',
-                    selected === id && 'text-red-500',
-                  )}
-                />
-              </ListItem.Endcap>
-              <ListItem.Heading classNames='grow pbs-2'>
-                <div className='flex flex-col overflow-hidden'>
-                  <div className='truncate'>{label}</div>
-                  {snippet && <Snippet text={snippet} match={match} />}
-                </div>
-              </ListItem.Heading>
-            </ListItem.Root>
+              <Card.Header>
+                <Card.DragHandle />
+                <Card.Title title={label ?? 'Untitled'} />
+              </Card.Header>
+              {snippet && (
+                <Card.Body gutter>
+                  <Snippet text={snippet} match={match} />
+                </Card.Body>
+              )}
+            </Card.Root>
           ))}
-        </List>
+        </div>
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
