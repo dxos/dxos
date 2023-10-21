@@ -3,7 +3,6 @@
 //
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
-
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 import { faker } from '@faker-js/faker';

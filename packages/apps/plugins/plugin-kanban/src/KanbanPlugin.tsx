@@ -54,7 +54,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'kanbanPlugin.createKanban',
+              testId: 'kanbanPlugin.createObject',
             },
           });
 

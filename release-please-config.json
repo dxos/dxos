@@ -64,6 +64,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-files/package.json",
           "jsonpath": "$.version"
         },

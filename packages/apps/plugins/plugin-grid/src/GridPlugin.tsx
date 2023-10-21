@@ -54,8 +54,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
               },
             ],
             properties: {
-              // TODO(burdon): Change all to gridPlugin.create.
-              testId: 'gridPlugin.createGrid',
+              testId: 'gridPlugin.createObject',
             },
           });
 

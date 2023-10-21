@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/echo-generator/src/packlets/**/*.{ts,js}?(x)"
+          "packages/core/echo/echo-generator/src/**/*.{ts,js}?(x)"
         ],
         "quiet": true
       },
