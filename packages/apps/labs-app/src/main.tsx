@@ -12,6 +12,7 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
+import { ExplorerPlugin } from '@braneframe/plugin-explorer';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
@@ -120,6 +121,7 @@ const main = async () => {
           StackPlugin(),
           TablePlugin(),
           ThreadPlugin(),
+          ExplorerPlugin(),
           ChessPlugin(),
         ]}
       />
