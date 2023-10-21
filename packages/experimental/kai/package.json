@@ -10,7 +10,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",

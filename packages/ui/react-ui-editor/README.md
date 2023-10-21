@@ -1,11 +1,11 @@
-# @dxos/react-ui-composer
+# @dxos/react-ui-editor
 
 Document editing experience within a DXOS shell.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-ui-composer
+pnpm i @dxos/react-ui-editor
 ```
 
 ## DXOS Resources

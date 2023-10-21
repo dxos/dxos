@@ -53,7 +53,7 @@ row: {
 // TODO(burdon): Scrollbar area.
 // TODO(burdon): Overscroll horizontal (full width).
 
-// TODO(burdon): Integrate with DXOS UI theme (direct dependency -- see react-ui-composer, tailwind.ts).
+// TODO(burdon): Integrate with DXOS UI theme (direct dependency -- see react-ui-editor, tailwind.ts).
 //  See Link.tsx const { tx } = useThemeContext();
 //  Reuse button fragments for hoverColors, selected, primary, etc.
 export const defaultTableSlots: TableSlots = {

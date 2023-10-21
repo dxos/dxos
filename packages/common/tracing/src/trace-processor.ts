@@ -52,7 +52,7 @@ export type TraceSubscription = {
   newLogs: LogEntry[];
 };
 
-const MAX_RESOURCE_RECORDS = 500;
+const MAX_RESOURCE_RECORDS = 2_000;
 const MAX_SPAN_RECORDS = 1_000;
 const MAX_LOG_RECORDS = 1_000;
 

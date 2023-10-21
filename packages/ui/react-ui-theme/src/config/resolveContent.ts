@@ -12,7 +12,7 @@ const knownPeerPackages = [
   '@dxos/react-appkit',
   '@dxos/react-shell',
   '@dxos/react-surface',
-  '@dxos/react-ui-composer',
+  '@dxos/react-ui-editor',
   '@dxos/react-ui-navtree',
 ];
 

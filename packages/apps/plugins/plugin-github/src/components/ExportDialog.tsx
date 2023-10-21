@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/react-ui';
-import { type ComposerModel } from '@dxos/react-ui-composer';
+import { type ComposerModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { type ExportViewState, GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier } from '../props';
