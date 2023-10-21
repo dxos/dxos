@@ -7,30 +7,21 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
+import { View as ViewType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
 
-import { MapMain } from './components';
+import { ExplorerMain } from './components';
 import translations from './translations';
-import { isObject, MAP_PLUGIN, MapAction, type MapPluginProvides } from './types';
+import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
 import { objectToGraphNode } from './util';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[Expando.name] = Expando;
-
-export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
+export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
+  const adapter = new GraphNodeAdapter({ filter: ViewType.filter(), adapter: objectToGraphNode });
 
   return {
     meta: {
-      id: MAP_PLUGIN,
-    },
-    unload: async () => {
-      adapter.clear();
+      id: EXPLORER_PLUGIN,
     },
     provides: {
       translations,
@@ -42,14 +33,15 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
           const space = parent.data;
 
+          // TODO(burdon): Util.
           parent.addAction({
-            id: `${MAP_PLUGIN}/create`,
-            label: ['create object label', { ns: MAP_PLUGIN }],
+            id: `${EXPLORER_PLUGIN}/create`,
+            label: ['create object label', { ns: EXPLORER_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             intent: [
               {
-                plugin: MAP_PLUGIN,
-                action: MapAction.CREATE,
+                plugin: EXPLORER_PLUGIN,
+                action: ExplorerAction.CREATE,
               },
               {
                 action: SpaceAction.ADD_OBJECT,
@@ -60,7 +52,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'mapPlugin.createObject',
+              testId: 'explorerPlugin.createObject',
             },
           });
 
@@ -68,23 +60,25 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        if (!data || typeof data !== 'object' || !isExplorer(data)) {
           return null;
         }
 
         switch (role) {
-          case 'main': {
-            return isObject(data) ? MapMain : null;
-          }
+          case 'main':
+            return ExplorerMain;
+          default:
+            return null;
         }
-
-        return null;
+      },
+      components: {
+        ExplorerMain,
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case MapAction.CREATE: {
-              return { object: new Expando({ type: 'map' }) };
+            case ExplorerAction.CREATE: {
+              return { object: new ViewType() };
             }
           }
         },

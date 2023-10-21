@@ -61,7 +61,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
               },
             ],
             properties: {
-              testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
+              testId: 'templatePlugin.createObject',
             },
           });
 
