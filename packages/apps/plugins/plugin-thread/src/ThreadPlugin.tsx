@@ -11,7 +11,7 @@ import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
 
-import { ThreadMain } from './components';
+import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
 import { isThread, THREAD_PLUGIN, ThreadAction, type ThreadPluginProvides } from './types';
 import { objectToGraphNode } from './util';
@@ -67,15 +67,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       component: (data, role) => {
         switch (role) {
           case 'main': {
-            if (!data || typeof data !== 'object' || !isThread(data)) {
+            if (!isThread(data)) {
               return null;
             }
 
             return ThreadMain;
           }
 
-          case 'complementary':
-          // return ThreadSidebar;
+          case 'context':
+            return ThreadSidebar;
         }
       },
       components: {

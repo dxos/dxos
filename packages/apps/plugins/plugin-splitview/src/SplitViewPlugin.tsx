@@ -13,7 +13,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SplitViewContext, useSplitView } from './SplitViewContext';
-import { Fallback, SplitView, SplitViewMainContentEmpty } from './components';
+import { Fallback, SplitView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, type SplitViewPluginProvides, type SplitViewState } from './types';
@@ -94,7 +94,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       ),
       components: {
         SplitView: () => <SplitView fullscreen={state.values.fullscreen} {...{ showComplementarySidebar }} />,
-        SplitViewMainContentEmpty,
+        SplitViewMainContentEmpty: ContentEmpty,
         default: () => {
           const { plugins } = usePlugins();
           const { dispatch } = useIntent();

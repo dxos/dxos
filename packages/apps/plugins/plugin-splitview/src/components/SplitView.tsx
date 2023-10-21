@@ -49,6 +49,8 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
+        {/* TODO(burdon): name vs. role? */}
+
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar classNames='overflow-hidden'>
           <Surface name='sidebar' role='navigation' />
@@ -57,8 +59,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            {/* TODO(burdon): name vs. role? */}
-            <Surface name='complementary' role='complementary' />
+            <Surface name='complementary' role='context' />
           </Main.ComplementarySidebar>
         )}
 

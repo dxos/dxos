@@ -31,7 +31,6 @@ import { StackPlugin } from '@braneframe/plugin-stack';
 import { TablePlugin } from '@braneframe/plugin-table';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -121,7 +120,7 @@ const main = async () => {
           SketchPlugin(),
           StackPlugin(),
           TablePlugin(),
-          ThreadPlugin(),
+          // ThreadPlugin(),
           ChessPlugin(),
         ]}
       />

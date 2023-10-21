@@ -46,7 +46,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       component: (data, role) => {
         switch (role) {
-          case 'complementary':
+          case 'context':
             return SearchMain;
         }
       },
