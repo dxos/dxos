@@ -41,7 +41,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
                 variant='subdued'
                 classNames='p-0'
                 placeholder={t('title placeholder')}
-                value={item.title ?? item.label ?? ''} // TODO(burdon): Hack (label).
+                value={item.title ?? (item as any).label ?? ''} // TODO(burdon): Hack (label).
                 onChange={(event) => (item.title = event.target.value)}
               />
             </Input.Root>
