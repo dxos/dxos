@@ -58,7 +58,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'threadPlugin.createThread',
+              testId: 'threadPlugin.createObject',
             },
           });
           return adapter.createNodes(space, parent);
