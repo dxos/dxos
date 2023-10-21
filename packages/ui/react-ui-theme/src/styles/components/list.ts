@@ -30,7 +30,6 @@ export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density
   mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), focusRing, ...etc);
 
 export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => {
-  console.log('::::::::::', etc);
   return mx(getSize(5), ...etc);
 };
 

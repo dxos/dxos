@@ -9,7 +9,7 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SPLITVIEW_PLUGIN } from '../types';
 
-export const SplitViewMainContentEmpty = () => {
+export const ContentEmpty = () => {
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
   return (
     <div
