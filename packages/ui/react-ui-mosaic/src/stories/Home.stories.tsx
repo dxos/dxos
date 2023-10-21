@@ -10,6 +10,13 @@ import { FullscreenDecorator } from '../testing';
 
 const org = '@dxos-mosaic';
 
+const data = {
+  quote: `"I've written a few thousand words on why traditional “semantic class names” are the reason CSS is hard to ' +
+    'maintain, but the truth is you’re never going to believe me until you actually try it. If you can suppress the ' +
+    'urge to retch long enough to give it a chance, I really think you’ll wonder how you ever worked with CSS any other ' +
+    'way." [User]`,
+};
+
 const packages = [
   {
     name: `${org}/ui`,
@@ -51,7 +58,6 @@ const Home = () => {
         <span className='font-mono text-purple-700'>tailwindcss</span>. It enables the rapid development of beautiful
         data-driven applications.
       </p>
-
       <p>Mosaic is an extensible family of packages, which include:</p>
       <table>
         <tbody>
@@ -63,15 +69,9 @@ const Home = () => {
           ))}
         </tbody>
       </table>
-
       <br />
       <h1 className='text-lg flex justify-center font-medium text-blue-700'>Data-drive components, done right.</h1>
-      <p className='px-16 font-light text-sm'>
-        "I’ve written a few thousand words on why traditional “semantic class names” are the reason CSS is hard to
-        maintain, but the truth is you’re never going to believe me until you actually try it. If you can suppress the
-        urge to retch long enough to give it a chance, I really think you’ll wonder how you ever worked with CSS any
-        other way." [User]
-      </p>
+      <p className='px-8'>{data.quote}</p>
     </div>
   );
 };
