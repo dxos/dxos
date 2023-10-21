@@ -52,8 +52,8 @@ type GridOptions = {
 
 const defaultGridOptions: GridOptions = {
   size: { x: 8, y: 8 },
-  cellBounds: { width: 280, height: 280 },
-  spacing: 8,
+  cellBounds: { width: 272, height: 272 },
+  spacing: 6,
 };
 
 //
