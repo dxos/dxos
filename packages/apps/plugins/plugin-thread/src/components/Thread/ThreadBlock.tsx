@@ -123,6 +123,7 @@ const colors: Record<string, string> = {
   blue: 'bg-blue-50',
 };
 
+// TODO(burdon): Reuse SearchResult component.
 const Pill: MosaicTileComponent<Expando> = forwardRef(({ draggableStyle, draggableProps, item, path }, forwardRef) => {
   let title = item.name ?? item.title ?? item.__typename ?? 'Object';
   if (title instanceof Text) {

@@ -10,22 +10,29 @@ import { inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
 
+// TODO(burdon): Factor out.
+const styles = {
+  hover: 'hover:bg-neutral-50 dark:hover:bg-neutral-800',
+  selected: '!bg-teal-100 !dark:bg-teal-900',
+};
+
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
   ({ draggableStyle, draggableProps, item }, forwardRef) => {
-    const { id, label, snippet, match, selected, onSelect } = item;
+    const { id, Icon, label, snippet, match, selected, onSelect } = item;
 
     return (
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        classNames={mx('shadow-none rounded-none cursor-pointer hover:bg-neutral-50', selected && 'bg-teal-100')}
+        classNames={mx('mx-2 my-1 cursor-pointer', styles.hover, selected && styles.selected)}
         onClick={() => onSelect?.(id)}
       >
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={label ?? 'Untitled'} />
+          {Icon && <Card.Avatar Icon={Icon} />}
         </Card.Header>
         {snippet && (
           <Card.Body gutter>

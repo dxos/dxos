@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
+import { DotsSixVertical, DotsThreeVertical, type Icon } from '@phosphor-icons/react';
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, {
   type ComponentPropsWithoutRef,
@@ -72,6 +72,18 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
   );
 };
 
+type CardAvatarProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
+
+const CardAvatar: FC<CardAvatarProps> = ({ Icon, position, classNames, ...props }) => {
+  const { tx } = useThemeContext();
+  const density = useDensityContext();
+  return (
+    <div {...props} className={tx('card.dragHandle', 'card', { density, position }, classNames)}>
+      <Icon className={tx('card.dragHandleIcon', 'card')} />
+    </div>
+  );
+};
+
 type CardMenuProps = PropsWithChildren<
   ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' }
 >;
@@ -124,6 +136,7 @@ export const Card = {
   Root: CardRoot,
   Header: CardHeader,
   DragHandle: CardDragHandle,
+  Avatar: CardAvatar,
   Menu: CardMenu,
   Title: CardTitle,
   Body: CardBody,
