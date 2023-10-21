@@ -1428,6 +1428,7 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/client': workspace:*
@@ -1445,6 +1446,7 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@dxos/client': link:../../../sdk/client
       '@dxos/debug': link:../../../common/debug
       lodash.get: 4.4.2

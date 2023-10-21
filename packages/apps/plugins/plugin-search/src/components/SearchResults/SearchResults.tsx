@@ -6,7 +6,7 @@ import React, { type FC, forwardRef } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
-import { inputSurface, mx } from '@dxos/react-ui-theme';
+import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { type SearchResult } from '../../search';
 
@@ -26,7 +26,7 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
       <Card.Root
         ref={forwardRef}
         style={draggableStyle}
-        classNames={mx('mx-2 my-1 cursor-pointer', styles.hover, selected && styles.selected)}
+        classNames={mx('mx-2 mt-2 cursor-pointer', styles.hover, selected && styles.selected)}
         onClick={() => onSelect?.(id)}
       >
         <Card.Header>
@@ -55,9 +55,9 @@ export type SearchResultsProps = {
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   const path = 'search';
   return (
-    <ScrollArea.Root classNames={['grow', inputSurface]}>
+    <ScrollArea.Root classNames={['grow', groupSurface]}>
       <ScrollArea.Viewport>
-        <div className='flex flex-col divide-y'>
+        <div className='flex flex-col'>
           {/* TODO(burdon): ID. */}
           <Mosaic.Container id={path} Component={SearchItem}>
             {items.map((item) => (

@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "lodash.get": "^4.4.2"

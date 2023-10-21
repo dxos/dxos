@@ -32,7 +32,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
           id: object.id,
           label,
           match,
-          snippet: value !== label ? value : undefined, // TODO(burdon): Truncate.
+          snippet: value !== label ? value : fields.description ?? undefined, // TODO(burdon): Truncate.
           Icon: object.__schema ? getIcon(object.__schema) : undefined,
           object,
         });
