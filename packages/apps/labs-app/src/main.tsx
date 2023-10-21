@@ -12,10 +12,10 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-import { ExplorerPlugin } from '@braneframe/plugin-explorer';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -105,23 +105,22 @@ const main = async () => {
           // TODO(burdon): Remove need to come after SplitView.
           SpacePlugin(),
 
-          // Composer Apps.
+          DebugPlugin(),
           FilesPlugin(),
           GithubPlugin(),
-          MarkdownPlugin(),
-          SketchPlugin(),
-          PresenterPlugin(), // Before Stack.
-          StackPlugin(),
-
-          // Labs Apps.
-          ChessPlugin(),
-          DebugPlugin(),
           IpfsPlugin(),
+
+          // Presentation plugins.
+          MarkdownPlugin(),
+          GridPlugin(),
           KanbanPlugin(),
           MapPlugin(),
+          PresenterPlugin(), // Before Stack.
+          SketchPlugin(),
+          StackPlugin(),
           TablePlugin(),
           ThreadPlugin(),
-          ExplorerPlugin(),
+          ChessPlugin(),
         ]}
       />
     </StrictMode>,

@@ -19,7 +19,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-composer": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
     "lodash.get": "^4.4.2",

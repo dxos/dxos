@@ -41,7 +41,7 @@ export default defineConfig({
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
           ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
-          editor: ['@dxos/react-ui-composer'],
+          editor: ['@dxos/react-ui-editor'],
         },
       },
     },

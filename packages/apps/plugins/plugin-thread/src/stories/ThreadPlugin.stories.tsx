@@ -5,29 +5,17 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Config } from '@dxos/client';
 import { PluginProvider, Surface } from '@dxos/react-surface';
-import { mx } from '@dxos/react-ui-theme';
 
-import { createThread } from './testing';
 import { ThreadPlugin } from '../ThreadPlugin';
+import { FullscreenDecorator, createThread } from '../testing';
 
 faker.seed(7);
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 const DefaultThreadPluginStory = () => {
   const object = createThread();
@@ -54,10 +42,10 @@ const ThreadSurfacesApp = () => (
 );
 
 export default {
+  decorators: [FullscreenDecorator('bg-neutral-200 dark:bg-neutral-800')],
   component: ThreadSurfacesApp,
 };
 
 export const Default = {
-  decorators: [FullscreenDecorator('bg-zinc-200 dark:bg-zinc-800')],
   args: {},
 };

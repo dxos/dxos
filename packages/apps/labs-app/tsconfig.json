@@ -46,7 +46,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -80,6 +80,9 @@
     },
     {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-grid"
     },
     {
       "path": "../plugins/plugin-intent"

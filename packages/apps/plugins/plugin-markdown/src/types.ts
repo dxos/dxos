@@ -7,7 +7,7 @@ import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { type Document } from '@braneframe/types';
 import { type ObjectMeta } from '@dxos/client/echo';
-import { type EditorMode, type MarkdownComposerProps } from '@dxos/react-ui-composer';
+import { type EditorMode, type MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 

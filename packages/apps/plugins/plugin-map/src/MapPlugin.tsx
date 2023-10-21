@@ -60,7 +60,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'mapPlugin.createMap',
+              testId: 'mapPlugin.createObject',
             },
           });
 

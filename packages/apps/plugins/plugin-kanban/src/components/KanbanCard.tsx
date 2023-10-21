@@ -9,7 +9,7 @@ import React, { type FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { MarkdownComposer, useTextModel } from '@dxos/react-ui-composer';
+import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { getSize, mx, inputSurface } from '@dxos/react-ui-theme';
 
 import { KANBAN_PLUGIN } from '../types';
@@ -24,7 +24,7 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const KanbanItemComponent: FC<{
+export const KanbanCardComponent: FC<{
   column?: KanbanType.Column;
   item: KanbanType.Item;
   debug?: boolean;

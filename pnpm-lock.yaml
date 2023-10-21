@@ -361,7 +361,7 @@ importers:
       '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/vault': workspace:*
       '@sentry/vite-plugin': ^0.7.2
@@ -397,7 +397,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/react-ui': link:../../ui/react-ui
-      '@dxos/react-ui-composer': link:../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../ui/react-ui-editor
       isomorphic-fetch: 3.0.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -493,6 +493,7 @@ importers:
       '@braneframe/plugin-files': workspace:*
       '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-grid': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-ipfs': workspace:*
       '@braneframe/plugin-kanban': workspace:*
@@ -519,7 +520,7 @@ importers:
       '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-table': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/vault': workspace:*
@@ -544,6 +545,7 @@ importers:
       '@braneframe/plugin-files': link:../plugins/plugin-files
       '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-grid': link:../plugins/plugin-grid
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
       '@braneframe/plugin-ipfs': link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
@@ -568,7 +570,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/react-ui': link:../../ui/react-ui
-      '@dxos/react-ui-composer': link:../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../ui/react-ui-editor
       '@dxos/react-ui-table': link:../../ui/react-ui-table
       isomorphic-fetch: 3.0.0
       react: 18.2.0
@@ -930,7 +932,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/dompurify': ^3.0.2
@@ -951,7 +953,7 @@ importers:
       '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui-composer': link:../../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../../ui/react-ui-editor
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       lodash.get: 4.4.2
@@ -1028,6 +1030,63 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/mousetrap': 1.6.12
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-grid:
+    specifiers:
+      '@braneframe/plugin-dnd': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-ui-editor': workspace:*
+      '@dxos/react-ui-mosaic': workspace:*
+      '@dxos/react-ui-theme': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.6
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-markdown: ^8.0.5
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-stack': link:../plugin-stack
+      '@dxos/client': link:../../../sdk/client
+      deepsignal: 1.3.6
+      lodash.get: 4.4.2
+      react-markdown: 8.0.7_iapumuv4e6jcjznwuxpf4tt22e
+    devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/types': link:../../types
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@dxos/react-ui': link:../../../ui/react-ui
+      '@dxos/react-ui-editor': link:../../../ui/react-ui-editor
+      '@dxos/react-ui-mosaic': link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -1118,7 +1177,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -1139,7 +1198,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
-      '@dxos/react-ui-composer': link:../../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../../ui/react-ui-editor
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
@@ -1228,7 +1287,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -1247,7 +1306,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui-composer': link:../../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../../ui/react-ui-editor
       '@dxos/text-model': link:../../../core/echo/text-model
       '@preact/signals-react': 1.3.6_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
@@ -1444,7 +1503,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -1469,7 +1528,7 @@ importers:
       '@dxos/local-storage': link:../../../common/local-storage
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui-composer': link:../../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../../ui/react-ui-editor
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       '@preact/signals-react': 1.3.6_react@18.2.0
@@ -1766,6 +1825,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/react-ui-mosaic': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
@@ -1779,6 +1839,7 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@dxos/display-name': link:../../../common/display-name
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
@@ -1792,10 +1853,10 @@ importers:
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types
       '@dxos/react-ui': link:../../../ui/react-ui
+      '@dxos/react-ui-mosaic': link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme': link:../../../ui/react-ui-theme
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -5005,7 +5066,7 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/react-ui-composer': workspace:*
+      '@dxos/react-ui-editor': workspace:*
       '@dxos/react-ui-theme': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
@@ -5024,7 +5085,7 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../ui/react-ui
-      '@dxos/react-ui-composer': link:../../ui/react-ui-composer
+      '@dxos/react-ui-editor': link:../../ui/react-ui-editor
       '@dxos/react-ui-theme': link:../../ui/react-ui-theme
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
@@ -5514,7 +5575,7 @@ importers:
       vite: 4.3.9
       vite-plugin-turbosnap: 1.0.2
 
-  packages/ui/react-ui-composer:
+  packages/ui/react-ui-editor:
     specifiers:
       '@codemirror/autocomplete': ^6.4.2
       '@codemirror/commands': ^6.2.2

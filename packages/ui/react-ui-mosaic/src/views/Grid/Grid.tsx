@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
-
 import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -23,7 +21,14 @@ import {
   type Position,
   type Size,
 } from './layout';
-import { type MosaicContainerProps, type MosaicDataItem, Mosaic, Path, useMosaic } from '../../mosaic';
+import {
+  type MosaicContainerProps,
+  type MosaicDataItem,
+  type MosaicTileAction,
+  Mosaic,
+  Path,
+  useMosaic,
+} from '../../mosaic';
 
 //
 // Selection
@@ -66,6 +71,7 @@ export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCon
     square?: boolean;
     debug?: boolean;
     onCreate?: (position: Position) => void;
+    onAction?: (action: MosaicTileAction) => void; // TODO(burdon): Standardize across mosaics?
   };
 
 /**
@@ -86,6 +92,7 @@ export const Grid = ({
   onDrop,
   onSelect,
   onCreate,
+  onAction,
 }: GridProps) => {
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
   const options = defaultsDeep({}, opts, defaultGridOptions);
@@ -151,8 +158,8 @@ export const Grid = ({
       }}
     >
       <div className={mx('flex grow overflow-auto', className)}>
-        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none bg-neutral-600')}>
-          <div className='group block relative bg-neutral-500' style={{ ...bounds, margin: marginSize }}>
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none')}>
+          <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
             {matrix && (
               <div style={{ padding: options.spacing }}>
                 <div className='relative'>
@@ -172,7 +179,6 @@ export const Grid = ({
               </div>
             )}
 
-            {/* TODO(burdon): Events: onDoubleClick={() => handleSelect(id)} */}
             <div>
               {items.map((item) => {
                 const position = layout[item.id] ?? { x: 0, y: 0 };
@@ -188,6 +194,7 @@ export const Grid = ({
                       ...getBounds(position, cellBounds, options.spacing),
                     }}
                     onSelect={() => handleSelect(item.id)}
+                    onAction={onAction}
                     // debug={debug}
                   />
                 );
@@ -227,14 +234,18 @@ const GridCell: FC<{
     >
       <div
         className={mx(
-          'group/cell hidden group-hover:flex w-full h-full items-center justify-center',
-          isOverContainer && 'flex',
-          'box-border border-dashed border-4 border-neutral-600/50 rounded-lg',
-          'transition ease-in-out duration-200 bg-neutral-500',
-          isOver && 'flex bg-neutral-600',
+          'group/cell flex group-hover:flex w-full h-full items-center justify-center',
+          'box-border border-dashed border-4 border-neutral-100 rounded-lg',
+          'transition ease-in-out duration-300',
+          isOver && 'flex bg-neutral-200 border-neutral-400',
         )}
       >
-        <div className={mx('hidden group-hover/cell:flex', isOverContainer && 'hidden')}>
+        <div
+          className={mx(
+            'opacity-10 transition ease-in-out duration-300 group-hover/cell:opacity-100',
+            isOverContainer && 'hidden',
+          )}
+        >
           {onCreate && (
             // TODO(burdon): Style button.
             <Button variant='ghost' onClick={() => onCreate(position)}>

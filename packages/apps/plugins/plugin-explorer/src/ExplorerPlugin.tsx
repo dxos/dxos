@@ -52,7 +52,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'kanbanPlugin.createKanban',
+              testId: 'explorerPlugin.createObject',
             },
           });
 

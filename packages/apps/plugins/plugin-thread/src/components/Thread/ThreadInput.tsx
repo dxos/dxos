@@ -8,7 +8,7 @@ import React, { type FC, type KeyboardEvent, useState } from 'react';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
-import { THREAD_PLUGIN } from '../types';
+import { THREAD_PLUGIN } from '../../types';
 
 export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
