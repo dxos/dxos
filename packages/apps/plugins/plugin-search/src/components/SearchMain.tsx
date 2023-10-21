@@ -31,7 +31,7 @@ export const SearchMain = () => {
   };
 
   return (
-    <div className='flex flex-col grow h-full overflow-hidden'>
+    <div className='flex flex-col grow h-full overflow-hidden divide-y'>
       <DensityProvider density='coarse'>
         <Searchbar className='pl-3' variant='subdued' placeholder='Enter regular expression...' onChange={setMatch} />
       </DensityProvider>

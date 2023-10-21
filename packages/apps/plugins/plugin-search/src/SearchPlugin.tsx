@@ -38,7 +38,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               },
             ],
             properties: {
-              testId: 'sketchPlugin.createSketch',
+              testId: 'searchPlugin.search',
             },
           });
         },
@@ -46,7 +46,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       component: (data, role) => {
         switch (role) {
-          case 'context':
+          case 'context-search':
             return SearchMain;
         }
       },

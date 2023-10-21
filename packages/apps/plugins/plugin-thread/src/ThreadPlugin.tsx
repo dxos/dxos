@@ -74,7 +74,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             return ThreadMain;
           }
 
-          case 'context':
+          case 'context-thread':
             return ThreadSidebar;
         }
       },

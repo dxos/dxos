@@ -13,7 +13,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type Plugin, type PluginDefinition, Surface, findPlugin, usePlugins } from '@dxos/react-surface';
 
 import { SplitViewContext, useSplitView } from './SplitViewContext';
-import { Fallback, SplitView, ContentEmpty } from './components';
+import { Fallback, SplitView, ContentEmpty, ContextView } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, type SplitViewPluginProvides, type SplitViewState } from './types';
@@ -94,7 +94,8 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       ),
       components: {
         SplitView: () => <SplitView fullscreen={state.values.fullscreen} {...{ showComplementarySidebar }} />,
-        SplitViewMainContentEmpty: ContentEmpty,
+        ContentEmpty,
+        ContextView,
         default: () => {
           const { plugins } = usePlugins();
           const { dispatch } = useIntent();
@@ -159,7 +160,10 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
                   sidebar: {
                     data: { graph, activeId: splitView.active, popoverAnchorId: splitView.popoverAnchorId },
                   },
-                  complementary: { data: splitView.activeNode.data },
+                  complementary: {
+                    component: 'dxos.org/plugin/splitview/ContextView',
+                    data: splitView.activeNode.data,
+                  },
                   main: { data: splitView.activeNode.data, fallback: Fallback },
                   presence: { data: splitView.activeNode.data },
                   status: { data: splitView.activeNode.data },
@@ -176,7 +180,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
                   sidebar: {
                     data: { graph, activeId: splitView.active, popoverAnchorId: splitView.popoverAnchorId },
                   },
-                  main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
+                  main: { component: 'dxos.org/plugin/splitview/ContentEmpty' },
                   documentTitle: { component: 'dxos.org/plugin/treeview/DocumentTitle' },
                 }}
               />
