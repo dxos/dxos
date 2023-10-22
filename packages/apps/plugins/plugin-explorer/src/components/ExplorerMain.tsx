@@ -4,15 +4,17 @@
 
 import React, { useMemo } from 'react';
 
+import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type View as ViewType } from '@braneframe/types';
-import { type Space } from '@dxos/client/echo';
+import { type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { Graph, type GraphData, GraphModel, Markers } from '@dxos/gem-spore';
-import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '@dxos/gem-spore/testing';
-import { useClient } from '@dxos/react-client';
+import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
+import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { type PluginComponentProps } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+
+import { EchoGraphModel } from './EchoGraphModel';
 
 type Slots = {
   root?: { className?: string };
@@ -22,9 +24,11 @@ type Slots = {
 const slots: Slots = {};
 
 export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
-  const client = useClient();
-  const space = client.spaces.default; // TODO(burdon): Get from data object.
-  const model = useMemo(() => new EchoGraphModel(space), [space]);
+  // TODO(burdon): Get from node.
+  const { plugins } = usePlugins();
+  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+  const space = spacePlugin?.provides?.space.active;
+  const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
@@ -33,22 +37,19 @@ export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
           <Markers arrowSize={6} />
           <Grid className={slots?.grid?.className} />
           <Zoom extent={[1, 4]}>
-            <Graph model={model} drag arrows />
+            <Graph
+              model={model}
+              drag
+              arrows
+              labels={{
+                text: (node: GraphLayoutNode<TypedObject>) => {
+                  return node.data?.label ?? node.data?.title ?? node.data?.name;
+                },
+              }}
+            />
           </Zoom>
         </SVG>
       </SVGContextProvider>
     </Main.Content>
   );
 };
-
-export class EchoGraphModel extends GraphModel<TestNode> {
-  private _model = new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })));
-
-  constructor(private readonly _space: Space) {
-    super();
-  }
-
-  override get graph(): GraphData<TestNode> {
-    return this._model.graph;
-  }
-}
