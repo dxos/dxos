@@ -32,7 +32,7 @@ export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
         <Card.Header>
           <Card.DragHandle {...draggableProps} />
           <Card.Title title={label ?? 'Untitled'} />
-          {Icon && <Card.Avatar Icon={Icon} />}
+          {Icon && <Card.Endcap Icon={Icon} />}
         </Card.Header>
         {snippet && (
           <Card.Body gutter>

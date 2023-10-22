@@ -72,14 +72,14 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
   );
 };
 
-type CardAvatarProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
+type CardEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
 
-const CardAvatar: FC<CardAvatarProps> = ({ Icon, position, classNames, ...props }) => {
+const CardEndcap: FC<CardEndcapProps> = ({ Icon, position, classNames, ...props }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.dragHandle', 'card', { density, position }, classNames)}>
-      <Icon className={tx('card.dragHandleIcon', 'card')} />
+    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
+      <Icon className={tx('card.menuIcon', 'card')} />
     </div>
   );
 };
@@ -88,6 +88,7 @@ type CardMenuProps = PropsWithChildren<
   ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' }
 >;
 
+// TODO(burdon): Reconcile with Endcap (remove dropdown from here). See ListItem.Endcap (style icon/size?)
 const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(
   ({ children, position, classNames, ...props }, forwardRef) => {
     const { tx } = useThemeContext();
@@ -136,7 +137,7 @@ export const Card = {
   Root: CardRoot,
   Header: CardHeader,
   DragHandle: CardDragHandle,
-  Avatar: CardAvatar,
+  Endcap: CardEndcap,
   Menu: CardMenu,
   Title: CardTitle,
   Body: CardBody,
