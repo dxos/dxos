@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type PluginDefinition } from '@dxos/react-surface';
+import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
+import { SpaceProxy } from '@dxos/client/echo';
+import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
@@ -23,24 +25,40 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       translations,
       graph: {
         nodes: (parent) => {
-          if (parent.id !== 'root') {
-            return;
+          if (parent.id === 'root') {
+            parent.addAction({
+              id: SearchAction.SEARCH,
+              label: ['search action label', { ns: SEARCH_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              intent: [
+                {
+                  plugin: SEARCH_PLUGIN,
+                  action: SearchAction.SEARCH,
+                },
+              ],
+              properties: {
+                testId: 'searchPlugin.search',
+              },
+            });
           }
 
-          parent.addAction({
-            id: SearchAction.SEARCH,
-            label: ['search label', { ns: SEARCH_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: SEARCH_PLUGIN,
-                action: SearchAction.SEARCH,
+          if (parent.data instanceof SpaceProxy) {
+            parent.addAction({
+              id: SearchAction.SEARCH,
+              label: ['search action label', { ns: SEARCH_PLUGIN }],
+              icon: (props) => <MagnifyingGlass {...props} />,
+              keyBinding: 'shift+meta+f',
+              intent: [
+                {
+                  plugin: SEARCH_PLUGIN,
+                  action: SearchAction.SEARCH,
+                },
+              ],
+              properties: {
+                testId: 'searchPlugin.search',
               },
-            ],
-            properties: {
-              testId: 'searchPlugin.search',
-            },
-          });
+            });
+          }
         },
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
@@ -54,10 +72,12 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         SearchMain,
       },
       intent: {
-        resolver: (intent) => {
+        resolver: (intent, plugins) => {
           switch (intent.action) {
             case SearchAction.SEARCH: {
-              console.log('search');
+              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
+              splitViewPlugin!.provides.splitView.complementarySidebarOpen = true;
+              console.log('::');
             }
           }
         },

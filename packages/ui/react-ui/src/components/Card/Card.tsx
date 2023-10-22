@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
+import { DotsSixVertical, DotsThreeVertical, type Icon } from '@phosphor-icons/react';
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, {
   type ComponentPropsWithoutRef,
@@ -72,10 +72,23 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
   );
 };
 
+type CardEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
+
+const CardEndcap: FC<CardEndcapProps> = ({ Icon, position, classNames, ...props }) => {
+  const { tx } = useThemeContext();
+  const density = useDensityContext();
+  return (
+    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
+      <Icon className={tx('card.menuIcon', 'card')} />
+    </div>
+  );
+};
+
 type CardMenuProps = PropsWithChildren<
   ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' }
 >;
 
+// TODO(burdon): Reconcile with Endcap (remove dropdown from here). See ListItem.Endcap (style icon/size?)
 const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(
   ({ children, position, classNames, ...props }, forwardRef) => {
     const { tx } = useThemeContext();
@@ -124,6 +137,7 @@ export const Card = {
   Root: CardRoot,
   Header: CardHeader,
   DragHandle: CardDragHandle,
+  Endcap: CardEndcap,
   Menu: CardMenu,
   Title: CardTitle,
   Body: CardBody,

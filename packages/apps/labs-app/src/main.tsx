@@ -111,7 +111,6 @@ const main = async () => {
           FilesPlugin(),
           GithubPlugin(),
           IpfsPlugin(),
-          SearchPlugin(),
 
           // Presentation plugins.
           MarkdownPlugin(),
@@ -125,6 +124,9 @@ const main = async () => {
           ThreadPlugin(),
           ExplorerPlugin(),
           ChessPlugin(),
+
+          // Last so that action are added at end of dropdown menu.
+          SearchPlugin(),
         ]}
       />
     </StrictMode>,
