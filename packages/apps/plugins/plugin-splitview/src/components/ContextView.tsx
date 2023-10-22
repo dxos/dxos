@@ -24,7 +24,7 @@ export const ContextView = () => {
       <div className='flex grow overflow-hidden'>
         <Surface role={role} />
       </div>
-      <div className='absolute top-0 right-0 bottom-0 flex flex-col justify-center'>
+      <div className='absolute inset-y-1/2 right-0 flex flex-col justify-center'>
         <div className='flex flex-col border-2 border-r-0 rounded rounded-r-none border-black bg-white dark:bg-black'>
           <DensityProvider density='fine'>
             <Button

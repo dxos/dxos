@@ -9,7 +9,7 @@ import React, { forwardRef, useId } from 'react';
 import { type Thread as ThreadType } from '@braneframe/types';
 import { type Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { Card } from '@dxos/react-ui';
+import { Card, DensityProvider } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
@@ -40,37 +40,39 @@ export const ThreadBlock = ({ block, getBlockProperties, onDelete }: ThreadBlock
   // TODO(burdon): Use aurora cards.
   // TODO(burdon): Reply button.
   return (
-    <div
-      key={block.id}
-      className={mx(
-        'flex flex-col overflow-hidden rounded shadow',
-        inputSurface,
-        // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
-      )}
-    >
-      <div className='flex'>
-        <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
-          <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
-        </div>
-        <div className='flex flex-col w-full overflow-hidden'>
-          <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
-            <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
-            {date && (
-              <>
-                <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
-                <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
-              </>
-            )}
+    <DensityProvider density='fine'>
+      <div
+        key={block.id}
+        className={mx(
+          'flex flex-col overflow-hidden rounded shadow',
+          inputSurface,
+          // !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
+        )}
+      >
+        <div className='flex'>
+          <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
+            <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
           </div>
+          <div className='flex flex-col w-full overflow-hidden'>
+            <div className='flex text-sm px-2 py-1 space-x-1 truncate'>
+              <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
+              {date && (
+                <>
+                  <span className='font-mono text-xs'>{format(date, 'HH:mm')}</span>
+                  <span className='font-mono text-xs'>{format(date, 'aaa')}</span>
+                </>
+              )}
+            </div>
 
-          <div className='overflow-hidden pb-1'>
-            {block.messages.map((message, i) => (
-              <ThreadMessage key={i} message={message} onDelete={onDelete && (() => onDelete(block.id, i))} />
-            ))}
+            <div className='overflow-hidden pb-1'>
+              {block.messages.map((message, i) => (
+                <ThreadMessage key={i} message={message} onDelete={onDelete && (() => onDelete(block.id, i))} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </DensityProvider>
   );
 };
 
@@ -130,11 +132,12 @@ const Pill: MosaicTileComponent<Expando> = forwardRef(({ draggableStyle, draggab
     title = title.text;
   }
   const color = (item.color && colors[item.color]) ?? colors.gray;
+
   return (
     <Card.Root ref={forwardRef} style={draggableStyle} classNames={color}>
       <Card.Header>
         <Card.DragHandle {...draggableProps} />
-        <Card.Title title={title} classNames='truncate font-mono text-xs' />
+        <Card.Title title={title} />
       </Card.Header>
     </Card.Root>
   );
