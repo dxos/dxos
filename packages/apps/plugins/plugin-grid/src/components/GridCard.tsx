@@ -27,7 +27,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     const { t } = useTranslation(GRID_PLUGIN);
 
     // TODO(burdon): Accessor.
-    const model = useTextModel({ text: item.content });
+    const model = useTextModel({ text: item.content ?? (item as any).object?.description }); // TODO(burdon): Hack (description).
 
     const color = (item.color && colors[item.color]) ?? colors.gray;
 
@@ -41,7 +41,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
                 variant='subdued'
                 classNames='p-0'
                 placeholder={t('title placeholder')}
-                value={item.title ?? ''}
+                value={item.title ?? (item as any).label ?? ''} // TODO(burdon): Hack (label).
                 onChange={(event) => (item.title = event.target.value)}
               />
             </Input.Root>

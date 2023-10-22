@@ -14,7 +14,7 @@ enum Role {
   THREAD = 'context-thread',
 }
 
-const selected = 'bg-neutral-100';
+const selected = 'bg-neutral-100 dark:bg-neutral-800'; // TODO(burdon): Factor out.
 
 export const ContextView = () => {
   const [role, setRole] = useState(Role.SEARCH);
@@ -24,8 +24,8 @@ export const ContextView = () => {
       <div className='flex grow overflow-hidden'>
         <Surface role={role} />
       </div>
-      <div className='absolute top-0 right-0 bottom-0 flex flex-col justify-center'>
-        <div className='flex flex-col border-2 border-r-0 rounded rounded-r-none border-black'>
+      <div className='absolute inset-y-1/2 right-0 flex flex-col justify-center'>
+        <div className='flex flex-col border-2 border-r-0 rounded rounded-r-none border-black bg-white dark:bg-black'>
           <DensityProvider density='fine'>
             <Button
               variant='ghost'
