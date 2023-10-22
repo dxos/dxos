@@ -12,34 +12,26 @@ import { describe, test } from '@dxos/test';
 
 import { encodeChunk, decodeChunk, Balancer } from './balancer';
 
-const createStuckStream = (): any => {
-  const callbacks: any[] = [];
+const createStream = (stuck: boolean): { stream: Duplex; callbacks: Function[] } => {
+  const callbacks: Function[] = [];
   const stream = new Duplex({
     write(chunk, encoding, callback) {
-      // Simulate stuck stream.
-      callbacks.push(() => {
+      if (stuck) {
+        // Simulate stuck stream.
+        callbacks.push(() => {
+          this.push(chunk);
+          callback();
+        });
+      } else {
         this.push(chunk);
         callback();
-      });
+      }
     },
 
     read: (size) => {},
   });
 
   return { stream, callbacks };
-};
-
-const createStream = (): any => {
-  const stream = new Duplex({
-    write(chunk, encoding, callback) {
-      this.push(chunk);
-      callback();
-    },
-
-    read: (size) => {},
-  });
-
-  return { stream };
 };
 
 describe('Balancer', () => {
@@ -83,16 +75,13 @@ describe('Balancer', () => {
 
   test('should buffer chunks on the balancer for separate channels', async () => {
     const balancer = new Balancer(0);
-
-    const { stream, callbacks } = createStuckStream();
-
-    balancer.addChannel(1);
-    balancer.addChannel(2);
-    balancer.addChannel(3);
+    const { stream, callbacks } = createStream(true);
 
     pipeline(balancer.stream, stream, () => {});
 
-    for (let i = 1; i <= 3; i++) {
+    let i = 1;
+    for (i; i <= 3; i++) {
+      balancer.addChannel(i);
       for (let j = 0; j < 10; j++) {
         const chunk = Uint8Array.from(randomBytes(5_000));
         const trigger = new Trigger<void>();
@@ -102,7 +91,7 @@ describe('Balancer', () => {
 
     await sleep(50);
 
-    expect(balancer.buffersCount).to.equal(3);
+    expect(balancer.buffersCount).to.equal(i - 1);
 
     for (const callback of callbacks) {
       callback();
@@ -111,16 +100,12 @@ describe('Balancer', () => {
 
   test('should not buffer when backpressure is not applied', async () => {
     const balancer = new Balancer(0);
-
-    const { stream } = createStream();
-
-    balancer.addChannel(1);
-    balancer.addChannel(2);
-    balancer.addChannel(3);
+    const { stream } = createStream(false);
 
     pipeline(balancer.stream, stream, () => {});
 
     for (let i = 1; i <= 3; i++) {
+      balancer.addChannel(i);
       for (let j = 0; j < 10; j++) {
         const chunk = Uint8Array.from(randomBytes(5_000));
         const trigger = new Trigger<void>();
