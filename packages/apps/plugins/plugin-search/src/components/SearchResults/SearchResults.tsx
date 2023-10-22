@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
@@ -16,11 +17,23 @@ const styles = {
   selected: '!bg-teal-100 !dark:bg-teal-900',
 };
 
+// TODO(burdon): Registry defined by plugins?
+const getIcon = (type: string): Icon | undefined => {
+  const iconMap: Record<string, Icon> = {
+    user: User,
+    organization: Buildings,
+    project: Folders,
+  };
+
+  return iconMap[type];
+};
+
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
   ({ draggableStyle, draggableProps, item }, forwardRef) => {
-    const { id, Icon, label, snippet, match, selected, onSelect } = item;
+    const { id, type, label, snippet, match, selected, onSelect } = item;
+    const Icon = type ? getIcon(type) : undefined;
 
     return (
       <Card.Root
