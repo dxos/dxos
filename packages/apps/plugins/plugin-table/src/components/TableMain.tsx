@@ -22,11 +22,10 @@ const EMPTY_ROW_ID = '__new';
 
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const [, forceUpdate] = useState({});
+
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-  // TODO(burdon): Not updated when object deleted.
-  const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -36,8 +35,14 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
-  const rows = useFilteredObjects(objects);
+  const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
+  const rows = [...useFilteredObjects(objects), newObject];
 
+  //
+  //
+  //
+
+  const tables = useQuery<TableType>(space, TableType.filter());
   const updateSchemaProp = (update: SchemaType.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
     if (idx !== -1) {
@@ -90,11 +95,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       },
       onRowUpdate: (object, prop, value) => {
         object[prop] = value;
-        if (!object.id) {
-          // TODO(burdon): Add directly.
-          const obj = new Expando(object, { schema: table.schema });
+        if (object === newObject) {
+          space!.db.add(newObject);
           // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(obj);
+          setNewObject(new Expando({}, { schema: table.schema }));
         }
       },
       onRowDelete: (object) => {
