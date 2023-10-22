@@ -38,10 +38,6 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
   const rows = [...useFilteredObjects(objects), newObject];
 
-  //
-  //
-  //
-
   const tables = useQuery<TableType>(space, TableType.filter());
   const updateSchemaProp = (update: SchemaType.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
