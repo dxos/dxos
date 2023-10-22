@@ -6,7 +6,7 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
   return (Story) => (

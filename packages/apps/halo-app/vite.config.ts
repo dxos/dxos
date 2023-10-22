@@ -9,7 +9,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/

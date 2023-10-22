@@ -4,8 +4,8 @@
 
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { useId, useThemeContext, type ButtonProps, useElevationContext } from '@dxos/aurora';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/aurora-theme';
+import { useId, useThemeContext, type ButtonProps, useElevationContext } from '@dxos/react-ui';
+import { descriptionText, descriptionTextPrimary, mx } from '@dxos/react-ui-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -36,7 +36,7 @@ export const CompoundButton = ({
   const descriptionId = useId('compoundButton-description');
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
-  const isOs = tx('themeName', 'aurora', {}) === 'dxos';
+  const isOs = tx('themeName', 'react-ui', {}) === 'dxos';
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
   const buttonClassName = tx(
     'button.root',

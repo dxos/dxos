@@ -43,16 +43,16 @@
       "path": "../../sdk/vault"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/aurora-table"
+      "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugins/plugin-chess"
@@ -70,6 +70,9 @@
       "path": "../plugins/plugin-error"
     },
     {
+      "path": "../plugins/plugin-explorer"
+    },
+    {
       "path": "../plugins/plugin-files"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-grid"
     },
     {
       "path": "../plugins/plugin-intent"
@@ -98,6 +104,9 @@
     },
     {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-search"
     },
     {
       "path": "../plugins/plugin-sketch"

@@ -42,6 +42,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           }
 
           const space = parent.data;
+
           return adapter.createNodes(space, parent);
         },
       },

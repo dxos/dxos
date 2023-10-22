@@ -5,8 +5,8 @@
 import { Check, Copy, type IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button, type ButtonProps, Tooltip, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, type ButtonProps, Tooltip, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useClipboardContext } from './ClipboardProvider';
 

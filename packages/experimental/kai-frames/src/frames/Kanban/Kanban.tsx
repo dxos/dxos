@@ -5,8 +5,8 @@
 import { PlusCircle } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { Space, TypedObject } from '@dxos/react-client/echo';
 
 export type KanbanCard = FC<{ space: Space; object: TypedObject }>;

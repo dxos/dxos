@@ -9,10 +9,10 @@ import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type Kanban as KanbanType } from '@braneframe/types';
-import { Button, Input, useTranslation } from '@dxos/aurora';
-import { chromeSurface, getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { chromeSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
 
-import { KanbanItemComponent } from './KanbanItem';
+import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../types';
 
@@ -123,7 +123,7 @@ export const KanbanColumnComponent: FC<{
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
             {items.map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
-                <KanbanItemComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
+                <KanbanCardComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
               </div>
             ))}
           </div>

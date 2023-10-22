@@ -4,9 +4,9 @@
 
 import React, { type RefObject, useCallback } from 'react';
 
-import { Button, Dialog, useTranslation } from '@dxos/aurora';
-import { type MarkdownComposerRef } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
+import { Button, Dialog, useTranslation } from '@dxos/react-ui';
+import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier, type GhIssueIdentifier } from '../props';

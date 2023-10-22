@@ -4,26 +4,28 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
+import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { DensityProvider, Main } from '@dxos/aurora';
-import { Table, type TableDef } from '@dxos/aurora-table';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { DensityProvider, Main } from '@dxos/react-ui';
+import { Table, type TableDef } from '@dxos/react-ui-table';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
 
 const EMPTY_ROW_ID = '__new';
 
+// TODO(burdon): Hanging edit missing if no initial rows.
+
 export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const [, forceUpdate] = useState({});
+
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-  // TODO(burdon): Not updated when object deleted.
-  const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -33,10 +35,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
-  console.log(table);
+  const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
+  const rows = [...useFilteredObjects(objects), newObject];
 
-  const rows = [...objects, {} as any];
-
+  const tables = useQuery<TableType>(space, TableType.filter());
   const updateSchemaProp = (update: SchemaType.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
     if (idx !== -1) {
@@ -89,11 +91,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       },
       onRowUpdate: (object, prop, value) => {
         object[prop] = value;
-        if (!object.id) {
-          // TODO(burdon): Add directly.
-          const obj = new Expando(object, { schema: table.schema });
+        if (object === newObject) {
+          space!.db.add(newObject);
           // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(obj);
+          setNewObject(new Expando({}, { schema: table.schema }));
         }
       },
       onRowDelete: (object) => {

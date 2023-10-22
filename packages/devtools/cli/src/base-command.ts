@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { types } from '@braneframe/types';
+import { types } from '@braneframe/types'; // TODO(burdon): Remove.
 import {
   AgentIsNotStartedByCLIError,
   AgentWaitTimeoutError,
@@ -232,6 +232,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           group,
         },
       });
+      Sentry.enableSentryLogProcessor();
     }
 
     if (TELEMETRY_API_KEY) {
@@ -391,6 +392,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
 
+      // TODO(burdon): Remove app-specific dependencies (function should add this).
       this._client.addTypes(types);
 
       await this._client.initialize();

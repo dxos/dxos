@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -32,8 +33,9 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
@@ -50,9 +52,10 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

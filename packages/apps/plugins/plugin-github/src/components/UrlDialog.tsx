@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { type MarkdownProperties } from '@braneframe/plugin-markdown';
-import { Dialog, Button, useTranslation, Input } from '@dxos/aurora';
+import { Dialog, Button, useTranslation, Input } from '@dxos/react-ui';
 
 import { useGhIdFromUrl } from '../hooks';
 import { GITHUB_PLUGIN } from '../props';

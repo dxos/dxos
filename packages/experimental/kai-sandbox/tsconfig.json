@@ -71,7 +71,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     }
   ]
 }

@@ -36,10 +36,13 @@
       "path": "../../../sdk/react-surface"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
@@ -58,6 +61,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-splitview"

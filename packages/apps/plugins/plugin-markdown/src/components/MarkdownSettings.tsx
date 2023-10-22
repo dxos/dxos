@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Input, Select, useTranslation } from '@dxos/aurora';
-import { EditorModes } from '@dxos/aurora-composer';
 import { usePlugin } from '@dxos/react-surface';
+import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { EditorModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN, type MarkdownPluginProvides } from '../types';
 

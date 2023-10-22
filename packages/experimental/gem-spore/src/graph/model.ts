@@ -9,11 +9,12 @@ import { defaultIdAccessor, type IdAccessor, type GraphData } from './types';
 /**
  * Graph model with subscriptions.
  */
+// TODO(burdon): Evolve to use signal.
 export abstract class GraphModel<N> {
   readonly updated = new Event<GraphData<N>>();
   private _selected?: string;
 
-  constructor(private readonly _idAccessor: IdAccessor<N> = defaultIdAccessor) {}
+  protected constructor(private readonly _idAccessor: IdAccessor<N> = defaultIdAccessor) {}
 
   abstract get graph(): GraphData<N>;
 
@@ -21,6 +22,7 @@ export abstract class GraphModel<N> {
     return this._idAccessor;
   }
 
+  // TODO(burdon): Create separate model (e.g., multi-select).
   get selected(): string | undefined {
     return this._selected;
   }

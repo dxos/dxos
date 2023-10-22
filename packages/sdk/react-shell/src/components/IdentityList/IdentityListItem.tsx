@@ -4,11 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
+import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 type IdentityListItemProps = {
   identity: Identity;

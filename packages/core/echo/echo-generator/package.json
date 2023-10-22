@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/echo-generator",
+  "version": "0.3.1",
+  "description": "ECHO data generator for testing.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@faker-js/faker": "^8.0.2"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

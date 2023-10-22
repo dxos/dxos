@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { JoinPanel, type JoinPanelProps } from './JoinPanel';
 import { Dialog, type DialogProps } from '../Dialog';

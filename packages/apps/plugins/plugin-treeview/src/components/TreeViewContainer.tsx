@@ -7,18 +7,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
-import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/aurora';
-import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/aurora-grid/next';
+import { useClient, useConfig } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
+import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
   NavTree,
   type NavTreeContextType,
   nextRearrangeIndex,
   type TreeNode,
   type NavTreeProps,
-} from '@dxos/aurora-navtree';
-import { getSize, mx } from '@dxos/aurora-theme';
-import { useClient, useConfig } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
+} from '@dxos/react-ui-navtree';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
@@ -168,7 +168,7 @@ export const TreeViewContainer = ({
                   identityKey={identity?.identityKey.toHex()}
                   onClick={() => client.shell.shareIdentity()}
                 />
-                <div className='grow'></div>
+                <div className='grow' />
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Button
@@ -221,7 +221,7 @@ export const TreeViewContainer = ({
               {/* <Separator orientation='horizontal' /> */}
             </>
           )}
-          <div role='none' className='grow min-bs-0 overflow-y-auto'>
+          <div role='none' className='grow min-bs-0 overflow-y-auto p-0.5'>
             <NavTree
               node={graph.root}
               current={currentPath}
