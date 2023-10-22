@@ -6,33 +6,35 @@ import { expect } from 'chai';
 import { Duplex, pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
 import * as varint from 'varint';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger, sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { encodeChunk, decodeChunk, Balancer } from './balancer';
 
-const createStream = (stuck: boolean): { stream: Duplex; callbacks: Function[] } => {
-  const callbacks: Function[] = [];
-  const stream = new Duplex({
-    write(chunk, encoding, callback) {
-      if (stuck) {
-        // Simulate stuck stream.
-        callbacks.push(() => {
-          this.push(chunk);
-          callback();
-        });
-      } else {
+class StuckableStream extends Duplex {
+  public unstuck: Function | undefined;
+
+  constructor(private _stuck: boolean) {
+    super();
+  }
+
+  override _write(chunk: Buffer, encoding: string, callback: Function) {
+    if (this._stuck) {
+      this.unstuck = () => {
+        this._stuck = false;
         this.push(chunk);
         callback();
       }
-    },
+    } else {
+      this.push(chunk);
+      callback();
+    }
+  }
 
-    read: (size) => {},
-  });
-
-  return { stream, callbacks };
-};
+  override _read(size: number) {}
+}
 
 describe('Balancer', () => {
   test('varints', () => {
@@ -75,9 +77,9 @@ describe('Balancer', () => {
 
   test('should buffer chunks on the balancer for separate channels', async () => {
     const balancer = new Balancer(0);
-    const { stream, callbacks } = createStream(true);
+    const stream = new StuckableStream(true);
 
-    pipeline(balancer.stream, stream, () => {});
+    pipeline(balancer.stream, stream, balancer.stream, () => {});
 
     let i = 1;
     for (i; i <= 3; i++) {
@@ -89,18 +91,20 @@ describe('Balancer', () => {
       }
     }
 
-    await sleep(50);
+    await sleep(20);
 
     expect(balancer.buffersCount).to.equal(i - 1);
 
-    for (const callback of callbacks) {
-      callback();
-    }
+    stream.unstuck?.();
+
+    await waitForExpect(() => {
+      expect(balancer.buffersCount).to.equal(0);
+    });
   });
 
   test('should not buffer when backpressure is not applied', async () => {
     const balancer = new Balancer(0);
-    const { stream } = createStream(false);
+    const stream = new StuckableStream(false);
 
     pipeline(balancer.stream, stream, () => {});
 
@@ -113,7 +117,7 @@ describe('Balancer', () => {
       }
     }
 
-    await sleep(50);
+    await sleep(20);
 
     expect(balancer.buffersCount).to.equal(0);
   });
