@@ -19,14 +19,20 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null; // Can't be rejected.
 
-  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
+  constructor(
+    private readonly _ctx: Context,
+    private readonly _callback: () => Promise<void>,
+    private readonly _micro = false,
+  ) {}
 
   schedule() {
     if (this._scheduled) {
       return; // Already scheduled.
     }
 
-    scheduleTask(this._ctx, async () => {
+    const scheduleFunc = this._micro ? scheduleMicroTask : scheduleTask;
+
+    scheduleFunc(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       await this._promise; // Can't be rejected.
 
