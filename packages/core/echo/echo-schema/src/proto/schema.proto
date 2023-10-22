@@ -15,7 +15,7 @@ message Schema {
 
   enum PropType {
     NONE = 0;
-    STRING = 1;
+    STRING = 1; // TODO(burdon): Add RICH text.
     NUMBER = 2;
     BOOLEAN = 3;
     DATE = 4;
