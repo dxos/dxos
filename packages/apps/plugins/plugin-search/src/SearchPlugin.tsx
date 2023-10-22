@@ -14,8 +14,6 @@ import { SearchContextProvider } from './context';
 import translations from './translations';
 import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction } from './types';
 
-// TODO(burdon): Key accelerator (to open sidebar).
-
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {
     meta: {
