@@ -15,8 +15,7 @@ import { useSearch, useSearchResults } from '../context';
 export const SearchMain = () => {
   const { setMatch } = useSearch();
 
-  // TODO(burdon): Cross-space query.
-  // TODO(burdon): Query agent.
+  // TODO(burdon): Query agent/cross-space.
   const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.active;
   const { objects } = space?.db.query() ?? {};
