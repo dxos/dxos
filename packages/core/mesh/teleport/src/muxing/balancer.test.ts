@@ -26,7 +26,7 @@ class StuckableStream extends Duplex {
         this._stuck = false;
         this.push(chunk);
         callback();
-      }
+      };
     } else {
       this.push(chunk);
       callback();
