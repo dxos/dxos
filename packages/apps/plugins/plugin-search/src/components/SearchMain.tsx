@@ -26,8 +26,7 @@ export const SearchMain = () => {
 
   // TODO(burdon): Activate and/or filter current main (set context).
   const handleSelect = (id: string) => {
-    console.log('select', id);
-    setSelected(id);
+    setSelected((selected) => (selected === id ? undefined : id));
   };
 
   return (
