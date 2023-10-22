@@ -43,7 +43,6 @@ export class Balancer {
   private readonly _receiveBuffers = new Map<number, ChannelBuffer>();
 
   private _sendChunkTask: DeferredTask;
-  private _sendCtx = new Context();
 
   public incomingData = new Event<Uint8Array>();
   public readonly stream = this._framer.stream;
@@ -53,7 +52,7 @@ export class Balancer {
 
     // Handle incoming messages.
     this._framer.port.subscribe(this._processIncomingMessage.bind(this));
-    this._sendChunkTask = new DeferredTask(this._sendCtx, () => this._sendChunk());
+    this._sendChunkTask = new DeferredTask(new Context(), () => this._sendChunk());
   }
 
   get bytesSent() {
@@ -106,7 +105,6 @@ export class Balancer {
   }
 
   destroy() {
-    void this._sendCtx.dispose();
     this._sendBuffers.clear();
     this._framer.destroy();
   }
