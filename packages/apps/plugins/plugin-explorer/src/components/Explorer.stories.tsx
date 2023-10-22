@@ -17,25 +17,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { ExplorerMain } from './ExplorerMain';
 
-// Plugins
-// TODO(burdon): Search context.
-// TODO(burdon): Get space from active node (not graph).
-// TODO(burdon): Plugin utils (e.g., create object).
-
-// Tools
-// TODO(burdon): Async load fails and crashes app when offline.
-
-// TODO(burdon): Standardize ViewType for Explorer, Table, Kanban, Grid, etc.
-// TODO(burdon): Standardize surfaces (i.e., PluginComponentProps); rename react-surface => react-plugin; framework naming.
-// TODO(burdon): Standardize plugin surface binding (fooMain pattern vs. pure components).
-// TODO(burdon): Client schema/types (post initialize).
-// TODO(burdon): Get space from TypedObject.
-// TODO(burdon): Plugin deps (deps vs. peerDeps?)
-// TODO(burdon): Reconcile echo-generator.
-// TODO(burdon): Standardize storybooks (config, component/render props).
-// TODO(burdon): Reconcile story utils and config (e.g., FullscreenDecorator).
-// TODO(burdon): Reconcile test space decorator.
-
 faker.seed(1);
 const generator = new TestObjectGenerator();
 
