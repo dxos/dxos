@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/echo-query",
+  "version": "0.3.2",
+  "description": "ECHO queries.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@orama/orama": "^2.0.0-beta.1",
+    "lodash.get": "^4.4.2"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -3033,6 +3033,16 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
+  packages/core/echo/echo-query:
+    specifiers:
+      '@dxos/echo-db': workspace:*
+      '@orama/orama': ^2.0.0-beta.1
+      lodash.get: ^4.4.2
+    dependencies:
+      '@dxos/echo-db': link:../echo-db
+      '@orama/orama': 2.0.0-beta.1
+      lodash.get: 4.4.2
+
   packages/core/echo/echo-schema:
     specifiers:
       '@dxos/async': workspace:*
@@ -13016,6 +13026,11 @@ packages:
       '@octokit/webhooks-methods': 3.0.2
       '@octokit/webhooks-types': 6.10.0
       aggregate-error: 3.1.0
+    dev: false
+
+  /@orama/orama/2.0.0-beta.1:
+    resolution: {integrity: sha512-poON8z+wnUHyRJPD7IgigOmz1leRg04ipratBKWzfPUVNUZoGASxXSOInLda6hcMpKoWJO3a9o0NQk/w1vTUAA==}
+    engines: {node: '>= 16.0.0'}
     dev: false
 
   /@parcel/watcher/2.0.4:
