@@ -3,7 +3,6 @@
 //
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
-// TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
 export {
   TYPE_SCHEMA,
@@ -15,23 +14,24 @@ export {
   type SchemaRef,
 } from '@dxos/echo-db';
 export {
+  base,
   createSubscription,
   isTypedObject,
-  base,
   subscribe,
   EchoDatabase,
-  type EchoObject,
-  type ObjectMeta,
-  TypeCollection,
   Expando,
   Query,
+  Schema,
   Text,
+  TypeCollection,
   TypedObject,
+  type EchoObject,
   type Filter,
+  type ObjectMeta,
   type Selection,
+  type Subscription,
   type SubscriptionHandle,
   type TypeFilter,
-  Schema,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
