@@ -4,8 +4,8 @@
 
 import * as varint from 'varint';
 
-import { type Trigger, Event, DeferredTask } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { type Trigger, Event } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { Framer } from './framer';
 
@@ -41,8 +41,6 @@ export class Balancer {
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
   private readonly _sendBuffers: Map<number, ChunkEnvelope[]> = new Map();
   private readonly _receiveBuffers = new Map<number, ChannelBuffer>();
-
-  private _sendChunkTask = new DeferredTask(new Context(), () => this._sendChunk(), true);
 
   public incomingData = new Event<Uint8Array>();
   public readonly stream = this._framer.stream;
@@ -99,7 +97,7 @@ export class Balancer {
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      this._sendChunkTask.schedule();
+      this._sendChunk().catch((err) => log.catch(err));
     }
   }
 
@@ -177,7 +175,7 @@ export class Balancer {
       chunk.trigger?.throw(err);
     }
 
-    this._sendChunkTask.schedule();
+    await this._sendChunk();
   }
 }
 
