@@ -30,6 +30,7 @@ export type Filter<T extends TypedObject> = PropertyFilter | OperatorFilter<T>;
 // NOTE: `__phantom` property forces TS type check.
 export type TypeFilter<T extends TypedObject> = { __phantom: T } & Filter<T>;
 
+// TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
 
 /**
@@ -97,9 +98,14 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._cache;
   }
 
-  // TODO(burdon): Option to trigger immediately.
-  subscribe(callback: (query: Query<T>) => void): Subscription {
-    return this._event.on(callback);
+  // TODO(burdon): Change to SubscriptionHandle.
+  subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
+    const subscription = this._event.on(callback);
+    if (fire) {
+      callback(this);
+    }
+
+    return subscription;
   }
 
   private _match(object: T) {
