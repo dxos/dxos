@@ -4,7 +4,7 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { type EchoObject, base } from '@dxos/echo-schema';
+import { type EchoObject, base, getDatabaseFromObject } from '@dxos/echo-schema';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 
@@ -15,11 +15,12 @@ export const createDefaultModelFactory = () => {
 };
 
 export const getSpaceForObject = (object: EchoObject): SpaceProxy | undefined => {
-  const key = object[base]._database?._backend.spaceKey;
+  const db = getDatabaseFromObject(object);
+  const key = db?._backend.spaceKey;
   if (!key) {
     return undefined;
   }
-  const owner = object[base]._database?.graph._getOwningObject(key);
+  const owner = db?.graph._getOwningObject(key);
   if (owner instanceof SpaceProxy) {
     return owner;
   } else {

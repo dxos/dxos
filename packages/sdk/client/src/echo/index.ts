@@ -8,6 +8,7 @@ export {
   TYPE_SCHEMA,
   Item,
   ShowDeletedOption,
+  QUERY_ALL_MODELS,
   type QueryOptions,
   type SchemaDef,
   type SchemaField,

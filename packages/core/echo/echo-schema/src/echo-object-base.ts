@@ -198,3 +198,7 @@ export const setStateFromSnapshot = (obj: EchoObjectBase, snapshot: ObjectSnapsh
 export const forceUpdate = (obj: EchoObjectBase) => {
   obj[base]._itemUpdate();
 };
+
+export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
+  return obj[base]._database;
+}
