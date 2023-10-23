@@ -29,7 +29,7 @@ export const parseSurfacePlugin = (plugin?: Plugin) =>
   (plugin?.provides as any)?.surface?.component ? (plugin as Plugin<SurfaceProvides>) : undefined;
 
 /**
- *
+ * Provides a registry of surface components.
  */
 export const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
   const state = deepSignal<SurfaceRootContext>({ components: {} });

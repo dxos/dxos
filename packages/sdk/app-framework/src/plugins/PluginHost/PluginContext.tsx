@@ -34,6 +34,9 @@ export const usePlugin = <T,>(id: string): Plugin<T> | undefined => {
   return findPlugin<T>(plugins, id);
 };
 
+/**
+ * Resolve a plugin by predicate.
+ */
 export const useResolvePlugin = <T,>(predicate: (plugin: Plugin) => Plugin<T> | undefined): Plugin<T> | undefined => {
   const { plugins } = usePlugins();
   return resolvePlugin(plugins, predicate);

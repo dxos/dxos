@@ -34,8 +34,8 @@ export const filterPlugins = <T>(
  * Resolves a plugin by predicate.
  *
  * @example
- * import { isIntentPlugin, resolvePlugin } from '@dxos/app-framework';
- * const intentPlugin = resolvePlugin(plugins, isIntentPlugin);
+ * import { parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+ * const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
  */
 export const resolvePlugin = <T>(
   plugins: Plugin[],

@@ -2,17 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FC, type PropsWithChildren, type RefAttributes } from 'react';
-
-/**
- * Props passed to a component by the `Surface` resolver.
- */
-// TODO(burdon): Rename SurfaceComponentProps.
-export type PluginComponentProps<T = any> = PropsWithChildren<{
-  data: T;
-  role?: string;
-}> &
-  RefAttributes<HTMLElement>;
+import { type FC, type PropsWithChildren } from 'react';
 
 /**
  * Capabilities provided by a plugin.

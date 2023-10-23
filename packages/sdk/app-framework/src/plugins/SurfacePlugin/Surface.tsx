@@ -76,12 +76,8 @@ export const Surface = ({ role, name = role, fallback, ...rest }: SurfaceProps) 
   );
 };
 
-//
-//
 const SurfaceContext = createContext<SurfaceProps | null>(null);
 
-//
-//
 const SurfaceResolver = (props: SurfaceProps) => {
   const { components } = useSurface();
   const parent = useContext(SurfaceContext);
@@ -97,8 +93,6 @@ const SurfaceResolver = (props: SurfaceProps) => {
   return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;
 };
 
-//
-//
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
