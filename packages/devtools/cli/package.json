@@ -75,7 +75,6 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "oclif": "^3.7.0",
     "@oclif/test": "^2.3.31",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
@@ -83,6 +82,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
+    "oclif": "^3.7.0",
     "shx": "^0.3.3",
     "typescript": "^5.2.2"
   },
