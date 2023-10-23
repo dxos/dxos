@@ -14,7 +14,7 @@ export abstract class GraphModel<N> {
   readonly updated = new Event<GraphData<N>>();
   private _selected?: string;
 
-  protected constructor(private readonly _idAccessor: IdAccessor<N> = defaultIdAccessor) {}
+  constructor(private readonly _idAccessor: IdAccessor<N> = defaultIdAccessor) {}
 
   abstract get graph(): GraphData<N>;
 
