@@ -3,6 +3,7 @@
 //
 
 import { readFile, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import yaml from 'yaml';
 
 import { Stream } from '@dxos/codec-protobuf';
@@ -101,6 +102,12 @@ export class DashboardPlugin extends AbstractPlugin {
       const update = () => {
         next({
           status: AgentStatus.Status.ON,
+          memory: {
+            free: os.freemem(),
+            total: os.totalmem(),
+            ramUsage: process.memoryUsage().heapUsed,
+          },
+
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
             pluginId: plugin.id,
             pluginConfig: plugin.config,
