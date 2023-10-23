@@ -499,11 +499,12 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       this._schema = this._database!._resolveSchema(type);
     }
 
-    invariant(this._linkCache);
-    for (const obj of this._linkCache.values()) {
-      this._database!.add(obj as TypedObject);
+    if (this._linkCache) {
+      for (const obj of this._linkCache.values()) {
+        this._database!.add(obj as TypedObject);
+      }
+      this._linkCache = undefined;
     }
-    this._linkCache = undefined;
   }
 
   /**
