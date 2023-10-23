@@ -5,13 +5,13 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
+import { QUERY_ALL_MODELS } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
-import { QUERY_ALL_MODELS } from '@dxos/echo-db';
 
 describe('Serializer', () => {
   test('Basic', async () => {

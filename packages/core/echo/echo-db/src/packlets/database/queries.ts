@@ -61,7 +61,7 @@ export type QueryOptions = {
    * Filter by model.
    * @default * Only DocumentModel.
    */
-  models?: string[] | null
+  models?: string[] | null;
 };
 
 export const QUERY_ALL_MODELS = null;

@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { DocumentModel } from '@dxos/document-model';
 import { type QueryOptions, ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,7 +14,6 @@ import { type ComplexMap } from '@dxos/util';
 import { base, type EchoObject } from './defs';
 import { createSignal } from './signal';
 import { isTypedObject, type TypedObject } from './typed-object';
-import { DocumentModel } from '@dxos/document-model';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -131,17 +131,17 @@ const filterDeleted = (option?: ShowDeletedOption) => (object: TypedObject) => {
 
 const filterModels = (options?: QueryOptions) => (object: TypedObject) => {
   let models = options?.models;
-  
-  if(models === undefined) {
+
+  if (models === undefined) {
     models = [DocumentModel.meta.type];
   }
 
-  if(models === null) {
+  if (models === null) {
     return true;
   }
 
   return models.includes(object[base]._modelConstructor.meta.type);
-}
+};
 
 const match = (object: TypedObject, filter: Filter<any>): object is TypedObject => {
   if (typeof filter === 'function') {
