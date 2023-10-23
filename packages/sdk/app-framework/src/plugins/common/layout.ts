@@ -58,6 +58,8 @@ export enum LayoutAction {
   TOGGLE_SIDEBAR = `${LAYOUT_ACTION}/toggle-sidebar`,
   OPEN_DIALOG = `${LAYOUT_ACTION}/open-dialog`,
   CLOSE_DIALOG = `${LAYOUT_ACTION}/close-dialog`,
+  OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
+  CLOSE_POPOVER = `${LAYOUT_ACTION}/close-popover`,
   ACTIVATE = `${LAYOUT_ACTION}/activate`,
 }
 
@@ -74,10 +76,19 @@ export namespace LayoutAction {
   };
 
   export type OpenDialog = {
-    content: any;
+    component: string;
+    subject: any;
   };
 
   export type CloseDialog = {};
+
+  export type OpenPopover = {
+    anchorId: string;
+    component: string;
+    subject: any;
+  };
+
+  export type ClosePopover = {};
 
   export type Activate = {
     id: string;

@@ -417,14 +417,15 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME: {
-              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // if (space && layoutPlugin?.provides.layout) {
-              //   layoutPlugin.provides.layout.popoverOpen = true;
-              //   layoutPlugin.provides.layout.popoverContent = { component: 'dxos.org/plugin/space/RenameSpacePopover', subject: space };
-              //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${createNodeId(spaceKey)}`;
-              //   return true;
-              // }
-              break;
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/navtree/${createNodeId(spaceKey)}`,
+                  component: 'dxos.org/plugin/space/RenameSpacePopover',
+                  subject: space,
+                },
+              });
             }
 
             case SpaceAction.OPEN: {
@@ -455,13 +456,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RESTORE: {
-              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // if (space && layoutPlugin?.provides.layout) {
-              //   layoutPlugin.provides.layout.dialogOpen = true;
-              //   layoutPlugin.provides.layout.dialogContent = { component: 'dxos.org/plugin/space/RestoreSpaceDialog', subject: space };
-              //   return true;
-              // }
-              break;
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_DIALOG,
+                data: {
+                  component: 'dxos.org/plugin/space/RestoreSpaceDialog',
+                  subject: space,
+                },
+              });
             }
 
             case SpaceAction.ADD_OBJECT: {
@@ -482,16 +484,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME_OBJECT: {
-              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // const object =
-              //   typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              // if (object && layoutPlugin?.provides.layout) {
-              //   layoutPlugin.provides.layout.popoverOpen = true;
-              //   layoutPlugin.provides.layout.popoverContent = { component: 'dxos.org/plugin/space/RenameObjectPopover', subject: object };
-              //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${intent.data.objectId}`;
-              //   return true;
-              // }
-              break;
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              const subject =
+                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/navtree/${intent.data.objectId}`,
+                  component: 'dxos.org/plugin/space/RenameObjectPopover',
+                  subject,
+                },
+              });
             }
           }
         },

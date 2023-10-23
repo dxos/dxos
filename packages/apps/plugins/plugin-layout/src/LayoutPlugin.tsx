@@ -243,14 +243,30 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
             }
 
             case LayoutAction.OPEN_DIALOG: {
+              const { component, subject } = intent.data as LayoutAction.OpenDialog;
               state.values.dialogOpen = true;
-              state.values.dialogContent = (intent.data as LayoutAction.OpenDialog).content;
+              state.values.dialogContent = { component, subject };
               return true;
             }
 
             case LayoutAction.CLOSE_DIALOG: {
               state.values.dialogOpen = false;
               state.values.dialogContent = null;
+              return true;
+            }
+
+            case LayoutAction.OPEN_POPOVER: {
+              const { anchorId, component, subject } = intent.data as LayoutAction.OpenPopover;
+              state.values.popoverOpen = true;
+              state.values.popoverContent = { component, subject };
+              state.values.popoverAnchorId = anchorId;
+              return true;
+            }
+
+            case LayoutAction.CLOSE_POPOVER: {
+              state.values.popoverOpen = false;
+              state.values.popoverContent = null;
+              state.values.popoverAnchorId = undefined;
               return true;
             }
 
