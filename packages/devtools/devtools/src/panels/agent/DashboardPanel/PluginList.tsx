@@ -17,7 +17,7 @@ export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
   const { helper, builder } = createColumnBuilder<PluginState>();
   const columns: TableColumnDef<PluginState, any>[] = [
     helper.accessor('pluginId', builder.string()),
-    helper.accessor((plugin) => !!plugin.pluginConfig.enabled, { id: 'enabled', ...builder.icon() }),
+    helper.accessor((plugin) => !!plugin.pluginConfig.enabled, { id: 'enabled', ...builder.icon(), size: 80 }),
     helper.display({
       id: 'toggle',
       cell: (context) => (
