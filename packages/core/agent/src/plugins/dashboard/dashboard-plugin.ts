@@ -94,11 +94,8 @@ export class DashboardPlugin extends AbstractPlugin {
 
   private _handleStatus(): Stream<AgentStatus> {
     invariant(this._pluginCtx, 'Client is undefined.');
-    log.info('Dashboard status request.');
 
     return new Stream<AgentStatus>(({ ctx, next, close, ready }) => {
-      log.info('Dashboard status stream opened.');
-
       const update = () => {
         next({
           status: AgentStatus.Status.ON,

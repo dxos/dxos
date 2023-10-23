@@ -65,7 +65,6 @@ describe('DashboardPlugin', () => {
     afterTest(() => stream.close());
 
     stream.subscribe((msg) => {
-      log.info('Got message:', { msg });
       result.wake(msg);
     });
     await stream.waitUntilReady();
