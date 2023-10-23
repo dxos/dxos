@@ -4,6 +4,7 @@
 
 import { faker } from '@faker-js/faker';
 import { create, insert, search } from '@orama/orama';
+import { expect } from 'chai';
 
 import { range, TestObjectGenerator } from '@dxos/echo-generator';
 import { describe, test } from '@dxos/test';
@@ -42,6 +43,7 @@ describe('Orama', () => {
 
     {
       const result = await search(db, { term: 'shoes' });
+      expect(result.hits).to.have.length;
       console.log(result);
     }
   });
