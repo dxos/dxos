@@ -19,7 +19,7 @@ import {
   parseLayoutPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 
 import { LocalFileMain } from './components';
 import translations from './translations';

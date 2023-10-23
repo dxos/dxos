@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
 

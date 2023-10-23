@@ -28,6 +28,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../sdk/react-shell"
-    },
-    {
-      "path": "../../sdk/react-surface"
     },
     {
       "path": "../../sdk/vault"

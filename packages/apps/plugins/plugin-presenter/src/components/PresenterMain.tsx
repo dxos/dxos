@@ -7,7 +7,7 @@ import React, { type FC, useContext, useState } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { SPLITVIEW_PLUGIN, SplitViewAction, useSplitView } from '@braneframe/plugin-splitview';
 import { type Stack as StackType } from '@braneframe/types';
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 

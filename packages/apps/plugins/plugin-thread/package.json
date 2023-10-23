@@ -16,10 +16,10 @@
   ],
   "dependencies": {
     "@braneframe/plugin-splitview": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2"
@@ -50,7 +50,7 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

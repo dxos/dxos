@@ -24,7 +24,7 @@
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
@@ -37,7 +37,7 @@
   "peerDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

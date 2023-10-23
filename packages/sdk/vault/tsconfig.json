@@ -53,6 +53,9 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../app-framework"
+    },
+    {
       "path": "../client"
     },
     {
@@ -69,9 +72,6 @@
     },
     {
       "path": "../react-shell"
-    },
-    {
-      "path": "../react-surface"
     }
   ]
 }

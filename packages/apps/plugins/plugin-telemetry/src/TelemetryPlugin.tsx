@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/app-framework';
 
 import { type AppTelemetryOptions, initializeAppTelemetry } from './telemetry';
 import { useTelemetry } from './useTelemetry';

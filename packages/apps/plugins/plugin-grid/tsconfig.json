@@ -21,10 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../ui/react-ui"

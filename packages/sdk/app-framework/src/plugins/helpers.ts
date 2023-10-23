@@ -34,7 +34,7 @@ export const filterPlugins = <T>(
  * Resolves a plugin by predicate.
  *
  * @example
- * import { isIntentPlugin, resolvePlugin } from '@dxos/react-surface';
+ * import { isIntentPlugin, resolvePlugin } from '@dxos/app-framework';
  * const intentPlugin = resolvePlugin(plugins, isIntentPlugin);
  */
 export const resolvePlugin = <T>(

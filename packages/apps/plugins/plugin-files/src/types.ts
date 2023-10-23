@@ -7,7 +7,7 @@ import type {
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 
 export const FILES_PLUGIN = 'dxos.org/plugin/files';
 

@@ -4,8 +4,8 @@
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection, FileSlide } from './components';
 import translations from './translations';

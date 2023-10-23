@@ -32,7 +32,7 @@
   "devDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
@@ -47,7 +47,7 @@
   "peerDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

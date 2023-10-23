@@ -9,8 +9,8 @@ import { type View as ViewType } from '@braneframe/types';
 import { type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
-import { type PluginComponentProps } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { type PluginComponentProps } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 

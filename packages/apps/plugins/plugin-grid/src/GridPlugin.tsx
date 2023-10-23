@@ -9,7 +9,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Grid as GridType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/app-framework';
 
 import { GridMain } from './components';
 import translations from './translations';

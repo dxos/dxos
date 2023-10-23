@@ -10,7 +10,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import { KanbanMain } from './components';
 import translations from './translations';

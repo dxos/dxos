@@ -10,7 +10,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Table as TableType } from '@braneframe/types';
 import { SpaceProxy, Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import { TableMain } from './components';
 import translations from './translations';

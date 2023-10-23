@@ -30,7 +30,7 @@
       "path": "../../../common/local-storage"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../ui/react-ui"

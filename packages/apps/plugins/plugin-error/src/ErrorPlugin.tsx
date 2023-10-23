@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { ErrorBoundary, type PluginDefinition, type TranslationsProvides } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local } from '@dxos/react-client';
-import { ErrorBoundary, type PluginDefinition, type TranslationsProvides } from '@dxos/react-surface';
 
 import { ResetDialog } from './components';
 import { ERROR_PLUGIN } from './constants';

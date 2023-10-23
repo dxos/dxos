@@ -12,7 +12,7 @@ import type {
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 
 export const STACK_PLUGIN = 'dxos.org/plugin/stack';
 

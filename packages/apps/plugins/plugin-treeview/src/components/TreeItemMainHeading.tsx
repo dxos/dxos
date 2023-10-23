@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { useIntent } from '@dxos/react-surface';
+import { useIntent } from '@dxos/app-framework';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
 import { TREE_VIEW_PLUGIN } from '../types';

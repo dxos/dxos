@@ -9,9 +9,9 @@ import React, { useEffect, useState } from 'react';
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type GraphPluginProvides } from '@braneframe/plugin-graph';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { getPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';

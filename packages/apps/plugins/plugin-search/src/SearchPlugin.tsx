@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';

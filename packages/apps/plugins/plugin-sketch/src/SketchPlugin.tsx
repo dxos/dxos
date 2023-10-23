@@ -9,7 +9,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/react-surface';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 
 import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';

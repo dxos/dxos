@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { SurfaceProvides, TranslationsProvides } from '@dxos/react-surface';
+import type { SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
 
 export const TREE_VIEW_PLUGIN = 'dxos.org/plugin/treeview';
 

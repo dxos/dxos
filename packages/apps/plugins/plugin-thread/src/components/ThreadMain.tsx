@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 

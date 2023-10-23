@@ -6,7 +6,7 @@ import { Octokit } from 'octokit';
 import React, { type Context, createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { usePlugin } from '@dxos/react-surface';
+import { usePlugin } from '@dxos/app-framework';
 
 import { type GithubPluginProvides } from '../../GithubPlugin';
 import { GITHUB_PLUGIN } from '../../props';

@@ -40,7 +40,7 @@ import { createClientServices, Remote } from '@dxos/client/services';
 import { Config, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { Defaults } from '@dxos/react-client';
-import { PluginProvider } from '@dxos/react-surface';
+import { PluginProvider } from '@dxos/app-framework';
 import {
   defaultTheme,
   bindTheme,

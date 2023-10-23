@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { Surface, createApp } from '@dxos/react-surface';
+import { Surface, createApp } from '@dxos/app-framework';
 
 import { DebugPlugin } from '../DebugPlugin';
 

@@ -8,7 +8,7 @@ import React, { type FC, useEffect, useState } from 'react';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

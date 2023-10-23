@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
 
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 import { type LocalFile } from '../types';

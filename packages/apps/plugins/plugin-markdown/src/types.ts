@@ -9,7 +9,7 @@ import type {
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';

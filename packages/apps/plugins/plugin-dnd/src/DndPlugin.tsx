@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PluginDefinition } from '@dxos/react-surface';
+import { type PluginDefinition } from '@dxos/app-framework';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 export const DND_PLUGIN = 'dxos.org/plugin/dnd';

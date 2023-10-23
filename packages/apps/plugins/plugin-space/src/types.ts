@@ -3,14 +3,14 @@
 //
 
 import type { AppState } from '@braneframe/types';
-import type { PublicKey } from '@dxos/react-client';
-import type { Space } from '@dxos/react-client/echo';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
+import type { PublicKey } from '@dxos/react-client';
+import type { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';

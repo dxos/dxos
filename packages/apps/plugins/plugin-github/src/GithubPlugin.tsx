@@ -26,7 +26,7 @@ import {
   parseIntentPlugin,
   type TranslationsProvides,
   type SurfaceProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {

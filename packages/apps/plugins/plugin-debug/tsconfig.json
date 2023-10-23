@@ -54,13 +54,13 @@
       "path": "../../../devtools/devtools"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/react-ui"

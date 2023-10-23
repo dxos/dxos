@@ -5,7 +5,7 @@
 import { MagnifyingGlass, Chat } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Surface } from '@dxos/react-surface';
+import { Surface } from '@dxos/app-framework';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 

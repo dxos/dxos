@@ -10,7 +10,7 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { isMarkdownContent } from '@braneframe/plugin-markdown';
 import { SPLITVIEW_PLUGIN, SplitViewAction } from '@braneframe/plugin-splitview';
 import { isStack } from '@braneframe/plugin-stack';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import translations from './translations';

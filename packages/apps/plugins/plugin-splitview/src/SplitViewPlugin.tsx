@@ -27,7 +27,7 @@ import {
   type GraphBuilderProvides,
   parseSurfacePlugin,
   type SurfaceProvides,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 
 import { SplitViewContext, useSplitView } from './SplitViewContext';
 import { Fallback, SplitView, ContextView, ContentEmpty } from './components';

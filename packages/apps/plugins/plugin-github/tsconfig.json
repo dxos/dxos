@@ -27,10 +27,10 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"

@@ -6,8 +6,8 @@ import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
+import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
 import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
-import { Surface, useIntent, usePlugin } from '@dxos/react-surface';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';

@@ -16,7 +16,7 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, useIntent, usePlugin } from '@dxos/react-surface';
+import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
 import {
   Avatar,
   Button,

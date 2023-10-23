@@ -30,13 +30,13 @@
       "path": "../../../core/protocols"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/app-graph"
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/react-ui"

@@ -27,7 +27,7 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { createApp } from '@dxos/react-surface';
+import { createApp } from '@dxos/app-framework';
 import { ProgressBar } from '@dxos/react-ui';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.

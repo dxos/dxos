@@ -4,13 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import type { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 

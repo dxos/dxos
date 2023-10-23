@@ -36,10 +36,10 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../plugin-splitview"

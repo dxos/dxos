@@ -7,7 +7,7 @@ import React, { type FC, useEffect } from 'react';
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
 import { Expando } from '@dxos/client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { type MosaicTileAction, Grid, type MosaicDropEvent, type Position } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';

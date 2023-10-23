@@ -6,7 +6,7 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 

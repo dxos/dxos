@@ -15,7 +15,7 @@ import { Document } from '@braneframe/types';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin } from '@dxos/react-surface';
+import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import {
   type ComposerModel,
   type MarkdownComposerProps,

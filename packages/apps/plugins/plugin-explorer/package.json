@@ -17,11 +17,11 @@
   "dependencies": {
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "d3": "^7.4.4",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"
@@ -51,7 +51,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",

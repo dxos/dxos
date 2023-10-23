@@ -5,9 +5,9 @@
 import { Users } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
+import { parseIntentPlugin, parseLayoutPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { parseIntentPlugin, parseLayoutPlugin, usePlugin, useResolvePlugin } from '@dxos/react-surface';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 

@@ -10,7 +10,7 @@ import {
   type GraphPluginProvides,
   type PluginDefinition,
   parseGraphBuilderPlugin,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
 
 import { GraphContext } from './GraphContext';
 

@@ -9,8 +9,8 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
+import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/react-surface';
 
 import { StackMain } from './components';
 import translations from './translations';

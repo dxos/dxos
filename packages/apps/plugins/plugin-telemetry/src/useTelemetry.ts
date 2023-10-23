@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 
+import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { parseLayoutPlugin, useResolvePlugin } from '@dxos/react-surface';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, setupTelemetryListeners, withTelemetry } from './telemetry';
 

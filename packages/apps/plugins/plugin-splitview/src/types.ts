@@ -3,7 +3,7 @@
 //
 
 import type { Node } from '@braneframe/plugin-graph';
-import type { Layout } from '@dxos/react-surface';
+import type { Layout } from '@dxos/app-framework';
 
 export const SPLITVIEW_PLUGIN = 'dxos.org/plugin/splitview';
 

@@ -1,11 +1,11 @@
-# @dxos/react-surface
+# @dxos/app-framework
 
-A react framework for making extensible interfaces.
+A framework for building applications from composible plugins.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-surface
+pnpm i @dxos/app-framework
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ pnpm i @dxos/react-surface
 Run with
 
 ```bash
-pnpm nx storybook react-surface
+pnpm nx storybook app-framework
 ```
 
 ## DXOS Resources

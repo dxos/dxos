@@ -10,9 +10,9 @@ import React from 'react';
 import { type Node } from '@braneframe/plugin-graph';
 import { getPersistenceParent } from '@braneframe/plugin-treeview';
 import { type AppState } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
 import { type Filter } from '@dxos/echo-schema';
 import { type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
-import { type DispatchIntent } from '@dxos/react-surface';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 

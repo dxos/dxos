@@ -11,7 +11,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Game, types } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
 
 import { ChessMain } from './components';
 import translations from './translations';

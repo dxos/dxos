@@ -12,18 +12,18 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type Node, isGraphNode } from '@braneframe/plugin-graph';
 import { SplitViewAction, type LayoutState } from '@braneframe/plugin-splitview';
 import { AppState } from '@braneframe/types';
-import { EventSubscriptions } from '@dxos/async';
-import { isTypedObject, subscribe } from '@dxos/echo-schema';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 import {
   type PluginDefinition,
   resolvePlugin,
   parseIntentPlugin,
   parseGraphPlugin,
   parseLayoutPlugin,
-} from '@dxos/react-surface';
+} from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { isTypedObject, subscribe } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
+import { PublicKey } from '@dxos/react-client';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 
 import { backupSpace } from './backup';
 import {
