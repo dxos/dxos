@@ -17,7 +17,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithPreview } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,
@@ -41,7 +41,7 @@ const hoverableDescriptionIcons =
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component } = useContainer();
-  const sortedNodes = useSortedItems(nodes);
+  const sortedNodes = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body>
@@ -126,6 +126,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
+            data-itemid={item.id}
             style={draggableStyle}
             ref={forwardedRef}
             role='treeitem'

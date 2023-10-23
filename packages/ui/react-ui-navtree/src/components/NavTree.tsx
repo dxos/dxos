@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Tree } from '@dxos/react-ui';
-import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
+import { useContainer, Mosaic, type MosaicContainerProps, useItemsWithPreview } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
@@ -14,7 +14,7 @@ import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   const { id, Component } = useContainer();
-  const sortedNodes = useSortedItems(node.children);
+  const sortedNodes = useItemsWithPreview({ items: node.children, path: id, strategy: 'layout-stable' });
 
   return (
     <Mosaic.SortableContext id={id} items={sortedNodes} direction='vertical'>

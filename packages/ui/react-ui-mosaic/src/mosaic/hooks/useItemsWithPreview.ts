@@ -2,12 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useContainer } from './useContainer';
 import { useMosaic } from './useMosaic';
 import { type MosaicDataItem } from '../types';
 import { Path } from '../util';
+
+const isEquivalent = <T extends MosaicDataItem>(itemsA: T[], itemsB: T[]): boolean => {
+  if (itemsA.length !== itemsB.length) {
+    return false;
+  } else {
+    return itemsA.every(({ id }, index) => id === itemsB[index].id);
+  }
+};
 
 /**
  * Returns a spliced collection of items including a placeholder if items that could drop,
@@ -25,6 +33,9 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
   const { operation, activeItem, overItem } = useMosaic();
   const [itemsWithPreview, setItemsWithPreview] = useState(items);
   const { compare } = useContainer();
+  const sortedItems = useMemo(() => {
+    return compare ? [...items].sort(compare) : items;
+  }, [items, compare]);
   const overParent =
     // If over the sortable context itself & active item is foreign, then treat self as the parent.
     // This allows items to be appended to the end of the sortable.
@@ -34,9 +45,9 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
   const [lastOverParent, setLastOverParent] = useState(overParent);
 
   useEffect(() => {
-    if (operation === 'reject' || operation === 'rearrange' || !activeItem || !overItem) {
+    if (!activeItem || !overItem) {
       setLastOverParent(undefined);
-      setItemsWithPreview(compare ? [...items].sort(compare) : items);
+      setItemsWithPreview(sortedItems);
       return;
     }
 
@@ -52,29 +63,41 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
 
     switch (strategy) {
       case 'layout-stable':
-        // Reset items.
-        setItemsWithPreview(compare ? [...items].sort(compare) : items);
+        if (activeIsChild && !overIsChild && operation !== 'rearrange') {
+          // Change the dnd-id of the origin item that may move to a foreign destination
+          setItemsWithPreview(
+            sortedItems.map((item) => {
+              if (item.id === activeItem.item.id) {
+                return { ...item, id: `${item.id}--origin` };
+              } else {
+                return item;
+              }
+            }),
+          );
+        } else {
+          // Reset items.
+          setItemsWithPreview(sortedItems);
+        }
         break;
       case 'default':
       default:
         if (!activeIsChild && overIsChild) {
           // Insert item into sortable.
-          setItemsWithPreview((items) => {
-            const position = overItem.position as number;
-            const sortedItems = compare ? [...items].sort(compare) : items;
-            return [...sortedItems.slice(0, position), activeItem.item as T, ...sortedItems.slice(position)];
-          });
+          const position = overItem.position as number;
+          setItemsWithPreview([
+            ...sortedItems.slice(0, position),
+            activeItem.item as T,
+            ...sortedItems.slice(position),
+          ]);
         } else if (!activeIsChild && overSelf) {
           // Append item to end of sortable.
-          setItemsWithPreview((items) => [...(compare ? [...items].sort(compare) : items), activeItem.item as T]);
+          setItemsWithPreview([...sortedItems, activeItem.item as T]);
         } else if (activeIsChild && !overIsChild) {
           // Remove item being dragged out.
-          setItemsWithPreview((items) =>
-            (compare ? [...items].sort(compare) : items).filter((item) => item.id !== activeItem.item.id),
-          );
+          setItemsWithPreview(sortedItems.filter((item) => item.id !== activeItem.item.id));
         } else {
           // Reset items.
-          setItemsWithPreview(compare ? [...items].sort(compare) : items);
+          setItemsWithPreview(sortedItems);
         }
         break;
     }
@@ -82,5 +105,5 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
 
   // In order to avoid render glitching, rather than waiting for the effect to run,
   // immediately return the new items after dropping an item into a new path.
-  return items.length === itemsWithPreview.length ? items : itemsWithPreview;
+  return isEquivalent(sortedItems, itemsWithPreview) ? sortedItems : itemsWithPreview;
 };
