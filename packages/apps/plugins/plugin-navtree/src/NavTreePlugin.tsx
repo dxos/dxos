@@ -18,8 +18,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
     },
     provides: {
       surface: {
-        component: ({ $role, ...data }) => {
-          switch ($role) {
+        component: (data, role) => {
+          switch (role) {
             case 'navigation':
               if ('graph' in data && data.graph instanceof Graph) {
                 return (

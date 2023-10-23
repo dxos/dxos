@@ -229,8 +229,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       settings: settings.values,
       translations,
       surface: {
-        component: (data) => {
-          switch (data.$role) {
+        component: (data, role) => {
+          switch (role) {
             case 'main':
               switch (true) {
                 case isSpace(data.active):
@@ -249,16 +249,16 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   return null;
               }
             case 'dialog':
-              if (data.$component === 'dxos.org/plugin/space/RestoreSpaceDialog' && isSpace(data.subject)) {
+              if (data.component === 'dxos.org/plugin/space/RestoreSpaceDialog' && isSpace(data.subject)) {
                 return <DialogRestoreSpace space={data.subject} />;
               } else {
                 return null;
               }
             case 'popover':
-              if (data.$component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
+              if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
               } else if (
-                data.$component === 'dxos.org/plugin/space/RenameObjectPopover' &&
+                data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
                 isTypedObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
@@ -420,7 +420,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               // if (space && layoutPlugin?.provides.layout) {
               //   layoutPlugin.provides.layout.popoverOpen = true;
-              //   layoutPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameSpacePopover', subject: space };
+              //   layoutPlugin.provides.layout.popoverContent = { component: 'dxos.org/plugin/space/RenameSpacePopover', subject: space };
               //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${createNodeId(spaceKey)}`;
               //   return true;
               // }
@@ -458,7 +458,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               // if (space && layoutPlugin?.provides.layout) {
               //   layoutPlugin.provides.layout.dialogOpen = true;
-              //   layoutPlugin.provides.layout.dialogContent = { $component: 'dxos.org/plugin/space/RestoreSpaceDialog', subject: space };
+              //   layoutPlugin.provides.layout.dialogContent = { component: 'dxos.org/plugin/space/RestoreSpaceDialog', subject: space };
               //   return true;
               // }
               break;
@@ -487,7 +487,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               //   typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               // if (object && layoutPlugin?.provides.layout) {
               //   layoutPlugin.provides.layout.popoverOpen = true;
-              //   layoutPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameObjectPopover', subject: object };
+              //   layoutPlugin.provides.layout.popoverContent = { component: 'dxos.org/plugin/space/RenameObjectPopover', subject: object };
               //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${intent.data.objectId}`;
               //   return true;
               // }

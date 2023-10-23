@@ -9,6 +9,7 @@ import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
 
+import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../types';
 
@@ -74,10 +75,10 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
                 <span className='sr-only'>{t('open navigation sidebar label')}</span>
                 <MenuIcon weight='light' className={getSize(4)} />
               </Button>
-              <Surface name='heading' role='heading' limit={2} />
+              <Surface role='heading' limit={2} />
               <div role='none' className='grow' />
               {/* TODO(burdon): Too specific? status? contentinfo? */}
-              <Surface name='presence' role='presence' limit={1} />
+              <Surface role='presence' limit={1} />
               {complementarySidebarOpen !== null && showComplementarySidebar && (
                 <Button
                   onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
@@ -98,14 +99,14 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
         {/* Status info. */}
         {/* TODO(burdon): Currently covered by complementary sidebar. */}
         <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]', fixedSurface)}>
-          <Surface name='status' role='status' />
+          <Surface role='status' />
         </div>
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface name='main' role='main' limit={1} />
+        <Surface role='main' limit={1} fallback={Fallback} />
 
         {/* Global popovers. */}
         {/* TODO(burdon): Doesn't allow client to control the popover. */}

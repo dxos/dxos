@@ -123,12 +123,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     provides: {
       translations,
       surface: {
-        component: ({ $role, ...data }) => {
+        component: (data, role) => {
           if (!isLocalFile(data.active)) {
             return null;
           }
 
-          switch ($role) {
+          switch (role) {
             case 'main': {
               return <LocalFileMain file={data.active} />;
             }

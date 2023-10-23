@@ -122,13 +122,13 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
       context: (props) => <OctokitProvider {...props} />,
       surface: {
-        component: ({ $role, $component, ...data }) => {
-          switch ($component) {
+        component: (data, role) => {
+          switch (data.component) {
             case `${GITHUB_PLUGIN}/embedded`:
               return <EmbeddedMain />;
           }
 
-          switch ($role) {
+          switch (role) {
             case 'dialog':
               switch (data.content) {
                 case 'dxos.org/plugin/github/BindDialog':

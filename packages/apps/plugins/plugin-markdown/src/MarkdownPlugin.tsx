@@ -263,11 +263,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ $role, $component, ...data }) => {
+        component: (data, role) => {
           // TODO(burdon): Document.
           // TODO(wittjosiah): Expose all through `components` as well?
           // TODO(wittjosiah): Improve the naming of surface components.
-          switch ($role) {
+          switch (role) {
             case 'main': {
               if (isDocument(data.active)) {
                 return <MarkdownMain content={data.active} />;

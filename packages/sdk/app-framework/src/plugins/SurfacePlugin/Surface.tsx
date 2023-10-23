@@ -2,36 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type Ref, forwardRef, type ReactNode, type PropsWithChildren } from 'react';
+import React, { type ReactNode, type PropsWithChildren } from 'react';
 import { createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { type SurfaceComponent, useSurface } from './SurfaceRootContext';
-
-/**
- *
- */
-export type SurfaceDatum = {
-  /**
-   * If specified, the Surface will lookup the component(s) by name and only render if found.
-   */
-  $component?: string | string[];
-
-  /**
-   * Automatically set based on the role of the surface.
-   */
-  $role?: string;
-
-  /**
-   * Configure nested surfaces.
-   */
-  $surfaces?: Record<string, Partial<SurfaceProps>>;
-
-  /**
-   * Any other data to be passed to the component.
-   */
-  [key: string]: unknown;
-};
 
 /**
  * Direction determines how multiple components are laid out.
@@ -54,7 +29,12 @@ export type SurfaceProps = {
   /**
    * The data to be rendered by the surface.
    */
-  data?: SurfaceDatum;
+  data?: Record<string, unknown>;
+
+  /**
+   * Configure nested surfaces.
+   */
+  surfaces?: Record<string, Pick<SurfaceProps, 'data' | 'surfaces'>>;
 
   /**
    * If specified, the Surface will be wrapped in an error boundary.
@@ -78,11 +58,10 @@ export type SurfaceProps = {
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = forwardRef<HTMLElement, SurfaceProps>(({ role, name = role, ...rest }, forwardedRef) => {
-  const props = { role, name, ...rest };
+export const Surface = ({ role, name = role, fallback, ...rest }: SurfaceProps) => {
+  const props = { role, name, fallback, ...rest };
   const context = useContext(SurfaceContext);
-  const data = props.data ?? (props.name && context?.data?.$surfaces?.[props.name]?.data);
-  const fallback = props.fallback ?? (props.name && context?.data?.$surfaces?.[props.name]?.fallback);
+  const data = props.data ?? ((name && context?.surfaces?.[name]?.data) || {});
 
   return (
     <>
@@ -91,56 +70,48 @@ export const Surface = forwardRef<HTMLElement, SurfaceProps>(({ role, name = rol
           <SurfaceResolver {...props} />
         </ErrorBoundary>
       ) : (
-        <SurfaceResolver {...props} ref={forwardedRef} />
+        <SurfaceResolver {...props} />
       )}
     </>
   );
-});
-
-type SurfaceContext = SurfaceProps & {
-  //
-  parent?: SurfaceContext;
-
-  //
-  root?: SurfaceContext;
 };
 
 //
 //
-const SurfaceContext = createContext<SurfaceContext | null>(null);
+const SurfaceContext = createContext<SurfaceProps | null>(null);
 
 //
 //
-const SurfaceResolver = forwardRef<HTMLElement, SurfaceProps>((props, forwardedRef) => {
+const SurfaceResolver = (props: SurfaceProps) => {
   const { components } = useSurface();
   const parent = useContext(SurfaceContext);
-  const nodes = resolveNodes(components, props, parent, forwardedRef);
-  const currentContext = {
-    ...((props.name && parent?.data?.$surfaces?.[props.name]) ?? {}),
+  const nodes = resolveNodes(components, props, parent);
+  const currentContext: SurfaceProps = {
     ...props,
-    ...(parent ? { parent, root: parent.root ?? parent } : {}),
+    surfaces: {
+      ...((props.name && parent?.surfaces?.[props.name]?.surfaces) || {}),
+      ...props.surfaces,
+    },
   };
 
   return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;
-});
+};
 
 //
 //
 const resolveNodes = (
   components: Record<string, SurfaceComponent>,
   props: SurfaceProps,
-  context: SurfaceContext | null,
-  forwardedRef: Ref<HTMLElement>,
+  context: SurfaceProps | null,
 ): ReactNode[] => {
   const data = {
-    $role: props.role ?? (props.name && context?.data?.$surfaces?.[props.name]?.role),
-    ...(props.name && context?.data?.$surfaces?.[props.name]?.data),
+    ...((props.name && context?.surfaces?.[props.name]?.data) || {}),
     ...props.data,
   };
 
   const nodes = Object.entries(components)
     .map(([key, component]): ReactNode => {
-      const result = component(data, forwardedRef);
+      const result = component(data, props.role);
       return result ? <Wrapper key={key}>{result}</Wrapper> : undefined;
     })
     .filter((Component): Component is ReactNode => Boolean(Component));

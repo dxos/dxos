@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReactNode, type Ref, createContext, useContext, type Context, type Provider } from 'react';
-
-import { type SurfaceDatum } from './Surface';
+import { type ReactNode, createContext, useContext, type Context, type Provider } from 'react';
 
 /**
  *
  */
-export type SurfaceComponent = (data: SurfaceDatum, forwardedRef?: Ref<HTMLElement>) => ReactNode | undefined;
+export type SurfaceComponent = (data: Record<string, unknown>, role?: string) => ReactNode | undefined;
 
 export type SurfaceRootContext = {
   components: Record<string, SurfaceComponent>;

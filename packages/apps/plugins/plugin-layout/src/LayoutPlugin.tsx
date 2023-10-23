@@ -31,7 +31,7 @@ import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { LayoutContext, useLayout } from './LayoutContext';
-import { Fallback, SplitView, ContextView, ContentEmpty } from './components';
+import { SplitView, ContextView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
 import { LAYOUT_PLUGIN, type LayoutState } from './types';
@@ -124,9 +124,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         const { dispatch } = useIntent();
         const { graph } = useGraph();
         const layout = useLayout();
-        const [shortId, $component] = layout.active?.split(':') ?? [];
+        const [shortId, component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-        const result = plugin?.provides.surface.component({ $component });
+        const result = plugin?.provides.surface.component({ component });
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -167,11 +167,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           if (state.values.fullscreen) {
             return (
               <Surface
-                data={{
-                  $component: `${LAYOUT_PLUGIN}/SplitView`,
-                  $surfaces: {
-                    main: { data: layout.activeNode.data, fallback: Fallback },
-                  },
+                data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
+                surfaces={{
+                  main: { data: layout.activeNode.data },
                 }}
               />
             );
@@ -179,45 +177,41 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
 
           return (
             <Surface
-              data={{
-                $component: `${LAYOUT_PLUGIN}/SplitView`,
-                $surfaces: {
-                  sidebar: {
-                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                  },
-                  complementary: {
-                    data: { $component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
-                  },
-                  main: { data: { active: layout.activeNode.data }, fallback: Fallback },
-                  presence: { data: { active: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
+              data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
+              surfaces={{
+                sidebar: {
+                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
+                complementary: {
+                  data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                },
+                main: { data: { active: layout.activeNode.data } },
+                presence: { data: { active: layout.activeNode.data } },
+                status: { data: { active: layout.activeNode.data } },
+                heading: { data: { activeNode: layout.activeNode } },
+                documentTitle: { data: { activeNode: layout.activeNode } },
               }}
             />
           );
         } else {
           return (
             <Surface
-              data={{
-                $component: `${LAYOUT_PLUGIN}/SplitView`,
-                $surfaces: {
-                  sidebar: {
-                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                  },
-                  main: { data: { $component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
-                  // TODO(wittjosiah): This plugin should own document title.
-                  documentTitle: { data: { $component: 'dxos.org/plugin/treeview/DocumentTitle' } },
+              data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
+              surfaces={{
+                sidebar: {
+                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
+                main: { data: { component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
+                // TODO(wittjosiah): This plugin should own document title.
+                documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
               }}
             />
           );
         }
       },
       surface: {
-        component: ({ $component }) => {
-          switch ($component) {
+        component: ({ component }) => {
+          switch (component) {
             case `${LAYOUT_PLUGIN}/SplitView`:
               return (
                 <SplitView fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />

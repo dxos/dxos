@@ -92,12 +92,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       surface: {
-        component: ({ $role, ...data }) => {
+        component: (data, role) => {
           if (!isStack(data.active)) {
             return null;
           }
 
-          switch ($role) {
+          switch (role) {
             case 'main':
               return <StackMain stack={data.active} />;
 
