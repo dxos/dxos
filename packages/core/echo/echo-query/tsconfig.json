@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../echo-db"
+    },
+    {
+      "path": "../echo-generator"
     }
   ]
 }

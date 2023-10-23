@@ -40,19 +40,6 @@
         "{options.outputFile}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
-      },
-      "outputs": [
-        "packages/core/echo/echo-query/src/proto/gen",
-        "packages/core/echo/echo-query/src/test/proto/gen"
-      ]
-    },
     "test": {
       "executor": "@dxos/test:run",
       "options": {

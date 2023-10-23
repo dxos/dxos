@@ -3036,12 +3036,17 @@ importers:
   packages/core/echo/echo-query:
     specifiers:
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-generator': workspace:*
+      '@faker-js/faker': ^8.0.2
       '@orama/orama': ^2.0.0-beta.1
       lodash.get: ^4.4.2
     dependencies:
       '@dxos/echo-db': link:../echo-db
       '@orama/orama': 2.0.0-beta.1
       lodash.get: 4.4.2
+    devDependencies:
+      '@dxos/echo-generator': link:../echo-generator
+      '@faker-js/faker': 8.0.2
 
   packages/core/echo/echo-schema:
     specifiers:
