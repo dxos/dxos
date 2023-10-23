@@ -44,7 +44,7 @@ describe('Orama', () => {
     {
       const result = await search(db, { term: 'shoes' });
       expect(result.hits).to.have.length;
-      console.log(result);
+      // console.log(result);
     }
   });
 });
