@@ -101,11 +101,13 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     this._schema = opts?.schema;
     this._immutable = opts?.immutable ?? false;
 
-    const type = opts?.type ?? (
-      this._schema
-        ? (this._schema[immutable] ? new Reference(this._schema!.typename, 'protobuf') : new Reference(this._schema!.id))
-        : undefined
-    );
+    const type =
+      opts?.type ??
+      (this._schema
+        ? this._schema[immutable]
+          ? new Reference(this._schema!.typename, 'protobuf')
+          : new Reference(this._schema!.id)
+        : undefined);
 
     if (type) {
       this._mutate({ typeRef: type });
@@ -579,7 +581,7 @@ export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
  *
  */
 type ExpandoConstructor = {
-  new(initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
+  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;

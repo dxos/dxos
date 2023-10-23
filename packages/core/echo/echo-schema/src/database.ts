@@ -3,7 +3,7 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel, Reference, type DocumentModelState } from '@dxos/document-model';
+import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/document-model';
 import {
   type BatchUpdate,
   type DatabaseProxy,
@@ -19,12 +19,12 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
-import { type EchoObject, base, db, immutable } from './defs';
+import { type EchoObject, base, db } from './defs';
 import { type HyperGraph } from './hyper-graph';
 import { type Schema } from './proto';
 import { type Filter, Query, type TypeFilter } from './query';
 import { Text } from './text-object';
-import { TypedObject, isTypedObject } from './typed-object';
+import { TypedObject } from './typed-object';
 
 /**
  * Database wrapper.
@@ -276,7 +276,7 @@ export class EchoDatabase {
    * @internal
    */
   _resolveSchema(type: Reference): Schema | undefined {
-    if(type.protocol === 'protobuf') {
+    if (type.protocol === 'protobuf') {
       return this._graph.types.getSchema(type.itemId);
     } else {
       // TODO(dmaretskyi): Cross-space references.
