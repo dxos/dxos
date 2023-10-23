@@ -4294,6 +4294,28 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
 
+  packages/core/echo/echo-query:
+    dependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo-db
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@orama/orama':
+        specifier: ^2.0.0-beta.1
+        version: 2.0.0-beta.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo-generator
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
+
   packages/core/echo/echo-schema:
     dependencies:
       '@dxos/async':
@@ -15687,6 +15709,11 @@ packages:
       '@octokit/webhooks-methods': 3.0.2
       '@octokit/webhooks-types': 6.10.0
       aggregate-error: 3.1.0
+    dev: false
+
+  /@orama/orama@2.0.0-beta.1:
+    resolution: {integrity: sha512-poON8z+wnUHyRJPD7IgigOmz1leRg04ipratBKWzfPUVNUZoGASxXSOInLda6hcMpKoWJO3a9o0NQk/w1vTUAA==}
+    engines: {node: '>= 16.0.0'}
     dev: false
 
   /@parcel/watcher@2.0.4:

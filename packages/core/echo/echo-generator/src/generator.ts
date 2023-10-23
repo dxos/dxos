@@ -44,6 +44,19 @@ export const Priority = [1, 2, 3, 4, 5];
 
 export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
   document: {
+    createSchema: () =>
+      new SchemaType({
+        props: [
+          {
+            id: 'title',
+            type: SchemaType.PropType.STRING,
+          },
+          {
+            id: 'body',
+            type: SchemaType.PropType.STRING,
+          },
+        ],
+      }),
     createData: () => ({
       title: faker.lorem.sentence(3),
       body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
@@ -52,6 +65,19 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   // TODO(burdon): Configure images.
   image: {
+    createSchema: () =>
+      new SchemaType({
+        props: [
+          {
+            id: 'title',
+            type: SchemaType.PropType.STRING,
+          },
+          {
+            id: 'body',
+            type: SchemaType.PropType.STRING,
+          },
+        ],
+      }),
     createData: () => ({
       title: faker.lorem.sentence(3),
       body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
