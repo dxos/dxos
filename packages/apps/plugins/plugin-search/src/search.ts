@@ -35,6 +35,11 @@ export type SearchResult = {
 
 export const filterObjects = <T extends Record<string, any>>(objects: T[], match: RegExp): SearchResult[] => {
   return objects.reduce<SearchResult[]>((results, object) => {
+    // TODO(burdon): Hack to ignore Text objects.
+    if (!object.__meta) {
+      return results;
+    }
+
     const fields = mapObjectToTextFields(object);
     Object.entries(fields).some(([, value]) => {
       const result = value.match(match);
