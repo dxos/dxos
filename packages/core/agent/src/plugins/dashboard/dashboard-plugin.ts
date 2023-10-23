@@ -6,6 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import yaml from 'yaml';
 
+import { type Space } from '@dxos/client/echo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -13,9 +14,8 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AgentStatus, type PluginState, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { getGossipRPCPort } from './utils';
 import { AbstractPlugin } from '../plugin';
 
 type Options = Required<Runtime.Agent.Plugins.Dashboard>;
@@ -150,3 +150,11 @@ export class DashboardPlugin extends AbstractPlugin {
     }
   }
 }
+
+export const getGossipRPCPort = ({ space, channelName }: { space: Space; channelName: string }): RpcPort => ({
+  send: (message) => space.postMessage(channelName, { '@type': 'google.protobuf.Any', value: message }),
+  subscribe: (callback) =>
+    space.listen(channelName, (gossipMessage) => {
+      return callback(gossipMessage.payload.value);
+    }),
+});

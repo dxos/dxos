@@ -25,7 +25,7 @@ message AgentStatus {
   }
   
   Status status = 1;
-  Memory memory = 2;
+  optional Memory memory = 2;
   repeated PluginState plugins = 3;
 }
 

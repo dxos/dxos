@@ -3,11 +3,16 @@
 //
 
 import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { schema } from '@dxos/protocols';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
+import { createProtoRpcPeer, type RpcPort, type ProtoRpcPeer } from '@dxos/rpc';
 
-import { CHANNEL_NAME, type ServiceBundle } from './dashboard-plugin';
-import { getGossipRPCPort } from './utils';
+type ServiceBundle = {
+  DashboardService: DashboardService;
+};
+
+const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
 
 export class DashboardProxy {
   private readonly client: Client;
@@ -42,3 +47,11 @@ export class DashboardProxy {
     await this._rpc.close();
   }
 }
+
+const getGossipRPCPort = ({ space, channelName }: { space: Space; channelName: string }): RpcPort => ({
+  send: (message) => space.postMessage(channelName, { '@type': 'google.protobuf.Any', value: message }),
+  subscribe: (callback) =>
+    space.listen(channelName, (gossipMessage) => {
+      return callback(gossipMessage.payload.value);
+    }),
+});

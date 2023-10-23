@@ -9,11 +9,12 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
+import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { DashboardPlugin } from './dashboard-plugin';
-import { DashboardProxy } from './dashboard-proxy';
+import { CHANNEL_NAME, DashboardPlugin, getGossipRPCPort } from './dashboard-plugin';
 
 describe('DashboardPlugin', () => {
   test('Query status', async () => {
@@ -43,13 +44,24 @@ describe('DashboardPlugin', () => {
 
     await asyncTimeout(client2.spaces.isReady.wait(), 1000);
     await asyncTimeout(client1.spaces.default.waitUntilReady(), 1000);
-    const dashboardProxy = new DashboardProxy({ client: client2 });
+    const dashboardProxy = createProtoRpcPeer({
+      requested: {
+        DashboardService: schema.getService('dxos.agent.dashboard.DashboardService'),
+      },
+      exposed: {},
+      handlers: {},
+      noHandshake: true,
+      port: getGossipRPCPort({ space: client2.spaces.default, channelName: CHANNEL_NAME }),
+      encodingOptions: {
+        preserveAny: true,
+      },
+    });
     await dashboardProxy.open();
     afterTest(() => dashboardProxy.close());
 
     const result = new Trigger<AgentStatus>();
 
-    const stream = dashboardProxy.services.DashboardService.status();
+    const stream = dashboardProxy.rpc.DashboardService.status();
     afterTest(() => stream.close());
 
     stream.subscribe((msg) => {

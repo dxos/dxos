@@ -3,4 +3,3 @@
 //
 
 export * from './dashboard-plugin';
-export * from './dashboard-proxy';
