@@ -5,8 +5,9 @@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { base } from './defs';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
-import { dangerouslyMutateImmutableObject } from './typed-object';
+import { TypedObject, dangerouslyMutateImmutableObject } from './typed-object';
 
 type Prototype = {
   new (...args: any): any;
@@ -47,6 +48,13 @@ export class TypeCollection {
   registerPrototype(proto: Prototype, schema: SchemaProps) {
     this._prototypes.set(schema.typename, proto);
     this._schemaDefs.set(schema.typename, schema);
+
+    Object.defineProperty(proto, Symbol.hasInstance, {
+      value: (instance: any) =>
+        !!instance?.[base] && instance[base] instanceof TypedObject && instance.__typename === schema.typename,
+      enumerable: false,
+      writable: false,
+    });
   }
 
   getPrototype(name: string): Prototype | undefined {
