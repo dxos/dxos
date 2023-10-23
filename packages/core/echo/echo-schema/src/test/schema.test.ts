@@ -144,4 +144,25 @@ describe('static schema', () => {
       expect(task2!.__schema?.typename).to.eq('example.test.Task');
     }
   });
+
+  test('restart with static schema and schema is registered later', async () => {
+    const builder = new TestBuilder();
+    
+    const peer = await builder.createPeer();
+    const task = peer.db.add(new Task({ title: 'Task 1' }));
+    await peer.base.confirm();
+    expect(task).to.be.instanceOf(Task);
+    
+    await peer.reload();
+    {
+      const task2 = peer.db.getObjectById<Task>(task.id);
+      expect(task2).to.be.instanceOf(Task);
+      expect(task2!.__typename).to.eq('example.test.Task');
+      expect(task2!.__schema).to.eq(undefined);
+
+
+      builder.graph.addTypes(types);
+      expect(task2!.__schema?.typename).to.eq('example.test.Task');
+    }
+  });
 });

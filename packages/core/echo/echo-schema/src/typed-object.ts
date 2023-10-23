@@ -152,7 +152,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   };
 
   get [Symbol.toStringTag]() {
-    return this._schema?.typename ?? 'Expando';
+    return this.__schema?.typename ?? 'Expando';
   }
 
   /**
@@ -160,7 +160,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * @deprecated Use `__schema` instead.
    */
   get [schema](): Schema | undefined {
-    return this[base]._schema;
+    return this[base]._getSchema();
   }
 
   get [meta](): ObjectMeta {
@@ -178,14 +178,14 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   }
 
   get __schema(): Schema | undefined {
-    return this[base]._schema;
+    return this[base]._getSchema();
   }
 
   /**
    * Fully qualified name of the object type for objects created from the schema.
    */
   get __typename(): string | undefined {
-    if (this._schema) {
+    if (this.__schema) {
       return this.__schema?.typename;
     }
     const typeRef = this[base]._getState().type;
@@ -269,7 +269,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   private _convert(visitors: ConvertVisitors = {}) {
     return {
       '@id': this.id,
-      '@type': this.__typename ?? (this._schema ? { '@id': this._schema!.id } : undefined),
+      '@type': this.__typename ?? (this.__schema ? { '@id': this.__schema!.id } : undefined),
       // '@schema': this.__schema,
       '@model': DocumentModel.meta.type,
       '@meta': this._transform(this._getState().meta, visitors),
@@ -289,8 +289,8 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     let type;
     const value = meta ? this._model.getMeta(key) : this._model.get(key);
 
-    if (!type && this._schema) {
-      const field = this._schema.props.find((field) => field.id === key);
+    if (!type && this.__schema) {
+      const field = this.__schema.props.find((field) => field.id === key);
       if (field?.repeated) {
         type = 'array';
       }
@@ -407,8 +407,8 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
      */
     return new Proxy(object, {
       ownKeys: (target) => {
-        if (this._schema && !parent && !meta) {
-          return this._schema.props.map((field) => field.id!) ?? [];
+        if (this.__schema && !parent && !meta) {
+          return this.__schema.props.map((field) => field.id!) ?? [];
         } else {
           return this._properties(parent, meta);
         }
@@ -427,8 +427,8 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
           return false;
         }
 
-        if (this._schema && !parent && !meta) {
-          return !!this._schema?.props.find((field) => field.id === property);
+        if (this.__schema && !parent && !meta) {
+          return !!this.__schema?.props.find((field) => field.id === property);
         } else {
           return this._properties(parent, meta).includes(property);
         }
@@ -493,7 +493,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
 
   override _beforeBind() {
     const { type } = this._getState();
-    if(type) {
+    if (type) {
       this._schema = this._database!._resolveSchema(type);
     }
 
@@ -545,6 +545,16 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     this._signal?.notifyWrite();
     this._emitUpdate();
   };
+
+  private _getSchema(): Schema | undefined {
+    if (!this._schema && this._database) {
+      const { type } = this._getState();
+      if (type) {
+        this._schema = this._database._resolveSchema(type);
+      }
+    }
+    return this._schema;
+  }
 }
 
 // Set stringified name for constructor.
