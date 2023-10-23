@@ -69,13 +69,13 @@
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
-    "oclif": "^3.7.0",
     "pkg-up": "^3.1.0",
     "react": "^18.2.0",
     "uuid": "^8.3.2",
     "ws": "^7.4.4"
   },
   "devDependencies": {
+    "oclif": "^3.7.0",
     "@oclif/test": "^2.3.31",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
