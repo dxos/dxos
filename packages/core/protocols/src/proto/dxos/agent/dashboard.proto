@@ -15,14 +15,9 @@ message AgentStatus {
     ON = 0;
     OFF = 1;
   }
-
-  message Plugin {
-    string id = 1;
-    optional google.protobuf.Struct config = 3;
-  }
   
   Status status = 1;
-  repeated Plugin plugins = 2;
+  repeated PluginState plugins = 2;
 }
 
 message PluginState {

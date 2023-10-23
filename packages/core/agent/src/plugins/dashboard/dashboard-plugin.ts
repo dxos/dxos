@@ -102,8 +102,8 @@ export class DashboardPlugin extends AbstractPlugin {
         next({
           status: AgentStatus.Status.ON,
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
-            id: plugin.id,
-            config: plugin.config,
+            pluginId: plugin.id,
+            pluginConfig: plugin.config,
           })),
         });
       };
