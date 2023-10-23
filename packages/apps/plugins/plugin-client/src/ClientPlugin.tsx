@@ -33,11 +33,11 @@ export const ClientPlugin = (
       let error: unknown = null;
 
       try {
+        await client.initialize();
+
         if (options.types) {
           client.addTypes(options.types);
         }
-
-        await client.initialize();
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
