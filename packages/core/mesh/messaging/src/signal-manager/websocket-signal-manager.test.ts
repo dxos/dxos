@@ -14,17 +14,17 @@ describe('WebSocketSignalManager', () => {
   let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    if(!mochaExecutor.tags.includes('e2e')) {
-      return
+    if (!mochaExecutor.tags.includes('e2e')) {
+      return;
     }
-    
+
     broker1 = await runTestSignalServer({ port: 5001 });
     broker2 = await runTestSignalServer({ port: 5002 });
   });
 
   afterAll(() => {
-    if(!mochaExecutor.tags.includes('e2e')) {
-      return
+    if (!mochaExecutor.tags.includes('e2e')) {
+      return;
     }
 
     void broker1.stop();
