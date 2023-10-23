@@ -10,7 +10,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type Node, isGraphNode } from '@braneframe/plugin-graph';
-import { LayoutAction, type LayoutState } from '@braneframe/plugin-layout';
+import { type LayoutState } from '@braneframe/plugin-layout';
 import { AppState } from '@braneframe/types';
 import {
   type PluginDefinition,
@@ -18,6 +18,7 @@ import {
   parseIntentPlugin,
   parseGraphPlugin,
   parseLayoutPlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { isTypedObject, subscribe } from '@dxos/echo-schema';

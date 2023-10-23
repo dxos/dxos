@@ -5,10 +5,9 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Sketch as SketchType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
 
 import { SketchMain, SketchSection, SketchSlide } from './components';

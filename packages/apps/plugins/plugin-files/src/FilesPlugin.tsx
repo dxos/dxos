@@ -10,7 +10,6 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { type MarkdownProvides } from '@braneframe/plugin-markdown';
 import {
   resolvePlugin,
@@ -18,6 +17,7 @@ import {
   parseLayoutPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
 

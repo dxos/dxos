@@ -9,10 +9,9 @@ import React, { type FC, type MutableRefObject, type RefCallback, useCallback } 
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
-import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
+import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

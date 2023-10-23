@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './common-provides';
+export * from './common';
 export * from './helpers';
 
 export * from './IntentPlugin';

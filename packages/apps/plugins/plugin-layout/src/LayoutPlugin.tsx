@@ -9,22 +9,23 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
 import {
-  type Plugin,
-  type PluginDefinition,
   Surface,
   findPlugin,
   resolvePlugin,
   useIntent,
   usePlugins,
-  type LayoutProvides,
-  type IntentResolverProvides,
   parseGraphPlugin,
   parseIntentPlugin,
-  type TranslationsProvides,
+  parseSurfacePlugin,
+  LayoutAction,
+  type Plugin,
+  type PluginDefinition,
+  type LayoutProvides,
+  type IntentResolverProvides,
   type GraphPluginProvides,
   type GraphBuilderProvides,
-  parseSurfacePlugin,
   type SurfaceProvides,
+  type TranslationsProvides,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -33,7 +34,7 @@ import { LayoutContext, useLayout } from './LayoutContext';
 import { Fallback, SplitView, ContextView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
-import { LAYOUT_PLUGIN, LayoutAction, type LayoutState } from './types';
+import { LAYOUT_PLUGIN, type LayoutState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
@@ -237,18 +238,19 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         resolver: (intent) => {
           switch (intent.action) {
             case LayoutAction.TOGGLE_FULLSCREEN: {
-              state.values.fullscreen = intent.data?.state ?? !state.values.fullscreen;
+              state.values.fullscreen =
+                (intent.data as LayoutAction.ToggleFullscreen).state ?? !state.values.fullscreen;
               return true;
             }
 
             case LayoutAction.TOGGLE_SIDEBAR: {
-              state.values.sidebarOpen = intent.data?.state ?? !state.values.sidebarOpen;
+              state.values.sidebarOpen = (intent.data as LayoutAction.ToggleSidebar).state ?? !state.values.sidebarOpen;
               return true;
             }
 
             case LayoutAction.OPEN_DIALOG: {
               state.values.dialogOpen = true;
-              state.values.dialogContent = intent.data.content;
+              state.values.dialogContent = (intent.data as LayoutAction.OpenDialog).content;
               return true;
             }
 
@@ -259,14 +261,11 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
             }
 
             case LayoutAction.ACTIVATE: {
-              if (intent.data && typeof intent.data.id === 'string') {
-                batch(() => {
-                  state.values.previous = state.values.active;
-                  state.values.active = intent.data.id;
-                });
-                return true;
-              }
-              break;
+              batch(() => {
+                state.values.previous = state.values.active;
+                state.values.active = (intent.data as LayoutAction.Activate).id;
+              });
+              return true;
             }
           }
         },

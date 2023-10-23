@@ -5,7 +5,7 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useIntent } from '@dxos/app-framework';
+import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { type Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -61,7 +61,7 @@ export const TreeViewContainer = ({
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
     await dispatch({
-      action: 'dxos.org/plugin/layout/action/activate',
+      action: LayoutAction.ACTIVATE,
       data: {
         id: node.id,
       },
