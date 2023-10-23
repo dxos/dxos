@@ -3,7 +3,7 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import { QUERY_ALL_MODELS, TYPE_PROPERTIES } from '@dxos/echo-db';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
@@ -31,7 +31,7 @@ export type SerializedSpace = {
 // TODO(burdon): Sort JSON keys (npm canonical serialize util).
 export class Serializer {
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const { objects } = database.query();
+    const { objects } = database.query(undefined, { models: QUERY_ALL_MODELS });
     const data = {
       objects: objects.map((object) => {
         return stripUndefinedValues({

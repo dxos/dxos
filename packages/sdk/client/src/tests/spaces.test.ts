@@ -22,7 +22,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState } from '../echo';
+import { SpaceState, getSpaceForObject } from '../echo';
 import { type SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
@@ -497,5 +497,21 @@ describe('Spaces', () => {
     space.properties.name = 'example';
     await trigger.wait({ timeout: 500 });
     expect(space.properties.name).to.equal('example');
+  });
+
+  test('objects are owned by spaces', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.spaces.create();
+
+    const obj = space.db.add(new Expando({ data: 'test' }));
+    expect(getSpaceForObject(obj)).to.equal(space);
   });
 });
