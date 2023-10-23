@@ -36,6 +36,25 @@ class StuckableStream extends Duplex {
   override _read(size: number) {}
 }
 
+const setupBalancer = (channels: number, stuck: boolean): { balancer: Balancer; stream: StuckableStream } => {
+  const balancer = new Balancer(0);
+  const stream = new StuckableStream(stuck);
+
+  pipeline(balancer.stream, stream, () => {});
+
+  let i = 1;
+  for (i; i <= channels; i++) {
+    balancer.addChannel(i);
+    for (let j = 0; j < 10; j++) {
+      const chunk = Uint8Array.from(randomBytes(5_000));
+      const trigger = new Trigger<void>();
+      balancer.pushData(chunk, trigger, i);
+    }
+  }
+
+  return { balancer, stream };
+};
+
 describe('Balancer', () => {
   test('varints', () => {
     const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
@@ -76,24 +95,12 @@ describe('Balancer', () => {
   });
 
   test('should buffer chunks on the balancer for separate channels', async () => {
-    const balancer = new Balancer(0);
-    const stream = new StuckableStream(true);
-
-    pipeline(balancer.stream, stream, balancer.stream, () => {});
-
-    let i = 1;
-    for (i; i <= 3; i++) {
-      balancer.addChannel(i);
-      for (let j = 0; j < 10; j++) {
-        const chunk = Uint8Array.from(randomBytes(5_000));
-        const trigger = new Trigger<void>();
-        balancer.pushData(chunk, trigger, i);
-      }
-    }
+    const channels = 3;
+    const { balancer, stream } = setupBalancer(channels, true);
 
     await sleep(20);
 
-    expect(balancer.buffersCount).to.equal(i - 1);
+    expect(balancer.buffersCount).to.equal(channels);
 
     stream.unstuck?.();
 
@@ -103,19 +110,8 @@ describe('Balancer', () => {
   });
 
   test('should not buffer when backpressure is not applied', async () => {
-    const balancer = new Balancer(0);
-    const stream = new StuckableStream(false);
-
-    pipeline(balancer.stream, stream, () => {});
-
-    for (let i = 1; i <= 3; i++) {
-      balancer.addChannel(i);
-      for (let j = 0; j < 10; j++) {
-        const chunk = Uint8Array.from(randomBytes(5_000));
-        const trigger = new Trigger<void>();
-        balancer.pushData(chunk, trigger, i);
-      }
-    }
+    const channels = 3;
+    const { balancer } = setupBalancer(channels, false);
 
     await sleep(20);
 
