@@ -518,6 +518,9 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-navtree
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
@@ -536,9 +539,6 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -745,6 +745,9 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-navtree
       '@braneframe/plugin-presenter':
         specifier: workspace:*
         version: link:../plugins/plugin-presenter
@@ -778,9 +781,6 @@ importers:
       '@braneframe/plugin-thread':
         specifier: workspace:*
         version: link:../plugins/plugin-thread
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
@@ -1543,12 +1543,12 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugin-treeview
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -1847,6 +1847,88 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-navtree:
+    dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-navtree':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-navtree
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      '@tldraw/indices':
+        specifier: 2.0.0-alpha.14
+        version: 2.0.0-alpha.14
+      date-fns:
+        specifier: ^2.29.3
+        version: 2.29.3
+      deepsignal:
+        specifier: ^1.3.6
+        version: 1.3.6(@preact/signals-react@1.3.6)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-dnd':
+        specifier: workspace:*
+        version: link:../plugin-dnd
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2212,12 +2294,12 @@ importers:
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugin-treeview
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2300,12 +2382,12 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -2602,88 +2684,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-treeview:
-    dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../../sdk/app-graph
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-navtree':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-navtree
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      '@tldraw/indices':
-        specifier: 2.0.0-alpha.14
-        version: 2.0.0-alpha.14
-      date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -7456,12 +7456,12 @@ importers:
 
   packages/sdk/vault:
     dependencies:
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-navtree
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../../apps/plugins/plugin-telemetry
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../../apps/plugins/plugin-treeview
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../app-framework

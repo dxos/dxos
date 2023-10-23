@@ -70,6 +70,9 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-navtree"
+    },
+    {
       "path": "../plugins/plugin-pwa"
     },
     {
@@ -86,9 +89,6 @@
     },
     {
       "path": "../plugins/plugin-theme"
-    },
-    {
-      "path": "../plugins/plugin-treeview"
     },
     {
       "path": "../types"

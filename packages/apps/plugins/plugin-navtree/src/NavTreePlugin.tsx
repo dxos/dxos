@@ -9,12 +9,12 @@ import { Graph, type Node } from '@dxos/app-graph';
 
 import { TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import translations from './translations';
-import { TREE_VIEW_PLUGIN, type TreeViewPluginProvides } from './types';
+import { NAVTREE_PLUGIN, type NavTreePluginProvides } from './types';
 
-export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
+export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta: {
-      id: TREE_VIEW_PLUGIN,
+      id: NAVTREE_PLUGIN,
     },
     provides: {
       surface: {

@@ -8,7 +8,7 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { getPersistenceParent } from '@braneframe/plugin-treeview';
+import { getPersistenceParent } from '@braneframe/plugin-navtree';
 import { type AppState } from '@braneframe/types';
 import { type DispatchIntent } from '@dxos/app-framework';
 import { type Filter } from '@dxos/echo-schema';

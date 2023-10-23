@@ -22,7 +22,7 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
-import { TREE_VIEW_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../types';
 import { getPersistenceParent } from '../util';
 
 const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
@@ -55,8 +55,8 @@ export const TreeViewContainer = ({
   const config = useConfig();
   const identity = useIdentity();
 
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
+  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {

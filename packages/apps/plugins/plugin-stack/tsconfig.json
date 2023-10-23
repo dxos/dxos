@@ -63,6 +63,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-navtree"
+    },
+    {
       "path": "../plugin-space"
     },
     {
@@ -70,9 +73,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

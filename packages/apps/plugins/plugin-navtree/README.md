@@ -1,6 +1,6 @@
-# @braneframe/plugin-client
+# @braneframe/plugin-navtree
 
-Surface plugin for DXOS Client.
+DXOS Surface plugin for a tree view visualization of the graph.
 
 ## DXOS Resources
 

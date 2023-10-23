@@ -114,6 +114,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-navtree/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-presenter/package.json",
           "jsonpath": "$.version"
         },
@@ -165,11 +170,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-thread/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-treeview/package.json",
           "jsonpath": "$.version"
         },
         {

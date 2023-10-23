@@ -23,6 +23,7 @@ import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SearchPlugin } from '@braneframe/plugin-search';
@@ -33,7 +34,6 @@ import { TablePlugin } from '@braneframe/plugin-table';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
-import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
 import { PluginProvider } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -101,7 +101,7 @@ const main = async () => {
 
           // Core UX.
           DndPlugin(),
-          TreeViewPlugin(),
+          NavTreePlugin(),
           LayoutPlugin({ showComplementarySidebar: true }),
 
           // TODO(burdon): Remove need to come after SplitView.

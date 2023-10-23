@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-treeview/src",
+  "sourceRoot": "packages/apps/plugins/plugin-navtree/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-treeview/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-treeview/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-treeview/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-navtree/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-navtree/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-navtree/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-treeview/src/index.ts"
+          "packages/apps/plugins/plugin-navtree/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-treeview/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-navtree/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-treeview/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-navtree/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -49,7 +49,7 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-treeview/.storybook"
+        "configDir": "packages/apps/plugins/plugin-navtree/.storybook"
       }
     }
   },

@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/plugin-treeview",
+  "name": "@braneframe/plugin-navtree",
   "version": "0.3.2",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",

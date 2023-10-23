@@ -36,8 +36,8 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-navtree": "workspace:*",
     "@braneframe/plugin-telemetry": "workspace:*",
-    "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

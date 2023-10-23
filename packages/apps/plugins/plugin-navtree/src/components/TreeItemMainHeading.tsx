@@ -8,11 +8,11 @@ import { useIntent } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
-import { TREE_VIEW_PLUGIN } from '../types';
+import { NAVTREE_PLUGIN } from '../types';
 import { getTreeItemLabel } from '../util';
 
 export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
+  const { t } = useTranslation(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
 
   const handleActivate = (node: Node) => {

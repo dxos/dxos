@@ -20,10 +20,10 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-telemetry"
+      "path": "../../apps/plugins/plugin-navtree"
     },
     {
-      "path": "../../apps/plugins/plugin-treeview"
+      "path": "../../apps/plugins/plugin-telemetry"
     },
     {
       "path": "../../common/async"

@@ -15,13 +15,13 @@ import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { types } from '@braneframe/types';
 import { createApp } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -61,7 +61,7 @@ const main = async () => {
       // Core UX.
       DndPlugin(),
       LayoutPlugin(),
-      TreeViewPlugin(),
+      NavTreePlugin(),
 
       // TODO(burdon): Remove need to come after SplitView.
       SpacePlugin(),

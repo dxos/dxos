@@ -4,12 +4,12 @@
 
 import { translations as navtreeTranslations } from '@dxos/react-ui-navtree';
 
-import { TREE_VIEW_PLUGIN } from './types';
+import { NAVTREE_PLUGIN } from './types';
 
 export default [
   {
     'en-US': {
-      [TREE_VIEW_PLUGIN]: {
+      [NAVTREE_PLUGIN]: {
         'plugin error message': 'Content failed to render',
       },
     },

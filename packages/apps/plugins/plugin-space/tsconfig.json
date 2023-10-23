@@ -72,10 +72,10 @@
       "path": "../plugin-layout"
     },
     {
-      "path": "../plugin-theme"
+      "path": "../plugin-navtree"
     },
     {
-      "path": "../plugin-treeview"
+      "path": "../plugin-theme"
     }
   ]
 }
