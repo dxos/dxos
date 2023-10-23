@@ -10,9 +10,10 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ComplexMap } from '@dxos/util';
 
-import { type EchoObject } from './defs';
+import { base, type EchoObject } from './defs';
 import { createSignal } from './signal';
 import { isTypedObject, type TypedObject } from './typed-object';
+import { DocumentModel } from '@dxos/document-model';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -55,6 +56,7 @@ export class Query<T extends TypedObject = TypedObject> {
     options?: QueryOptions,
   ) {
     this._filters.push(filterDeleted(options?.deleted));
+    this._filters.push(filterModels(options));
     this._filters.push(...(Array.isArray(filter) ? filter : [filter]));
 
     // Weak listener to allow queries to be garbage collected.
@@ -126,6 +128,20 @@ const filterDeleted = (option?: ShowDeletedOption) => (object: TypedObject) => {
 
   return true;
 };
+
+const filterModels = (options?: QueryOptions) => (object: TypedObject) => {
+  let models = options?.models;
+  
+  if(models === undefined) {
+    models = [DocumentModel.meta.type];
+  }
+
+  if(models === null) {
+    return true;
+  }
+
+  return models.includes(object[base]._modelConstructor.meta.type);
+}
 
 const match = (object: TypedObject, filter: Filter<any>): object is TypedObject => {
   if (typeof filter === 'function') {

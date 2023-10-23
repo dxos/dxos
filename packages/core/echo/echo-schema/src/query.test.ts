@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { ShowDeletedOption } from '@dxos/echo-db';
+import { QUERY_ALL_MODELS, ShowDeletedOption } from '@dxos/echo-db';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { type EchoDatabase } from './database';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { TestBuilder, createDatabase } from './testing';
+import { Expando, TypedObject } from './typed-object';
+import { Text } from './text-object';
 
 describe('Queries', () => {
   let db: EchoDatabase;
@@ -179,3 +180,18 @@ describe.skip('Query updates', () => {
     await sleep(10);
   });
 });
+
+test('query with model filters', async () => {
+  const testBuilder = new TestBuilder();
+  const peer = await testBuilder.createPeer();
+
+  const obj = peer.db.add(new Expando({
+    title: 'title',
+    description: new Text('description'),
+  }))
+
+  expect(peer.db.query().objects).to.have.length(1);
+  expect(peer.db.query().objects[0]).to.eq(obj)
+
+  expect(peer.db.query(undefined, { models: QUERY_ALL_MODELS }).objects).to.have.length(2);
+})
