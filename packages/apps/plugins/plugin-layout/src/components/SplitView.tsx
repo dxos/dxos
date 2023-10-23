@@ -9,8 +9,8 @@ import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
 
-import { useSplitView } from '../SplitViewContext';
-import { SPLITVIEW_PLUGIN } from '../types';
+import { useLayout } from '../LayoutContext';
+import { LAYOUT_PLUGIN } from '../types';
 
 export type SplitViewProps = {
   fullscreen?: boolean;
@@ -18,9 +18,9 @@ export type SplitViewProps = {
 };
 
 export const SplitView = ({ fullscreen, showComplementarySidebar = true }: SplitViewProps) => {
-  const context = useSplitView();
+  const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
-  const { t } = useTranslation(SPLITVIEW_PLUGIN);
+  const { t } = useTranslation(LAYOUT_PLUGIN);
 
   if (fullscreen) {
     return <Surface name='main' role='main' limit={1} />;

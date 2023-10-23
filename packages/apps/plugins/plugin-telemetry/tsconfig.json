@@ -42,7 +42,7 @@
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../plugin-splitview"
+      "path": "../plugin-layout"
     }
   ]
 }

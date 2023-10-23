@@ -5,11 +5,11 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
@@ -69,7 +69,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

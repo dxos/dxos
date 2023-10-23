@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -48,8 +48,8 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

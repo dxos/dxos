@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type Node } from '@dxos/app-graph';
 import { useIntent } from '@dxos/app-framework';
+import { type Node } from '@dxos/app-graph';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
 import { TREE_VIEW_PLUGIN } from '../types';
@@ -18,7 +18,7 @@ export const TreeItemMainHeading = ({ activeNode }: { activeNode: Node }) => {
   const handleActivate = (node: Node) => {
     void dispatch({
       // TODO(wittjosiah): What's a good pattern for more generic actions?
-      action: 'dxos.org/plugin/splitview/action/activate',
+      action: 'dxos.org/plugin/layout/action/activate',
       data: { id: node.id },
     });
   };

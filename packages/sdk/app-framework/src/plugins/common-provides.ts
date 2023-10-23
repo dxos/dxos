@@ -39,7 +39,7 @@ export type Layout = z.infer<typeof Layout>;
 /**
  * Provides for a plugin that can manage the app layout.
  */
-export type LayoutPluginProvides = {
+export type LayoutProvides = {
   layout: Readonly<Layout>;
 };
 
@@ -48,7 +48,7 @@ export type LayoutPluginProvides = {
  */
 export const parseLayoutPlugin = (plugin: Plugin) => {
   const { success } = Layout.safeParse((plugin.provides as any).layout);
-  return success ? (plugin as Plugin<LayoutPluginProvides>) : undefined;
+  return success ? (plugin as Plugin<LayoutProvides>) : undefined;
 };
 
 //

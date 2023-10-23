@@ -10,9 +10,8 @@ import localforage from 'localforage';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { type MarkdownProvides } from '@braneframe/plugin-markdown';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
-import { EventSubscriptions, Trigger } from '@dxos/async';
 import {
   resolvePlugin,
   type PluginDefinition,
@@ -20,6 +19,7 @@ import {
   parseGraphPlugin,
   parseIntentPlugin,
 } from '@dxos/app-framework';
+import { EventSubscriptions, Trigger } from '@dxos/async';
 
 import { LocalFileMain } from './components';
 import translations from './translations';
@@ -97,12 +97,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         );
       }
 
-      const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      if (splitViewPlugin && graphPlugin) {
+      if (layoutPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = splitViewPlugin.provides.layout.active;
+            const active = layoutPlugin.provides.layout.active;
             const path =
               active &&
               graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
@@ -161,7 +161,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 plugin: FILES_PLUGIN,
                 action: LocalFilesAction.OPEN_FILE,
               },
-              { action: SplitViewAction.ACTIVATE },
+              { action: LayoutAction.ACTIVATE },
             ],
           });
 
@@ -176,7 +176,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                     plugin: FILES_PLUGIN,
                     action: LocalFilesAction.OPEN_DIRECTORY,
                   },
-                  { action: SplitViewAction.ACTIVATE },
+                  { action: LayoutAction.ACTIVATE },
                 ]),
             });
           }

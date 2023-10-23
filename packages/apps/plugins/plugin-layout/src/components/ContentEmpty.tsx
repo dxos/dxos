@@ -7,15 +7,15 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { SPLITVIEW_PLUGIN } from '../types';
+import { LAYOUT_PLUGIN } from '../types';
 
 export const ContentEmpty = () => {
-  const { t } = useTranslation(SPLITVIEW_PLUGIN);
+  const { t } = useTranslation(LAYOUT_PLUGIN);
   return (
     <div
       role='none'
       className='min-bs-screen is-full flex items-center justify-center p-8'
-      data-testid='splitViewPlugin.firstRunMessage'
+      data-testid='layoutPlugin.firstRunMessage'
     >
       <p
         role='alert'

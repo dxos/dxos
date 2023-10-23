@@ -8,8 +8,6 @@ import { type RevertDeepSignal } from 'deepsignal';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { invariant } from '@dxos/invariant';
-import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Plugin,
   type PluginDefinition,
@@ -18,7 +16,7 @@ import {
   resolvePlugin,
   useIntent,
   usePlugins,
-  type LayoutPluginProvides,
+  type LayoutProvides,
   type IntentResolverProvides,
   parseGraphPlugin,
   parseIntentPlugin,
@@ -28,32 +26,33 @@ import {
   parseSurfacePlugin,
   type SurfaceProvides,
 } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
+import { LocalStorageStore } from '@dxos/local-storage';
 
-import { SplitViewContext, useSplitView } from './SplitViewContext';
+import { LayoutContext, useLayout } from './LayoutContext';
 import { Fallback, SplitView, ContextView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
-import { SPLITVIEW_PLUGIN, SplitViewAction, type LayoutState } from './types';
+import { LAYOUT_PLUGIN, LayoutAction, type LayoutState } from './types';
 
 /**
  * Root application layout that controls sidebars, popovers, and dialogs.
  */
-export type SplitViewPluginOptions = {
+export type LayoutPluginOptions = {
   showComplementarySidebar?: boolean;
 };
 
-export type SplitViewPluginProvides = SurfaceProvides &
+export type LayoutPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   TranslationsProvides &
-  LayoutPluginProvides;
+  LayoutProvides;
 
-// TODO(burdon): Rename LayoutPlugin.
-export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinition<SplitViewPluginProvides> => {
+export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<LayoutPluginProvides> => {
   let graphPlugin: Plugin<GraphPluginProvides> | undefined;
   const { showComplementarySidebar = false } = { ...options };
 
-  const state = new LocalStorageStore<LayoutState>(SPLITVIEW_PLUGIN, {
+  const state = new LocalStorageStore<LayoutState>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
     complementarySidebarOpen: false,
@@ -79,7 +78,7 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
 
   return {
     meta: {
-      id: SPLITVIEW_PLUGIN,
+      id: LAYOUT_PLUGIN,
     },
     ready: async (plugins) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
@@ -101,12 +100,12 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
           if (parent.id === 'root') {
             // TODO(burdon): Root menu isn't visible so nothing bound.
             parent.addAction({
-              id: SplitViewAction.TOGGLE_FULLSCREEN,
-              label: ['toggle fullscreen label', { ns: SPLITVIEW_PLUGIN }],
+              id: LayoutAction.TOGGLE_FULLSCREEN,
+              label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
               icon: (props) => <ArrowsOut {...props} />,
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
-                  plugin: SPLITVIEW_PLUGIN,
+                  plugin: LAYOUT_PLUGIN,
                   action: 'toggle-fullscreen',
                 }),
               keyBinding: 'ctrl+meta+f',
@@ -115,16 +114,16 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
         },
       },
       context: (props: PropsWithChildren) => (
-        <SplitViewContext.Provider value={state.values as RevertDeepSignal<LayoutState>}>
+        <LayoutContext.Provider value={state.values as RevertDeepSignal<LayoutState>}>
           {props.children}
-        </SplitViewContext.Provider>
+        </LayoutContext.Provider>
       ),
       root: () => {
         const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const splitView = useSplitView();
-        const [shortId, $component] = splitView.active?.split(':') ?? [];
+        const layout = useLayout();
+        const [shortId, $component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
         const result = plugin?.provides.surface.component({ $component });
 
@@ -132,8 +131,8 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
         useEffect(() => {
           const handleNavigation = async () => {
             await dispatch({
-              plugin: SPLITVIEW_PLUGIN,
-              action: SplitViewAction.ACTIVATE,
+              plugin: LAYOUT_PLUGIN,
+              action: LayoutAction.ACTIVATE,
               data: {
                 // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
                 id:
@@ -163,14 +162,14 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
 
         if (result) {
           return <>result</>;
-        } else if (splitView.activeNode) {
+        } else if (layout.activeNode) {
           if (state.values.fullscreen) {
             return (
               <Surface
                 data={{
-                  $component: 'dxos.org/plugin/splitview/SplitView',
+                  $component: `${LAYOUT_PLUGIN}/SplitView`,
                   $surfaces: {
-                    main: { data: splitView.activeNode.data, fallback: Fallback },
+                    main: { data: layout.activeNode.data, fallback: Fallback },
                   },
                 }}
               />
@@ -180,19 +179,19 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
           return (
             <Surface
               data={{
-                $component: 'dxos.org/plugin/splitview/SplitView',
+                $component: `${LAYOUT_PLUGIN}/SplitView`,
                 $surfaces: {
                   sidebar: {
-                    data: { graph, activeId: splitView.active, popoverAnchorId: splitView.popoverAnchorId },
+                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
                   complementary: {
-                    data: { $component: 'dxos.org/plugin/splitView/ContextView', active: splitView.activeNode.data },
+                    data: { $component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
                   },
-                  main: { data: { active: splitView.activeNode.data }, fallback: Fallback },
-                  presence: { data: { active: splitView.activeNode.data } },
-                  status: { data: { active: splitView.activeNode.data } },
-                  heading: { data: { activeNode: splitView.activeNode } },
-                  documentTitle: { data: { activeNode: splitView.activeNode } },
+                  main: { data: { active: layout.activeNode.data }, fallback: Fallback },
+                  presence: { data: { active: layout.activeNode.data } },
+                  status: { data: { active: layout.activeNode.data } },
+                  heading: { data: { activeNode: layout.activeNode } },
+                  documentTitle: { data: { activeNode: layout.activeNode } },
                 },
               }}
             />
@@ -201,12 +200,12 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
           return (
             <Surface
               data={{
-                $component: 'dxos.org/plugin/splitview/SplitView',
+                $component: `${LAYOUT_PLUGIN}/SplitView`,
                 $surfaces: {
                   sidebar: {
-                    data: { graph, activeId: splitView.active, popoverAnchorId: splitView.popoverAnchorId },
+                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                   },
-                  main: { data: { $component: 'dxos.org/plugin/splitview/ContentEmpty' } },
+                  main: { data: { $component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
                   // TODO(wittjosiah): This plugin should own document title.
                   documentTitle: { data: { $component: 'dxos.org/plugin/treeview/DocumentTitle' } },
                 },
@@ -218,15 +217,15 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       surface: {
         component: ({ $component }) => {
           switch ($component) {
-            case `${SPLITVIEW_PLUGIN}/SplitView`:
+            case `${LAYOUT_PLUGIN}/SplitView`:
               return (
                 <SplitView fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />
               );
 
-            case `${SPLITVIEW_PLUGIN}/ContentEmpty`:
+            case `${LAYOUT_PLUGIN}/ContentEmpty`:
               return <ContentEmpty />;
 
-            case `${SPLITVIEW_PLUGIN}/ContextView`:
+            case `${LAYOUT_PLUGIN}/ContextView`:
               return <ContextView />;
 
             default:
@@ -237,29 +236,29 @@ export const SplitViewPlugin = (options?: SplitViewPluginOptions): PluginDefinit
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
-            case SplitViewAction.TOGGLE_FULLSCREEN: {
+            case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen = intent.data?.state ?? !state.values.fullscreen;
               return true;
             }
 
-            case SplitViewAction.TOGGLE_SIDEBAR: {
+            case LayoutAction.TOGGLE_SIDEBAR: {
               state.values.sidebarOpen = intent.data?.state ?? !state.values.sidebarOpen;
               return true;
             }
 
-            case SplitViewAction.OPEN_DIALOG: {
+            case LayoutAction.OPEN_DIALOG: {
               state.values.dialogOpen = true;
               state.values.dialogContent = intent.data.content;
               return true;
             }
 
-            case SplitViewAction.CLOSE_DIALOG: {
+            case LayoutAction.CLOSE_DIALOG: {
               state.values.dialogOpen = false;
               state.values.dialogContent = null;
               return true;
             }
 
-            case SplitViewAction.ACTIVATE: {
+            case LayoutAction.ACTIVATE: {
               if (intent.data && typeof intent.data.id === 'string') {
                 batch(() => {
                   state.values.previous = state.values.active;

@@ -512,6 +512,9 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugins/plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
@@ -524,9 +527,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugins/plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
@@ -736,6 +736,9 @@ importers:
       '@braneframe/plugin-kanban':
         specifier: workspace:*
         version: link:../plugins/plugin-kanban
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugins/plugin-layout
       '@braneframe/plugin-map':
         specifier: workspace:*
         version: link:../plugins/plugin-map
@@ -757,9 +760,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugins/plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
@@ -885,9 +885,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1034,12 +1034,12 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1168,9 +1168,9 @@ importers:
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1272,12 +1272,12 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1351,15 +1351,15 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1433,12 +1433,12 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -1619,15 +1619,15 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1652,6 +1652,58 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-layout:
+    dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: ^1.3.6
+        version: 1.3.6(@preact/signals-react@1.3.6)
+    devDependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1698,9 +1750,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1777,12 +1829,12 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -1819,12 +1871,12 @@ importers:
 
   packages/apps/plugins/plugin-presenter:
     dependencies:
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -1944,9 +1996,9 @@ importers:
 
   packages/apps/plugins/plugin-search:
     dependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2048,12 +2100,12 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2157,67 +2209,15 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
       '@braneframe/plugin-treeview':
         specifier: workspace:*
         version: link:../plugin-treeview
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-splitview:
-    dependencies:
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-    devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2294,12 +2294,12 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2379,9 +2379,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2443,9 +2443,9 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
     devDependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -2480,9 +2480,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -2553,9 +2553,9 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework

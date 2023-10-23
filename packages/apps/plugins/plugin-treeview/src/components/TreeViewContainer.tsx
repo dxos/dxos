@@ -5,10 +5,10 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
+import { useIntent } from '@dxos/app-framework';
 import { type Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useIntent } from '@dxos/app-framework';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -61,7 +61,7 @@ export const TreeViewContainer = ({
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
     await dispatch({
-      action: 'dxos.org/plugin/splitview/action/activate',
+      action: 'dxos.org/plugin/layout/action/activate',
       data: {
         id: node.id,
       },
@@ -179,8 +179,8 @@ export const TreeViewContainer = ({
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: 'dxos.org/plugin/splitview/action/open-dialog',
-                          data: { content: 'dxos.org/plugin/splitview/ProfileSettings' },
+                          action: 'dxos.org/plugin/layout/action/open-dialog',
+                          data: { content: 'dxos.org/plugin/layout/ProfileSettings' },
                         });
                       }}
                     >
@@ -203,7 +203,7 @@ export const TreeViewContainer = ({
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: 'dxos.org/plugin/splitview/action/toggle-sidebar',
+                          action: 'dxos.org/plugin/layout/action/toggle-sidebar',
                           data: { state: false },
                         });
                       }}

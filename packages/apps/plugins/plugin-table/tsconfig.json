@@ -60,6 +60,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-layout"
+    },
+    {
       "path": "../plugin-search"
     },
     {
@@ -67,9 +70,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

@@ -16,7 +16,7 @@ import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer 
 export const SpacePresence = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
-  const splitViewPlugin = useResolvePlugin(parseLayoutPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const space = spacePlugin?.provides.space.active;
   const defaultSpace = useSpace();
   const identity = useIdentity();
@@ -44,7 +44,7 @@ export const SpacePresence = () => {
   const viewers = spacePlugin.provides.space.viewers.filter((viewer) => {
     return (
       space.key.equals(viewer.spaceKey) &&
-      splitViewPlugin?.provides.layout.active === viewer.objectId &&
+      layoutPlugin?.provides.layout.active === viewer.objectId &&
       Date.now() - viewer.lastSeen < 30_000
     );
   });

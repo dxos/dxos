@@ -91,6 +91,9 @@
       "path": "../plugins/plugin-kanban"
     },
     {
+      "path": "../plugins/plugin-layout"
+    },
+    {
       "path": "../plugins/plugin-map"
     },
     {
@@ -110,9 +113,6 @@
     },
     {
       "path": "../plugins/plugin-space"
-    },
-    {
-      "path": "../plugins/plugin-splitview"
     },
     {
       "path": "../plugins/plugin-stack"

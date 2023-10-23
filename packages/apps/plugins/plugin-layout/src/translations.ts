@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SPLITVIEW_PLUGIN } from './types';
+import { LAYOUT_PLUGIN } from './types';
 
 export default [
   {
     'en-US': {
-      [SPLITVIEW_PLUGIN]: {
+      [LAYOUT_PLUGIN]: {
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar',
         'open complementary sidebar label': 'Open complementary sidebar',

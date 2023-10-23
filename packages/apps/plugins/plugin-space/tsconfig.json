@@ -69,7 +69,7 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-splitview"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-theme"

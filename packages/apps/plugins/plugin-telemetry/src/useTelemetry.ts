@@ -17,7 +17,7 @@ export type UseTelemetryOptions = {
  * Hooks up navigation and click events to telemetry.
  */
 export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
-  const splitViewPlugin = useResolvePlugin(parseLayoutPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const client = useClient();
 
   useEffect(() => {
@@ -43,5 +43,5 @@ export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
         properties: BASE_TELEMETRY_PROPERTIES,
       });
     });
-  }, [splitViewPlugin?.provides.layout.active]);
+  }, [layoutPlugin?.provides.layout.active]);
 };

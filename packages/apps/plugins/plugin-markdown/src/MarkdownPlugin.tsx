@@ -9,13 +9,13 @@ import React, { type FC, type MutableRefObject, type RefCallback, useCallback } 
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Document } from '@braneframe/types';
+import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import {
   type ComposerModel,
   type MarkdownComposerProps,
@@ -181,7 +181,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({
-            action: SplitViewAction.ACTIVATE,
+            action: LayoutAction.ACTIVATE,
             data: { id: document.id },
           });
         }
@@ -232,7 +232,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   data: { spaceKey: space.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
           });
@@ -309,7 +309,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              if (data.content === 'dxos.org/plugin/splitview/ProfileSettings') {
+              if (data.content === 'dxos.org/plugin/layout/ProfileSettings') {
                 return <MarkdownSettings />;
               }
               break;

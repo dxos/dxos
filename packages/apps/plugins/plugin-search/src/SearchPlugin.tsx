@@ -5,9 +5,9 @@
 import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
-import { SpaceProxy } from '@dxos/client/echo';
+import { type LayoutPluginProvides } from '@braneframe/plugin-layout';
 import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
@@ -73,8 +73,8 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case SearchAction.SEARCH: {
-              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-              splitViewPlugin!.provides.splitView.complementarySidebarOpen = true;
+              const layoutPlugin = findPlugin<LayoutPluginProvides>(plugins, 'dxos.org/plugin/splitview');
+              layoutPlugin!.provides.splitView.complementarySidebarOpen = true;
               console.log('::');
             }
           }

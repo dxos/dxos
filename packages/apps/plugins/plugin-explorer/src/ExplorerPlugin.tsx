@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { View as ViewType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/app-framework';
@@ -48,7 +48,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                 data: { spaceKey: parent.data.key.toHex() },
               },
               {
-                action: SplitViewAction.ACTIVATE,
+                action: LayoutAction.ACTIVATE,
               },
             ],
             properties: {

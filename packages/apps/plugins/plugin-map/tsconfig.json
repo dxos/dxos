@@ -42,13 +42,13 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-space"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-splitview"
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-theme"

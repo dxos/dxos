@@ -5,8 +5,8 @@
 import { CaretDoubleRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
+import { type LayoutPluginProvides } from '@braneframe/plugin-layout';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
-import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
@@ -33,7 +33,7 @@ export const ThreadSidebar: FC<{ data: ThreadType }> = ({ data: object }) => {
   }, [space, object]);
 
   // TODO(burdon): Get current context.
-  const splitviewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
+  const splitviewPlugin = findPlugin<LayoutPluginProvides>(plugins, 'dxos.org/plugin/splitview');
   // console.log('splitView:', splitviewPlugin?.provides?.splitView?.active);
 
   if (!space || !thread) {

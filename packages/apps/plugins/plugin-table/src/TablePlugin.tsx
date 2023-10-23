@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { Table as TableType } from '@braneframe/types';
 import { SpaceProxy, Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -68,7 +68,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

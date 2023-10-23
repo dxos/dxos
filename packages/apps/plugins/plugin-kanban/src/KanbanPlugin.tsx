@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -60,7 +60,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

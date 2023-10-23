@@ -36,10 +36,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-layout"
     },
     {
-      "path": "../plugin-splitview"
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-theme"

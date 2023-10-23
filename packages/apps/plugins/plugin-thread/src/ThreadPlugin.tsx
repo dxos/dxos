@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
@@ -64,7 +64,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

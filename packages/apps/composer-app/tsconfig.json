@@ -64,6 +64,9 @@
       "path": "../plugins/plugin-graph"
     },
     {
+      "path": "../plugins/plugin-layout"
+    },
+    {
       "path": "../plugins/plugin-markdown"
     },
     {
@@ -74,9 +77,6 @@
     },
     {
       "path": "../plugins/plugin-space"
-    },
-    {
-      "path": "../plugins/plugin-splitview"
     },
     {
       "path": "../plugins/plugin-stack"

@@ -1,6 +1,6 @@
-# @braneframe/plugin-client
+# @braneframe/plugin-layout
 
-Surface plugin for DXOS Client.
+DXOS Surface plugin for a split view application layout.
 
 ## DXOS Resources
 

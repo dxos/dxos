@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-splitview/src",
+  "sourceRoot": "packages/apps/plugins/plugin-layout/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-splitview/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-splitview/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-splitview/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-layout/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-layout/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-layout/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-splitview/src/index.ts"
+          "packages/apps/plugins/plugin-layout/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-splitview/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-layout/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-splitview/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-layout/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },

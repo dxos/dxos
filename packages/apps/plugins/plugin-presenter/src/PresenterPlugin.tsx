@@ -7,8 +7,8 @@ import { deepSignal } from 'deepsignal';
 import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { LAYOUT_PLUGIN, LayoutAction } from '@braneframe/plugin-layout';
 import { isMarkdownContent } from '@braneframe/plugin-markdown';
-import { SPLITVIEW_PLUGIN, SplitViewAction } from '@braneframe/plugin-splitview';
 import { isStack } from '@braneframe/plugin-stack';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 
@@ -50,8 +50,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                     action: 'toggle-presentation',
                   },
                   {
-                    plugin: SPLITVIEW_PLUGIN,
-                    action: SplitViewAction.TOGGLE_FULLSCREEN,
+                    plugin: LAYOUT_PLUGIN,
+                    action: LayoutAction.TOGGLE_FULLSCREEN,
                   },
                 ]),
               keyBinding: 'shift+meta+p',

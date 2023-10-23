@@ -8,7 +8,7 @@ import React from 'react';
 import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { Game, types } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
@@ -64,7 +64,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { LayoutAction } from '@braneframe/plugin-layout';
 import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
 
@@ -66,7 +66,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {

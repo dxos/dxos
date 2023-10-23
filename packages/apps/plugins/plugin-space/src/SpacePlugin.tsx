@@ -10,7 +10,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type Node, isGraphNode } from '@braneframe/plugin-graph';
-import { SplitViewAction, type LayoutState } from '@braneframe/plugin-splitview';
+import { LayoutAction, type LayoutState } from '@braneframe/plugin-layout';
 import { AppState } from '@braneframe/types';
 import {
   type PluginDefinition,
@@ -77,14 +77,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-      if (!clientPlugin || !splitViewPlugin) {
+      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      if (!clientPlugin || !layoutPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
       // TODO(wittjosiah): Remove once space can be computed directly from an object.
-      const splitView = splitViewPlugin.provides.layout as LayoutState;
+      const layout = layoutPlugin.provides.layout as LayoutState;
 
       // Find or initialize `appState`
       const defaultSpace = client.spaces.default;
@@ -115,7 +115,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           await intentPlugin?.provides.intent.dispatch({
-            action: SplitViewAction.ACTIVATE,
+            action: LayoutAction.ACTIVATE,
             data: { id: createNodeId(space.key) },
           });
         });
@@ -124,13 +124,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       // Calculate the active space based on the graph and active node.
       subscriptions.add(
         effect(async () => {
-          if (!splitView.activeNode) {
+          if (!layout.activeNode) {
             return;
           }
 
           state.active = await new Promise<Space | undefined>((resolve) => {
             graphPlugin?.provides.graph.traverse({
-              node: splitView.activeNode,
+              node: layout.activeNode,
               direction: 'up',
               visitor: (node) => {
                 if (isSpace(node.data)) {
@@ -150,12 +150,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const send = () => {
             const identity = client.halo.identity.get();
             const space = state.active;
-            if (identity && space && splitView.active) {
+            if (identity && space && layout.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
                 spaceKey: space.key.toHex(),
-                added: [splitView.active],
-                removed: [splitView.previous],
+                added: [layout.active],
+                removed: [layout.previous],
               });
             }
           };
@@ -229,10 +229,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       translations,
       surface: {
         component: (data) => {
-          if (data.$component === 'dxos.org/plugin/splitview/ProfileSettings') {
-            return <SpaceSettings />;
-          }
-
           switch (data.$role) {
             case 'main':
               switch (true) {
@@ -270,6 +266,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               }
             case 'presence':
               return <SpacePresence />;
+            case 'settings':
+              return data.content === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
             default:
               return null;
           }
@@ -367,7 +365,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                     action: SpaceAction.JOIN,
                   },
                   {
-                    action: SplitViewAction.ACTIVATE,
+                    action: LayoutAction.ACTIVATE,
                   },
                 ]),
             },
@@ -418,11 +416,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME: {
-              // const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // if (space && splitViewPlugin?.provides.layout) {
-              //   splitViewPlugin.provides.layout.popoverOpen = true;
-              //   splitViewPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameSpacePopover', subject: space };
-              //   splitViewPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${createNodeId(spaceKey)}`;
+              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              // if (space && layoutPlugin?.provides.layout) {
+              //   layoutPlugin.provides.layout.popoverOpen = true;
+              //   layoutPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameSpacePopover', subject: space };
+              //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${createNodeId(spaceKey)}`;
               //   return true;
               // }
               break;
@@ -456,10 +454,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RESTORE: {
-              // const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-              // if (space && splitViewPlugin?.provides.layout) {
-              //   splitViewPlugin.provides.layout.dialogOpen = true;
-              //   splitViewPlugin.provides.layout.dialogContent = { $component: 'dxos.org/plugin/space/RestoreSpaceDialog', subject: space };
+              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              // if (space && layoutPlugin?.provides.layout) {
+              //   layoutPlugin.provides.layout.dialogOpen = true;
+              //   layoutPlugin.provides.layout.dialogContent = { $component: 'dxos.org/plugin/space/RestoreSpaceDialog', subject: space };
               //   return true;
               // }
               break;
@@ -483,13 +481,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME_OBJECT: {
-              // const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+              // const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
               // const object =
               //   typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              // if (object && splitViewPlugin?.provides.layout) {
-              //   splitViewPlugin.provides.layout.popoverOpen = true;
-              //   splitViewPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameObjectPopover', subject: object };
-              //   splitViewPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${intent.data.objectId}`;
+              // if (object && layoutPlugin?.provides.layout) {
+              //   layoutPlugin.provides.layout.popoverOpen = true;
+              //   layoutPlugin.provides.layout.popoverContent = { $component: 'dxos.org/plugin/space/RenameObjectPopover', subject: object };
+              //   layoutPlugin.provides.layout.popoverAnchorId = `dxos.org/ui/navtree/${intent.data.objectId}`;
               //   return true;
               // }
               break;

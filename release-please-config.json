@@ -99,6 +99,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-map/package.json",
           "jsonpath": "$.version"
         },
@@ -130,11 +135,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-space/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-splitview/package.json",
           "jsonpath": "$.version"
         },
         {

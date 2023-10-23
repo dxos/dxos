@@ -5,7 +5,7 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
-import { SPLITVIEW_PLUGIN, SplitViewAction, useSplitView } from '@braneframe/plugin-splitview';
+import { LAYOUT_PLUGIN, LayoutAction, useLayout } from '@braneframe/plugin-layout';
 import { type Stack as StackType } from '@braneframe/types';
 import { Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const { fullscreen } = useSplitView();
+  const { fullscreen } = useLayout();
 
   const { running } = useContext(PresenterContext);
 
@@ -32,8 +32,8 @@ export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
         data: { state: running },
       },
       {
-        plugin: SPLITVIEW_PLUGIN,
-        action: SplitViewAction.TOGGLE_FULLSCREEN,
+        plugin: LAYOUT_PLUGIN,
+        action: LayoutAction.TOGGLE_FULLSCREEN,
         data: { state: running },
       },
     ]);
