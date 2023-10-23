@@ -5,10 +5,9 @@
 import { Plus, Placeholder } from '@phosphor-icons/react';
 import React, { useCallback, type FC } from 'react';
 
-import { useIntent } from '@braneframe/plugin-intent';
 import { type Stack as StackType, type File as FileType } from '@braneframe/types';
 import { TypedObject, isTypedObject } from '@dxos/react-client/echo';
-import { Surface, usePlugin } from '@dxos/react-surface';
+import { Surface, useIntent, usePlugin } from '@dxos/react-surface';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { Stack, type StackSectionItem } from '@dxos/react-ui-stack';
@@ -22,10 +21,10 @@ import { isStack } from '../util';
 const StackContent = ({ data }: { data: StackSectionItem }) => {
   // TODO(wittjosiah): This is a hack to read graph data. Needs to use a lens.
   const object = (data as any).node?.data ?? data;
-  return <Surface role='section' data={object} />;
+  return <Surface role='section' data={{ object }} />;
 };
 
-export const StackMain: FC<{ data: StackType }> = ({ data: stack }) => {
+export const StackMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);

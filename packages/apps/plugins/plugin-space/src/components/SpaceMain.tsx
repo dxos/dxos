@@ -40,7 +40,7 @@ export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
       : childNode
       ? { space: parentNode.data, node: childNode }
       : { space: parentNode.data }
-    : null;
+    : {};
 
   return <Surface data={transformedData} role='main' />;
 };

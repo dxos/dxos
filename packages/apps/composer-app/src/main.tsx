@@ -13,7 +13,6 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
-import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
@@ -28,7 +27,7 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
-import { PluginProvider } from '@dxos/react-surface';
+import { createApp } from '@dxos/react-surface';
 import { ProgressBar } from '@dxos/react-ui';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -40,45 +39,45 @@ import { ProgressBar } from '@dxos/react-ui';
 const main = async () => {
   const config = new Config(Envs(), Local(), Defaults());
   const services = await createClientServices(config);
+  const App = createApp({
+    fallback: (
+      <div className='flex h-screen justify-center items-center'>
+        <ProgressBar indeterminate />
+      </div>
+    ),
+    plugins: [
+      // TODO(burdon): Normalize namespace across apps.
+      TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
+      ThemePlugin({ appName: 'Composer' }),
+
+      // Outside of error boundary so that updates are not blocked by errors.
+      PwaPlugin(),
+
+      // Core framework.
+      ErrorPlugin(),
+      GraphPlugin(),
+      ClientPlugin({ config, services, types }),
+
+      // Core UX.
+      DndPlugin(),
+      SplitViewPlugin(),
+      TreeViewPlugin(),
+
+      // TODO(burdon): Remove need to come after SplitView.
+      SpacePlugin(),
+
+      // Apps.
+      MarkdownPlugin(),
+      StackPlugin(),
+      FilesPlugin(),
+      GithubPlugin(),
+      SketchPlugin(),
+    ],
+  });
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <PluginProvider
-        fallback={
-          <div className='flex h-screen justify-center items-center'>
-            <ProgressBar indeterminate />
-          </div>
-        }
-        plugins={[
-          // TODO(burdon): Normalize namespace across apps.
-          TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
-          ThemePlugin({ appName: 'Composer' }),
-
-          // Outside of error boundary so that updates are not blocked by errors.
-          PwaPlugin(),
-
-          // Core framework.
-          ErrorPlugin(),
-          IntentPlugin(),
-          GraphPlugin(),
-          ClientPlugin({ config, services, types }),
-
-          // Core UX.
-          DndPlugin(),
-          SplitViewPlugin(),
-          TreeViewPlugin(),
-
-          // TODO(burdon): Remove need to come after SplitView.
-          SpacePlugin(),
-
-          // Apps.
-          MarkdownPlugin(),
-          StackPlugin(),
-          FilesPlugin(),
-          GithubPlugin(),
-          SketchPlugin(),
-        ]}
-      />
+      <App />
     </StrictMode>,
   );
 };

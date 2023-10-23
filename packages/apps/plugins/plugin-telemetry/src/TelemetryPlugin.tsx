@@ -17,12 +17,10 @@ export const TelemetryPlugin = (options: AppTelemetryOptions): PluginDefinition 
       id: 'dxos.org/plugin/telemetry',
     },
     provides: {
-      components: {
-        default: () => {
-          useTelemetry({ namespace: options.namespace });
+      root: () => {
+        useTelemetry({ namespace: options.namespace });
 
-          return null;
-        },
+        return null;
       },
     },
   };

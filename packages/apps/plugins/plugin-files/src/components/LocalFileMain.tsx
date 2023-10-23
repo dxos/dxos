@@ -9,25 +9,25 @@ import { Surface } from '@dxos/react-surface';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 import { type LocalFile } from '../types';
 
-export const LocalFileMain: FC<{ data: LocalFile }> = ({ data }) => {
+export const LocalFileMain: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
     () =>
-      data.permission !== 'granted'
+      file.permission !== 'granted'
         ? {
-            composer: { id: data.id, content: () => <LocalFileMainPermissions data={data} /> },
-            properties: { title: data.title, readOnly: true },
+            composer: { id: file.id, content: () => <LocalFileMainPermissions entity={file} /> },
+            properties: { title: file.title, readOnly: true },
           }
-        : data.text
+        : file.text
         ? {
-            composer: { id: data.id, content: data.text },
-            properties: { title: data.title, readOnly: true },
+            composer: { id: file.id, content: file.text },
+            properties: { title: file.title, readOnly: true },
           }
-        : data,
-    [data.id, Boolean(data.text)],
+        : { file },
+    [file.id, Boolean(file.text)],
   );
 
   // TODO(wittjosiah): Render file list.
-  if ('children' in data) {
+  if ('children' in file) {
     return null;
   }
 

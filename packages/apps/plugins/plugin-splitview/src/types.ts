@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides, Node } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { Node } from '@braneframe/plugin-graph';
+import type { Layout } from '@dxos/react-surface';
 
 export const SPLITVIEW_PLUGIN = 'dxos.org/plugin/splitview';
 
@@ -17,23 +16,7 @@ export enum SplitViewAction {
   ACTIVATE = `${SPLITVIEW_ACTION}/activate`,
 }
 
-export type SplitViewState = {
-  fullscreen?: boolean;
-  sidebarOpen?: boolean;
-  complementarySidebarOpen?: boolean;
-  dialogContent?: any;
-  dialogOpen?: boolean;
-  popoverContent?: any;
-  popoverOpen?: boolean;
-  popoverAnchorId?: string;
-  active: string | undefined;
-  previous: string | undefined;
+export type LayoutState = Layout & {
   activeNode: Node | undefined;
   previousNode: Node | undefined;
 };
-
-export type SplitViewPluginProvides = GraphProvides &
-  TranslationsProvides &
-  IntentProvides & {
-    splitView: SplitViewState;
-  };

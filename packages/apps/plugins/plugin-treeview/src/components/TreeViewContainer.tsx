@@ -3,12 +3,12 @@
 //
 
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
-import { useIntent } from '@braneframe/plugin-intent';
 import { type Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useIntent } from '@dxos/react-surface';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -43,9 +43,13 @@ const getMosaicPath = (graph: Graph, id: string) => {
 };
 
 export const TreeViewContainer = ({
-  data: { graph, activeId, popoverAnchorId },
+  graph,
+  activeId,
+  popoverAnchorId,
 }: {
-  data: { graph: Graph; activeId?: string; popoverAnchorId?: string };
+  graph: Graph;
+  activeId?: string;
+  popoverAnchorId?: string;
 }) => {
   const client = useClient();
   const config = useConfig();
@@ -66,9 +70,7 @@ export const TreeViewContainer = ({
     // !isLg && closeNavigationSidebar();
   };
 
-  const currentPath: string = useMemo(() => {
-    return (activeId && getMosaicPath(graph, activeId)) ?? 'never';
-  }, [graph, activeId]);
+  const currentPath = (activeId && getMosaicPath(graph, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && graph.findNode(Path.last(activeItem.path));

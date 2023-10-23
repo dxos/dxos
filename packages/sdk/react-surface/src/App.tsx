@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { type BootstrapPluginsParams, createPluginHost, SurfacePlugin, IntentPlugin } from './plugins';
+import { type BootstrapPluginsParams, PluginHost, SurfacePlugin, IntentPlugin } from './plugins';
 
 /**
  * Expected usage is for this to be the entrypoint of the application.
@@ -25,17 +25,19 @@ import { type BootstrapPluginsParams, createPluginHost, SurfacePlugin, IntentPlu
  * @param params.fallback Fallback component to render while plugins are initializing.
  */
 export const createApp = ({ plugins, fallback }: BootstrapPluginsParams) => {
-  const { definition, bootstrap } = createPluginHost({
+  const host = PluginHost({
     plugins: [SurfacePlugin(), IntentPlugin(), ...plugins],
     fallback,
   });
 
-  invariant(definition.provides?.root);
-  const Root = definition.provides.root;
+  invariant(host.provides?.context);
+  invariant(host.provides?.root);
+  const Context = host.provides.context;
+  const Root = host.provides.root;
 
-  return () => {
-    useEffect(() => bootstrap(), []);
-
-    return <Root />;
-  };
+  return () => (
+    <Context>
+      <Root />
+    </Context>
+  );
 };

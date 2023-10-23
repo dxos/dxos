@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 
 import { getTreeItemLabel } from '../util';
 
-export const TreeViewDocumentTitle = ({ data: activeNode }: { data: Node }) => {
+export const TreeViewDocumentTitle = ({ activeNode }: { activeNode?: Node }) => {
   const { t } = useTranslation();
   useEffect(() => {
     document.title = activeNode ? getTreeItemLabel(activeNode, t) : t('current app name', { ns: 'appkit' });

@@ -4,12 +4,15 @@
 
 import React from 'react';
 
-import { type Graph, GraphBuilder, type NodeBuilder } from '@dxos/app-graph';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { GraphBuilder } from '@dxos/app-graph';
+import {
+  filterPlugins,
+  type GraphPluginProvides,
+  type PluginDefinition,
+  parseGraphBuilderPlugin,
+} from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { type GraphPluginProvides, type WithPlugins } from './types';
-import { graphPlugins } from './util';
 
 /**
  * Manages the state of the graph for the application.
@@ -17,33 +20,23 @@ import { graphPlugins } from './util';
  * This includes actions and annotation each other's nodes.
  */
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
-  const state: { graph?: Graph } = {}; // TODO(burdon): Use signal?
+  const builder = new GraphBuilder();
+  const graph = builder.build();
 
   return {
     meta: {
       id: 'dxos.org/plugin/graph',
     },
     ready: async (plugins) => {
-      const builder = new GraphBuilder();
+      filterPlugins(plugins, parseGraphBuilderPlugin).forEach((plugin) =>
+        builder.addNodeBuilder(plugin.meta.id, (parent) => plugin.provides.graph.builder({ parent, plugins })),
+      );
 
-      // TODO(burdon): Unify.
-      graphPlugins(plugins)
-        .map((plugin) => [plugin.meta.id, plugin.provides.graph.withPlugins])
-        .filter((withPlugins): withPlugins is [string, WithPlugins] => !!withPlugins[1])
-        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder(plugins)));
-
-      graphPlugins(plugins)
-        .map((plugin) => [plugin.meta.id, plugin.provides.graph.nodes])
-        .filter((nodes): nodes is [string, NodeBuilder] => !!nodes[1])
-        .forEach(([id, nodeBuilder]) => builder.addNodeBuilder(id, nodeBuilder));
-
-      state.graph = builder.build();
+      builder.build(graph);
     },
     provides: {
-      context: ({ children }) => (
-        <GraphContext.Provider value={{ graph: state.graph! }}>{children}</GraphContext.Provider>
-      ),
-      graph: () => state.graph!,
+      context: ({ children }) => <GraphContext.Provider value={{ graph }}>{children}</GraphContext.Provider>,
+      graph,
     },
   };
 };

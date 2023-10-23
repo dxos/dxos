@@ -10,11 +10,14 @@ import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type PluginDefinition } from '@dxos/react-surface';
+import type { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
+
+export const parseClientPlugin = (plugin?: Plugin) =>
+  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },

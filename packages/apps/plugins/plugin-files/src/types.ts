@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/react-surface';
 
 export const FILES_PLUGIN = 'dxos.org/plugin/files';
 
@@ -41,4 +44,7 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export type LocalFilesPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type LocalFilesPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;

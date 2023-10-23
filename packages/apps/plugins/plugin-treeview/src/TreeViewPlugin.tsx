@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph } from '@dxos/app-graph';
+import React from 'react';
+
+import { Graph, type Node } from '@dxos/app-graph';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 import { TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
@@ -15,29 +17,38 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       id: TREE_VIEW_PLUGIN,
     },
     provides: {
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+      surface: {
+        component: ({ $role, ...data }) => {
+          switch ($role) {
+            case 'navigation':
+              if ('graph' in data && data.graph instanceof Graph) {
+                return (
+                  <TreeViewContainer
+                    graph={data.graph}
+                    activeId={data.activeId as string}
+                    popoverAnchorId={data.popoverAnchorId as string}
+                  />
+                );
+              }
+              break;
+
+            case 'document-title':
+              return <TreeViewDocumentTitle activeNode={data.activeNode as Node | undefined} />;
+
+            case 'heading':
+              if (
+                data.activeNode &&
+                typeof data.activeNode === 'object' &&
+                'label' in data.activeNode &&
+                'parent' in data.activeNode
+              ) {
+                return <TreeItemMainHeading activeNode={data.activeNode as Node} />;
+              }
+              break;
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'navigation':
-            if ('graph' in data && data.graph instanceof Graph) {
-              return TreeViewContainer;
-            }
-            break;
-
-          case 'document-title':
-            return TreeViewDocumentTitle;
-
-          case 'heading':
-            if ('label' in data && 'parent' in data) {
-              return TreeItemMainHeading;
-            }
-            break;
-        }
-
-        return null;
+        },
       },
       translations,
     },

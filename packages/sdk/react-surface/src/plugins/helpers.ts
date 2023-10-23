@@ -25,5 +25,19 @@ export const getPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> => {
 /**
  * Filter a list of plugins to only those that match a predicate.
  */
-export const filterPlugins = <T>(plugins: Plugin[], predicate: (plugin: Plugin<T>) => boolean): Plugin<T>[] =>
-  (plugins as Plugin<T>[]).filter((plugin) => predicate(plugin));
+export const filterPlugins = <T>(
+  plugins: Plugin[],
+  predicate: (plugin: Plugin) => Plugin<T> | undefined,
+): Plugin<T>[] => plugins.map((plugin) => predicate(plugin)).filter((plugin): plugin is Plugin<T> => !!plugin);
+
+/**
+ * Resolves a plugin by predicate.
+ *
+ * @example
+ * import { isIntentPlugin, resolvePlugin } from '@dxos/react-surface';
+ * const intentPlugin = resolvePlugin(plugins, isIntentPlugin);
+ */
+export const resolvePlugin = <T>(
+  plugins: Plugin[],
+  predicate: (plugin: Plugin) => Plugin<T> | undefined,
+): Plugin<T> | undefined => filterPlugins(plugins, predicate)[0];

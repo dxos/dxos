@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { type TranslationsProvides } from '@braneframe/plugin-theme';
 import { Config, Defaults, Envs, Local } from '@dxos/react-client';
-import { ErrorBoundary, type PluginDefinition } from '@dxos/react-surface';
+import { ErrorBoundary, type PluginDefinition, type TranslationsProvides } from '@dxos/react-surface';
 
 import { ResetDialog } from './components';
 import { ERROR_PLUGIN } from './constants';

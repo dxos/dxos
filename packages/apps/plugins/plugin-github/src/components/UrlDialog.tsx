@@ -10,7 +10,7 @@ import { Dialog, Button, useTranslation, Input } from '@dxos/react-ui';
 import { useGhIdFromUrl } from '../hooks';
 import { GITHUB_PLUGIN } from '../props';
 
-export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
+export const UrlDialog = ({ properties }: { properties: MarkdownProperties }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const [ghUrlValue, setGhUrlValue] = useState('');
 

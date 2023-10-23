@@ -32,7 +32,7 @@ export const StandaloneMenu = ({
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={8} classNames='z-10'>
           <DropdownMenu.Viewport>
-            <Surface data={[model, properties, editorRef]} role='menuitem' />
+            <Surface data={{ model, properties, editorRef }} role='menuitem' />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

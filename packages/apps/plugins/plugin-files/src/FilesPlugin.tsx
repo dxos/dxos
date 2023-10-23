@@ -9,12 +9,17 @@ import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
-import { type Node, type GraphPluginProvides } from '@braneframe/plugin-graph';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { type Node } from '@braneframe/plugin-graph';
 import { type MarkdownProvides } from '@braneframe/plugin-markdown';
-import { SplitViewAction, type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
+import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseLayoutPlugin,
+  parseGraphPlugin,
+  parseIntentPlugin,
+} from '@dxos/react-surface';
 
 import { LocalFileMain } from './components';
 import translations from './translations';
@@ -92,18 +97,15 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         );
       }
 
-      const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const splitViewPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       if (splitViewPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = splitViewPlugin.provides.splitView.active;
+            const active = splitViewPlugin.provides.layout.active;
             const path =
               active &&
-              graphPlugin.provides
-                .graph()
-                .getPath(active)
-                ?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
+              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
             const current =
               (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
             if (state.current !== current) {
@@ -120,29 +122,28 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     },
     provides: {
       translations,
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if (isLocalFile(data)) {
-              return LocalFileMain;
-            }
-            break;
+      surface: {
+        component: ({ $role, ...data }) => {
+          if (!isLocalFile(data.active)) {
+            return null;
           }
-        }
 
-        return null;
+          switch ($role) {
+            case 'main': {
+              return <LocalFileMain file={data.active} />;
+            }
+          }
+
+          return null;
+        },
       },
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (parent.id !== 'root') {
             return;
           }
 
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           const [groupNode] = parent.addNode(FILES_PLUGIN, {
             id: 'all-files',
@@ -200,7 +201,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         },
       },
       intent: {
-        resolver: async (intent, plugins) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case LocalFilesAction.OPEN_FILE: {
               if ('showOpenFilePicker' in window) {

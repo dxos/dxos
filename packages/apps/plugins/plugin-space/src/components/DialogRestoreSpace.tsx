@@ -14,7 +14,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { restoreSpace } from '../backup';
 import { SPACE_PLUGIN } from '../types';
 
-export const DialogRestoreSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
+export const DialogRestoreSpace = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const splitView = useSplitView();
   return (

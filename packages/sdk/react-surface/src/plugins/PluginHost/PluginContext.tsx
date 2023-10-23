@@ -2,18 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext, useContext } from 'react';
+import { type Context, type Provider, createContext, useContext } from 'react';
 
 import { type Plugin, type PluginDefinition } from './plugin';
-import { findPlugin } from '../helpers';
+import { findPlugin, resolvePlugin } from '../helpers';
 
 export type PluginContext = {
-  plugins: Plugin[];
+  ready: boolean;
   initializing: PluginDefinition[];
   loading: PluginDefinition[];
+  plugins: Plugin[];
 };
 
-const PluginContext = createContext<PluginContext>({ plugins: [], initializing: [], loading: [] });
+const PluginContext: Context<PluginContext> = createContext<PluginContext>({
+  ready: false,
+  initializing: [],
+  loading: [],
+  plugins: [],
+});
 
 /**
  * Get all plugins.
@@ -28,4 +34,9 @@ export const usePlugin = <T,>(id: string): Plugin<T> | undefined => {
   return findPlugin<T>(plugins, id);
 };
 
-export const PluginProvider = PluginContext.Provider;
+export const useResolvePlugin = <T,>(predicate: (plugin: Plugin) => Plugin<T> | undefined): Plugin<T> | undefined => {
+  const { plugins } = usePlugins();
+  return resolvePlugin(plugins, predicate);
+};
+
+export const PluginProvider: Provider<PluginContext> = PluginContext.Provider;

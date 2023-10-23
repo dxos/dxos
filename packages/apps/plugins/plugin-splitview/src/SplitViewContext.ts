@@ -6,9 +6,9 @@ import { type Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type SplitViewState } from './types';
+import { type LayoutState } from './types';
 
-export const SplitViewContext: Context<SplitViewState | null> = createContext<SplitViewState | null>(null);
+export const SplitViewContext: Context<LayoutState | null> = createContext<LayoutState | null>(null);
 
-export const useSplitView = (): SplitViewState =>
+export const useSplitView = (): LayoutState =>
   useContext(SplitViewContext) ?? raise(new Error('Missing SplitViewContext'));

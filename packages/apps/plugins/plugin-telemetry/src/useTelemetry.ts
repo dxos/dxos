@@ -4,9 +4,8 @@
 
 import { useEffect } from 'react';
 
-import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { useClient } from '@dxos/react-client';
-import { usePlugin } from '@dxos/react-surface';
+import { parseLayoutPlugin, useResolvePlugin } from '@dxos/react-surface';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, setupTelemetryListeners, withTelemetry } from './telemetry';
 
@@ -18,7 +17,7 @@ export type UseTelemetryOptions = {
  * Hooks up navigation and click events to telemetry.
  */
 export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
-  const splitViewPlugin = usePlugin<SplitViewPluginProvides>('dxos.org/plugin/splitview');
+  const splitViewPlugin = useResolvePlugin(parseLayoutPlugin);
   const client = useClient();
 
   useEffect(() => {
@@ -44,5 +43,5 @@ export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
         properties: BASE_TELEMETRY_PROPERTIES,
       });
     });
-  }, [splitViewPlugin?.provides.splitView.active]);
+  }, [splitViewPlugin?.provides.layout.active]);
 };

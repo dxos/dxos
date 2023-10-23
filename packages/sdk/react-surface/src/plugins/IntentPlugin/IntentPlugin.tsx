@@ -10,7 +10,7 @@ import { type Intent } from './intent';
 import { type PluginDefinition, type Plugin } from '../PluginHost';
 import { filterPlugins, findPlugin } from '../helpers';
 
-export type IntentProvides = {
+export type IntentResolverProvides = {
   intent: {
     resolver: (intent: Intent, plugins: Plugin[]) => any;
   };
@@ -20,8 +20,11 @@ export type IntentPluginProvides = {
   intent: IntentContext;
 };
 
-export const isIntentPlugin = (plugin: Plugin): plugin is Plugin<IntentPluginProvides> =>
-  Boolean((plugin.provides as IntentPluginProvides).intent);
+export const parseIntentPlugin = (plugin: Plugin) =>
+  (plugin.provides as any).intent?.dispatch ? (plugin as Plugin<IntentPluginProvides>) : undefined;
+
+export const parseIntentResolverPlugin = (plugin: Plugin) =>
+  (plugin.provides as any).intent?.resolver ? (plugin as Plugin<IntentResolverProvides>) : undefined;
 
 /**
  * Allows plugins to register intent handlers and routes sent intents to the appropriate plugin.
@@ -37,16 +40,13 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     ready: async (plugins) => {
       // Dispatch intent to associated plugin.
       const dispatch = (intent: Intent) => {
-        const plugin = intent.plugin && findPlugin<IntentProvides>(plugins, intent.plugin);
-        if (plugin) {
-          return plugin.provides.intent.resolver(intent, plugins);
+        if (intent.plugin) {
+          const plugin = findPlugin<IntentResolverProvides>(plugins, intent.plugin);
+          return plugin?.provides.intent.resolver(intent, plugins);
         }
 
         // Return resolved value from first plugin that handles the intent.
-        return filterPlugins<IntentProvides>(
-          plugins,
-          (plugin) => typeof plugin.provides.intent?.resolver === 'function',
-        ).reduce((acc, plugin) => {
+        return filterPlugins(plugins, parseIntentResolverPlugin).reduce((acc, plugin) => {
           return acc ?? plugin.provides.intent.resolver(intent, plugins);
         }, undefined);
       };

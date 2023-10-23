@@ -38,12 +38,12 @@ export class GraphBuilder {
   /**
    * Construct the graph, starting by calling all registered node builders on the root node.
    * Node builders will be filtered out as they are used such that they are only used once on any given path.
-   * @param root
-   * @param path
+   * @param previousGraph If provided, the graph will be updated in place.
+   * @param startingPath If provided, the graph will be updated starting at the given path.
    */
-  build(root?: Node, path: string[] = []): Graph {
-    const graph: Graph = new Graph(root ?? this._createNode(() => graph, { id: 'root', label: 'Root' }));
-    return this._build(graph, graph.root, path);
+  build(previousGraph?: Graph, startingPath: string[] = []): Graph {
+    const graph: Graph = previousGraph ?? new Graph(this._createNode(() => graph, { id: 'root', label: 'Root' }));
+    return this._build(graph, graph.root, startingPath);
   }
 
   /**

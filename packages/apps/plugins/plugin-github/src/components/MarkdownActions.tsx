@@ -18,9 +18,13 @@ import { GITHUB_PLUGIN, type GhIssueIdentifier } from '../props';
 
 // TODO(burdon): Where do "properties" come from? Is this the graph node datum?
 export const MarkdownActions = ({
-  data: [model, properties, editorRef],
+  model,
+  properties,
+  editorRef,
 }: {
-  data: [ComposerModel, MarkdownProperties, RefObject<MarkdownComposerRef>];
+  model: ComposerModel;
+  properties: MarkdownProperties;
+  editorRef: RefObject<MarkdownComposerRef>;
 }) => {
   // TODO(burdon): Ad hoc assumption that underlying object is ECHO?
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
@@ -46,7 +50,13 @@ export const MarkdownActions = ({
         const {
           data: { html_url: issueUrl },
         } = await updateIssueContent();
-        splitView.dialogContent = ['dxos.org/plugin/github/ExportDialog', ['response', issueUrl], model, docGhId];
+        splitView.dialogContent = {
+          content: 'dxos.org/plugin/github/ExportDialog',
+          type: 'response',
+          target: issueUrl,
+          model,
+          docGhId,
+        };
         splitView.dialogOpen = true;
       } catch (err) {
         log.error('Failed to export to Github issue');
@@ -60,7 +70,12 @@ export const MarkdownActions = ({
     if ('issueNumber' in docGhId!) {
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
-      splitView.dialogContent = ['dxos.org/plugin/github/ExportDialog', ['create-pr', null], model, docGhId];
+      splitView.dialogContent = {
+        content: 'dxos.org/plugin/github/ExportDialog',
+        type: 'create-pr',
+        model,
+        docGhId,
+      };
       splitView.dialogOpen = true;
     }
   }, [exportGhIssueContent, docGhId]);
@@ -74,7 +89,7 @@ export const MarkdownActions = ({
             classNames='gap-2'
             disabled={!docGhId}
             onClick={() => {
-              splitView.dialogContent = ['dxos.org/plugin/github/ImportDialog', docGhId, editorRef];
+              splitView.dialogContent = { content: 'dxos.org/plugin/github/ImportDialog', docGhId, editorRef };
               splitView.dialogOpen = true;
             }}
           >
@@ -108,7 +123,7 @@ export const MarkdownActions = ({
         <DropdownMenu.Item
           classNames='gap-2'
           onClick={() => {
-            splitView.dialogContent = ['dxos.org/plugin/github/BindDialog', properties];
+            splitView.dialogContent = { content: 'dxos.org/plugin/github/BindDialog', properties };
             splitView.dialogOpen = true;
           }}
         >

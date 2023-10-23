@@ -134,7 +134,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                   {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
                   <div className='flex flex-col my-2 gap-4'>
-                    <Surface role='dialog' data={dialogContent} />
+                    <Surface role='settings' data={{ content: dialogContent }} />
                   </div>
                   <Dialog.Close asChild>
                     <Button variant='primary' classNames='mbs-2'>
@@ -144,7 +144,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
                 </Dialog.Content>
               ) : (
                 <Dialog.Content>
-                  <Surface role='dialog' data={dialogContent} />
+                  <Surface role='dialog' data={{ content: dialogContent }} />
                 </Dialog.Content>
               )}
             </Dialog.Overlay>

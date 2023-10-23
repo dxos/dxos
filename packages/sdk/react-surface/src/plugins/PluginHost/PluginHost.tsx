@@ -3,7 +3,7 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
-import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
+import React, { useEffect, type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -12,23 +12,26 @@ import { type Plugin, type PluginDefinition, type PluginProvides } from './plugi
 
 export type BootstrapPluginsParams = {
   plugins: PluginDefinition[];
-  fallback?: ReactNode | FC<{ initializing: PluginDefinition[]; loading: PluginDefinition[] }>;
+  fallback?: ReactNode | FC<Omit<PluginContext, 'ready'>>;
 };
 
 export type PluginHostProvides = {
   plugins: PluginContext;
 };
 
-export const isPluginHost = (plugin: Plugin): plugin is Plugin<PluginHostProvides> =>
-  Boolean((plugin.provides as PluginHostProvides).plugins);
+export const parsePluginHost = (plugin: Plugin) =>
+  (plugin.provides as PluginHostProvides).plugins ? (plugin as Plugin<PluginHostProvides>) : undefined;
 
 /**
  * Bootstraps an application by initializing plugins and rendering root components.
  */
-export const createPluginHost = (params: BootstrapPluginsParams) => {
-  const state = deepSignal<PluginContext>({ plugins: [], initializing: [], loading: [] });
+export const PluginHost = ({
+  plugins: definitions,
+  fallback,
+}: BootstrapPluginsParams): PluginDefinition<PluginHostProvides> => {
+  const state = deepSignal<PluginContext>({ ready: false, initializing: [], loading: [], plugins: [] });
 
-  const definition: PluginDefinition<PluginHostProvides> = {
+  return {
     meta: {
       id: 'dxos.org/plugin/host',
     },
@@ -36,12 +39,50 @@ export const createPluginHost = (params: BootstrapPluginsParams) => {
       plugins: state,
       context: ({ children }) => <PluginProvider value={state}>{children}</PluginProvider>,
       root: () => {
-        if (!state.plugins) {
-          if (typeof params.fallback === 'function') {
-            const FallbackComponent = params.fallback;
-            return <FallbackComponent initializing={state.initializing} loading={state.loading} />;
+        useEffect(() => {
+          log('initializing plugins', { definitions });
+          const timeout = setTimeout(async () => {
+            state.initializing = definitions;
+            const plugins = await Promise.all(
+              definitions.map(async (definition) => {
+                const plugin = await initializePlugin(definition).catch((err) => {
+                  console.error('Failed to initialize plugin:', definition.meta.id, err);
+                  return undefined;
+                });
+                state.initializing = state.initializing.filter((plugin) => plugin !== definition);
+                return plugin;
+              }),
+            ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
+
+            log('plugins initialized', { plugins });
+            state.loading = definitions;
+            await Promise.all(
+              definitions.map(async (pluginDefinition) => {
+                await pluginDefinition.ready?.(plugins);
+                state.loading = state.loading.filter((plugin) => plugin !== pluginDefinition);
+              }),
+            );
+
+            log('plugins ready', { plugins });
+            state.plugins = plugins;
+            state.ready = true;
+          });
+
+          return () => {
+            clearTimeout(timeout);
+            state.ready = false;
+            void Promise.all(definitions.map((definition) => definition.unload?.()));
+          };
+        }, []);
+
+        if (!state.ready) {
+          if (typeof fallback === 'function') {
+            const FallbackComponent = fallback;
+            return (
+              <FallbackComponent initializing={state.initializing} loading={state.loading} plugins={state.plugins} />
+            );
           }
-          return <>{params.fallback ?? null}</>;
+          return <>{fallback ?? null}</>;
         }
 
         const ComposedContext = composeContext(state.plugins);
@@ -50,42 +91,6 @@ export const createPluginHost = (params: BootstrapPluginsParams) => {
       },
     },
   };
-
-  const bootstrap = () => {
-    const definitions: PluginDefinition[] = [definition, ...params.plugins];
-    log('initializing plugins', { definitions });
-    setTimeout(async () => {
-      state.initializing = definitions;
-      const plugins = await Promise.all(
-        definitions.map(async (definition) => {
-          const plugin = await initializePlugin(definition).catch((err) => {
-            console.error('Failed to initialize plugin:', definition.meta.id, err);
-            return undefined;
-          });
-          state.initializing = state.initializing.filter((plugin) => plugin !== definition);
-          return plugin;
-        }),
-      ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
-
-      log('plugins initialized', { plugins });
-      state.loading = definitions;
-      await Promise.all(
-        definitions.map(async (pluginDefinition) => {
-          await pluginDefinition.ready?.(plugins);
-          state.loading = state.loading.filter((plugin) => plugin !== pluginDefinition);
-        }),
-      );
-
-      log('plugins ready', { plugins });
-      state.plugins = plugins;
-    });
-
-    return () => {
-      void Promise.all(definitions.map((definition) => definition.unload?.()));
-    };
-  };
-
-  return { definition, bootstrap };
 };
 
 /**
@@ -115,14 +120,14 @@ const rootComponents = (plugins: Plugin[]) => {
     .filter((node): node is JSX.Element => Boolean(node));
 };
 
+const composeContext = (plugins: Plugin[]) => {
+  return compose(plugins.map((p) => p.provides.context!).filter(Boolean));
+};
+
 const compose = (contexts: FC<PropsWithChildren>[]) => {
   return [...contexts].reduce((Acc, Next) => ({ children }) => (
     <Acc>
       <Next>{children}</Next>
     </Acc>
   ));
-};
-
-const composeContext = (plugins: Plugin[]) => {
-  return compose(plugins.map((p) => p.provides.context!).filter(Boolean));
 };
