@@ -12,9 +12,9 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin, type TranslationsProvides } from '@braneframe/plugin-theme';
+import { type PluginDefinition, PluginProvider } from '@dxos/app-framework';
 import { Config, Defaults } from '@dxos/config';
 import { TypedObject } from '@dxos/echo-schema';
-import { type PluginDefinition, PluginProvider } from '@dxos/app-framework';
 
 import { OpenVault, ProgressBar } from './components';
 import translations from './translations';

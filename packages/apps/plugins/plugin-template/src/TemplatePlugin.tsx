@@ -6,10 +6,10 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { LayoutAction } from '@braneframe/plugin-layout';
-import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
 
 import { TemplateMain } from './components';
 import translations from './translations';

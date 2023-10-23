@@ -25,9 +25,7 @@ export const DialogRestoreSpace = ({ space }: { space: Space }) => {
         types={['zip']}
         classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
         dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-        handleChange={(backupFile: File) =>
-          restoreSpace(space, backupFile).finally(() => (layout.dialogOpen = false))
-        }
+        handleChange={(backupFile: File) => restoreSpace(space, backupFile).finally(() => (layout.dialogOpen = false))}
       >
         <FilePlus weight='duotone' className={getSize(8)} />
         <span>{t('upload file message')}</span>

@@ -6,11 +6,11 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { LayoutAction } from '@braneframe/plugin-layout';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import { KanbanMain } from './components';
 import translations from './translations';

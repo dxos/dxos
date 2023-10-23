@@ -9,8 +9,8 @@ import React from 'react';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { Config } from '@dxos/client';
 import { PluginProvider, Surface } from '@dxos/app-framework';
+import { Config } from '@dxos/client';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 import { FullscreenDecorator, createThread } from '../testing';

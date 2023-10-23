@@ -5,11 +5,11 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { LayoutAction } from '@braneframe/plugin-layout';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { View as ViewType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import { ExplorerMain } from './components';
 import translations from './translations';

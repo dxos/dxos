@@ -16,8 +16,6 @@ import {
   setAppStateIndex,
 } from '@braneframe/plugin-space';
 import { type Document } from '@braneframe/types';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 import {
   type GraphBuilderProvides,
   type PluginDefinition,
@@ -27,6 +25,8 @@ import {
   type TranslationsProvides,
   type SurfaceProvides,
 } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
+import { type Space, SpaceProxy } from '@dxos/react-client/echo';
 import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {

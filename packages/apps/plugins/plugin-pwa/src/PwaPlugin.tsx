@@ -5,8 +5,8 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { log } from '@dxos/log';
 import { type PluginDefinition } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { ServiceWorkerToast } from './components';

@@ -6,13 +6,13 @@ import { type TLStore } from '@tldraw/tlschema';
 
 import type { StackProvides } from '@braneframe/plugin-stack';
 import { Sketch as SketchType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client/echo';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { isTypedObject } from '@dxos/client/echo';
 
 export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
 

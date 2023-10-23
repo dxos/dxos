@@ -3,13 +3,13 @@
 //
 
 import type { Document } from '@braneframe/types';
-import type { ObjectMeta } from '@dxos/client/echo';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import type { ObjectMeta } from '@dxos/client/echo';
 import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';

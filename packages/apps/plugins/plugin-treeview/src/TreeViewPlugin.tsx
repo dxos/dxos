@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Graph, type Node } from '@dxos/app-graph';
 import { type PluginDefinition } from '@dxos/app-framework';
+import { Graph, type Node } from '@dxos/app-graph';
 
 import { TreeItemMainHeading, TreeViewContainer, TreeViewDocumentTitle } from './components';
 import translations from './translations';

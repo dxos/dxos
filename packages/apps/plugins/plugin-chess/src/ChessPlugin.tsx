@@ -7,11 +7,11 @@ import React from 'react';
 
 import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { LayoutAction } from '@braneframe/plugin-layout';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
 import { Game, types } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
 
 import { ChessMain } from './components';
 import translations from './translations';

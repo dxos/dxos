@@ -6,11 +6,11 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { LayoutAction } from '@braneframe/plugin-layout';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/react-client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';

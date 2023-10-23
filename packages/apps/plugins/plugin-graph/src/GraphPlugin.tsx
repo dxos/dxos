@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { GraphBuilder } from '@dxos/app-graph';
 import {
   filterPlugins,
   type GraphPluginProvides,
   type PluginDefinition,
   parseGraphBuilderPlugin,
 } from '@dxos/app-framework';
+import { GraphBuilder } from '@dxos/app-graph';
 
 import { GraphContext } from './GraphContext';
 

@@ -6,11 +6,11 @@ import React, { useMemo } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { type View as ViewType } from '@braneframe/types';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { type PluginComponentProps } from '@dxos/app-framework';
 import { type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { type PluginComponentProps } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
