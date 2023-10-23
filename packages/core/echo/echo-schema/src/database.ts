@@ -90,15 +90,6 @@ export class EchoDatabase {
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
 
-    // TODO(dmaretskyi): Better way to differentiate static schemas.
-    if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
-      const objectConstructor = Object.getPrototypeOf(obj).constructor;
-      invariant(
-        this._graph.types.getPrototype(obj.__typename!) === objectConstructor,
-        `Prototype invalid or not registered: ${objectConstructor.name}`,
-      );
-    }
-
     if (this._removed.has(obj[base]._id)) {
       this._backend.mutate({
         objects: [
@@ -273,13 +264,8 @@ export class EchoDatabase {
 
       if (state.type.protocol === 'protobuf') {
         const type = state.type.itemId;
-        const Proto = this._graph.types.getPrototype(type);
-        if (!Proto) {
-          log('Unknown schema type', { type: state.type?.encode() });
-          return new TypedObject(); // TODO(burdon): Expando?
-        } else {
-          return new Proto();
-        }
+        const schema = this._graph.types.getSchema(type);
+        return new TypedObject(undefined, { schema });
       } else if (state.type.protocol === undefined) {
         const schema = this.getObjectById(state.type.itemId);
         return new TypedObject(undefined, { schema: schema as Schema | undefined });

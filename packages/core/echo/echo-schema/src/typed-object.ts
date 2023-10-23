@@ -92,6 +92,9 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
 
+    // Reset prototype so that derived classes don't change it.
+    Object.setPrototypeOf(this, TypedObject.prototype);
+
     this._schema = opts?.schema;
     this._immutable = opts?.immutable ?? false;
 
