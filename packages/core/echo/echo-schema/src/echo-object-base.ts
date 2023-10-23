@@ -201,4 +201,4 @@ export const forceUpdate = (obj: EchoObjectBase) => {
 
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
   return obj[base]._database;
-}
+};

@@ -4,7 +4,7 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { type EchoObject, base, getDatabaseFromObject } from '@dxos/echo-schema';
+import { type EchoObject, getDatabaseFromObject } from '@dxos/echo-schema';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 
