@@ -139,6 +139,7 @@ export class DashboardPlugin extends AbstractPlugin {
       await plugin.close();
       await plugin.setConfig(request.pluginConfig);
       await plugin.open();
+      this.statusUpdate.emit();
     }
   }
 }

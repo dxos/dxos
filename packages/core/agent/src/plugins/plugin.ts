@@ -24,7 +24,7 @@ export interface Plugin {
   config: Record<string, any>;
 
   initialize(pluginCtx: PluginContext): Promise<void>;
-  setConfig(config: any): Promise<void>;
+  setConfig(config: Record<string, any>): Promise<void>;
 
   open(): Promise<void>;
   close(): Promise<void>;

@@ -154,7 +154,7 @@ message Runtime {
     message Plugins {
       message Functions {
         optional bool enabled = 1;
-        int32 port = 2;
+        optional int32 port = 2;
       }
 
       /// Automatic epoch creation.
@@ -182,6 +182,11 @@ message Runtime {
       /// Dashboard for agent.
       message Dashboard {
         optional bool enabled = 1;
+      }
+
+      message EchoProxy {
+        optional bool enabled = 1;
+        optional int32 port = 2;
       }
 
       optional Functions functions = 1;

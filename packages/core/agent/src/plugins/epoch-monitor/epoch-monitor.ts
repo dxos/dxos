@@ -72,8 +72,8 @@ export class EpochMonitor extends AbstractPlugin {
 
     const sub = this._pluginCtx.client.spaces.subscribe(process);
     process(this._pluginCtx.client.spaces.get());
-    this.statusUpdate.emit();
     this._ctx.onDispose(() => sub.unsubscribe());
+    this.statusUpdate.emit();
   }
 
   async close() {

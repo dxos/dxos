@@ -9,24 +9,33 @@ import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { AbstractPlugin } from '../plugin';
 
-export type ProxyServerOptions = {
-  port: number;
+type Options = Required<Runtime.Agent.Plugins.EchoProxy>;
+
+const DEFAULT_OPTIONS: Options = {
+  enabled: false,
+  port: 7001,
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
 export class EchoProxyServer extends AbstractPlugin {
-  public readonly id = 'echoProxyServer';
+  public readonly id = 'echoProxy';
   private _server?: http.Server;
-
-  constructor(private readonly _options: ProxyServerOptions) {
-    super();
-  }
+  private _options?: Options = undefined;
 
   async open() {
     invariant(this._pluginCtx);
+
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+
+    if (!this._options || this._options.enabled === false) {
+      log.info('EchoProxyServer disabled from config');
+      return;
+    }
+
     log('starting proxy...', { ports: this._options.port });
     await this._pluginCtx.client.initialize();
 
