@@ -39,4 +39,4 @@ export { TextModel } from '@dxos/text-model';
 
 export { SpaceList } from './space-list';
 export { SpaceProxy } from './space-proxy';
-export { createDefaultModelFactory } from './util';
+export { createDefaultModelFactory, getSpaceForObject } from './util';

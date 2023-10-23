@@ -113,7 +113,7 @@ export class SpaceProxy implements Space {
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
-    graph._register(this.key, this._db);
+    graph._register(this.key, this._db, this);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);

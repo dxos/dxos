@@ -21,6 +21,7 @@ import { type TypedObject } from './typed-object';
  */
 export class HyperGraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
@@ -36,9 +37,11 @@ export class HyperGraph {
 
   /**
    * Register a database in hyper-graph.
+   * @param owningObject Database owner, usually a space.
    */
-  _register(spaceKey: PublicKey, database: EchoDatabase) {
+  _register(spaceKey: PublicKey, database: EchoDatabase, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
+    this._owningObjects.set(spaceKey, owningObject);
     database._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceKey);
@@ -56,6 +59,10 @@ export class HyperGraph {
 
   _unregister(spaceKey: PublicKey) {
     this._databases.delete(spaceKey);
+  }
+
+  _getOwningObject(spaceKey: PublicKey): unknown | undefined {
+    return this._owningObjects.get(spaceKey);
   }
 
   /**
