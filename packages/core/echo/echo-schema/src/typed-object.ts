@@ -68,6 +68,7 @@ type NoInfer<T> = [T][T extends any ? 0 : never];
 
 export type TypedObjectOptions = {
   schema?: Schema;
+  type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
@@ -86,11 +87,13 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private readonly _schema?: Schema = undefined;
+  private _schema?: Schema = undefined;
   private readonly _immutable;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
     super(DocumentModel);
+
+    invariant(!(opts?.schema && opts?.type), 'Cannot specify both schema and type.');
 
     // Reset prototype so that derived classes don't change it.
     Object.setPrototypeOf(this, TypedObject.prototype);
@@ -98,17 +101,21 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     this._schema = opts?.schema;
     this._immutable = opts?.immutable ?? false;
 
+    const type = opts?.type ?? (
+      this._schema
+        ? (this._schema[immutable] ? new Reference(this._schema!.typename, 'protobuf') : new Reference(this._schema!.id))
+        : undefined
+    );
+
+    if (type) {
+      this._mutate({ typeRef: type });
+    }
+
     // Assign initial meta fields.
     this._updateMeta({ keys: [], ...opts?.meta });
 
     // Assign initial values, those will be overridden by the initialProps and later by the ECHO state when the object is bound to the database.
     if (this._schema) {
-      // TODO(dmaretskyi): Add a separate field to schema for `protocol`.
-      const typeRef = this._schema[immutable]
-        ? new Reference(this._schema!.typename, 'protobuf')
-        : new Reference(this._schema!.id);
-      this._mutate({ typeRef });
-
       for (const field of this._schema.props) {
         if (field.repeated) {
           this._set(field.id!, new EchoArray());
@@ -485,6 +492,11 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   }
 
   override _beforeBind() {
+    const { type } = this._getState();
+    if(type) {
+      this._schema = this._database!._resolveSchema(type);
+    }
+
     invariant(this._linkCache);
     for (const obj of this._linkCache.values()) {
       this._database!.add(obj as TypedObject);
@@ -557,7 +569,7 @@ export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
  *
  */
 type ExpandoConstructor = {
-  new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
+  new(initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
 };
 
 export const Expando: ExpandoConstructor = TypedObject;
