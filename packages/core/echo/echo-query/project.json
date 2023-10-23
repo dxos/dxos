@@ -18,7 +18,6 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-query/src/index.ts",
-          "packages/core/echo/echo-query/src/testing.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/echo/echo-query/dist/lib"

@@ -3037,11 +3037,13 @@ importers:
     specifiers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-generator': workspace:*
+      '@dxos/node-std': workspace:*
       '@faker-js/faker': ^8.0.2
       '@orama/orama': ^2.0.0-beta.1
       lodash.get: ^4.4.2
     dependencies:
       '@dxos/echo-db': link:../echo-db
+      '@dxos/node-std': link:../../../common/node-std
       '@orama/orama': 2.0.0-beta.1
       lodash.get: 4.4.2
     devDependencies:
