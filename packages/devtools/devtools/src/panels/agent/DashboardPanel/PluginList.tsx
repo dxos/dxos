@@ -17,11 +17,12 @@ export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
   const { helper, builder } = createColumnBuilder<PluginState>();
   const columns: TableColumnDef<PluginState, any>[] = [
     helper.accessor('pluginId', builder.string()),
-    helper.accessor((plugin) => plugin.pluginConfig.enabled, { id: 'enabled', ...builder.icon() }),
+    helper.accessor((plugin) => !!plugin.pluginConfig.enabled, { id: 'enabled', ...builder.icon() }),
     helper.display({
       id: 'toggle',
       cell: (context) => (
         <Button
+          disabled={context.row.original.pluginId === 'dashboard'}
           onClick={() => {
             void togglePlugin(context.row.original.pluginId);
           }}
