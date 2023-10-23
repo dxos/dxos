@@ -41,10 +41,6 @@ export default class Start extends BaseCommand<typeof Start> {
       helpValue: 'port',
       aliases: ['web-socket'],
     }),
-    echo: Flags.integer({
-      description: 'Expose ECHO REST API.',
-      helpValue: 'port',
-    }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
     }),
@@ -97,8 +93,7 @@ export default class Start extends BaseCommand<typeof Start> {
         new DashboardPlugin({ configPath: this.flags.config }),
 
         // ECHO API.
-        // TODO(burdon): Config.
-        this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
+        new EchoProxyServer(),
 
         // Functions.
         new FunctionsPlugin(),
