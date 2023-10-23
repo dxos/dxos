@@ -55,7 +55,7 @@ export class Search extends AbstractPlugin {
   }
 
   async open(): Promise<void> {
-    log('Opening indexing plugin...');
+    log.info('Opening indexing plugin...');
 
     this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
 

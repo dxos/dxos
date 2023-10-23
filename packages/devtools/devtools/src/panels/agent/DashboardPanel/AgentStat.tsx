@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
+import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 
 export type AgentStatusProps = {
   status: AgentStatus;
@@ -12,8 +12,8 @@ export type AgentStatusProps = {
 
 export const AgentStat = ({ status }: AgentStatusProps) => {
   return (
-    <div>
-      <div>Agent Status: {status.status}</div>
+    <div className='flex-1 justify-center'>
+      <div>Agent Status: {status.status === AgentStatus.Status.ON ? 'Online' : 'Offline'}</div>
     </div>
   );
 };

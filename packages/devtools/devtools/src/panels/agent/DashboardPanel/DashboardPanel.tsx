@@ -87,8 +87,10 @@ export const DashboardPanel = () => {
   };
 
   return (
-    <PanelContainer>
-      <AgentStat status={agentState} />
+    <PanelContainer className='flex-1 flex-row'>
+      <div className='flex-1 flex-col w-50%'>
+        <AgentStat status={agentState} />
+      </div>
       {agentState.plugins ? (
         <PluginList plugins={agentState.plugins} togglePlugin={togglePlugin} />
       ) : (
