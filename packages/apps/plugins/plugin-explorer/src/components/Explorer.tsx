@@ -8,7 +8,7 @@ import { type Space, type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 
-import { EchoGraphModel } from './EchoGraphModel';
+import { EchoGraphModel } from './graph-model';
 
 type Slots = {
   root?: { className?: string };
