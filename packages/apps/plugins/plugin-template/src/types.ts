@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  TranslationsProvides,
+  SurfaceProvides,
+} from '@dxos/app-framework';
 import { isTypedObject, type Expando, type TypedObject } from '@dxos/client/echo';
 
 // TODO(burdon): Copy pattern to other plugins.
@@ -18,7 +21,10 @@ export enum TemplateAction {
 
 export type TemplateProvides = {};
 
-export type TemplatePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type TemplatePluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;
 
 // TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
 // TODO(burdon): Better way to detect?

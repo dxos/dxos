@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Tree } from '@dxos/react-ui';
-import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
+import { useContainer, Mosaic, type MosaicContainerProps, useItemsWithPreview } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
@@ -13,12 +13,15 @@ import { NavTreeItem } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
-  const { id, Component } = useContainer();
-  const sortedNodes = useSortedItems(node.children);
+  const { id, Component, compare } = useContainer();
+  const sortedItems = useMemo(() => {
+    return compare ? [...node.children].sort(compare) : node.children;
+  }, [node.children, compare]);
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
 
   return (
-    <Mosaic.SortableContext id={id} items={sortedNodes} direction='vertical'>
-      {sortedNodes.map((node, index) => (
+    <Mosaic.SortableContext id={id} items={itemsWithPreview} direction='vertical'>
+      {itemsWithPreview.map((node, index) => (
         <Mosaic.SortableTile
           key={node.id}
           item={{ id: node.id, node, level: 0 }}
@@ -32,7 +35,7 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
 };
 
 const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overItem }) =>
-  overItem?.path === path && (operation === 'adopt' || operation === 'copy');
+  overItem?.path === path && (operation === 'transfer' || operation === 'copy');
 
 export type NavTreeProps = {
   node: TreeNode;

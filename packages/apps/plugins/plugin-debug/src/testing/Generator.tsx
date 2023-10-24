@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
-import { Schema as SchemaType, type Space, Text } from '@dxos/client/echo';
-import { Expando } from '@dxos/echo-schema';
+import { type Space, Text } from '@dxos/client/echo';
+import { createSpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -26,174 +25,72 @@ export class Generator {
     return this;
   }
 
-  // TODO(burdon): Silent fail if try to set __foo property.
-  createTables(options = { organizations: 50, projects: 20, people: 200 }) {
-    // TODO(burdon): Get or create schema.
-    const org = new SchemaType({
-      props: [
-        {
-          id: 'name',
-          type: SchemaType.PropType.STRING,
-        },
-        {
-          id: 'website',
-          type: SchemaType.PropType.STRING,
-        },
-        {
-          id: 'active',
-          type: SchemaType.PropType.BOOLEAN,
-        },
-      ],
-    });
+  createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
+    const generator = createSpaceObjectGenerator(this._space);
 
-    this._space.db.add(
-      new TableType({
+    const tables: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
+      {
+        type: 'organization',
         title: 'Organizations',
-        schema: org,
-      }),
-    );
-
-    const organizations = this._faker!.helpers.uniqueArray(faker.company.name, options.organizations).map(
-      (name: string) => {
-        const obj = new Expando(
-          {
-            name,
-            website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-            description: new Text(this._faker!.lorem.sentences()),
-          },
-          { schema: org },
-        );
-        return this._space.db.add(obj);
       },
-    );
-
-    const project = new SchemaType({
-      props: [
-        {
-          id: 'name',
-          type: SchemaType.PropType.STRING,
-        },
-        {
-          id: 'repo',
-          type: SchemaType.PropType.STRING,
-        },
-      ],
-    });
-
-    this._space.db.add(
-      new TableType({
+      {
+        type: 'project',
         title: 'Projects',
-        schema: project,
-      }),
-    );
-
-    const projects = this._faker!.helpers.uniqueArray(faker.commerce.productName, options.projects).map(
-      (name: string) => {
-        const obj = new Expando(
-          {
-            name,
-            repo: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
-          },
-          { schema: project },
-        );
-        return this._space.db.add(obj);
       },
-    );
-
-    const person = new SchemaType({
-      props: [
-        {
-          id: 'name',
-          type: SchemaType.PropType.STRING,
-        },
-        {
-          id: 'email',
-          type: SchemaType.PropType.STRING,
-        },
-        {
-          id: 'org',
-          type: SchemaType.PropType.REF,
-          ref: org,
-        },
-      ],
-    });
-
-    this._space.db.add(
-      new TableType({
+      {
+        type: 'person',
         title: 'People',
-        schema: person,
         props: [
           {
-            id: 'name',
-          },
-          {
-            id: 'email',
-          },
-          {
             id: 'org',
-            label: 'Organization',
             refProp: 'name',
           },
         ],
-      }),
-    );
+      },
+    ];
 
-    const people = this._faker!.helpers.uniqueArray(faker.person.fullName, options.people).map((name: string) => {
-      const obj = new Expando(
-        {
-          name,
-          email: this._faker!.datatype.boolean({ probability: 0.5 }) ? this._faker?.internet.email() : undefined,
-          org: this._faker!.datatype.boolean({ probability: 0.3 })
-            ? this._faker!.helpers.arrayElement(organizations)
-            : undefined,
-        },
-        { schema: person },
-      );
-      return this._space.db.add(obj);
+    // Generate tables.
+    tables.forEach(({ type, title, props }) => {
+      // TODO(burdon): Detect if schema already exists.
+      const schema = generator.schema[type];
+      this._space.db.add(schema);
+      this._space.db.add(new TableType({ title, schema, props }));
     });
 
-    log('created objects', { organizations: organizations.length, projects: projects.length, people: people.length });
+    // Generate objects.
+    tables.forEach(({ type }) => {
+      generator.createObjects({ types: [type], count: options[type] ?? 0 });
+    });
+
+    log('created objects', options);
   }
 
-  createObject({ type = DocumentType.schema.typename } = {}) {
-    log('creating object', { type });
-    switch (type) {
-      case DocumentType.schema.typename: {
-        // TODO(burdon): Factor out generators.
-        const title = this._faker!.lorem.sentence();
-        const content = range(this._faker!.number.int({ min: 2, max: 8 }))
-          .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
-          .join('\n\n');
+  createDocument() {
+    // TODO(burdon): Factor out generators.
+    const title = this._faker!.lorem.sentence();
+    const content = range(this._faker!.number.int({ min: 2, max: 8 }))
+      .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
+      .join('\n\n');
 
-        this._space.db.add(new DocumentType({ title, content: new Text(content) }));
-        break;
-      }
-    }
+    this._space.db.add(new DocumentType({ title, content: new Text(content) }));
   }
 
-  async updateObject(type = DocumentType.schema.typename) {
-    switch (type) {
-      case DocumentType.schema.typename: {
-        const { objects } = this._space.db.query(DocumentType.filter());
-        if (objects.length) {
-          // TODO(burdon): Standardize faker deps.
-          const object = this._faker!.helpers.arrayElement(objects);
-          const text = object.content.text;
-          // TODO(burdon): Insert, update, or delete.
-          const idx = text.lastIndexOf(' ', this._faker!.number.int({ min: 0, max: text.length }));
-          if (idx !== -1) {
-            object.content.model?.insert(' ' + this._faker!.lorem.word(), idx);
-          } else {
-            object.content.model?.insert(this._faker!.lorem.sentence(), 0);
-          }
-        }
-
-        break;
+  async updateDocument() {
+    const { objects } = this._space.db.query(DocumentType.filter());
+    if (objects.length) {
+      // TODO(burdon): Standardize faker deps.
+      const object = this._faker!.helpers.arrayElement(objects);
+      const text = object.content.text;
+      // TODO(burdon): Insert, update, or delete.
+      const idx = text.lastIndexOf(' ', this._faker!.number.int({ min: 0, max: text.length }));
+      if (idx !== -1) {
+        object.content.model?.insert(' ' + this._faker!.lorem.word(), idx);
+      } else {
+        object.content.model?.insert(this._faker!.lorem.sentence(), 0);
       }
     }
 
     this._space.internal.db.commitBatch();
-    // TODO(burdon): Make optional.
     await this._space.db.flush();
   }
 }

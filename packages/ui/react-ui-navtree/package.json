@@ -19,7 +19,7 @@
     "chromatic": "true"
   },
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

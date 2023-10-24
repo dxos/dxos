@@ -41,3 +41,5 @@ export interface Daemon {
   isRunning: (profile: string) => Promise<boolean>;
   list: () => Promise<ProcessInfo[]>;
 }
+
+export const PROFILE_FOLDER = 'profile';

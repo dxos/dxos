@@ -10,7 +10,7 @@ import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Phoenix } from '@dxos/phoenix';
 
-import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
+import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions, PROFILE_FOLDER } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';
@@ -20,7 +20,7 @@ import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } f
  */
 export class PhoenixDaemon implements Daemon {
   constructor(private readonly _rootDir: string) {
-    const dir = join(this._rootDir, 'profile');
+    const dir = join(this._rootDir, PROFILE_FOLDER);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
@@ -40,7 +40,7 @@ export class PhoenixDaemon implements Daemon {
   }
 
   async list(): Promise<ProcessInfo[]> {
-    const profiles = (await readdir(join(this._rootDir, 'profile'))).filter((uid) => !uid.startsWith('.'));
+    const profiles = (await readdir(join(this._rootDir, PROFILE_FOLDER))).filter((uid) => !uid.startsWith('.'));
 
     return Promise.all(
       profiles.map(async (profile) => {
@@ -51,7 +51,7 @@ export class PhoenixDaemon implements Daemon {
 
   async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
+      const logDir = path.join(this._rootDir, PROFILE_FOLDER, profile, 'logs');
       if (!existsSync(logDir)) {
         mkdirSync(logDir, { recursive: true });
       }

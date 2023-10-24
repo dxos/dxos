@@ -10,7 +10,7 @@ import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { PluginProvider, Surface } from '@dxos/react-surface';
+import { createApp, Surface } from '@dxos/app-framework';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createKanban } from './testing';
@@ -29,8 +29,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const DefaultKanbanPluginStory = () => {
   const object = createKanban();
-  // TODO(burdon): Why array? Should first be space?
-  return <Surface role='main' data={[object, object]} />;
+  return <Surface role='main' data={{ active: object }} />;
 };
 
 const KanbanPluginStoryPlugin = () => ({
@@ -38,13 +37,11 @@ const KanbanPluginStoryPlugin = () => ({
     id: 'dxos.org/plugin/kanban-story',
   },
   provides: {
-    components: {
-      default: DefaultKanbanPluginStory,
-    },
+    root: DefaultKanbanPluginStory,
   },
 });
 
-const KanbanSurfacesApp = () => <PluginProvider plugins={[ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()]} />;
+const KanbanSurfacesApp = createApp({ plugins: [ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()] });
 
 export default {
   component: KanbanSurfacesApp,

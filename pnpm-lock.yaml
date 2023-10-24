@@ -497,9 +497,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugins/plugin-dnd
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
@@ -512,12 +509,15 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugins/plugin-intent
+        version: link:../plugins/plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-navtree
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
@@ -527,9 +527,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugins/plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
@@ -539,12 +536,12 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -554,9 +551,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../sdk/react-surface
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -639,6 +633,9 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugins/plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -654,9 +651,6 @@ importers:
       '@dxos/react-shell':
         specifier: workspace:*
         version: link:../../sdk/react-shell
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../sdk/react-surface
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -712,9 +706,6 @@ importers:
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugins/plugin-dnd
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
@@ -733,21 +724,24 @@ importers:
       '@braneframe/plugin-grid':
         specifier: workspace:*
         version: link:../plugins/plugin-grid
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugins/plugin-intent
       '@braneframe/plugin-ipfs':
         specifier: workspace:*
         version: link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban':
         specifier: workspace:*
         version: link:../plugins/plugin-kanban
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugins/plugin-layout
       '@braneframe/plugin-map':
         specifier: workspace:*
         version: link:../plugins/plugin-map
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugins/plugin-navtree
       '@braneframe/plugin-presenter':
         specifier: workspace:*
         version: link:../plugins/plugin-presenter
@@ -763,9 +757,6 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugins/plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
@@ -784,12 +775,12 @@ importers:
       '@braneframe/plugin-thread':
         specifier: workspace:*
         version: link:../plugins/plugin-thread
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugins/plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -802,9 +793,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../sdk/react-surface
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -882,8 +870,8 @@ importers:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -891,18 +879,15 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -952,12 +937,9 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
     devDependencies:
-      '@braneframe/plugin-dnd':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../plugin-dnd
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -976,15 +958,6 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     dependencies:
-      '@braneframe/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -994,6 +967,9 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -1043,24 +1019,30 @@ importers:
         specifier: ^15.5.0
         version: 15.5.0(react@18.2.0)
     devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-space':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-space
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1092,52 +1074,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-dnd:
-    dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
-    devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
   packages/apps/plugins/plugin-error:
     dependencies:
       '@dxos/client-services':
@@ -1153,9 +1089,9 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1180,9 +1116,9 @@ importers:
 
   packages/apps/plugins/plugin-explorer:
     dependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -1198,9 +1134,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
       d3:
         specifier: ^7.4.4
         version: 7.8.2
@@ -1211,21 +1144,18 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
@@ -1278,8 +1208,8 @@ importers:
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1287,21 +1217,18 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1363,30 +1290,24 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1423,67 +1344,19 @@ importers:
 
   packages/apps/plugins/plugin-graph:
     dependencies:
-      '@dxos/async':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../../common/async
+        version: link:../../../sdk/app-graph
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
-      mousetrap:
-        specifier: ^1.6.5
-        version: 1.6.5
     devDependencies:
-      '@braneframe/plugin-intent':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../../../sdk/app-framework
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/indices':
-        specifier: 2.0.0-alpha.14
-        version: 2.0.0-alpha.14
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
-      '@types/mousetrap':
-        specifier: ^1.6.11
-        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1502,12 +1375,12 @@ importers:
 
   packages/apps/plugins/plugin-grid:
     dependencies:
+      '@braneframe/plugin-layout':
+        specifier: workspace:*
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -1515,8 +1388,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/client
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1524,15 +1397,9 @@ importers:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -1542,9 +1409,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1582,25 +1449,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-intent:
-    dependencies:
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
-    devDependencies:
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
   packages/apps/plugins/plugin-ipfs:
     dependencies:
       '@braneframe/plugin-graph':
@@ -1619,8 +1467,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1631,21 +1479,15 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-dnd':
+      '@braneframe/plugin-navtree':
         specifier: workspace:*
-        version: link:../plugin-dnd
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-navtree
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../plugin-treeview
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1713,27 +1555,24 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1765,6 +1604,61 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-layout:
+    dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-map:
     dependencies:
       '@braneframe/plugin-graph':
@@ -1777,8 +1671,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/client
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -1795,18 +1689,15 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1865,8 +1756,8 @@ importers:
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1877,21 +1768,18 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -1920,20 +1808,90 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-navtree:
+    dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-navtree':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-navtree
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      '@tldraw/indices':
+        specifier: 2.0.0-alpha.14
+        version: 2.0.0-alpha.14
+      date-fns:
+        specifier: ^2.29.3
+        version: 2.29.3
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-presenter:
     dependencies:
-      '@braneframe/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
-      '@braneframe/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -1959,27 +1917,30 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3
     devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
+      '@braneframe/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2026,9 +1987,9 @@ importers:
         specifier: workspace:*
         version: link:../../../common/sentry
     devDependencies:
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
@@ -2050,9 +2011,6 @@ importers:
 
   packages/apps/plugins/plugin-search:
     dependencies:
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2063,15 +2021,12 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -2081,9 +2036,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2157,15 +2112,12 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
@@ -2175,9 +2127,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2251,8 +2203,8 @@ importers:
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -2269,73 +2221,18 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-splitview':
+        version: link:../plugin-layout
+      '@braneframe/plugin-navtree':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-navtree
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../plugin-treeview
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-splitview:
-    dependencies:
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-    devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2363,12 +2260,6 @@ importers:
 
   packages/apps/plugins/plugin-stack:
     dependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2388,8 +2279,8 @@ importers:
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       ipfs-http-client:
         specifier: ~56.0.1
         version: 56.0.3(node-fetch@2.6.7)
@@ -2406,30 +2297,30 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
     devDependencies:
-      '@braneframe/plugin-dnd':
+      '@braneframe/plugin-graph':
         specifier: workspace:*
-        version: link:../plugin-dnd
-      '@braneframe/plugin-intent':
+        version: link:../plugin-graph
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
+        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-navtree':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-navtree
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@braneframe/plugin-treeview':
-        specifier: workspace:*
-        version: link:../plugin-treeview
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2488,8 +2379,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2497,18 +2388,15 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2564,12 +2452,12 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
     devDependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
-      '@dxos/react-surface':
+        version: link:../plugin-layout
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2592,8 +2480,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/client
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2601,18 +2489,15 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-intent':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-splitview':
-        specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2644,15 +2529,15 @@ importers:
   packages/apps/plugins/plugin-theme:
     dependencies:
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
     devDependencies:
-      '@dxos/react-surface':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../../sdk/react-surface
+        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -2677,9 +2562,12 @@ importers:
 
   packages/apps/plugins/plugin-thread:
     dependencies:
-      '@braneframe/plugin-splitview':
+      '@braneframe/plugin-layout':
         specifier: workspace:*
-        version: link:../plugin-splitview
+        version: link:../plugin-layout
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
@@ -2689,9 +2577,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -2708,9 +2593,6 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -2729,91 +2611,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^4.3.9
-        version: 4.3.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-treeview:
-    dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../types
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../../sdk/react-client
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      '@dxos/react-ui-navtree':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-navtree
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      '@tldraw/indices':
-        specifier: 2.0.0-alpha.14
-        version: 2.0.0-alpha.14
-      date-fns:
-        specifier: ^2.29.3
-        version: 2.29.3
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-dnd':
-        specifier: workspace:*
-        version: link:../plugin-dnd
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../../../sdk/react-surface
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -3437,8 +3234,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -3998,6 +3795,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4028,6 +3828,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../mesh/rpc
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -4052,6 +3855,9 @@ importers:
       ws:
         specifier: ^7.4.4
         version: 7.5.9
+      yaml:
+        specifier: ^2.1.3
+        version: 2.2.2
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
@@ -4293,6 +4099,28 @@ importers:
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
+
+  packages/core/echo/echo-query:
+    dependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo-db
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@orama/orama':
+        specifier: ^2.0.0-beta.1
+        version: 2.0.0-beta.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+    devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo-generator
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
 
   packages/core/echo/echo-schema:
     dependencies:
@@ -5446,8 +5274,8 @@ importers:
         specifier: ^2.29.3
         version: 2.29.3
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       flame-chart-js:
         specifier: ^2.3.1
         version: 2.3.1
@@ -6921,6 +6749,113 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/sdk/app-framework:
+    dependencies:
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      zod:
+        specifier: ^3.19.1
+        version: 3.20.2
+    devDependencies:
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+
+  packages/sdk/app-graph:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.set:
+        specifier: ^4.3.2
+        version: 4.3.2
+      mousetrap:
+        specifier: ^1.6.5
+        version: 1.6.5
+    devDependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@tldraw/indices':
+        specifier: 2.0.0-alpha.14
+        version: 2.0.0-alpha.14
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/lodash.set':
+        specifier: ^4.3.7
+        version: 4.3.7
+      '@types/mousetrap':
+        specifier: ^1.6.11
+        version: 1.6.12
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/sdk/client:
     dependencies:
       '@dxos/async':
@@ -7477,30 +7412,17 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
 
-  packages/sdk/react-surface:
-    dependencies:
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-    devDependencies:
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-
   packages/sdk/vault:
     dependencies:
+      '@braneframe/plugin-navtree':
+        specifier: workspace:*
+        version: link:../../apps/plugins/plugin-navtree
       '@braneframe/plugin-telemetry':
         specifier: workspace:*
         version: link:../../apps/plugins/plugin-telemetry
-      '@braneframe/plugin-treeview':
+      '@dxos/app-framework':
         specifier: workspace:*
-        version: link:../../apps/plugins/plugin-treeview
+        version: link:../app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7534,9 +7456,6 @@ importers:
       '@dxos/react-shell':
         specifier: workspace:*
         version: link:../react-shell
-      '@dxos/react-surface':
-        specifier: workspace:*
-        version: link:../react-surface
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8184,8 +8103,8 @@ importers:
         specifier: 2.0.0-alpha.14
         version: 2.0.0-alpha.14
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8196,9 +8115,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-graph':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../apps/plugins/plugin-graph
+        version: link:../../sdk/app-graph
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -8250,9 +8169,9 @@ importers:
 
   packages/ui/react-ui-navtree:
     dependencies:
-      '@braneframe/plugin-graph':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../apps/plugins/plugin-graph
+        version: link:../../sdk/app-graph
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -8401,8 +8320,8 @@ importers:
         specifier: ^6.17.0
         version: 6.17.0
       deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-core@1.5.0)
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -15689,6 +15608,11 @@ packages:
       aggregate-error: 3.1.0
     dev: false
 
+  /@orama/orama@2.0.0-beta.1:
+    resolution: {integrity: sha512-poON8z+wnUHyRJPD7IgigOmz1leRg04ipratBKWzfPUVNUZoGASxXSOInLda6hcMpKoWJO3a9o0NQk/w1vTUAA==}
+    engines: {node: '>= 16.0.0'}
+    dev: false
+
   /@parcel/watcher@2.0.4:
     resolution: {integrity: sha512-cTDi+FUDBIUOBKEtj+nhiJ71AZVlkAsQFuGQTun5tV9mwQBQgZvhCzG+URPQc8myeN32yRVZEfVAPCs1RW+Jvg==}
     engines: {node: '>= 10.0.0'}
@@ -15768,7 +15692,6 @@ packages:
       '@preact/signals-core': 1.5.0
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
-    dev: false
 
   /@preact/signals@1.2.1(preact@10.11.2):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
@@ -25873,44 +25796,13 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  /deepsignal@1.3.6(@preact/signals-core@1.5.0):
-    resolution: {integrity: sha512-yjd+vtiznL6YaMptOsKnEKkPr60OEApa+LRe+Qe6Ile/RfCOrELKk/YM3qVpXFZiyOI3Ng67GDEyjAlqVc697g==}
-    peerDependencies:
-      '@preact/signals': ^1.1.4
-      '@preact/signals-core': ^1.3.1
-      '@preact/signals-react': ^1.3.3
-      preact: '*'
-    peerDependenciesMeta:
-      '@preact/signals':
-        optional: true
-      '@preact/signals-core':
-        optional: true
-      '@preact/signals-react':
-        optional: true
-      preact:
-        optional: true
+  /deepsignal@1.4.0-shallow.0(react@18.2.0):
+    resolution: {integrity: sha512-xMLJPVks5Z/2xWoUuj3YCZXpvtWRWme1kxGmwTV4AsX0EYYtFtXW55NiHmL5xZcco9m6TqVCtl2UsW2bq53Lhg==}
     dependencies:
       '@preact/signals-core': 1.5.0
-
-  /deepsignal@1.3.6(@preact/signals-react@1.3.6):
-    resolution: {integrity: sha512-yjd+vtiznL6YaMptOsKnEKkPr60OEApa+LRe+Qe6Ile/RfCOrELKk/YM3qVpXFZiyOI3Ng67GDEyjAlqVc697g==}
-    peerDependencies:
-      '@preact/signals': ^1.1.4
-      '@preact/signals-core': ^1.3.1
-      '@preact/signals-react': ^1.3.3
-      preact: '*'
-    peerDependenciesMeta:
-      '@preact/signals':
-        optional: true
-      '@preact/signals-core':
-        optional: true
-      '@preact/signals-react':
-        optional: true
-      preact:
-        optional: true
-    dependencies:
       '@preact/signals-react': 1.3.6(react@18.2.0)
-    dev: false
+    transitivePeerDependencies:
+      - react
 
   /default-browser-id@3.0.0:
     resolution: {integrity: sha512-OZ1y3y0SqSICtE8DE4S8YOE9UZOJ8wO16fKWVP5J1Qz42kV9jcnMVFrEE/noXb/ss3Q4pZIH79kxofzyNNtUNA==}
@@ -41576,7 +41468,6 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
-    dev: false
 
   /use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}

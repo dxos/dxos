@@ -16,6 +16,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -53,6 +56,9 @@
     },
     {
       "path": "../mesh/network-manager"
+    },
+    {
+      "path": "../mesh/rpc"
     },
     {
       "path": "../mesh/websocket-rpc"

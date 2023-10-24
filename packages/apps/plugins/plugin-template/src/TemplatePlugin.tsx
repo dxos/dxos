@@ -6,9 +6,8 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
 
 import { TemplateMain } from './components';
 import translations from './translations';
@@ -20,66 +19,73 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[Expando.name] = Expando;
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
-
+  let adapter: GraphNodeAdapter<TypedObject> | undefined;
   return {
     meta: {
       id: TEMPLATE_PLUGIN,
     },
+    ready: async (plugins) => {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: (object: TypedObject) => isObject(object),
+          adapter: objectToGraphNode,
+        });
+      }
+    },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
             label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
             icon: (props) => <Plus {...props} />,
             // TODO(burdon): Factor out helper.
-            intent: [
-              {
-                plugin: TEMPLATE_PLUGIN,
-                action: TemplateAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: TEMPLATE_PLUGIN,
+                  action: TemplateAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'templatePlugin.createObject',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? TemplateMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <TemplateMain object={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

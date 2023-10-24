@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { type Document } from '@braneframe/types';
-import { type ObjectMeta } from '@dxos/client/echo';
-import { type EditorMode, type MarkdownComposerProps } from '@dxos/react-ui-editor';
+import type { Document } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { ObjectMeta } from '@dxos/client/echo';
+import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
@@ -48,8 +51,9 @@ type StackProvides = {
 
 export type MarkdownSettingsProps = { editorMode?: EditorMode };
 
-export type MarkdownPluginProvides = GraphProvides &
-  IntentProvides &
+export type MarkdownPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
   TranslationsProvides &
   StackProvides & {
     settings: MarkdownSettingsProps;

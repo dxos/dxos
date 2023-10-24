@@ -4,11 +4,14 @@
 
 import { type TLStore } from '@tldraw/tlschema';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { StackProvides } from '@braneframe/plugin-stack';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Sketch as SketchType } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/client/echo';
 
 export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
@@ -19,7 +22,11 @@ export enum SketchAction {
   CREATE = `${SKETCH_ACTION}/create`,
 }
 
-export type SketchPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & StackProvides;
+export type SketchPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides &
+  StackProvides;
 
 export interface SketchModel {
   store: TLStore;

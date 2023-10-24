@@ -21,7 +21,7 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
-import { STACK } from '../translations';
+import { translationKey } from '../translations';
 
 export type SectionProps = PropsWithChildren<{
   // Data props.
@@ -37,7 +37,7 @@ export type SectionProps = PropsWithChildren<{
 
 export const Section = forwardRef<HTMLLIElement, SectionProps>(
   ({ id, title, active, draggableProps, draggableStyle, onRemove, children }, forwardedRef) => {
-    const { t } = useTranslation(STACK);
+    const { t } = useTranslation(translationKey);
 
     return (
       <DensityProvider density='fine'>
