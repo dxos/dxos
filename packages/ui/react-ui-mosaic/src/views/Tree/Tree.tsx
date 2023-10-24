@@ -122,7 +122,7 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
                 position={index}
                 Component={Component!}
                 isOver={
-                  overItem?.path === Path.create(path, child.id) && (operation === 'adopt' || operation === 'copy')
+                  overItem?.path === Path.create(path, child.id) && (operation === 'transfer' || operation === 'copy')
                 }
               />
             </TreeItemComponent.Root>

@@ -3,6 +3,7 @@
 //
 
 import { deepSignal } from 'deepsignal/react';
+// TODO(wittjosiah): Remove lodash dependency.
 import get from 'lodash.get';
 
 import { type Label } from './action';
@@ -48,10 +49,9 @@ export class Graph {
         label: toLabel(node.label),
         children: node.children.length ? node.children.map((node) => toJSON(node)) : undefined,
         actions: node.actions.length
-          ? node.actions.map(({ id, label, intent }) => ({
+          ? node.actions.map(({ id, label }) => ({
               id,
               label: toLabel(label),
-              intent: Array.isArray(intent) ? intent.map(({ action }) => ({ action })) : intent?.action,
             }))
           : undefined,
       };

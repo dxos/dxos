@@ -35,7 +35,7 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
 };
 
 const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overItem }) =>
-  overItem?.path === path && (operation === 'adopt' || operation === 'copy');
+  overItem?.path === path && (operation === 'transfer' || operation === 'copy');
 
 export type NavTreeProps = {
   node: TreeNode;

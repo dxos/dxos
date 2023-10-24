@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -30,7 +31,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -47,7 +47,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",

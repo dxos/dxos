@@ -40,7 +40,7 @@ describe('Graph', () => {
 
   test('builder can add actions to root node', () => {
     const builder = new GraphBuilder();
-    const testAction = { id: 'test', label: 'Test', intent: { action: 'test' } };
+    const testAction = { id: 'test', label: 'Test', invoke: () => {} };
     builder.addNodeBuilder('test', (parent) => {
       if (parent.id === 'root') {
         parent.addAction(testAction);
@@ -98,8 +98,8 @@ describe('Graph', () => {
   test('builders can add actions to action sets', () => {
     const builder = new GraphBuilder();
     builder.addNodeBuilder('test', (parent) => {
-      const [set] = parent.addAction({ id: 'test-set', label: 'Test Set' });
-      set.addAction({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
+      const [set] = parent.addAction({ id: 'test-set', label: 'Test Set', invoke: () => {} });
+      set.addAction({ id: 'test-action', label: 'Test', invoke: () => {} });
     });
 
     const graph = builder.build();
@@ -126,7 +126,7 @@ describe('Graph', () => {
     expect(graph.root.childrenMap['root-test1'].childrenMap['root-test1-test2'].children).to.have.length(0);
 
     expect(graph.root.actions).to.have.length(1);
-    addAction('root', { id: 'root-test2', label: 'root-test2', intent: { action: 'test' } });
+    addAction('root', { id: 'root-test2', label: 'root-test2', invoke: () => {} });
     expect(graph.root.actions).to.have.length(2);
 
     expect(graph.root.childrenMap['root-test1'].properties).to.not.have.property('test');
