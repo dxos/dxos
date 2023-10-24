@@ -41,9 +41,6 @@
     },
     {
       "path": "../react-client"
-    },
-    {
-      "path": "../react-surface"
     }
   ]
 }

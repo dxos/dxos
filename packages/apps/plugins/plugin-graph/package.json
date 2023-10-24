@@ -37,8 +37,8 @@
     "@dxos/debug": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -46,7 +46,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

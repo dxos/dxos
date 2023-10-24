@@ -5,11 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { MapMain } from './components';
 import translations from './translations';
@@ -27,7 +25,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       id: MAP_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({
@@ -43,13 +41,13 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${MAP_PLUGIN}/create`,
@@ -66,7 +64,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -77,18 +75,16 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? MapMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <MapMain map={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

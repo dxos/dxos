@@ -9,7 +9,7 @@ import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../types';
 
-export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, TypedObject] }) => {
+export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
   // TODO(wittjosiah): Normalize title vs name.

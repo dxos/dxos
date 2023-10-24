@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Grid as GridType } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/client/echo';
 
 export const GRID_PLUGIN = 'dxos.org/plugin/grid';
@@ -16,7 +19,7 @@ export enum GridAction {
   CREATE = `${GRID_ACTION}/create`,
 }
 
-export type GridPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type GridPluginProvides = SurfaceProvides & IntentResolverProvides & GraphBuilderProvides & TranslationsProvides;
 
 export const isGrid = (data: unknown): data is GridType => {
   return isTypedObject(data) && GridType.schema.typename === data.__typename;

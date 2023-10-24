@@ -11,7 +11,7 @@ import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { Sketch as SketchType } from '@braneframe/types';
-import { PluginProvider, Surface } from '@dxos/react-surface';
+import { createApp, Surface } from '@dxos/app-framework';
 import { mx } from '@dxos/react-ui-theme';
 
 import { SketchPlugin } from '../SketchPlugin';
@@ -29,7 +29,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const DefaultSketchPluginStory = () => {
   const object = new SketchType({});
-  return <Surface role='main' data={[object, object]} />;
+  return <Surface role='main' data={{ active: object }} />;
 };
 
 const SketchPluginStoryPlugin = () => ({
@@ -37,13 +37,11 @@ const SketchPluginStoryPlugin = () => ({
     id: 'dxos.org/plugin/sketch-story',
   },
   provides: {
-    components: {
-      default: DefaultSketchPluginStory,
-    },
+    root: DefaultSketchPluginStory,
   },
 });
 
-const SketchSurfacesApp = () => <PluginProvider plugins={[ThemePlugin(), SketchPlugin(), SketchPluginStoryPlugin()]} />;
+const SketchSurfacesApp = createApp({ plugins: [ThemePlugin(), SketchPlugin(), SketchPluginStoryPlugin()] });
 
 export default {
   component: SketchSurfacesApp,

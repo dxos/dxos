@@ -6,12 +6,16 @@ import { Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
+import {
+  resolvePlugin,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain } from './components';
 import translations from './translations';
@@ -31,7 +35,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       id: STACK_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({ dispatch, filter: StackType.filter(), adapter: stackToGraphNode });
@@ -53,12 +57,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const space = parent.data;
 
           parent.addAction({
@@ -76,7 +80,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -87,18 +91,20 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!isStack(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return StackMain;
-
-          default:
+      surface: {
+        component: (data, role) => {
+          if (!isStack(data.active)) {
             return null;
-        }
+          }
+
+          switch (role) {
+            case 'main':
+              return <StackMain stack={data.active} />;
+
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

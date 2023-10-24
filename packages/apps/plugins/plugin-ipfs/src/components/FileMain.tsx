@@ -18,7 +18,7 @@ const getIpfsUrl = (config: Config, cid: string) => {
   return urlJoin(config.values.runtime!.services!.ipfs!.gateway!, cid);
 };
 
-export const FileMain: FC<{ data: TypedObject }> = ({ data: file }) => {
+export const FileMain: FC<{ file: TypedObject }> = ({ file }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;
@@ -33,7 +33,7 @@ export const FileMain: FC<{ data: TypedObject }> = ({ data: file }) => {
   );
 };
 
-export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
+export const FileSection: FC<{ file: TypedObject }> = ({ file }) => {
   const config = useConfig();
   const [height] = useState<number>(400);
   if (!file.cid) {
@@ -49,7 +49,7 @@ export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
   );
 };
 
-export const FileSlide: FC<{ data: TypedObject }> = ({ data: file }) => {
+export const FileSlide: FC<{ file: TypedObject }> = ({ file }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;

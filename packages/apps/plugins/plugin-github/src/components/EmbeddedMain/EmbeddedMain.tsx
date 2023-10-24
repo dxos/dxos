@@ -14,10 +14,9 @@ import {
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { Surface, useIntent, usePlugin } from '@dxos/app-framework';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, usePlugin } from '@dxos/react-surface';
 import {
   Avatar,
   Button,
@@ -53,8 +52,8 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
+  const { dispatch } = useIntent();
   const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
-  const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -64,17 +63,8 @@ const EmbeddedLayoutImpl = () => {
     document && window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
   }, [document]);
 
-  const handleCreateSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: SpaceAction.CREATE,
-    });
-  }, [intentPlugin]);
-
-  const handleJoinSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: SpaceAction.JOIN,
-    });
-  }, [intentPlugin]);
+  const handleCreateSpace = () => dispatch({ action: SpaceAction.CREATE });
+  const handleJoinSpace = () => dispatch({ action: SpaceAction.JOIN });
 
   const handleInvite = useCallback(() => {
     if (clientPlugin && space) {
@@ -281,7 +271,7 @@ const EmbeddedLayoutImpl = () => {
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
             <Dialog.Overlay classNames='backdrop-blur'>
               <Dialog.Content>
-                <Surface role='dialog' data={['dxos.org/plugin/space/RenameSpaceDialog', space]} />
+                <Surface role='dialog' data={{ content: 'dxos.org/plugin/space/RenameSpaceDialog', subject: space }} />
               </Dialog.Content>
             </Dialog.Overlay>
           </Dialog.Root>

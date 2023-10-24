@@ -5,12 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { View as ViewType } from '@braneframe/types';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { ExplorerMain } from './components';
 import translations from './translations';
@@ -25,26 +23,22 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
       id: EXPLORER_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides.intent.dispatch;
       if (dispatch) {
-        adapter = new GraphNodeAdapter({
-          dispatch,
-          filter: ViewType.filter(),
-          adapter: objectToGraphNode,
-        });
+        adapter = new GraphNodeAdapter({ dispatch, filter: ViewType.filter(), adapter: objectToGraphNode });
       }
     },
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // TODO(burdon): Util.
           parent.addAction({
@@ -62,7 +56,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -73,20 +67,15 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isExplorer(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return ExplorerMain;
-          default:
-            return null;
-        }
-      },
-      components: {
-        ExplorerMain,
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isExplorer(data.active) ? <ExplorerMain /> : null;
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {
