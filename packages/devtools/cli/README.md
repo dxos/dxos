@@ -18,7 +18,27 @@ npm install -g @dxos/cli@main
 # Running an Agent
 Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
 
-## Install agent as a `launchd` service (macOS users)
+## Start an agent as a system daemon via CLI command
+
+Agent could be started as a system daemon via cli command:
+
+```terminal
+dx agent start --system
+```
+
+This command will run an agent as `launchd` service (macOS users) or as a `systemd` service (Linux users).
+
+Other useful commands:
+
+```terminal
+dx agent list --system
+dx agent restart --system
+dx agent stop --system
+```
+
+Alternatively, manual setup could be used (see below).
+
+## Install agent as a `launchd` service (macOS users) - manual setup
 1. Install DXOS CLI with steps in [Installation](#Instalation) section.
 2. Replace `??NODE_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `dirname $(which node)`
 3. Replace `??DX_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `which dx`
@@ -29,7 +49,7 @@ Agent is a name for DXOS Client which is run by CLI in the background in the dae
 1. Run `launchctl unload -w ~/Library/LaunchAgents/org.dxos.agent.plist`
 2. Remove `~/Library/LaunchAgents/org.dxos.agent.plist`
 
-## Install agent as a `systemd` service (Linux users)
+## Install agent as a `systemd` service (Linux users) - manual setup
 1. Install DXOS CLI with steps in [Installation](#Instalation) section.
 1. Copy `./init-templates/dxos-agent.service` and `./init-templates/pre-dxos-agent.service` -> `~/.config/systemd/user/`
 1. Run `systemctl --user daemon-reload` to make the systemd daemon aware of the service
