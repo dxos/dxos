@@ -25,10 +25,10 @@ export class Generator {
     return this;
   }
 
-  createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 50, project: 20, person: 200 }) {
+  createTables(options: Partial<Record<TestSchemaType, number>> = { organization: 30, project: 20, person: 200 }) {
     const generator = createSpaceObjectGenerator(this._space);
 
-    const tables: { type: TestSchemaType; title: string }[] = [
+    const tables: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
       {
         type: 'organization',
         title: 'Organizations',
@@ -40,20 +40,25 @@ export class Generator {
       {
         type: 'person',
         title: 'People',
+        props: [
+          {
+            id: 'org',
+            refProp: 'name',
+          },
+        ],
       },
     ];
 
     // Generate tables.
-    tables.forEach(({ type, title }) => {
+    tables.forEach(({ type, title, props }) => {
       // TODO(burdon): Detect if schema already exists.
       const schema = generator.schema[type];
       this._space.db.add(schema);
-      this._space.db.add(new TableType({ title, schema }));
+      this._space.db.add(new TableType({ title, schema, props }));
     });
 
     // Generate objects.
-    // TODO(burdon): Doesn't link org from person. Lookup doesn't work.
-    tables.forEach(({ type, title }) => {
+    tables.forEach(({ type }) => {
       generator.createObjects({ types: [type], count: options[type] ?? 0 });
     });
 
