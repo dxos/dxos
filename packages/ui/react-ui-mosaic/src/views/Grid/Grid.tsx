@@ -90,6 +90,7 @@ export const Grid = ({
   Component = Mosaic.DefaultComponent,
   className,
   onDrop,
+  onOver,
   onSelect,
   onCreate,
   onAction,
@@ -155,6 +156,7 @@ export const Grid = ({
         getOverlayProps: () => ({ grow: true }),
         getOverlayStyle: () => getDimension(cellBounds, options.spacing),
         onDrop,
+        onOver,
       }}
     >
       <div className={mx('flex grow overflow-auto', className)}>
