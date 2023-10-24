@@ -48,12 +48,6 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
@@ -64,9 +58,6 @@
     },
     {
       "path": "../plugin-navtree"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"

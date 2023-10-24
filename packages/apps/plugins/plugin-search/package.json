@@ -15,14 +15,13 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-layout": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",

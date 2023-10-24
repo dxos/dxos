@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-navtree": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",

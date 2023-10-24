@@ -54,9 +54,6 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
       "path": "../plugin-theme"
     }
   ]

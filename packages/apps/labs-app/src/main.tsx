@@ -10,7 +10,6 @@ import { createRoot } from 'react-dom/client';
 import { ChessPlugin } from '@braneframe/plugin-chess';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
-import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { ExplorerPlugin } from '@braneframe/plugin-explorer';
 import { FilesPlugin } from '@braneframe/plugin-files';
@@ -96,9 +95,8 @@ const main = async () => {
       ClientPlugin({ config, services, debugIdentity: debug, types }),
 
       // Core UX.
-      DndPlugin(),
-      NavTreePlugin(),
       LayoutPlugin({ showComplementarySidebar: true }),
+      NavTreePlugin(),
 
       // TODO(burdon): Remove need to come after SplitView.
       SpacePlugin(),

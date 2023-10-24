@@ -8,7 +8,6 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
-import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
@@ -59,7 +58,6 @@ const main = async () => {
       ClientPlugin({ config, services, types }),
 
       // Core UX.
-      DndPlugin(),
       LayoutPlugin(),
       NavTreePlugin(),
 

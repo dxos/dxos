@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
@@ -49,7 +48,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",

@@ -30,7 +30,6 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -45,7 +44,6 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

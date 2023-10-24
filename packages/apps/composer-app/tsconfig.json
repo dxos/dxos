@@ -49,9 +49,6 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-dnd"
-    },
-    {
       "path": "../plugins/plugin-error"
     },
     {

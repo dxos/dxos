@@ -23,7 +23,6 @@
     "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -32,7 +31,6 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

@@ -54,11 +54,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-dnd/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-error/package.json",
           "jsonpath": "$.version"
         },

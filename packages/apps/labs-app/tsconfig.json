@@ -64,9 +64,6 @@
       "path": "../plugins/plugin-debug"
     },
     {
-      "path": "../plugins/plugin-dnd"
-    },
-    {
       "path": "../plugins/plugin-error"
     },
     {

@@ -26,9 +26,11 @@ import {
   type GraphBuilderProvides,
   type SurfaceProvides,
   type TranslationsProvides,
+  type SurfaceProps,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, useLayout } from './LayoutContext';
 import { SplitView, ContextView, ContentEmpty } from './components';
@@ -115,9 +117,11 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         },
       },
       context: (props: PropsWithChildren) => (
-        <LayoutContext.Provider value={state.values as RevertDeepSignal<LayoutState>}>
-          {props.children}
-        </LayoutContext.Provider>
+        <Mosaic.Root>
+          <LayoutContext.Provider value={state.values as RevertDeepSignal<LayoutState>}>
+            {props.children}
+          </LayoutContext.Provider>
+        </Mosaic.Root>
       ),
       root: () => {
         const { plugins } = usePlugins();
@@ -126,7 +130,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         const layout = useLayout();
         const [shortId, component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-        const X = plugin?.provides.surface.component({ data: { component } });
+        const result = plugin?.provides.surface.component({ data: { component } });
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -161,53 +165,46 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           }
         }, [state.values.active]);
 
-        if (X) {
-          return <>{X}</>;
-        } else if (layout.activeNode) {
-          if (state.values.fullscreen) {
-            return (
-              <Surface
-                data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
-                surfaces={{
-                  main: { data: layout.activeNode.data },
-                }}
-              />
-            );
-          }
-
-          return (
-            <Surface
-              data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
-              surfaces={{
-                sidebar: {
-                  data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+        const surfaceProps: SurfaceProps = layout.activeNode
+          ? state.values.fullscreen
+            ? {
+                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
+                surfaces: { main: { data: layout.activeNode.data } },
+              }
+            : {
+                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
+                surfaces: {
+                  sidebar: {
+                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
+                  },
+                  complementary: {
+                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                  },
+                  main: { data: { active: layout.activeNode.data } },
+                  presence: { data: { active: layout.activeNode.data } },
+                  status: { data: { active: layout.activeNode.data } },
+                  heading: { data: { activeNode: layout.activeNode } },
+                  documentTitle: { data: { activeNode: layout.activeNode } },
                 },
-                complementary: {
-                  data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
-                },
-                main: { data: { active: layout.activeNode.data } },
-                presence: { data: { active: layout.activeNode.data } },
-                status: { data: { active: layout.activeNode.data } },
-                heading: { data: { activeNode: layout.activeNode } },
-                documentTitle: { data: { activeNode: layout.activeNode } },
-              }}
-            />
-          );
-        } else {
-          return (
-            <Surface
-              data={{ component: `${LAYOUT_PLUGIN}/SplitView` }}
-              surfaces={{
+              }
+          : {
+              data: { component: `${LAYOUT_PLUGIN}/SplitView` },
+              surfaces: {
                 sidebar: {
                   data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
                 main: { data: { component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
                 // TODO(wittjosiah): This plugin should own document title.
                 documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
-              }}
-            />
-          );
-        }
+              },
+            };
+
+        return (
+          <>
+            {result || <Surface {...surfaceProps} />}
+            <Mosaic.DragOverlay />
+          </>
+        );
       },
       surface: {
         component: ({ component }) => {
