@@ -64,6 +64,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-files/package.json",
           "jsonpath": "$.version"
         },
@@ -75,6 +80,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-grid/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -110,6 +120,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-pwa/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-search/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -344,7 +359,17 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-query/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -644,7 +669,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-composer/package.json",
+          "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
         {

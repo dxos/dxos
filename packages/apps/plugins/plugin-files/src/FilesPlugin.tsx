@@ -37,7 +37,7 @@ import {
   localEntityToGraphNode,
 } from './util';
 
-// TODO(buron): Rename package plugin-file (singular).
+// TODO(burdon): Rename package plugin-file (singular).
 
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;

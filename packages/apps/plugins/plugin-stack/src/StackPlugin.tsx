@@ -80,7 +80,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'stackPlugin.createStack',
+              testId: 'stackPlugin.createObject',
             },
           });
 

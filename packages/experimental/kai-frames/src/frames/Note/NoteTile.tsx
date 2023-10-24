@@ -6,7 +6,7 @@ import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Button, DropdownMenu } from '@dxos/react-ui';
-import { Composer } from '@dxos/react-ui-composer';
+import { Composer } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';

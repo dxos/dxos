@@ -46,7 +46,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-composer"
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -70,6 +70,9 @@
       "path": "../plugins/plugin-error"
     },
     {
+      "path": "../plugins/plugin-explorer"
+    },
+    {
       "path": "../plugins/plugin-files"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-grid"
     },
     {
       "path": "../plugins/plugin-intent"
@@ -98,6 +104,9 @@
     },
     {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-search"
     },
     {
       "path": "../plugins/plugin-sketch"

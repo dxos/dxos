@@ -2,12 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react';
+import { DotsSixVertical, DotsThreeVertical, type Icon } from '@phosphor-icons/react';
 import { type Primitive } from '@radix-ui/react-primitive';
-import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, type FC, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type FC,
+  forwardRef,
+  type PropsWithChildren,
+} from 'react';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { DropdownMenu } from '../DropdownMenu';
 
 type CardRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   grow?: boolean;
@@ -65,17 +72,42 @@ const CardDragHandle: FC<CardDragHandleProps> = ({ position, classNames, ...prop
   );
 };
 
-type CardMenuProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' };
+type CardEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { Icon: Icon; position?: 'left' | 'right' };
 
-const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(({ position, classNames, ...props }, forwardRef) => {
+const CardEndcap: FC<CardEndcapProps> = ({ Icon, position, classNames, ...props }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext();
   return (
-    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)} ref={forwardRef}>
-      <DotsThreeVertical className={tx('card.menuIcon', 'card', {})} />
+    <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)}>
+      <Icon className={tx('card.menuIcon', 'card')} />
     </div>
   );
-});
+};
+
+type CardMenuProps = PropsWithChildren<
+  ThemedClassName<ComponentPropsWithoutRef<'div'>> & { position?: 'left' | 'right' }
+>;
+
+// TODO(burdon): Reconcile with Endcap (remove dropdown from here). See ListItem.Endcap (style icon/size?)
+const CardMenu = forwardRef<HTMLDivElement, CardMenuProps>(
+  ({ children, position, classNames, ...props }, forwardRef) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext();
+    return (
+      <div {...props} className={tx('card.menu', 'card', { density, position }, classNames)} ref={forwardRef}>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <DotsThreeVertical className={tx('card.menuIcon', 'card', {})} />
+          </DropdownMenu.Trigger>
+          {/* TODO(burdon): Position to the left of the menu button. */}
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>{children}</DropdownMenu.Viewport>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </div>
+    );
+  },
+);
 
 type CardBodyProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { gutter?: boolean };
 
@@ -105,6 +137,7 @@ export const Card = {
   Root: CardRoot,
   Header: CardHeader,
   DragHandle: CardDragHandle,
+  Endcap: CardEndcap,
   Menu: CardMenu,
   Title: CardTitle,
   Body: CardBody,

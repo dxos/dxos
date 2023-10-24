@@ -55,6 +55,14 @@ message Document {
   dxos.schema.Text content = 2;
 }
 
+// TODO(burdon): Lightweight document (not visible in sidebar).
+message Note {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text content = 2;
+}
+
 /**
  *
  */
@@ -87,18 +95,43 @@ message Kanban {
     repeated Item items = 3;
   }
 
+  // TODO(burdon): Reconcile with Grid.Item.
   message Item {
-    // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    dxos.schema.Text title = 1;
-    string index = 2;
-    // TODO(burdon): Optional content
-    dxos.schema.TypedObject object = 3;
+    dxos.schema.TypedObject object = 1;
+    dxos.schema.Text title = 2;
+
+    // TODO(burdon): Properties.
+    string index = 11;
   }
 
   string title = 1;
   repeated Column columns = 2;
+}
+
+/**
+ *
+ */
+message Grid {
+  option (object) = true;
+
+  // TODO(burdon): Reconcile with Kanban.Item.
+  message Item {
+    option (object) = true;
+
+    dxos.schema.TypedObject object = 1;
+    dxos.schema.Text title = 2;
+    dxos.schema.Text content = 3;
+
+    // TODO(burdon): Properties.
+    string position = 11; // TODO(burdon): Replace layout object?
+    string color = 12;
+  }
+
+  string title = 1;
+  repeated Item items = 2;
+  dxos.schema.TypedObject layout = 3;
 }
 
 /**
@@ -123,6 +156,7 @@ message Thread {
     string timestamp = 1;
     string text = 2;
     string data = 3; // JSON.
+    dxos.schema.Expando ref = 4;
   }
 
   // TODO(burdon): Meta (e.g., source).
@@ -140,6 +174,17 @@ message Thread {
   repeated Block blocks = 2;
 }
 
+//
+// Generic data view.
+//
+message View {
+  option (object) = true;
+
+  string title = 1;
+  string type = 2;
+}
+
+// TODO(burdon): ???
 message AppState {
   option (object) = true;
 

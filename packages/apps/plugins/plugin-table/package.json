@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",

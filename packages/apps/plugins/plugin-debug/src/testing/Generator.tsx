@@ -59,6 +59,7 @@ export class Generator {
           {
             name,
             website: this._faker!.datatype.boolean({ probability: 0.3 }) ? this._faker!.internet.url() : undefined,
+            description: new Text(this._faker!.lorem.sentences()),
           },
           { schema: org },
         );

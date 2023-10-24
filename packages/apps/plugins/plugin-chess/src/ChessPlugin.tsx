@@ -68,7 +68,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'chessPlugin.createKanban',
+              testId: 'chessPlugin.createObject',
             },
           });
 

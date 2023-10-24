@@ -161,8 +161,7 @@ export const MosaicRoot: FC<MosaicRootProps> = ({ Component = DefaultComponent, 
       } else if (overContainer.onOver) {
         return overContainer.onOver({ active, over });
       } else {
-        // TODO(wittjosiah): Default to reject.
-        return 'adopt';
+        return 'reject';
       }
     };
 

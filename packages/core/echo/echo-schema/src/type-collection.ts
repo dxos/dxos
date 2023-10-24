@@ -3,9 +3,11 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
+import { base } from './defs';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
-import { dangerouslyMutateImmutableObject } from './typed-object';
+import { TypedObject, dangerouslyMutateImmutableObject } from './typed-object';
 
 type Prototype = {
   new (...args: any): any;
@@ -20,10 +22,23 @@ export class TypeCollection {
   private readonly _types = new Map<string, SchemaProto>();
   private readonly _schemaDefs = new Map<string, SchemaProps>();
 
+  get schemas(): SchemaProto[] {
+    log.info('schemas', {
+      types: this._types.size,
+      prototypes: this._prototypes.size,
+      schemaDefs: this._schemaDefs.size,
+    });
+    return Array.from(this._types.values());
+  }
+
   mergeSchema(schema: TypeCollection) {
     Array.from(schema._prototypes.entries()).forEach(([name, prototype]) => {
       invariant(!this._prototypes.has(name), `Schema already exists: ${name}`);
       this._prototypes.set(name, prototype);
+    });
+    Array.from(schema._types.entries()).forEach(([name, type]) => {
+      invariant(!this._types.has(name), `Schema already exists: ${name}`);
+      this._types.set(name, type);
     });
   }
 
@@ -33,10 +48,21 @@ export class TypeCollection {
   registerPrototype(proto: Prototype, schema: SchemaProps) {
     this._prototypes.set(schema.typename, proto);
     this._schemaDefs.set(schema.typename, schema);
+
+    Object.defineProperty(proto, Symbol.hasInstance, {
+      value: (instance: any) =>
+        !!instance?.[base] && instance[base] instanceof TypedObject && instance.__typename === schema.typename,
+      enumerable: false,
+      writable: false,
+    });
   }
 
   getPrototype(name: string): Prototype | undefined {
     return this._prototypes.get(name);
+  }
+
+  getSchema(name: string): SchemaProto | undefined {
+    return this._types.get(name);
   }
 
   /**

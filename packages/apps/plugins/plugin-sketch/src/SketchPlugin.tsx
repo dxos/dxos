@@ -74,7 +74,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'sketchPlugin.createSketch',
+              testId: 'sketchPlugin.createObject',
             },
           });
 

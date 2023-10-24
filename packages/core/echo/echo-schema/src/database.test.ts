@@ -276,4 +276,17 @@ describe('Database', () => {
       },
     });
   });
+
+  test('query by id', async () => {
+    const { db } = await createDatabase();
+
+    const title = 'Test title';
+    const obj = new TypedObject({ title });
+    db.add(obj);
+    await db.flush();
+
+    const { objects } = db.query({ id: obj.id });
+    expect(objects).toHaveLength(1);
+    expect(objects[0].title).toEqual(title);
+  });
 });

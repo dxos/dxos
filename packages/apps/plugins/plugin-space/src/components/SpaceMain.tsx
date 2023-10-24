@@ -9,7 +9,7 @@ import { Document } from '@braneframe/types';
 import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface } from '@dxos/react-surface';
-import { useTextModel } from '@dxos/react-ui-composer';
+import { useTextModel } from '@dxos/react-ui-editor';
 
 export const isDocument = (data: unknown): data is Document => data instanceof Document;
 

@@ -31,7 +31,7 @@ import {
   Tooltip,
   useJdenticonHref,
 } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-composer';
+import { useTextModel } from '@dxos/react-ui-editor';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { GfmPreview } from './GfmPreview';

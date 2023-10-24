@@ -72,7 +72,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 },
               ]),
             properties: {
-              testId: 'tablePlugin.createKanban',
+              testId: 'tablePlugin.createObject',
             },
           });
 

@@ -60,10 +60,10 @@ type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithRef<typeo
   asChild?: boolean;
 };
 
-const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
+const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
     const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const Root = asChild ? Slot : Primitive.p;
+    const Root = asChild ? Slot : Primitive.div;
     return (
       <Root {...props} id={headingId} ref={forwardedRef}>
         {children}

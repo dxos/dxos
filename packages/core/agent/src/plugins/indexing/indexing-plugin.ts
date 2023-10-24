@@ -20,23 +20,35 @@ import { AbstractPlugin } from '../plugin';
 
 type Options = Required<Runtime.Agent.Plugins.Indexing>;
 
+type IndexDocument = {
+  id: string;
+  json: string;
+};
+
+type SpaceIndex = {
+  space: Space;
+  query: Query;
+  subscription: Subscription;
+};
+
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
 };
 
-export class Indexing extends AbstractPlugin {
+export class IndexingPlugin extends AbstractPlugin {
   private readonly _ctx = new Context();
-  private _options?: Options = undefined;
-  private _index?: MiniSearch;
 
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
+
+  private readonly _indexedObjects = new Map<string, IndexDocument>();
 
   private readonly _indexOptions = {
     fields: ['json'],
     idField: 'id',
   };
 
-  private readonly _indexedObjects = new Map<string, IndexDocument>();
+  private _options?: Options = undefined;
+  private _index?: MiniSearch;
 
   constructor(private readonly _indexPath?: string) {
     super();
@@ -46,13 +58,13 @@ export class Indexing extends AbstractPlugin {
         const { index, options } = JSON.parse(serializedIndex);
         this._index = MiniSearch.loadJS(index, options);
       } catch (error) {
-        log.warn('Failed to load index from file:', { error });
+        log.warn('failed to load index from file', { error });
       }
     }
   }
 
   async open(): Promise<void> {
-    log('Opening indexing plugin...');
+    log('opening indexing plugin...');
 
     invariant(this._pluginCtx);
     const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
@@ -65,9 +77,7 @@ export class Indexing extends AbstractPlugin {
 
     this._pluginCtx.client.spaces.isReady.subscribe(async () => {
       invariant(this._pluginCtx, 'Client is undefined.');
-
       const space = this._pluginCtx.client.spaces.default;
-
       const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
         log('received message', { message });
         await this._processMessage(message);
@@ -91,7 +101,7 @@ export class Indexing extends AbstractPlugin {
     if (this._indexPath) {
       invariant(this._index);
       const serializedIndex = JSON.stringify({ index: this._index.toJSON(), options: this._indexOptions });
-      log('Saving index to file:', { path: this._indexPath });
+      log('saving index to file', { path: this._indexPath });
       writeFileSync(this._indexPath, serializedIndex, { encoding: 'utf8' });
     }
   }
@@ -166,6 +176,7 @@ export class Indexing extends AbstractPlugin {
     return {
       results: results.map((result) => {
         return {
+          // TODO(burdon): Types should be independent of plugin (core echo).
           '@type': 'dxos.agent.indexing.SearchResult',
           spaceKey: result.id.split(':')[0],
           objectId: result.id.split(':')[1],
@@ -178,14 +189,3 @@ export class Indexing extends AbstractPlugin {
     };
   }
 }
-
-type IndexDocument = {
-  id: string;
-  json: string;
-};
-
-type SpaceIndex = {
-  space: Space;
-  query: Query;
-  subscription: Subscription;
-};
