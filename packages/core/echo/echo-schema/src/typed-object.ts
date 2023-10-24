@@ -106,7 +106,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       (this._schema
         ? this._schema[immutable]
           ? new Reference(this._schema!.typename, 'protobuf')
-          : new Reference(this._schema!.id)
+          : this._linkObject(this._schema)
         : undefined);
 
     if (type) {
