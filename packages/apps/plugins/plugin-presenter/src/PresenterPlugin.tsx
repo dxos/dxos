@@ -6,10 +6,11 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { isMarkdownContent } from '@braneframe/plugin-markdown';
 import { SPLITVIEW_PLUGIN, SplitViewAction } from '@braneframe/plugin-splitview';
 import { isStack } from '@braneframe/plugin-stack';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import translations from './translations';
@@ -34,6 +35,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
       translations,
       graph: {
         withPlugins: (plugins) => (parent) => {
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
           if (isStack(parent.data)) {
             parent.addAction({
               id: 'toggle-presentation',
@@ -41,16 +43,17 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               icon: (props) => <Presentation {...props} />,
               // TODO(burdon): Allow function so can generate state when activated.
               //  So can set explicit fullscreen state coordinated with current presenter state.
-              intent: [
-                {
-                  plugin: PRESENTER_PLUGIN,
-                  action: 'toggle-presentation',
-                },
-                {
-                  plugin: SPLITVIEW_PLUGIN,
-                  action: SplitViewAction.TOGGLE_FULLSCREEN,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: PRESENTER_PLUGIN,
+                    action: 'toggle-presentation',
+                  },
+                  {
+                    plugin: SPLITVIEW_PLUGIN,
+                    action: SplitViewAction.TOGGLE_FULLSCREEN,
+                  },
+                ]),
               keyBinding: 'shift+meta+p',
             });
           }

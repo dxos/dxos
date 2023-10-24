@@ -6,9 +6,7 @@ import { untracked } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import Mousetrap from 'mousetrap';
 
-import { type DispatchIntent } from '@braneframe/plugin-intent';
 import { EventSubscriptions } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 
 import { type Action } from './action';
 import { Graph } from './graph';
@@ -20,8 +18,6 @@ import { type Node, type NodeBuilder } from './node';
 export class GraphBuilder {
   private readonly _nodeBuilders = new Map<string, NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
-
-  constructor(private readonly _dispatch: DispatchIntent = async () => {}) {}
 
   /**
    * Register a node builder which will be called in order to construct the graph.
@@ -133,10 +129,9 @@ export class GraphBuilder {
         return untracked(() => {
           return partials.map((partial) => {
             const action = this._createAction(partial);
-            if (action.keyBinding && action.intent) {
+            if (action.keyBinding) {
               Mousetrap.bind(action.keyBinding, () => {
-                invariant(action.intent);
-                void this._dispatch(action.intent);
+                action.invoke();
               });
             }
 
@@ -148,7 +143,7 @@ export class GraphBuilder {
       removeAction: (id) => {
         return untracked(() => {
           const action = node.actionsMap[id];
-          if (action.keyBinding && action.intent) {
+          if (action.keyBinding) {
             Mousetrap.unbind(action.keyBinding);
           }
 
@@ -162,7 +157,7 @@ export class GraphBuilder {
   }
 
   private _createAction<TProperties extends Record<string, any> = Record<string, any>>(
-    partial: Pick<Action, 'id' | 'label'> & Partial<Action<TProperties>>,
+    partial: Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TProperties>>,
   ): Action<TProperties> {
     const action: Action<TProperties> = deepSignal({
       properties: {} as TProperties,
@@ -171,11 +166,6 @@ export class GraphBuilder {
       // TODO(wittjosiah): Default sort.
       get actions() {
         return Object.values(action.actionsMap);
-      },
-      invoke: async () => {
-        if (action.intent) {
-          return this._dispatch?.(action.intent);
-        }
       },
       addAction: (...partials) => {
         return untracked(() => {

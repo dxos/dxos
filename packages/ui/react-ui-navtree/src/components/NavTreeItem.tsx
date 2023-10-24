@@ -5,7 +5,6 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
-import { keyString } from '@braneframe/plugin-graph';
 import {
   Button,
   DensityProvider,
@@ -35,6 +34,7 @@ import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { TreeNode, TreeNodeAction } from '../types';
+import { keyString } from '../util';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';

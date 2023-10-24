@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Node } from '@dxos/app-graph';
 import { type Plugin } from '@dxos/react-surface';
 
-import { type Node } from './graph';
 import { type GraphProvides } from './types';
 
 export const isGraphNode = (data: unknown): data is Node =>

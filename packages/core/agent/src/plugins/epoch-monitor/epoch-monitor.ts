@@ -32,7 +32,8 @@ const DEFAULT_OPTIONS: Options = {
  */
 // TODO(burdon): Create test.
 export class EpochMonitor extends AbstractPlugin {
-  private _ctx = new Context();
+  public readonly id = 'epochMonitor';
+  private _ctx?: Context;
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
   private _options?: Options = undefined;
@@ -43,13 +44,14 @@ export class EpochMonitor extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.epochMonitor;
-    if (!config || config.enabled === false) {
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+
+    if (!this._options || this._options.enabled === false) {
       log.info('epoch monitor disabled from config');
       return;
     }
+    this._ctx = new Context();
 
-    this._options = { ...DEFAULT_OPTIONS, ...config };
     log.info('epoch monitor open', { options: this._options });
 
     const process = (spaces: Space[]) => {
@@ -61,6 +63,9 @@ export class EpochMonitor extends AbstractPlugin {
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
 
+          if (!this._ctx) {
+            return;
+          }
           // Process asynchronously.
           scheduleTask(this._ctx, async () => {
             await monitor.open();
@@ -72,14 +77,17 @@ export class EpochMonitor extends AbstractPlugin {
     const sub = this._pluginCtx.client.spaces.subscribe(process);
     process(this._pluginCtx.client.spaces.get());
     this._ctx.onDispose(() => sub.unsubscribe());
+    this.statusUpdate.emit();
   }
 
   async close() {
-    await this._ctx.dispose();
+    await this._ctx?.dispose();
+    this._ctx = undefined;
     this._monitors.forEach((monitor) => {
       void monitor.close();
     });
     this._monitors.clear();
+    this.statusUpdate.emit();
   }
 }
 

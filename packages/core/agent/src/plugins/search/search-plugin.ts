@@ -11,44 +11,35 @@ import { Context } from '@dxos/context';
 import { type Query, type Subscription, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/indexing';
+import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/search';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Indexing>;
-
-type IndexDocument = {
-  id: string;
-  json: string;
-};
-
-type SpaceIndex = {
-  space: Space;
-  query: Query;
-  subscription: Subscription;
-};
+type Options = Required<Runtime.Agent.Plugins.Search>;
 
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
 };
 
-export class IndexingPlugin extends AbstractPlugin {
-  private readonly _ctx = new Context();
+export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
+
+export class Search extends AbstractPlugin {
+  public readonly id = 'search';
+  private _ctx?: Context;
+  private _options?: Options = undefined;
+  private _index?: MiniSearch;
 
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
-
-  private readonly _indexedObjects = new Map<string, IndexDocument>();
 
   private readonly _indexOptions = {
     fields: ['json'],
     idField: 'id',
   };
 
-  private _options?: Options = undefined;
-  private _index?: MiniSearch;
+  private readonly _indexedObjects = new Map<string, IndexDocument>();
 
   constructor(private readonly _indexPath?: string) {
     super();
@@ -58,42 +49,51 @@ export class IndexingPlugin extends AbstractPlugin {
         const { index, options } = JSON.parse(serializedIndex);
         this._index = MiniSearch.loadJS(index, options);
       } catch (error) {
-        log.warn('failed to load index from file', { error });
+        log.warn('Failed to load index from file:', { error });
       }
     }
   }
 
   async open(): Promise<void> {
-    log('opening indexing plugin...');
+    log.info('Opening indexing plugin...');
 
-    invariant(this._pluginCtx);
-    const config = this._pluginCtx.client.config.values.runtime?.agent?.plugins?.indexing;
-    if (!config || config.enabled === false) {
-      log.info('indexing disabled from config');
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+
+    if (!this._options.enabled) {
+      log.info('Search disabled.');
       return;
     }
+    this._ctx = new Context();
 
-    this._options = { ...DEFAULT_OPTIONS, ...config };
-
-    this._pluginCtx.client.spaces.isReady.subscribe(async () => {
+    invariant(this._pluginCtx);
+    this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
       invariant(this._pluginCtx, 'Client is undefined.');
+
       const space = this._pluginCtx.client.spaces.default;
-      const unsubscribe = space.listen('dxos.agent.indexing-plugin', async (message) => {
+
+      const unsubscribe = space.listen(SEARCH_CHANNEL, async (message) => {
         log('received message', { message });
         await this._processMessage(message);
       });
 
-      this._ctx.onDispose(unsubscribe);
+      this._ctx?.onDispose(unsubscribe);
     });
 
     this._indexSpaces().catch((error: Error) => log.catch(error));
+    this.statusUpdate.emit();
   }
 
   async close(): Promise<void> {
     this._saveIndex();
     this._spaceIndexes.clear();
     this._indexedObjects.clear();
-    void this._ctx.dispose();
+    this._index?.removeAll();
+    this._index = undefined;
+    void this._ctx?.dispose();
+    this.statusUpdate.emit();
   }
 
   // TODO(mykola): Save index periodically.
@@ -101,7 +101,7 @@ export class IndexingPlugin extends AbstractPlugin {
     if (this._indexPath) {
       invariant(this._index);
       const serializedIndex = JSON.stringify({ index: this._index.toJSON(), options: this._indexOptions });
-      log('saving index to file', { path: this._indexPath });
+      log('Saving index to file:', { path: this._indexPath });
       writeFileSync(this._indexPath, serializedIndex, { encoding: 'utf8' });
     }
   }
@@ -122,7 +122,7 @@ export class IndexingPlugin extends AbstractPlugin {
     invariant(this._pluginCtx, 'Client is undefined.');
     await this._pluginCtx.client.spaces.isReady.wait();
     const sub = this._pluginCtx.client.spaces.subscribe(process);
-    this._ctx.onDispose(() => sub.unsubscribe());
+    this._ctx?.onDispose(() => sub.unsubscribe());
     await process(this._pluginCtx.client.spaces.get());
   }
 
@@ -152,21 +152,24 @@ export class IndexingPlugin extends AbstractPlugin {
       }),
     };
 
-    this._ctx.onDispose(() => spaceIndex.subscription());
+    this._ctx?.onDispose(() => spaceIndex.subscription());
 
     processObjects(query.objects);
     return spaceIndex;
   }
 
   private async _processMessage(message: GossipMessage) {
-    if (message.payload['@type'] !== 'dxos.agent.indexing.SearchRequest') {
+    if (message.payload['@type'] !== 'dxos.agent.search.SearchRequest') {
       log.warn('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
       return;
     }
     const request: SearchRequest = message.payload;
     if (request.query) {
       const response = this._search(request);
-      await this._pluginCtx!.client!.spaces.default.postMessage('dxos.agent.indexing-plugin', response);
+      await this._pluginCtx!.client!.spaces.default.postMessage(SEARCH_CHANNEL, {
+        '@type': 'dxos.agent.search.SearchResponse',
+        ...response,
+      });
     }
   }
 
@@ -176,8 +179,6 @@ export class IndexingPlugin extends AbstractPlugin {
     return {
       results: results.map((result) => {
         return {
-          // TODO(burdon): Types should be independent of plugin (core echo).
-          '@type': 'dxos.agent.indexing.SearchResult',
           spaceKey: result.id.split(':')[0],
           objectId: result.id.split(':')[1],
           score: result.score,
@@ -189,3 +190,14 @@ export class IndexingPlugin extends AbstractPlugin {
     };
   }
 }
+
+type IndexDocument = {
+  id: string;
+  json: string;
+};
+
+type SpaceIndex = {
+  space: Space;
+  query: Query;
+  subscription: Subscription;
+};

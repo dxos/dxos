@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.agent.indexing;
+package dxos.agent.search;
 
 message SearchRequest {
   enum Type {
@@ -14,7 +14,6 @@ message SearchRequest {
 
   string query = 1;
   Type type = 2;
-
 }
 
 message SearchResponse {

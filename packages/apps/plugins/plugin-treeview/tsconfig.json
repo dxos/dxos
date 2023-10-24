@@ -30,6 +30,9 @@
       "path": "../../../core/protocols"
     },
     {
+      "path": "../../../sdk/app-graph"
+    },
+    {
       "path": "../../../sdk/react-client"
     },
     {
@@ -52,9 +55,6 @@
     },
     {
       "path": "../plugin-dnd"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-intent"

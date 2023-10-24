@@ -7,8 +7,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { type Graph as GraphType, GraphBuilder } from '@braneframe/plugin-graph';
-import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { type Graph as GraphType, GraphBuilder } from '@dxos/app-graph';
+import { buildGraph } from '@dxos/app-graph/testing';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -78,7 +78,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
         // This is a rearrange operation
         const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
         activeNode.properties.index = nextIndex ?? 'a0';
-      } else if (activeNode && activeParent && overParent && operation === 'adopt') {
+      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
         activeParent.removeNode(active.item.id);
         overNode.addNode('tree', { ...activeNode });
       }
