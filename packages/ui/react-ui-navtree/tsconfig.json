@@ -17,13 +17,13 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-graph"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../react-ui"

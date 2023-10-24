@@ -80,7 +80,7 @@ export const Stack = ({
         className={className}
         item={{ id, items: itemsWithPreview }}
         Component={StackTile}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'adopt')}
+        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
       />
     </Mosaic.Container>
   );

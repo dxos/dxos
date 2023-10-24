@@ -5,7 +5,7 @@
 import { type UniqueIdentifier } from '@dnd-kit/core';
 import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 
-import { type Node } from '@braneframe/plugin-graph';
+import { type Node } from '@dxos/app-graph';
 
 export const nextRearrangeIndex = (nodes: Node[], activeId: UniqueIdentifier, overId?: UniqueIdentifier) => {
   const overOrderIndex = nodes.length > 0 ? nodes.findIndex(({ id }) => id === overId) : -1;

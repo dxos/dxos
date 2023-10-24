@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
+import { type Node } from '@dxos/app-graph';
 import { Breadcrumb, Button, useTranslation } from '@dxos/react-ui';
 
 import { TREE_VIEW_PLUGIN } from '../types';
