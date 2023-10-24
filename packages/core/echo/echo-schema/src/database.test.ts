@@ -7,12 +7,12 @@ import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { data } from './defs';
+import { Schema } from './proto';
 import { TestBuilder, createDatabase } from './testing';
 import { Expando, TypedObject } from './typed-object';
-import { Schema } from './proto';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -301,13 +301,13 @@ describe('Database', () => {
         {
           id: 'title',
           type: Schema.PropType.STRING,
-        }
-      ]
+        },
+      ],
     });
 
     const obj = new Expando({ title: 'Test title' }, { schema });
-    expect(obj.__schema).toEqual(schema)  
+    expect(obj.__schema).toEqual(schema);
     peer.db.add(obj);
-    expect(obj.__schema).toEqual(schema)
+    expect(obj.__schema).toEqual(schema);
   });
 });
