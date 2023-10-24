@@ -40,8 +40,8 @@ const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
-  const { Component } = useContainer();
-  const sortedNodes = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable' });
+  const { Component, compare } = useContainer();
+  const sortedNodes = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable', compare });
 
   return (
     <TreeItemComponent.Body>

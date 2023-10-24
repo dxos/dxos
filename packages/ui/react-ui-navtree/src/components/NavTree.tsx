@@ -13,8 +13,8 @@ import { NavTreeItem } from './NavTreeItem';
 import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
-  const { id, Component } = useContainer();
-  const sortedNodes = useItemsWithPreview({ items: node.children, path: id, strategy: 'layout-stable' });
+  const { id, Component, compare } = useContainer();
+  const sortedNodes = useItemsWithPreview({ items: node.children, path: id, strategy: 'layout-stable', compare });
 
   return (
     <Mosaic.SortableContext id={id} items={sortedNodes} direction='vertical'>

@@ -4,8 +4,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { useContainer } from './useContainer';
 import { useMosaic } from './useMosaic';
+import { type MosaicCompareDataItem } from '../Container';
 import { type MosaicDataItem } from '../types';
 import { Path } from '../util';
 
@@ -25,14 +25,15 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
   path,
   items,
   strategy = 'default',
+  compare,
 }: {
   path: string;
   items: T[];
   strategy?: 'default' | 'layout-stable';
+  compare?: MosaicCompareDataItem;
 }): T[] => {
   const { operation, activeItem, overItem } = useMosaic();
   const [itemsWithPreview, setItemsWithPreview] = useState(items);
-  const { compare } = useContainer();
   const sortedItems = useMemo(() => {
     return compare ? [...items].sort(compare) : items;
   }, [items, compare]);
@@ -103,7 +104,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
     }
   }, [operation, activeItem, overItem, overParent, lastOverParent, compare, path, items]);
 
-  // In order to avoid render glitching, rather than waiting for the effect to run,
-  // immediately return the new items after dropping an item into a new path.
+  // TODO(thure): In order to avoid render glitching, the array of item IDs in order may need to change independently
+  //  from the set of items to be rendered.
   return isEquivalent(sortedItems, itemsWithPreview) ? sortedItems : itemsWithPreview;
 };

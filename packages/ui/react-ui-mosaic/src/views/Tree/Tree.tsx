@@ -55,8 +55,8 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 };
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
-  const { id, Component } = useContainer();
-  const sortedItems = useItemsWithPreview({ items, path: id, strategy: 'layout-stable' });
+  const { id, Component, compare } = useContainer();
+  const sortedItems = useItemsWithPreview({ items, path: id, strategy: 'layout-stable', compare });
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
@@ -101,8 +101,8 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
-  const { Component } = useContainer();
-  const sortedItems = useItemsWithPreview({ items, path, strategy: 'layout-stable' });
+  const { Component, compare } = useContainer();
+  const sortedItems = useItemsWithPreview({ items, path, strategy: 'layout-stable', compare });
 
   return (
     <TreeItemComponent.Body className='pis-4'>

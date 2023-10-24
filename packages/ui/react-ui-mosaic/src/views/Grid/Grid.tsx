@@ -5,10 +5,10 @@
 import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, useState, useMemo, useEffect, forwardRef } from 'react';
+import React, { type FC, useState, useMemo, useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Button, useForwardedRef, useMediaQuery } from '@dxos/react-ui';
+import { Button, useMediaQuery } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import {
@@ -78,130 +78,136 @@ export type GridProps<TData extends MosaicDataItem = MosaicDataItem> = MosaicCon
  * Grid content.
  */
 // TODO(burdon): Make generic (and forwardRef).
-const GridImpl = forwardRef<
-  HTMLDivElement,
-  GridProps & { gridDimensions: GridDimensions; width?: number; height?: number }
->(
-  (
-    {
-      id,
-      items = [],
-      layout = {},
-      margin,
-      debug,
-      selected: controlledSelected,
-      Component = Mosaic.DefaultComponent,
-      className,
-      options = {},
-      onDrop,
-      onSelect,
-      onCreate,
-      onAction,
-      gridDimensions: { cellBounds, matrix, bounds },
-      width,
-      height,
-    },
-    forwardedRef,
-  ) => {
-    // No margin if mobile.
-    const [isNotMobile] = useMediaQuery('md');
-    const ref = useForwardedRef(forwardedRef);
-    const marginSize = margin && !isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
-
-    const [selected, setSelected] = useState(controlledSelected);
-    useEffect(() => {
-      setSelected(controlledSelected);
-      if (controlledSelected) {
-        scrollToCenter(controlledSelected);
-      }
-    }, [controlledSelected]);
-
-    const scrollToCenter = (id: string) => {
-      const item = items.find((item) => item.id === id);
-      if (item && width && height) {
-        const pos = getBounds(layout[item.id], cellBounds);
-        const top = pos.top + marginSize - (height - cellBounds.height) / 2;
-        const left = pos.left + marginSize - (width - cellBounds.width) / 2;
-        ref.current!.scrollTo({ top, left, behavior: 'smooth' });
-      }
+export const Grid = ({
+  id,
+  items = [],
+  layout = {},
+  options: opts,
+  margin,
+  square = true,
+  debug,
+  selected: controlledSelected,
+  Component = Mosaic.DefaultComponent,
+  className,
+  onDrop,
+  onSelect,
+  onCreate,
+  onAction,
+}: GridProps) => {
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+  const options = defaultsDeep({}, opts, defaultGridOptions);
+  const { matrix, bounds, cellBounds } = useMemo(() => {
+    // Change default cell bounds to screen width if mobile.
+    const cellWidth = calculateCellWidth(options.cellBounds.width, width ?? 0);
+    const cellBounds = {
+      width: cellWidth,
+      height: square ? cellWidth : options.cellBounds.height,
     };
 
-    // TODO(burdon): Focus ring/navigation.
-    // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
-    const handleSelect = (id: string) => {
-      setSelected(id);
-      scrollToCenter(id);
-      onSelect?.(id);
+    return {
+      matrix: createMatrix(options.size, ({ x, y }) => ({ x, y })),
+      bounds: getPanelBounds(options.size, cellBounds, options.spacing),
+      cellBounds,
     };
+  }, [options, width]);
 
-    useEffect(() => {
-      if (selected) {
-        scrollToCenter(selected);
-      }
-    }, [selected, width, height]);
+  // No margin if mobile.
+  const [isNotMobile] = useMediaQuery('md');
+  const marginSize = margin && !isNotMobile ? Math.max(cellBounds.width, cellBounds.height) : 0;
 
-    return (
-      <Mosaic.Container
-        {...{
-          id,
-          Component,
-          getOverlayProps: () => ({ grow: true }),
-          getOverlayStyle: () => getDimension(cellBounds, options.spacing),
-          onDrop,
-        }}
-      >
-        <div className={mx('flex grow overflow-auto', className)}>
-          <div ref={forwardedRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none')}>
-            <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
-              {matrix && (
-                <div style={{ padding: options.spacing }}>
-                  <div className='relative'>
-                    {(matrix as Position[][]).map((row) =>
-                      row.map(({ x, y }) => (
-                        <GridCell
-                          key={`${x}-${y}`}
-                          path={id}
-                          position={{ x, y }}
-                          bounds={getBounds({ x, y }, cellBounds)}
-                          padding={options.spacing}
-                          onCreate={onCreate}
-                        />
-                      )),
-                    )}
-                  </div>
+  const [selected, setSelected] = useState(controlledSelected);
+  useEffect(() => {
+    setSelected(controlledSelected);
+    if (controlledSelected) {
+      scrollToCenter(controlledSelected);
+    }
+  }, [controlledSelected]);
+
+  const scrollToCenter = (id: string) => {
+    const item = items.find((item) => item.id === id);
+    if (item && width && height) {
+      const pos = getBounds(layout[item.id], cellBounds);
+      const top = pos.top + marginSize - (height - cellBounds.height) / 2;
+      const left = pos.left + marginSize - (width - cellBounds.width) / 2;
+      containerRef.current!.scrollTo({ top, left, behavior: 'smooth' });
+    }
+  };
+
+  // TODO(burdon): Focus ring/navigation.
+  // TODO(burdon): Set center point on container (via translation?) Scale container to zoom.
+  const handleSelect = (id: string) => {
+    setSelected(id);
+    scrollToCenter(id);
+    onSelect?.(id);
+  };
+
+  useEffect(() => {
+    if (selected) {
+      scrollToCenter(selected);
+    }
+  }, [selected, width, height]);
+
+  return (
+    <Mosaic.Container
+      {...{
+        id,
+        Component,
+        getOverlayProps: () => ({ grow: true }),
+        getOverlayStyle: () => getDimension(cellBounds, options.spacing),
+        onDrop,
+      }}
+    >
+      <div className={mx('flex grow overflow-auto', className)}>
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none')}>
+          <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
+            {matrix && (
+              <div style={{ padding: options.spacing }}>
+                <div className='relative'>
+                  {matrix.map((row) =>
+                    row.map(({ x, y }) => (
+                      <GridCell
+                        key={`${x}-${y}`}
+                        path={id}
+                        position={{ x, y }}
+                        bounds={getBounds({ x, y }, cellBounds)}
+                        padding={options.spacing}
+                        onCreate={onCreate}
+                      />
+                    )),
+                  )}
                 </div>
-              )}
-
-              <div>
-                {items.map((item) => {
-                  const position = layout[item.id] ?? { x: 0, y: 0 };
-                  return (
-                    <Mosaic.DraggableTile
-                      key={item.id}
-                      item={item}
-                      path={id}
-                      position={position}
-                      Component={Component}
-                      draggableStyle={{
-                        position: 'absolute',
-                        ...getBounds(position, cellBounds, options.spacing),
-                      }}
-                      onSelect={() => handleSelect(item.id)}
-                      onAction={onAction}
-                      // debug={debug}
-                    />
-                  );
-                })}
               </div>
-            </div>
+            )}
 
-            {debug && <Mosaic.Debug data={{ items: items?.length }} position='bottom-right' />}
+            <div>
+              {items.map((item) => {
+                const position = layout[item.id] ?? { x: 0, y: 0 };
+                return (
+                  <Mosaic.DraggableTile
+                    key={item.id}
+                    item={item}
+                    path={id}
+                    position={position}
+                    Component={Component}
+                    draggableStyle={{
+                      position: 'absolute',
+                      ...getBounds(position, cellBounds, options.spacing),
+                    }}
+                    onSelect={() => handleSelect(item.id)}
+                    onAction={onAction}
+                    // debug={debug}
+                  />
+                );
+              })}
+            </div>
           </div>
+
+          {debug && <Mosaic.Debug data={{ items: items?.length }} position='bottom-right' />}
         </div>
-      </Mosaic.Container>
-    );
-  },
-);
+      </div>
+    </Mosaic.Container>
+  );
+};
 
 /**
  * Grid cell.
@@ -249,50 +255,5 @@ const GridCell: FC<{
         </div>
       </div>
     </div>
-  );
-};
-
-export type GridDimensions = {
-  matrix: ReturnType<typeof createMatrix>;
-  bounds: ReturnType<typeof getPanelBounds>;
-  cellBounds: { width: number; height: number };
-};
-
-export const Grid = (props: GridProps) => {
-  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-
-  const options = defaultsDeep({}, props.options, defaultGridOptions);
-  const gridDimensions = useMemo(() => {
-    // Change default cell bounds to screen width if mobile.
-    const cellWidth = calculateCellWidth(options.cellBounds.width, width ?? 0);
-    const cellBounds = {
-      width: cellWidth,
-      height: props.square ? cellWidth : options.cellBounds.height,
-    };
-
-    return {
-      matrix: createMatrix(options.size, ({ x, y }) => ({ x, y })),
-      bounds: getPanelBounds(options.size, cellBounds, options.spacing),
-      cellBounds,
-    };
-  }, [options, width]);
-
-  return (
-    <Mosaic.Container
-      id={props.id}
-      Component={props.Component}
-      getOverlayProps={() => ({ grow: true })}
-      getOverlayStyle={() => getDimension(gridDimensions.cellBounds, options.spacing)}
-      onDrop={props.onDrop}
-    >
-      <GridImpl
-        {...props}
-        options={options}
-        gridDimensions={gridDimensions}
-        width={width}
-        height={height}
-        ref={containerRef}
-      />
-    </Mosaic.Container>
   );
 };
