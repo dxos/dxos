@@ -14,7 +14,7 @@ import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
+import { getSchema, schemaPropMapper, TableColumnBuilder } from '../schema';
 
 // TODO(burdon): Factor out echo fn to update when changed.
 const reactDeps = (...obj: TypedObject[]) => {
@@ -77,7 +77,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         updateTableProp({ id, refProp, label });
         updateSchemaProp({
           id,
-          type: getSchemaType(type),
+          type: getSchema(type),
           ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
           digits,
         });

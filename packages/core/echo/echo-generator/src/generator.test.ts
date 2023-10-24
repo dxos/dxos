@@ -8,8 +8,8 @@ import { expect } from 'chai';
 import { Client } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { testObjectGenerators, testSchemas } from './data';
-import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
+import { createSpaceObjectGenerator, testObjectGenerators, testSchemas } from './data';
+import { TestObjectGenerator } from './generator';
 
 faker.seed(3);
 
@@ -26,7 +26,7 @@ describe('TestObjectGenerator', () => {
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
-    const generator = new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators);
+    const generator = createSpaceObjectGenerator(space);
 
     // Create org.
     const organization = generator.createObject({ types: ['organization'] });

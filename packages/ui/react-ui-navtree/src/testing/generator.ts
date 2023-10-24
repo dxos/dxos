@@ -8,7 +8,7 @@
 
 import { faker } from '@faker-js/faker';
 
-import { type Schema } from '@dxos/client/echo';
+import { Schema } from '@dxos/client/echo';
 import { Expando, type TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Util.
@@ -62,23 +62,23 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      new SchemaType({
+      new Schema({
         props: [
           {
             id: 'title',
-            type: SchemaType.PropType.STRING,
+            type: Schema.PropType.STRING,
           },
           {
             id: 'repo',
-            type: SchemaType.PropType.STRING,
+            type: Schema.PropType.STRING,
           },
           {
             id: 'status',
-            type: SchemaType.PropType.STRING,
+            type: Schema.PropType.STRING,
           },
           {
             id: 'priority',
-            type: SchemaType.PropType.NUMBER,
+            type: Schema.PropType.NUMBER,
           },
         ],
       }),
@@ -106,7 +106,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): SchemaType[] {
+  get schema(): Schema[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

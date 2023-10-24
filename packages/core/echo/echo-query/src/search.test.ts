@@ -6,7 +6,7 @@ import { faker } from '@faker-js/faker';
 import { create, insert, search } from '@orama/orama';
 import { expect } from 'chai';
 
-import { range, TestObjectGenerator } from '@dxos/echo-generator';
+import { createTestObjectGenerator, range } from '@dxos/echo-generator';
 import { describe, test } from '@dxos/test';
 
 faker.seed(1);
@@ -22,7 +22,7 @@ faker.seed(1);
 describe('Orama', () => {
   test('basic', async () => {
     // TODO(burdon): Create Client/spaces.
-    const generator = new TestObjectGenerator();
+    const generator = createTestObjectGenerator();
 
     // https://www.npmjs.com/package/@orama/orama
     const db = await create({

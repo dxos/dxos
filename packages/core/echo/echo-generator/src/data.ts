@@ -7,8 +7,9 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Schema, Text } from '@dxos/client/echo';
+import { Schema, type Space, Text } from '@dxos/client/echo';
 
+import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestGeneratorMap, type TestSchemaMap } from './types';
 
 // TODO(burdon): Handle restricted values.
@@ -122,3 +123,8 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaTypes> = {
     priority: faker.helpers.arrayElement(Priority),
   }),
 };
+
+export const createTestObjectGenerator = () => new TestObjectGenerator(testSchemas(), testObjectGenerators);
+
+export const createSpaceObjectGenerator = (space: Space) =>
+  new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators);
