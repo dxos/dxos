@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
 import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
 import { dropRing, mx } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ import {
   useContainer,
   useMosaic,
   Path,
-  useSortedItems,
+  useItemsWithPreview,
   type MosaicCompareDataItem,
 } from '../../mosaic';
 
@@ -55,13 +55,16 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 };
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
-  const { id, Component } = useContainer();
-  const sortedItems = useSortedItems(items);
+  const { id, Component, compare } = useContainer();
+  const sortedItems = useMemo(() => {
+    return compare ? [...items].sort(compare) : items;
+  }, [items, compare]);
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
-      <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
-        {sortedItems.map((item, index) => (
+      <Mosaic.SortableContext id={id} items={itemsWithPreview} direction='vertical'>
+        {itemsWithPreview.map((item, index) => (
           <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
             <Mosaic.SortableTile item={item} path={id} position={index} Component={Component!} />
           </TreeItemComponent.Root>
@@ -101,13 +104,16 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
-  const { Component } = useContainer();
-  const sortedItems = useSortedItems(items);
+  const { Component, compare } = useContainer();
+  const sortedItems = useMemo(() => {
+    return compare ? [...items].sort(compare) : items;
+  }, [items, compare]);
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-        {sortedItems.map((child, index) => (
+      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
+        {itemsWithPreview.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
               <Mosaic.SortableTile
