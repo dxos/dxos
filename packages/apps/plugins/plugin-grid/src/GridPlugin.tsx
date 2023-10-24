@@ -5,12 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Grid as GridType } from '@braneframe/types';
+import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { GridMain } from './components';
 import translations from './translations';
@@ -25,14 +23,10 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       id: GRID_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides.intent.dispatch;
       if (dispatch) {
-        adapter = new GraphNodeAdapter({
-          dispatch,
-          filter: GridType.filter(),
-          adapter: objectToGraphNode,
-        });
+        adapter = new GraphNodeAdapter({ dispatch, filter: GridType.filter(), adapter: objectToGraphNode });
       }
     },
     unload: async () => {
@@ -41,13 +35,13 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${GRID_PLUGIN}/create`,
@@ -64,7 +58,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -75,20 +69,15 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isGrid(data)) {
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isGrid(data.active) ? <GridMain grid={data.active} /> : null;
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return GridMain;
-        }
-
-        return null;
-      },
-      components: {
-        GridMain,
+        },
       },
       intent: {
         resolver: (intent) => {

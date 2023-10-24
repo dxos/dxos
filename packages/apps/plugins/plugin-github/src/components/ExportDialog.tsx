@@ -12,16 +12,22 @@ import { useOctokitContext } from './GithubApiProviders';
 import { type ExportViewState, GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier } from '../props';
 
 export const ExportDialog = ({
-  data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],
+  type,
+  target,
+  model,
+  docGhId,
 }: {
-  data: [string, [ExportViewState, string | null], ComposerModel, GhIdentifier];
+  type: ExportViewState;
+  target: string | null;
+  model: ComposerModel;
+  docGhId: GhIdentifier;
 }) => {
   const content = model.content;
 
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
-  const [exportViewState, setExportViewState] = useState<ExportViewState>(initialExportViewState);
-  const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(initialResponseUrl);
+  const [exportViewState, setExportViewState] = useState<ExportViewState>(type);
+  const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(target);
   const [ghBranchValue, setGhBranchValue] = useState('');
   const [ghMessageValue, setGhMessageValue] = useState('');
 

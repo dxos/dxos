@@ -30,10 +30,10 @@
       "path": "../../../core/echo/echo-schema"
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"
@@ -54,19 +54,16 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
+    },
+    {
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

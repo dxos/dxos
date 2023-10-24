@@ -6,15 +6,15 @@ import React, { type FC, useEffect } from 'react';
 
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Expando } from '@dxos/client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
 import { type MosaicTileAction, Grid, type MosaicDropEvent, type Position } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { colors, GridCard } from './GridCard';
 
-export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
+export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const { plugins } = usePlugins();
 
   // TODO(burdon): Get from properties?

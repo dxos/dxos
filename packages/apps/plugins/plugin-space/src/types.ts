@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import type { AppState } from '@braneframe/types';
-import { type PublicKey } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
+import type { PublicKey } from '@dxos/react-client';
+import type { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
@@ -58,8 +61,9 @@ export type SpaceState = {
 
 export type SpaceSettingsProps = { showHidden?: boolean };
 
-export type SpacePluginProvides = GraphProvides &
-  IntentProvides &
+export type SpacePluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
   TranslationsProvides & {
     settings: SpaceSettingsProps;
     space: SpaceState;

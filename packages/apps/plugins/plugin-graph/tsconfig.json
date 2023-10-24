@@ -24,13 +24,13 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/app-graph"
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-surface"
     }
   ]
 }

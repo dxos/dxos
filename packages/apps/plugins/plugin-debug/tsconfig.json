@@ -54,13 +54,13 @@
       "path": "../../../devtools/devtools"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/react-ui"
@@ -78,16 +78,13 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

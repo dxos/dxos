@@ -21,12 +21,12 @@ const styles = {
 
 export type SketchMainParams = {
   readonly?: boolean;
-  data: SketchType;
+  sketch: SketchType;
 };
 
-export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
+export const SketchMain: FC<SketchMainParams> = ({ sketch }) => {
   const { themeMode } = useThemeContext();
-  const store = useSketchStore(object.data);
+  const store = useSketchStore(sketch.data);
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -70,16 +70,16 @@ export const SketchMain: FC<SketchMainParams> = ({ data: object }) => {
   );
 };
 
-export const SketchSection: FC<SketchMainParams> = ({ data: sketch }) => {
-  return <SketchReadonly data={sketch} maxHeight={400} />;
+export const SketchSection: FC<SketchMainParams> = ({ sketch }) => {
+  return <SketchReadonly sketch={sketch} maxHeight={400} />;
 };
 
-export const SketchSlide: FC<SketchMainParams> = ({ data: sketch }) => {
-  return <SketchReadonly data={sketch} maxZoom={1.5} />;
+export const SketchSlide: FC<SketchMainParams> = ({ sketch }) => {
+  return <SketchReadonly sketch={sketch} maxZoom={1.5} />;
 };
 
 export const SketchReadonly: FC<SketchMainParams & { maxHeight?: number; maxZoom?: number }> = ({
-  data: sketch,
+  sketch,
   maxHeight,
   maxZoom = 1,
 }) => {

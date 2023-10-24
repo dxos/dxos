@@ -7,9 +7,9 @@ import React, { type FC, useMemo, useState } from 'react';
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -21,7 +21,7 @@ const reactDeps = (...obj: TypedObject[]) => {
   return JSON.stringify(obj);
 };
 
-export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
+export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
 
   const { plugins } = usePlugins();

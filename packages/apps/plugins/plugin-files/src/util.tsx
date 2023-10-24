@@ -7,7 +7,7 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type DispatchIntent } from '@braneframe/plugin-intent';
+import { type DispatchIntent } from '@dxos/app-framework';
 
 import {
   FILES_PLUGIN,

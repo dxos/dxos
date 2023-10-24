@@ -8,9 +8,9 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type DispatchIntent } from '@braneframe/plugin-intent';
-import { getPersistenceParent } from '@braneframe/plugin-treeview';
+import { getPersistenceParent } from '@braneframe/plugin-navtree';
 import { type AppState } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
 import { type Filter } from '@dxos/echo-schema';
 import { type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
