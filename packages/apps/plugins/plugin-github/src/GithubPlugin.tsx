@@ -8,18 +8,11 @@ import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import {
-  type SpacePluginProvides,
-  GraphNodeAdapter,
-  getIndices,
-  getAppStateIndex,
-  setAppStateIndex,
-} from '@braneframe/plugin-space';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { type Document } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   type PluginDefinition,
-  findPlugin,
   resolvePlugin,
   parseIntentPlugin,
   type TranslationsProvides,
@@ -67,10 +60,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
 
-      const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-      const appState = spacePlugin?.provides.space.appState;
-      const defaultIndices = getIndices(plugins.length);
-
       const createGroup = (parent: Node) => {
         const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
         const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
@@ -79,15 +68,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
           icon: (props) => <GithubLogo {...props} />,
           properties: {
             palette: 'pink',
-            persistenceClass: 'appState',
+            persistenceClass: 'objectOrder',
             childrenPersistenceClass: 'spaceObject',
-            index:
-              getAppStateIndex(id, appState) ??
-              setAppStateIndex(
-                id,
-                defaultIndices[plugins.findIndex(({ meta: { id } }) => id === GITHUB_PLUGIN)],
-                appState,
-              ),
           },
         });
 

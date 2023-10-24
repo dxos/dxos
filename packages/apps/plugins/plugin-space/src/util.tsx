@@ -8,13 +8,11 @@ import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type AppState } from '@braneframe/types';
 import { type DispatchIntent } from '@dxos/app-framework';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
-import { getAppStateIndex, setAppStateIndex } from './helpers';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
 
 type Index = ReturnType<typeof getIndices>[number];
@@ -47,15 +45,11 @@ export const spaceToGraphNode = ({
   parent,
   dispatch,
   settings,
-  appState,
-  defaultIndex,
 }: {
   space: Space;
   parent: Node;
   dispatch: DispatchIntent;
   settings: SpaceSettingsProps;
-  appState?: AppState;
-  defaultIndex?: string;
 }): Node<Space> => {
   const id = createNodeId(space.key);
   const state = space.state.get();
@@ -82,13 +76,8 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
         onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(thure): Reconcile with `TypedObject`’s `meta` record.
-          child.properties.index = nextIndex;
-          if (child.data.meta) {
-            child.data.meta.index = nextIndex;
-          }
+          console.warn('[on rearrange child]', 'not implemented', child, nextIndex);
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
