@@ -7,14 +7,14 @@ RED=16711680
 
 function notifySuccess() {
   if [ -z "$DISCORD_TEST_REPORT_WEBHOOK" ]; then return; fi
-  MESSAGE='{ "content": "<@'$ROLE_ID'>", "embeds": [{ "title": "Daily testing successful: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$GREEN' }] }'
+  MESSAGE='{ "content": "🌈✨✅", "embeds": [{ "title": "Daily testing successful: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$GREEN' }] }'
   echo $MESSAGE
   curl -H "Content-Type: application/json" -d "${MESSAGE}" $DISCORD_TEST_REPORT_WEBHOOK
 }
 
 function notifyFailure() {
   if [ -z "$DISCORD_TEST_REPORT_WEBHOOK" ]; then return; fi
-  MESSAGE='{ "content": "<@'$ROLE_ID'>", "embeds": [{ "title": "Daily testing failed: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$RED' }] }'
+  MESSAGE='{ "content": "⚠️ <@'$ROLE_ID'>", "embeds": [{ "title": "Daily testing failed: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$RED' }] }'
   echo $MESSAGE
   curl -H "Content-Type: application/json" -d "${MESSAGE}" $DISCORD_TEST_REPORT_WEBHOOK
 }
