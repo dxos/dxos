@@ -6,12 +6,11 @@ import { deepSignal } from 'deepsignal/react';
 import type { Resource } from 'i18next';
 import React from 'react';
 
-import { type PluginDefinition } from '@dxos/react-surface';
+import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import compositeEnUs from './translations/en-US';
-import { translationsPlugins } from './util';
 
 export type ThemePluginOptions = {
   appName?: string;
@@ -36,7 +35,7 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTheme({ matches: modeQuery.matches });
       modeQuery.addEventListener('change', setTheme);
-      for (const plugin of translationsPlugins(plugins)) {
+      for (const plugin of filterPlugins(plugins, parseTranslationsPlugin)) {
         resources.push(...plugin.provides.translations);
       }
     },

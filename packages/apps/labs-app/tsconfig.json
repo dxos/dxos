@@ -28,6 +28,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../sdk/react-shell"
-    },
-    {
-      "path": "../../sdk/react-surface"
     },
     {
       "path": "../../sdk/vault"
@@ -64,9 +64,6 @@
       "path": "../plugins/plugin-debug"
     },
     {
-      "path": "../plugins/plugin-dnd"
-    },
-    {
       "path": "../plugins/plugin-error"
     },
     {
@@ -85,19 +82,22 @@
       "path": "../plugins/plugin-grid"
     },
     {
-      "path": "../plugins/plugin-intent"
-    },
-    {
       "path": "../plugins/plugin-ipfs"
     },
     {
       "path": "../plugins/plugin-kanban"
     },
     {
+      "path": "../plugins/plugin-layout"
+    },
+    {
       "path": "../plugins/plugin-map"
     },
     {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-navtree"
     },
     {
       "path": "../plugins/plugin-presenter"
@@ -113,9 +113,6 @@
     },
     {
       "path": "../plugins/plugin-space"
-    },
-    {
-      "path": "../plugins/plugin-splitview"
     },
     {
       "path": "../plugins/plugin-stack"
@@ -134,9 +131,6 @@
     },
     {
       "path": "../plugins/plugin-thread"
-    },
-    {
-      "path": "../plugins/plugin-treeview"
     },
     {
       "path": "../types"

@@ -7,13 +7,19 @@ import { batch } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type GraphPluginProvides } from '@braneframe/plugin-graph';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import { Graph } from '@braneframe/plugin-graph';
+import {
+  getPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+  parseGraphPlugin,
+  parseIntentPlugin,
+} from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getPlugin, type PluginDefinition } from '@dxos/react-surface';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -21,10 +27,6 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
-
-  const nodeIds = new Set<string>();
-  const isDebug = (data: unknown) =>
-    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
 
   return {
     meta: {
@@ -64,7 +66,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (parent.id !== 'root') {
             return;
           }
@@ -87,19 +89,18 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             }),
           );
 
-          const graphPlugin = getPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-          const intentPlugin = getPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // Root debug node.
           subscriptions.push(
             settings.values.$debug!.subscribe((debug) => {
-              const nodeId = parent.id + '-debug';
-              nodeIds.add(nodeId);
+              const nodeId = 'debug';
               if (debug) {
                 const [root] = parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
-                  label: 'Debug',
-                  data: { id: nodeId, graph: graphPlugin?.provides.graph() },
+                  label: ['debug label', { ns: DEBUG_PLUGIN }],
+                  data: { graph: graphPlugin?.provides.graph },
                 });
 
                 root.addAction({
@@ -107,7 +108,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
                   invoke: () =>
-                    intentPlugin.provides.intent.dispatch({
+                    intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
                       action: 'open-devtools',
                     }),
@@ -123,16 +124,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   clientPlugin.provides.client.spaces.subscribe((spaces) => {
                     batch(() => {
                       spaces.forEach((space) => {
-                        const nodeId = parent.id + '-' + space.key.toHex();
-                        if (!nodeIds.has(nodeId)) {
-                          nodeIds.add(nodeId);
-                          root.addNode(DEBUG_PLUGIN, {
-                            id: nodeId,
-                            label: space.key.truncate(),
-                            icon: (props: IconProps) => <Bug {...props} />,
-                            data: { id: nodeId, graph: graphPlugin?.provides.graph(), space },
-                          });
-                        }
+                        root.addNode(DEBUG_PLUGIN, {
+                          id: `${space.key.toHex()}-debug`,
+                          label: space.key.truncate(),
+                          icon: (props: IconProps) => <Bug {...props} />,
+                          data: { space },
+                        });
                       });
                     });
                   }).unsubscribe,
@@ -173,31 +170,32 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
         },
       },
-      component: (data, role) => {
-        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-          return DebugSettings;
-        }
+      surface: {
+        component: ({ component, active }, role) => {
+          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
+            return <DebugSettings />;
+          }
 
-        if (!settings.values.debug) {
+          if (!settings.values.debug) {
+            return null;
+          }
+
+          switch (role) {
+            case 'main':
+              return active === 'devtools' ? (
+                <DevtoolsMain />
+              ) : !active || typeof active !== 'object' ? null : 'space' in active &&
+                active.space instanceof SpaceProxy ? (
+                <DebugSpace space={active.space} />
+              ) : 'graph' in active && active.graph instanceof Graph ? (
+                <DebugGlobal graph={active.graph} />
+              ) : null;
+            case 'status':
+              return <DebugStatus />;
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main':
-            if (isDebug(data)) {
-              return DebugMain; // TODO(burdon): Convert to render for type safety.
-            } else if (data === 'devtools') {
-              return DevtoolsMain;
-            }
-            break;
-          case 'status':
-            return DebugStatus;
-        }
-
-        return null;
-      },
-      components: {
-        DebugMain,
+        },
       },
     },
   };

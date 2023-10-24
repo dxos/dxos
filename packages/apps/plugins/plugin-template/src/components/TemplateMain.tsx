@@ -5,13 +5,13 @@
 import React, { type FC } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { type TypedObject } from '@dxos/client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+export const TemplateMain: FC<{ object: TypedObject }> = ({ object }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;

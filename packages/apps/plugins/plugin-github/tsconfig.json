@@ -27,10 +27,10 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"
@@ -48,22 +48,16 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

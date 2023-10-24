@@ -12,9 +12,11 @@ import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN, type GhFileIdentifier, type GhIdentifier, type GhIssueIdentifier } from '../props';
 
 export const ImportDialog = ({
-  data: [_, docGhId, editorRef],
+  docGhId,
+  editorRef,
 }: {
-  data: [string, GhIdentifier, RefObject<MarkdownComposerRef>];
+  docGhId: GhIdentifier;
+  editorRef: RefObject<MarkdownComposerRef>;
 }) => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();

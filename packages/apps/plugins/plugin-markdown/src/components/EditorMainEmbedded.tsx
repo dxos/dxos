@@ -10,10 +10,11 @@ import { EditorMain } from './EditorMain';
 import { type MarkdownProperties } from '../types';
 
 export const EditorMainEmbedded = ({
-  data: { composer, properties },
+  composer,
+  properties,
 }: {
-  data: { composer: ComposerModel; properties: MarkdownProperties; view: 'embedded' };
-  role?: string;
+  composer: ComposerModel;
+  properties: MarkdownProperties;
 }) => {
   return <EditorMain model={composer} properties={properties} layout='embedded' editorRefCb={() => {}} />;
 };
