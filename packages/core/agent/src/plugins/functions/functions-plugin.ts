@@ -3,11 +3,11 @@
 //
 
 import express from 'express';
+import { type Server } from 'http';
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
 import { AbstractPlugin } from '../plugin';
-import { Server } from 'http';
 
 const DEFAULT_PORT = 7000;
 

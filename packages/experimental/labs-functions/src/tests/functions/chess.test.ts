@@ -12,7 +12,7 @@ import { join } from 'path';
 
 const HUB_PORT = 8757;
 
-test.only('chess function', async () => {
+test('chess function', async () => {
   const testBuilder = new TestBuilder();
   afterTest(() => testBuilder.destroy());
   const services = testBuilder.createLocal();
