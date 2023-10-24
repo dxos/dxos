@@ -9,10 +9,10 @@ type ObjectOrderAccumulator<T> = { objects: T[]; ids: Set<string> };
 /**
  * Uses an array of string id’s to order a map of objects. Objects not listed by the array of id’s occur later in the
  * resulting array of objects based on the map’s key order.
- * @param order
  * @param objectMap
+ * @param order
  */
-export const inferObjectOrder = <T = any>(order: IdOrder, objectMap: Record<string, T>): T[] => {
+export const inferObjectOrder = <T = any>(objectMap: Record<string, T>, order: IdOrder = []): T[] => {
   const orderedObjects = order.reduce(
     (acc, id) => {
       if (id in objectMap) {
