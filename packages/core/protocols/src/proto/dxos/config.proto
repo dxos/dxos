@@ -153,7 +153,8 @@ message Runtime {
   message Agent {
     message Plugins {
       message Functions {
-        int32 port = 1;
+        optional bool enabled = 1;
+        optional int32 port = 2;
       }
 
       /// Automatic epoch creation.
@@ -174,7 +175,7 @@ message Runtime {
       }
 
       /// Automatic index spaces
-      message Indexing {
+      message Search {
         optional bool enabled = 1;
       }
 
@@ -183,9 +184,14 @@ message Runtime {
         optional bool enabled = 1;
       }
 
+      message EchoProxy {
+        optional bool enabled = 1;
+        optional int32 port = 2;
+      }
+
       optional Functions functions = 1;
       optional EpochMontior epoch_monitor = 2;
-      optional Indexing indexing = 3;
+      optional Search search = 3;
       optional Dashboard dashboard = 4;
     }
 

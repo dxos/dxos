@@ -3,7 +3,7 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Button,
@@ -16,7 +16,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithPreview } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,
@@ -40,14 +40,17 @@ const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
-  const { Component } = useContainer();
-  const sortedNodes = useSortedItems(nodes);
+  const { Component, compare } = useContainer();
+  const sortedItems = useMemo(() => {
+    return compare ? [...nodes].sort(compare) : nodes;
+  }, [nodes, compare]);
+  const itemsWithPreview = useItemsWithPreview({ path, items: sortedItems, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={sortedNodes} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
         <Tree.Branch>
-          {sortedNodes.map((node, index) => (
+          {itemsWithPreview.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
               item={{ id: node.id, node, level }}
@@ -126,6 +129,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
+            data-itemid={item.id}
             style={draggableStyle}
             ref={forwardedRef}
             role='treeitem'
