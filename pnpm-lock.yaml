@@ -3950,6 +3950,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -3980,6 +3983,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../mesh/rpc
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -4004,6 +4010,9 @@ importers:
       ws:
         specifier: ^7.4.4
         version: 7.5.9
+      yaml:
+        specifier: ^2.1.3
+        version: 2.2.2
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
