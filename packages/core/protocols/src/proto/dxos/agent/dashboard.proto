@@ -17,11 +17,11 @@ message AgentStatus {
   }
 
   message Memory {
-    /// The total amount of system memory in bytes as an integer.
-    int32 total = 1;
-    /// The amount of free system memory in bytes as an integer
-    int32 free = 2;
-    int32 ram_usage = 3;
+    /// The total amount of system memory in bytes as a string.
+    string total = 1;
+    /// The amount of free system memory in bytes as a string.
+    string free = 2;
+    string ram_usage = 3;
   }
   
   Status status = 1;

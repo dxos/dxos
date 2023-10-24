@@ -6,6 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import yaml from 'yaml';
 
+import { scheduleTaskInterval } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
@@ -25,6 +26,7 @@ const DEFAULT_OPTIONS: Options = {
 };
 
 export const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
+export const UPDATE_INTERVAL = 5_000;
 
 export type ServiceBundle = {
   DashboardService: DashboardService;
@@ -101,9 +103,9 @@ export class DashboardPlugin extends AbstractPlugin {
         next({
           status: AgentStatus.Status.ON,
           memory: {
-            free: os.freemem(),
-            total: os.totalmem(),
-            ramUsage: process.memoryUsage().heapUsed,
+            free: String(os.freemem()),
+            total: String(os.totalmem()),
+            ramUsage: String(process.memoryUsage().heapUsed),
           },
 
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
@@ -119,6 +121,8 @@ export class DashboardPlugin extends AbstractPlugin {
       });
 
       update();
+
+      scheduleTaskInterval(ctx, async () => update(), UPDATE_INTERVAL);
 
       this._ctx.onDispose(() => {
         close();
