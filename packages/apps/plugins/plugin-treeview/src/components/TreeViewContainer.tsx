@@ -105,7 +105,7 @@ export const TreeViewContainer = ({
       else if (Path.hasChild(over.path, active.path)) {
         return graph.findNode(Path.last(over.path))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
       }
-      // Check if adopt is supported
+      // Check if transfer is supported
       else {
         const overNode = graph.findNode(Path.last(over.path));
         const activeNode = graph.findNode(Path.last(active.path));
