@@ -19,6 +19,8 @@ import {
   type Daemon,
   PhoenixDaemon,
   SystemDaemon,
+  LaunchctlRunner,
+  SystemctlRunner,
 } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -466,7 +468,17 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     callback: (daemon: Daemon) => Promise<T | undefined>,
     system: boolean,
   ): Promise<T | undefined> {
-    const daemon = system ? new SystemDaemon(DX_RUNTIME) : new PhoenixDaemon(DX_RUNTIME);
+    const platform = os.platform();
+    const daemon = system
+      ? new SystemDaemon(
+          DX_RUNTIME,
+          platform === 'darwin'
+            ? new LaunchctlRunner()
+            : platform === 'linux'
+            ? new SystemctlRunner()
+            : raise(new Error(`System daemon not implemented for ${os.platform()}.`)),
+        )
+      : new PhoenixDaemon(DX_RUNTIME);
 
     await daemon.connect();
     const value = await callback(daemon);
