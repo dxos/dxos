@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { auroraTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import React, { createElement, useEffect } from 'react';
 import { ThemeProvider } from '@dxos/react-ui';
@@ -38,13 +38,13 @@ export const globalTypes = {
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
+  useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
   }, [theme]);
 
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
-    tx: auroraTx
+    tx: defaultTx,
   });
 }
 
