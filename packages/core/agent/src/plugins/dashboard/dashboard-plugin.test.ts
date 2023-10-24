@@ -8,7 +8,6 @@ import yaml from 'yaml';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer } from '@dxos/rpc';
