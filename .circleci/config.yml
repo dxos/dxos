@@ -8,6 +8,11 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.1
 
+parameters:
+  mode:
+    type: string
+    default: default
+
 aliases:
   - &docker_image
     image: ghcr.io/dxos/circleci-node:latest
@@ -43,6 +48,17 @@ aliases:
   - &store_test_results
     store_test_results:
       path: test-results
+  - &send_test_report
+    when:
+      condition:
+        equal: [ report, << pipeline.parameters.mode >> ]
+      steps:
+        - run:
+            command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB failure
+            when: on_fail
+        - run:
+            command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB success
+            when: on_success
   # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
   - &install_datadog
     run:
@@ -85,6 +101,7 @@ jobs:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport --environments=nodejs
+      - *send_test_report
       - *codecov_upload
       - *store_test_results
 
@@ -119,6 +136,7 @@ jobs:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
           when: always
+      - *send_test_report
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
@@ -180,6 +198,7 @@ workflows:
                 - main
                 - /^rc-.*/
                 - /^hotfix-.*/
+                - /^release-please-.*/
           context:
             - Github
 
