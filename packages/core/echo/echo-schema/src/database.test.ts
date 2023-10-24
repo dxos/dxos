@@ -7,11 +7,12 @@ import { inspect } from 'node:util';
 
 import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { data } from './defs';
 import { TestBuilder, createDatabase } from './testing';
 import { Expando, TypedObject } from './typed-object';
+import { Schema } from './proto';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -288,5 +289,25 @@ describe('Database', () => {
     const { objects } = db.query({ id: obj.id });
     expect(objects).toHaveLength(1);
     expect(objects[0].title).toEqual(title);
+  });
+
+  test('schema gets automatically added to the database', async () => {
+    const testBuilder = new TestBuilder();
+    const peer = await testBuilder.createPeer();
+
+    const schema = new Schema({
+      typename: 'example.Task',
+      props: [
+        {
+          id: 'title',
+          type: Schema.PropType.STRING,
+        }
+      ]
+    });
+
+    const obj = new Expando({ title: 'Test title' }, { schema });
+    expect(obj.__schema).toEqual(schema)  
+    peer.db.add(obj);
+    expect(obj.__schema).toEqual(schema)
   });
 });
