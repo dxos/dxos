@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type GraphPluginProvides } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getPlugin, type PluginDefinition } from '@dxos/react-surface';
@@ -87,6 +88,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           );
 
           const graphPlugin = getPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+          const intentPlugin = getPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
 
           // Root debug node.
           subscriptions.push(
@@ -104,10 +106,11 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   id: 'open-devtools',
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
-                  intent: {
-                    plugin: DEBUG_PLUGIN,
-                    action: 'open-devtools',
-                  },
+                  invoke: () =>
+                    intentPlugin.provides.intent.dispatch({
+                      plugin: DEBUG_PLUGIN,
+                      action: 'open-devtools',
+                    }),
                   keyBinding: 'shift+meta+\\',
                   properties: {
                     testId: 'spacePlugin.openDevtools',

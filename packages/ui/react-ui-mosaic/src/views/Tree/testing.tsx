@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { type Graph, GraphBuilder, type Node } from '@braneframe/plugin-graph';
-import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { type Graph, GraphBuilder, type Node } from '@dxos/app-graph';
+import { buildGraph } from '@dxos/app-graph/testing';
 import { arrayMove } from '@dxos/util';
 
 import { Tree, type TreeData, type TreeProps } from './Tree';

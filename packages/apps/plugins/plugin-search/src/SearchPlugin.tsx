@@ -5,6 +5,7 @@
 import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { type SplitViewPluginProvides } from '@braneframe/plugin-splitview';
 import { SpaceProxy } from '@dxos/client/echo';
 import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
@@ -22,18 +23,20 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
           if (parent.id === 'root') {
             parent.addAction({
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: SEARCH_PLUGIN,
-                  action: SearchAction.SEARCH,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: SEARCH_PLUGIN,
+                    action: SearchAction.SEARCH,
+                  },
+                ]),
               properties: {
                 testId: 'searchPlugin.search',
               },
@@ -46,12 +49,13 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <MagnifyingGlass {...props} />,
               keyBinding: 'shift+meta+f',
-              intent: [
-                {
-                  plugin: SEARCH_PLUGIN,
-                  action: SearchAction.SEARCH,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: SEARCH_PLUGIN,
+                    action: SearchAction.SEARCH,
+                  },
+                ]),
               properties: {
                 testId: 'searchPlugin.search',
               },

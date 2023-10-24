@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node } from '@braneframe/plugin-graph';
+import type { Action, Node } from '@dxos/app-graph';
 import type { TFunction } from '@dxos/react-ui';
 
 export const getLevel = (node: Node, level = 0): number => {
