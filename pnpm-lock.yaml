@@ -6270,6 +6270,9 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2
     devDependencies:
+      '@mediapipe/tasks-text':
+        specifier: ^0.10.7
+        version: 0.10.7
       '@types/html-to-text':
         specifier: ^9.0.0
         version: 9.0.2
@@ -14191,6 +14194,10 @@ packages:
       vfile: 5.3.6
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@mediapipe/tasks-text@0.10.7:
+    resolution: {integrity: sha512-9OF8DJV/9nuPOQfhOkwuBFunLqc1EXXraGn+q90RpdCoHcg288fkV2r6e268o4NL+u8Lvkx0Zy9ll4/Orqh0JA==}
     dev: true
 
   /@microsoft/tsdoc@0.14.2:
