@@ -967,6 +967,9 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../../devtools/devtools
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
