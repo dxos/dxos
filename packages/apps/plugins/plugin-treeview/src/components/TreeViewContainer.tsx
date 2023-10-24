@@ -5,8 +5,8 @@
 import { CaretDoubleLeft, GearSix } from '@phosphor-icons/react';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Graph } from '@braneframe/plugin-graph';
 import { useIntent } from '@braneframe/plugin-intent';
+import { type Graph } from '@dxos/app-graph';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';

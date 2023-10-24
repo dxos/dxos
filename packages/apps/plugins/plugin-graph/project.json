@@ -17,8 +17,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-graph/src/index.ts",
-          "packages/apps/plugins/plugin-graph/src/testing.ts"
+          "packages/apps/plugins/plugin-graph/src/index.ts"
         ],
         "outputPath": "packages/apps/plugins/plugin-graph/dist/lib"
       },
@@ -49,29 +48,9 @@
       "options": {
         "configDir": "packages/apps/plugins/plugin-graph/.storybook"
       }
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-graph",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-graph",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-graph",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-graph/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
     }
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }

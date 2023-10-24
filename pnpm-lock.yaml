@@ -1423,67 +1423,19 @@ importers:
 
   packages/apps/plugins/plugin-graph:
     dependencies:
-      '@dxos/async':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../../common/async
+        version: link:../../../sdk/app-graph
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-react':
-        specifier: ^1.3.6
-        version: 1.3.6(react@18.2.0)
-      deepsignal:
-        specifier: ^1.3.6
-        version: 1.3.6(@preact/signals-react@1.3.6)
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.set:
-        specifier: ^4.3.2
-        version: 4.3.2
-      mousetrap:
-        specifier: ^1.6.5
-        version: 1.6.5
     devDependencies:
-      '@braneframe/plugin-intent':
-        specifier: workspace:*
-        version: link:../plugin-intent
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@dxos/react-surface':
         specifier: workspace:*
         version: link:../../../sdk/react-surface
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@faker-js/faker':
-        specifier: ^8.0.2
-        version: 8.0.2
-      '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@tldraw/indices':
-        specifier: 2.0.0-alpha.14
-        version: 2.0.0-alpha.14
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.set':
-        specifier: ^4.3.7
-        version: 4.3.7
-      '@types/mousetrap':
-        specifier: ^1.6.11
-        version: 1.6.12
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2762,6 +2714,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2799,9 +2754,6 @@ importers:
       '@braneframe/plugin-dnd':
         specifier: workspace:*
         version: link:../plugin-dnd
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@braneframe/plugin-intent':
         specifier: workspace:*
         version: link:../plugin-intent
@@ -6943,6 +6895,82 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/sdk/app-graph:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact/signals-react':
+        specifier: ^1.3.6
+        version: 1.3.6(react@18.2.0)
+      deepsignal:
+        specifier: ^1.3.6
+        version: 1.3.6(@preact/signals-react@1.3.6)
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.set:
+        specifier: ^4.3.2
+        version: 4.3.2
+      mousetrap:
+        specifier: ^1.6.5
+        version: 1.6.5
+    devDependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
+      '@dxos/react-surface':
+        specifier: workspace:*
+        version: link:../react-surface
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@faker-js/faker':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@phosphor-icons/react':
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+      '@tldraw/indices':
+        specifier: 2.0.0-alpha.14
+        version: 2.0.0-alpha.14
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/lodash.set':
+        specifier: ^4.3.7
+        version: 4.3.7
+      '@types/mousetrap':
+        specifier: ^1.6.11
+        version: 1.6.12
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/sdk/client:
     dependencies:
       '@dxos/async':
@@ -8218,9 +8246,9 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@braneframe/plugin-graph':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../apps/plugins/plugin-graph
+        version: link:../../sdk/app-graph
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -8272,9 +8300,9 @@ importers:
 
   packages/ui/react-ui-navtree:
     dependencies:
-      '@braneframe/plugin-graph':
+      '@dxos/app-graph':
         specifier: workspace:*
-        version: link:../../apps/plugins/plugin-graph
+        version: link:../../sdk/app-graph
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
