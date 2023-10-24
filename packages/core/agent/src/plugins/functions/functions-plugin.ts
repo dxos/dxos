@@ -3,35 +3,44 @@
 //
 
 import express from 'express';
+import { type Server } from 'node:http';
+
+import { log } from '@dxos/log';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
 import { AbstractPlugin } from '../plugin';
 
-const DEFAULT_PORT = 7000;
+type Options = Required<Runtime.Agent.Plugins.Functions>;
 
-export type FunctionsPluginOptions = {
-  port?: number;
+const DEFAULT_OPTIONS: Options = {
+  enabled: false,
+  port: 7000,
 };
 
 export class FunctionsPlugin extends AbstractPlugin {
+  public readonly id = 'functions';
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
   private readonly _devDispatcher = new DevFunctionDispatcher();
+  private _options?: Options;
 
-  private _server?: ReturnType<typeof express>;
-
-  constructor(private readonly _options: FunctionsPluginOptions) {
-    super();
-  }
+  private _server?: Server;
 
   async open() {
+    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+    if (!this._options.enabled) {
+      log.info('Functions disabled.');
+      return;
+    }
+
     this._dispatchers.set('dev', this._devDispatcher);
     this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
-    this._server = express();
-    this._server.use(express.json());
+    const app = express();
+    app.use(express.json());
 
-    this._server.post('/:dispatcher/:functionName', (req, res) => {
+    app.post('/:dispatcher/:functionName', (req, res) => {
       const dispatcher = req.params.dispatcher;
       const functionName = req.params.functionName;
 
@@ -60,13 +69,16 @@ export class FunctionsPlugin extends AbstractPlugin {
         );
     });
 
-    const port = this._options.port ?? DEFAULT_PORT;
-    this._server.listen(port, () => {
+    const port = this._options.port;
+    this._server = app.listen(port, () => {
       console.log('functions server listening', { port });
     });
+    this.statusUpdate.emit();
   }
 
   async close() {
     this.host.serviceRegistry.removeService('FunctionRegistryService');
+    this._server?.close();
+    this.statusUpdate.emit();
   }
 }
