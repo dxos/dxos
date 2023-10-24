@@ -9,7 +9,7 @@ import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, type TypedObject, Schema } from '@dxos/client/echo';
+import { Schema, SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
 import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';
