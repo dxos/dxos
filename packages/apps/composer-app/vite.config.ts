@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
@@ -40,8 +40,8 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom'],
           dxos: ['@dxos/react-client'],
-          aurora: ['@dxos/aurora', '@dxos/aurora-theme'],
-          editor: ['@dxos/aurora-composer'],
+          ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
+          editor: ['@dxos/react-ui-editor'],
         },
       },
     },
@@ -61,9 +61,9 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/aurora-grid/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/aurora-stack/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/aurora-navtree/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),

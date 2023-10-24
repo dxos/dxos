@@ -6,7 +6,7 @@ import { Smiley, SmileyBlank, UserCircle } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';

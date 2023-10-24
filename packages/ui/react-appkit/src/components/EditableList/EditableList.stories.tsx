@@ -10,7 +10,7 @@ import React, {
   type ComponentPropsWithoutRef,
 } from 'react';
 
-import { useId, randomString } from '@dxos/aurora';
+import { useId, randomString } from '@dxos/react-ui';
 
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 import { appkitTranslations } from '../../translations';

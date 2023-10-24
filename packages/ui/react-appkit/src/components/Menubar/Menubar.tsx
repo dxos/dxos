@@ -6,7 +6,7 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import throttle from 'lodash.throttle';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export type MenubarProps = PropsWithChildren<{}>;
 

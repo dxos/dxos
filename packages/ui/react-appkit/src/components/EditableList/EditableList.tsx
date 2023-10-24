@@ -30,8 +30,8 @@ import {
   useListContext,
   LIST_NAME,
   useDensityContext,
-} from '@dxos/aurora';
-import { mx, getSize, descriptionText } from '@dxos/aurora-theme';
+} from '@dxos/react-ui';
+import { mx, getSize, descriptionText } from '@dxos/react-ui-theme';
 
 import { Input, type InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';

@@ -16,6 +16,8 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
 import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Surface, usePlugin } from '@dxos/react-surface';
 import {
   Avatar,
   Button,
@@ -28,11 +30,9 @@ import {
   DropdownMenu,
   Tooltip,
   useJdenticonHref,
-} from '@dxos/aurora';
-import { useTextModel } from '@dxos/aurora-composer';
-import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, usePlugin } from '@dxos/react-surface';
+} from '@dxos/react-ui';
+import { useTextModel } from '@dxos/react-ui-editor';
+import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
@@ -262,10 +262,10 @@ const EmbeddedLayoutImpl = () => {
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
-            <div role='none' className={auroraTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+            <div role='none' className={defaultTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
               <div
                 role='none'
-                className={auroraTx(
+                className={defaultTx(
                   'dialog.content',
                   'dialog--resolver__content',
                   {},

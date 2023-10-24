@@ -7,10 +7,10 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { TimeoutError } from '@dxos/async';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {
   success: 'text-green-500 dark:text-green-600',

@@ -4,8 +4,8 @@
 
 import React, { type FC, type ReactNode } from 'react';
 
-import { ElevationProvider } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { ElevationProvider } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export const Toolbar: FC<{ children?: ReactNode; className?: string }> = ({ children, className }) => {
   return (

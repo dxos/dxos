@@ -19,13 +19,17 @@ message Schema {
     NUMBER = 2;
     BOOLEAN = 3;
     DATE = 4;
-    REF = 5;
+    REF = 5; // TODO(burdon): Add RICH text separately?
     RECORD = 6;
   }
 
   message Prop {
     string id = 1; // TODO(burdon): Rename key.
     PropType type = 2;
+
+    /// Human readable name.
+    /// TODO(burdon): Rename?
+    optional string typename = 7;
 
     /// Referenced object's FQN.
     optional string ref_name = 6;

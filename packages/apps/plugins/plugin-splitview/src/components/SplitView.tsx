@@ -5,9 +5,9 @@
 import { CaretDoubleLeft, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/aurora';
-import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
+import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
+import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
 
 import { useSplitView } from '../SplitViewContext';
 import { SPLITVIEW_PLUGIN } from '../types';
@@ -49,6 +49,8 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
+        {/* TODO(burdon): name vs. role? */}
+
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar classNames='overflow-hidden'>
           <Surface name='sidebar' role='navigation' />
@@ -57,8 +59,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            {/* TODO(burdon): name vs. role? */}
-            <Surface name='complementary' role='complementary' />
+            <Surface name='complementary' role='context' />
           </Main.ComplementarySidebar>
         )}
 

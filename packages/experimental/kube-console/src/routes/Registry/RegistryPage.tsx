@@ -5,11 +5,11 @@
 import { ArrowSquareOut } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { ConfigProto } from '@dxos/config';
-import { TableColumn, Table } from '@dxos/mosaic';
+import { type ConfigProto } from '@dxos/config';
+import { type TableColumn, Table } from '@dxos/mosaic';
 import { CompactQrCode } from '@dxos/react-appkit';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import { compareObject, compareString } from '@dxos/util';
 
 import { Toolbar } from '../../components';

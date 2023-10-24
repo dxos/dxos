@@ -6,7 +6,7 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Main } from '@dxos/aurora';
+import { Main } from '@dxos/react-ui';
 import { FrameRegistryContextProvider, frameDefs, frameModules } from '@dxos/kai-frames';
 import {
   AppState,

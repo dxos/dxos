@@ -53,6 +53,7 @@ export type LogFilter = {
 export type LogOptions = {
   file?: string;
   filter?: string | string[] | LogLevel;
+  captureFilter?: string | string[] | LogLevel;
   depth?: number; // Context object depth.
   processor?: string | LogProcessorType;
   formatter?: {
@@ -69,6 +70,7 @@ export type LogOptions = {
 export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
+  captureFilters?: LogFilter[];
   processors: LogProcessor[];
   prefix?: string;
 }

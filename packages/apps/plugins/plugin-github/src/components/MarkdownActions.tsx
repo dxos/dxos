@@ -7,10 +7,10 @@ import React, { type RefObject, useCallback } from 'react';
 
 import { type MarkdownProperties } from '@braneframe/plugin-markdown';
 import { useSplitView } from '@braneframe/plugin-splitview';
-import { DropdownMenu, useTranslation } from '@dxos/aurora';
-import { type ComposerModel, type MarkdownComposerRef } from '@dxos/aurora-composer';
-import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
+import { DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { useDocGhId } from '../hooks';

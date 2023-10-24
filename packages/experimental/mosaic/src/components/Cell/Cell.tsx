@@ -6,7 +6,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from '@phosphor-icons/react';
 import React, { type ReactNode } from 'react';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type Bounds, type Location, type Point, serializeLocation } from '../../layout';
 

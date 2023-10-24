@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ComposerModel } from '@dxos/aurora-composer';
+import { type ComposerModel } from '@dxos/react-ui-editor';
 
 import { EditorMain } from './EditorMain';
 import { type MarkdownProperties } from '../types';

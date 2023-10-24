@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button } from '@dxos/react-ui';
 import { Contact, DocumentStack, Message } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
 import { useConfig } from '@dxos/react-client';

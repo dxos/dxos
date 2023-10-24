@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Main } from '@dxos/aurora';
+import { Main } from '@dxos/react-ui';
 
 import { Sidebar } from '../components';
 import { useModules } from '../hooks';
