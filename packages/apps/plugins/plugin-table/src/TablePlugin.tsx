@@ -8,7 +8,7 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
+import { SpaceProxy, Expando, type TypedObject, Schema } from '@dxos/client/echo';
 import { type PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';
@@ -85,11 +85,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              const schema = new SchemaType({
+              const schema = new Schema({
                 props: [
                   {
                     id: 'title',
-                    type: SchemaType.PropType.STRING,
+                    type: Schema.PropType.STRING,
                   },
                 ],
               });

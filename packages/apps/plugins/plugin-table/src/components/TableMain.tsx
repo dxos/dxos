@@ -7,7 +7,7 @@ import React, { type FC, useMemo, useState } from 'react';
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
+import { Expando, type TypedObject, type Schema } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { DensityProvider, Main } from '@dxos/react-ui';
@@ -40,7 +40,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
   const rows = [...useFilteredObjects(objects), newObject];
 
   const tables = useQuery<TableType>(space, TableType.filter());
-  const updateSchemaProp = (update: SchemaType.Prop) => {
+  const updateSchemaProp = (update: Schema.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
     if (idx !== -1) {
       const current = table.schema?.props[idx];

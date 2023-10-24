@@ -6,7 +6,7 @@ import { faker } from '@faker-js/faker';
 import type { Faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
-import { Schema as SchemaType, type Space, Text } from '@dxos/client/echo';
+import { Schema, type Space, Text } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -29,19 +29,19 @@ export class Generator {
   // TODO(burdon): Silent fail if try to set __foo property.
   createTables(options = { organizations: 50, projects: 20, people: 200 }) {
     // TODO(burdon): Get or create schema.
-    const org = new SchemaType({
+    const org = new Schema({
       props: [
         {
           id: 'name',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
         {
           id: 'website',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
         {
           id: 'active',
-          type: SchemaType.PropType.BOOLEAN,
+          type: Schema.PropType.BOOLEAN,
         },
       ],
     });
@@ -67,15 +67,15 @@ export class Generator {
       },
     );
 
-    const project = new SchemaType({
+    const project = new Schema({
       props: [
         {
           id: 'name',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
         {
           id: 'repo',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
       ],
     });
@@ -100,19 +100,19 @@ export class Generator {
       },
     );
 
-    const person = new SchemaType({
+    const person = new Schema({
       props: [
         {
           id: 'name',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
         {
           id: 'email',
-          type: SchemaType.PropType.STRING,
+          type: Schema.PropType.STRING,
         },
         {
           id: 'org',
-          type: SchemaType.PropType.REF,
+          type: Schema.PropType.REF,
           ref: org,
         },
       ],

@@ -7,140 +7,52 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
+import { Expando, type Space } from '@dxos/client/echo';
 
-// TODO(burdon): Util.
-export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
-  Array.from({ length })
-    .map((_, i) => fn(i))
-    .filter(Boolean) as T[];
-
-// TODO(burdon): Commit to using ECHO to generate all test data? Or convert from raw data?
-export type TestItem = { id: string; type: string } & Record<string, any>;
-
-type ObjectDataGenerator = {
-  createSchema?: () => SchemaType;
-  createData: () => any;
-};
-
-type ObjectFactory<T extends TypedObject> = {
-  schema?: SchemaType; // TODO(burdon): Support both typed and expando schema.
-  createObject: () => T;
-};
-
-type ObjectFactoryMap = { [type: string]: ObjectFactory<any> };
-
-const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
-  const schema = createSchema?.();
-  return {
-    schema,
-    createObject: () => new Expando(createData(), { schema }),
-  };
-};
-
-// TODO(burdon): Handle restricted values.
-export const Status = ['pending', 'active', 'done'];
-export const Priority = [1, 2, 3, 4, 5];
-
-export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
-  document: {
-    createSchema: () =>
-      new SchemaType({
-        props: [
-          {
-            id: 'title',
-            type: SchemaType.PropType.STRING,
-          },
-          {
-            id: 'body',
-            type: SchemaType.PropType.STRING,
-          },
-        ],
-      }),
-    createData: () => ({
-      title: faker.lorem.sentence(3),
-      body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
-    }),
-  },
-
-  // TODO(burdon): Configure images.
-  image: {
-    createSchema: () =>
-      new SchemaType({
-        props: [
-          {
-            id: 'title',
-            type: SchemaType.PropType.STRING,
-          },
-          {
-            id: 'body',
-            type: SchemaType.PropType.STRING,
-          },
-        ],
-      }),
-    createData: () => ({
-      title: faker.lorem.sentence(3),
-      body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
-    }),
-  },
-
-  project: {
-    createSchema: () =>
-      new SchemaType({
-        props: [
-          {
-            id: 'title',
-            type: SchemaType.PropType.STRING,
-          },
-          {
-            id: 'repo',
-            type: SchemaType.PropType.STRING,
-          },
-          {
-            id: 'status',
-            type: SchemaType.PropType.STRING,
-          },
-          {
-            id: 'priority',
-            type: SchemaType.PropType.NUMBER,
-          },
-        ],
-      }),
-    createData: () => ({
-      title: faker.commerce.productName(),
-      repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-      status: faker.helpers.arrayElement(Status),
-      priority: faker.helpers.arrayElement(Priority),
-    }),
-  },
-};
+import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
+import { range } from './util';
 
 /**
  * Typed object generator.
  */
-export class TestObjectGenerator {
-  public readonly factories: ObjectFactoryMap;
+export class TestObjectGenerator<T extends string> {
+  // prettier-ignore
+  constructor(
+    private readonly schema: TestSchemaMap<T>,
+    private readonly _generators: TestGeneratorMap<T>,
+    private readonly _provider?: TestObjectProvider<T>
+  ) {}
 
-  constructor({ types, factories }: { types?: string[]; factories?: ObjectFactoryMap } = {}) {
-    this.factories =
-      factories ??
-      (types ?? Object.keys(defaultGenerators)).reduce<ObjectFactoryMap>((acc, type) => {
-        acc[type] = createFactory(defaultGenerators[type]);
-        return acc;
-      }, {});
+  createObject({ types }: { types?: T[] } = {}): Expando {
+    const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
+    const factory = this._generators[type];
+    const data = factory(this._provider);
+    return new Expando(data, { schema: this.schema[type] });
   }
 
-  get schema(): SchemaType[] {
-    return Object.values(this.factories).map((f) => f.schema!);
+  // TODO(burdon): Create batch.
+  createObjects({ types, count }: { types?: T[]; count: number }): Expando[] {
+    return range(() => this.createObject({ types }), count);
+  }
+}
+
+/**
+ * Typed object generator for a space.
+ */
+export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
+  constructor(private readonly space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+    super(schema, generators, (type: T) => {
+      // TODO(burdon): Query by schema.
+      let i = 0;
+      const { objects } = space.db.query((object) => {
+        console.log('???', i++, object.id.slice(0, 8), object.__schema?.id.slice(0, 8), schema[type].id.slice(0, 8));
+        return object.__schema === schema[type];
+      });
+      return objects;
+    });
   }
 
-  createObject({ types }: { types?: string[] } = {}) {
-    const type = faker.helpers.arrayElement(types ?? Object.keys(this.factories));
-    const factory = this.factories[type];
-    return factory?.createObject();
-  }
-
-  createObjects({ types, length }: { types?: string[]; length: number }) {
-    return range(() => this.createObject({ types }), length);
+  override createObject({ types }: { types?: T[] } = {}): Expando {
+    return this.space.db.add(super.createObject({ types }));
   }
 }

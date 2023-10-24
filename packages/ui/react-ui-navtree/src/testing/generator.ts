@@ -8,7 +8,7 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Schema as SchemaType } from '@dxos/client/echo';
+import { type Schema } from '@dxos/client/echo';
 import { Expando, type TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Util.
@@ -21,12 +21,12 @@ export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] 
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => SchemaType;
+  createSchema?: () => Schema;
   createData: () => any;
 };
 
 type ObjectFactory<T extends TypedObject> = {
-  schema?: SchemaType; // TODO(burdon): Support both typed and expando schema.
+  schema?: Schema; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
