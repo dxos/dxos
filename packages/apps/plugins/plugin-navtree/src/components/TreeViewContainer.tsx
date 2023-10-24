@@ -11,13 +11,7 @@ import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
-import {
-  NavTree,
-  type NavTreeContextType,
-  nextRearrangeIndex,
-  type TreeNode,
-  type NavTreeProps,
-} from '@dxos/react-ui-navtree';
+import { NavTree, type NavTreeContextType, type TreeNode, type NavTreeProps } from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { HaloButton } from './HaloButton';
@@ -131,13 +125,8 @@ export const TreeViewContainer = ({
       const overNode = graph.findNode(Path.last(over.path));
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
-        const nextIndex = nextRearrangeIndex(
-          activeNode.parent!.children.sort(graphNodeCompare),
-          activeNode.id,
-          overNode.id,
-        );
         if (operation === 'rearrange') {
-          activeNode.parent!.properties.onRearrangeChild(activeNode, nextIndex);
+          activeNode.parent!.properties.onRearrangeChild(activeNode, 'never');
         }
         if (operation === 'transfer') {
           const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
@@ -146,7 +135,7 @@ export const TreeViewContainer = ({
           const originParent = getPersistenceParent(activeNode, activeClass);
           if (destinationParent && originParent) {
             // TODO(wittjosiah): Rename migrate to transfer.
-            destinationParent.properties.onMigrateStartChild(activeNode, nextIndex);
+            destinationParent.properties.onMigrateStartChild(activeNode, 'never');
             originParent.properties.onMigrateEndChild(activeNode);
           }
         }

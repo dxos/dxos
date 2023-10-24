@@ -4,7 +4,6 @@
 
 import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
-import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
@@ -14,8 +13,6 @@ import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
-
-type Index = ReturnType<typeof getIndices>[number];
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
@@ -76,7 +73,7 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
+        onRearrangeChild: (child: Node<TypedObject>, nextIndex: any) => {
           console.warn('[on rearrange child]', 'not implemented', child, nextIndex);
         },
         persistenceClass: 'appState',

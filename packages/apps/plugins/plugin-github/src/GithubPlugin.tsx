@@ -3,7 +3,6 @@
 //
 
 import { GithubLogo } from '@phosphor-icons/react';
-import get from 'lodash.get';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
@@ -153,14 +152,13 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   };
 };
 
-const objectToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
+const objectToGraphNode = (parent: Node<Space>, document: Document): Node => {
   const [child] = parent.addNode(GITHUB_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
     icon: (props) => <Issue {...props} />,
     data: document,
     properties: {
-      index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
     },
   });
