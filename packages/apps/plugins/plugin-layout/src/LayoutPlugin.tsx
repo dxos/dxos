@@ -126,7 +126,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         const layout = useLayout();
         const [shortId, component] = layout.active?.split(':') ?? [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
-        const result = plugin?.provides.surface.component({ component });
+        const X = plugin?.provides.surface.component({ data: { component } });
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -161,8 +161,8 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           }
         }, [state.values.active]);
 
-        if (result) {
-          return <>result</>;
+        if (X) {
+          return <>{X}</>;
         } else if (layout.activeNode) {
           if (state.values.fullscreen) {
             return (

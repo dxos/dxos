@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
+import { deepSignal, shallow } from 'deepsignal/react';
 import React, { useEffect, type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
@@ -42,29 +42,29 @@ export const PluginHost = ({
         useEffect(() => {
           log('initializing plugins', { definitions });
           const timeout = setTimeout(async () => {
-            state.initializing = definitions;
+            state.initializing = shallow(definitions);
             const plugins = await Promise.all(
               definitions.map(async (definition) => {
                 const plugin = await initializePlugin(definition).catch((err) => {
                   console.error('Failed to initialize plugin:', definition.meta.id, err);
                   return undefined;
                 });
-                state.initializing = state.initializing.filter((plugin) => plugin !== definition);
+                state.initializing = shallow(state.initializing.filter((plugin) => plugin !== definition));
                 return plugin;
               }),
             ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
 
             log('plugins initialized', { plugins });
-            state.loading = definitions;
+            state.loading = shallow(definitions);
             await Promise.all(
               definitions.map(async (pluginDefinition) => {
                 await pluginDefinition.ready?.(plugins);
-                state.loading = state.loading.filter((plugin) => plugin !== pluginDefinition);
+                state.loading = shallow(state.loading.filter((plugin) => plugin !== pluginDefinition));
               }),
             );
 
             log('plugins ready', { plugins });
-            state.plugins = plugins;
+            state.plugins = shallow(plugins);
             state.ready = true;
           });
 
@@ -131,3 +131,70 @@ const compose = (contexts: FC<PropsWithChildren>[]) => {
     </Acc>
   ));
 };
+// export const PluginHost = ({ plugins: definitions, fallback }: BootstrapPluginsParams): PluginDefinition => {
+//   // const state = deepSignal<PluginContext>({ ready: false, initializing: [], loading: [], plugins: [] });
+
+//   return {
+//     meta: {
+//       id: 'dxos.org/plugin/host',
+//     },
+//     provides: {
+//       // plugins: state,
+//       // context: ({ children }) => <PluginProvider value={state}>{children}</PluginProvider>,
+//       root: () => {
+//         const [plugins, setPlugins] = useState<Plugin[]>();
+//         const [initializing, setInitializing] = useState<PluginDefinition[]>([]);
+//         const [loading, setLoading] = useState<PluginDefinition[]>([]);
+//         useEffect(() => {
+//           log('initializing plugins', { definitions });
+//           const timeout = setTimeout(async () => {
+//             setInitializing(definitions);
+//             const plugins = await Promise.all(
+//               definitions.map(async (definition) => {
+//                 const plugin = await initializePlugin(definition).catch((err) => {
+//                   console.error('Failed to initialize plugin:', definition.meta.id, err);
+//                   return undefined;
+//                 });
+//                 setInitializing((initializing) => initializing.filter((plugin) => plugin !== definition));
+//                 return plugin;
+//               }),
+//             ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
+
+//             log('plugins initialized', { plugins });
+//             setLoading(definitions);
+//             await Promise.all(
+//               definitions.map(async (pluginDefinition) => {
+//                 await pluginDefinition.ready?.(plugins);
+//                 setLoading((loading) => loading.filter((plugin) => plugin !== pluginDefinition));
+//               }),
+//             );
+
+//             log('plugins ready', { plugins });
+//             setPlugins(plugins);
+//           });
+
+//           return () => {
+//             clearTimeout(timeout);
+//             void Promise.all(definitions.map((definition) => definition.unload?.()));
+//           };
+//         }, []);
+
+//         if (!plugins) {
+//           if (typeof fallback === 'function') {
+//             const FallbackComponent = fallback;
+//             return <FallbackComponent initializing={initializing} loading={loading} />;
+//           }
+//           return <>{fallback ?? null}</>;
+//         }
+
+//         const ComposedContext = composeContext(plugins);
+
+//         return (
+//           <PluginProvider value={{ plugins, initializing, loading, ready: true }}>
+//             <ComposedContext>{rootComponents(plugins)}</ComposedContext>
+//           </PluginProvider>
+//         );
+//       },
+//     },
+//   };
+// };

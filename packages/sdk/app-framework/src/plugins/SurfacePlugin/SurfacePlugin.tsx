@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
+import { deepSignal, shallow } from 'deepsignal/react';
 import React from 'react';
 
 import { type SurfaceComponent, SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
@@ -39,9 +39,11 @@ export const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
       id: 'dxos.org/plugin/surface',
     },
     ready: async (plugins) => {
-      state.components = filterPlugins(plugins, parseSurfacePlugin).reduce((acc, plugin) => {
-        return { ...acc, [plugin.meta.id]: plugin.provides.surface.component };
-      }, {});
+      state.components = shallow(
+        filterPlugins(plugins, parseSurfacePlugin).reduce((acc, plugin) => {
+          return { ...acc, [plugin.meta.id]: plugin.provides.surface.component };
+        }, {}),
+      );
     },
     provides: {
       surface: state,

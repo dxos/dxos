@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type ReactNode, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 import { createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
@@ -104,11 +104,11 @@ const resolveNodes = (
   };
 
   const nodes = Object.entries(components)
-    .map(([key, component]): ReactNode => {
+    .map(([key, component]) => {
       const result = component(data, props.role);
       return result ? <Wrapper key={key}>{result}</Wrapper> : undefined;
     })
-    .filter((Component): Component is ReactNode => Boolean(Component));
+    .filter((Component): Component is JSX.Element => Boolean(Component));
 
   return props.limit ? nodes.slice(0, props.limit) : nodes;
 };

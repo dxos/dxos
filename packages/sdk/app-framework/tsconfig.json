@@ -30,9 +30,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../app-graph"
     }
   ],
