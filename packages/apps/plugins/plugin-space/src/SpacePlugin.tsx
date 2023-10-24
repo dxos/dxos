@@ -284,18 +284,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const dispatch = intentPlugin?.provides.intent.dispatch;
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
-          if (!clientPlugin) {
-            return;
-          }
+          const client = clientPlugin?.provides.client;
 
-          const client = clientPlugin.provides.client;
-          if (!client.spaces.isReady.get()) {
+          if (!dispatch || !client || !client.spaces.isReady.get()) {
             return;
           }
 
           // Ensure default space is always first.
-          spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
+          spaceToGraphNode({ space: client.spaces.default, parent, dispatch, settings: settings.values });
 
           // Shared spaces section.
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
@@ -315,10 +314,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           const updateSpace = (space: Space, indices: string[], index: number) => {
             client.spaces.default.key.equals(space.key)
-              ? spaceToGraphNode({ space, parent, settings: settings.values, appState: state.appState })
+              ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values, appState: state.appState })
               : spaceToGraphNode({
                   space,
                   parent: groupNode,
+                  dispatch,
                   settings: settings.values,
                   appState: state.appState,
                   defaultIndex: indices[index],
@@ -349,10 +349,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 disposition: 'toolbar',
                 testId: 'spacePlugin.createSpace',
               },
-              intent: {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.CREATE,
-              },
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.CREATE,
+                }),
             },
             {
               id: 'join-space',
@@ -362,15 +363,16 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 disposition: 'toolbar',
                 testId: 'spacePlugin.joinSpace',
               },
-              intent: [
-                {
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.JOIN,
-                },
-                {
-                  action: SplitViewAction.ACTIVATE,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.JOIN,
+                  },
+                  {
+                    action: SplitViewAction.ACTIVATE,
+                  },
+                ]),
             },
           );
 

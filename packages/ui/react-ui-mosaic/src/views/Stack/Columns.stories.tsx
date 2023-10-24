@@ -36,7 +36,7 @@ export default {
   },
 };
 
-export const Adopt = {
+export const Transfer = {
   args: {
     Component: SimpleCard,
     debug: true,

@@ -17,36 +17,20 @@
   ],
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src/**/*.tsx"
   ],
   "references": [
-    {
-      "path": "../../../common/async"
-    },
     {
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/util"
+      "path": "../../../sdk/app-graph"
     },
     {
       "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../../../ui/react-ui"
-    },
-    {
-      "path": "../../../ui/react-ui-theme"
-    },
-    {
-      "path": "../plugin-intent"
     }
   ]
 }
