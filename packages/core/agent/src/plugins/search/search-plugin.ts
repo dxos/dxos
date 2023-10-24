@@ -28,7 +28,7 @@ export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
 
 export class Search extends AbstractPlugin {
   public readonly id = 'search';
-  private readonly _ctx = new Context();
+  private _ctx?: Context;
   private _options?: Options = undefined;
   private _index?: MiniSearch;
 
@@ -63,6 +63,7 @@ export class Search extends AbstractPlugin {
       log.info('Search disabled.');
       return;
     }
+    this._ctx = new Context();
 
     invariant(this._pluginCtx);
     this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
@@ -78,7 +79,7 @@ export class Search extends AbstractPlugin {
         await this._processMessage(message);
       });
 
-      this._ctx.onDispose(unsubscribe);
+      this._ctx?.onDispose(unsubscribe);
     });
 
     this._indexSpaces().catch((error: Error) => log.catch(error));
@@ -89,7 +90,9 @@ export class Search extends AbstractPlugin {
     this._saveIndex();
     this._spaceIndexes.clear();
     this._indexedObjects.clear();
-    void this._ctx.dispose();
+    this._index?.removeAll();
+    this._index = undefined;
+    void this._ctx?.dispose();
     this.statusUpdate.emit();
   }
 
@@ -119,7 +122,7 @@ export class Search extends AbstractPlugin {
     invariant(this._pluginCtx, 'Client is undefined.');
     await this._pluginCtx.client.spaces.isReady.wait();
     const sub = this._pluginCtx.client.spaces.subscribe(process);
-    this._ctx.onDispose(() => sub.unsubscribe());
+    this._ctx?.onDispose(() => sub.unsubscribe());
     await process(this._pluginCtx.client.spaces.get());
   }
 
@@ -149,7 +152,7 @@ export class Search extends AbstractPlugin {
       }),
     };
 
-    this._ctx.onDispose(() => spaceIndex.subscription());
+    this._ctx?.onDispose(() => spaceIndex.subscription());
 
     processObjects(query.objects);
     return spaceIndex;
