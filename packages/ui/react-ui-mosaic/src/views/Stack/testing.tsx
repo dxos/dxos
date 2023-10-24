@@ -26,7 +26,7 @@ export const DemoStack = ({
   types,
   count = 8,
   direction = 'vertical',
-  operation = 'adopt',
+  operation = 'transfer',
   debug,
 }: DemoStackProps) => {
   const [items, setItems] = useState<MosaicDataItem[]>(() => {

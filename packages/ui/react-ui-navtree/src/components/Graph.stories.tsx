@@ -78,7 +78,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
         // This is a rearrange operation
         const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
         activeNode.properties.index = nextIndex ?? 'a0';
-      } else if (activeNode && activeParent && overParent && operation === 'adopt') {
+      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
         activeParent.removeNode(active.item.id);
         overNode.addNode('tree', { ...activeNode });
       }
