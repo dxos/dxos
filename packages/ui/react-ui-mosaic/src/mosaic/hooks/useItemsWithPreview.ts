@@ -51,6 +51,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
 
     switch (strategy) {
       case 'layout-stable':
+        setLastOverParent(overParent);
         if (activeIsChild && !overIsChild && operation !== 'rearrange') {
           // Change the dnd-id of the origin item that may move to a foreign destination
           setItemsWithPreview((sortedItems) =>
