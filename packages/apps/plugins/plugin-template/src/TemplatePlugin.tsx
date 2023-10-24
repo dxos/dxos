@@ -20,7 +20,6 @@ import { objectToGraphNode } from './util';
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   let adapter: GraphNodeAdapter<TypedObject> | undefined;
-
   return {
     meta: {
       id: TEMPLATE_PLUGIN,

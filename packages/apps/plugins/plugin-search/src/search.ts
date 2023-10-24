@@ -35,6 +35,11 @@ export type SearchResult = {
 
 export const filterObjects = <T extends Record<string, any>>(objects: T[], match: RegExp): SearchResult[] => {
   return objects.reduce<SearchResult[]>((results, object) => {
+    // TODO(burdon): Hack to ignore Text objects.
+    if (!object.__meta) {
+      return results;
+    }
+
     const fields = mapObjectToTextFields(object);
     Object.entries(fields).some(([, value]) => {
       const result = value.match(match);
@@ -82,7 +87,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
     const obj = JSON.parse(JSON.stringify(object));
     return Object.keys(obj).filter((key) => key !== 'id' && key[0] !== '_' && key[0] !== '@') as string[];
   } catch (err) {
-    //  Error with TLDraw sketch.
+    // TODO(burdon): Error with TLDraw sketch.
     //  Uncaught Error: Type with the name content has already been defined with a different constructor
     return [];
   }

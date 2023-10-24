@@ -79,7 +79,7 @@ export const TreeViewContainer = ({
       !activeNode ||
       !overNode ||
       !Path.hasRoot(overItem.path, graph.root.id) ||
-      (operation !== 'adopt' && operation !== 'copy')
+      (operation !== 'transfer' && operation !== 'copy')
     ) {
       return false;
     }
@@ -107,7 +107,7 @@ export const TreeViewContainer = ({
       else if (Path.hasChild(over.path, active.path)) {
         return graph.findNode(Path.last(over.path))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
       }
-      // Check if adopt is supported
+      // Check if transfer is supported
       else {
         const overNode = graph.findNode(Path.last(over.path));
         const activeNode = graph.findNode(Path.last(active.path));
@@ -116,7 +116,7 @@ export const TreeViewContainer = ({
           const overAcceptParent = overNode.properties.acceptPersistenceClass?.has(activeClass)
             ? overNode
             : getPersistenceParent(overNode, activeClass);
-          return overAcceptParent ? 'adopt' : 'reject';
+          return overAcceptParent ? 'transfer' : 'reject';
         } else {
           return 'reject';
         }
@@ -139,7 +139,7 @@ export const TreeViewContainer = ({
         if (operation === 'rearrange') {
           activeNode.parent!.properties.onRearrangeChild(activeNode, nextIndex);
         }
-        if (operation === 'adopt') {
+        if (operation === 'transfer') {
           const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
             ? overNode
             : getPersistenceParent(overNode, activeClass);

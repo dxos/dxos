@@ -17,7 +17,6 @@
   "dependencies": {
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
@@ -32,6 +31,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

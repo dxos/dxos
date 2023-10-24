@@ -1,0 +1,67 @@
+{
+  "sourceRoot": "packages/core/echo/echo-query/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/core/echo/echo-query/src/index.ts",
+        "outputPath": "packages/core/echo/echo-query/dist/types",
+        "tsConfig": "packages/core/echo/echo-query/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-query/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-query/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/echo/echo-query/src/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/echo/echo-query",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/echo/echo-query",
+        "resultsPath": "test-results/packages/core/echo/echo-query",
+        "testPatterns": [
+          "packages/core/echo/echo-query/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-query/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

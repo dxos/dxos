@@ -10,12 +10,13 @@ import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
+import { type Space } from '@dxos/client/echo';
 import { range, TestObjectGenerator } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ExplorerMain } from './ExplorerMain';
+import { Explorer } from './Explorer';
 
 faker.seed(1);
 const generator = new TestObjectGenerator();
@@ -31,6 +32,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const Story = () => {
   const client = useClient();
+  const [space, setSpace] = useState<Space>();
   const [view, setView] = useState<ViewType>();
   useEffect(() => {
     const space = client.spaces.default;
@@ -38,19 +40,19 @@ const Story = () => {
     const factory = generator.factories.project;
     const objects = range(factory.createObject, 10);
     objects.forEach((object) => space.db.add(object));
+    setSpace(space);
     setView(view);
   }, []);
 
-  if (!view) {
+  if (!space || !view) {
     return null;
   }
 
-  // TODO(burdon): Create storybook util with surface.
-  return <ExplorerMain />;
+  return <Explorer space={space} />;
 };
 
 export default {
-  component: ExplorerMain,
+  component: Explorer,
   render: Story,
   decorators: [
     FullscreenDecorator(),

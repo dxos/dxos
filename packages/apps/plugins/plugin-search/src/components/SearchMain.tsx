@@ -18,6 +18,7 @@ export const SearchMain = () => {
   // TODO(burdon): Query agent/cross-space.
   const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.active;
+  // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const { objects } = space?.db.query() ?? {};
   const results = useSearchResults(objects);
 

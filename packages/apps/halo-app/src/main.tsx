@@ -11,8 +11,8 @@ import { ClientPlugin } from '@braneframe/plugin-client';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
-import { ThemePlugin, type TranslationsProvides } from '@braneframe/plugin-theme';
-import { type PluginDefinition, PluginProvider } from '@dxos/app-framework';
+import { ThemePlugin } from '@braneframe/plugin-theme';
+import { type PluginDefinition, type TranslationsProvides, createApp } from '@dxos/app-framework';
 import { Config, Defaults } from '@dxos/config';
 import { TypedObject } from '@dxos/echo-schema';
 
@@ -23,40 +23,42 @@ import translations from './translations';
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
 
+const App = createApp({
+  fallback: (
+    <div className='flex h-screen justify-center items-center'>
+      <ProgressBar indeterminate />
+    </div>
+  ),
+  plugins: [
+    TelemetryPlugin({ namespace: 'halo-app', config: new Config(Defaults()) }),
+    ThemePlugin({ appName: 'HALO' }),
+    // Outside of error boundary so that updates are not blocked by errors.
+    PwaPlugin(),
+    // Inside theme provider so that errors are styled.
+    ErrorPlugin(),
+    ClientPlugin(),
+    {
+      meta: {
+        id: 'dxos.org/plugin/halo-app',
+      },
+      provides: {
+        translations,
+        components: {
+          default: () => {
+            return (
+              <div className='flex h-screen justify-center items-center'>
+                <OpenVault />
+              </div>
+            );
+          },
+        },
+      },
+    } as PluginDefinition<TranslationsProvides>,
+  ],
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PluginProvider
-      fallback={
-        <div className='flex h-screen justify-center items-center'>
-          <ProgressBar indeterminate />
-        </div>
-      }
-      plugins={[
-        TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
-        ThemePlugin({ appName: 'HALO' }),
-        // Outside of error boundary so that updates are not blocked by errors.
-        PwaPlugin(),
-        // Inside theme provider so that errors are styled.
-        ErrorPlugin(),
-        ClientPlugin(),
-        {
-          meta: {
-            id: 'dxos.org/plugin/halo-app',
-          },
-          provides: {
-            translations,
-            components: {
-              default: () => {
-                return (
-                  <div className='flex h-screen justify-center items-center'>
-                    <OpenVault />
-                  </div>
-                );
-              },
-            },
-          },
-        } as PluginDefinition<TranslationsProvides>,
-      ]}
-    />
+    <App />
   </StrictMode>,
 );

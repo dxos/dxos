@@ -15,7 +15,7 @@ import { SearchRequest } from '@dxos/protocols/proto/dxos/agent/indexing';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Indexing } from './indexing-plugin';
+import { IndexingPlugin } from './indexing-plugin';
 
 const TEST_DIR = 'tmp/dxos/testing/agent/indexing';
 
@@ -111,7 +111,7 @@ describe('IndexingPlugin', () => {
       space.db.add(new Expando(documents[0]));
       await space.db.flush();
     }
-    const index = new Indexing();
+    const index = new IndexingPlugin();
     await index.initialize({ client: client1, clientServices: services1, plugins: [] });
     await index.open();
     afterTest(() => index.close());

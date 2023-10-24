@@ -16,9 +16,10 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
 
-const EMPTY_ROW_ID = '__new';
-
-// TODO(burdon): Hanging edit missing if no initial rows.
+// TODO(burdon): Factor out echo fn to update when changed.
+const reactDeps = (...obj: TypedObject[]) => {
+  return JSON.stringify(obj);
+};
 
 export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
@@ -66,7 +67,7 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
 
     const tableDefs: TableDef[] = tables.map((table) => ({
       id: table.schema.id,
-      name: table.schema.typename ?? table.title,
+      name: table.schema.typename ?? table.title, // TODO(burdon): Typename?
       columns: table.schema.props.map(schemaPropMapper(table)),
     }));
 
@@ -92,8 +93,8 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
       onRowUpdate: (object, prop, value) => {
         object[prop] = value;
         if (object === newObject) {
-          space!.db.add(newObject);
           // TODO(burdon): Silent exception if try to add plain object directly.
+          space!.db.add(newObject);
           setNewObject(new Expando({}, { schema: table.schema }));
         }
       },
@@ -104,7 +105,7 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
     });
 
     return builder.createColumns();
-  }, [space, tables, JSON.stringify(table), JSON.stringify(table.schema)]); // TODO(burdon): Impl. echo useMemo-like hook.
+  }, [space, tables, reactDeps(table, table.schema), newObject]);
 
   const handleColumnResize = (state: Record<string, number>) => {
     Object.entries(state).forEach(([id, size]) => {
@@ -119,7 +120,7 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
       <DensityProvider density='fine'>
         <div className='flex grow m-4 overflow-hidden'>
           <Table<TypedObject>
-            keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
+            keyAccessor={(row) => row.id ?? '__new'}
             columns={columns}
             data={rows}
             border
