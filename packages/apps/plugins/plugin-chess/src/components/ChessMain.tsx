@@ -10,24 +10,24 @@ import { invariant } from '@dxos/invariant';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const ChessMain = ({ data: object }: { data: Game }) => {
+export const ChessMain = ({ game }: { game: Game }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
-    if (!model || object.pgn !== model?.chess.pgn()) {
+    if (!model || game.pgn !== model?.chess.pgn()) {
       const chess = new Chess();
-      if (object.pgn) {
-        chess.loadPgn(object.pgn);
+      if (game.pgn) {
+        chess.loadPgn(game.pgn);
       }
 
       setModel({ chess });
     }
-  }, [object.pgn]);
+  }, [game.pgn]);
 
   const handleUpdate = (move: ChessMove) => {
     invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
-      object!.pgn = model.chess.pgn();
+      game!.pgn = model.chess.pgn();
       setModel({ ...model });
     }
   };

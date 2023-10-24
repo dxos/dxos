@@ -5,12 +5,10 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Sketch as SketchType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { SketchMain, SketchSection, SketchSlide } from './components';
 import translations from './translations';
@@ -35,7 +33,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       //     return tile;
       //   });
       // }
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides.intent.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({ dispatch, filter: SketchType.filter(), adapter: objectToGraphNode });
@@ -47,13 +45,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${SKETCH_PLUGIN}/create`,
@@ -70,7 +68,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -95,23 +93,19 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           },
         ],
       },
-      component: (data, role) => {
-        // TODO(burdon): SurfaceResolver error if component not defined.
-        if (!data || typeof data !== 'object' || !isSketch(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return SketchMain;
-          case 'section':
-            return SketchSection;
-          case 'presenter-slide':
-            return SketchSlide;
-        }
-      },
-      components: {
-        SketchMain,
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
+            case 'section':
+              return isSketch(data.object) ? <SketchSection sketch={data.object} /> : null;
+            case 'presenter-slide':
+              return isSketch(data.object) ? <SketchSlide sketch={data.object} /> : null;
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

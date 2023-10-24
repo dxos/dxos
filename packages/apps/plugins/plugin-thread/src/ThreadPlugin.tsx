@@ -5,12 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Thread as ThreadType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain, ThreadSidebar } from './components';
 import translations from './translations';
@@ -29,8 +27,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       id: THREAD_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides.intent.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({ dispatch, filter: ThreadType.filter(), adapter: objectToGraphNode });
       }
@@ -41,13 +39,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${THREAD_PLUGIN}/create`,
@@ -64,7 +62,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -75,22 +73,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        switch (role) {
-          case 'main': {
-            if (!isThread(data)) {
-              return null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
 
-            return ThreadMain;
-          }
+            case 'context-thread':
+              return <ThreadSidebar />;
 
-          case 'context-thread':
-            return ThreadSidebar;
-        }
-      },
-      components: {
-        ThreadMain,
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

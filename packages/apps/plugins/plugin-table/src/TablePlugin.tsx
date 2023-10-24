@@ -5,12 +5,10 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Table as TableType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy, Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
-import { findPlugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { TableMain } from './components';
 import translations from './translations';
@@ -29,7 +27,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       id: TABLE_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({
@@ -45,13 +43,13 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${TABLE_PLUGIN}/create`,
@@ -68,7 +66,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: SplitViewAction.ACTIVATE,
+                  action: LayoutAction.ACTIVATE,
                 },
               ]),
             properties: {
@@ -79,18 +77,16 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? TableMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <TableMain table={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {

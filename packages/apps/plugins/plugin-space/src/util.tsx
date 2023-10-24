@@ -8,8 +8,8 @@ import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type DispatchIntent } from '@braneframe/plugin-intent';
 import { type AppState } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';

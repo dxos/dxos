@@ -21,7 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../ui/react-ui"
@@ -33,22 +33,16 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-stack"

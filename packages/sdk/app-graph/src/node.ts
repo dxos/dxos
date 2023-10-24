@@ -99,3 +99,6 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   ): Action<TActionProperties>[];
   removeAction(id: string): Action;
 };
+
+export const isGraphNode = (data: unknown): data is Node =>
+  data && typeof data === 'object' ? 'id' in data && 'label' in data : false;
