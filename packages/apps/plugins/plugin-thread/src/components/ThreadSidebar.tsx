@@ -14,13 +14,13 @@ import { getSize } from '@dxos/react-ui-theme';
 import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
-export const ThreadSidebar: FC<{ thread: ThreadType }> = ({ thread: initialThread }) => {
+export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThread }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
   const space = spacePlugin?.provides.space.active;
-  const [thread, setThread] = useState<ThreadType | null>(initialThread);
+  const [thread, setThread] = useState(initialThread);
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
