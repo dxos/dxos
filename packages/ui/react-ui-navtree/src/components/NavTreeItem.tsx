@@ -3,7 +3,7 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { keyString } from '@braneframe/plugin-graph';
 import {
@@ -41,13 +41,16 @@ const hoverableDescriptionIcons =
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component, compare } = useContainer();
-  const sortedNodes = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable', compare });
+  const sortedItems = useMemo(() => {
+    return compare ? [...nodes].sort(compare) : nodes;
+  }, [nodes, compare]);
+  const itemsWithPreview = useItemsWithPreview({ path, items: sortedItems, strategy: 'layout-stable', compare });
 
   return (
     <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={sortedNodes} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
         <Tree.Branch>
-          {sortedNodes.map((node, index) => (
+          {itemsWithPreview.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
               item={{ id: node.id, node, level }}
