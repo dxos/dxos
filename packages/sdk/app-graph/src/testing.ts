@@ -33,7 +33,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
     parent.addAction({
       id: `${parent.id}-${id}`,
       label: `${parent.id}-${id}`,
-      intent: { action: 'test' },
+      invoke: () => {},
     });
 
     nodes.set(parent.id, parent);
@@ -60,7 +60,7 @@ export const createTestNodeBuilder = (id: string, depth = 1) => {
     return parent.removeNode(id);
   };
 
-  const addAction = (parentId: string, action: Pick<Action, 'id' | 'label'> & Partial<Action>) => {
+  const addAction = (parentId: string, action: Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action>) => {
     const parent = nodes.get(parentId);
     if (!parent) {
       return;

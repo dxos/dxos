@@ -4,11 +4,10 @@
 
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type Graph, GraphBuilder, type NodeBuilder } from '@dxos/app-graph';
+import { type PluginDefinition } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { type Graph, GraphBuilder, type NodeBuilder } from './graph';
 import { type GraphPluginProvides, type WithPlugins } from './types';
 import { graphPlugins } from './util';
 
@@ -25,8 +24,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       id: 'dxos.org/plugin/graph',
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      const builder = new GraphBuilder(intentPlugin?.provides.intent.dispatch);
+      const builder = new GraphBuilder();
 
       // TODO(burdon): Unify.
       graphPlugins(plugins)

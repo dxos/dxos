@@ -166,12 +166,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       });
 
-      const filter = (document: Document) =>
-        document.__typename === Document.schema.typename && filters.every((filter) => filter(document));
-      adapter = new GraphNodeAdapter({ filter, adapter: documentToGraphNode });
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const dispatch = intentPlugin?.provides.intent.dispatch;
+
+      if (dispatch) {
+        const filter = (document: Document) =>
+          document.__typename === Document.schema.typename && filters.every((filter) => filter(document));
+        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
+      }
 
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const document = clientPlugin.provides.client.spaces.default.db.add(
           new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
@@ -202,11 +206,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        nodes: (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
           const space = parent.data;
 
           parent.addAction({
@@ -217,19 +222,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               testId: 'spacePlugin.createDocument',
               disposition: 'toolbar',
             },
-            intent: [
-              {
-                plugin: MARKDOWN_PLUGIN,
-                action: MarkdownAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: space.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: MARKDOWN_PLUGIN,
+                  action: MarkdownAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: space.key.toHex() },
+                },
+                {
+                  action: SplitViewAction.ACTIVATE,
+                },
+              ]),
           });
 
           return adapter?.createNodes(space, parent);

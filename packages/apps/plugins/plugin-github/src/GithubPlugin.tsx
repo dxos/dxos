@@ -7,6 +7,7 @@ import get from 'lodash.get';
 import React from 'react';
 
 import { type Node, type GraphProvides } from '@braneframe/plugin-graph';
+import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import {
   type SpacePluginProvides,
@@ -85,7 +86,11 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
         return presentationNode;
       };
 
-      adapter = new GraphNodeAdapter({ filter, adapter: objectToGraphNode, createGroup });
+      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: objectToGraphNode, createGroup });
+      }
     },
     unload: async () => {
       settings.close();
