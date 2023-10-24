@@ -54,10 +54,10 @@ aliases:
         equal: [ report, << pipeline.parameters.mode >> ]
       steps:
         - run:
-            command: ./.circleci/scripts/send-test-report.sh failure
+            command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB failure
             when: on_fail
         - run:
-            command: ./.circleci/scripts/send-test-report.sh success
+            command: ./.circleci/scripts/send-test-report.sh $CIRCLE_JOB success
             when: on_success
   # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
   - &install_datadog
