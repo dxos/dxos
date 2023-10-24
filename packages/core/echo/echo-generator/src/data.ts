@@ -105,7 +105,6 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaTypes> = {
 
   person: (provider) => {
     const organizations = provider?.('organization');
-    console.log('>>>>>>>>>', organizations);
     return {
       name: faker.person.fullName(),
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,

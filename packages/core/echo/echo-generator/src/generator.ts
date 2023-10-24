@@ -7,7 +7,7 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Expando, type Space } from '@dxos/client/echo';
+import { Expando, type Schema, type Space } from '@dxos/client/echo';
 
 import { type TestGeneratorMap, type TestObjectProvider, type TestSchemaMap } from './types';
 import { range } from './util';
@@ -18,10 +18,14 @@ import { range } from './util';
 export class TestObjectGenerator<T extends string> {
   // prettier-ignore
   constructor(
-    private readonly schema: TestSchemaMap<T>,
+    public readonly schema: TestSchemaMap<T>,
     private readonly _generators: TestGeneratorMap<T>,
     private readonly _provider?: TestObjectProvider<T>
   ) {}
+
+  get schemas(): Schema[] {
+    return Object.values(this.schema);
+  }
 
   createObject({ types }: { types?: T[] } = {}): Expando {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this.schema) as T[]));
@@ -43,13 +47,13 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   constructor(private readonly space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
     super(schema, generators, (type: T) => {
       // TODO(burdon): Query by schema.
-      let i = 0;
       const { objects } = space.db.query((object) => {
-        console.log('???', i++, object.id.slice(0, 8), object.__schema?.id.slice(0, 8), schema[type].id.slice(0, 8));
         return object.__schema === schema[type];
       });
       return objects;
     });
+
+    this.schemas.forEach((schema) => space.db.add(schema));
   }
 
   override createObject({ types }: { types?: T[] } = {}): Expando {

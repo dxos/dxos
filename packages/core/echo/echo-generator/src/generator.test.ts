@@ -14,12 +14,11 @@ import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 faker.seed(3);
 
 describe('TestObjectGenerator', () => {
-  test.skip('basic', () => {
+  test('basic', () => {
     const generator = new TestObjectGenerator(testSchemas(), testObjectGenerators);
 
     const object = generator.createObject({ types: ['person'] });
     expect(object).to.exist;
-    console.log(JSON.stringify(object, undefined, 2));
   });
 
   test('with space', async () => {
@@ -29,13 +28,13 @@ describe('TestObjectGenerator', () => {
     const space = await client.spaces.create();
     const generator = new SpaceObjectGenerator(space, testSchemas(), testObjectGenerators);
 
+    // Create org.
     const organization = generator.createObject({ types: ['organization'] });
-    console.log(JSON.stringify(organization, undefined, 2));
-    expect(organization.__schema).to.exist; // TODO(burdon): undefined.
+    expect(organization.__schema).to.exist;
 
-    console.log('::::', space.db.objects.length);
-    const objects = generator.createObjects({ types: ['person'], count: 1 });
-    console.log(JSON.stringify(objects, undefined, 2));
+    // Expect at least one person to have org field.
+    const objects = generator.createObjects({ types: ['person'], count: 10 });
+    expect(objects.some((object) => object.org === organization)).to.be.true;
 
     await client.destroy();
   });
