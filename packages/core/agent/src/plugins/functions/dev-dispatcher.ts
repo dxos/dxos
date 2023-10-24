@@ -21,7 +21,7 @@ type Registration = {
 export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegistryService {
   private _registrations: Registration[] = [];
 
-  async register(request: RegisterRequest): Promise<RegisterResponse> {
+  async register(request: RegisterRequest) : Promise<RegisterResponse> {
     const registrationId = randomUUID();
     this._registrations.push({
       id: registrationId,

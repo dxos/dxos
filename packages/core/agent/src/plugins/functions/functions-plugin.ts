@@ -7,6 +7,7 @@ import express from 'express';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
 import { AbstractPlugin } from '../plugin';
+import { Server } from 'http';
 
 const DEFAULT_PORT = 7000;
 
@@ -19,6 +20,7 @@ export class FunctionsPlugin extends AbstractPlugin {
   private readonly _devDispatcher = new DevFunctionDispatcher();
 
   private _server?: ReturnType<typeof express>;
+  private _httpListener?: Server;
 
   constructor(private readonly _options: FunctionsPluginOptions) {
     super();
@@ -61,12 +63,13 @@ export class FunctionsPlugin extends AbstractPlugin {
     });
 
     const port = this._options.port ?? DEFAULT_PORT;
-    this._server.listen(port, () => {
+    this._httpListener = this._server.listen(port, () => {
       console.log('functions server listening', { port });
     });
   }
 
   async close() {
+    this._httpListener?.close();
     this.host.serviceRegistry.removeService('FunctionRegistryService');
   }
 }
