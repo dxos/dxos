@@ -81,7 +81,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             }
 
             case 'context-thread':
-              return isThread(data.active) ? <ThreadSidebar thread={data.active} /> : null;
+              return <ThreadSidebar />;
 
             default:
               return null;
