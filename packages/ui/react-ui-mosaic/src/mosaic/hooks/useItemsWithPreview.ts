@@ -104,7 +104,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
     }
   }, [operation, activeItem, overItem, overParent, lastOverParent, compare, path, items]);
 
-  // TODO(thure): In order to avoid render glitching, the array of item IDs in order may need to change independently
-  //  from the set of items to be rendered.
+  // In order to avoid render glitching, rather than waiting for the effect to run,
+  // immediately return the new items after dropping an item into a new path.
   return isEquivalent(sortedItems, itemsWithPreview) ? sortedItems : itemsWithPreview;
 };
