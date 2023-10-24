@@ -5,7 +5,6 @@
 import { useEffect, useState } from 'react';
 
 import { useMosaic } from './useMosaic';
-import { type MosaicCompareDataItem } from '../Container';
 import { type MosaicDataItem } from '../types';
 import { Path } from '../util';
 
@@ -17,12 +16,10 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({
   path,
   items,
   strategy = 'default',
-  compare,
 }: {
   path: string;
   items: T[];
   strategy?: 'default' | 'layout-stable';
-  compare?: MosaicCompareDataItem;
 }): T[] => {
   const { operation, activeItem, overItem } = useMosaic();
   const [itemsWithPreview, setItemsWithPreview] = useState(items);

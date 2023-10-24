@@ -59,7 +59,7 @@ const TreeRoot = ({ items }: { items: TreeData[] }) => {
   const sortedItems = useMemo(() => {
     return compare ? [...items].sort(compare) : items;
   }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable', compare });
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
@@ -108,7 +108,7 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const sortedItems = useMemo(() => {
     return compare ? [...items].sort(compare) : items;
   }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path, strategy: 'layout-stable', compare });
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body className='pis-4'>

@@ -44,7 +44,7 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
   const sortedItems = useMemo(() => {
     return compare ? [...nodes].sort(compare) : nodes;
   }, [nodes, compare]);
-  const itemsWithPreview = useItemsWithPreview({ path, items: sortedItems, strategy: 'layout-stable', compare });
+  const itemsWithPreview = useItemsWithPreview({ path, items: sortedItems, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body>

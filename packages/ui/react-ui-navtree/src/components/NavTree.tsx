@@ -17,7 +17,7 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   const sortedItems = useMemo(() => {
     return compare ? [...node.children].sort(compare) : node.children;
   }, [node.children, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable', compare });
+  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
 
   return (
     <Mosaic.SortableContext id={id} items={itemsWithPreview} direction='vertical'>
