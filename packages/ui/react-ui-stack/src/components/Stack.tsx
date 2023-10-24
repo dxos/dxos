@@ -49,7 +49,6 @@ export const Stack = ({
   onRemoveSection,
 }: StackProps) => {
   const { operation, overItem } = useMosaic();
-  const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   const Component: MosaicTileComponent<StackSectionItem, HTMLLIElement> = useMemo(
     () =>
@@ -78,7 +77,7 @@ export const Stack = ({
       <Mosaic.DroppableTile
         path={id}
         className={className}
-        item={{ id, items: itemsWithPreview }}
+        item={{ id, items }}
         Component={StackTile}
         isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'adopt')}
       />
@@ -89,13 +88,14 @@ export const Stack = ({
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ({ className, path, isOver, item: { items } }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { Component } = useContainer();
+    const { Component, compare } = useContainer();
+    const itemsWithPreview = useItemsWithPreview({ path, items, compare });
 
     return (
       <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-1', isOver && dropRing)}>
-        {items.length > 0 ? (
-          <Mosaic.SortableContext items={items} direction='vertical'>
-            {items.map((item, index) => (
+        {itemsWithPreview.length > 0 ? (
+          <Mosaic.SortableContext items={itemsWithPreview} direction='vertical'>
+            {itemsWithPreview.map((item, index) => (
               <Mosaic.SortableTile key={item.id} item={item} path={path} position={index} Component={Component!} />
             ))}
           </Mosaic.SortableContext>
