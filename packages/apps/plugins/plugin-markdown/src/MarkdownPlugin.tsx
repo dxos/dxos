@@ -308,10 +308,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
 
             case 'settings': {
-              if (data.content === 'dxos.org/plugin/layout/ProfileSettings') {
-                return <MarkdownSettings />;
-              }
-              break;
+              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <MarkdownSettings /> : null;
             }
 
             // TODO(burdon): Review with @thure.

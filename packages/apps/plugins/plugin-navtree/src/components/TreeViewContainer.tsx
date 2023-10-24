@@ -179,8 +179,8 @@ export const TreeViewContainer = ({
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: 'dxos.org/plugin/layout/action/open-dialog',
-                          data: { content: 'dxos.org/plugin/layout/ProfileSettings' },
+                          action: LayoutAction.OPEN_DIALOG,
+                          data: { component: 'dxos.org/plugin/layout/ProfileSettings' },
                         });
                       }}
                     >
@@ -203,7 +203,7 @@ export const TreeViewContainer = ({
                       {...(!navigationSidebarOpen && { tabIndex: -1 })}
                       onClick={() => {
                         void dispatch({
-                          action: 'dxos.org/plugin/layout/action/toggle-sidebar',
+                          action: LayoutAction.TOGGLE_SIDEBAR,
                           data: { state: false },
                         });
                       }}

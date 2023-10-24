@@ -181,6 +181,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: (data, role) => {
+          if (role === 'settings' && data.component === 'dxos.org/plugin/layout/ProfileSettings') {
+            return <DebugSettings />;
+          }
+
           if (!settings.values.debug) {
             return null;
           }
@@ -195,8 +199,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               break;
             case 'status':
               return <DebugStatus />;
-            case 'settings':
-              return data.content === 'dxos.org/plugin/layout/ProfileSettings' ? <DebugSettings /> : null;
           }
 
           return null;

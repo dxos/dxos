@@ -130,12 +130,12 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
           <DensityProvider density='fine'>
             <Dialog.Overlay>
               {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
-              {dialogContent === 'dxos.org/plugin/layout/ProfileSettings' ? (
+              {dialogContent.component === 'dxos.org/plugin/layout/ProfileSettings' ? (
                 <Dialog.Content>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                   {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}
                   <div className='flex flex-col my-2 gap-4'>
-                    <Surface role='settings' data={{ content: dialogContent }} />
+                    <Surface role='settings' data={dialogContent} />
                   </div>
                   <Dialog.Close asChild>
                     <Button variant='primary' classNames='mbs-2'>
@@ -145,7 +145,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
                 </Dialog.Content>
               ) : (
                 <Dialog.Content>
-                  <Surface role='dialog' data={{ content: dialogContent }} />
+                  <Surface role='dialog' data={dialogContent} />
                 </Dialog.Content>
               )}
             </Dialog.Overlay>

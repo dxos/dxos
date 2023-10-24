@@ -1174,9 +1174,6 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -1211,6 +1208,9 @@ importers:
       '@braneframe/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../../core/echo/echo-generator
