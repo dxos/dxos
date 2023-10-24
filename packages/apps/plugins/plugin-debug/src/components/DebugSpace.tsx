@@ -78,7 +78,7 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
     } else {
       start(
         async () => {
-          await generator.updateObject();
+          await generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -93,7 +93,7 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
     if (createTables) {
       generator.createTables();
     } else {
-      generator.createObject();
+      generator.createDocument();
     }
   };
 

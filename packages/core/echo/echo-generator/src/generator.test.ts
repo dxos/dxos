@@ -28,6 +28,9 @@ describe('TestObjectGenerator', () => {
     const space = await client.spaces.create();
     const generator = createSpaceObjectGenerator(space);
 
+    // Add schemas.
+    generator.addSchemas();
+
     // Create org object.
     const organization = generator.createObject({ types: ['organization'] });
     expect(organization.__schema).to.exist;

@@ -16,9 +16,9 @@ import { type TestGeneratorMap, type TestSchemaMap } from './types';
 export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
-type TestSchemaTypes = 'document' | 'organization' | 'person' | 'project';
+export type TestSchemaType = 'document' | 'organization' | 'person' | 'project';
 
-export const testSchemas = (): TestSchemaMap<TestSchemaTypes> => {
+export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = new Schema({
     props: [
       {
@@ -92,7 +92,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaTypes> => {
   return { document, organization, person, project };
 };
 
-export const testObjectGenerators: TestGeneratorMap<TestSchemaTypes> = {
+export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   document: () => ({
     title: faker.lorem.sentence(3),
     content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),

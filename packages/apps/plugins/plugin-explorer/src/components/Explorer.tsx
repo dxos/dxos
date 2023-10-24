@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 
-import { type Space, type TypedObject } from '@dxos/client/echo';
+import { type Schema, type Space, type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 
@@ -17,8 +17,17 @@ type Slots = {
 
 const slots: Slots = {};
 
+const colors = [
+  '[&>circle]:!fill-red-300',
+  '[&>circle]:!fill-green-300',
+  '[&>circle]:!fill-blue-300',
+  '[&>circle]:!fill-orange-300',
+  '[&>circle]:!fill-purple-300',
+];
+
 export const Explorer: FC<{ space: Space }> = ({ space }) => {
   const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+  const [colorMap] = useState(new Map<Schema, string>());
 
   return (
     <SVGContextProvider>
@@ -32,7 +41,24 @@ export const Explorer: FC<{ space: Space }> = ({ space }) => {
             arrows
             labels={{
               text: (node: GraphLayoutNode<TypedObject>) => {
-                return node.data?.label ?? node.data?.title ?? node.data?.name;
+                // TODO(burdon): Use schema.
+                return node.data?.label ?? node.data?.title ?? node.data?.name ?? node.data?.id.slice(0, 8);
+              },
+            }}
+            attributes={{
+              node: (node: GraphLayoutNode<TypedObject>) => {
+                let className: string | undefined;
+                if (node.data?.__schema) {
+                  className = colorMap.get(node.data.__schema);
+                  if (!className) {
+                    className = colors[colorMap.size % colors.length];
+                    colorMap.set(node.data.__schema, className);
+                  }
+                }
+
+                return {
+                  class: className,
+                };
               },
             }}
           />

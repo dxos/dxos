@@ -38,7 +38,8 @@ const Story = () => {
     const view = space.db.add(new ViewType({}));
 
     const generator = createSpaceObjectGenerator(space);
-    generator.createObjects({ count: 10 });
+    generator.addSchemas();
+    generator.createObjects({ count: 30 });
 
     setSpace(space);
     setView(view);

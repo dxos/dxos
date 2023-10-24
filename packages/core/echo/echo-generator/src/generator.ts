@@ -44,19 +44,22 @@ export class TestObjectGenerator<T extends string> {
  * Typed object generator for a space.
  */
 export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<T> {
-  constructor(private readonly space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
+  constructor(private readonly _space: Space, schema: TestSchemaMap<T>, generators: TestGeneratorMap<T>) {
     super(schema, generators, (type: T) => {
       // TODO(burdon): Query by schema.
-      const { objects } = space.db.query((object) => {
+      const { objects } = this._space.db.query((object) => {
         return object.__schema === schema[type];
       });
+
       return objects;
     });
+  }
 
-    this.schemas.forEach((schema) => space.db.add(schema));
+  addSchemas() {
+    this.schemas.forEach((schema) => this._space.db.add(schema));
   }
 
   override createObject({ types }: { types?: T[] } = {}): Expando {
-    return this.space.db.add(super.createObject({ types }));
+    return this._space.db.add(super.createObject({ types }));
   }
 }
