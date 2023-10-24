@@ -8,6 +8,11 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.1
 
+parameters:
+  report:
+    type: boolean
+    default: false
+
 aliases:
   - &docker_image
     image: ghcr.io/dxos/circleci-node:latest
@@ -64,14 +69,9 @@ jobs:
     # Run the job on ramdisk for optimal performance.
     # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
     working_directory: /mnt/ramdisk/work
-    
-    parameters:
-      report:
-        type: boolean
-        default: false
 
     steps:
-      - run: echo << parameters.report >>
+      - run: echo << pipeline.parameters.report >>
       - *ram_cache_configure
       - checkout
       - *ram_cache_restore
@@ -102,12 +102,8 @@ jobs:
       - *docker_image
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
-    parameters:
-      report:
-        type: boolean
-        default: false
     steps:
-      - run: echo << parameters.report >>
+      - run: echo << pipeline.parameters.report >>
       - checkout
       - *cache_restore
       - run: pnpm install
@@ -191,6 +187,7 @@ workflows:
                 - main
                 - /^rc-.*/
                 - /^hotfix-.*/
+                - /^release-please-.*/
           context:
             - Github
 
