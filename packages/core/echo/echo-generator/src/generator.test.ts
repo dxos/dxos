@@ -8,15 +8,15 @@ import { expect } from 'chai';
 import { Client } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { createSpaceObjectGenerator, testObjectGenerators, testSchemas } from './data';
-import { TestObjectGenerator } from './generator';
+import { createSpaceObjectGenerator, createTestObjectGenerator } from './data';
 
 faker.seed(3);
 
 describe('TestObjectGenerator', () => {
   test('basic', () => {
-    const generator = new TestObjectGenerator(testSchemas(), testObjectGenerators);
+    const generator = createTestObjectGenerator();
 
+    // Create raw object.
     const object = generator.createObject({ types: ['person'] });
     expect(object).to.exist;
   });
@@ -28,11 +28,11 @@ describe('TestObjectGenerator', () => {
     const space = await client.spaces.create();
     const generator = createSpaceObjectGenerator(space);
 
-    // Create org.
+    // Create org object.
     const organization = generator.createObject({ types: ['organization'] });
     expect(organization.__schema).to.exist;
 
-    // Expect at least one person to have org field.
+    // Expect at least one person object with a linked org reference.
     const objects = generator.createObjects({ types: ['person'], count: 10 });
     expect(objects.some((object) => object.org === organization)).to.be.true;
 
