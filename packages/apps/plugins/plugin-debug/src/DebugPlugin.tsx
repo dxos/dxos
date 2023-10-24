@@ -7,7 +7,7 @@ import { batch } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type Graph } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import {
   getPlugin,
   resolvePlugin,
@@ -17,9 +17,9 @@ import {
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space } from '@dxos/react-client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
-import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -27,10 +27,6 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN);
-
-  const nodeIds = new Set<string>();
-  const isDebug = (data: unknown) =>
-    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
 
   return {
     meta: {
@@ -99,13 +95,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           // Root debug node.
           subscriptions.push(
             settings.values.$debug!.subscribe((debug) => {
-              const nodeId = parent.id + '-debug';
-              nodeIds.add(nodeId);
+              const nodeId = 'debug';
               if (debug) {
                 const [root] = parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
-                  label: 'Debug',
-                  data: { id: nodeId, graph: graphPlugin?.provides.graph },
+                  label: ['debug label', { ns: DEBUG_PLUGIN }],
+                  data: { graph: graphPlugin?.provides.graph },
                 });
 
                 root.addAction({
@@ -129,16 +124,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   clientPlugin.provides.client.spaces.subscribe((spaces) => {
                     batch(() => {
                       spaces.forEach((space) => {
-                        const nodeId = parent.id + '-' + space.key.toHex();
-                        if (!nodeIds.has(nodeId)) {
-                          nodeIds.add(nodeId);
-                          root.addNode(DEBUG_PLUGIN, {
-                            id: nodeId,
-                            label: space.key.truncate(),
-                            icon: (props: IconProps) => <Bug {...props} />,
-                            data: { id: nodeId, graph: graphPlugin?.provides.graph, space },
-                          });
-                        }
+                        root.addNode(DEBUG_PLUGIN, {
+                          id: `${space.key.toHex()}-debug`,
+                          label: space.key.truncate(),
+                          icon: (props: IconProps) => <Bug {...props} />,
+                          data: { space },
+                        });
                       });
                     });
                   }).unsubscribe,
@@ -180,8 +171,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       surface: {
-        component: (data, role) => {
-          if (role === 'settings' && data.component === 'dxos.org/plugin/layout/ProfileSettings') {
+        component: ({ component, active }, role) => {
+          if (role === 'settings' && component === 'dxos.org/plugin/layout/ProfileSettings') {
             return <DebugSettings />;
           }
 
@@ -191,12 +182,14 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
           switch (role) {
             case 'main':
-              if (isDebug(data)) {
-                return <DebugMain graph={data.graph as Graph} space={data.space as Space | undefined} />;
-              } else if (data.active === 'devtools') {
-                return <DevtoolsMain />;
-              }
-              break;
+              return active === 'devtools' ? (
+                <DevtoolsMain />
+              ) : !active || typeof active !== 'object' ? null : 'space' in active &&
+                active.space instanceof SpaceProxy ? (
+                <DebugSpace space={active.space} />
+              ) : 'graph' in active && active.graph instanceof Graph ? (
+                <DebugGlobal graph={active.graph} />
+              ) : null;
             case 'status':
               return <DebugStatus />;
           }

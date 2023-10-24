@@ -7,40 +7,26 @@ import {
   DownloadSimple,
   Flag,
   FlagPennant,
-  Gauge,
-  Graph as GraphIcon,
-  Gear,
   HandPalm,
   Play,
   Plus,
   PlusMinus,
   Timer,
-  Toolbox,
   UserCirclePlus,
-  Warning,
 } from '@phosphor-icons/react';
-import { formatDistance } from 'date-fns';
-import React, {
-  type FC,
-  type PropsWithChildren,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { type Graph } from '@braneframe/plugin-graph';
 import { type Space } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useConfig } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { useSpaceInvitation } from '@dxos/react-client/echo';
-import { Button, DensityProvider, Input, Main, ToggleGroup, ToggleGroupItem, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { Json, Tree } from './Tree';
+import { DebugPanel } from './DebugPanel';
+import { Json } from './Tree';
 import { useFileDownload } from './util';
 import { DebugContext } from '../props';
 import { Generator } from '../testing';
@@ -48,105 +34,7 @@ import { Generator } from '../testing';
 export const DEFAULT_COUNT = 100;
 export const DEFAULT_PERIOD = 500;
 export const DEFAULT_JITTER = 50;
-
-export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, children }) => {
-  const config = useConfig();
-  return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <div className='flex shrink-0 p-2 space-x-2'>
-        <DensityProvider density='fine'>{menu}</DensityProvider>
-      </div>
-      <div className='flex flex-col grow px-2 overflow-hidden'>
-        <div className='flex flex-col grow overflow-auto'>{children}</div>
-
-        {config.values?.runtime?.app?.build?.timestamp && (
-          <div className='p-2 text-sm font-mono'>
-            {config.values?.runtime?.app?.build?.version} (
-            {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
-              addSuffix: true,
-              includeSeconds: true,
-            })}
-            )
-          </div>
-        )}
-      </div>
-    </Main.Content>
-  );
-};
-
-export const DebugMain: FC<{ graph: Graph; space?: Space }> = ({ graph, space }) => {
-  if (!space) {
-    return <DebugGlobal graph={graph} />;
-  }
-
-  return <DebugSpace space={space} />;
-};
-
-export const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
-  const { themeMode } = useThemeContext();
-  const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
-  const [data, setData] = useState<any>({});
-  const client = useClient();
-  const config = useConfig();
-  const handleRefresh = async () => {
-    const data = await client.diagnostics({ truncate: true });
-    setData(data);
-  };
-  useEffect(() => {
-    void handleRefresh();
-  }, []);
-
-  const handleResetClient = async (force = false) => {
-    if (!force && !window.confirm('Reset storage?')) {
-      return;
-    }
-
-    // TODO(burdon): Throws exception.
-    await client.reset();
-    window.location.href = window.location.origin;
-  };
-
-  const handleOpenDevtools = () => {
-    const vaultUrl = config.values?.runtime?.client?.remoteSource;
-    if (vaultUrl) {
-      window.open(`https://devtools.dev.dxos.org/?target=${vaultUrl}`);
-    }
-  };
-
-  return (
-    <DebugPanel
-      menu={
-        <>
-          <ToggleGroup type='single' value={view}>
-            <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
-              <GraphIcon className={getSize(5)} />
-            </ToggleGroupItem>
-            <ToggleGroupItem value={'diagnostics'} onClick={() => setView('diagnostics')} title={'Diagnostics'}>
-              <Gauge className={getSize(5)} />
-            </ToggleGroupItem>
-            <ToggleGroupItem value={'config'} onClick={() => setView('config')} title={'Config'}>
-              <Gear className={getSize(5)} />
-            </ToggleGroupItem>
-          </ToggleGroup>
-
-          <div className='grow' />
-          <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
-            <Warning className={mx(getSize(5), 'text-red-700')} />
-          </Button>
-          <Button onClick={handleOpenDevtools} title='Open Devtools'>
-            <Toolbox weight='duotone' className={mx(getSize(5), 'text-700')} />
-          </Button>
-        </>
-      }
-    >
-      {view === 'graph' && <Tree data={graph.toJSON()} />}
-      {view === 'config' && <Json theme={themeMode} data={data.diagnostics?.config} />}
-      {view === 'diagnostics' && <Json theme={themeMode} data={data} />}
-    </DebugPanel>
-  );
-};
-
-export const DebugSpace: FC<{ space: Space }> = ({ space }) => {
+const DebugSpace: FC<{ space: Space }> = ({ space }) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
@@ -302,4 +190,4 @@ export const DebugSpace: FC<{ space: Space }> = ({ space }) => {
   );
 };
 
-export default DebugMain;
+export default DebugSpace;

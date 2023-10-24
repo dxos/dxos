@@ -15,8 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/devtools": "workspace:*",
@@ -38,9 +36,11 @@
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -56,6 +56,12 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
