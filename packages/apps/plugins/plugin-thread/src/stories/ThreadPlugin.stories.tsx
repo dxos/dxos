@@ -9,7 +9,7 @@ import React from 'react';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { PluginProvider, Surface } from '@dxos/app-framework';
+import { Surface, createApp } from '@dxos/app-framework';
 import { Config } from '@dxos/client';
 
 import { ThreadPlugin } from '../ThreadPlugin';
@@ -20,8 +20,7 @@ faker.seed(7);
 const DefaultThreadPluginStory = () => {
   const object = createThread();
 
-  // TODO(burdon): Why array? Should first be space?
-  return <Surface role='main' data={[object, object]} />;
+  return <Surface role='main' data={{ active: object }} />;
 };
 
 const ThreadPluginStoryPlugin = () => ({
@@ -29,17 +28,13 @@ const ThreadPluginStoryPlugin = () => ({
     id: 'dxos.org/plugin/thread-story',
   },
   provides: {
-    components: {
-      default: DefaultThreadPluginStory,
-    },
+    root: DefaultThreadPluginStory,
   },
 });
 
-const ThreadSurfacesApp = () => (
-  <PluginProvider
-    plugins={[ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]}
-  />
-);
+const ThreadSurfacesApp = createApp({
+  plugins: [ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()],
+});
 
 export default {
   decorators: [FullscreenDecorator('bg-neutral-200 dark:bg-neutral-800')],

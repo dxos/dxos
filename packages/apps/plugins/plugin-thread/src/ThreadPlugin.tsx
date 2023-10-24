@@ -5,11 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { ThreadMain, ThreadSidebar } from './components';
@@ -29,8 +27,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       id: THREAD_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides.intent.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({ dispatch, filter: ThreadType.filter(), adapter: objectToGraphNode });
       }
@@ -41,13 +39,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${THREAD_PLUGIN}/create`,
@@ -75,22 +73,20 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        switch (role) {
-          case 'main': {
-            if (!isThread(data)) {
-              return null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isThread(data.active) ? <ThreadMain thread={data.active} /> : null;
             }
 
-            return ThreadMain;
-          }
+            case 'context-thread':
+              return isThread(data.active) ? <ThreadSidebar thread={data.active} /> : null;
 
-          case 'context-thread':
-            return ThreadSidebar;
-        }
-      },
-      components: {
-        ThreadMain,
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

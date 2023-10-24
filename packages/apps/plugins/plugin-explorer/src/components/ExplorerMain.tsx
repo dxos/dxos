@@ -5,9 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
-import { type View as ViewType } from '@braneframe/types';
 import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { type PluginComponentProps } from '@dxos/app-framework';
 import { type TypedObject } from '@dxos/client/echo';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
@@ -23,7 +21,7 @@ type Slots = {
 
 const slots: Slots = {};
 
-export const ExplorerMain = ({ data }: PluginComponentProps<ViewType>) => {
+export const ExplorerMain = () => {
   // TODO(burdon): Get from node.
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');

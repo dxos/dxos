@@ -5,10 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
+import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
 
 import { GridMain } from './components';
@@ -17,64 +16,68 @@ import { isGrid, GRID_PLUGIN, GridAction, type GridPluginProvides } from './type
 import { objectToGraphNode } from './util';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: GridType.filter(), adapter: objectToGraphNode });
+  let adapter: GraphNodeAdapter<GridType> | undefined;
 
   return {
     meta: {
       id: GRID_PLUGIN,
     },
+    ready: async (plugins) => {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides.intent.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter: GridType.filter(), adapter: objectToGraphNode });
+      }
+    },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${GRID_PLUGIN}/create`,
             label: ['create grid label', { ns: GRID_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: GRID_PLUGIN,
-                action: GridAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: LayoutAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: GRID_PLUGIN,
+                  action: GridAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'gridPlugin.createObject',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isGrid(data)) {
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isGrid(data.active) ? <GridMain grid={data.active} /> : null;
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return GridMain;
-        }
-
-        return null;
-      },
-      components: {
-        GridMain,
+        },
       },
       intent: {
         resolver: (intent) => {

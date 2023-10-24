@@ -13,7 +13,7 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { MapControl } from './MapControl';
 
-export const MapMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;

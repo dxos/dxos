@@ -17,7 +17,6 @@ import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { GridPlugin } from '@braneframe/plugin-grid';
-import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
@@ -35,7 +34,7 @@ import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { types } from '@braneframe/types';
-import { PluginProvider } from '@dxos/app-framework';
+import { createApp } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
 import { createClientServices, Remote } from '@dxos/client/services';
 import { Config, Envs, Local } from '@dxos/config';
@@ -82,53 +81,54 @@ const main = async () => {
     },
   });
 
+  const App = createApp({
+    plugins: [
+      // TODO(burdon): Normalize namespace across apps.
+      TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
+      ThemePlugin({ appName: 'Labs', tx: labsTx }),
+
+      // Outside of error boundary so that updates are not blocked by errors.
+      PwaPlugin(),
+
+      // Core framework.
+      ErrorPlugin(),
+      GraphPlugin(),
+      ClientPlugin({ config, services, debugIdentity: debug, types }),
+
+      // Core UX.
+      DndPlugin(),
+      NavTreePlugin(),
+      LayoutPlugin({ showComplementarySidebar: true }),
+
+      // TODO(burdon): Remove need to come after SplitView.
+      SpacePlugin(),
+
+      DebugPlugin(),
+      FilesPlugin(),
+      GithubPlugin(),
+      IpfsPlugin(),
+
+      // Presentation plugins.
+      MarkdownPlugin(),
+      GridPlugin(),
+      KanbanPlugin(),
+      MapPlugin(),
+      PresenterPlugin(), // Before Stack.
+      SketchPlugin(),
+      StackPlugin(),
+      TablePlugin(),
+      ThreadPlugin(),
+      ExplorerPlugin(),
+      ChessPlugin(),
+
+      // Last so that action are added at end of dropdown menu.
+      SearchPlugin(),
+    ],
+  });
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <PluginProvider
-        plugins={[
-          // TODO(burdon): Normalize namespace across apps.
-          TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
-          ThemePlugin({ appName: 'Labs', tx: labsTx }),
-
-          // Outside of error boundary so that updates are not blocked by errors.
-          PwaPlugin(),
-
-          // Core framework.
-          ErrorPlugin(),
-          IntentPlugin(),
-          GraphPlugin(),
-          ClientPlugin({ config, services, debugIdentity: debug, types }),
-
-          // Core UX.
-          DndPlugin(),
-          NavTreePlugin(),
-          LayoutPlugin({ showComplementarySidebar: true }),
-
-          // TODO(burdon): Remove need to come after SplitView.
-          SpacePlugin(),
-
-          DebugPlugin(),
-          FilesPlugin(),
-          GithubPlugin(),
-          IpfsPlugin(),
-
-          // Presentation plugins.
-          MarkdownPlugin(),
-          GridPlugin(),
-          KanbanPlugin(),
-          MapPlugin(),
-          PresenterPlugin(), // Before Stack.
-          SketchPlugin(),
-          StackPlugin(),
-          TablePlugin(),
-          ThreadPlugin(),
-          ExplorerPlugin(),
-          ChessPlugin(),
-
-          // Last so that action are added at end of dropdown menu.
-          SearchPlugin(),
-        ]}
-      />
+      <App />
     </StrictMode>,
   );
 };

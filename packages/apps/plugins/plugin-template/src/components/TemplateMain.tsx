@@ -11,7 +11,7 @@ import { type TypedObject } from '@dxos/client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+export const TemplateMain: FC<{ object: TypedObject }> = ({ object }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;

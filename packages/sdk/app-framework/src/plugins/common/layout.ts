@@ -53,9 +53,11 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 //
 
 const LAYOUT_ACTION = 'dxos.org/plugin/intent';
+// TODO(wittjosiah): Consider consolidating some action types (e.g. toggle).
 export enum LayoutAction {
   TOGGLE_FULLSCREEN = `${LAYOUT_ACTION}/toggle-fullscreen`,
   TOGGLE_SIDEBAR = `${LAYOUT_ACTION}/toggle-sidebar`,
+  TOGGLE_COMPLEMENTARY_SIDEBAR = `${LAYOUT_ACTION}/toggle-complementary-sidebar`,
   OPEN_DIALOG = `${LAYOUT_ACTION}/open-dialog`,
   CLOSE_DIALOG = `${LAYOUT_ACTION}/close-dialog`,
   OPEN_POPOVER = `${LAYOUT_ACTION}/open-popover`,
@@ -72,6 +74,10 @@ export namespace LayoutAction {
   };
 
   export type ToggleSidebar = {
+    state?: boolean;
+  };
+
+  export type ToggleComplementarySidebar = {
     state?: boolean;
   };
 

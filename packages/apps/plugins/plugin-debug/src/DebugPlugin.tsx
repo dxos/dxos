@@ -7,11 +7,17 @@ import { batch } from '@preact/signals-react';
 import React, { useEffect, useState } from 'react';
 
 import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type GraphPluginProvides } from '@braneframe/plugin-graph';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { getPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { type Graph } from '@braneframe/plugin-graph';
+import {
+  getPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+  parseGraphPlugin,
+  parseIntentPlugin,
+} from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type Space } from '@dxos/react-client/echo';
 
 import { DebugMain, DebugSettings, DebugStatus, DevtoolsMain } from './components';
 import { DEBUG_PLUGIN, DebugContext, type DebugSettingsProps, type DebugPluginProvides } from './props';
@@ -64,7 +70,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         );
       },
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (parent.id !== 'root') {
             return;
           }
@@ -87,8 +93,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             }),
           );
 
-          const graphPlugin = getPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-          const intentPlugin = getPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // Root debug node.
           subscriptions.push(
@@ -99,7 +105,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 const [root] = parent.addNode(DEBUG_PLUGIN, {
                   id: nodeId,
                   label: 'Debug',
-                  data: { id: nodeId, graph: graphPlugin?.provides.graph() },
+                  data: { id: nodeId, graph: graphPlugin?.provides.graph },
                 });
 
                 root.addAction({
@@ -107,7 +113,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                   label: ['open devtools label', { ns: DEBUG_PLUGIN }],
                   icon: (props) => <Bug {...props} />,
                   invoke: () =>
-                    intentPlugin.provides.intent.dispatch({
+                    intentPlugin?.provides.intent.dispatch({
                       plugin: DEBUG_PLUGIN,
                       action: 'open-devtools',
                     }),
@@ -130,7 +136,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                             id: nodeId,
                             label: space.key.truncate(),
                             icon: (props: IconProps) => <Bug {...props} />,
-                            data: { id: nodeId, graph: graphPlugin?.provides.graph(), space },
+                            data: { id: nodeId, graph: graphPlugin?.provides.graph, space },
                           });
                         }
                       });
@@ -173,31 +179,28 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
         },
       },
-      component: (data, role) => {
-        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-          return DebugSettings;
-        }
+      surface: {
+        component: (data, role) => {
+          if (!settings.values.debug) {
+            return null;
+          }
 
-        if (!settings.values.debug) {
+          switch (role) {
+            case 'main':
+              if (isDebug(data)) {
+                return <DebugMain graph={data.graph as Graph} space={data.space as Space | undefined} />;
+              } else if (data.active === 'devtools') {
+                return <DevtoolsMain />;
+              }
+              break;
+            case 'status':
+              return <DebugStatus />;
+            case 'settings':
+              return data.content === 'dxos.org/plugin/layout/ProfileSettings' ? <DebugSettings /> : null;
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main':
-            if (isDebug(data)) {
-              return DebugMain; // TODO(burdon): Convert to render for type safety.
-            } else if (data === 'devtools') {
-              return DevtoolsMain;
-            }
-            break;
-          case 'status':
-            return DebugStatus;
-        }
-
-        return null;
-      },
-      components: {
-        DebugMain,
+        },
       },
     },
   };

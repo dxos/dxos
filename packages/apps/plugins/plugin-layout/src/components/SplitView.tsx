@@ -130,7 +130,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
           <DensityProvider density='fine'>
             <Dialog.Overlay>
               {/* TODO(burdon): Move (thure)[ProfileSettings dialog in particular] dialog to settings-plugin. */}
-              {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
+              {dialogContent === 'dxos.org/plugin/layout/ProfileSettings' ? (
                 <Dialog.Content>
                   <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                   {/* TODO(burdon): Standardize layout of section components (e.g., checkbox padding). */}

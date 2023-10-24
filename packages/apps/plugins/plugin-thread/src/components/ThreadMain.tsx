@@ -12,7 +12,7 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { ThreadContainer } from './ThreadContainer';
 
-export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
+export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.active;
@@ -22,7 +22,7 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: object }) => {
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <ThreadContainer space={space} thread={object} />
+      <ThreadContainer space={space} thread={thread} />
     </Main.Content>
   );
 };

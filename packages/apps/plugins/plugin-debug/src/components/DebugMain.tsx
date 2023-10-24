@@ -74,7 +74,7 @@ export const DebugPanel: FC<PropsWithChildren<{ menu: ReactNode }>> = ({ menu, c
   );
 };
 
-export const DebugMain: FC<{ data: { graph: Graph; space: Space } }> = ({ data: { graph, space } }) => {
+export const DebugMain: FC<{ graph: Graph; space?: Space }> = ({ graph, space }) => {
   if (!space) {
     return <DebugGlobal graph={graph} />;
   }

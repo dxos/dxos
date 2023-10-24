@@ -5,10 +5,9 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { View as ViewType } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
 
 import { ExplorerMain } from './components';
@@ -17,62 +16,66 @@ import { EXPLORER_PLUGIN, ExplorerAction, type ExplorerPluginProvides, isExplore
 import { objectToGraphNode } from './util';
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
-  const adapter = new GraphNodeAdapter({ filter: ViewType.filter(), adapter: objectToGraphNode });
+  let adapter: GraphNodeAdapter<ViewType> | undefined;
 
   return {
     meta: {
       id: EXPLORER_PLUGIN,
     },
+    ready: async (plugins) => {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides.intent.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter: ViewType.filter(), adapter: objectToGraphNode });
+      }
+    },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // TODO(burdon): Util.
           parent.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: EXPLORER_PLUGIN,
-                action: ExplorerAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: LayoutAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: EXPLORER_PLUGIN,
+                  action: ExplorerAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'explorerPlugin.createObject',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isExplorer(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return ExplorerMain;
-          default:
-            return null;
-        }
-      },
-      components: {
-        ExplorerMain,
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isExplorer(data.active) ? <ExplorerMain /> : null;
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

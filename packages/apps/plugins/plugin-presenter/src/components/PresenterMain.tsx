@@ -4,17 +4,16 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { useIntent } from '@braneframe/plugin-intent';
-import { LAYOUT_PLUGIN, LayoutAction, useLayout } from '@braneframe/plugin-layout';
+import { useLayout } from '@braneframe/plugin-layout';
 import { type Stack as StackType } from '@braneframe/types';
-import { Surface } from '@dxos/app-framework';
+import { LayoutAction, Surface, useIntent } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN, PresenterContext } from '../types';
 
-export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
+export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
@@ -32,7 +31,6 @@ export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
         data: { state: running },
       },
       {
-        plugin: LAYOUT_PLUGIN,
         action: LayoutAction.TOGGLE_FULLSCREEN,
         data: { state: running },
       },
@@ -54,7 +52,7 @@ export const PresenterMain: FC<{ data: StackType }> = ({ data: stack }) => {
           />
         }
       >
-        <Surface role='presenter-slide' data={stack.sections[slide].object} />
+        <Surface role='presenter-slide' data={{ slide: stack.sections[slide].object }} />
       </Layout>
     </Main.Content>
   );

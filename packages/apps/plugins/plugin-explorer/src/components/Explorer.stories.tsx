@@ -46,7 +46,7 @@ const Story = () => {
   }
 
   // TODO(burdon): Create storybook util with surface.
-  return <ExplorerMain data={view} />;
+  return <ExplorerMain />;
 };
 
 export default {

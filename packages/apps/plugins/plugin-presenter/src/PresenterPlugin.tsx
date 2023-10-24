@@ -6,11 +6,9 @@ import { Presentation } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import React from 'react';
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { LAYOUT_PLUGIN, LayoutAction } from '@braneframe/plugin-layout';
 import { isMarkdownContent } from '@braneframe/plugin-markdown';
 import { isStack } from '@braneframe/plugin-stack';
-import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import translations from './translations';
@@ -34,8 +32,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+        builder: ({ parent, plugins }) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
           if (isStack(parent.data)) {
             parent.addAction({
               id: 'toggle-presentation',
@@ -50,7 +49,6 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                     action: 'toggle-presentation',
                   },
                   {
-                    plugin: LAYOUT_PLUGIN,
                     action: LayoutAction.TOGGLE_FULLSCREEN,
                   },
                 ]),
@@ -72,28 +70,20 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           </PresenterContext.Provider>
         );
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isStack(data.active) && state.presenting ? <PresenterMain stack={data.active} /> : null;
+            }
+
+            case 'presenter-slide': {
+              return isMarkdownContent(data.slide) ? <MarkdownSlideMain slide={data.slide} /> : null;
+            }
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if (isStack(data) && state.presenting) {
-              return PresenterMain;
-            }
-            break;
-          }
-
-          case 'presenter-slide': {
-            if (isMarkdownContent(data)) {
-              return MarkdownSlideMain;
-            }
-            break;
-          }
-        }
-
-        return null;
+        },
       },
       intent: {
         resolver: (intent) => {

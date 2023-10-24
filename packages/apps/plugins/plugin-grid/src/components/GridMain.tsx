@@ -14,7 +14,7 @@ import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxo
 
 import { colors, GridCard } from './GridCard';
 
-export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
+export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const { plugins } = usePlugins();
 
   // TODO(burdon): Get from properties?

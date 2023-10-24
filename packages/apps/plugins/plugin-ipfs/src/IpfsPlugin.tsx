@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
+import React from 'react';
+
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
-import { findPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
 import { FileMain, FileSection, FileSlide } from './components';
@@ -30,7 +31,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       //     return tile;
       //   });
       // }
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({
@@ -46,7 +47,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
@@ -56,21 +57,19 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object' || !isFile(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return FileMain;
-          case 'section':
-            return FileSection;
-          case 'presenter-slide':
-            return FileSlide;
-        }
-
-        return null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isFile(data.active) ? <FileMain file={data.active} /> : null;
+            case 'section':
+              return isFile(data.object) ? <FileSection file={data.object} /> : null;
+            case 'presenter-slide':
+              return isFile(data.slide) ? <FileSlide file={data.slide} /> : null;
+            default:
+              return null;
+          }
+        },
       },
     },
   };

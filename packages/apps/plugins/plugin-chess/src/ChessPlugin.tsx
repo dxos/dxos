@@ -6,10 +6,8 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { LayoutAction } from '@braneframe/plugin-layout';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { type PluginDefinition, findPlugin } from '@dxos/app-framework';
+import { type PluginDefinition, findPlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Game, types } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
 
@@ -26,7 +24,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       id: CHESS_PLUGIN,
     },
     ready: async (plugins) => {
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
         adapter = new GraphNodeAdapter({ dispatch, filter: Game.filter(), adapter: objectToGraphNode });
@@ -41,13 +39,13 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
     },
     provides: {
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${CHESS_PLUGIN}/create`,
@@ -76,20 +74,15 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         },
       },
       translations,
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if (isObject(data)) {
-              return ChessMain;
-            }
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isObject(data.active) ? <ChessMain game={data.active} /> : null;
+            default:
+              return null;
           }
-        }
-
-        return null;
+        },
       },
       intent: {
         resolver: (intent) => {
