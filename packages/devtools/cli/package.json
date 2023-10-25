@@ -30,7 +30,6 @@
     "readme": "oclif readme"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -105,8 +104,29 @@
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
-      "config": {
-        "description": "Configuration information."
+      "agent": {
+        "description": "DXOS Daemon with client services, which is constantly backuping your data. Agent can be extended with plugins (e.g. search plugin, epoch monitor). Also agent has an ability to run functions."
+      },
+      "app": {
+        "description": "Control apps that are published to KUBE specified in DXOS config."
+      },
+      "debug": {
+        "description": "Commands to help debug stuff (contains data generation to imitate high load, database metrics, etc.)."
+      },
+      "device": {
+        "description": "Devices in your HALO."
+      },
+      "function": {
+        "description": "Runtime plugable code with data/event specific triggers."
+      },
+      "halo": {
+        "description": "HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements."
+      },
+      "kube": {
+        "description": "KUBE is a set of runtime services for static web apps and peer-to-peer applications. "
+      },
+      "space": {
+        "description": "A space is an instance of an ECHO database which can be replicated by a number of peers."
       }
     }
   }
