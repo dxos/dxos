@@ -114,6 +114,7 @@ jobs:
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
+      - run: echo << pipeline.parameters.mode >>
       - checkout
       - *cache_restore
       - run: pnpm install
