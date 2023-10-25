@@ -73,8 +73,8 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        onRearrangeChild: (child: Node<TypedObject>, nextIndex: any) => {
-          console.warn('[on rearrange child]', 'not implemented', child, nextIndex);
+        onRearrangeChildren: (nodeIds: string[]) => {
+          console.warn('[on rearrange child]', 'not implemented', nodeIds);
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),

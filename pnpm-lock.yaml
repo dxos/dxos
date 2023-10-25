@@ -1828,6 +1828,9 @@ importers:
       '@dxos/react-ui-navtree':
         specifier: workspace:*
         version: link:../../../ui/react-ui-navtree
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@preact/signals-react':
         specifier: ^1.3.6
         version: 1.3.6(react@18.2.0)
