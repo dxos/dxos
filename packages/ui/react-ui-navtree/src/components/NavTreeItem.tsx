@@ -130,6 +130,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             ]}
             {...draggableProps}
             data-itemid={item.id}
+            data-testid={testId}
             style={draggableStyle}
             ref={forwardedRef}
             role='treeitem'
@@ -145,7 +146,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 ((active && active !== 'overlay') || path === current) && 'bg-neutral-75 dark:bg-neutral-850',
                 'flex items-start rounded',
               )}
-              data-testid={testId}
             >
               <NavTreeItemHeading
                 {...{
@@ -203,7 +203,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                               hoverableOpenControlItem,
                               active === 'overlay' && 'invisible',
                             ]}
-                            data-testid={`navTree.treeItemActionsLevel${level}`}
+                            data-testid={`navtree.treeItem.actionsLevel${level}`}
                           >
                             <DotsThreeVertical className={getSize(4)} />
                           </Button>
