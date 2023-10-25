@@ -11,7 +11,7 @@ orbs:
 parameters:
   mode:
     type: string
-    default: default
+    default: e2e
 
 aliases:
   - &docker_image
