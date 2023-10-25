@@ -22,8 +22,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@tldraw/indices": "2.0.0-alpha.14"
+    "@dxos/react-ui-theme": "workspace:*"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",

@@ -3,7 +3,6 @@
 //
 
 import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
@@ -120,17 +119,16 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent: Node, dispatch: DispatchIntent) => {
+export const localEntityToGraphNode = (entity: LocalEntity, parent: Node, dispatch: DispatchIntent) => {
   if ('children' in entity) {
-    return localDirectoryToGraphNode(entity, index, parent, dispatch);
+    return localDirectoryToGraphNode(entity, parent, dispatch);
   } else {
-    return localFileToGraphNode(entity, index, parent, dispatch);
+    return localFileToGraphNode(entity, parent, dispatch);
   }
 };
 
 const localDirectoryToGraphNode = (
   directory: LocalDirectory,
-  index: string,
   parent: Node<LocalDirectory>,
   dispatch: DispatchIntent,
 ) => {
@@ -139,9 +137,7 @@ const localDirectoryToGraphNode = (
     label: directory.title,
     icon: (props) => <Folder {...props} />,
     data: directory,
-    properties: {
-      index,
-    },
+    properties: {},
   });
 
   if (directory.permission !== 'granted') {
@@ -173,25 +169,18 @@ const localDirectoryToGraphNode = (
       }),
   });
 
-  const childIndices = getIndices(directory.children.length);
-  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, childIndices[index], node, dispatch));
+  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, node, dispatch));
 
   return node;
 };
 
-const localFileToGraphNode = (
-  file: LocalFile,
-  index: string,
-  parent: Node<LocalDirectory>,
-  dispatch: DispatchIntent,
-) => {
+const localFileToGraphNode = (file: LocalFile, parent: Node<LocalDirectory>, dispatch: DispatchIntent) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,
     icon: (props) => <FileIcon {...props} />,
     data: file,
     properties: {
-      index,
       modified: file.modified,
     },
   });
