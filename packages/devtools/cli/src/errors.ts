@@ -7,3 +7,9 @@ export class SpaceWaitTimeoutError extends Error {
     super(`Timeout waiting for space to be ready: ${timeout.toLocaleString()}ms`);
   }
 }
+
+export class PublisherConnectionError extends Error {
+  constructor() {
+    super('Error while connecting to kube publisher.');
+  }
+}

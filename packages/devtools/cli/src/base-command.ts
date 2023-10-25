@@ -42,7 +42,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { SpaceWaitTimeoutError } from './errors';
+import { PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -343,6 +343,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       this.logToStderr(
         chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually or as a system daemon.`,
       );
+    } else if (err instanceof PublisherConnectionError) {
+      this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -495,7 +497,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.error(new PublisherConnectionError());
     } finally {
       if (rpc) {
         await rpc.close();
