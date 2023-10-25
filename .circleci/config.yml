@@ -202,6 +202,15 @@ workflows:
           context:
             - Github
 
+  e2e:
+    when:
+      condition:
+        equal: [ e2e, << pipeline.parameters.mode >> ]
+    jobs:
+      - e2e:
+          context:
+            - Github
+
   deploy:
     jobs:
       - publish:
