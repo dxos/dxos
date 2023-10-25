@@ -11,7 +11,7 @@ import { arrayMove } from '@dxos/util';
 
 import { Tree, type TreeData, type TreeProps } from './Tree';
 import { type MosaicDropEvent, type MosaicMoveEvent, Path, type MosaicOperation } from '../../mosaic';
-import { TestObjectGenerator, nextRearrangeIndex } from '../../testing';
+import { TestObjectGenerator } from '../../testing';
 
 const fake = faker.helpers.fake;
 
@@ -134,8 +134,7 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
         operation === 'rearrange'
       ) {
         // This is a rearrange operation
-        const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
-        activeNode.properties.index = nextIndex ?? 'a0';
+        console.warn('[react-ui-mosaic]', 'Tree', 'rearrange', 'needs implementation');
       } else if (activeNode && activeParent && overParent && operation === 'transfer') {
         activeParent.removeNode(active.item.id);
         overNode.addNode('tree', { ...activeNode });

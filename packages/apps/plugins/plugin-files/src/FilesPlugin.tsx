@@ -4,7 +4,6 @@
 
 import { FilePlus, FolderPlus } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -181,13 +180,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             });
           }
 
-          const fileIndices = getIndices(state.files.length);
           onFilesUpdate = () => {
             const dispatch = intentPlugin?.provides.intent.dispatch;
             if (dispatch) {
-              state.files.forEach((entity, index) =>
-                localEntityToGraphNode(entity, fileIndices[index], groupNode, dispatch),
-              );
+              state.files.forEach((entity, index) => localEntityToGraphNode(entity, groupNode, dispatch));
             }
           };
           onFilesUpdate();
