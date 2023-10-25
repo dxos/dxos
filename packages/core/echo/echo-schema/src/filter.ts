@@ -18,9 +18,6 @@ export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
 export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T>;
 
-// NOTE: `__phantom` property forces TS type check.
-export type TypeFilter<T extends TypedObject> = { __phantom: T } & FilterSource<T>;
-
 export type FilterParams = {
   properties?: Record<string, any>;
   type?: Reference;
