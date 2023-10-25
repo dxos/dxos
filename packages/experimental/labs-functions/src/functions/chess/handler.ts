@@ -5,7 +5,7 @@
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 
-const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
+export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
   // TODO(burdon): client.spaces.get() is a more natural API.
   const space = context.client.spaces.get(PublicKey.from(event.space))!;
 
@@ -36,5 +36,3 @@ const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, cont
     });
   });
 };
-
-export default handler;

@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { type Config } from '@dxos/config';
 import { describe, test } from '@dxos/test';
 
-import { ChatModel } from './chat-model';
+import { Chat } from './chat';
 import { type Entity, type SchemaMap } from './schema';
 import { getConfig, loadJson } from '../../util';
 
@@ -20,9 +20,9 @@ const getKey = (config: Config, name: string) => {
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('ChatModel', () => {
-  const createChatModel = (): ChatModel => {
+  const createChatModel = (): Chat => {
     const config = getConfig()!;
-    return new ChatModel({
+    return new Chat({
       orgId: getKey(config, 'com.openai.org_id')!,
       apiKey: getKey(config, 'com.openai.api_key')!,
     });

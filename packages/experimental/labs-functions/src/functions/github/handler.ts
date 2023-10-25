@@ -4,6 +4,4 @@
 
 import { type FunctionHandler } from '@dxos/functions';
 
-const handler: FunctionHandler<any> = async ({ event, context }) => {};
-
-export default handler;
+export const handler: FunctionHandler<any> = async ({ event, context }) => {};
