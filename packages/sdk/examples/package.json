@@ -9,6 +9,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
+    "/": "https://github.com/dxos/dxos/issues/4511",
     "chromatic": "true || chromatic --only-changed --project-token=\"chpt_7b7f447ccad9f73\" --storybook-build-dir out --exit-zero-on-changes",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
