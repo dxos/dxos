@@ -215,6 +215,14 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
   }
 
   /**
+   * @internal
+  */
+  // TODO(dmaretskyi): Make public.
+  _getType() {
+    return this._getState().type;
+  }
+
+  /**
    * Convenience method to set meta fields.
    *
    * @example

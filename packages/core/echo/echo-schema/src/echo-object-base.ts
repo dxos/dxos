@@ -19,6 +19,7 @@ import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/docum
 import { type EchoDatabase } from './database';
 import { type EchoObject, base, db, subscribe } from './defs';
 import { createSignal } from './signal';
+import { Reference } from '@dxos/document-model';
 
 /**
  * Base class for all echo objects.
@@ -202,3 +203,8 @@ export const forceUpdate = (obj: EchoObjectBase) => {
 export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
   return obj[base]._database;
 };
+
+export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
+  const db = getDatabaseFromObject(obj);
+  return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
+}

@@ -26,6 +26,7 @@ describe('database', () => {
     await database.flush();
     expect(task[db]).to.exist;
 
+
     const { objects: tasks } = database.query(Task.filter());
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);

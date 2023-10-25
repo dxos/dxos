@@ -6,5 +6,5 @@
 
 export { TypedObject, type TypedObjectOptions } from '../typed-object';
 export { TypeCollection } from '../type-collection';
-export type { TypeFilter } from '../query';
+export { Filter } from '../filter';
 export type { Schema } from './index';

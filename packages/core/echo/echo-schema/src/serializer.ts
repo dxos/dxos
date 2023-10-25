@@ -11,6 +11,7 @@ import { type EchoDatabase } from './database';
 import { base } from './defs';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
+import { Filter } from './filter';
 
 export type SerializedObject = {
   '@id': string;
@@ -46,7 +47,7 @@ export class Serializer {
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
       objects: [properties],
-    } = database.query({ '@type': TYPE_PROPERTIES });
+    } = database.query(Filter.byTypeName(TYPE_PROPERTIES));
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;
