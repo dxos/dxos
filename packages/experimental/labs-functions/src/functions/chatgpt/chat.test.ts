@@ -31,7 +31,8 @@ describe.skip('ChatModel', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     const chat = createChatModel();
-    const { messages } = loadJson('packages/experimental/kai-bots/testing/messages.json');
+    // TODO(burdon): Get dir.
+    const { messages } = loadJson('packages/experimental/labs-functions/testing/messages.json');
     const result = await chat.request(messages);
     expect(result).to.exist;
   });

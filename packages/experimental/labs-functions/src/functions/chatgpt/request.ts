@@ -9,28 +9,21 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Schema } from '@dxos/echo-schema';
 
-type SchemaConfig = {
+export type SchemaConfig = {
   typename: string;
-  allowedFields: string[];
+  fields: string[];
 };
 
-type SchemaDef = {
+export type SchemaDef = {
   config: SchemaConfig;
   schema: Schema;
 };
 
-const SCHEMA_CONFIG: SchemaConfig[] = [
-  {
-    typename: 'braneframe.Grid.Item',
-    allowedFields: ['title', 'content', 'color'],
-  },
-];
-
 const formatSchema = ({ schema, config }: SchemaDef) => {
   const props =
-    !config || config.allowedFields.length === 0
+    !config || config.fields.length === 0
       ? schema.props
-      : schema.props.filter((prop) => config?.allowedFields.includes(prop.id!));
+      : schema.props.filter((prop) => config?.fields.includes(prop.id!));
 
   return `
     @type: ${schema.typename}
@@ -40,15 +33,25 @@ const formatSchema = ({ schema, config }: SchemaDef) => {
   `;
 };
 
-export const createRequest = (client: Client, space: Space, block: Thread.Block): ChatCompletionRequestMessage[] => {
-  // TODO(burdon): Pass in history.
-  // TODO(burdon): Error handling (e.g., 401);
-  const messages: ChatCompletionRequestMessage[] = [];
+export const createRequest = (
+  client: Client,
+  space: Space,
+  block: Thread.Block,
+  schmea: SchemaConfig[],
+): ChatCompletionRequestMessage[] => {
+  const messages: ChatCompletionRequestMessage[] = [
+    {
+      role: 'system',
+      content: 'you are a helpful assistant.',
+    },
+  ];
 
-  const schemas = SCHEMA_CONFIG.map((config) => ({
-    config,
-    schema: client.experimental.types.getSchema(config.typename)!,
-  })).filter(Boolean);
+  const schemas = schmea
+    .map((config) => ({
+      config,
+      schema: client.experimental.types.getSchema(config.typename)!,
+    }))
+    .filter(Boolean);
 
   messages.push({
     role: 'system',
@@ -76,7 +79,7 @@ export const createRequest = (client: Client, space: Space, block: Thread.Block)
       let content = '';
       const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
       if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
-        content += '\n' + 'I am playing chess. And current game history is: ' + contextObject.pgn + '.\n';
+        content += '\n' + 'I am playing chess and current game history is: ' + contextObject.pgn + '.\n';
       }
 
       if (message.text) {

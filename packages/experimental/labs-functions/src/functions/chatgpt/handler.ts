@@ -9,11 +9,18 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Chat } from './chat';
-import { createRequest } from './request';
+import { createRequest, type SchemaConfig } from './request';
 import { createResponse } from './response';
 import { getKey } from '../../util';
 
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
+
+const schemaConfigs: SchemaConfig[] = [
+  {
+    typename: 'braneframe.Grid.Item',
+    fields: ['title', 'content', 'color'],
+  },
+];
 
 export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
   event: { space: spaceKey, objects: blockIds },
@@ -52,9 +59,10 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
       // TODO(burdon): Create set of messages.
       const block = thread.blocks[thread.blocks.length - 1];
       if (block.__meta.keys.length === 0) {
-        const messages = createRequest(client, space, block);
+        const messages = createRequest(client, space, block, schemaConfigs);
         log.info('request', { messages });
 
+        // TODO(burdon): Error handling (e.g., 401);
         const { content } = (await chat.request(messages)) ?? {};
         log.info('response', { content });
         if (content) {

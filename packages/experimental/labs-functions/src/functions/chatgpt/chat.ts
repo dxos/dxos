@@ -43,13 +43,7 @@ export class Chat {
       // https://platform.openai.com/docs/guides/chat
       const response = await this._api.createChatCompletion({
         model: this._options.model ?? 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'you are a helpful assistant.',
-          },
-          ...messages,
-        ],
+        messages,
       });
 
       const {
