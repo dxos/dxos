@@ -56,7 +56,7 @@ export default class Join extends BaseCommand<typeof Join> {
       const space = client.spaces.get(invitation.spaceKey!)!;
 
       ux.log();
-      ux.log(chalk`{green Joined}: ${space.key.truncate()}`);
+      ux.log(chalk`{green Joined successfully.}`);
 
       return {
         key: space.key,
