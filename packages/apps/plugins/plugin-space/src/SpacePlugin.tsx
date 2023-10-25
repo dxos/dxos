@@ -29,7 +29,7 @@ import {
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
-  SpaceMainEmpty,
+  SpaceMain,
   SpacePresence,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -216,12 +216,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         component: (data, role) => {
           switch (role) {
             case 'main':
-              switch (true) {
-                case isSpace(data.active):
-                  return <SpaceMainEmpty />;
-                default:
-                  return null;
-              }
+              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
               switch (true) {

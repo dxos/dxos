@@ -13,6 +13,10 @@ parameters:
     type: string
     default: default
 
+  e2e:
+    type: boolean
+    default: false
+
 aliases:
   - &docker_image
     image: ghcr.io/dxos/circleci-node:latest
@@ -199,6 +203,13 @@ workflows:
                 - /^rc-.*/
                 - /^hotfix-.*/
                 - /^release-please-.*/
+          context:
+            - Github
+
+  e2e:
+    when: << pipeline.parameters.e2e >>
+    jobs:
+      - e2e:
           context:
             - Github
 

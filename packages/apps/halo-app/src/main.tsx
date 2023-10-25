@@ -43,14 +43,12 @@ const App = createApp({
       },
       provides: {
         translations,
-        components: {
-          default: () => {
-            return (
-              <div className='flex h-screen justify-center items-center'>
-                <OpenVault />
-              </div>
-            );
-          },
+        root: () => {
+          return (
+            <div className='flex h-screen justify-center items-center'>
+              <OpenVault />
+            </div>
+          );
         },
       },
     } as PluginDefinition<TranslationsProvides>,
