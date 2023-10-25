@@ -168,8 +168,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const dispatch = intentPlugin?.provides.intent.dispatch;
 
       if (dispatch) {
-        const filter = Filter.from((document: Document) =>
-          document.__typename === Document.schema.typename && filters.every((filter) => filter(document)));
+        const filter = Filter.from(
+          (document: Document) =>
+            document.__typename === Document.schema.typename && filters.every((filter) => filter(document)),
+        );
         adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
       }
 

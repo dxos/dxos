@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import type { QueryOptions, TypedObject, Filter, Query, FilterSource, Space } from '@dxos/client/echo';
+import type { QueryOptions, TypedObject, Query, FilterSource, Space } from '@dxos/client/echo';
 
 type UseQuery = {
   <T extends TypedObject>(space?: Space, filter?: FilterSource<T>, options?: QueryOptions, deps?: any[]): T[];

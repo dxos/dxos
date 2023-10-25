@@ -98,7 +98,12 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter: Filter.from(filter), adapter: objectToGraphNode, createGroup });
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: Filter.from(filter),
+          adapter: objectToGraphNode,
+          createGroup,
+        });
       }
     },
     unload: async () => {

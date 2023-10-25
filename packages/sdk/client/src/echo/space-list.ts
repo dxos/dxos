@@ -18,11 +18,11 @@ import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type QueryOptions } from '@dxos/echo-db';
 import {
-  FilterSource,
+  type FilterSource,
   type HyperGraph,
   type Query,
   type TypeCollection,
-  type TypedObject
+  type TypedObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -32,8 +32,8 @@ import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationsProxy } from '../invitations';
 import { SpaceProxy } from './space-proxy';
+import { InvitationsProxy } from '../invitations';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;

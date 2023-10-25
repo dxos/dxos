@@ -52,6 +52,10 @@ export class Query<T extends TypedObject = TypedObject> {
     this._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
   }
 
+  get filter(): Filter {
+    return this._filter;
+  }
+
   get objects(): T[] {
     this._signal?.notifyRead();
     return this._getObjects();

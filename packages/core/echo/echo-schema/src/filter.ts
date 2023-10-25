@@ -88,7 +88,7 @@ export class Filter<T extends EchoObject = EchoObject> {
 
   static byTypeName(typename: string, properties?: Record<string, any>) {
     return new Filter({
-      type: new Reference(typename, 'protobuf', undefined),
+      type: Reference.fromLegacyTypeName(typename),
       properties,
     });
   }
