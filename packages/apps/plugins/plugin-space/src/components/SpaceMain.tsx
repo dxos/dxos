@@ -2,45 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useEffect } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
-import { Document } from '@braneframe/types';
-import { Surface } from '@dxos/app-framework';
-import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { useGraph } from '@braneframe/plugin-graph';
+import { LayoutAction, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { type Space } from '@dxos/react-client/echo';
+import { useTranslation } from '@dxos/react-ui';
+import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
-export const isDocument = (data: unknown): data is Document => data instanceof Document;
+import { SPACE_PLUGIN } from '../types';
+import { createNodeId } from '../util';
 
-export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
-  const identity = useIdentity();
-  const [parentNode, childNode] =
-    data &&
-    typeof data === 'object' &&
-    'active' in data &&
-    Array.isArray(data.active) &&
-    isGraphNode(data.active[0]) &&
-    isGraphNode(data.active[1])
-      ? [data.active[0], data.active[1]]
-      : [];
+export const SpaceMain = ({ space }: { space: Space }) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+  const { graph } = useGraph();
+  const node = graph.findNode(createNodeId(space.key));
+  const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
-  // TODO(wittjosiah): Factor out.
-  const textModel = useTextModel({
-    identity,
-    space: parentNode?.data instanceof SpaceProxy ? parentNode.data : undefined,
-    text: childNode && isDocument(childNode.data) ? childNode.data.content : undefined,
-  });
+  useEffect(() => {
+    if (node && node.children.length > 0 && intentPlugin) {
+      void intentPlugin.provides.intent.dispatch({
+        action: LayoutAction.ACTIVATE,
+        data: { id: node.children[0].id },
+      });
+    }
+  }, [node, intentPlugin]);
 
-  const transformedData = textModel
-    ? { composer: textModel, properties: childNode!.data }
-    : parentNode?.data instanceof SpaceProxy
-    ? isTypedObject(childNode?.data)
-      ? { space: parentNode.data, object: childNode!.data }
-      : childNode
-      ? { space: parentNode.data, node: childNode }
-      : { space: parentNode.data }
-    : {};
+  if (node && node.children.length > 0) {
+    return null;
+  }
 
-  return <Surface data={transformedData} role='main' />;
+  return (
+    <div
+      role='none'
+      className={mx(baseSurface, 'min-bs-screen is-full flex items-center justify-center p-8')}
+      data-testid='composer.firstRunMessage'
+    >
+      <p
+        role='alert'
+        className={mx(
+          descriptionText,
+          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
+        )}
+      >
+        {t('first run message')}
+      </p>
+    </div>
+  );
 };
