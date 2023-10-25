@@ -3,4 +3,3 @@
 //
 
 export * from './bots';
-export * from './functions';

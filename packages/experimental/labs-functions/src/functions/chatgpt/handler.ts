@@ -7,7 +7,7 @@ import { type ChatCompletionRequestMessage } from 'openai';
 import { Thread } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { type Schema, Text } from '@dxos/echo-schema';
-import { type FunctionContext } from '@dxos/functions';
+import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -15,17 +15,12 @@ import { ChatModel } from './chat-model';
 import { parseMessage } from './parser';
 import { getKey } from '../../util';
 
-type HandlerProps = {
-  space: string;
-  objects: string[];
-};
-
 // TODO(burdon): Feedback (presence).
 // TODO(burdon): Prevent multiple responses (esp. if slow).
 
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): ???
 
-export default async (event: HandlerProps, context: FunctionContext) => {
+const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ event, context }) => {
   const { space: spaceKey, objects: blockIds } = event; // TODO(burdon): Rename objects.
   const config = context.client.config;
   const space = context.client.spaces.get(PublicKey.from(spaceKey))!;
@@ -170,6 +165,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
   return context.status(200).succeed();
 };
+
+export default handler;
 
 type SchemaConfig = {
   typename: string;
