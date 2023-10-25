@@ -4,8 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { DocumentModel } from '@dxos/document-model';
-import { ShowDeletedOption, type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
+import { ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,9 +12,9 @@ import { type ComplexMap } from '@dxos/util';
 
 import { base, type EchoObject } from './defs';
 import { getDatabaseFromObject } from './echo-object-base';
-import { Filter, FilterSource } from './filter';
+import { type Filter } from './filter';
 import { createSignal } from './signal';
-import { isTypedObject, TypedObject, } from './typed-object';
+import { isTypedObject, type TypedObject } from './typed-object';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -107,22 +106,22 @@ export class Query<T extends TypedObject = TypedObject> {
 const filterMatch = (filter: Filter, object: EchoObject) => {
   let result = filterMatchInner(filter, object);
 
-  for(const orFilter of filter.orFilters) {
-    if(filterMatch(orFilter, object)) {
+  for (const orFilter of filter.orFilters) {
+    if (filterMatch(orFilter, object)) {
       result = true;
       break;
     }
   }
 
-  if(filter.invert) {
+  if (filter.invert) {
     result = !result;
-  } 
+  }
 
   return result;
-}
+};
 
 const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
-  if(isTypedObject(object)) {
+  if (isTypedObject(object)) {
     if (object.__deleted) {
       if (filter.showDeletedPreference === ShowDeletedOption.HIDE_DELETED) {
         return false;
@@ -134,26 +133,31 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
   }
 
-  if(filter.modelFilterPreference !== null) {
-    if(!filter.modelFilterPreference.includes(object[base]._modelConstructor.meta.type)) {
+  if (filter.modelFilterPreference !== null) {
+    if (!filter.modelFilterPreference.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
   }
 
-  if(filter.type) {
-    if(!isTypedObject(object)) {
+  if (filter.type) {
+    if (!isTypedObject(object)) {
       return false;
     }
 
     const type = object[base]._getType();
     const host = type?.host ?? getDatabaseFromObject(object)?._backend.spaceKey.toHex();
 
-    if(!type || type.itemId !== filter.type.itemId || type.protocol !== filter.type.protocol || host !== filter.type.host && type.host !== filter.type.host) {
+    if (
+      !type ||
+      type.itemId !== filter.type.itemId ||
+      type.protocol !== filter.type.protocol ||
+      (host !== filter.type.host && type.host !== filter.type.host)
+    ) {
       return false;
     }
   }
 
-  if(filter.properties) {
+  if (filter.properties) {
     for (const key in filter.properties) {
       invariant(key !== '@type');
       const value = filter.properties[key];
@@ -163,21 +167,21 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
   }
 
-  if(filter.textMatch !== undefined) {
+  if (filter.textMatch !== undefined) {
     throw new Error('Text based search not implemented.');
   }
 
-  if(filter.predicate) {
-    if(!filter.predicate(object)) {
+  if (filter.predicate) {
+    if (!filter.predicate(object)) {
       return false;
     }
   }
 
-  for(const andFilter of filter.andFilters) {
-    if(!filterMatch(andFilter, object)) {
+  for (const andFilter of filter.andFilters) {
+    if (!filterMatch(andFilter, object)) {
       return false;
     }
   }
 
   return true;
-}
+};

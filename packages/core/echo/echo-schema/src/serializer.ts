@@ -9,9 +9,9 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { base } from './defs';
+import { Filter } from './filter';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
-import { Filter } from './filter';
 
 export type SerializedObject = {
   '@id': string;

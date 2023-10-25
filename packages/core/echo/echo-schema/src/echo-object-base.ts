@@ -3,6 +3,7 @@
 //
 
 import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
+import { Reference } from '@dxos/document-model';
 import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -19,7 +20,6 @@ import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/docum
 import { type EchoDatabase } from './database';
 import { type EchoObject, base, db, subscribe } from './defs';
 import { createSignal } from './signal';
-import { Reference } from '@dxos/document-model';
 
 /**
  * Base class for all echo objects.
@@ -207,4 +207,4 @@ export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined
 export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
   const db = getDatabaseFromObject(obj);
   return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
-}
+};

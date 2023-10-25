@@ -12,10 +12,10 @@ import { ComplexMap, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import {  Query} from './query';
+import { Filter, type FilterSource } from './filter';
+import { Query } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
-import { Filter, FilterSource } from './filter';
 
 /**
  * Manages cross-space database interactions.

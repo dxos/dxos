@@ -20,12 +20,12 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
+import { Filter, type FilterSource } from './filter';
 import { type HyperGraph } from './hyper-graph';
 import { type Schema } from './proto';
 import { Query } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
-import { Filter, FilterSource } from './filter';
 
 /**
  * Database wrapper.

@@ -1,10 +1,15 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { DocumentModel, Reference } from '@dxos/document-model';
-import { QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
+import { type QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { EchoObject } from './defs';
+
+import { type EchoObject } from './defs';
 import { getReferenceWithSpaceKey } from './echo-object-base';
-import { Schema } from './proto';
-import { Expando, TypedObject } from './typed-object';
+import { type Schema } from './proto';
+import { type Expando, type TypedObject } from './typed-object';
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
@@ -33,16 +38,16 @@ export class Filter<T extends EchoObject = EchoObject> {
 
     if (source instanceof Filter) {
       filter = source;
-    } else if(source === undefined) {
+    } else if (source === undefined) {
       filter = new Filter({});
     } else if (typeof source === 'function') {
       filter = new Filter({
         predicate: source as any,
       });
-    } else if(Array.isArray(source)) {
+    } else if (Array.isArray(source)) {
       filter = new Filter({
-        andFilters: source.map(sourceItem => Filter.from(sourceItem))
-      })
+        andFilters: source.map((sourceItem) => Filter.from(sourceItem)),
+      });
     } else if (typeof source === 'object' && source !== null) {
       filter = new Filter({
         properties: source,
@@ -51,7 +56,7 @@ export class Filter<T extends EchoObject = EchoObject> {
       throw new Error(`Invalid filter source: ${source}`);
     }
 
-    if(options) {
+    if (options) {
       filter.setOptions(options);
     }
 
@@ -66,13 +71,13 @@ export class Filter<T extends EchoObject = EchoObject> {
 
   static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
     const res = new Filter({});
-    res.andFilters = filters.map(filter => Filter.from(filter));
+    res.andFilters = filters.map((filter) => Filter.from(filter));
     return res;
   }
 
   static or<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
     const res = new Filter({});
-    res.orFilters = filters.map(filter => Filter.from(filter));
+    res.orFilters = filters.map((filter) => Filter.from(filter));
     return res;
   }
 
