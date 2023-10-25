@@ -106,7 +106,6 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
       }
 
       const after = text.slice(result.index + result[0].length);
-
       content = (
         <>
           {before}
