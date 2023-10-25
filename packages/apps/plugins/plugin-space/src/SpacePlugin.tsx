@@ -371,7 +371,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              console.log('JOIN', space);
               return space && { space, id: createNodeId(space.key) };
             }
           }
