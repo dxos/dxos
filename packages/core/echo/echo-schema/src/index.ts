@@ -19,4 +19,5 @@ export * from './util';
 export * from './clone';
 export * from './proto';
 export * from './signal';
+export * from './filter';
 linkDeferred();
