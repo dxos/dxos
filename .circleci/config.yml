@@ -13,6 +13,10 @@ parameters:
     type: string
     default: default
 
+  e2e:
+    type: boolean
+    default: false
+
 aliases:
   - &docker_image
     image: ghcr.io/dxos/circleci-node:latest
@@ -114,7 +118,6 @@ jobs:
     # TODO(wittjosiah): Using because of kai bundling memory usage.
     resource_class: xlarge
     steps:
-      - run: echo << pipeline.parameters.mode >>
       - checkout
       - *cache_restore
       - run: pnpm install
@@ -204,9 +207,7 @@ workflows:
             - Github
 
   e2e:
-    when:
-      condition:
-        equal: [ e2e, << pipeline.parameters.mode >> ]
+    when: << pipeline.parameters.e2e >>
     jobs:
       - e2e:
           context:
