@@ -58,7 +58,7 @@ export default class Join extends BaseCommand<typeof Join> {
       await done.wait();
 
       ux.log();
-      ux.log(chalk`{green Joined}: ${invitation.identityKey!.truncate()}`);
+      ux.log(chalk`{green Joined successfully.}`);
 
       return {
         identityKey: invitation.identityKey,
