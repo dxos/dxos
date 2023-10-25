@@ -105,7 +105,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       opts?.type ??
       (this._schema
         ? this._schema[immutable]
-          ? new Reference(this._schema!.typename, 'protobuf')
+          ? Reference.fromLegacyTypeName(this._schema!.typename)
           : this._linkObject(this._schema)
         : undefined);
 
@@ -212,6 +212,14 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   toJSON() {
     return this[base]._convert();
+  }
+
+  /**
+   * @internal
+   */
+  // TODO(dmaretskyi): Make public.
+  _getType() {
+    return this._getState().type;
   }
 
   /**

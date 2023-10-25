@@ -26,13 +26,13 @@ export {
   Text,
   TypeCollection,
   TypedObject,
+  Filter,
   type EchoObject,
-  type Filter,
   type ObjectMeta,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  type TypeFilter,
+  type FilterSource,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

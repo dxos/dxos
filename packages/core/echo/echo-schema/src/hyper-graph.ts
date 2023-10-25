@@ -12,7 +12,8 @@ import { ComplexMap, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import { type Filter, Query, type TypeFilter } from './query';
+import { Filter, type FilterSource } from './filter';
+import { Query } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
 
@@ -68,18 +69,14 @@ export class HyperGraph {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return new Query(
       new ComplexMap(
         PublicKey.hash,
         Array.from(this._databases.entries()).map(([key, db]) => [key, db._objects]),
       ),
       this._updateEvent,
-      filter,
-      options,
+      Filter.from(filter, options),
     );
   }
 
