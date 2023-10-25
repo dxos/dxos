@@ -13,7 +13,7 @@ function notifySuccess() {
 
 function notifyFailure() {
   if [ -z "$DISCORD_TEST_REPORT_WEBHOOK" ]; then return; fi
-  MESSAGE='{ "content": "⚠️ <@'$ROLE_ID'>", "embeds": [{ "title": "Daily testing failed: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$RED' }] }'
+  MESSAGE='{ "content": "⚠️ <@&'$ROLE_ID'>", "embeds": [{ "title": "Daily testing failed: '$1'", "description": "'$CIRCLE_BUILD_URL'", "color": '$RED' }] }'
   echo $MESSAGE
   curl -H "Content-Type: application/json" -d "${MESSAGE}" $DISCORD_TEST_REPORT_WEBHOOK
 }
