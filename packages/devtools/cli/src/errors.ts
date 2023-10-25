@@ -13,3 +13,9 @@ export class PublisherConnectionError extends Error {
     super('Error while connecting to kube publisher.');
   }
 }
+
+export class IdentityWaitTimeoutError extends Error {
+  constructor() {
+    super('Timeout waiting for identity.');
+  }
+}

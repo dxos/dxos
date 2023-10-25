@@ -42,7 +42,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
+import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -128,7 +128,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Run command without agent.',
+      description: 'Run command without using or starting agent.',
       default: false,
     }),
 
@@ -345,6 +345,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       );
     } else if (err instanceof PublisherConnectionError) {
       this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
+    } else if (err instanceof IdentityWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error}: Identity not initialized.`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
