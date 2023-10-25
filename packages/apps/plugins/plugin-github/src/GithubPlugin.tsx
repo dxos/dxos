@@ -26,7 +26,7 @@ import {
   type SurfaceProvides,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {
@@ -53,6 +53,7 @@ export type GithubPluginProvides = SurfaceProvides &
     settings: GithubSettingsProps;
   };
 
+// TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
@@ -97,7 +98,12 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: objectToGraphNode, createGroup });
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: Filter.from(filter),
+          adapter: objectToGraphNode,
+          createGroup,
+        });
       }
     },
     unload: async () => {

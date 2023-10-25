@@ -20,9 +20,10 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
+import { Filter, type FilterSource } from './filter';
 import { type HyperGraph } from './hyper-graph';
 import { type Schema } from './proto';
-import { type Filter, Query, type TypeFilter } from './query';
+import { Query } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -194,15 +195,11 @@ export class EchoDatabase {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    return new Query<T>(
       new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
       this._updateEvent,
-      filter,
-      options,
+      Filter.from(filter, options),
     );
   }
 

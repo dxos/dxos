@@ -7,7 +7,7 @@ import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy, Expando, type TypedObject } from '@dxos/client/echo';
+import { SpaceProxy, Expando, type TypedObject, Filter } from '@dxos/client/echo';
 
 import { TemplateMain } from './components';
 import translations from './translations';
@@ -30,7 +30,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
       if (dispatch) {
         adapter = new GraphNodeAdapter({
           dispatch,
-          filter: (object: TypedObject) => isObject(object),
+          filter: Filter.from((object: TypedObject) => isObject(object)),
           adapter: objectToGraphNode,
         });
       }

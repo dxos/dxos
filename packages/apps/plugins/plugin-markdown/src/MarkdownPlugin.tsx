@@ -13,7 +13,7 @@ import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@branef
 import { Document } from '@braneframe/types';
 import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -168,8 +168,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const dispatch = intentPlugin?.provides.intent.dispatch;
 
       if (dispatch) {
-        const filter = (document: Document) =>
-          document.__typename === Document.schema.typename && filters.every((filter) => filter(document));
+        const filter = Filter.from(
+          (document: Document) =>
+            document.__typename === Document.schema.typename && filters.every((filter) => filter(document)),
+        );
         adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
       }
 
