@@ -4,6 +4,5 @@
 
 export * from './decorators';
 export * from './generator';
-export * from './next-fractional-index';
 
 export * from './Cards';

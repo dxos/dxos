@@ -31,7 +31,6 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.5.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
-    "@tldraw/indices": "2.0.0-alpha.14",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",

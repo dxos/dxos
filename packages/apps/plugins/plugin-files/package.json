@@ -17,7 +17,6 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@preact/signals-react": "^1.3.6",
-    "@tldraw/indices": "2.0.0-alpha.14",
     "deepsignal": "1.4.0-shallow.0",
     "localforage": "^1.10.0"
   },

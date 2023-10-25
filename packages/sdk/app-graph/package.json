@@ -49,7 +49,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
-    "@tldraw/indices": "2.0.0-alpha.14",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/mousetrap": "^1.6.11",
