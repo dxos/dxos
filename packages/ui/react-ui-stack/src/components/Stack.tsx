@@ -18,7 +18,7 @@ import {
 import { dropRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { Section } from './Section';
-import { STACK } from '../translations';
+import { translationKey } from '../translations';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -80,7 +80,7 @@ export const Stack = ({
         className={className}
         item={{ id, items: itemsWithPreview }}
         Component={StackTile}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'adopt')}
+        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
       />
     </Mosaic.Container>
   );
@@ -88,7 +88,7 @@ export const Stack = ({
 
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
   ({ className, path, isOver, item: { items } }, forwardedRef) => {
-    const { t } = useTranslation(STACK);
+    const { t } = useTranslation(translationKey);
     const { Component } = useContainer();
 
     return (

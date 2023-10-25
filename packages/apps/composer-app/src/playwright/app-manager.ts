@@ -36,7 +36,7 @@ export class AppManager {
   }
 
   isAuthenticated() {
-    return this.page.getByTestId('splitViewPlugin.firstRunMessage').isVisible();
+    return this.page.getByTestId('layoutPlugin.firstRunMessage').isVisible();
   }
 
   async createSpace() {

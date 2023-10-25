@@ -6,9 +6,13 @@ import type { IconProps } from '@phosphor-icons/react';
 import type { DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { Intent, IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  Intent,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 
 export const STACK_PLUGIN = 'dxos.org/plugin/stack';
 
@@ -40,4 +44,7 @@ export type StackState = DeepSignal<{
   creators: StackSectionCreator[];
 }>;
 
-export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };
+export type StackPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides & { stack: StackState };

@@ -22,8 +22,16 @@ export type MosaicTileOverlayProps = {
   debug?: boolean;
 };
 
-// TODO(wittjosiah): Add delete.
-export type MosaicOperation = 'adopt' | 'copy' | 'rearrange' | 'reject';
+/**
+ * Possible operations when dropping a tile.
+ *
+ * * `transfer` - Remove the tile from it's current path and move to a new path.
+ * * `copy` - Add a clone of the tile at a new path.
+ * * `rearrange` - Change the order of the tile within it's current path.
+ * * `reject` - The tile is not allowed where it was dropped.
+ */
+// TODO(wittjosiah): Add 'delete'. Consider adding 'swap'.
+export type MosaicOperation = 'transfer' | 'copy' | 'rearrange' | 'reject';
 
 export type MosaicMoveEvent<TPosition = unknown> = {
   active: MosaicDraggedItem<TPosition>;

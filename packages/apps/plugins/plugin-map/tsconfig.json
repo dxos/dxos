@@ -21,10 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../ui/react-ui"
@@ -42,16 +42,13 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

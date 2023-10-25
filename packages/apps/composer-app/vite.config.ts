@@ -63,7 +63,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),

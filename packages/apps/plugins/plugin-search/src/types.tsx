@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 
 export const SEARCH_PLUGIN = 'dxos.org/plugin/search';
 
@@ -14,4 +17,7 @@ export enum SearchAction {
   SEARCH = `${SEARCH_ACTION}/search`,
 }
 
-export type SearchPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type SearchPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;

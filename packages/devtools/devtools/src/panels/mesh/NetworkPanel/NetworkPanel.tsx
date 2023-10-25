@@ -158,7 +158,6 @@ export const NetworkPanel = () => {
                   node.data!.member?.identity.identityKey.truncate();
 
                 const peer = node.data!.peer?.peerId?.truncate();
-
                 return `${peer} [${identity}]`;
               },
             }}
