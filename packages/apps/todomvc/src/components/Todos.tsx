@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery, SpaceState } from '@dxos/react-client/echo';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
@@ -23,7 +23,7 @@ export const Todos = () => {
   const [list] = useQuery(space, TodoList.filter());
 
   useEffect(() => {
-    if (space && !list) {
+    if (space && space.state.get() === SpaceState.READY && !list) {
       void space.db.add(new TodoList());
     }
   }, [space, list]);
