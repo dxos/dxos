@@ -5024,9 +5024,6 @@ importers:
 
   packages/devtools/cli:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
