@@ -14,12 +14,7 @@ export type SchemaConfig = {
   fields: string[];
 };
 
-export type SchemaDef = {
-  config: SchemaConfig;
-  schema: Schema;
-};
-
-const formatSchema = ({ schema, config }: SchemaDef) => {
+const formatSchema = (config: SchemaConfig, schema: Schema) => {
   const props =
     !config || config.fields.length === 0
       ? schema.props
@@ -37,7 +32,7 @@ export const createRequest = (
   client: Client,
   space: Space,
   block: Thread.Block,
-  schmea: SchemaConfig[],
+  schemaConfigs: SchemaConfig[],
 ): ChatCompletionRequestMessage[] => {
   const messages: ChatCompletionRequestMessage[] = [
     {
@@ -46,13 +41,7 @@ export const createRequest = (
     },
   ];
 
-  const schemas = schmea
-    .map((config) => ({
-      config,
-      schema: client.experimental.types.getSchema(config.typename)!,
-    }))
-    .filter(Boolean);
-
+  // Output format.
   messages.push({
     role: 'system',
     content: `
@@ -70,14 +59,27 @@ export const createRequest = (
       }]
 
       Available schema types:
-      ${schemas.map(({ config, schema }) => (schema ? formatSchema({ schema, config }) : '')).join('\n')}
+      ${schemaConfigs
+        .map((config) => {
+          const schema = client.experimental.types.getSchema(config.typename);
+          if (schema) {
+            return formatSchema(config, schema);
+          }
+
+          return undefined;
+        })
+        .filter(Boolean)
+        .join('\n')}
       `,
   });
 
+  // Context.
   messages.push(
     ...block.messages.map((message): ChatCompletionRequestMessage => {
-      let content = '';
+      // TODO(burdon): Add message data to block.
       const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
+
+      let content = '';
       if (contextObject && contextObject.__typename === 'dxos.experimental.chess.Game') {
         content += '\n' + 'I am playing chess and current game history is: ' + contextObject.pgn + '.\n';
       }
