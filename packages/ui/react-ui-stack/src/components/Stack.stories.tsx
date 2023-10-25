@@ -61,7 +61,7 @@ export const Complex = {
   },
 };
 
-export const Adopt = {
+export const Transfer = {
   args: {
     Component: SimpleContent,
     types: ['document'],
@@ -97,7 +97,7 @@ export const Copy = {
         <div className='flex grow justify-center p-4'>
           <div className='grid grid-cols-2 gap-4'>
             <DemoStack {...args} id='stack-1' />
-            <DemoStack {...args} id='stack-2' behavior='copy' count={0} />
+            <DemoStack {...args} id='stack-2' operation='copy' count={0} />
           </div>
         </div>
       </Mosaic.Root>
@@ -109,10 +109,17 @@ export const Copy = {
 export type DemoStackProps = StackProps & {
   types?: string[];
   count?: number;
-  behavior?: MosaicOperation;
+  operation?: MosaicOperation;
 };
 
-const DemoStack = ({ id = 'stack', Component, types, count = 8, behavior = 'adopt', className }: DemoStackProps) => {
+const DemoStack = ({
+  id = 'stack',
+  Component,
+  types,
+  count = 8,
+  operation = 'transfer',
+  className,
+}: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
     return generator.createObjects({ length: count });
@@ -121,7 +128,7 @@ const DemoStack = ({ id = 'stack', Component, types, count = 8, behavior = 'adop
   const itemsRef = useRef(items);
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
-    if (behavior === 'reject') {
+    if (operation === 'reject') {
       return 'reject';
     }
 
@@ -129,7 +136,7 @@ const DemoStack = ({ id = 'stack', Component, types, count = 8, behavior = 'adop
     const exists = itemsRef.current.findIndex((item) => item.id === active.item.id) >= 0;
 
     if (!exists) {
-      return behavior;
+      return operation;
     } else {
       return 'reject';
     }

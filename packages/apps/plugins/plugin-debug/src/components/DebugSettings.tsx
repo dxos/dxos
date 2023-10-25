@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { usePlugin } from '@dxos/react-surface';
+import { usePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DEBUG_PLUGIN, type DebugPluginProvides } from '../props';

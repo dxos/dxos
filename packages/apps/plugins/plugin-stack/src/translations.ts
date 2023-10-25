@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { translations as stackTranslations } from '@dxos/react-ui-stack';
+
 import { STACK_PLUGIN } from './types';
 
 export default [
@@ -15,4 +17,5 @@ export default [
       },
     },
   },
+  ...stackTranslations,
 ];

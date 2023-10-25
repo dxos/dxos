@@ -7,6 +7,7 @@ import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
+import { type DispatchIntent } from '@dxos/app-framework';
 
 import {
   FILES_PLUGIN,
@@ -119,15 +120,20 @@ const handleLegacySave = (file: LocalFile) => {
   document.body.removeChild(a);
 };
 
-export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent: Node) => {
+export const localEntityToGraphNode = (entity: LocalEntity, index: string, parent: Node, dispatch: DispatchIntent) => {
   if ('children' in entity) {
-    return localDirectoryToGraphNode(entity, index, parent);
+    return localDirectoryToGraphNode(entity, index, parent, dispatch);
   } else {
-    return localFileToGraphNode(entity, index, parent);
+    return localFileToGraphNode(entity, index, parent, dispatch);
   }
 };
 
-const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, parent: Node<LocalDirectory>) => {
+const localDirectoryToGraphNode = (
+  directory: LocalDirectory,
+  index: string,
+  parent: Node<LocalDirectory>,
+  dispatch: DispatchIntent,
+) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: directory.id,
     label: directory.title,
@@ -143,11 +149,12 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
       id: 're-open',
       label: ['re-open directory label', { ns: FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.RECONNECT,
-        data: { id: directory.id },
-      },
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.RECONNECT,
+          data: { id: directory.id },
+        }),
       properties: {
         disposition: 'default',
       },
@@ -158,20 +165,26 @@ const localDirectoryToGraphNode = (directory: LocalDirectory, index: string, par
     id: 'close-directory',
     label: ['close directory label', { ns: FILES_PLUGIN }],
     icon: (props) => <X {...props} />,
-    intent: {
-      plugin: FILES_PLUGIN,
-      action: LocalFilesAction.CLOSE,
-      data: { id: directory.id },
-    },
+    invoke: () =>
+      dispatch({
+        plugin: FILES_PLUGIN,
+        action: LocalFilesAction.CLOSE,
+        data: { id: directory.id },
+      }),
   });
 
   const childIndices = getIndices(directory.children.length);
-  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, childIndices[index], node));
+  directory.children.forEach((entity, index) => localEntityToGraphNode(entity, childIndices[index], node, dispatch));
 
   return node;
 };
 
-const localFileToGraphNode = (file: LocalFile, index: string, parent: Node<LocalDirectory>) => {
+const localFileToGraphNode = (
+  file: LocalFile,
+  index: string,
+  parent: Node<LocalDirectory>,
+  dispatch: DispatchIntent,
+) => {
   const [node] = parent.addNode(FILES_PLUGIN, {
     id: file.id,
     label: file.title,
@@ -188,22 +201,24 @@ const localFileToGraphNode = (file: LocalFile, index: string, parent: Node<Local
       id: 'save',
       label: [file.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
       icon: (props) => <FloppyDisk {...props} />,
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.SAVE,
-        data: { id: file.id },
-      },
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.SAVE,
+          data: { id: file.id },
+        }),
     });
   } else {
     node.addAction({
       id: 're-open',
       label: ['re-open file label', { ns: FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
-      intent: {
-        plugin: FILES_PLUGIN,
-        action: LocalFilesAction.RECONNECT,
-        data: { id: file.id },
-      },
+      invoke: () =>
+        dispatch({
+          plugin: FILES_PLUGIN,
+          action: LocalFilesAction.RECONNECT,
+          data: { id: file.id },
+        }),
       properties: {
         disposition: 'default',
       },
@@ -214,11 +229,12 @@ const localFileToGraphNode = (file: LocalFile, index: string, parent: Node<Local
     id: 'close-file',
     label: ['close file label', { ns: FILES_PLUGIN }],
     icon: (props) => <X {...props} />,
-    intent: {
-      plugin: FILES_PLUGIN,
-      action: LocalFilesAction.CLOSE,
-      data: { id: file.id },
-    },
+    invoke: () =>
+      dispatch({
+        plugin: FILES_PLUGIN,
+        action: LocalFilesAction.CLOSE,
+        data: { id: file.id },
+      }),
   });
 
   return node;

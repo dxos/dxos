@@ -6,10 +6,10 @@ import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-ico
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {

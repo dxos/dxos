@@ -9,6 +9,7 @@ import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
 import { type AppState } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
@@ -44,12 +45,14 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
 export const spaceToGraphNode = ({
   space,
   parent,
+  dispatch,
   settings,
   appState,
   defaultIndex,
 }: {
   space: Space;
   parent: Node;
+  dispatch: DispatchIntent;
   settings: SpaceSettingsProps;
   appState?: AppState;
   defaultIndex?: string;
@@ -114,7 +117,7 @@ export const spaceToGraphNode = ({
         id: 'rename-space',
         label: ['rename space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.RENAME },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RENAME }),
         properties: {
           disabled: disabled || error,
         },
@@ -123,7 +126,7 @@ export const spaceToGraphNode = ({
         id: 'share-space',
         label: ['share space', { ns: SPACE_PLUGIN }],
         icon: (props) => <Users {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.SHARE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.SHARE }),
         properties: {
           disabled: disabled || error,
         },
@@ -136,7 +139,7 @@ export const spaceToGraphNode = ({
       id: 'backup-space',
       label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Download {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.BACKUP },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.BACKUP }),
       properties: {
         disabled: disabled || error,
       },
@@ -145,7 +148,7 @@ export const spaceToGraphNode = ({
       id: 'restore-space',
       label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Upload {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.RESTORE },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RESTORE }),
       properties: {
         disabled: disabled || error,
       },
@@ -158,14 +161,14 @@ export const spaceToGraphNode = ({
         id: 'close-space',
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <X {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.CLOSE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.CLOSE }),
       });
     } else {
       node.addAction({
         id: 'open-space',
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <ClockCounterClockwise {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.OPEN },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.OPEN }),
       });
     }
   }

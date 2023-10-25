@@ -56,7 +56,15 @@ export type QueryOptions = {
    * Controls how deleted items are filtered.
    */
   deleted?: ShowDeletedOption;
+
+  /**
+   * Filter by model.
+   * @default * Only DocumentModel.
+   */
+  models?: string[] | null;
 };
+
+export const QUERY_ALL_MODELS = null;
 
 //
 // Filters

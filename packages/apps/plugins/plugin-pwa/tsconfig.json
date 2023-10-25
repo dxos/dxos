@@ -27,7 +27,7 @@
       "path": "../../../common/sentry"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../ui/react-ui"
