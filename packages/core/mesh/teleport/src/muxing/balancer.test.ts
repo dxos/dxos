@@ -15,12 +15,14 @@ import { encodeChunk, decodeChunk, Balancer } from './balancer';
 
 class StuckableStream extends Duplex {
   public unstuck: Function | undefined;
+  public writeCalls = 0;
 
   constructor(private _stuck: boolean) {
     super();
   }
 
   override _write(chunk: Buffer, encoding: string, callback: Function) {
+    this.writeCalls++;
     if (this._stuck) {
       this.unstuck = () => {
         this._stuck = false;
@@ -100,6 +102,7 @@ describe('Balancer', () => {
 
     await sleep(20);
 
+    expect(stream.writeCalls).to.equal(1);
     expect(balancer.buffersCount).to.equal(channels);
 
     stream.unstuck?.();

@@ -29,6 +29,7 @@ export class Framer {
 
   readonly drain = new Event();
 
+  // TODO(egorgripasov): Consider using a Transform stream if it provides better backpressure handling.
   private readonly _stream = new Duplex({
     objectMode: false,
     read: () => {
