@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Subscription, type Space, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
+import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/client/echo';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 
 /**
@@ -39,7 +39,7 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
 
             // Parse schema to follow referenced objects.
             object.__schema.props.forEach((prop) => {
-              if (prop.type === SchemaType.PropType.REF) {
+              if (prop.type === Schema.PropType.REF) {
                 const ref = object[prop.id!];
                 if (ref) {
                   if (objects.findIndex((obj) => obj.id === ref.id) !== -1) {
