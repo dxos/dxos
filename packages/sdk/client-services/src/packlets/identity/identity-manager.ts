@@ -199,6 +199,24 @@ export class IdentityManager {
       displayName: this._identity.profileDocument?.displayName,
     });
 
+    {
+      const credential = await identity.getIdentityCredentialSigner().createCredential({
+        subject: identity.deviceKey,
+        assertion: {
+          '@type': 'dxos.halo.credentials.DeviceProfile',
+          profile: {
+            platform: platform.name,
+            platformVersion: platform.version,
+            architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
+            os: platform.os?.family,
+            osVersion: platform.os?.version,
+          },
+        },
+      });
+
+      await identity.controlPipeline.writer.write({ credential: { credential } });
+    }
+
     this.stateUpdate.emit();
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
