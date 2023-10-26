@@ -34,6 +34,7 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
 } from './components';
+import { SaveIndicator } from './components/SaveIndicator';
 import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
 import {
@@ -45,7 +46,6 @@ import {
   type SpaceState,
 } from './types';
 import { createNodeId, isSpace, spaceToGraphNode } from './util';
-import { SaveIndicator } from './components/SaveIndicator';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -246,7 +246,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return null;
               }
             case 'save-indicator':
-              return <SaveIndicator hideSaveIndicator />
+              return <SaveIndicator hideSaveIndicator />;
             case 'presence':
               return <SpacePresence />;
             case 'settings':

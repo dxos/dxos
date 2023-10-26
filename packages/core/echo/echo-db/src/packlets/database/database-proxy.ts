@@ -431,7 +431,7 @@ export class DatabaseProxy {
     for (const batch of this._pendingBatches.values()) {
       batch.processTrigger!.throw(new Error('Service connection closed.'));
     }
-    if(this._pendingBatches.size > 0) {
+    if (this._pendingBatches.size > 0) {
       this.pendingBatch.emit({
         size: this._pendingBatches.size,
         error: new Error('Service connection closed.'),
