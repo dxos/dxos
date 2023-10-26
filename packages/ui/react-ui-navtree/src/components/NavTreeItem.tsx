@@ -44,14 +44,6 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
 
   const items = useItemsWithOrigin(path, nodes);
 
-  if (path === 'root/space-all-spaces') {
-    console.log(
-      '[branch]',
-      path,
-      nodes.map(({ id }) => id.substring(8, 12)),
-    );
-  }
-
   return (
     <TreeItemComponent.Body>
       <Mosaic.SortableContext id={path} items={items} direction='vertical'>
