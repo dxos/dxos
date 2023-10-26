@@ -39,7 +39,7 @@ export class EpochMonitor extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    if (!this._pluginConfig.enabled === false) {
+    if (!this._pluginConfig.enabled) {
       log.info('epoch monitor disabled from config');
       return;
     }

@@ -24,7 +24,7 @@ export class EchoProxyServer extends AbstractPlugin {
 
   async open() {
     invariant(this._pluginCtx);
-    if (this._pluginConfig.enabled === false) {
+    if (!this._pluginConfig.enabled) {
       log.info('EchoProxyServer disabled from config');
       return;
     }
@@ -92,7 +92,7 @@ export class EchoProxyServer extends AbstractPlugin {
       res.json(result);
     });
 
-    const { port } = this._pluginConfig.config.port!;
+    const { port } = this._pluginConfig.config!;
     this._server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
