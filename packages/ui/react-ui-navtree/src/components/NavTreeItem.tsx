@@ -16,7 +16,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithPreview } from '@dxos/react-ui-mosaic';
+import { Mosaic, useContainer, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,
@@ -41,13 +41,23 @@ const hoverableDescriptionIcons =
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component } = useContainer();
-  const itemsWithPreview = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable' });
+
+  // TODO(thure): Use this next:
+  // const items = useItemsWithOrigin(path, nodes);
+
+  if (path === 'root/space-all-spaces') {
+    console.log(
+      '[branch]',
+      path,
+      nodes.map(({ id }) => id.substring(8, 12)),
+    );
+  }
 
   return (
     <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={nodes} direction='vertical'>
         <Tree.Branch>
-          {itemsWithPreview.map((node, index) => (
+          {nodes.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
               item={{ id: node.id, node, level }}
@@ -85,6 +95,15 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
         setOpen(true);
       }
     }, [current, path]);
+
+    useEffect(() => {
+      if (path === 'root/space-all-spaces') {
+        console.log(
+          '[all spaces children map]',
+          Object.keys(node.childrenMap).map((id) => id.substring(8, 12)),
+        );
+      }
+    }, [node.childrenMap]);
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;

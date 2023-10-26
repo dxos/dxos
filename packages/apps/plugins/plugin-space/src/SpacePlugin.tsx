@@ -281,9 +281,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           // Shared spaces section.
           const allSpacesId = createNodeId('all-spaces');
 
-          let spacesOrder: ObjectOrder | undefined = client.spaces.default.db.objects.find(
-            (obj) => obj?.scope === allSpacesId,
-          );
+          const spacesOrderQuery = client.spaces.default.db.query(ObjectOrder.filter({ scope: allSpacesId }));
+
+          let spacesOrder: ObjectOrder | undefined;
 
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
             id: allSpacesId,
@@ -296,33 +296,18 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               childrenPersistenceClass: 'appState',
               onRearrangeChildren: (nextOrder: string[]) => {
                 console.log('[on rearrange spaces]', nextOrder);
-                groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, nextOrder);
                 if (!spacesOrder) {
-                  client.spaces.default.db.add(
-                    new ObjectOrder({
-                      scope: allSpacesId,
-                      order: nextOrder,
-                    }),
-                  );
+                  const nextObjectOrder = new ObjectOrder({
+                    scope: allSpacesId,
+                    order: nextOrder,
+                  });
+                  client.spaces.default.db.add(nextObjectOrder);
                 } else {
                   spacesOrder.order = nextOrder;
                 }
               },
             },
           });
-
-          // TODO(thure): This isn’t running right away, why is that?
-          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
-            spacesOrder = spacesOrders[0];
-            console.log('[on update spaces order]', spacesOrder.order);
-            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
-          };
-
-          // TODO(thure): how to unsubscribe?
-          // TODO(thure): how to only subscribe to first result?
-          const _spacesOrderSubscription = client.spaces.default.db
-            .query(ObjectOrder.filter({ scope: allSpacesId }))
-            .subscribe(updateSpacesOrder);
 
           const updateSpace = (space: Space) => {
             client.spaces.default.key.equals(space.key)
@@ -384,8 +369,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           );
 
+          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
+            console.log('[update spaces order]', groupNode.childrenMap);
+            spacesOrder = spacesOrders[0];
+            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
+          };
+
+          updateSpacesOrder(spacesOrderQuery);
+
+          const spacesOrderUnsubscribe = spacesOrderQuery.subscribe(updateSpacesOrder);
+
           return () => {
             unsubscribe();
+            spacesOrderUnsubscribe();
             unsubscribeHidden();
             graphSubscriptions.clear();
           };

@@ -6,7 +6,7 @@ import { type Node, type Action } from '@dxos/app-graph';
 
 export type TreeNodeAction = Pick<Action, 'id' | 'label' | 'invoke' | 'actions' | 'properties' | 'icon' | 'keyBinding'>;
 
-export type TreeNode = Pick<Node, 'id' | 'label' | 'properties' | 'icon'> & {
+export type TreeNode = Pick<Node, 'id' | 'label' | 'properties' | 'icon' | 'childrenMap'> & {
   children: TreeNode[];
   actions: TreeNodeAction[];
 };
