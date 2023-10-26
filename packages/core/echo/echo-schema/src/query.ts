@@ -73,7 +73,9 @@ export class Query<T extends TypedObject = TypedObject> {
   // Hold a reference to the listener to prevent it from being garbage collected.
   private _onUpdate = (updateEvent: UpdateEvent) => {
     const objectMap = this._objectMaps.get(updateEvent.spaceKey);
-    invariant(objectMap, 'Invalid update routed.');
+    if(!objectMap) {
+      return;
+    }
 
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
     const changed = updateEvent.itemsUpdated.some((object) => {
