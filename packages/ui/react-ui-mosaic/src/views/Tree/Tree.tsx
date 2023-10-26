@@ -15,7 +15,7 @@ import {
   useContainer,
   useMosaic,
   Path,
-  useItemsWithPreview,
+  useItemsWithOrigin,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -53,12 +53,12 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
   const { id, Component } = useContainer();
-  const itemsWithPreview = useItemsWithPreview({ items, path: id, strategy: 'layout-stable' });
+  const itemsWithOrigin = useItemsWithOrigin(id, items);
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
-      <Mosaic.SortableContext id={id} items={itemsWithPreview} direction='vertical'>
-        {itemsWithPreview.map((item, index) => (
+      <Mosaic.SortableContext id={id} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((item, index) => (
           <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
             <Mosaic.SortableTile item={item} path={id} position={index} Component={Component!} />
           </TreeItemComponent.Root>
@@ -99,12 +99,12 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
   const { Component } = useContainer();
-  const itemsWithPreview = useItemsWithPreview({ items, path, strategy: 'layout-stable' });
+  const itemsWithOrigin = useItemsWithOrigin(path, items);
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
-        {itemsWithPreview.map((child, index) => (
+      <Mosaic.SortableContext id={path} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
               <Mosaic.SortableTile

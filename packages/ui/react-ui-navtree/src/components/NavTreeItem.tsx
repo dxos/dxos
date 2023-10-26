@@ -95,15 +95,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
       }
     }, [current, path]);
 
-    useEffect(() => {
-      if (path === 'root/space-all-spaces') {
-        console.log(
-          '[all spaces children map]',
-          Object.keys(node.childrenMap).map((id) => id.substring(8, 12)),
-        );
-      }
-    }, [node.childrenMap]);
-
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
     const testId = node.properties?.['data-testid'];

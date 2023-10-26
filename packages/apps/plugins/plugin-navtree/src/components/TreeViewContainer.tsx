@@ -20,18 +20,6 @@ import { VersionInfo } from './VersionInfo';
 import { NAVTREE_PLUGIN } from '../types';
 import { getPersistenceParent } from '../util';
 
-const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
-  if (a.properties.index && b.properties.index) {
-    if (a.properties.index < b.properties.index) {
-      return -1;
-    } else if (a.properties.index > b.properties.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
-
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
   return parts ? Path.create('root', ...parts) : undefined;
@@ -228,7 +216,6 @@ export const TreeViewContainer = ({
               isOver={isOver}
               onOver={handleOver}
               onDrop={handleDrop}
-              compare={graphNodeCompare}
               popoverAnchorId={popoverAnchorId}
             />
           </div>
