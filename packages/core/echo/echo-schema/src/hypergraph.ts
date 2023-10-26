@@ -16,6 +16,7 @@ import { Filter, QueryOptions, type FilterSource } from './filter';
 import { Query } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Manages cross-space database interactions.
@@ -70,10 +71,16 @@ export class HyperGraph {
    * Filter by type.
    */
   query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    const spaces = options?.spaces?.map((entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey) ? entry.key : entry as PublicKey);
+    invariant(!spaces || spaces.every(space => space instanceof PublicKey), 'Invalid spaces filter');
+
     return new Query(
       new ComplexMap(
         PublicKey.hash,
-        Array.from(this._databases.entries()).map(([key, db]) => [key, db._objects]),
+        // TODO(dmaretskyi): This fails when new spaces are added.
+        Array.from(this._databases.entries())
+          .map(([key, db]) => [key, db._objects] as const)
+          .filter(([key,]) => !spaces || spaces.some(k => k.equals(key))),
       ),
       this._updateEvent,
       Filter.from(filter, options),

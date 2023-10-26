@@ -195,11 +195,10 @@ export class EchoDatabase {
    * Filter by type.
    */
   query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    return new Query<T>(
-      new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
-      this._updateEvent,
-      Filter.from(filter, options),
-    );
+    options ??= {};
+    options.spaces = [this._backend.spaceKey];
+
+    return this._graph.query(filter, options);
   }
 
   private _update(updateEvent: UpdateEvent) {
