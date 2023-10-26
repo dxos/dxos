@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
-
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
+// TODO(burdon): Reconcile with @dxos/echo-generator.
 
 import { faker } from '@faker-js/faker';
 
@@ -17,7 +15,6 @@ export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] 
     .map((_, i) => fn(i))
     .filter(Boolean) as T[];
 
-// TODO(burdon): Commit to using ECHO to generate all test data? Or convert from raw data?
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
@@ -44,7 +41,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
 export const Status = ['pending', 'active', 'done'];
 export const Priority = [1, 2, 3, 4, 5];
 
-export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
+const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
   document: {
     createData: () => ({
       title: faker.lorem.sentence(3),

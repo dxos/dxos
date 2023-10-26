@@ -28,7 +28,7 @@ export class FunctionsPlugin extends AbstractPlugin {
   private _server?: Server;
 
   async open() {
-    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+    this._options = { ...DEFAULT_OPTIONS, ...this._config };
     if (!this._options.enabled) {
       log.info('Functions disabled.');
       return;

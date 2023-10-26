@@ -80,8 +80,11 @@ export const ClientPlugin = (
         }
       }
 
+      // TODO(burdon): Timeout.
       if (client.halo.identity.get()) {
+        console.log('### waiting...');
         await client.spaces.isReady.wait();
+        console.log('### ok');
       }
 
       return {
@@ -89,14 +92,12 @@ export const ClientPlugin = (
         firstRun,
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
-
           useEffect(() => {
             if (!client) {
               return;
             }
 
             const subscription = client.status.subscribe((status) => setStatus(status));
-
             return () => subscription.unsubscribe();
           }, [client, setStatus]);
 

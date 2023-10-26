@@ -63,11 +63,7 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
   const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
   const [mutationJitter, setMutationJitter] = useState(String(DEFAULT_JITTER));
 
-  const generator = useMemo(() => {
-    const generator = new Generator(space);
-    void generator.initialize();
-    return generator;
-  }, [space]);
+  const generator = useMemo(() => new Generator(space), [space]);
 
   // TODO(burdon): Note: this is shared across all spaces!
   const { running, start, stop } = useContext(DebugContext);

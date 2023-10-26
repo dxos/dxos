@@ -13,7 +13,6 @@ import React, { type FC, type PropsWithChildren, useState } from 'react';
 import { chromeSurface, mx } from '@dxos/react-ui-theme';
 
 import { Card } from './Card';
-import { testImages } from './testing';
 import { DensityProvider } from '../DensityProvider';
 import { DropdownMenu } from '../DropdownMenu';
 import { Input } from '../Input';
@@ -21,9 +20,16 @@ import { ScrollArea } from '../ScrollArea';
 
 faker.seed(1);
 
-// TODO(burdon): Menu.
-// TODO(burdon): Collapse.
-// TODO(burdon): Editable.
+// https://unsplash.com
+// TODO(burdon): Use https://picsum.photos
+const testImages = [
+  'https://images.unsplash.com/photo-1616394158624-a2ba9cfe2994',
+  'https://images.unsplash.com/photo-1507941097613-9f2157b69235',
+  'https://images.unsplash.com/photo-1431274172761-fca41d930114',
+  'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
+  'https://images.unsplash.com/photo-1564221710304-0b37c8b9d729',
+  'https://images.unsplash.com/photo-1605425183435-25b7e99104a4',
+];
 
 type CardData = {
   id: string;
@@ -92,7 +98,7 @@ const DraggableStory: FC<PropsWithChildren> = ({ children }) => {
     <DndContext onDragEnd={handleDragEnd}>
       <SortableContext items={cards.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
         <div className='flex flex-col overflow-y-scroll'>
-          <div className='flex flex-col m-4 gap-4'>
+          <div className='flex flex-col gap-4'>
             {cards.map((card) => (
               <DraggableCard key={card.id} data={card} onDelete={handleDelete} />
             ))}
@@ -105,8 +111,8 @@ const DraggableStory: FC<PropsWithChildren> = ({ children }) => {
 
 const ReadonlyCardStory = () => {
   return (
-    <div className='flex flex-col overflow-y-scroll p-8'>
-      <div className='flex flex-col gap-8'>
+    <div className='flex flex-col overflow-y-scroll'>
+      <div className='flex flex-col gap-4'>
         <Card.Root square noPadding>
           <Card.Header floating>
             <Card.DragHandle position='left' />
@@ -173,35 +179,34 @@ const ReadonlyCardStory = () => {
 
 const EditableCardStory = () => {
   return (
-    <div className='flex flex-col overflow-y-scroll p-8'>
-      <div className='flex flex-col gap-8'>
-        <Card.Root>
-          <Card.Header>
-            <Card.DragHandle />
-            <Input.Root>
-              <Input.TextInput classNames={'-mx-2 px-2'} variant='subdued' placeholder={'Title'} />
-            </Input.Root>
-            <Card.Menu />
-          </Card.Header>
-          <Card.Body gutter classNames={'gap-2 text-sm font-thin'}>
-            {faker.lorem.sentences()}
-          </Card.Body>
-        </Card.Root>
-      </div>
+    <div className='flex flex-col h-full justify-center'>
+      <Card.Root>
+        <Card.Header>
+          <Card.DragHandle />
+          <Input.Root>
+            <Input.TextInput classNames={'-mx-2 px-2'} variant='subdued' placeholder={'Title'} />
+          </Input.Root>
+          <Card.Menu />
+        </Card.Header>
+        <Card.Body gutter classNames={'gap-2 text-sm font-thin'}>
+          {faker.lorem.sentences()}
+        </Card.Body>
+      </Card.Root>
     </div>
   );
 };
 
 export default {
   component: Card,
-  args: {},
   decorators: [
     (Story: any) => (
       <div className={mx('flex h-screen w-full justify-center overflow-hidden', chromeSurface)}>
-        {/* TODO(burdon): Story for different densities. */}
-        <DensityProvider density='fine'>
-          <Story />
-        </DensityProvider>
+        <div className='flex flex-col w-[360px] overflow-hidden'>
+          {/* TODO(burdon): Story for different densities. */}
+          <DensityProvider density='fine'>
+            <Story />
+          </DensityProvider>
+        </div>
       </div>
     ),
   ],
