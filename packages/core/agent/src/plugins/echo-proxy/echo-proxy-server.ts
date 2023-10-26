@@ -13,7 +13,8 @@ import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy
 
 import { AbstractPlugin } from '../plugin';
 
-const DEFAULT_OPTIONS: EchoProxyConfig = {
+const DEFAULT_OPTIONS: Required<EchoProxyConfig> & { '@type': string } = {
+  '@type': 'dxos.agent.echoproxy.EchoProxyConfig',
   port: 7001,
 };
 

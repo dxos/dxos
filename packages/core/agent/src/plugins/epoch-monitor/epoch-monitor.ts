@@ -15,7 +15,8 @@ import { ComplexMap } from '@dxos/util';
 import { AbstractPlugin } from '../plugin';
 
 // TODO(dmaretskyi): Review defaults.
-const DEFAULT_OPTIONS: Required<EpochMonitorConfig> = {
+const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
+  '@type': 'dxos.agent.epoch.EpochMonitorConfig',
   minMessagesBetweenEpochs: 10_000,
   minTimeBetweenEpochs: 120_000,
   minInactivityBeforeEpoch: 30_000,

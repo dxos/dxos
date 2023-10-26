@@ -12,7 +12,8 @@ import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
 import { AbstractPlugin } from '../plugin';
 
-const DEFAULT_OPTIONS: Required<FunctionsConfig> = {
+const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
+  '@type': 'dxos.agent.functions.FunctionsConfig',
   port: 7002,
 };
 
