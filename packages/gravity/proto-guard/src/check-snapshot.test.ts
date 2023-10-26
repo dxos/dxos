@@ -37,7 +37,7 @@ describe('Tests against old storage', () => {
     fse.removeSync(testStoragePath);
   });
 
-  test.only('check if space loads', async () => {
+  test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
     const services = builder.createLocal();
     const client = new Client({ services });
