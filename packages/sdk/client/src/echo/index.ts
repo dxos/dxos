@@ -4,13 +4,7 @@
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export { type ItemID, DocumentModel } from '@dxos/document-model';
-export {
-  TYPE_SCHEMA,
-  Item,
-  type SchemaDef,
-  type SchemaField,
-  type SchemaRef,
-} from '@dxos/echo-db';
+export { TYPE_SCHEMA, Item, type SchemaDef, type SchemaField, type SchemaRef } from '@dxos/echo-db';
 export {
   base,
   createSubscription,

@@ -17,7 +17,7 @@ import {
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import {
-  QueryOptions,
+  type QueryOptions,
   type FilterSource,
   type HyperGraph,
   type Query,
