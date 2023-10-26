@@ -34,6 +34,39 @@ export interface QuerySource {
   update: Event<QuerySourceUpdateEvent>;
 }
 
+export type QueryResult<T extends EchoObject> = {
+  id: string;
+  spaceKey: PublicKey;
+
+  /**
+   * May not be present for remote results.
+   */
+  object?: T;
+
+  match?: {
+    // TODO(dmaretskyi): text positional info.
+    
+    /**
+     * Higher means better match.
+     */
+    rank: number
+  },
+  
+  /**
+   * Query resolution metadata. 
+   */
+  resolution?: {
+    // TODO(dmaretskyi): Make this more generic.
+    source: 'remote' | 'local',
+
+    /**
+     * Query resolution time in milliseconds.
+     */
+    time: number
+  }
+}
+
+
 /**
  * Predicate based query.
  */
@@ -45,7 +78,8 @@ export class Query<T extends TypedObject = TypedObject> {
   });
 
   private readonly _filter: Filter;
-  private _cache: T[] | undefined = undefined;
+  private _resultCache: QueryResult<T>[] | undefined = undefined;
+  private _objectCache: T[] | undefined = undefined;
   private _signal = createSignal?.();
   private _event = new Event<Query<T>>();
 
@@ -65,9 +99,16 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._filter;
   }
 
+  get results(): QueryResult<T>[] {
+    this._signal?.notifyRead();
+    this._ensureCachePresent();
+    return this._resultCache!;
+  }
+
   get objects(): T[] {
     this._signal?.notifyRead();
-    return this._getObjects();
+    this._ensureCachePresent();
+    return this._objectCache!;
   }
 
   // Hold a reference to the listener to prevent it from being garbage collected.
@@ -80,27 +121,36 @@ export class Query<T extends TypedObject = TypedObject> {
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
     const changed = updateEvent.itemsUpdated.some((object) => {
       return (
-        !this._cache ||
-        this._cache.find((obj) => obj.id === object.id) ||
+        !this._objectCache ||
+        this._objectCache.find((obj) => obj.id === object.id) ||
         (objectMap.has(object.id) && this._match(objectMap.get(object.id)! as T))
       );
     });
 
     if (changed) {
-      this._cache = undefined;
+      this._resultCache = undefined;
+      this._objectCache = undefined;
       this._signal?.notifyWrite();
       this._event.emit(this);
     }
   };
 
-  private _getObjects() {
-    if (!this._cache) {
-      this._cache = Array.from(this._objectMaps.values()).flatMap((objects) =>
-        Array.from(objects.values()).filter((object): object is T => this._match(object as T)),
-      );
+  private _ensureCachePresent() {
+    if(!this._resultCache) {
+      this._resultCache = Array.from(this._objectMaps.values()).flatMap((objects) =>
+        Array.from(objects.values()).filter((object): object is T => this._match(object as T))
+      )
+        .map(object => ({
+          id: object.id,
+          spaceKey: getDatabaseFromObject(object)!._backend.spaceKey,
+          object,
+          resolution: {
+            source: 'local',
+            time: 0,
+          }
+        }));
+        this._objectCache = this._resultCache.map(result => result.object!).filter((object): object is T => !!object);
     }
-
-    return this._cache;
   }
 
   // TODO(burdon): Change to SubscriptionHandle.

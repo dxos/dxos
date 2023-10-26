@@ -46,8 +46,12 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query({ label: undefined });
+      const { objects, results } = db.query({ label: undefined });
       expect(objects).to.have.length(1);
+      expect(results).to.have.length(1);
+      expect(results[0].object).to.eq(objects[0]);
+      expect(results[0].id).to.eq(objects[0].id);
+      expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
     }
 
     {
