@@ -10,7 +10,6 @@ import {
   type MosaicMoveEvent as NaturalMosaicMoveEvent,
   type MosaicDropEvent as NaturalMosaicDropEvent,
   type MosaicOperation as NaturalMosaicOperation,
-  type MosaicCompareDataItem as NaturalMosaicCompareDataItem,
 } from './Container';
 import { Debug, type DebugProps } from './Debug';
 import { DefaultComponent } from './DefaultComponent';
@@ -81,8 +80,6 @@ export type MosaicMoveEvent<TPosition = unknown> = NaturalMosaicMoveEvent<TPosit
 export type MosaicDropEvent<TPosition = unknown> = NaturalMosaicDropEvent<TPosition>;
 export type MosaicOperation = NaturalMosaicOperation;
 export type MosaicActiveType = NaturalMosaicActiveType;
-
-export type MosaicCompareDataItem = NaturalMosaicCompareDataItem;
 
 // TODO(burdon): Remove.
 export type MosaicDebugProps = DebugProps;

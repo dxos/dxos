@@ -14,7 +14,6 @@ import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { NavTree } from './NavTree';
-import type { TreeNode } from '../types';
 
 faker.seed(3);
 const fake = faker.helpers.fake;
@@ -44,18 +43,6 @@ const createGraph = () => {
   return buildGraph(new GraphBuilder().build(), 'tree', content);
 };
 
-const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
-  if (a.properties.index && b.properties.index) {
-    if (a.properties.index < b.properties.index) {
-      return -1;
-    } else if (a.properties.index > b.properties.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
-
 const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string; graph?: GraphType }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
@@ -83,7 +70,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
     }
   };
 
-  return <NavTree node={graph.root} onDrop={handleDrop} compare={graphNodeCompare} />;
+  return <NavTree node={graph.root} onDrop={handleDrop} />;
 };
 
 export default {

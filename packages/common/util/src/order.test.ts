@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { inferObjectOrder } from './order';
+import { inferObjectOrder, inferRecordOrder } from './order';
 
 describe('Object order', () => {
   test('infers correct order for nonempty record & order', () => {
@@ -34,5 +34,20 @@ describe('Object order', () => {
   });
   test('infers correct order for empty record & nonempty order', () => {
     expect(inferObjectOrder({}, ['a', 'b', 'c'])).to.deep.equal([]);
+  });
+  test('infers correct record order', () => {
+    expect(
+      Object.keys(
+        inferRecordOrder(
+          {
+            b: { value: 'bee' },
+            c: { value: 'cow' },
+            d: { value: 'dog' },
+            a: { value: 'ant' },
+          },
+          ['a', 'z', 'c', 'b'],
+        ),
+      ),
+    ).to.deep.equal(['a', 'c', 'b', 'd']);
   });
 });

@@ -13,23 +13,12 @@ import { Button, DensityProvider, ElevationProvider, Tooltip, useSidebars, useTr
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import { NavTree, type NavTreeContextType, type TreeNode, type NavTreeProps } from '@dxos/react-ui-navtree';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { arrayMove } from '@dxos/util';
 
 import { HaloButton } from './HaloButton';
 import { VersionInfo } from './VersionInfo';
 import { NAVTREE_PLUGIN } from '../types';
 import { getPersistenceParent } from '../util';
-
-const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
-  if (a.properties.index && b.properties.index) {
-    if (a.properties.index < b.properties.index) {
-      return -1;
-    } else if (a.properties.index > b.properties.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
 
 const getMosaicPath = (graph: Graph, id: string) => {
   const parts = graph.getPath(id)?.filter((part) => part !== 'childrenMap');
@@ -95,11 +84,13 @@ export const TreeViewContainer = ({
       }
       // Rearrange if rearrange is supported and active and over are siblings
       else if (Path.siblings(over.path, active.path)) {
-        return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
+        return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChildren
+          ? 'rearrange'
+          : 'reject';
       }
       // Rearrange if rearrange is supported and active is or would be a child of over
       else if (Path.hasChild(over.path, active.path)) {
-        return graph.findNode(Path.last(over.path))?.properties.onRearrangeChild ? 'rearrange' : 'reject';
+        return graph.findNode(Path.last(over.path))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
       }
       // Check if transfer is supported
       else {
@@ -126,7 +117,12 @@ export const TreeViewContainer = ({
       if (activeNode && overNode) {
         const activeClass = activeNode.properties.persistenceClass;
         if (operation === 'rearrange') {
-          activeNode.parent!.properties.onRearrangeChild(activeNode, 'never');
+          const ids = Object.keys(activeNode.parent!.childrenMap);
+          const activeIndex = ids.indexOf(activeNode.id);
+          const overIndex = ids.indexOf(overNode.id);
+          activeNode.parent!.properties.onRearrangeChildren(
+            arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
+          );
         }
         if (operation === 'transfer') {
           const destinationParent = overNode?.properties.acceptPersistenceClass?.has(activeClass)
@@ -220,7 +216,6 @@ export const TreeViewContainer = ({
               isOver={isOver}
               onOver={handleOver}
               onDrop={handleDrop}
-              compare={graphNodeCompare}
               popoverAnchorId={popoverAnchorId}
             />
           </div>
