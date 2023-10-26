@@ -15,11 +15,6 @@ export type PluginContext = {
   plugins: Plugin[];
 };
 
-export type PluginOptions<PluginConfig = {}> = {
-  enabled: boolean;
-  config?: PluginConfig;
-};
-
 export interface Plugin {
   statusUpdate: Event<void>;
 
