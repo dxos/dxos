@@ -19,8 +19,8 @@ import {
   parseLayoutPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
-import { isTypedObject, subscribe } from '@dxos/echo-schema';
+import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
+import { isTypedObject, type Query, subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -63,6 +63,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
+  const orderSubscriptions: Record<string, UnsubscribeCallback> = {};
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
@@ -295,7 +296,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChildren: (nextOrder: string[]) => {
-                console.log('[on rearrange spaces]', nextOrder);
                 if (!spacesOrder) {
                   const nextObjectOrder = new ObjectOrder({
                     scope: allSpacesId,
@@ -310,7 +310,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           });
 
           const updateSpace = (space: Space) => {
-            client.spaces.default.key.equals(space.key)
+            const {
+              node: { id },
+              subscription,
+            } = client.spaces.default.key.equals(space.key)
               ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values })
               : spaceToGraphNode({
                   space,
@@ -318,6 +321,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                   dispatch,
                   settings: settings.values,
                 });
+            orderSubscriptions[id]?.();
+            orderSubscriptions[id] = subscription;
           };
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
@@ -369,19 +374,18 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           );
 
-          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
-            console.log('[update spaces order]', groupNode.childrenMap);
+          const updateSpacesOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
             spacesOrder = spacesOrders[0];
             groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
           };
 
           updateSpacesOrder(spacesOrderQuery);
 
-          const spacesOrderUnsubscribe = spacesOrderQuery.subscribe(updateSpacesOrder);
+          orderSubscriptions[allSpacesId] = spacesOrderQuery.subscribe(updateSpacesOrder);
 
           return () => {
             unsubscribe();
-            spacesOrderUnsubscribe();
+            Object.values(orderSubscriptions).forEach((cb) => cb());
             unsubscribeHidden();
             graphSubscriptions.clear();
           };

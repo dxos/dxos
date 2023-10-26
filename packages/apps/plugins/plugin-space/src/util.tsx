@@ -7,10 +7,13 @@ import { batch } from '@preact/signals-react';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
+import { ObjectOrder } from '@braneframe/types';
 import { type DispatchIntent } from '@dxos/app-framework';
-import { clone } from '@dxos/echo-schema';
+import { type UnsubscribeCallback } from '@dxos/async';
+import { clone, type Query } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
+import { inferRecordOrder } from '@dxos/util';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
 
@@ -47,7 +50,7 @@ export const spaceToGraphNode = ({
   parent: Node;
   dispatch: DispatchIntent;
   settings: SpaceSettingsProps;
-}): Node<Space> => {
+}): { node: Node<Space>; subscription: UnsubscribeCallback } => {
   const id = createNodeId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
@@ -55,6 +58,10 @@ export const spaceToGraphNode = ({
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
+
+  const spaceOrderQuery = space.db.query(ObjectOrder.filter({ scope: id }));
+
+  let spaceOrder: ObjectOrder | undefined;
 
   let node!: Node;
   // TODO(wittjosiah): Why is this batch needed?
@@ -73,8 +80,16 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        onRearrangeChildren: (nodeIds: string[]) => {
-          console.warn('[on rearrange child]', 'not implemented', nodeIds);
+        onRearrangeChildren: (nextOrder: string[]) => {
+          if (!spaceOrder) {
+            const nextObjectOrder = new ObjectOrder({
+              scope: id,
+              order: nextOrder,
+            });
+            space.db.add(nextObjectOrder);
+          } else {
+            spaceOrder.order = nextOrder;
+          }
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
@@ -85,8 +100,6 @@ export const spaceToGraphNode = ({
             retainId: true,
             additional: [child.data.content],
           });
-          // TODO(wittjosiah): Use separate object to store graph/tree order.
-          // object.meta.index = nextIndex;
           space.db.add(object);
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
@@ -96,6 +109,15 @@ export const spaceToGraphNode = ({
       },
     });
   });
+
+  const updateSpaceOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+    spaceOrder = spacesOrders[0];
+    node.childrenMap = inferRecordOrder(node.childrenMap, spaceOrder?.order);
+  };
+
+  updateSpaceOrder(spaceOrderQuery);
+
+  const subscription = spaceOrderQuery.subscribe(updateSpaceOrder);
 
   if (parent.id !== 'root') {
     node.addAction(
@@ -159,5 +181,5 @@ export const spaceToGraphNode = ({
     }
   }
 
-  return node;
+  return { node, subscription };
 };
