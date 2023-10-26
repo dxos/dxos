@@ -25,15 +25,6 @@ export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
 
-export type QuerySourceUpdateEvent = {
-  all: boolean;
-  items?: Item[];
-}
-
-export interface QuerySource {
-  update: Event<QuerySourceUpdateEvent>;
-}
-
 export type QueryResult<T extends EchoObject> = {
   id: string;
   spaceKey: PublicKey;
@@ -45,27 +36,55 @@ export type QueryResult<T extends EchoObject> = {
 
   match?: {
     // TODO(dmaretskyi): text positional info.
-    
+
     /**
      * Higher means better match.
      */
-    rank: number
-  },
-  
+    rank: number;
+  };
+
   /**
-   * Query resolution metadata. 
+   * Query resolution metadata.
    */
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local',
+    source: 'remote' | 'local';
 
     /**
      * Query resolution time in milliseconds.
      */
-    time: number
-  }
+    time: number;
+  };
+};
+
+/**
+ * Query data source.
+ * Implemented by a space or a remote agent.
+ * Each query has a separate instance.
+ */
+export interface QuerySource {
+  getResults(): QueryResult<EchoObject>[];
+
+  // TODO(dmaretskyi): Update info?
+  changed: Event<void>;
+
+  /**
+   * Set the filter and trigger the query.
+   */
+  update(filter: Filter): void;
 }
 
+export interface QueryContext {
+  added: Event<QuerySource>;
+  removed: Event<QuerySource>;
+
+  /**
+   * Start creating query sources and firing events.
+   */
+  start(): void;
+
+  // Deliberately no stop() method so that query contexts can be garbage collected automatically.
+}
 
 /**
  * Predicate based query.
@@ -78,21 +97,29 @@ export class Query<T extends TypedObject = TypedObject> {
   });
 
   private readonly _filter: Filter;
+  private _sources = new Set<QuerySource>();
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: T[] | undefined = undefined;
   private _signal = createSignal?.();
   private _event = new Event<Query<T>>();
 
-  constructor(
-    private readonly _objectMaps: ComplexMap<PublicKey, Map<string, EchoObject>>,
-    private readonly _updateEvent: Event<UpdateEvent>,
-    filter: Filter,
-  ) {
+  constructor(private readonly _queryContext: QueryContext, filter: Filter) {
     this._filter = filter;
 
-    // Weak listener to allow queries to be garbage collected.
-    // TODO(dmaretskyi): Allow to specify a retainer.
-    this._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
+    this._queryContext.added.on((source) => {
+      this._sources.add(source);
+      source.changed.on(() => {
+        this._resultCache = undefined;
+        this._objectCache = undefined;
+        this._signal?.notifyWrite();
+        this._event.emit(this);
+      });
+      source.update(this._filter);
+    });
+    this._queryContext.removed.on((source) => {
+      this._sources.delete(source);
+    });
+    this._queryContext.start();
   }
 
   get filter(): Filter {
@@ -115,48 +142,15 @@ export class Query<T extends TypedObject = TypedObject> {
    * Resend query to remote agents.
    */
   update() {
-    throw new Error('Not implemented.');
+    for(const source of this._sources) {
+      source.update(this._filter);
+    }
   }
 
-  // Hold a reference to the listener to prevent it from being garbage collected.
-  private _onUpdate = (updateEvent: UpdateEvent) => {
-    const objectMap = this._objectMaps.get(updateEvent.spaceKey);
-    if(!objectMap) {
-      return;
-    }
-
-    // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-    const changed = updateEvent.itemsUpdated.some((object) => {
-      return (
-        !this._objectCache ||
-        this._objectCache.find((obj) => obj.id === object.id) ||
-        (objectMap.has(object.id) && this._match(objectMap.get(object.id)! as T))
-      );
-    });
-
-    if (changed) {
-      this._resultCache = undefined;
-      this._objectCache = undefined;
-      this._signal?.notifyWrite();
-      this._event.emit(this);
-    }
-  };
-
   private _ensureCachePresent() {
-    if(!this._resultCache) {
-      this._resultCache = Array.from(this._objectMaps.values()).flatMap((objects) =>
-        Array.from(objects.values()).filter((object): object is T => this._match(object as T))
-      )
-        .map(object => ({
-          id: object.id,
-          spaceKey: getDatabaseFromObject(object)!._backend.spaceKey,
-          object,
-          resolution: {
-            source: 'local',
-            time: 0,
-          }
-        }));
-        this._objectCache = this._resultCache.map(result => result.object!).filter((object): object is T => !!object);
+    if (!this._resultCache) {
+      this._resultCache = Array.from(this._sources).flatMap((source) => source.getResults()) as QueryResult<T>[];
+      this._objectCache = this._resultCache.map((result) => result.object!).filter((object): object is T => !!object);
     }
   }
 
@@ -169,13 +163,9 @@ export class Query<T extends TypedObject = TypedObject> {
 
     return subscription;
   }
-
-  private _match(object: T) {
-    return filterMatch(this._filter, object);
-  }
 }
 
-const filterMatch = (filter: Filter, object: EchoObject) => {
+export const filterMatch = (filter: Filter, object: EchoObject) => {
   let result = filterMatchInner(filter, object);
 
   for (const orFilter of filter.orFilters) {
