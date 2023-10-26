@@ -74,7 +74,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const disabled = !!(node.properties?.disabled ?? node.properties?.isPreview);
     const forceCollapse = active === 'overlay' || active === 'destination' || active === 'rearrange' || disabled;
-    const testId = node.properties?.['data-testid'];
 
     const Root = active === 'overlay' ? Tree.Root : Fragment;
 
@@ -96,7 +95,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             ]}
             {...draggableProps}
             data-itemid={item.id}
-            data-testid={testId}
+            data-testid={node.properties.testId}
             style={draggableStyle}
             ref={forwardedRef}
             role='treeitem'
@@ -142,6 +141,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   level={level}
                   active={active}
                   popoverAnchorId={popoverAnchorId}
+                  testId={primaryAction.properties.testId}
                 />
               )}
               {actions.length > 0 && (
@@ -153,6 +153,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   level={level}
                   active={active}
                   popoverAnchorId={popoverAnchorId}
+                  testId={`navtree.treeItem.actionsLevel${level}`}
                 />
               )}
             </div>

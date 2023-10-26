@@ -22,6 +22,7 @@ type NavTreeItemActionMenuProps = {
   level: number;
   active?: MosaicActiveType;
   popoverAnchorId?: string;
+  testId?: string;
 };
 
 export const NavTreeItemActionMenu = ({
@@ -33,6 +34,7 @@ export const NavTreeItemActionMenu = ({
   active,
   level,
   popoverAnchorId,
+  testId,
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(translationKey);
 
@@ -78,7 +80,7 @@ export const NavTreeItemActionMenu = ({
                 event.stopPropagation();
                 void action.invoke();
               }}
-              data-testid={`navtree.treeItem.actionsLevel${level}`}
+              data-testid={testId}
             >
               <Icon className={getSize(4)} />
             </Button>
@@ -105,7 +107,7 @@ export const NavTreeItemActionMenu = ({
                     hoverableOpenControlItem,
                     active === 'overlay' && 'invisible',
                   ]}
-                  data-testid={`navtree.treeItem.actionsLevel${level}`}
+                  data-testid={testId}
                 >
                   <Icon className={getSize(4)} />
                 </Button>

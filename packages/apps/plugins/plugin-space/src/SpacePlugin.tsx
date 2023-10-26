@@ -287,7 +287,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             properties: {
               // TODO(burdon): Factor out palette constants.
               palette: 'pink',
-              'data-testid': 'spacePlugin.allSpaces',
+              testId: 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChildren: (nextOrder: string[]) => {

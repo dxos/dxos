@@ -92,13 +92,14 @@ export const spaceToGraphNode = ({
           properties: {
             disposition: 'toolbar',
             disabled: disabled || error,
+            testId: 'spacePlugin.createObject',
           },
         },
       ],
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: parent.id === 'root' ? 'teal' : undefined,
-        'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
+        testId: parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
         role: 'branch',
         hidden: settings.showHidden ? false : inactive,
         disabled,

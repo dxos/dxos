@@ -76,7 +76,7 @@ export const documentToGraphNode = (parent: Node<Space>, document: Document): No
     data: document,
     properties: {
       persistenceClass: 'spaceObject',
-      'data-testid': 'markdownPlugin.document',
+      testId: 'markdownPlugin.document',
     },
   });
 
