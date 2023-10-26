@@ -6,10 +6,7 @@ import { useMosaic } from './useMosaic';
 import { type MosaicDataItem } from '../types';
 import { Path } from '../util';
 
-// TODO(thure): I know the signature of this
-//  is not an expando like its sibling’s,
-//  but I no longer trust objects.
-
+// TODO(thure): Harmonize this hook signature with its sibling’s.
 export const useItemsWithOrigin = <T extends MosaicDataItem>(path: string, items: T[]) => {
   const { operation, activeItem, overItem } = useMosaic();
 
