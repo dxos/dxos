@@ -14,15 +14,18 @@ export type PluginContext = {
   plugins: Plugin[];
 };
 
+// TODO(burdon): Don't need interface and abstract class.
 export interface Plugin {
-  id: string;
   statusUpdate: Event<void>;
+
+  id: string;
 
   /**
    * Plugin DXOS config defined in `runtime.agent.plugin.<plugin_id>`. Inside plugin only that config should be used.
    */
   config: Record<string, any>;
 
+  // TODO(burdon): Why are these separate?
   initialize(pluginCtx: PluginContext): Promise<void>;
   setConfig(config: Record<string, any>): Promise<void>;
 
@@ -31,20 +34,22 @@ export interface Plugin {
 }
 
 export abstract class AbstractPlugin implements Plugin {
+  public readonly statusUpdate = new Event();
+
   /**
    * Unique plugin identifier. Should be equal to the value in DXOS yaml config file.
    */
-  abstract id: string;
-  public statusUpdate = new Event();
-  protected _pluginConfig!: Record<string, any>;
+  public abstract readonly id: string;
+
   protected _pluginCtx?: PluginContext;
+  protected _config!: Record<string, any>;
 
   get host(): ClientServicesHost {
     return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
   get config(): Record<string, any> {
-    return this._pluginConfig;
+    return this._config;
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
@@ -54,7 +59,7 @@ export abstract class AbstractPlugin implements Plugin {
   }
 
   async setConfig(config: Record<string, any>) {
-    this._pluginConfig = config;
+    this._config = config;
   }
 
   abstract open(): Promise<void>;

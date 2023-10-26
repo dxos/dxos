@@ -8,7 +8,7 @@ import React from 'react';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { Schema, SpaceProxy, Expando, type TypedObject, Filter } from '@dxos/client/echo';
+import { Expando, Filter, Schema, SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
 import { TableMain } from './components';
 import translations from './translations';

@@ -37,8 +37,9 @@ export type DashboardPluginParams = {
 };
 
 export class DashboardPlugin extends AbstractPlugin {
-  public readonly id = 'dashboard';
   private readonly _ctx = new Context();
+  public readonly id = 'dashboard';
+
   private _options?: Options;
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
@@ -51,7 +52,7 @@ export class DashboardPlugin extends AbstractPlugin {
 
     invariant(this._pluginCtx);
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+    this._options = { ...DEFAULT_OPTIONS, ...this._config };
 
     if (!this._options.enabled) {
       log.info('Dashboard disabled.');

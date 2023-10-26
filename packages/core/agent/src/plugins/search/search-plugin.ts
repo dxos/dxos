@@ -57,7 +57,7 @@ export class Search extends AbstractPlugin {
   async open(): Promise<void> {
     log.info('Opening indexing plugin...');
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+    this._options = { ...DEFAULT_OPTIONS, ...this._config };
 
     if (!this._options.enabled) {
       log.info('Search disabled.');
