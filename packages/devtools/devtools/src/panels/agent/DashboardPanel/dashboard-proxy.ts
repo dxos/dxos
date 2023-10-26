@@ -29,9 +29,6 @@ export class DashboardProxy {
       handlers: {},
       noHandshake: true,
       port: getGossipRPCPort({ space: this.client.spaces.default, channelName: CHANNEL_NAME }),
-      encodingOptions: {
-        preserveAny: true,
-      },
     });
   }
 

@@ -74,9 +74,6 @@ export class DashboardPlugin extends AbstractPlugin {
         },
         noHandshake: true,
         port: getGossipRPCPort({ space: this._pluginCtx.client.spaces.default, channelName: CHANNEL_NAME }),
-        encodingOptions: {
-          preserveAny: true,
-        },
       });
       await this._rpc.open();
       this._ctx.onDispose(() => this._rpc!.close());

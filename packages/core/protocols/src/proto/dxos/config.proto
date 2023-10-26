@@ -155,7 +155,7 @@ message Runtime {
       string id = 1;
       optional string name = 2;
       optional bool enabled = 3;
-      optional google.protobuf.Any config = 10;
+      optional google.protobuf.Any config = 10; 
     }
 
     repeated Plugin plugins = 1;
