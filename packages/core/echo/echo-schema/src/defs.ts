@@ -70,12 +70,6 @@ export type ObjectMeta = {
    * Foreign keys.
    */
   keys: ForeignKey[];
-
-  /**
-   * Positional index in a list.
-   * @deprecated
-   */
-  index?: string;
 };
 
 /**

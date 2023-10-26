@@ -3,30 +3,22 @@
 //
 
 import { GithubLogo } from '@phosphor-icons/react';
-import get from 'lodash.get';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import {
-  type SpacePluginProvides,
-  GraphNodeAdapter,
-  getIndices,
-  getAppStateIndex,
-  setAppStateIndex,
-} from '@braneframe/plugin-space';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { type Document } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   type PluginDefinition,
-  findPlugin,
   resolvePlugin,
   parseIntentPlugin,
   type TranslationsProvides,
   type SurfaceProvides,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type Space, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {
@@ -53,6 +45,7 @@ export type GithubPluginProvides = SurfaceProvides &
     settings: GithubSettingsProps;
   };
 
+// TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
@@ -67,10 +60,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
 
-      const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-      const appState = spacePlugin?.provides.space.appState;
-      const defaultIndices = getIndices(plugins.length);
-
       const createGroup = (parent: Node) => {
         const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
         const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
@@ -79,15 +68,8 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
           icon: (props) => <GithubLogo {...props} />,
           properties: {
             palette: 'pink',
-            persistenceClass: 'appState',
+            persistenceClass: 'objectOrder',
             childrenPersistenceClass: 'spaceObject',
-            index:
-              getAppStateIndex(id, appState) ??
-              setAppStateIndex(
-                id,
-                defaultIndices[plugins.findIndex(({ meta: { id } }) => id === GITHUB_PLUGIN)],
-                appState,
-              ),
           },
         });
 
@@ -97,7 +79,12 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const dispatch = intentPlugin?.provides?.intent?.dispatch;
       if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: objectToGraphNode, createGroup });
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: Filter.from(filter),
+          adapter: objectToGraphNode,
+          createGroup,
+        });
       }
     },
     unload: async () => {
@@ -171,14 +158,13 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   };
 };
 
-const objectToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
+const objectToGraphNode = (parent: Node<Space>, document: Document): Node => {
   const [child] = parent.addNode(GITHUB_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
     icon: (props) => <Issue {...props} />,
     data: document,
     properties: {
-      index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
     },
   });

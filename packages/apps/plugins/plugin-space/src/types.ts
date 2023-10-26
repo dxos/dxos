@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { AppState } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -52,11 +51,6 @@ export type SpaceState = {
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
-
-  /**
-   * The active AppState object, when ready.
-   */
-  appState: AppState | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

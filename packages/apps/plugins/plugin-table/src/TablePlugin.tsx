@@ -32,7 +32,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       if (dispatch) {
         adapter = new GraphNodeAdapter({
           dispatch,
-          filter: (object: TypedObject) => isObject(object),
+          filter: Filter.from((object: TypedObject) => isObject(object)),
           adapter: objectToGraphNode,
         });
       }

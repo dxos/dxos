@@ -50,8 +50,6 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
 
   /**
    * Properties of the node relevant to displaying the node.
-   *
-   * @example { index: 'a1' }
    */
   // TODO(burdon): Make this extensible and move label, description, and icon into here?
   properties: TProperties;

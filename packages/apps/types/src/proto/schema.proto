@@ -184,14 +184,12 @@ message View {
   string type = 2;
 }
 
-// TODO(burdon): ???
-message AppState {
+/**
+ * Portable source of truth for canonical/presentational order of objects within a certain scope.
+ */
+message ObjectOrder {
   option (object) = true;
 
-  message Index {
-    string ref = 1;
-    string value = 2;
-  }
-
-  repeated Index indices = 1;
+  string scope = 1;
+  repeated string order = 2;
 }

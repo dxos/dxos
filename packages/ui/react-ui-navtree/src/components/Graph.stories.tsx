@@ -15,7 +15,6 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { NavTree } from './NavTree';
 import type { TreeNode } from '../types';
-import { nextRearrangeIndex } from '../util';
 
 faker.seed(3);
 const fake = faker.helpers.fake;
@@ -76,8 +75,7 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
         operation === 'rearrange'
       ) {
         // This is a rearrange operation
-        const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
-        activeNode.properties.index = nextIndex ?? 'a0';
+        console.warn('[react-ui-navtree]', 'Graph', 'rearrange', 'needs implementation');
       } else if (activeNode && activeParent && overParent && operation === 'transfer') {
         activeParent.removeNode(active.item.id);
         overNode.addNode('tree', { ...activeNode });

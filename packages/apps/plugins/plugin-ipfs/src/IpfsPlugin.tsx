@@ -6,7 +6,7 @@ import React from 'react';
 
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
-import { SpaceProxy, type TypedObject } from '@dxos/client/echo';
+import { Filter, SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
 import { FileMain, FileSection, FileSlide } from './components';
 import translations from './translations';
@@ -36,7 +36,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       if (dispatch) {
         adapter = new GraphNodeAdapter({
           dispatch,
-          filter: (object: TypedObject) => isFile(object),
+          filter: Filter.from((object: TypedObject) => isFile(object)),
           adapter: objectToGraphNode,
         });
       }

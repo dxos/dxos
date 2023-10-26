@@ -3,7 +3,6 @@
 //
 
 import { type IconProps, StackSimple } from '@phosphor-icons/react';
-import get from 'lodash.get';
 import React from 'react';
 
 import type { Node } from '@braneframe/plugin-graph';
@@ -21,14 +20,13 @@ export const isStack = (data: unknown): data is StackType =>
       typeof (data as { [key: string]: any }).sections?.length === 'number'
     : false;
 
-export const stackToGraphNode = (parent: Node<Space>, object: StackType, index: string): Node => {
+export const stackToGraphNode = (parent: Node<Space>, object: StackType): Node => {
   const [child] = parent.addNode(STACK_PLUGIN, {
     id: object.id,
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <StackSimple {...props} />,
     data: object,
     properties: {
-      index: get(object, 'meta.index', index),
       persistenceClass: 'spaceObject',
     },
   });

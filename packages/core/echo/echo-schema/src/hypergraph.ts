@@ -5,14 +5,16 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
-import { type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
+import { type UpdateEvent } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, entry } from '@dxos/util';
+import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import { type Filter, Query, type TypeFilter } from './query';
+import { Filter, type QueryOptions, type FilterSource } from './filter';
+import { Query, type QueryContext, type QueryResult, type QuerySource, filterMatch } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
 
@@ -25,6 +27,7 @@ export class HyperGraph {
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
+  private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
 
   get types(): TypeCollection {
     return this._types;
@@ -55,10 +58,15 @@ export class HyperGraph {
         }
       }
     }
+
+    for (const context of this._queryContexts.values()) {
+      context.addQuerySource(new SpaceQuerySource(database));
+    }
   }
 
   _unregister(spaceKey: PublicKey) {
     this._databases.delete(spaceKey);
+    // TODO(dmaretskyi): Remove db from query contexts.
   }
 
   _getOwningObject(spaceKey: PublicKey): unknown | undefined {
@@ -68,19 +76,13 @@ export class HyperGraph {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(
-      new ComplexMap(
-        PublicKey.hash,
-        Array.from(this._databases.entries()).map(([key, db]) => [key, db._objects]),
-      ),
-      this._updateEvent,
-      filter,
-      options,
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    const spaces = options?.spaces?.map(
+      (entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey ? entry.key : (entry as PublicKey)),
     );
+    invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
+
+    return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
 
   /**
@@ -143,5 +145,105 @@ export class HyperGraph {
     }
 
     this._updateEvent.emit(updateEvent);
+  }
+
+  private _createQueryContext(): QueryContext {
+    const context = new GraphQueryContext(async () => {
+      for (const database of this._databases.values()) {
+        context.addQuerySource(new SpaceQuerySource(database));
+      }
+    });
+    this._queryContexts.set({}, context);
+
+    return context;
+  }
+}
+
+class GraphQueryContext implements QueryContext {
+  public added = new Event<QuerySource>();
+  public removed = new Event<QuerySource>();
+
+  constructor(private _onStart: () => void) {}
+
+  start() {
+    this._onStart();
+  }
+
+  addQuerySource(querySource: QuerySource) {
+    this.added.emit(querySource);
+  }
+}
+
+class SpaceQuerySource implements QuerySource {
+  public readonly changed = new Event<void>();
+
+  private _filter: Filter | undefined = undefined;
+  private _results?: QueryResult<EchoObject>[] = undefined;
+
+  constructor(private readonly _database: EchoDatabase) {}
+
+  get spaceKey() {
+    return this._database._backend.spaceKey;
+  }
+
+  private _onUpdate = (updateEvent: UpdateEvent) => {
+    if (!this._filter) {
+      return;
+    }
+
+    // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const changed = updateEvent.itemsUpdated.some((object) => {
+      return (
+        !this._results ||
+        this._results.find((result) => result.id === object.id) ||
+        (this._database._objects.has(object.id) && filterMatch(this._filter!, this._database._objects.get(object.id)!))
+      );
+    });
+
+    if (changed) {
+      this._results = undefined;
+      this.changed.emit();
+    }
+  };
+
+  getResults(): QueryResult<EchoObject>[] {
+    if (!this._filter) {
+      return [];
+    }
+
+    if (!this._results) {
+      this._results = Array.from(this._database._objects.values())
+        .filter((object) => filterMatch(this._filter!, object))
+        .map((object) => ({
+          id: object.id,
+          spaceKey: this.spaceKey,
+          object,
+          resolution: {
+            source: 'local',
+            time: 0,
+          },
+        }));
+    }
+
+    return this._results;
+  }
+
+  update(filter: Filter<EchoObject>): void {
+    if (
+      filter.searchSpacesPreference !== undefined &&
+      !filter.searchSpacesPreference.some((key) => key.equals(this.spaceKey))
+    ) {
+      // Disabled by spaces filter.
+      this._filter = undefined;
+      return;
+    }
+
+    this._filter = filter;
+
+    // TODO(dmaretskyi): Allow to specify a retainer.
+    this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+
+    this._results = undefined;
+    this.changed.emit();
   }
 }

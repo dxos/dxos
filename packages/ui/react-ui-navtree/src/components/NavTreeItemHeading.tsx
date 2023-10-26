@@ -57,7 +57,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
           <TreeItem.OpenTrigger
             {...(disabled && { disabled, 'aria-disabled': true })}
             classNames={['-translate-x-2', ghostButtonColors, disabled && staticDisabled]}
-            data-testid={!open ? 'navTree.treeItem.openTrigger' : 'navTree.treeItem.closeTrigger'}
+            data-testid={!open ? 'navtree.treeItem.openTrigger' : 'navtree.treeItem.closeTrigger'}
             onKeyDown={(event) => {
               if (event.key === ' ' || event.key === 'Enter') {
                 event.stopPropagation();
@@ -67,10 +67,10 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             <OpenTriggerIcon className={mx('shrink-0 text-[--icons-color]', getSize(3))} />
           </TreeItem.OpenTrigger>
         )}
-        <TreeItem.Heading data-testid='navTree.treeItem.heading' asChild>
+        <TreeItem.Heading data-testid='navtree.treeItem.heading' asChild>
           <Button
             role='link'
-            {...(level > 1 && { 'data-testid': 'navTree.treeItem.link' })}
+            {...(level > 1 && { 'data-testid': 'navtree.treeItem.link' })}
             data-itemid={id}
             onKeyDown={async (event) => {
               if (event.key === ' ' || event.key === 'Enter') {

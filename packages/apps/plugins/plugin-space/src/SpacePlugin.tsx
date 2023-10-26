@@ -4,14 +4,12 @@
 
 import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { getIndices } from '@tldraw/indices';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { type Node, isGraphNode } from '@braneframe/plugin-graph';
 import { type LayoutState } from '@braneframe/plugin-layout';
-import { AppState } from '@braneframe/types';
 import {
   type PluginDefinition,
   resolvePlugin,
@@ -31,13 +29,12 @@ import {
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
-  SpaceMainEmpty,
+  SpaceMain,
   SpacePresence,
   PopoverRenameObject,
   PopoverRenameSpace,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
-import { setAppStateIndex } from './helpers';
 import translations from './translations';
 import {
   SPACE_PLUGIN,
@@ -60,8 +57,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const state = deepSignal<SpaceState>({
     active: undefined,
     viewers: [],
-    // TODO(wittjosiah): Don't expose this. Plugins should manage their own state.
-    appState: undefined,
   }) as RevertDeepSignal<SpaceState>;
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -86,17 +81,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const client = clientPlugin.provides.client;
       // TODO(wittjosiah): Remove once space can be computed directly from an object.
       const layout = layoutPlugin.provides.layout as LayoutState;
-
-      // Find or initialize `appState`
-      const defaultSpace = client.spaces.default;
-      const appStates = defaultSpace.db.query(AppState.filter()).objects;
-      if (appStates.length < 1) {
-        const nextAppState = new AppState();
-        defaultSpace.db.add(nextAppState);
-        state.appState = nextAppState;
-      } else {
-        state.appState = (appStates as AppState[])[0];
-      }
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
@@ -232,12 +216,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         component: (data, role) => {
           switch (role) {
             case 'main':
-              switch (true) {
-                case isSpace(data.active):
-                  return <SpaceMainEmpty />;
-                default:
-                  return null;
-              }
+              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
               switch (true) {
@@ -303,37 +282,33 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
-                child.properties.index = setAppStateIndex(child.id, nextIndex, state.appState);
+                console.warn('[on rearrange child]', 'not implemented', child, nextIndex);
               },
             },
           });
 
-          const updateSpace = (space: Space, indices: string[], index: number) => {
+          const updateSpace = (space: Space) => {
             client.spaces.default.key.equals(space.key)
-              ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values, appState: state.appState })
+              ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values })
               : spaceToGraphNode({
                   space,
                   parent: groupNode,
                   dispatch,
                   settings: settings.values,
-                  appState: state.appState,
-                  defaultIndex: indices[index],
                 });
           };
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             graphSubscriptions.clear();
-            const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space, indices, index)));
-              updateSpace(space, indices, index);
+              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space)));
+              updateSpace(space);
             });
           });
 
           const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
             const spaces = client.spaces.get();
-            const indices = getIndices(spaces.length);
-            spaces.forEach((space, index) => updateSpace(space, indices, index));
+            spaces.forEach((space) => updateSpace(space));
           });
 
           groupNode.addAction(

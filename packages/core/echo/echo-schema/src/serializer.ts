@@ -3,12 +3,13 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { QUERY_ALL_MODELS, TYPE_PROPERTIES } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { base } from './defs';
+import { Filter, QUERY_ALL_MODELS } from './filter';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -46,7 +47,7 @@ export class Serializer {
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
       objects: [properties],
-    } = database.query({ '@type': TYPE_PROPERTIES });
+    } = database.query(Filter.byTypeName(TYPE_PROPERTIES));
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;

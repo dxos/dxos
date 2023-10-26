@@ -4,25 +4,18 @@
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/document-model';
-import {
-  type BatchUpdate,
-  type DatabaseProxy,
-  type Item,
-  type ItemManager,
-  type QueryOptions,
-  UpdateEvent,
-} from '@dxos/echo-db';
+import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
-import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
+import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
-import { type HyperGraph } from './hyper-graph';
+import { type QueryOptions, type FilterSource } from './filter';
+import { type HyperGraph } from './hypergraph';
 import { type Schema } from './proto';
-import { type Filter, Query, type TypeFilter } from './query';
+import { type Query } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
@@ -194,16 +187,11 @@ export class EchoDatabase {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(
-      new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
-      this._updateEvent,
-      filter,
-      options,
-    );
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    options ??= {};
+    options.spaces = [this._backend.spaceKey];
+
+    return this._graph.query(filter, options);
   }
 
   private _update(updateEvent: UpdateEvent) {

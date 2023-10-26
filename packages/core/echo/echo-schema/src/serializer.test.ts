@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { QUERY_ALL_MODELS } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
+import { QUERY_ALL_MODELS } from './filter';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
