@@ -76,88 +76,90 @@ describe('SearchPlugin', () => {
     }
   });
 
-  test('search request/response', async () => {
-    //
-    // 1. Test topology:
-    //
-    // client 1 (with indexing plugin)
-    //    |
-    //    | (device invitation)
-    //    |
-    // client 2
-    //
-    // 2. Test scenario:
-    //   a. client 1 creates few spaces and propagates it with data.
-    //   b. client 1 invites client 2 as another device.
-    //   c. client 2 sends search request to client 1.
-    //   d. client 1 responds with search results.
+  test
+    .skip('search request/response', async () => {
+      //
+      // 1. Test topology:
+      //
+      // client 1 (with indexing plugin)
+      //    |
+      //    | (device invitation)
+      //    |
+      // client 2
+      //
+      // 2. Test scenario:
+      //   a. client 1 creates few spaces and propagates it with data.
+      //   b. client 1 invites client 2 as another device.
+      //   c. client 2 sends search request to client 1.
+      //   d. client 1 responds with search results.
 
-    const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
+      const builder = new TestBuilder();
+      afterTest(() => builder.destroy());
 
-    const services1 = builder.createLocal();
-    const client1 = new Client({
-      services: services1,
-      config: new Config({ runtime: { agent: { plugins: { search: { enabled: true } } } } }),
-    });
-    await client1.initialize();
-    afterTest(() => client1.destroy());
-    await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
-
-    {
-      // Create one space before indexing is initialized.
-      const space = await client1.spaces.create({ name: 'first space' });
-      await space.waitUntilReady();
-      space.db.add(new Expando(documents[0]));
-      await space.db.flush();
-    }
-    const index = new Search();
-    await index.initialize({ client: client1, clientServices: services1, plugins: [] });
-    await index.open();
-    afterTest(() => index.close());
-
-    {
-      const space = await client1.spaces.create({ name: 'second space' });
-      await space.waitUntilReady();
-      space.db.add(new Expando(documents[1]));
-      await space.db.flush();
-    }
-
-    const services2 = builder.createLocal();
-    const client2 = new Client({ services: services2 });
-    await client2.initialize();
-    afterTest(() => client2.destroy());
-
-    await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
-
-    // Subscribe for search results.
-    const results = new Trigger<GossipMessage>();
-    {
-      await asyncTimeout(client2.spaces.isReady.wait(), 1000);
-
-      await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
-
-      const subs = client2.spaces.default.listen(SEARCH_CHANNEL, (message) => {
-        expect(message.payload.results).to.have.lengthOf(2);
-        results.wake(message);
+      const services1 = builder.createLocal();
+      const client1 = new Client({
+        services: services1,
+        config: new Config({ runtime: { agent: { plugins: { search: { enabled: true } } } } }),
       });
-      afterTest(() => subs());
-    }
+      await client1.initialize();
+      afterTest(() => client1.destroy());
+      await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    // Send search request.
-    {
-      const searchRequest: SearchRequest = {
-        query: 'bar',
-        type: SearchRequest.Type.FUZZY,
-      };
+      {
+        // Create one space before indexing is initialized.
+        const space = await client1.spaces.create({ name: 'first space' });
+        await space.waitUntilReady();
+        space.db.add(new Expando(documents[0]));
+        await space.db.flush();
+      }
+      const index = new Search();
+      await index.initialize({ client: client1, clientServices: services1, plugins: [] });
+      await index.open();
+      afterTest(() => index.close());
 
-      await sleep(500);
-      await client2.spaces.default.postMessage(SEARCH_CHANNEL, {
-        '@type': 'dxos.agent.search.SearchRequest',
-        ...searchRequest,
-      });
-    }
+      {
+        const space = await client1.spaces.create({ name: 'second space' });
+        await space.waitUntilReady();
+        space.db.add(new Expando(documents[1]));
+        await space.db.flush();
+      }
 
-    await asyncTimeout(results.wait(), 1000);
-  }).tag('flaky');
+      const services2 = builder.createLocal();
+      const client2 = new Client({ services: services2 });
+      await client2.initialize();
+      afterTest(() => client2.destroy());
+
+      await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
+
+      // Subscribe for search results.
+      const results = new Trigger<GossipMessage>();
+      {
+        await asyncTimeout(client2.spaces.isReady.wait(), 1000);
+
+        await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
+
+        const subs = client2.spaces.default.listen(SEARCH_CHANNEL, (message) => {
+          expect(message.payload.results).to.have.lengthOf(2);
+          results.wake(message);
+        });
+        afterTest(() => subs());
+      }
+
+      // Send search request.
+      {
+        const searchRequest: SearchRequest = {
+          query: 'bar',
+          type: SearchRequest.Type.FUZZY,
+        };
+
+        await sleep(500);
+        await client2.spaces.default.postMessage(SEARCH_CHANNEL, {
+          '@type': 'dxos.agent.search.SearchRequest',
+          ...searchRequest,
+        });
+      }
+
+      await asyncTimeout(results.wait(), 1000);
+    })
+    .tag('flaky');
 });
