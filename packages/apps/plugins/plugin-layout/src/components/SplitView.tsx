@@ -78,6 +78,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
               <Surface role='heading' limit={2} />
               <div role='none' className='grow' />
               {/* TODO(burdon): Too specific? status? contentinfo? */}
+              <Surface role='save-indicator' limit={1} />
               <Surface role='presence' limit={1} />
               {complementarySidebarOpen !== null && showComplementarySidebar && (
                 <Button

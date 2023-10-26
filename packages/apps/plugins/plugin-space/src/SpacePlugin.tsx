@@ -45,6 +45,7 @@ import {
   type SpaceState,
 } from './types';
 import { createNodeId, isSpace, spaceToGraphNode } from './util';
+import { SaveIndicator } from './components/SaveIndicator';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -244,6 +245,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               } else {
                 return null;
               }
+            case 'save-indicator':
+              return <SaveIndicator />
             case 'presence':
               return <SpacePresence />;
             case 'settings':

@@ -353,6 +353,7 @@ export class DatabaseProxy {
         (err) => {
           log.warn('batch commit err', { err });
           batch.receiptTrigger!.throw(err);
+          this.pendingBatch.emit({ error: err });
         },
       );
   }
@@ -430,10 +431,12 @@ export class DatabaseProxy {
     for (const batch of this._pendingBatches.values()) {
       batch.processTrigger!.throw(new Error('Service connection closed.'));
     }
-    this.pendingBatch.emit({
-      size: this._pendingBatches.size,
-      error: new Error('Service connection closed.'),
-    });
+    if(this._pendingBatches.size > 0) {
+      this.pendingBatch.emit({
+        size: this._pendingBatches.size,
+        error: new Error('Service connection closed.'),
+      });
+    }
     this._pendingBatches.clear();
   }
 }
