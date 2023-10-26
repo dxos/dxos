@@ -111,6 +111,13 @@ export class Query<T extends TypedObject = TypedObject> {
     return this._objectCache!;
   }
 
+  /**
+   * Resend query to remote agents.
+   */
+  update() {
+    throw new Error('Not implemented.');
+  }
+
   // Hold a reference to the listener to prevent it from being garbage collected.
   private _onUpdate = (updateEvent: UpdateEvent) => {
     const objectMap = this._objectMaps.get(updateEvent.spaceKey);
