@@ -14,7 +14,7 @@ import { AbstractPlugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
-  port: 7002,
+  port: 7000,
 };
 
 export class FunctionsPlugin extends AbstractPlugin {
