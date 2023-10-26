@@ -184,4 +184,8 @@ export class Filter<T extends EchoObject = EchoObject> {
 
     return this.options.models;
   }
+
+  get searchSpacesPreference(): PublicKey[] | undefined {
+    return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));
+  }
 }

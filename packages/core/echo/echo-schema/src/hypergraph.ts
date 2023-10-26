@@ -180,9 +180,10 @@ class SpaceQuerySource implements QuerySource {
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoObject>[] = undefined;
 
-  constructor(private readonly _database: EchoDatabase) {
-    // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+  constructor(private readonly _database: EchoDatabase) {}
+
+  get spaceKey() {
+    return this._database._backend.spaceKey;
   }
 
   private _onUpdate = (updateEvent: UpdateEvent) => {
@@ -215,7 +216,7 @@ class SpaceQuerySource implements QuerySource {
         .filter((object) => filterMatch(this._filter!, object))
         .map((object) => ({
           id: object.id,
-          spaceKey: this._database._backend.spaceKey,
+          spaceKey: this.spaceKey,
           object,
           resolution: {
             source: 'local',
@@ -228,7 +229,20 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
+    if (
+      filter.searchSpacesPreference !== undefined &&
+      !filter.searchSpacesPreference.some((key) => key.equals(this.spaceKey))
+    ) {
+      // Disabled by spaces filter.
+      this._filter = undefined;
+      return;
+    }
+
     this._filter = filter;
+
+    // TODO(dmaretskyi): Allow to specify a retainer.
+    this._database._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+
     this._results = undefined;
     this.changed.emit();
   }
