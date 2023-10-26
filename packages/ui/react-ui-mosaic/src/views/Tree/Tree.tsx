@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef } from 'react';
 
 import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
 import { dropRing, mx } from '@dxos/react-ui-theme';
@@ -15,8 +15,7 @@ import {
   useContainer,
   useMosaic,
   Path,
-  useItemsWithPreview,
-  type MosaicCompareDataItem,
+  useItemsWithOrigin,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -27,7 +26,6 @@ import {
 export type TreeProps<TData extends MosaicDataItem = TreeData> = MosaicContainerProps<TData, number> & {
   items?: TData[];
   debug?: boolean;
-  compare?: MosaicCompareDataItem;
 };
 
 export type TreeData = {
@@ -37,7 +35,7 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -46,7 +44,6 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
         Component,
         onOver,
         onDrop,
-        compare,
       }}
     >
       <TreeRoot items={items} />
@@ -55,16 +52,13 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 };
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
-  const { id, Component, compare } = useContainer();
-  const sortedItems = useMemo(() => {
-    return compare ? [...items].sort(compare) : items;
-  }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
+  const { id, Component } = useContainer();
+  const itemsWithOrigin = useItemsWithOrigin(id, items);
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
-      <Mosaic.SortableContext id={id} items={itemsWithPreview} direction='vertical'>
-        {itemsWithPreview.map((item, index) => (
+      <Mosaic.SortableContext id={id} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((item, index) => (
           <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
             <Mosaic.SortableTile item={item} path={id} position={index} Component={Component!} />
           </TreeItemComponent.Root>
@@ -104,16 +98,13 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
-  const { Component, compare } = useContainer();
-  const sortedItems = useMemo(() => {
-    return compare ? [...items].sort(compare) : items;
-  }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path, strategy: 'layout-stable' });
+  const { Component } = useContainer();
+  const itemsWithOrigin = useItemsWithOrigin(path, items);
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={itemsWithPreview} direction='vertical'>
-        {itemsWithPreview.map((child, index) => (
+      <Mosaic.SortableContext id={path} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
               <Mosaic.SortableTile
