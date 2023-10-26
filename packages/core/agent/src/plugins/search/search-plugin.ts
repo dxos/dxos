@@ -19,10 +19,6 @@ import { AbstractPlugin, type PluginOptions } from '../plugin';
 
 type Options = PluginOptions;
 
-const DEFAULT_OPTIONS: Options = {
-  enabled: false,
-};
-
 export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
 export class Search extends AbstractPlugin {
@@ -56,9 +52,7 @@ export class Search extends AbstractPlugin {
   async open(): Promise<void> {
     log.info('Opening indexing plugin...');
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
-
-    if (!this._options.enabled) {
+    if (!this._pluginConfig.enabled) {
       log.info('Search disabled.');
       return;
     }

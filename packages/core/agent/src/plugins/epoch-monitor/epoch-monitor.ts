@@ -12,19 +12,14 @@ import { log } from '@dxos/log';
 import { type EpochMonitorConfig } from '@dxos/protocols/proto/dxos/agent/epoch';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin, type PluginOptions } from '../plugin';
-
-type Options = PluginOptions<Required<EpochMonitorConfig>>;
+import { AbstractPlugin } from '../plugin';
 
 // TODO(dmaretskyi): Review defaults.
-const DEFAULT_OPTIONS: Options = {
-  enabled: true,
-  config: {
-    minMessagesBetweenEpochs: 10_000,
-    minTimeBetweenEpochs: 120_000,
-    minInactivityBeforeEpoch: 30_000,
-    maxInactivityDelay: 60_000,
-  },
+const DEFAULT_OPTIONS: Required<EpochMonitorConfig> = {
+  minMessagesBetweenEpochs: 10_000,
+  minTimeBetweenEpochs: 120_000,
+  minInactivityBeforeEpoch: 30_000,
+  maxInactivityDelay: 60_000,
 };
 
 /**
@@ -38,33 +33,26 @@ export class EpochMonitor extends AbstractPlugin {
   private _ctx?: Context = undefined;
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
-  private _options?: Options = undefined;
-
   /**
    * Monitor spaces for which the agent is the leader.
    */
   async open() {
     invariant(this._pluginCtx);
 
-    this._options = {
-      ...DEFAULT_OPTIONS,
-      ...this._pluginConfig,
-      config: { ...DEFAULT_OPTIONS.config, ...this._pluginConfig.config },
-    };
-
-    if (!this._options || this._options.enabled === false) {
+    if (!this._pluginConfig.enabled === false) {
       log.info('epoch monitor disabled from config');
       return;
     }
     this._ctx = new Context();
+    this._pluginConfig.config = { ...DEFAULT_OPTIONS, ...this._pluginConfig.config };
 
-    log.info('epoch monitor open', { options: this._options });
+    log.info('epoch monitor open', { config: this._pluginConfig });
 
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
-          invariant(this._options);
-          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._options);
+          invariant(this._pluginConfig.config);
+          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._pluginConfig.config);
           this._monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
@@ -105,7 +93,11 @@ class SpaceMonitor {
   private _creatingEpoch = false;
   private _previousEpochNumber = -1;
 
-  constructor(private readonly _client: Client, private readonly _space: Space, private readonly _options: Options) {}
+  constructor(
+    private readonly _client: Client,
+    private readonly _space: Space,
+    private readonly _options: Required<EpochMonitorConfig>,
+  ) {}
 
   async open() {
     await this._space.waitUntilReady();
@@ -155,21 +147,18 @@ class SpaceMonitor {
       const timeSinceLastEpoch = Date.now() - pipeline.currentEpoch.issuanceDate.getTime();
 
       if (
-        newMessages > this._options.config!.minMessagesBetweenEpochs &&
-        timeSinceLastEpoch > this._options.config!.minTimeBetweenEpochs
+        newMessages > this._options.minMessagesBetweenEpochs &&
+        timeSinceLastEpoch > this._options.minTimeBetweenEpochs
       ) {
         if (!this._maxTimeoutTask) {
           log.info('wanting to create epoch', { key: this._space.key, options: this._options });
           this._previousEpochNumber = pipeline.currentEpoch.subject.assertion.number;
-          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.config!.maxInactivityDelay);
+          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxInactivityDelay);
         }
         if (this._epochCreationTask) {
           clearTimeout(this._epochCreationTask);
         }
-        this._epochCreationTask = setTimeout(
-          this._createEpoch.bind(this),
-          this._options.config!.minInactivityBeforeEpoch,
-        );
+        this._epochCreationTask = setTimeout(this._createEpoch.bind(this), this._options.minInactivityBeforeEpoch);
       }
     });
     this._ctx.onDispose(() => sub.unsubscribe());

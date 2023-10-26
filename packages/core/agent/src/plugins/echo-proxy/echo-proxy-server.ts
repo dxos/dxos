@@ -13,11 +13,8 @@ import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy
 
 import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-const DEFAULT_OPTIONS: PluginOptions<EchoProxyConfig> = {
-  enabled: false,
-  config: {
-    port: 7001,
-  },
+const DEFAULT_OPTIONS: EchoProxyConfig = {
+  port: 7001,
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
@@ -28,19 +25,13 @@ export class EchoProxyServer extends AbstractPlugin {
 
   async open() {
     invariant(this._pluginCtx);
-
-    this._options = {
-      ...DEFAULT_OPTIONS,
-      ...this._pluginConfig,
-      config: { ...DEFAULT_OPTIONS.config, ...this._pluginConfig.config },
-    };
-
-    if (this._options.enabled === false) {
+    if (this._pluginConfig.enabled === false) {
       log.info('EchoProxyServer disabled from config');
       return;
     }
+    this._pluginConfig.config = { ...DEFAULT_OPTIONS, ...this._pluginConfig.config };
 
-    log('starting proxy...', { ports: this._options.config!.port });
+    log('starting proxy...', { ports: this._pluginConfig.config.port });
     await this._pluginCtx.client.initialize();
 
     const app = express();
@@ -102,7 +93,7 @@ export class EchoProxyServer extends AbstractPlugin {
       res.json(result);
     });
 
-    const { port } = this._options.config!;
+    const { port } = this._pluginConfig.config.port!;
     this._server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
