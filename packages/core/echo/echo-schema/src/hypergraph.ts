@@ -5,14 +5,14 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
-import { type QueryOptions, type UpdateEvent } from '@dxos/echo-db';
+import { type UpdateEvent } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import { Filter, type FilterSource } from './filter';
+import { Filter, QueryOptions, type FilterSource } from './filter';
 import { Query } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';

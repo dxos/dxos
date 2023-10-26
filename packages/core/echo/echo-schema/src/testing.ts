@@ -16,7 +16,7 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
-import { HyperGraph } from './hyper-graph';
+import { HyperGraph } from './hypergraph';
 import { schemaBuiltin } from './proto';
 
 // TODO(burdon): Builder pattern.

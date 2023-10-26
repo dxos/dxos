@@ -9,7 +9,6 @@ import {
   type DatabaseProxy,
   type Item,
   type ItemManager,
-  type QueryOptions,
   UpdateEvent,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -20,8 +19,8 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
-import { Filter, type FilterSource } from './filter';
-import { type HyperGraph } from './hyper-graph';
+import { Filter, QueryOptions, type FilterSource } from './filter';
+import { type HyperGraph } from './hypergraph';
 import { type Schema } from './proto';
 import { Query } from './query';
 import { Text } from './text-object';

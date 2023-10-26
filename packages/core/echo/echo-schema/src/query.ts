@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Item, ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
+import { Item, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,7 +12,7 @@ import { type ComplexMap } from '@dxos/util';
 
 import { base, type EchoObject } from './defs';
 import { getDatabaseFromObject } from './echo-object-base';
-import { type Filter } from './filter';
+import { ShowDeletedOption, type Filter } from './filter';
 import { createSignal } from './signal';
 import { isTypedObject, type TypedObject } from './typed-object';
 
