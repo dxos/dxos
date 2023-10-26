@@ -15,16 +15,14 @@ import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/a
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin, type PluginOptions } from '../plugin';
+import { AbstractPlugin } from '../plugin';
 
-type Options = PluginOptions;
 
 export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
 export class Search extends AbstractPlugin {
   public readonly id = 'dxos.org/agent/plugin/search';
   private _ctx?: Context;
-  private _options?: Options = undefined;
   private _index?: MiniSearch;
 
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);

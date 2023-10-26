@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
-import { AbstractPlugin, type PluginOptions } from '../plugin';
+import { AbstractPlugin } from '../plugin';
 
 const DEFAULT_OPTIONS: EchoProxyConfig = {
   port: 7001,
@@ -21,7 +21,6 @@ const DEFAULT_OPTIONS: EchoProxyConfig = {
 export class EchoProxyServer extends AbstractPlugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
   private _server?: http.Server = undefined;
-  private _options?: PluginOptions<EchoProxyConfig> = undefined;
 
   async open() {
     invariant(this._pluginCtx);
