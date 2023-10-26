@@ -75,7 +75,7 @@ export class TypeCollection {
     }
 
     if (this._types.size !== 0) {
-      throw new Error('Already linked.');
+      return;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
