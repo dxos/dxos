@@ -16,8 +16,8 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { type QueryOptions } from '@dxos/echo-db';
 import {
+  type QueryOptions,
   type FilterSource,
   type HyperGraph,
   type Query,

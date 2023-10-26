@@ -3,13 +3,13 @@
 //
 
 import { DocumentModel } from '@dxos/document-model';
-import { QUERY_ALL_MODELS, TYPE_PROPERTIES } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { base } from './defs';
-import { Filter } from './filter';
+import { Filter, QUERY_ALL_MODELS } from './filter';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 
