@@ -9,6 +9,8 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Schema } from '@dxos/echo-schema';
 
+// TODO(burdon): Tests.
+
 export type SchemaConfig = {
   typename: string;
   fields: string[];
@@ -23,7 +25,7 @@ const formatSchema = (config: SchemaConfig, schema: Schema) => {
   return `
     @type: ${schema.typename}
     fields:
-      ${props.map((prop) => `${prop.id}: ${prop.type}`).join('\n      ')}
+      ${props.map((prop) => `${prop.id}: ${prop.type}`).join('\n')}
     \n
   `;
 };
@@ -42,9 +44,10 @@ export const createRequest = (
   ];
 
   // Output format.
-  messages.push({
-    role: 'system',
-    content: `
+  if (schemaConfigs.length) {
+    messages.push({
+      role: 'system',
+      content: `
       In your replies you can choose to output lists and only lists in a structured format.
       Structured data is formatted as an array of JSON objects conforming to the schema.
       Include "@type" field with the exact name of one of the provided schema types.
@@ -71,12 +74,13 @@ export const createRequest = (
         .filter(Boolean)
         .join('\n')}
       `,
-  });
+    });
+  }
 
   // Context.
   messages.push(
     ...block.messages.map((message): ChatCompletionRequestMessage => {
-      // TODO(burdon): Add message data to block.
+      // TODO(burdon): Add context to message block; use ref.
       const contextObject = message.data && space.db.query({ id: message.data }).objects[0];
 
       let content = '';

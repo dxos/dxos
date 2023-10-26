@@ -13,6 +13,8 @@ import { createRequest, type SchemaConfig } from './request';
 import { createResponse } from './response';
 import { getKey } from '../../util';
 
+// TODO(burdon): https://platform.openai.com/docs/plugins/examples
+
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): Pass in to context.
 
 const schemaConfigs: SchemaConfig[] = [
@@ -39,15 +41,14 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const query = space.db.query(Thread.filter());
-  const threads: Thread[] = query.objects; // TODO(burdon): Infer type?
-  const activeThreads = blockIds.reduce((set, blockId) => {
+  const { objects: threads } = space.db.query(Thread.filter());
+  const activeThreads = blockIds.reduce((activeThreads, blockId) => {
     const thread = threads.find((thread) => thread.blocks.some((block) => block.id === blockId));
     if (thread) {
-      set.add(thread);
+      activeThreads.add(thread);
     }
 
-    return set;
+    return activeThreads;
   }, new Set<Thread>());
 
   // Process threads.
