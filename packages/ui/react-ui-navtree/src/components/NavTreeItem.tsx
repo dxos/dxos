@@ -16,7 +16,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,
@@ -42,8 +42,7 @@ const hoverableDescriptionIcons =
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component } = useContainer();
 
-  // TODO(thure): Use this next:
-  // const items = useItemsWithOrigin(path, nodes);
+  const items = useItemsWithOrigin(path, nodes);
 
   if (path === 'root/space-all-spaces') {
     console.log(
@@ -55,9 +54,9 @@ const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]
 
   return (
     <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={nodes} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={items} direction='vertical'>
         <Tree.Branch>
-          {nodes.map((node, index) => (
+          {items.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
               item={{ id: node.id, node, level }}
