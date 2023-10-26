@@ -246,7 +246,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return null;
               }
             case 'save-indicator':
-              return <SaveIndicator />
+              return <SaveIndicator hideSaveIndicator />
             case 'presence':
               return <SpacePresence />;
             case 'settings':
