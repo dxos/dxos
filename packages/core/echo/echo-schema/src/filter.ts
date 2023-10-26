@@ -3,13 +3,51 @@
 //
 
 import { DocumentModel, Reference } from '@dxos/document-model';
-import { type QueryOptions, ShowDeletedOption } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 import { type EchoObject } from './defs';
 import { getReferenceWithSpaceKey } from './echo-object-base';
 import { type Schema } from './proto';
 import { type Expando, type TypedObject } from './typed-object';
+import { PublicKey } from '@dxos/keys';
+
+/**
+ * Controls how deleted items are filtered.
+ */
+export enum ShowDeletedOption {
+  /**
+   * Do not return deleted items. Default behaviour.
+   */
+  HIDE_DELETED = 0,
+  /**
+   * Return deleted and regular items.
+   */
+  SHOW_DELETED = 1,
+  /**
+   * Return only deleted items.
+   */
+  SHOW_DELETED_ONLY = 2,
+}
+
+export type QueryOptions = {
+  /**
+   * Controls how deleted items are filtered.
+   */
+  deleted?: ShowDeletedOption;
+
+  /**
+   * Filter by model.
+   * @default * Only DocumentModel.
+   */
+  models?: string[] | null;
+
+  /**
+   * Query only in specific spaces.
+   */
+  spaces?: (PublicKey | { key: PublicKey; })[];
+};
+
+export const QUERY_ALL_MODELS = null;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;

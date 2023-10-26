@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
+import { Item, ShowDeletedOption, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,6 +24,15 @@ export type Sort<T extends TypedObject> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
+
+export type QuerySourceUpdateEvent = {
+  all: boolean;
+  items?: Item[];
+}
+
+export interface QuerySource {
+  update: Event<QuerySourceUpdateEvent>;
+}
 
 /**
  * Predicate based query.

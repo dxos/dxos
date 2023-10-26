@@ -33,39 +33,6 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
  */
 export type Callable<T extends Item, R> = (entities: T[], result: R) => R;
 
-/**
- * Controls how deleted items are filtered.
- */
-export enum ShowDeletedOption {
-  /**
-   * Do not return deleted items. Default behaviour.
-   */
-  HIDE_DELETED = 0,
-  /**
-   * Return deleted and regular items.
-   */
-  SHOW_DELETED = 1,
-  /**
-   * Return only deleted items.
-   */
-  SHOW_DELETED_ONLY = 2,
-}
-
-export type QueryOptions = {
-  /**
-   * Controls how deleted items are filtered.
-   */
-  deleted?: ShowDeletedOption;
-
-  /**
-   * Filter by model.
-   * @default * Only DocumentModel.
-   */
-  models?: string[] | null;
-};
-
-export const QUERY_ALL_MODELS = null;
-
 //
 // Filters
 //
@@ -87,21 +54,3 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
       !filter.parent || item.parent === coerceToId(filter.parent);
   }
 };
-
-// TODO(burdon): Not referenced.
-export const createQueryOptionsFilter =
-  ({ deleted = ShowDeletedOption.HIDE_DELETED }: QueryOptions): Predicate<Item> =>
-  (entity) => {
-    // if (entity.model === null) {
-    //   return false;
-    // }
-
-    switch (deleted) {
-      case ShowDeletedOption.HIDE_DELETED:
-        return !(entity instanceof Item) || !entity.deleted;
-      case ShowDeletedOption.SHOW_DELETED:
-        return true;
-      case ShowDeletedOption.SHOW_DELETED_ONLY:
-        return entity instanceof Item && entity.deleted;
-    }
-  };
