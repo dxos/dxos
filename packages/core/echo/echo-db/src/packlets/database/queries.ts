@@ -4,7 +4,7 @@
 
 import { type ItemID } from '@dxos/protocols';
 
-import { Item } from './item';
+import { type Item } from './item';
 import { coerceToId, type OneOrMultiple } from './util';
 
 // TODO(burdon): Are these deprecated? Incl. Item?

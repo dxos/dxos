@@ -6,17 +6,17 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Reference } from '@dxos/document-model';
 import { type UpdateEvent } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import { Filter, QueryOptions, type FilterSource } from './filter';
-import { Query, QueryContext, QueryResult, QuerySource, filterMatch } from './query';
+import { Filter, type QueryOptions, type FilterSource } from './filter';
+import { Query, type QueryContext, type QueryResult, type QuerySource, filterMatch } from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
-import { invariant } from '@dxos/invariant';
 
 /**
  * Manages cross-space database interactions.
@@ -82,10 +82,7 @@ export class HyperGraph {
     );
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
 
-    return new Query(
-      this._createQueryContext(),
-      Filter.from(filter, options),
-    );
+    return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
 
   /**
@@ -152,7 +149,7 @@ export class HyperGraph {
 
   private _createQueryContext(): QueryContext {
     const context = new GraphQueryContext(async () => {
-      for(const database of this._databases.values()) {
+      for (const database of this._databases.values()) {
         context.addQuerySource(new SpaceQuerySource(database));
       }
     });

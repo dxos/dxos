@@ -4,12 +4,12 @@
 
 import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 
 import { type EchoObject } from './defs';
 import { getReferenceWithSpaceKey } from './echo-object-base';
 import { type Schema } from './proto';
 import { type Expando, type TypedObject } from './typed-object';
-import { PublicKey } from '@dxos/keys';
 
 /**
  * Controls how deleted items are filtered.
@@ -44,7 +44,7 @@ export type QueryOptions = {
   /**
    * Query only in specific spaces.
    */
-  spaces?: (PublicKey | { key: PublicKey; })[];
+  spaces?: (PublicKey | { key: PublicKey })[];
 };
 
 export const QUERY_ALL_MODELS = null;

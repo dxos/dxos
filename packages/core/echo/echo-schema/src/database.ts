@@ -4,25 +4,18 @@
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/document-model';
-import {
-  type BatchUpdate,
-  type DatabaseProxy,
-  type Item,
-  type ItemManager,
-  UpdateEvent,
-} from '@dxos/echo-db';
+import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
-import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
+import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
-import { Filter, QueryOptions, type FilterSource } from './filter';
+import { type QueryOptions, type FilterSource } from './filter';
 import { type HyperGraph } from './hypergraph';
 import { type Schema } from './proto';
-import { Query } from './query';
+import { type Query } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 

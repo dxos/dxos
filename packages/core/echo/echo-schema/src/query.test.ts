@@ -8,10 +8,10 @@ import { sleep } from '@dxos/async';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { type EchoDatabase } from './database';
+import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
 import { TestBuilder, createDatabase } from './testing';
 import { Text } from './text-object';
 import { Expando, TypedObject } from './typed-object';
-import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
 
 describe('Queries', () => {
   let db: EchoDatabase;

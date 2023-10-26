@@ -4,11 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Item, type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ComplexMap } from '@dxos/util';
 
 import { base, type EchoObject } from './defs';
 import { getDatabaseFromObject } from './echo-object-base';
@@ -142,7 +140,7 @@ export class Query<T extends TypedObject = TypedObject> {
    * Resend query to remote agents.
    */
   update() {
-    for(const source of this._sources) {
+    for (const source of this._sources) {
       source.update(this._filter);
     }
   }
