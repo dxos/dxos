@@ -12,22 +12,21 @@ import { type Query, type Subscription, type TypedObject } from '@dxos/echo-sche
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/search';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
+import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Search>;
+type Options = PluginOptions;
 
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
 };
 
-export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
+export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
 export class Search extends AbstractPlugin {
-  public readonly id = 'search';
+  public readonly id = 'dxos.org/agent/plugin/search';
   private _ctx?: Context;
   private _options?: Options = undefined;
   private _index?: MiniSearch;

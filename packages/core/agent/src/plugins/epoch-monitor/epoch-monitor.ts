@@ -9,20 +9,22 @@ import { Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type EpochMonitorConfig } from '@dxos/protocols/proto/dxos/agent/epoch';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
+import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.EpochMontior>;
+type Options = PluginOptions<Required<EpochMonitorConfig>>;
 
 // TODO(dmaretskyi): Review defaults.
 const DEFAULT_OPTIONS: Options = {
   enabled: true,
-  minMessagesBetweenEpochs: 10_000,
-  minTimeBetweenEpochs: 120_000,
-  minInactivityBeforeEpoch: 30_000,
-  maxInactivityDelay: 60_000,
+  config: {
+    minMessagesBetweenEpochs: 10_000,
+    minTimeBetweenEpochs: 120_000,
+    minInactivityBeforeEpoch: 30_000,
+    maxInactivityDelay: 60_000,
+  },
 };
 
 /**
@@ -32,8 +34,8 @@ const DEFAULT_OPTIONS: Options = {
  */
 // TODO(burdon): Create test.
 export class EpochMonitor extends AbstractPlugin {
-  public readonly id = 'epochMonitor';
-  private _ctx?: Context;
+  public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
+  private _ctx?: Context = undefined;
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
 
   private _options?: Options = undefined;
@@ -44,7 +46,11 @@ export class EpochMonitor extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...this._pluginConfig,
+      config: { ...DEFAULT_OPTIONS.config, ...this._pluginConfig.config },
+    };
 
     if (!this._options || this._options.enabled === false) {
       log.info('epoch monitor disabled from config');
@@ -149,18 +155,21 @@ class SpaceMonitor {
       const timeSinceLastEpoch = Date.now() - pipeline.currentEpoch.issuanceDate.getTime();
 
       if (
-        newMessages > this._options.minMessagesBetweenEpochs &&
-        timeSinceLastEpoch > this._options.minTimeBetweenEpochs
+        newMessages > this._options.config!.minMessagesBetweenEpochs &&
+        timeSinceLastEpoch > this._options.config!.minTimeBetweenEpochs
       ) {
         if (!this._maxTimeoutTask) {
           log.info('wanting to create epoch', { key: this._space.key, options: this._options });
           this._previousEpochNumber = pipeline.currentEpoch.subject.assertion.number;
-          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.maxInactivityDelay);
+          this._maxTimeoutTask = setTimeout(this._createEpoch.bind(this), this._options.config!.maxInactivityDelay);
         }
         if (this._epochCreationTask) {
           clearTimeout(this._epochCreationTask);
         }
-        this._epochCreationTask = setTimeout(this._createEpoch.bind(this), this._options.minInactivityBeforeEpoch);
+        this._epochCreationTask = setTimeout(
+          this._createEpoch.bind(this),
+          this._options.config!.minInactivityBeforeEpoch,
+        );
       }
     });
     this._ctx.onDispose(() => sub.unsubscribe());

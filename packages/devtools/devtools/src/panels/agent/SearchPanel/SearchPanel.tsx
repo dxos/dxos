@@ -19,7 +19,7 @@ export const SearchPanel = () => {
   useAsyncEffect(async () => {
     await client.spaces.isReady.wait();
     await client.spaces.default.waitUntilReady();
-    const unsubscribe = client.spaces.default.listen('dxos.agent.search-plugin', (data) => {
+    const unsubscribe = client.spaces.default.listen('dxos.org/agent/plugin/search', (data) => {
       log.info('response', { data });
       if (data.payload['@type'] === 'dxos.agent.search.SearchResponse') {
         setSearchResult(data.payload);
@@ -32,7 +32,7 @@ export const SearchPanel = () => {
     await client.spaces.isReady.wait();
     await client.spaces.default.waitUntilReady();
     log.info('search', { query });
-    await client.spaces.default.postMessage('dxos.agent.search-plugin', {
+    await client.spaces.default.postMessage('dxos.org/agent/plugin/search', {
       '@type': 'dxos.agent.search.SearchRequest',
       query,
     });

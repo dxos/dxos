@@ -7,6 +7,7 @@ import { type Client } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 export type PluginContext = {
   client: Client;
@@ -14,16 +15,20 @@ export type PluginContext = {
   plugins: Plugin[];
 };
 
-// TODO(burdon): Don't need interface and abstract class.
+export type PluginOptions<PluginConfig = {}> = {
+  enabled: boolean;
+  config?: PluginConfig;
+};
+
 export interface Plugin {
   statusUpdate: Event<void>;
 
   id: string;
 
   /**
-   * Plugin DXOS config defined in `runtime.agent.plugin.<plugin_id>`. Inside plugin only that config should be used.
+   * Plugin DXOS config defined in `runtime.agent.plugins`. Inside plugin only that config should be used.
    */
-  config: Record<string, any>;
+  config: Runtime.Agent.Plugin;
 
   // TODO(burdon): Why are these separate?
   initialize(pluginCtx: PluginContext): Promise<void>;
@@ -40,7 +45,8 @@ export abstract class AbstractPlugin implements Plugin {
    * Unique plugin identifier. Should be equal to the value in DXOS yaml config file.
    */
   public abstract readonly id: string;
-
+  public statusUpdate = new Event();
+  protected _pluginConfig!: Record<string, any>;
   protected _pluginCtx?: PluginContext;
   protected _config!: Record<string, any>;
 
@@ -48,18 +54,24 @@ export abstract class AbstractPlugin implements Plugin {
     return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
-  get config(): Record<string, any> {
-    return this._config;
+  get config(): Runtime.Agent.Plugin {
+    return this._pluginConfig;
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     this._pluginCtx = pluginCtx;
-    await this.setConfig((this._pluginCtx.client.config.values.runtime?.agent?.plugins as any)?.[this.id] ?? {});
+
+    // TODO(mykola): Maybe do not pass config directly to plugin, but rather let plugin to request it through some callback.
+    await this.setConfig(
+      this._pluginCtx.client.config.values.runtime?.agent?.plugins?.find((pluginCtx) => pluginCtx.id === this.id) ?? {
+        id: this.id,
+      },
+    );
   }
 
-  async setConfig(config: Record<string, any>) {
-    this._config = config;
+  async setConfig(config: Runtime.Agent.Plugin) {
+    this._pluginConfig = config;
   }
 
   abstract open(): Promise<void>;

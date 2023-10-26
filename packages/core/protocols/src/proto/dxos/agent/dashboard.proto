@@ -31,7 +31,7 @@ message AgentStatus {
 
 message PluginState {
   string plugin_id = 1;
-  google.protobuf.Struct plugin_config = 2;
+  dxos.config.Runtime.Agent.Plugin plugin_config = 2;
 }
 
 service DashboardService {

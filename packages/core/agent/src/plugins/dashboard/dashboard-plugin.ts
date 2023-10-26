@@ -14,18 +14,15 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AgentStatus, type PluginState, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { AbstractPlugin } from '../plugin';
+import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Dashboard>;
-
-const DEFAULT_OPTIONS: Options = {
+const DEFAULT_OPTIONS: PluginOptions = {
   enabled: true,
 };
 
-export const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
+export const CHANNEL_NAME = 'dxos.org/agent/plugin/dashboard';
 export const UPDATE_INTERVAL = 5_000;
 
 export type ServiceBundle = {
@@ -37,10 +34,9 @@ export type DashboardPluginParams = {
 };
 
 export class DashboardPlugin extends AbstractPlugin {
+  public readonly id = 'dxos.org/agent/plugin/dashboard';
   private readonly _ctx = new Context();
-  public readonly id = 'dashboard';
-
-  private _options?: Options;
+  private _options?: PluginOptions;
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _params: DashboardPluginParams) {
@@ -138,7 +134,14 @@ export class DashboardPlugin extends AbstractPlugin {
       //       We are changing only config of specific plugin, it should not cause problems.
       const configAsString = await readFile(this._params.configPath, { encoding: 'utf-8' });
       const yamlConfig = yaml.parseDocument(configAsString);
-      yamlConfig.setIn(['runtime', 'agent', 'plugins', request.pluginId], request.pluginConfig);
+      const plugins = yamlConfig.getIn(['runtime', 'agent', 'plugins']);
+      if (!plugins) {
+        yamlConfig.setIn(['runtime', 'agent', 'plugins'], [request.pluginConfig]);
+      } else if (plugins instanceof yaml.YAMLSeq) {
+        plugins.delete(plugins.items.findIndex((item) => item.get('id') === request.pluginId));
+        plugins.add(request.pluginConfig);
+        yamlConfig.setIn(['runtime', 'agent', 'plugins'], plugins);
+      }
       await writeFile(this._params.configPath, yamlConfig.toString(), { encoding: 'utf-8' });
     }
 

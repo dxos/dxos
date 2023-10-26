@@ -6,21 +6,23 @@ import express from 'express';
 import { type Server } from 'node:http';
 
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
-import { AbstractPlugin } from '../plugin';
+import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Functions>;
+type Options = PluginOptions<Required<FunctionsConfig>>;
 
 const DEFAULT_OPTIONS: Options = {
   enabled: false,
-  port: 7000,
+  config: {
+    port: 7002,
+  },
 };
 
 export class FunctionsPlugin extends AbstractPlugin {
-  public readonly id = 'functions';
+  public readonly id = 'dxos.org/agent/plugin/functions';
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
   private readonly _devDispatcher = new DevFunctionDispatcher();
   private _options?: Options;
@@ -28,7 +30,11 @@ export class FunctionsPlugin extends AbstractPlugin {
   private _server?: Server;
 
   async open() {
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...this._pluginConfig,
+      config: { ...DEFAULT_OPTIONS.config, ...this._pluginConfig.config },
+    };
     if (!this._options.enabled) {
       log.info('Functions disabled.');
       return;
@@ -69,7 +75,7 @@ export class FunctionsPlugin extends AbstractPlugin {
         );
     });
 
-    const port = this._options.port;
+    const port = this._options.config!.port;
     this._server = app.listen(port, () => {
       console.log('functions server listening', { port });
     });

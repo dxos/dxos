@@ -54,6 +54,6 @@ describe('EpochMonitor', () => {
   }).tag('flaky');
 
   test('id', async () => {
-    expect(monitor.id).to.equal('epochMonitor');
+    expect(monitor.id).to.equal('dxos.org/agent/plugin/epoch-monitor');
   });
 });

@@ -96,26 +96,27 @@ describe('SearchPlugin', () => {
       const builder = new TestBuilder();
       afterTest(() => builder.destroy());
 
-      const services1 = builder.createLocal();
-      const client1 = new Client({
-        services: services1,
-        config: new Config({ runtime: { agent: { plugins: { search: { enabled: true } } } } }),
-      });
-      await client1.initialize();
-      afterTest(() => client1.destroy());
-      await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
+    const services1 = builder.createLocal();
+    const client1 = new Client({
+      services: services1,
+      config: new Config({ runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/search', enabled: true }] } } }),
+    });
+    await client1.initialize();
+    afterTest(() => client1.destroy());
+    await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-      {
-        // Create one space before indexing is initialized.
-        const space = await client1.spaces.create({ name: 'first space' });
-        await space.waitUntilReady();
-        space.db.add(new Expando(documents[0]));
-        await space.db.flush();
-      }
-      const index = new Search();
-      await index.initialize({ client: client1, clientServices: services1, plugins: [] });
-      await index.open();
-      afterTest(() => index.close());
+    {
+      // Create one space before indexing is initialized.
+      const space = await client1.spaces.create({ name: 'first space' });
+      await space.waitUntilReady();
+      space.db.add(new Expando(documents[0]));
+      await space.db.flush();
+    }
+    const index = new Search();
+    await index.initialize({ client: client1, clientServices: services1, plugins: [] });
+
+    await index.open();
+    afterTest(() => index.close());
 
       {
         const space = await client1.spaces.create({ name: 'second space' });

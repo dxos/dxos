@@ -22,7 +22,7 @@ export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
       id: 'toggle',
       cell: (context) => (
         <Button
-          disabled={context.row.original.pluginId === 'dashboard'}
+          disabled={context.row.original.pluginId === 'dxos.org/agent/plugin/dashboard'}
           onClick={() => {
             void togglePlugin(context.row.original.pluginId);
           }}

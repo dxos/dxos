@@ -9,34 +9,38 @@ import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type EchoProxyConfig } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
-import { AbstractPlugin } from '../plugin';
+import { AbstractPlugin, type PluginOptions } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.EchoProxy>;
-
-const DEFAULT_OPTIONS: Options = {
+const DEFAULT_OPTIONS: PluginOptions<EchoProxyConfig> = {
   enabled: false,
-  port: 7001,
+  config: {
+    port: 7001,
+  },
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
 export class EchoProxyServer extends AbstractPlugin {
-  public readonly id = 'echoProxy';
-  private _server?: http.Server;
-  private _options?: Options = undefined;
+  public readonly id = 'dxos.org/agent/plugin/echo-proxy';
+  private _server?: http.Server = undefined;
+  private _options?: PluginOptions<EchoProxyConfig> = undefined;
 
   async open() {
     invariant(this._pluginCtx);
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...this._pluginConfig,
+      config: { ...DEFAULT_OPTIONS.config, ...this._pluginConfig.config },
+    };
 
-    if (!this._options || this._options.enabled === false) {
+    if (this._options.enabled === false) {
       log.info('EchoProxyServer disabled from config');
       return;
     }
 
-    log('starting proxy...', { ports: this._options.port });
+    log('starting proxy...', { ports: this._options.config!.port });
     await this._pluginCtx.client.initialize();
 
     const app = express();
@@ -98,7 +102,7 @@ export class EchoProxyServer extends AbstractPlugin {
       res.json(result);
     });
 
-    const { port } = this._options;
+    const { port } = this._options.config!;
     this._server = app.listen(port, () => {
       console.log('proxy listening', { port });
     });
