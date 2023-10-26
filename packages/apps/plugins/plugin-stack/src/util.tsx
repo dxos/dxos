@@ -23,7 +23,7 @@ export const isStack = (data: unknown): data is StackType =>
 export const stackToGraphNode = (parent: Node<Space>, object: StackType): Node => {
   const [child] = parent.addNode(STACK_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
+    label: object.title || ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <StackSimple {...props} />,
     data: object,
     properties: {
