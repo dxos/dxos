@@ -3,7 +3,7 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { forwardRef, Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
 import {
   Button,
@@ -40,11 +40,8 @@ const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
-  const { Component, compare } = useContainer();
-  const sortedItems = useMemo(() => {
-    return compare ? [...nodes].sort(compare) : nodes;
-  }, [nodes, compare]);
-  const itemsWithPreview = useItemsWithPreview({ path, items: sortedItems, strategy: 'layout-stable' });
+  const { Component } = useContainer();
+  const itemsWithPreview = useItemsWithPreview({ path, items: nodes, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body>

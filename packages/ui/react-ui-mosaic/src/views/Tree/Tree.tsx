@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef } from 'react';
 
 import { Card, Tree as TreeComponent, TreeItem as TreeItemComponent } from '@dxos/react-ui';
 import { dropRing, mx } from '@dxos/react-ui-theme';
@@ -16,7 +16,6 @@ import {
   useMosaic,
   Path,
   useItemsWithPreview,
-  type MosaicCompareDataItem,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -27,7 +26,6 @@ import {
 export type TreeProps<TData extends MosaicDataItem = TreeData> = MosaicContainerProps<TData, number> & {
   items?: TData[];
   debug?: boolean;
-  compare?: MosaicCompareDataItem;
 };
 
 export type TreeData = {
@@ -37,7 +35,7 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -46,7 +44,6 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
         Component,
         onOver,
         onDrop,
-        compare,
       }}
     >
       <TreeRoot items={items} />
@@ -55,11 +52,8 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 };
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
-  const { id, Component, compare } = useContainer();
-  const sortedItems = useMemo(() => {
-    return compare ? [...items].sort(compare) : items;
-  }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path: id, strategy: 'layout-stable' });
+  const { id, Component } = useContainer();
+  const itemsWithPreview = useItemsWithPreview({ items, path: id, strategy: 'layout-stable' });
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
@@ -104,11 +98,8 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
-  const { Component, compare } = useContainer();
-  const sortedItems = useMemo(() => {
-    return compare ? [...items].sort(compare) : items;
-  }, [items, compare]);
-  const itemsWithPreview = useItemsWithPreview({ items: sortedItems, path, strategy: 'layout-stable' });
+  const { Component } = useContainer();
+  const itemsWithPreview = useItemsWithPreview({ items, path, strategy: 'layout-stable' });
 
   return (
     <TreeItemComponent.Body className='pis-4'>

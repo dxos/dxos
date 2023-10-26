@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import React, { useCallback, useState } from 'react';
 
-import { type Graph, GraphBuilder, type Node } from '@dxos/app-graph';
+import { type Graph, GraphBuilder } from '@dxos/app-graph';
 import { buildGraph } from '@dxos/app-graph/testing';
 import { arrayMove } from '@dxos/util';
 
@@ -104,18 +104,6 @@ export const createGraph = () => {
   return buildGraph(new GraphBuilder().build(), 'tree', content);
 };
 
-const graphNodeCompare = (a: Node, b: Node) => {
-  if (a.properties.index && b.properties.index) {
-    if (a.properties.index < b.properties.index) {
-      return -1;
-    } else if (a.properties.index > b.properties.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
-
 export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
     // Moving within the tree.
@@ -145,13 +133,6 @@ export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; gr
   const handleOver = (): MosaicOperation => 'transfer';
 
   return (
-    <Tree
-      id={id}
-      items={graph.root.children as TreeData[]}
-      onDrop={handleDrop}
-      onOver={handleOver}
-      debug={debug}
-      compare={graphNodeCompare}
-    />
+    <Tree id={id} items={graph.root.children as TreeData[]} onDrop={handleDrop} onOver={handleOver} debug={debug} />
   );
 };

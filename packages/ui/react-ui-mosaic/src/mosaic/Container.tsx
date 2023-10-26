@@ -42,8 +42,6 @@ export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & 
   operation: MosaicOperation;
 };
 
-export type MosaicCompareDataItem = Parameters<typeof Array.prototype.sort>[0];
-
 export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
   HTMLAttributes<HTMLDivElement>,
   'className'
@@ -92,11 +90,6 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dropped on the container.
      */
     onDrop?: (event: MosaicDropEvent<TPosition>) => void;
-
-    /**
-     * Used to sort items within the container.
-     */
-    compare?: MosaicCompareDataItem;
   }>;
 
 export type MosaicContainerContextType = Omit<MosaicContainerProps<any>, 'children'>;
@@ -117,7 +110,6 @@ export const MosaicContainer = ({
   getOverlayStyle,
   onOver,
   onDrop,
-  compare,
 }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   const container = {
@@ -130,7 +122,6 @@ export const MosaicContainer = ({
     getOverlayStyle,
     onOver,
     onDrop,
-    compare,
   };
 
   useEffect(() => {
