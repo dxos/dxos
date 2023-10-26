@@ -17,7 +17,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { AbstractPlugin } from '../plugin';
 
-
 export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
 export class Search extends AbstractPlugin {
