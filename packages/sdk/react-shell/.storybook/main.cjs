@@ -45,6 +45,8 @@ module.exports = {
           root: __dirname,
           content: [
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.mjs'),
+            resolve(__dirname, '../node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
           ],
         }),
         turbosnap({ rootDir: config.root }),

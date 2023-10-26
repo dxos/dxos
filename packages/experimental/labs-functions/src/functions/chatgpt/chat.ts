@@ -21,7 +21,7 @@ export type ChatModelOptions = {
  * NOTE: The current (2023-03-02) cost model is $0.002 per 1000 tokens (roughly 1c per large query).
  * We are being billed for this -- use with caution.
  */
-export class ChatModel {
+export class Chat {
   private readonly _api: OpenAIApi;
 
   constructor(private readonly _options: ChatModelOptions) {
@@ -43,13 +43,7 @@ export class ChatModel {
       // https://platform.openai.com/docs/guides/chat
       const response = await this._api.createChatCompletion({
         model: this._options.model ?? 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'you are a helpful assistant.',
-          },
-          ...messages,
-        ],
+        messages,
       });
 
       const {

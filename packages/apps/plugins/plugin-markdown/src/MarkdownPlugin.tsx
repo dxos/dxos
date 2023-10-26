@@ -219,7 +219,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             properties: {
-              testId: 'spacePlugin.createDocument',
+              testId: 'markdownPlugin.createDocument',
               disposition: 'toolbar',
             },
             invoke: () =>

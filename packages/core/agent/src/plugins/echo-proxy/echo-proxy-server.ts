@@ -29,7 +29,7 @@ export class EchoProxyServer extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._pluginConfig };
+    this._options = { ...DEFAULT_OPTIONS, ...this._config };
 
     if (!this._options || this._options.enabled === false) {
       log.info('EchoProxyServer disabled from config');
