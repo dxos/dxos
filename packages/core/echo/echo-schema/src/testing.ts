@@ -16,7 +16,7 @@ import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase } from './database';
-import { HyperGraph } from './hyper-graph';
+import { HyperGraph } from './hypergraph';
 import { schemaBuiltin } from './proto';
 
 // TODO(burdon): Builder pattern.
@@ -36,7 +36,7 @@ export const createDatabase = async (graph = new HyperGraph()) => {
   const host = await createMemoryDatabase(modelFactory);
   const proxy = await createRemoteDatabaseFromDataServiceHost(modelFactory, host.backend.createDataServiceHost());
   const db = new EchoDatabase(proxy.itemManager, proxy.backend as DatabaseProxy, graph);
-  graph._register(PublicKey.random(), db); // TODO(burdon): Database should have random id?
+  graph._register(proxy.backend.spaceKey, db); // TODO(burdon): Database should have random id?
   return { db, host };
 };
 

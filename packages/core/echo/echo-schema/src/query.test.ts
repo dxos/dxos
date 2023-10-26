@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { QUERY_ALL_MODELS, ShowDeletedOption } from '@dxos/echo-db';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { type EchoDatabase } from './database';
+import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
 import { TestBuilder, createDatabase } from './testing';
 import { Text } from './text-object';
 import { Expando, TypedObject } from './typed-object';
@@ -46,8 +46,12 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query({ label: undefined });
+      const { objects, results } = db.query({ label: undefined });
       expect(objects).to.have.length(1);
+      expect(results).to.have.length(1);
+      expect(results[0].object).to.eq(objects[0]);
+      expect(results[0].id).to.eq(objects[0].id);
+      expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
     }
 
     {
