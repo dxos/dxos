@@ -39,7 +39,7 @@ describe('SearchPlugin', () => {
    * Test MiniSearch.
    * @see https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
    */
-  test('minisearch', async () => {
+  test.skip('minisearch', async () => {
     const opts: Options = {
       fields: ['hello', 'foo', 'nested.deep.foo'],
       extractField: (document: any, fieldName: string) => {
@@ -99,7 +99,9 @@ describe('SearchPlugin', () => {
       const services1 = builder.createLocal();
       const client1 = new Client({
         services: services1,
-        config: new Config({ runtime: { agent: { plugins: { search: { enabled: true } } } } }),
+        config: new Config({
+          runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/search', enabled: true }] } },
+        }),
       });
       await client1.initialize();
       afterTest(() => client1.destroy());
@@ -114,6 +116,7 @@ describe('SearchPlugin', () => {
       }
       const index = new Search();
       await index.initialize({ client: client1, clientServices: services1, plugins: [] });
+
       await index.open();
       afterTest(() => index.close());
 

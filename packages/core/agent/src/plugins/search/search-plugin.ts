@@ -12,24 +12,16 @@ import { type Query, type Subscription, type TypedObject } from '@dxos/echo-sche
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/agent/search';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Search>;
+export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
-const DEFAULT_OPTIONS: Options = {
-  enabled: false,
-};
-
-export const SEARCH_CHANNEL = 'dxos.agent.search-plugin';
-
-export class Search extends AbstractPlugin {
-  public readonly id = 'search';
+export class Search extends Plugin {
+  public readonly id = 'dxos.org/agent/plugin/search';
   private _ctx?: Context;
-  private _options?: Options = undefined;
   private _index?: MiniSearch;
 
   private readonly _spaceIndexes = new ComplexMap<PublicKey, SpaceIndex>(PublicKey.hash);
@@ -57,9 +49,7 @@ export class Search extends AbstractPlugin {
   async open(): Promise<void> {
     log.info('Opening indexing plugin...');
 
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
-
-    if (!this._options.enabled) {
+    if (!this._config.enabled) {
       log.info('Search disabled.');
       return;
     }
