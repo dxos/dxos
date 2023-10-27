@@ -125,10 +125,10 @@ export class DashboardPlugin extends Plugin {
       const yamlConfig = yaml.parseDocument(configAsString);
       const plugins = yamlConfig.getIn(['runtime', 'agent', 'plugins']);
       if (!plugins) {
-        yamlConfig.setIn(['runtime', 'agent', 'plugins'], [request.pluginConfig]);
+        yamlConfig.setIn(['runtime', 'agent', 'plugins'], [request.config]);
       } else if (plugins instanceof yaml.YAMLSeq) {
-        plugins.delete(plugins.items.findIndex((item) => item.get('id') === request.pluginId));
-        plugins.add(request.pluginConfig);
+        plugins.delete(plugins.items.findIndex((item) => item.get('id') === request.id));
+        plugins.add(request.config);
         yamlConfig.setIn(['runtime', 'agent', 'plugins'], plugins);
       }
       await writeFile(this._params.configPath, yamlConfig.toString(), { encoding: 'utf-8' });
@@ -136,10 +136,10 @@ export class DashboardPlugin extends Plugin {
 
     // Restart plugin for which config was changed.
     {
-      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.pluginId);
-      invariant(plugin, `Plugin ${request.pluginId} not found.`);
+      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.id);
+      invariant(plugin, `Plugin ${request.id} not found.`);
       await plugin.close();
-      await plugin.setConfig(request.pluginConfig);
+      await plugin.setConfig(request.config);
       await plugin.open();
       this.statusUpdate.emit();
     }
