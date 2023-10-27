@@ -207,7 +207,6 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
 
     const type = object[base]._getType();
-
     if (!type) {
       return false;
     }
@@ -231,10 +230,8 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     throw new Error('Text based search not implemented.');
   }
 
-  if (filter.predicate) {
-    if (!filter.predicate(object)) {
-      return false;
-    }
+  if (filter.predicate && !filter.predicate(object)) {
+    return false;
   }
 
   for (const andFilter of filter.andFilters) {

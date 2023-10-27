@@ -53,28 +53,14 @@ export type PropertyFilter = Record<string, any>;
 
 export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
-// TODO(burdon):
-// export type Filter = {
-//   properties?: Record<string, any>;
-//   type?: Reference;
-//   textMatch?: string;
-//   predicate?: OperatorFilter<any>;
-//
-//   invert?: boolean;
-//   andFilters?: Filter[];
-//   orFilters?: Filter[];
-//
-//   options?: QueryOptions;
-// };
-
 export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T>;
 
+// TODO(burdon): Remove class.
 export type FilterParams = {
   properties?: Record<string, any>;
   type?: Reference;
   textMatch?: string;
   predicate?: OperatorFilter<any>;
-
   invert?: boolean;
   andFilters?: Filter[];
   orFilters?: Filter[];
@@ -113,10 +99,6 @@ export class Filter<T extends EchoObject = EchoObject> {
       throw new Error(`Invalid filter source: ${source}`);
     }
 
-    // if (options) {
-    //   filter.setOptions(options);
-    // }
-
     return filter;
   }
 
@@ -138,7 +120,7 @@ export class Filter<T extends EchoObject = EchoObject> {
 
   static schema(schema: Schema): Filter<Expando> {
     const ref = getReferenceWithSpaceKey(schema);
-    invariant(ref, 'Schema may not be persisted in the database.');
+    invariant(ref, 'Invalid schema; check persisted in the database.');
     return new Filter({
       type: ref,
     });
@@ -151,18 +133,16 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
+  // TODO(burdon): Make plain immutable object.
   // TODO(burdon): Split into serializable and non-serializable.
-  // TODO(burdon): Make immutable and/or plain TS object with factories.
 
   public readonly properties?: Record<string, any>;
   public readonly type?: Reference;
   public readonly textMatch?: string;
   public readonly predicate?: OperatorFilter<any>;
-
   public readonly invert: boolean;
   public readonly andFilters: Filter[];
   public readonly orFilters: Filter[];
-
   public readonly options: QueryOptions = {};
 
   protected constructor(params: FilterParams, options: QueryOptions = {}) {
@@ -170,22 +150,15 @@ export class Filter<T extends EchoObject = EchoObject> {
     this.type = params.type;
     this.textMatch = params.textMatch;
     this.predicate = params.predicate;
-
     this.invert = params.invert ?? false;
     this.andFilters = params.andFilters ?? [];
     this.orFilters = params.orFilters ?? [];
-
     this.options = options;
   }
 
-  clone(params: FilterParams = {}): Filter<T> {
+  protected clone(params: FilterParams = {}): Filter<T> {
     return new Filter(defaultsDeep({}, params, this), this.options);
   }
-
-  // setOptions(options: QueryOptions): Filter<T> {
-  //   this.options = { ...this.options, ...options };
-  //   return this;
-  // }
 
   // TODO(burdon): Document?
   get spaceKeys(): PublicKey[] | undefined {
