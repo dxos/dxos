@@ -5,10 +5,13 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
+import { Reference } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { type EchoDatabase } from './database';
 import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
+import { compareType } from './query';
 import { TestBuilder, createDatabase } from './testing';
 import { Text } from './text-object';
 import { Expando, TypedObject } from './typed-object';
@@ -200,4 +203,37 @@ test('query with model filters', async () => {
   expect(peer.db.query().objects[0]).to.eq(obj);
 
   expect(peer.db.query(undefined, { models: QUERY_ALL_MODELS }).objects).to.have.length(2);
+});
+
+test('compare types', () => {
+  const spaceKey = PublicKey.random();
+  const itemId = PublicKey.random().toHex();
+
+  expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
+  expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random())).to
+    .be.false;
+
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      spaceKey,
+    ),
+  ).to.be.true;
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      Reference.fromLegacyTypeName('dxos.sdk.client.Test'),
+      spaceKey,
+    ),
+  ).to.be.false;
+
+  // Missing host on items created on some versions.
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
+      spaceKey,
+    ),
+  ).to.be.true;
 });
