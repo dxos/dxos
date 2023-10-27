@@ -23,3 +23,8 @@ runtime:
       server: ws://127.0.0.1/.well-known/dx/supervisor
     tunneling:
       server: ws://127.0.0.1/.well-known/dx/tunnel
+    
+  agent:
+    plugins:
+      - id: dxos.org/agent/plugin/dashboard
+        enabled: true
