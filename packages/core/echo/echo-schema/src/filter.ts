@@ -47,6 +47,7 @@ export type QueryOptions = {
   spaces?: (PublicKey | { key: PublicKey })[];
 };
 
+// TODO(burdon): Remove.
 export const QUERY_ALL_MODELS = null;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
@@ -131,7 +132,7 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  // TODO(burdon): Make immutable.
+  // TODO(burdon): Make immutable and/or plain TS object with factories.
 
   public options: QueryOptions = {};
 
