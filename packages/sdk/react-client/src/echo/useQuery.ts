@@ -20,7 +20,8 @@ type UseQuery = {
 export const useQuery: UseQuery = <T extends TypedObject>(...args: any[]) => {
   let space: Space | undefined;
 
-  if (args.length === 4) {
+  // args[0] === space heuristic
+  if (typeof args[0].db === 'object') {
     space = args[0];
     args.shift();
   }
