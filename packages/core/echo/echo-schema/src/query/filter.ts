@@ -15,6 +15,7 @@ import { type Schema } from '../proto';
 /**
  * Controls how deleted items are filtered.
  */
+// TODO(burdon): Rename.
 export enum ShowDeletedOption {
   /**
    * Do not return deleted items. Default behaviour.
@@ -57,39 +58,37 @@ export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter
 
 // TODO(burdon): Remove class.
 export type FilterParams = {
-  properties?: Record<string, any>;
   type?: Reference;
+  properties?: Record<string, any>;
   textMatch?: string;
   predicate?: OperatorFilter<any>;
-  invert?: boolean;
-  andFilters?: Filter[];
-  orFilters?: Filter[];
+  not?: boolean;
+  and?: Filter[];
+  or?: Filter[];
 };
 
 export class Filter<T extends EchoObject = EchoObject> {
   static from<T extends TypedObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
-    let filter: Filter;
-
-    if (source instanceof Filter) {
-      filter = source.clone();
-    } else if (source === undefined) {
-      filter = new Filter({}, options);
+    if (source === undefined || source === null) {
+      return new Filter({}, options);
+    } else if (source instanceof Filter) {
+      return source.clone();
     } else if (typeof source === 'function') {
-      filter = new Filter(
+      return new Filter(
         {
           predicate: source as any,
         },
         options,
       );
     } else if (Array.isArray(source)) {
-      filter = new Filter(
+      return new Filter(
         {
-          andFilters: source.map((sourceItem) => Filter.from(sourceItem)),
+          and: source.map((sourceItem) => Filter.from(sourceItem)),
         },
         options,
       );
-    } else if (typeof source === 'object' && source !== null) {
-      filter = new Filter(
+    } else if (typeof source === 'object') {
+      return new Filter(
         {
           properties: source,
         },
@@ -98,24 +97,6 @@ export class Filter<T extends EchoObject = EchoObject> {
     } else {
       throw new Error(`Invalid filter source: ${source}`);
     }
-
-    return filter;
-  }
-
-  static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
-    return source.clone({ invert: !source.invert });
-  }
-
-  static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
-    return new Filter({
-      andFilters: filters.map((filter) => Filter.from(filter)),
-    });
-  }
-
-  static or<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
-    return new Filter({
-      orFilters: filters.map((filter) => Filter.from(filter)),
-    });
   }
 
   static schema(schema: Schema): Filter<Expando> {
@@ -133,34 +114,52 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
+  static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
+    return source.clone({ not: !source.not });
+  }
+
+  static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
+    return new Filter({
+      and: filters.map((filter) => Filter.from(filter)),
+    });
+  }
+
+  static or<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
+    return new Filter({
+      or: filters.map((filter) => Filter.from(filter)),
+    });
+  }
+
   // TODO(burdon): Make plain immutable object.
   // TODO(burdon): Split into serializable and non-serializable.
 
-  public readonly properties?: Record<string, any>;
   public readonly type?: Reference;
+  public readonly properties?: Record<string, any>;
   public readonly textMatch?: string;
   public readonly predicate?: OperatorFilter<any>;
-  public readonly invert: boolean;
-  public readonly andFilters: Filter[];
-  public readonly orFilters: Filter[];
+  public readonly not: boolean;
+  public readonly and: Filter[];
+  public readonly or: Filter[];
   public readonly options: QueryOptions = {};
 
   protected constructor(params: FilterParams, options: QueryOptions = {}) {
-    this.properties = params.properties;
     this.type = params.type;
+    this.properties = params.properties;
     this.textMatch = params.textMatch;
     this.predicate = params.predicate;
-    this.invert = params.invert ?? false;
-    this.andFilters = params.andFilters ?? [];
-    this.orFilters = params.orFilters ?? [];
+    this.not = params.not ?? false;
+    this.and = params.and ?? [];
+    this.or = params.or ?? [];
     this.options = options;
   }
 
+  // TODO(burdon): JSON tree.
+
+  // TODO(burdon): If predicate is { foo: undefined } then this is removed.
   protected clone(params: FilterParams = {}): Filter<T> {
     return new Filter(defaultsDeep({}, params, this), this.options);
   }
 
-  // TODO(burdon): Document?
   get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));
   }

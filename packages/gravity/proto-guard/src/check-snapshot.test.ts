@@ -40,15 +40,15 @@ describe('Tests against old storage', () => {
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
     const services = builder.createLocal();
+
+    log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const client = new Client({ services });
-    await asyncTimeout(client.initialize(), 1000);
+    await asyncTimeout(client.initialize(), 1_000);
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    log.info('Running test', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const spaces = client.spaces.get();
     await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1_000);
-
     const space = spaces.find((space) => space.properties.name === data.space.properties.name);
     invariant(space, 'Space not found');
 

@@ -163,24 +163,17 @@ export class Query<T extends TypedObject = TypedObject> {
   }
 }
 
-export const filterMatch = (filter: Filter, object: EchoObject) => {
-  let result = filterMatchInner(filter, object);
+// TODO(burdon): Move logic into Filter.
 
-  for (const orFilter of filter.orFilters) {
-    if (filterMatch(orFilter, object)) {
-      result = true;
-      break;
-    }
-  }
-
-  if (filter.invert) {
-    result = !result;
-  }
-
-  return result;
+export const filterMatch = (filter: Filter, object: EchoObject): boolean => {
+  const result = filterMatchInner(filter, object);
+  return filter.not ? !result : result;
 };
 
 const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
+  // TODO(burdon): Should empty filter match?
+  let match = true;
+
   if (isTypedObject(object)) {
     const deleted = filter.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
     if (object.__deleted) {
@@ -194,11 +187,22 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
   }
 
+  // Match all models if null, otherwise default to documents.
   if (filter.options.models !== null) {
     const models = filter.options.models ?? [DocumentModel.meta.type];
     if (!models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
+
+    match = true;
+  }
+
+  for (const orFilter of filter.or) {
+    if (filterMatch(orFilter, object)) {
+      return true;
+    }
+
+    match = false;
   }
 
   if (filter.type) {
@@ -214,6 +218,8 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
       return false;
     }
+
+    match = true;
   }
 
   if (filter.properties) {
@@ -224,6 +230,8 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
         return false;
       }
     }
+
+    match = true;
   }
 
   if (filter.textMatch !== undefined) {
@@ -234,13 +242,15 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     return false;
   }
 
-  for (const andFilter of filter.andFilters) {
+  for (const andFilter of filter.and) {
     if (!filterMatch(andFilter, object)) {
       return false;
     }
+
+    match = true;
   }
 
-  return true;
+  return match;
 };
 
 // Type comparison is a bit weird due to backwards compatibility requirements.
