@@ -38,7 +38,6 @@ const main = async () => {
     await client.halo.createIdentity();
   }
 
-  // TODO(burdon): Leverage other generators to create multiple spaces with more data.
   {
     // Create Space and data.
     const space = await client.spaces.create(data.space.properties);
