@@ -289,11 +289,11 @@ export class SpaceProxy implements Space {
         this._properties = query.objects[0];
         this._stateUpdate.emit(this._currentState);
       } else {
-        const subscription = query.subscribe((query) => {
+        const unsubscribe = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
             this._stateUpdate.emit(this._currentState);
-            subscription();
+            unsubscribe();
           }
         });
       }

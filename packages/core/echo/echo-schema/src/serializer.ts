@@ -46,6 +46,7 @@ export class Serializer {
     const {
       objects: [properties],
     } = database.query(Filter.byTypeName(TYPE_PROPERTIES));
+
     const { objects } = data;
     for (const object of objects) {
       const { '@id': id, '@type': type, '@model': model, ...data } = object;
