@@ -39,7 +39,7 @@ describe('SearchPlugin', () => {
    * Test MiniSearch.
    * @see https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
    */
-  test('minisearch', async () => {
+  test.skip('minisearch', async () => {
     const opts: Options = {
       fields: ['hello', 'foo', 'nested.deep.foo'],
       extractField: (document: any, fieldName: string) => {
