@@ -69,12 +69,7 @@ export class Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      for (const provider of this._querySourceProviders) {
-        const source = provider.onDatabase(database);
-        if (source) {
-          context.addQuerySource(source);
-        }
-      }
+      context.addQuerySource(new SpaceQuerySource(database));
     }
   }
 
@@ -134,19 +129,10 @@ export class Hypergraph {
       .value.on(new Context(), onResolve, { weak: true });
   }
 
-  registerQuerySourceProvider(provider: QuerySourceProvider) {
+  async registerQuerySourceProvider(provider: QuerySourceProvider) {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      const source = provider.onContextCreation(context);
-      if (source) {
-        context.addQuerySource(source);
-      }
-      for (const database of this._databases.values()) {
-        const source = provider.onDatabase(database);
-        if (source) {
-          context.addQuerySource(source);
-        }
-      }
+      context.addQuerySource(await provider.create());
     }
   }
 
@@ -179,15 +165,12 @@ export class Hypergraph {
   private _createQueryContext(): QueryContext {
     const context = new GraphQueryContext(async () => {
       for (const database of this._databases.values()) {
-        for (const provider of this._querySourceProviders) {
-          const source = provider.onDatabase(database);
-          if (source) {
-            context.addQuerySource(source);
-          }
-        }
+        context.addQuerySource(new SpaceQuerySource(database));
+      }
+      for (const provider of this._querySourceProviders) {
+        context.addQuerySource(await provider.create());
       }
     });
-
     this._queryContexts.set({}, context);
 
     return context;
@@ -195,18 +178,7 @@ export class Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  onDatabase(database: EchoDatabase): QuerySource | void;
-  onContextCreation(context: QueryContext): QuerySource | void;
-}
-
-export class SpaceQuerySourceProvider implements QuerySourceProvider {
-  onDatabase(database: EchoDatabase): QuerySource {
-    return new SpaceQuerySource(database);
-  }
-
-  onContextCreation() {
-    // no-op
-  }
+  create(): Promise<QuerySource>;
 }
 
 class GraphQueryContext implements QueryContext {
