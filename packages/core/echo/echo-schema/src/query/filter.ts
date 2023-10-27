@@ -57,6 +57,7 @@ export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T>;
 
 // TODO(burdon): Remove class.
+// TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
 export type FilterParams = {
   type?: Reference;
   properties?: Record<string, any>;
