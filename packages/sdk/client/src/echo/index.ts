@@ -14,6 +14,7 @@ export {
   Expando,
   Query,
   Schema,
+  type Text, // TODO(burdon): Deprecated.
   TextObject,
   TypeCollection,
   TypedObject,

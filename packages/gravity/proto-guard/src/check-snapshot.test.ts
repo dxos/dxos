@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { QUERY_ALL_MODELS, type Text } from '@dxos/client/echo';
+import { QUERY_ALL_MODELS, type TextObject } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -89,7 +89,7 @@ describe('Tests against old storage', () => {
       // Text.
       // TODO(mykola): add ability to query.
       const text = space.db.query({ text: data.space.text.content }, { models: QUERY_ALL_MODELS }).objects[0];
-      expect((text as unknown as Text).text).to.equal(data.space.text.content);
+      expect((text as unknown as TextObject).text).to.equal(data.space.text.content);
     }
   });
 });

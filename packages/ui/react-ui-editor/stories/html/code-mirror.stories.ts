@@ -28,7 +28,7 @@ const testBuilder = new TestBuilder();
 const views: Record<number, EditorView> = {};
 const subscriptions = new EventSubscriptions();
 
-const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identity, space: Space, text: Text) => {
+const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identity, space: Space, text: TextObject) => {
   const doc = text.doc;
   const ytext = text.content;
   if (!(ytext instanceof YText) || !doc) {

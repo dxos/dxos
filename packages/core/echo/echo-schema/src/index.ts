@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Remove QUERY_ALL_MODELS.
 // TODO(burdon): Break apart files to remove unneeded exports (e.g., EchoBaseObject).
 // TODO(burdon): Remove circ deps (remove need for reexports).
 // TODO(burdon): linkDeferred
