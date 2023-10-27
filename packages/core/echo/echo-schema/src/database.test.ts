@@ -10,9 +10,9 @@ import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
 import { data } from './defs';
+import { Expando, TypedObject } from './object';
 import { Schema } from './proto';
 import { TestBuilder, createDatabase } from './testing';
-import { Expando, TypedObject } from './typed-object';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 

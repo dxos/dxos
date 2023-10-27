@@ -9,12 +9,11 @@ import { Reference } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { ShowDeletedOption, QUERY_ALL_MODELS } from './filter';
+import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
 import { compareType } from './query';
 import { type EchoDatabase } from '../database';
+import { Text, Expando, TypedObject } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
-import { Text } from '../text-object';
-import { Expando, TypedObject } from '../typed-object';
 
 describe('Queries', () => {
   let db: EchoDatabase;
@@ -97,7 +96,7 @@ describe('Queries', () => {
     }
   });
 
-  test.only('options', async () => {
+  test('options', async () => {
     {
       const { objects } = db.query({ label: 'red' });
       expect(objects).to.have.length(3);

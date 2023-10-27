@@ -7,11 +7,10 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
+import { Text, TypedObject } from './object';
 import { QUERY_ALL_MODELS } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
-import { Text } from './text-object';
-import { TypedObject } from './typed-object';
 
 describe('Serializer', () => {
   test('Basic', async () => {

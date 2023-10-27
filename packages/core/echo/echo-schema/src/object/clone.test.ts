@@ -7,9 +7,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
-import { createDatabase } from './testing';
-import { Text } from './text-object';
 import { Expando } from './typed-object';
+import { createDatabase } from '../testing';
 
 describe('clone', () => {
   test('clone to a different database', async () => {

@@ -8,9 +8,9 @@ import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-mode
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { base } from './defs';
-import { EchoObjectBase } from './echo-object-base';
+import { EchoObjectBase } from './base';
 import { type TypedObject } from './typed-object';
+import { base } from '../defs'; // TODO(burdon): Split.
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;

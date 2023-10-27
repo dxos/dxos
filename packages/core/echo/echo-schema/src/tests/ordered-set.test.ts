@@ -7,7 +7,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
-import { Hypergraph, EchoArray } from '..';
+import { Hypergraph } from '../hypergraph';
+import { EchoArray } from '../object';
 import { createDatabase } from '../testing';
 
 // TODO(burdon): Test with/without saving to database.

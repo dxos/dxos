@@ -12,6 +12,8 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
+import { EchoObjectBase } from './base';
+import { Text } from './text';
 import {
   base,
   data,
@@ -22,12 +24,9 @@ import {
   type ObjectMeta,
   type TypedObjectProperties,
   type EchoObject,
-} from './defs';
-import { getBody, getHeader } from './devtools-formatter';
-import { EchoObjectBase } from './echo-object-base';
-import { type Schema } from './proto'; // NOTE: Keep as type-import.
-import { Text } from './text-object';
-import { isReferenceLike } from './util';
+} from '../defs';
+import { type Schema } from '../proto'; // NOTE: Keep as type-import.
+import { isReferenceLike, getBody, getHeader } from '../util';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -614,8 +613,9 @@ let schemaProto: typeof Schema;
 const getSchemaProto = (): typeof Schema => {
   if (!schemaProto) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Schema } = require('./proto');
+    const { Schema } = require('../proto');
     schemaProto = Schema;
   }
+
   return schemaProto;
 };

@@ -6,7 +6,7 @@ import { log } from '@dxos/log';
 import { type TextKind, type TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
-import { EchoObjectBase } from './echo-object-base';
+import { EchoObjectBase } from './base';
 
 // TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
 //  So rethink how we expose this.

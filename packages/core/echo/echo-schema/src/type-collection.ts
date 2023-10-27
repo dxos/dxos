@@ -6,8 +6,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { base } from './defs';
+import { TypedObject, dangerouslyMutateImmutableObject } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
-import { TypedObject, dangerouslyMutateImmutableObject } from './typed-object';
 
 type Prototype = {
   new (...args: any): any;

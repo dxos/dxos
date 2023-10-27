@@ -7,9 +7,9 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createDatabase } from './testing';
-import { Text } from './text-object';
+import { Text } from './text';
 import { TypedObject } from './typed-object';
+import { createDatabase } from '../testing';
 
 describe('Text', () => {
   test('basic', async () => {

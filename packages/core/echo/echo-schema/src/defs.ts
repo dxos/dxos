@@ -3,7 +3,7 @@
 //
 
 import type { EchoDatabase } from './database';
-import { type EchoObjectBase } from './echo-object-base';
+import { type EchoObjectBase } from './object';
 import { type Schema } from './proto';
 
 // TypedObject

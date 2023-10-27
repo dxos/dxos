@@ -13,10 +13,9 @@ import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
 import { type Hypergraph } from './hypergraph';
+import { Text, TypedObject } from './object';
 import { type Schema } from './proto';
 import { type QueryOptions, type FilterSource, type Query } from './query';
-import { Text } from './text-object';
-import { TypedObject } from './typed-object';
 
 /**
  * Database wrapper.

@@ -13,6 +13,7 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
+import { type TypedObject } from './object';
 import {
   filterMatch,
   Filter,
@@ -24,7 +25,6 @@ import {
   type QuerySource,
 } from './query';
 import { TypeCollection } from './type-collection';
-import { type TypedObject } from './typed-object';
 
 /**
  * Manages cross-space database interactions.

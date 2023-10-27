@@ -7,9 +7,9 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
+import { Expando } from './object';
 import { createSubscription } from './subscription';
 import { createDatabase } from './testing';
-import { Expando } from './typed-object';
 
 describe('create subscription', () => {
   test('updates are propagated', async () => {

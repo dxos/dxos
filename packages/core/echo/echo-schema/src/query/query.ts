@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 
 import { ShowDeletedOption, type Filter, QUERY_ALL_MODELS } from './filter';
 import { base, type EchoObject } from '../defs';
-import { getDatabaseFromObject } from '../echo-object-base';
-import { createSignal } from '../signal';
-import { isTypedObject, type TypedObject } from '../typed-object';
+import { getDatabaseFromObject } from '../object';
+import { isTypedObject, type TypedObject } from '../object';
+import { createSignal } from '../util';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
