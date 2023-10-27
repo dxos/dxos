@@ -4,11 +4,11 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Reference } from '@dxos/document-model';
+import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
-import { type EchoObject, type Expando, type TypedObject } from '../object';
+import { base, type EchoObject, type Expando, getDatabaseFromObject, isTypedObject, type TypedObject } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 
@@ -165,3 +165,111 @@ export class Filter<T extends EchoObject = EchoObject> {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));
   }
 }
+
+// TODO(burdon): Move logic into Filter.
+
+export const filterMatch = (filter: Filter, object: EchoObject): boolean => {
+  const result = filterMatchInner(filter, object);
+  return filter.not ? !result : result;
+};
+
+const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
+  if (isTypedObject(object)) {
+    const deleted = filter.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
+    if (object.__deleted) {
+      if (deleted === ShowDeletedOption.HIDE_DELETED) {
+        return false;
+      }
+    } else {
+      if (deleted === ShowDeletedOption.SHOW_DELETED_ONLY) {
+        return false;
+      }
+    }
+  }
+
+  // Match all models if null, otherwise default to documents.
+  if (filter.options.models !== null) {
+    // TODO(burdon): Expose default options that are merged if not null.
+    const models = filter.options.models ?? [DocumentModel.meta.type];
+    if (!models.includes(object[base]._modelConstructor.meta.type)) {
+      return false;
+    }
+  }
+
+  if (filter.or.length) {
+    for (const orFilter of filter.or) {
+      if (filterMatch(orFilter, object)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // TODO(burdon): Should match by default?
+  let match = true;
+
+  if (filter.type) {
+    if (!isTypedObject(object)) {
+      return false;
+    }
+
+    const type = object[base]._getType();
+    if (!type) {
+      return false;
+    }
+
+    // TODO(burdon): Comment.
+    if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
+      return false;
+    }
+
+    match = true;
+  }
+
+  if (filter.properties) {
+    for (const key in filter.properties) {
+      invariant(key !== '@type');
+      const value = filter.properties[key];
+      if ((object as any)[key] !== value) {
+        return false;
+      }
+    }
+
+    match = true;
+  }
+
+  if (filter.textMatch !== undefined) {
+    throw new Error('Text based search not implemented.');
+  }
+
+  if (filter.predicate && !filter.predicate(object)) {
+    return false;
+  }
+
+  for (const andFilter of filter.and) {
+    if (!filterMatch(andFilter, object)) {
+      return false;
+    }
+
+    match = true;
+  }
+
+  return match;
+};
+
+// Type comparison is a bit weird due to backwards compatibility requirements.
+// TODO(dmaretskyi): Deprecate `protobuf` protocol to clean this up.
+export const compareType = (expected: Reference, actual: Reference, spaceKey?: PublicKey) => {
+  const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
+
+  if (
+    actual.itemId !== expected.itemId ||
+    actual.protocol !== expected.protocol ||
+    (host !== expected.host && actual.host !== expected.host)
+  ) {
+    return false;
+  } else {
+    return true;
+  }
+};

@@ -4,10 +4,11 @@
 
 import { expect } from 'chai';
 
+import { Reference } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { Filter } from './filter';
-import { filterMatch } from './query';
+import { compareType, Filter, filterMatch } from './filter';
 import { Expando } from '../object';
 
 describe('Filter', () => {
@@ -60,4 +61,37 @@ describe('Filter', () => {
   });
 
   // TODO(burdon): Test schema.
+
+  test('compare types', () => {
+    const spaceKey = PublicKey.random();
+    const itemId = PublicKey.random().toHex();
+
+    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
+    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random()))
+      .to.be.false;
+
+    expect(
+      compareType(
+        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        spaceKey,
+      ),
+    ).to.be.true;
+    expect(
+      compareType(
+        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypeName('dxos.sdk.client.Test'),
+        spaceKey,
+      ),
+    ).to.be.false;
+
+    // Missing host on items created on some versions.
+    expect(
+      compareType(
+        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
+        spaceKey,
+      ),
+    ).to.be.true;
+  });
 });
