@@ -8,7 +8,7 @@ import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-mode
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { EchoObjectBase } from './object';
+import { AbstractEchoObject } from './object';
 import { type TypedObject } from './typed-object';
 import { base } from './types';
 
@@ -351,7 +351,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof EchoObjectBase) {
+    if (value instanceof AbstractEchoObject) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
@@ -426,7 +426,7 @@ export class EchoArray<T> implements Array<T> {
 }
 
 const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof EchoObjectBase) {
+  if (value instanceof AbstractEchoObject) {
     return document!._linkObject(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => encodeRecords(value, document));

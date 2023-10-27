@@ -6,16 +6,16 @@ import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { type EchoObjectBase } from './object';
+import { type AbstractEchoObject } from './object';
 import { base, type EchoObject } from './types';
 import type { EchoDatabase } from '../database';
 
-export const setStateFromSnapshot = (obj: EchoObjectBase, snapshot: ObjectSnapshot) => {
+export const setStateFromSnapshot = (obj: AbstractEchoObject, snapshot: ObjectSnapshot) => {
   invariant(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
 };
 
-export const forceUpdate = (obj: EchoObjectBase) => {
+export const forceUpdate = (obj: AbstractEchoObject) => {
   obj[base]._itemUpdate();
 };
 

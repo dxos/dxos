@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type EchoObjectBase } from './object';
+import { type AbstractEchoObject } from './object';
 import type { EchoDatabase } from '../database';
 import { type Schema } from '../proto';
 
@@ -39,7 +39,7 @@ export interface EchoObject {
    * Returns the underlying object.
    * Same as `this` for non-proxied objects.
    */
-  [base]: EchoObjectBase;
+  [base]: AbstractEchoObject;
 
   /**
    * The database this object belongs to.

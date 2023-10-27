@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { type EchoObjectBase } from './object';
+import { type AbstractEchoObject } from './object';
 import { TypedObject } from './typed-object';
 import { base, type EchoObject } from './types';
 
@@ -68,7 +68,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
   return clone;
 };
 
-const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
+const cloneInner = (obj: AbstractEchoObject, id: string): EchoObject => {
   const prototype = Object.getPrototypeOf(obj);
   const snapshot = getObjectSnapshot(obj);
 
@@ -79,7 +79,7 @@ const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
   return clone;
 };
 
-const getObjectSnapshot = (obj: EchoObjectBase): EchoObjectProto => {
+const getObjectSnapshot = (obj: AbstractEchoObject): EchoObjectProto => {
   if (obj._item) {
     return obj._item.createSnapshot();
   } else {

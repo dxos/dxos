@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { EchoObjectBase } from './object';
+import { AbstractEchoObject } from './object';
 import { TextObject } from './text-object';
 import {
   base,
@@ -79,7 +79,7 @@ export type TypedObjectOptions = {
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
 // TODO(burdon): Extract interface.
-class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedObjectProperties {
+class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
@@ -251,7 +251,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => this._transform(value, visitorsWithDefaults);
 
-    if (value instanceof EchoObjectBase) {
+    if (value instanceof AbstractEchoObject) {
       return visitorsWithDefaults.onRef!(value.id, value);
     } else if (value instanceof Reference) {
       return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value));
@@ -350,12 +350,12 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof EchoObjectBase) {
+      if (value instanceof AbstractEchoObject) {
         const ref = this._linkObject(value);
         this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
-          if (item instanceof EchoObjectBase) {
+          if (item instanceof AbstractEchoObject) {
             return this._linkObject(item);
           } else if (isReferenceLike(item)) {
             return new Reference(item['@id']);
@@ -519,7 +519,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: EchoObjectBase): Reference {
+  _linkObject(obj: AbstractEchoObject): Reference {
     if (this._database) {
       if (!obj[base]._database) {
         this._database.add(obj as TypedObject);
