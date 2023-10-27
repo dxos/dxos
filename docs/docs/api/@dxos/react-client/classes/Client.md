@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.3.2"</code>
+Type: <code>"0.3.3"</code>
 
 The version of this client API.
 
@@ -28,6 +28,11 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 Current configuration object.
+
+### [experimental]()
+Type: <code>object</code>
+
+
 
 ### [halo]()
 Type: <code>HaloProxy</code>
@@ -83,7 +88,7 @@ Arguments: none
 
 
 
-Returns: <code>void</code>
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
 
 Arguments: 
 
@@ -95,7 +100,7 @@ Arguments:
 
 
 
-Returns: <code>void</code>
+Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
 
 Arguments: 
 
