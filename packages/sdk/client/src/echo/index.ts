@@ -14,7 +14,7 @@ export {
   Expando,
   Query,
   Schema,
-  Text,
+  TextObject,
   TypeCollection,
   TypedObject,
   Filter,

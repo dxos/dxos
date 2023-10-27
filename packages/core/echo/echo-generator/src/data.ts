@@ -7,7 +7,7 @@
 
 import { faker } from '@faker-js/faker';
 
-import { Schema, type Space, Text } from '@dxos/client/echo';
+import { Schema, type Space, TextObject } from '@dxos/client/echo';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestGeneratorMap, type TestSchemaMap } from './types';
@@ -101,7 +101,7 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   organization: () => ({
     name: faker.company.name(),
     website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-    description: new Text(faker.lorem.sentences()),
+    description: new TextObject(faker.lorem.sentences()),
   }),
 
   person: (provider) => {

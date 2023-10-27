@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
-import { Text } from './text';
+import { TextObject } from './text-object';
 import { Expando } from './typed-object';
 import { createDatabase } from '../testing';
 
@@ -95,7 +95,7 @@ describe('clone', () => {
     const task1 = new Expando({
       title: 'Main task',
       tags: ['red', 'green'],
-      details: new Text('Some details'),
+      details: new TextObject('Some details'),
     });
     db1.add(task1);
     await db1.flush();

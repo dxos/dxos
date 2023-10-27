@@ -5,7 +5,7 @@
 import path from 'node:path';
 
 import { Client } from '@dxos/client';
-import { Expando, Text } from '@dxos/client/echo';
+import { Expando, TextObject } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
@@ -53,7 +53,7 @@ const main = async () => {
     await space.internal.createEpoch();
 
     // TODO(burdon): Add mutations.
-    space.db.add(new Text(data.space.text.content));
+    space.db.add(new TextObject(data.space.text.content));
     await space.db.flush();
   }
 

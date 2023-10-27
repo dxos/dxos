@@ -12,8 +12,8 @@ import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type Hypergraph } from './hypergraph';
-import { type EchoObject, base, db } from './object';
-import { Text, TypedObject } from './object';
+import { type EchoObject, base, db, TextObject } from './object';
+import { TypedObject } from './object';
 import { type Schema } from './proto';
 import { type QueryOptions, type FilterSource, type Query } from './query';
 
@@ -251,7 +251,7 @@ export class EchoDatabase {
         return new TypedObject(undefined, { type: state.type });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new Text();
+      return new TextObject();
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;

@@ -13,7 +13,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
 import { EchoObjectBase } from './base';
-import { Text } from './text';
+import { TextObject } from './text-object';
 import {
   base,
   data,
@@ -121,7 +121,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
         if (field.repeated) {
           this._set(field.id!, new EchoArray());
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
-          this._set(field.id!, new Text());
+          this._set(field.id!, new TextObject());
         }
       }
     }
@@ -573,7 +573,6 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 /**
  * Base class for generated document types and expando objects.
  */
-
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
@@ -586,7 +585,7 @@ export type TypedObject<T extends Record<string, any> = Record<string, any>> = T
 export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
 
 /**
- *
+ * Runtime object.
  */
 type ExpandoConstructor = {
   new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;

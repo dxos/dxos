@@ -8,7 +8,7 @@ import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { base, Text, TypedObject } from './object';
+import { base, TextObject, TypedObject } from './object';
 import { Filter, QUERY_ALL_MODELS } from './query';
 
 export type SerializedObject = {
@@ -74,7 +74,7 @@ export class Serializer {
           break;
         }
         case TextModel.meta.type: {
-          const obj = new Text(data.text);
+          const obj = new TextObject(data.text);
           obj[base]._id = id;
           database.add(obj);
           await database.flush();

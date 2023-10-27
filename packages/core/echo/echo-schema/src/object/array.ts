@@ -18,6 +18,7 @@ const isIndex = (property: string | symbol): property is string =>
 /**
  * Array of complex or scalar values.
  */
+// TODO(burdon): Rename OrderedList.
 export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {
     return Array;

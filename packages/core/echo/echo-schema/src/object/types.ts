@@ -6,6 +6,8 @@ import { type EchoObjectBase } from './base';
 import type { EchoDatabase } from '../database';
 import { type Schema } from '../proto';
 
+// TODO(burdon): Don't export symbols outside of package?
+
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');
 export const meta = Symbol.for('dxos.echo.meta');

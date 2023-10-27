@@ -3,8 +3,9 @@
 //
 
 export * from './array';
-export * from './base';
 export * from './clone';
-export * from './text';
-export * from './types';
+export * from './functions';
+export * from './subscription';
+export * from './text-object';
 export * from './typed-object';
+export * from './types';

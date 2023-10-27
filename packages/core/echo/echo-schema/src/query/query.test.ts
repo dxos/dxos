@@ -12,7 +12,7 @@ import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
 import { compareType } from './query';
 import { type EchoDatabase } from '../database';
-import { Text, Expando, TypedObject } from '../object';
+import { Expando, TypedObject, TextObject } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
 
 describe('Queries', () => {
@@ -194,7 +194,7 @@ test('query with model filters', async () => {
   const obj = peer.db.add(
     new Expando({
       title: 'title',
-      description: new Text('description'),
+      description: new TextObject('description'),
     }),
   );
 

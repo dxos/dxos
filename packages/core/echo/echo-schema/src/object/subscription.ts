@@ -4,7 +4,8 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { type EchoObject, EchoObjectBase, subscribe } from './object';
+import { EchoObjectBase } from './base';
+import { type EchoObject, subscribe } from './types';
 
 export type Selection = any[];
 

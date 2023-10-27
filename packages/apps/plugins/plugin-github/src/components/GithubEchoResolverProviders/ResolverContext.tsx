@@ -3,8 +3,8 @@
 //
 
 import React, {
-  type Context,
   createContext,
+  type Context,
   type PropsWithChildren,
   useContext,
   useEffect,
@@ -15,7 +15,7 @@ import React, {
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, useQuery, useSpaces, Text } from '@dxos/react-client/echo';
+import { type Space, SpaceState, TextObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -93,7 +93,7 @@ const DocumentResolverProviderImpl = ({
       if (event.data.type === 'initial-data') {
         const nextDocument = new Document(
           {
-            content: new Text(event.data.content),
+            content: new TextObject(event.data.content),
             title: defaultDisplayName,
           },
           {

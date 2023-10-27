@@ -11,7 +11,7 @@ import { EchoObjectBase } from './base';
 // TODO(burdon): Consider renaming to TextObject.
 // TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
 //  So rethink how we expose this.
-export class Text extends EchoObjectBase<TextModel> {
+export class TextObject extends EchoObjectBase<TextModel> {
   // TODO(burdon): Change to object.
   constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
@@ -85,3 +85,9 @@ export class Text extends EchoObjectBase<TextModel> {
     this._signal?.notifyWrite();
   }
 }
+
+/**
+ * @deprecated Use TextObject.
+ */
+// TODO(burdon): Remove.
+export type Text = TextObject;

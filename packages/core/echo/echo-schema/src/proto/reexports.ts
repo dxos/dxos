@@ -4,7 +4,7 @@
 
 // Exports referenced by code generator.
 
-export { TypedObject, type TypedObjectOptions } from '../object';
+export { type TypedObjectOptions, TextObject, TypedObject } from '../object';
 export { TypeCollection } from '../type-collection';
 export { Filter } from '../query';
-export type { Schema } from './index';
+export { type Schema } from './index';

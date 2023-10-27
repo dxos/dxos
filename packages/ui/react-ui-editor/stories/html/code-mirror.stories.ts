@@ -11,9 +11,9 @@ import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
-import { Client, PublicKey } from '@dxos/react-client';
-import { Space, Text } from '@dxos/react-client/echo';
-import { Identity } from '@dxos/react-client/halo';
+import { Client, type PublicKey } from '@dxos/react-client';
+import { type Space, TextObject } from '@dxos/react-client/echo';
+import { type Identity } from '@dxos/react-client/halo';
 import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 
@@ -80,7 +80,7 @@ const setupSpace = async (count: number) => {
   clients.map((client) => client.spaces.addSchema(schema));
 
   const space = await clients[0].spaces.create();
-  const text = new Text('Hello, Storybook!');
+  const text = new TextObject('Hello, Storybook!');
   const document = new ComposerDocument({ content: text });
   await space.db.add(document);
 
