@@ -36,6 +36,7 @@ export class Hypergraph {
   private readonly _updateEvent = new Event<UpdateEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
+  private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get types(): TypeCollection {
     return this._types;
@@ -68,7 +69,12 @@ export class Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      for (const provider of this._querySourceProviders) {
+        const source = provider.onDatabase(database);
+        if (source) {
+          context.addQuerySource(source);
+        }
+      }
     }
   }
 
@@ -128,6 +134,22 @@ export class Hypergraph {
       .value.on(new Context(), onResolve, { weak: true });
   }
 
+  registerQuerySourceProvider(provider: QuerySourceProvider) {
+    this._querySourceProviders.push(provider);
+    for (const context of this._queryContexts.values()) {
+      const source = provider.onContextCreation(context);
+      if (source) {
+        context.addQuerySource(source);
+      }
+      for (const database of this._databases.values()) {
+        const source = provider.onDatabase(database);
+        if (source) {
+          context.addQuerySource(source);
+        }
+      }
+    }
+  }
+
   private _onUpdate(updateEvent: UpdateEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
@@ -157,12 +179,33 @@ export class Hypergraph {
   private _createQueryContext(): QueryContext {
     const context = new GraphQueryContext(async () => {
       for (const database of this._databases.values()) {
-        context.addQuerySource(new SpaceQuerySource(database));
+        for (const provider of this._querySourceProviders) {
+          const source = provider.onDatabase(database);
+          if (source) {
+            context.addQuerySource(source);
+          }
+        }
       }
     });
+
     this._queryContexts.set({}, context);
 
     return context;
+  }
+}
+
+export interface QuerySourceProvider {
+  onDatabase(database: EchoDatabase): QuerySource | void;
+  onContextCreation(context: QueryContext): QuerySource | void;
+}
+
+export class SpaceQuerySourceProvider implements QuerySourceProvider {
+  onDatabase(database: EchoDatabase): QuerySource {
+    return new SpaceQuerySource(database);
+  }
+
+  onContextCreation() {
+    // no-op
   }
 }
 
