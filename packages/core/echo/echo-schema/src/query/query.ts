@@ -171,9 +171,6 @@ export const filterMatch = (filter: Filter, object: EchoObject): boolean => {
 };
 
 const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
-  // TODO(burdon): Should empty filter match?
-  let match = true;
-
   if (isTypedObject(object)) {
     const deleted = filter.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
     if (object.__deleted) {
@@ -193,17 +190,20 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     if (!models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
-
-    match = true;
   }
 
-  for (const orFilter of filter.or) {
-    if (filterMatch(orFilter, object)) {
-      return true;
+  if (filter.or.length) {
+    for (const orFilter of filter.or) {
+      if (filterMatch(orFilter, object)) {
+        return true;
+      }
     }
 
-    match = false;
+    return false;
   }
+
+  // TODO(burdon): Should match by default?
+  let match = true;
 
   if (filter.type) {
     if (!isTypedObject(object)) {
