@@ -39,11 +39,14 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.get": "^4.4.7",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

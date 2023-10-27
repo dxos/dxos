@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import defaultsDeep from 'lodash.defaultsdeep';
+
 import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -51,6 +53,20 @@ export type PropertyFilter = Record<string, any>;
 
 export type OperatorFilter<T extends EchoObject> = (object: T) => boolean;
 
+// TODO(burdon):
+// export type Filter = {
+//   properties?: Record<string, any>;
+//   type?: Reference;
+//   textMatch?: string;
+//   predicate?: OperatorFilter<any>;
+//
+//   invert?: boolean;
+//   andFilters?: Filter[];
+//   orFilters?: Filter[];
+//
+//   options?: QueryOptions;
+// };
+
 export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter<T> | Filter<T>;
 
 export type FilterParams = {
@@ -69,48 +85,55 @@ export class Filter<T extends EchoObject = EchoObject> {
     let filter: Filter;
 
     if (source instanceof Filter) {
-      filter = source;
+      filter = source.clone();
     } else if (source === undefined) {
-      filter = new Filter({});
+      filter = new Filter({}, options);
     } else if (typeof source === 'function') {
-      filter = new Filter({
-        predicate: source as any,
-      });
+      filter = new Filter(
+        {
+          predicate: source as any,
+        },
+        options,
+      );
     } else if (Array.isArray(source)) {
-      filter = new Filter({
-        andFilters: source.map((sourceItem) => Filter.from(sourceItem)),
-      });
+      filter = new Filter(
+        {
+          andFilters: source.map((sourceItem) => Filter.from(sourceItem)),
+        },
+        options,
+      );
     } else if (typeof source === 'object' && source !== null) {
-      filter = new Filter({
-        properties: source,
-      });
+      filter = new Filter(
+        {
+          properties: source,
+        },
+        options,
+      );
     } else {
       throw new Error(`Invalid filter source: ${source}`);
     }
 
-    if (options) {
-      filter.setOptions(options);
-    }
+    // if (options) {
+    //   filter.setOptions(options);
+    // }
 
     return filter;
   }
 
   static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
-    const res = source.clone();
-    res.invert = !res.invert;
-    return res;
+    return source.clone({ invert: !source.invert });
   }
 
   static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
-    const res = new Filter({});
-    res.andFilters = filters.map((filter) => Filter.from(filter));
-    return res;
+    return new Filter({
+      andFilters: filters.map((filter) => Filter.from(filter)),
+    });
   }
 
   static or<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
-    const res = new Filter({});
-    res.orFilters = filters.map((filter) => Filter.from(filter));
-    return res;
+    return new Filter({
+      orFilters: filters.map((filter) => Filter.from(filter)),
+    });
   }
 
   static schema(schema: Schema): Filter<Expando> {
@@ -128,20 +151,21 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
+  // TODO(burdon): Split into serializable and non-serializable.
   // TODO(burdon): Make immutable and/or plain TS object with factories.
 
-  public options: QueryOptions = {};
+  public readonly properties?: Record<string, any>;
+  public readonly type?: Reference;
+  public readonly textMatch?: string;
+  public readonly predicate?: OperatorFilter<any>;
 
-  public properties?: Record<string, any>;
-  public type?: Reference;
-  public textMatch?: string;
-  public predicate?: OperatorFilter<any>;
+  public readonly invert: boolean;
+  public readonly andFilters: Filter[];
+  public readonly orFilters: Filter[];
 
-  public invert: boolean;
-  public andFilters: Filter[];
-  public orFilters: Filter[];
+  public readonly options: QueryOptions = {};
 
-  constructor(params: FilterParams) {
+  protected constructor(params: FilterParams, options: QueryOptions = {}) {
     this.properties = params.properties;
     this.type = params.type;
     this.textMatch = params.textMatch;
@@ -150,36 +174,21 @@ export class Filter<T extends EchoObject = EchoObject> {
     this.invert = params.invert ?? false;
     this.andFilters = params.andFilters ?? [];
     this.orFilters = params.orFilters ?? [];
+
+    this.options = options;
   }
 
-  clone(): Filter<T> {
-    const filter = new Filter({});
-    filter.options = this.options;
-
-    filter.properties = this.properties;
-    filter.type = this.type;
-    filter.textMatch = this.textMatch;
-    filter.predicate = this.predicate;
-
-    filter.invert = this.invert;
-    filter.andFilters = this.andFilters;
-    filter.orFilters = this.orFilters;
-
-    return filter;
+  clone(params: FilterParams = {}): Filter<T> {
+    return new Filter(defaultsDeep({}, params, this), this.options);
   }
 
-  setOptions(options: QueryOptions): Filter<T> {
-    this.options = { ...this.options, ...options };
-    return this;
-  }
+  // setOptions(options: QueryOptions): Filter<T> {
+  //   this.options = { ...this.options, ...options };
+  //   return this;
+  // }
 
-  // TODO(burdon): Remove getters?
-
-  get showDeletedPreference(): ShowDeletedOption {
-    return this.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
-  }
-
-  get searchSpacesPreference(): PublicKey[] | undefined {
+  // TODO(burdon): Document?
+  get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));
   }
 }

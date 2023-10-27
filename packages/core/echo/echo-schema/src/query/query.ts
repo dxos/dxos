@@ -182,12 +182,13 @@ export const filterMatch = (filter: Filter, object: EchoObject) => {
 
 const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
   if (isTypedObject(object)) {
+    const deleted = filter.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
     if (object.__deleted) {
-      if (filter.showDeletedPreference === ShowDeletedOption.HIDE_DELETED) {
+      if (deleted === ShowDeletedOption.HIDE_DELETED) {
         return false;
       }
     } else {
-      if (filter.showDeletedPreference === ShowDeletedOption.SHOW_DELETED_ONLY) {
+      if (deleted === ShowDeletedOption.SHOW_DELETED_ONLY) {
         return false;
       }
     }

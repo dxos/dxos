@@ -236,10 +236,7 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (
-      filter.searchSpacesPreference !== undefined &&
-      !filter.searchSpacesPreference.some((key) => key.equals(this.spaceKey))
-    ) {
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
       this._filter = undefined;
       return;
