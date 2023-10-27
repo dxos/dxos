@@ -14,18 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AgentStatus, type PluginState, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
-type Options = Required<Runtime.Agent.Plugins.Dashboard>;
-
-const DEFAULT_OPTIONS: Options = {
-  enabled: true,
-};
-
-export const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
+export const CHANNEL_NAME = 'dxos.org/agent/plugin/dashboard';
 export const UPDATE_INTERVAL = 5_000;
 
 export type ServiceBundle = {
@@ -36,11 +29,9 @@ export type DashboardPluginParams = {
   configPath: string;
 };
 
-export class DashboardPlugin extends AbstractPlugin {
+export class DashboardPlugin extends Plugin {
+  public readonly id = 'dxos.org/agent/plugin/dashboard';
   private readonly _ctx = new Context();
-  public readonly id = 'dashboard';
-
-  private _options?: Options;
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _params: DashboardPluginParams) {
@@ -51,10 +42,7 @@ export class DashboardPlugin extends AbstractPlugin {
     log('Opening dashboard plugin...');
 
     invariant(this._pluginCtx);
-
-    this._options = { ...DEFAULT_OPTIONS, ...this._config };
-
-    if (!this._options.enabled) {
+    if (!this._config.enabled) {
       log.info('Dashboard disabled.');
       return;
     }
@@ -78,9 +66,6 @@ export class DashboardPlugin extends AbstractPlugin {
         },
         noHandshake: true,
         port: getGossipRPCPort({ space: this._pluginCtx.client.spaces.default, channelName: CHANNEL_NAME }),
-        encodingOptions: {
-          preserveAny: true,
-        },
       });
       await this._rpc.open();
       this._ctx.onDispose(() => this._rpc!.close());
@@ -110,8 +95,8 @@ export class DashboardPlugin extends AbstractPlugin {
           },
 
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
-            pluginId: plugin.id,
-            pluginConfig: plugin.config,
+            id: plugin.id,
+            config: plugin.config,
           })),
         });
       };
@@ -138,16 +123,23 @@ export class DashboardPlugin extends AbstractPlugin {
       //       We are changing only config of specific plugin, it should not cause problems.
       const configAsString = await readFile(this._params.configPath, { encoding: 'utf-8' });
       const yamlConfig = yaml.parseDocument(configAsString);
-      yamlConfig.setIn(['runtime', 'agent', 'plugins', request.pluginId], request.pluginConfig);
+      const plugins = yamlConfig.getIn(['runtime', 'agent', 'plugins']);
+      if (!plugins) {
+        yamlConfig.setIn(['runtime', 'agent', 'plugins'], [request.config]);
+      } else if (plugins instanceof yaml.YAMLSeq) {
+        plugins.delete(plugins.items.findIndex((item) => item.get('id') === request.id));
+        plugins.add(request.config);
+        yamlConfig.setIn(['runtime', 'agent', 'plugins'], plugins);
+      }
       await writeFile(this._params.configPath, yamlConfig.toString(), { encoding: 'utf-8' });
     }
 
     // Restart plugin for which config was changed.
     {
-      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.pluginId);
-      invariant(plugin, `Plugin ${request.pluginId} not found.`);
+      const plugin = this._pluginCtx!.plugins.find((plugin) => plugin.id === request.id);
+      invariant(plugin, `Plugin ${request.id} not found.`);
       await plugin.close();
-      await plugin.setConfig(request.pluginConfig);
+      await plugin.setConfig(request.config);
       await plugin.open();
       this.statusUpdate.emit();
     }

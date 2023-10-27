@@ -64,7 +64,7 @@ export const DashboardPanel = () => {
   }, []);
 
   const togglePlugin = async (pluginId: string) => {
-    const config = agentState?.plugins?.find((plugin) => plugin.pluginId === pluginId)?.pluginConfig;
+    const config = agentState?.plugins?.find((plugin) => plugin.id === pluginId)?.config;
     if (!config || !dashboard) {
       log.info('skip toggle');
       return;
@@ -73,8 +73,8 @@ export const DashboardPanel = () => {
     log.info('toggle plugin', { pluginId, config });
 
     await dashboard?.services.DashboardService.changePluginConfig({
-      pluginId,
-      pluginConfig: { ...config, enabled: !config.enabled },
+      id: pluginId,
+      config: { ...config, enabled: !config.enabled },
     });
   };
 
