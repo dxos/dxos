@@ -86,7 +86,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private readonly _schema?: Schema;
+  private _schema?: Schema;
   private readonly _immutable;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
@@ -510,6 +510,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       for (const obj of this._linkCache.values()) {
         this._database!.add(obj as TypedObject);
       }
+
       this._linkCache = undefined;
     }
   }
