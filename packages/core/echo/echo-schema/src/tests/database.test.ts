@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 import { Contact, Container, Task, types } from './proto';
 import { base, db } from '../defs';
 import { Hypergraph } from '../hypergraph';
-import { clone, Expando } from '../object';
+import { clone, Expando, Text } from '../object';
 import { createDatabase } from '../testing';
 
 // TODO(burdon): Reconcile/document tests in parent folder.

@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
+import { Text } from './text';
 import { Expando } from './typed-object';
 import { createDatabase } from '../testing';
 
