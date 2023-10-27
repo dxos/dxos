@@ -12,7 +12,7 @@ type ServiceBundle = {
   DashboardService: DashboardService;
 };
 
-const CHANNEL_NAME = 'dxos.agent.dashboard-plugin';
+const CHANNEL_NAME = 'dxos.org/agent/plugin/dashboard';
 
 export class DashboardProxy {
   private readonly client: Client;
@@ -21,7 +21,7 @@ export class DashboardProxy {
   constructor({ client }: { client: Client }) {
     this.client = client;
 
-    this._rpc = createProtoRpcPeer({
+    this._rpc = createProtoRpcPeer<ServiceBundle>({
       requested: {
         DashboardService: schema.getService('dxos.agent.dashboard.DashboardService'),
       },
@@ -29,9 +29,6 @@ export class DashboardProxy {
       handlers: {},
       noHandshake: true,
       port: getGossipRPCPort({ space: this.client.spaces.default, channelName: CHANNEL_NAME }),
-      encodingOptions: {
-        preserveAny: true,
-      },
     });
   }
 

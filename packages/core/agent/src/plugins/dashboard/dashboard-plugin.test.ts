@@ -23,7 +23,9 @@ describe('DashboardPlugin', () => {
     const services1 = builder.createLocal();
     const client1 = new Client({
       services: services1,
-      config: new Config({ runtime: { agent: { plugins: { dashboard: { enabled: true } } } } }),
+      config: new Config({
+        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/dashboard', enabled: true }] } },
+      }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());
@@ -74,7 +76,7 @@ describe('DashboardPlugin', () => {
 
   test('id', async () => {
     const plugin = new DashboardPlugin({ configPath: '' });
-    expect(plugin.id).to.equal('dashboard');
+    expect(plugin.id).to.equal('dxos.org/agent/plugin/dashboard');
   });
 
   test('yaml parsing preserves comments', async () => {

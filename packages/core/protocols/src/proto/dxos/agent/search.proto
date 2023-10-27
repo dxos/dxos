@@ -6,6 +6,7 @@ syntax = "proto3";
 
 package dxos.agent.search;
 
+
 message SearchRequest {
   enum Type {
     EXACT = 0;

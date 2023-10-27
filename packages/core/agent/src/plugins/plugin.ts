@@ -7,6 +7,7 @@ import { type Client } from '@dxos/client';
 import { type ClientServicesProvider, type LocalClientServices } from '@dxos/client/services';
 import { type ClientServicesHost } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 export type PluginContext = {
   client: Client;
@@ -14,51 +15,37 @@ export type PluginContext = {
   plugins: Plugin[];
 };
 
-// TODO(burdon): Don't need interface and abstract class.
-export interface Plugin {
-  statusUpdate: Event<void>;
-
-  id: string;
-
-  /**
-   * Plugin DXOS config defined in `runtime.agent.plugin.<plugin_id>`. Inside plugin only that config should be used.
-   */
-  config: Record<string, any>;
-
-  // TODO(burdon): Why are these separate?
-  initialize(pluginCtx: PluginContext): Promise<void>;
-  setConfig(config: Record<string, any>): Promise<void>;
-
-  open(): Promise<void>;
-  close(): Promise<void>;
-}
-
-export abstract class AbstractPlugin implements Plugin {
-  public readonly statusUpdate = new Event();
-
+export abstract class Plugin {
   /**
    * Unique plugin identifier. Should be equal to the value in DXOS yaml config file.
    */
   public abstract readonly id: string;
 
+  public readonly statusUpdate = new Event();
+  protected _config!: Runtime.Agent.Plugin;
   protected _pluginCtx?: PluginContext;
-  protected _config!: Record<string, any>;
 
   get host(): ClientServicesHost {
     return (this._pluginCtx!.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
-  get config(): Record<string, any> {
+  get config(): Runtime.Agent.Plugin {
     return this._config;
   }
 
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     this._pluginCtx = pluginCtx;
-    await this.setConfig((this._pluginCtx.client.config.values.runtime?.agent?.plugins as any)?.[this.id] ?? {});
+
+    // TODO(mykola): Maybe do not pass config directly to plugin, but rather let plugin to request it through some callback.
+    await this.setConfig(
+      this._pluginCtx.client.config.values.runtime?.agent?.plugins?.find((pluginCtx) => pluginCtx.id === this.id) ?? {
+        id: this.id,
+      },
+    );
   }
 
-  async setConfig(config: Record<string, any>) {
+  async setConfig(config: Runtime.Agent.Plugin) {
     this._config = config;
   }
 
