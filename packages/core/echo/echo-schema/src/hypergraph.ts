@@ -21,8 +21,9 @@ import { type TypedObject } from './typed-object';
 /**
  * Manages cross-space database interactions.
  */
-export class HyperGraph {
+export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
@@ -81,7 +82,6 @@ export class HyperGraph {
       (entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey ? entry.key : (entry as PublicKey)),
     );
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-
     return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
 

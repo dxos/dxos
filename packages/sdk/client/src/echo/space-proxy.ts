@@ -11,7 +11,7 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { type HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
+import { type Hypergraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -80,7 +80,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    graph: HyperGraph,
+    graph: Hypergraph,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');

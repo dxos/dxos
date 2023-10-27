@@ -10,7 +10,7 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { HyperGraph, schemaBuiltin } from '@dxos/echo-schema';
+import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -66,7 +66,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
-  private readonly _graph = new HyperGraph();
+  private readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.

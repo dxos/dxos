@@ -10,6 +10,9 @@ export class Reference {
     return new Reference(value.itemId, value.protocol, value.host);
   }
 
+  /**
+   * @deprecated
+   */
   static fromLegacyTypeName(type: string): Reference {
     return new Reference(type, 'protobuf', 'dxos.org');
   }

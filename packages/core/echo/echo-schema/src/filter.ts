@@ -131,6 +131,10 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
+  // TODO(burdon): Make immutable.
+
+  public options: QueryOptions = {};
+
   public properties?: Record<string, any>;
   public type?: Reference;
   public textMatch?: string;
@@ -139,8 +143,6 @@ export class Filter<T extends EchoObject = EchoObject> {
   public invert: boolean;
   public andFilters: Filter[];
   public orFilters: Filter[];
-
-  public options: QueryOptions = {};
 
   constructor(params: FilterParams) {
     this.properties = params.properties;
@@ -155,6 +157,8 @@ export class Filter<T extends EchoObject = EchoObject> {
 
   clone(): Filter<T> {
     const filter = new Filter({});
+    filter.options = this.options;
+
     filter.properties = this.properties;
     filter.type = this.type;
     filter.textMatch = this.textMatch;
@@ -163,7 +167,6 @@ export class Filter<T extends EchoObject = EchoObject> {
     filter.invert = this.invert;
     filter.andFilters = this.andFilters;
     filter.orFilters = this.orFilters;
-    filter.options = this.options;
 
     return filter;
   }
@@ -172,6 +175,8 @@ export class Filter<T extends EchoObject = EchoObject> {
     this.options = { ...this.options, ...options };
     return this;
   }
+
+  // TODO(burdon): Remove getters?
 
   get showDeletedPreference(): ShowDeletedOption {
     return this.options.deleted ?? ShowDeletedOption.HIDE_DELETED;

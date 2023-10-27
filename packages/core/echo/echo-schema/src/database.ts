@@ -13,7 +13,7 @@ import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
 import { type QueryOptions, type FilterSource } from './filter';
-import { type HyperGraph } from './hypergraph';
+import { type Hypergraph } from './hypergraph';
 import { type Schema } from './proto';
 import { type Query } from './query';
 import { Text } from './text-object';
@@ -46,7 +46,7 @@ export class EchoDatabase {
      */
     readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _graph: HyperGraph,
+    private readonly _graph: Hypergraph,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
 
