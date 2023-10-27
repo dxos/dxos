@@ -6,4 +6,5 @@ export * from './array';
 export * from './base';
 export * from './clone';
 export * from './text';
+export * from './types';
 export * from './typed-object';

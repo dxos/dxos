@@ -4,8 +4,7 @@
 
 import { type JsonML } from '@dxos/debug';
 
-import { base, data } from '../defs';
-import { type TypedObject } from '../object';
+import { base, data, type TypedObject } from '../object';
 
 const idStyle = { style: 'color: #777' };
 const listStyle = {

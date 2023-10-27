@@ -8,8 +8,7 @@ import { TextModel } from '@dxos/text-model';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { base } from './defs';
-import { Text, TypedObject } from './object';
+import { base, Text, TypedObject } from './object';
 import { Filter, QUERY_ALL_MODELS } from './query';
 
 export type SerializedObject = {

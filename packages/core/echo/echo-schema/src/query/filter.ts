@@ -6,9 +6,8 @@ import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
-import { type EchoObject } from '../defs';
+import { type EchoObject, type Expando, type TypedObject } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
-import { type Expando, type TypedObject } from '../object';
 import { type Schema } from '../proto';
 
 /**

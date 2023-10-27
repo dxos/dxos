@@ -7,8 +7,7 @@ import { expect } from 'chai';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { subscribe } from './defs';
-import { Expando } from './object';
+import { subscribe, Expando } from './object';
 import { TestBuilder } from './testing';
 
 describe('HyperGraph', () => {

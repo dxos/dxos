@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { EchoObjectBase } from './base';
 import { type TypedObject } from './typed-object';
-import { base } from '../defs'; // TODO(burdon): Split.
+import { base } from './types';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;

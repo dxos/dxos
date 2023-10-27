@@ -8,6 +8,7 @@ import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-m
 
 import { EchoObjectBase } from './base';
 
+// TODO(burdon): Consider renaming to TextObject.
 // TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
 //  So rethink how we expose this.
 export class Text extends EchoObjectBase<TextModel> {

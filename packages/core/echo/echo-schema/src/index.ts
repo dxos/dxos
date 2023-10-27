@@ -6,11 +6,11 @@
 // TODO(burdon): Remove circ deps (remove need for reexports).
 // TODO(burdon): linkDeferred
 // TODO(burdon): Organize test suites.
+// TODO(burdon): Rename Text => TextObject.
 
 import { linkDeferred } from './type-collection';
 
 export * from './database';
-export * from './defs';
 export * from './hypergraph';
 export * from './object';
 export * from './proto';

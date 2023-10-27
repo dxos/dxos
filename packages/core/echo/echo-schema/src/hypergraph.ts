@@ -12,8 +12,7 @@ import { log } from '@dxos/log';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { type EchoObject } from './defs';
-import { type TypedObject } from './object';
+import { type EchoObject, type TypedObject } from './object';
 import {
   filterMatch,
   Filter,

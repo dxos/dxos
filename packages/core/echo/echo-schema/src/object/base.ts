@@ -17,8 +17,8 @@ import {
 } from '@dxos/model-factory';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
+import { type EchoObject, base, db, subscribe } from './types';
 import { type EchoDatabase } from '../database';
-import { type EchoObject, base, db, subscribe } from '../defs';
 import { createSignal } from '../util';
 
 /**

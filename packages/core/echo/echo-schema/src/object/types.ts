@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { EchoDatabase } from './database';
-import { type EchoObjectBase } from './object';
-import { type Schema } from './proto';
+import { type EchoObjectBase } from './base';
+import type { EchoDatabase } from '../database';
+import { type Schema } from '../proto';
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');

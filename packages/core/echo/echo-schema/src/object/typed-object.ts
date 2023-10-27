@@ -24,7 +24,7 @@ import {
   type ObjectMeta,
   type TypedObjectProperties,
   type EchoObject,
-} from '../defs';
+} from './types';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
 

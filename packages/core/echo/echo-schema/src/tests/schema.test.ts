@@ -7,8 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Container, Task, types } from './proto';
-import { immutable } from '../defs';
-import { Expando } from '../object';
+import { immutable, Expando } from '../object';
 import { Schema } from '../proto';
 import { TestBuilder, createDatabase } from '../testing';
 

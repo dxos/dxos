@@ -9,8 +9,7 @@ import { Trigger } from '@dxos/async';
 import { type BatchUpdate } from '@dxos/echo-db';
 import { describe, test } from '@dxos/test';
 
-import { data } from './defs';
-import { Expando, TypedObject } from './object';
+import { data, Expando, TypedObject } from './object';
 import { Schema } from './proto';
 import { TestBuilder, createDatabase } from './testing';
 

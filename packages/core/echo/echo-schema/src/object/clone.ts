@@ -9,7 +9,7 @@ import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/e
 
 import { type EchoObjectBase } from './base';
 import { TypedObject } from './typed-object';
-import { base, type EchoObject } from '../defs';
+import { base, type EchoObject } from './types';
 
 export type CloneOptions = {
   /**

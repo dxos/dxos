@@ -10,9 +10,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { ShowDeletedOption, type Filter, QUERY_ALL_MODELS } from './filter';
-import { base, type EchoObject } from '../defs';
+import { base, type EchoObject, isTypedObject, type TypedObject } from '../object';
 import { getDatabaseFromObject } from '../object';
-import { isTypedObject, type TypedObject } from '../object';
 import { createSignal } from '../util';
 
 // TODO(burdon): Test suite.

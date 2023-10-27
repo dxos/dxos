@@ -11,8 +11,8 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { type EchoObject, base, db } from './defs';
 import { type Hypergraph } from './hypergraph';
+import { type EchoObject, base, db } from './object';
 import { Text, TypedObject } from './object';
 import { type Schema } from './proto';
 import { type QueryOptions, type FilterSource, type Query } from './query';
