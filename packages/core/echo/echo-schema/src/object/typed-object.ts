@@ -78,7 +78,6 @@ export type TypedObjectOptions = {
  * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
-// TODO(burdon): Extract interface.
 class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
@@ -598,6 +597,7 @@ export type Expando = TypedObject;
 
 let mutationOverride = false;
 
+// TODO(burdon): Document.
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
   const prev = mutationOverride;
   mutationOverride = true;

@@ -21,7 +21,6 @@ import { createSignal } from '../util';
 
 /**
  * Base class for all echo objects.
- * Can carry different models.
  */
 export abstract class AbstractEchoObject<T extends Model = any> implements EchoObject {
   /**
