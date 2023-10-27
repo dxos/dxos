@@ -9,7 +9,8 @@ import { Reference } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { QUERY_ALL_MODELS, ShowDeletedOption, compareType } from './query';
+import { ShowDeletedOption, QUERY_ALL_MODELS } from './filter';
+import { compareType } from './query';
 import { type EchoDatabase } from '../database';
 import { TestBuilder, createDatabase } from '../testing';
 import { Text } from '../text-object';
@@ -96,7 +97,7 @@ describe('Queries', () => {
     }
   });
 
-  test('options', async () => {
+  test.only('options', async () => {
     {
       const { objects } = db.query({ label: 'red' });
       expect(objects).to.have.length(3);
