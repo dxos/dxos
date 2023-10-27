@@ -36,7 +36,7 @@ export const useQuery: UseQuery = <T extends TypedObject>(...args: any[]) => {
 
   const query = useMemo(
     () => client.spaces.query(filter, options) as Query<T> | undefined,
-    [client.spaces, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])],
+    [space, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])],
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
