@@ -27,13 +27,13 @@
       "path": "../../../common/sentry"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     }
   ]
 }

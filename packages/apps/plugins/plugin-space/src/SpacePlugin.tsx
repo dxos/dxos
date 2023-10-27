@@ -4,22 +4,27 @@
 
 import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import { getIndices } from '@tldraw/indices';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
-import { DND_PLUGIN, type DndPluginProvides, setAppStateIndex } from '@braneframe/plugin-dnd';
-import { type Node, type GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
-import { SPLITVIEW_PLUGIN, type SplitViewPluginProvides, SplitViewAction } from '@braneframe/plugin-splitview';
-import { type AppState } from '@braneframe/types';
-import { EventSubscriptions } from '@dxos/async';
-import { subscribe } from '@dxos/echo-schema';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { isGraphNode } from '@braneframe/plugin-graph';
+import { type LayoutState } from '@braneframe/plugin-layout';
+import { ObjectOrder } from '@braneframe/types';
+import {
+  type PluginDefinition,
+  resolvePlugin,
+  parseIntentPlugin,
+  parseGraphPlugin,
+  parseLayoutPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
+import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
+import { isTypedObject, type Query, subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { inferRecordOrder } from '@dxos/util';
 
 import { backupSpace } from './backup';
 import {
@@ -27,7 +32,6 @@ import {
   EmptySpace,
   EmptyTree,
   SpaceMain,
-  SpaceMainEmpty,
   SpacePresence,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -42,7 +46,7 @@ import {
   type SpaceSettingsProps,
   type SpaceState,
 } from './types';
-import { createNodId, isSpace, spaceToGraphNode } from './util';
+import { createNodeId, isSpace, spaceToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -51,10 +55,15 @@ import { createNodId, isSpace, spaceToGraphNode } from './util';
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<SpaceState>({ active: undefined, viewers: [] });
+  // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
+  const state = deepSignal<SpaceState>({
+    active: undefined,
+    viewers: [],
+  }) as RevertDeepSignal<SpaceState>;
   const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
+  const orderSubscriptions: Record<string, UnsubscribeCallback> = {};
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
@@ -64,16 +73,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     },
     ready: async (plugins) => {
       settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
-      const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos.org/plugin/intent');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
-      const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, SPLITVIEW_PLUGIN);
-      if (!clientPlugin || !splitViewPlugin) {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      if (!clientPlugin || !layoutPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      const splitView = splitViewPlugin.provides.splitView;
+      // TODO(wittjosiah): Remove once space can be computed directly from an object.
+      const layout = layoutPlugin.provides.layout as LayoutState;
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(location.search);
@@ -93,8 +103,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           await intentPlugin?.provides.intent.dispatch({
-            action: SplitViewAction.ACTIVATE,
-            data: { id: createNodId(space.key) },
+            action: LayoutAction.ACTIVATE,
+            data: { id: createNodeId(space.key) },
           });
         });
       }
@@ -102,13 +112,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       // Calculate the active space based on the graph and active node.
       subscriptions.add(
         effect(async () => {
-          if (!splitView.activeNode) {
+          if (!layout.activeNode) {
             return;
           }
 
           state.active = await new Promise<Space | undefined>((resolve) => {
-            graphPlugin?.provides.graph().traverse({
-              node: splitView.activeNode,
+            graphPlugin?.provides.graph.traverse({
+              node: layout.activeNode,
               direction: 'up',
               visitor: (node) => {
                 if (isSpace(node.data)) {
@@ -128,12 +138,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const send = () => {
             const identity = client.halo.identity.get();
             const space = state.active;
-            if (identity && space && splitView.active) {
+            if (identity && space && layout.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
                 spaceKey: space.key.toHex(),
-                added: [splitView.active],
-                removed: [splitView.previous],
+                added: [layout.active],
+                removed: [layout.previous],
               });
             }
           };
@@ -202,88 +212,77 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
-      space: state as RevertDeepSignal<SpaceState>,
+      space: state,
       settings: settings.values,
       translations,
-      component: (data, role) => {
-        if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
-          return SpaceSettings;
-        }
-
-        switch (role) {
-          case 'main':
-            switch (true) {
-              case isSpace(data):
-                return SpaceMainEmpty;
-              default:
-                return null;
-            }
-          // TODO(burdon): Add role name syntax to minimal plugin docs.
-          case 'tree--empty':
-            switch (true) {
-              case data === SPACE_PLUGIN:
-                return EmptyTree;
-              case isGraphNode(data) && isSpace(data?.data):
-                return EmptySpace;
-              default:
-                return null;
-            }
-          case 'dialog':
-            if (Array.isArray(data)) {
-              switch (data[0]) {
-                case 'dxos.org/plugin/space/RestoreSpaceDialog':
-                  return DialogRestoreSpace;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main':
+              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
+            case 'tree--empty':
+              switch (true) {
+                case data.plugin === SPACE_PLUGIN:
+                  return <EmptyTree />;
+                case isGraphNode(data.activeNode) && isSpace(data.activeNode.data):
+                  return <EmptySpace />;
                 default:
                   return null;
               }
-            } else {
-              return null;
-            }
-          case 'popover':
-            if (Array.isArray(data)) {
-              switch (data[0]) {
-                case 'dxos.org/plugin/space/RenameSpacePopover':
-                  return PopoverRenameSpace;
-                case 'dxos.org/plugin/space/RenameObjectPopover':
-                  return PopoverRenameObject;
-                default:
-                  return null;
+            case 'dialog':
+              if (data.component === 'dxos.org/plugin/space/RestoreSpaceDialog' && isSpace(data.subject)) {
+                return <DialogRestoreSpace space={data.subject} />;
+              } else {
+                return null;
               }
-            } else {
+            case 'popover':
+              if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
+                return <PopoverRenameSpace space={data.subject} />;
+              } else if (
+                data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
+                isTypedObject(data.subject)
+              ) {
+                return <PopoverRenameObject object={data.subject} />;
+              } else {
+                return null;
+              }
+            case 'presence':
+              return <SpacePresence />;
+            case 'settings':
+              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <SpaceSettings /> : null;
+            default:
               return null;
-            }
-          case 'presence':
-            return SpacePresence;
-          default:
-            return null;
-        }
-      },
-      components: {
-        Main: SpaceMain,
+          }
+        },
       },
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
           if (parent.id !== 'root') {
             return;
           }
 
-          const dndPlugin = findPlugin<DndPluginProvides>(plugins, DND_PLUGIN);
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, CLIENT_PLUGIN);
-          if (!clientPlugin) {
-            return;
-          }
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = intentPlugin?.provides.intent.dispatch;
+          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+          const client = clientPlugin?.provides.client;
 
-          const client = clientPlugin.provides.client;
-          if (!client.spaces.isReady.get()) {
+          if (!dispatch || !client || !client.spaces.isReady.get()) {
             return;
           }
 
           // Ensure default space is always first.
-          spaceToGraphNode({ space: client.spaces.default, parent, settings: settings.values });
+          spaceToGraphNode({ space: client.spaces.default, parent, dispatch, settings: settings.values });
 
           // Shared spaces section.
+          const allSpacesId = createNodeId('all-spaces');
+
+          const spacesOrderQuery = client.spaces.default.db.query(ObjectOrder.filter({ scope: allSpacesId }));
+
+          let spacesOrder: ObjectOrder | undefined;
+
           const [groupNode] = parent.addNode(SPACE_PLUGIN, {
-            id: createNodId('all-spaces'),
+            id: allSpacesId,
             label: ['shared spaces label', { ns: SPACE_PLUGIN }],
             properties: {
               // TODO(burdon): Factor out palette constants.
@@ -291,42 +290,47 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               'data-testid': 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
-              onRearrangeChild: (child: Node<Space>, nextIndex: string) => {
-                child.properties.index = setAppStateIndex(
-                  child.id,
-                  nextIndex,
-                  dndPlugin?.provides.dnd?.appState as AppState | undefined,
-                );
+              onRearrangeChildren: (nextOrder: string[]) => {
+                if (!spacesOrder) {
+                  const nextObjectOrder = new ObjectOrder({
+                    scope: allSpacesId,
+                    order: nextOrder,
+                  });
+                  client.spaces.default.db.add(nextObjectOrder);
+                } else {
+                  spacesOrder.order = nextOrder;
+                }
               },
             },
           });
 
-          const updateSpace = (space: Space, indices: string[], index: number) => {
-            const appState = dndPlugin?.provides.dnd?.appState;
-            client.spaces.default.key.equals(space.key)
-              ? spaceToGraphNode({ space, parent, settings: settings.values, appState })
+          const updateSpace = (space: Space) => {
+            const {
+              node: { id },
+              subscription,
+            } = client.spaces.default.key.equals(space.key)
+              ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values })
               : spaceToGraphNode({
                   space,
                   parent: groupNode,
+                  dispatch,
                   settings: settings.values,
-                  appState,
-                  defaultIndex: indices[index],
                 });
+            orderSubscriptions[id]?.();
+            orderSubscriptions[id] = subscription;
           };
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             graphSubscriptions.clear();
-            const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
-              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space, indices, index)));
-              updateSpace(space, indices, index);
+              graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space)));
+              updateSpace(space);
             });
           });
 
           const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
             const spaces = client.spaces.get();
-            const indices = getIndices(spaces.length);
-            spaces.forEach((space, index) => updateSpace(space, indices, index));
+            spaces.forEach((space) => updateSpace(space));
           });
 
           groupNode.addAction(
@@ -338,10 +342,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 disposition: 'toolbar',
                 testId: 'spacePlugin.createSpace',
               },
-              intent: {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.CREATE,
-              },
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.CREATE,
+                }),
             },
             {
               id: 'join-space',
@@ -351,20 +356,31 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 disposition: 'toolbar',
                 testId: 'spacePlugin.joinSpace',
               },
-              intent: [
-                {
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.JOIN,
-                },
-                {
-                  action: SplitViewAction.ACTIVATE,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: SPACE_PLUGIN,
+                    action: SpaceAction.JOIN,
+                  },
+                  {
+                    action: LayoutAction.ACTIVATE,
+                  },
+                ]),
             },
           );
 
+          const updateSpacesOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+            spacesOrder = spacesOrders[0];
+            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
+          };
+
+          updateSpacesOrder(spacesOrderQuery);
+
+          orderSubscriptions[allSpacesId] = spacesOrderQuery.subscribe(updateSpacesOrder);
+
           return () => {
             unsubscribe();
+            Object.values(orderSubscriptions).forEach((cb) => cb());
             unsubscribeHidden();
             graphSubscriptions.clear();
           };
@@ -372,14 +388,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       },
       intent: {
         resolver: async (intent, plugins) => {
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           switch (intent.action) {
             case SpaceAction.CREATE: {
               if (!clientPlugin) {
                 return;
               }
               const space = await clientPlugin.provides.client.spaces.create(intent.data);
-              return { space, id: createNodId(space.key) };
+              return { space, id: createNodeId(space.key) };
             }
 
             case SpaceAction.JOIN: {
@@ -387,7 +403,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 return;
               }
               const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: createNodId(space.key) };
+              return space && { space, id: createNodeId(space.key) };
             }
           }
 
@@ -408,16 +424,15 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME: {
-              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-              if (space && splitViewPlugin?.provides.splitView) {
-                splitViewPlugin.provides.splitView.popoverOpen = true;
-                splitViewPlugin.provides.splitView.popoverContent = ['dxos.org/plugin/space/RenameSpacePopover', space];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${createNodId(
-                  spaceKey,
-                )}`;
-                return true;
-              }
-              break;
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/navtree/${createNodeId(spaceKey)}`,
+                  component: 'dxos.org/plugin/space/RenameSpacePopover',
+                  subject: space,
+                },
+              });
             }
 
             case SpaceAction.OPEN: {
@@ -448,13 +463,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RESTORE: {
-              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-              if (space && splitViewPlugin?.provides.splitView) {
-                splitViewPlugin.provides.splitView.dialogOpen = true;
-                splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RestoreSpaceDialog', space];
-                return true;
-              }
-              break;
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_DIALOG,
+                data: {
+                  component: 'dxos.org/plugin/space/RestoreSpaceDialog',
+                  subject: space,
+                },
+              });
             }
 
             case SpaceAction.ADD_OBJECT: {
@@ -475,19 +491,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME_OBJECT: {
-              const splitViewPlugin = findPlugin<SplitViewPluginProvides>(plugins, 'dxos.org/plugin/splitview');
-              const object =
+              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+              const subject =
                 typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              if (object && splitViewPlugin?.provides.splitView) {
-                splitViewPlugin.provides.splitView.popoverOpen = true;
-                splitViewPlugin.provides.splitView.popoverContent = [
-                  'dxos.org/plugin/space/RenameObjectPopover',
-                  object,
-                ];
-                splitViewPlugin.provides.splitView.popoverAnchorId = `dxos.org/plugin/treeview/NavTreeItem/${intent.data.objectId}`;
-                return true;
-              }
-              break;
+              return intentPlugin?.provides.intent.dispatch({
+                action: LayoutAction.OPEN_POPOVER,
+                data: {
+                  anchorId: `dxos.org/ui/navtree/${intent.data.objectId}`,
+                  component: 'dxos.org/plugin/space/RenameObjectPopover',
+                  subject,
+                },
+              });
             }
           }
         },

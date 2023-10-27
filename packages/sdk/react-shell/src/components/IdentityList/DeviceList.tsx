@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { List, useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
 import { type Device } from '@dxos/react-client/halo';
+import { List, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';
 

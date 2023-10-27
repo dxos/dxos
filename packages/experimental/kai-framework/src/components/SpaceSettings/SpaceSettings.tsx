@@ -5,8 +5,8 @@
 import { Square } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { Space } from '@dxos/react-client/echo';
 
 import { icons, themes } from '../../hooks';

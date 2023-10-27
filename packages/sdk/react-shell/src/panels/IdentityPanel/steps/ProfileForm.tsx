@@ -5,9 +5,9 @@
 import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
-import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
+import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';

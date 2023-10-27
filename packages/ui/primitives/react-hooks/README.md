@@ -1,3 +1,3 @@
-# Aurora types
+# DXOS UI types
 
-TypeScript types for Aurora and its themes.
+TypeScript types for DXOS UI and its themes.

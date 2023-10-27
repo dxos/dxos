@@ -3,8 +3,8 @@
 //
 
 import React, { createElement, useEffect } from 'react';
-import { auroraTx } from '@dxos/aurora-theme';
-import { ThemeProvider } from '@dxos/aurora';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { ThemeProvider } from '@dxos/react-ui';
 
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},
@@ -37,13 +37,13 @@ export const globalTypes = {
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
+  useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
   }, [theme]);
 
   return createElement(ThemeProvider, {
     children: createElement(StoryFn),
-    tx: auroraTx
+    tx: defaultTx
   });
 }
 

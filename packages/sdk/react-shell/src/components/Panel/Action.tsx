@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { type ButtonProps, Button } from '@dxos/aurora';
+import { type ButtonProps, Button } from '@dxos/react-ui';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;

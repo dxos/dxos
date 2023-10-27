@@ -4,9 +4,12 @@
 
 import { type Context, createContext } from 'react';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 
 export const PRESENTER_PLUGIN = 'dxos.org/plugin/presenter';
 
@@ -22,4 +25,7 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
   stop: () => {},
 });
 
-export type PresenterPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type PresenterPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;

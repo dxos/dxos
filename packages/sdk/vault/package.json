@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vault",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "DXOS web browser vault",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,11 +36,10 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-navtree": "workspace:*",
     "@braneframe/plugin-telemetry": "workspace:*",
-    "@braneframe/plugin-treeview": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "@dxos/aurora-theme": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -51,7 +50,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-shell": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fastify/cors": "^8.2.1",

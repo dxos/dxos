@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos",
@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@types/d3": "^7.1.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",

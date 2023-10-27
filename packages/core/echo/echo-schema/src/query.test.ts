@@ -5,12 +5,16 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { ShowDeletedOption } from '@dxos/echo-db';
+import { Reference } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { type EchoDatabase } from './database';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
+import { compareType } from './query';
+import { TestBuilder, createDatabase } from './testing';
+import { Text } from './text-object';
+import { Expando, TypedObject } from './typed-object';
 
 describe('Queries', () => {
   let db: EchoDatabase;
@@ -45,8 +49,12 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query({ label: undefined });
+      const { objects, results } = db.query({ label: undefined });
       expect(objects).to.have.length(1);
+      expect(results).to.have.length(1);
+      expect(results[0].object).to.eq(objects[0]);
+      expect(results[0].id).to.eq(objects[0].id);
+      expect(results[0].spaceKey).to.eq(db._backend.spaceKey);
     }
 
     {
@@ -178,4 +186,54 @@ describe.skip('Query updates', () => {
     objects[0].title = 'Task 0a';
     await sleep(10);
   });
+});
+
+test('query with model filters', async () => {
+  const testBuilder = new TestBuilder();
+  const peer = await testBuilder.createPeer();
+
+  const obj = peer.db.add(
+    new Expando({
+      title: 'title',
+      description: new Text('description'),
+    }),
+  );
+
+  expect(peer.db.query().objects).to.have.length(1);
+  expect(peer.db.query().objects[0]).to.eq(obj);
+
+  expect(peer.db.query(undefined, { models: QUERY_ALL_MODELS }).objects).to.have.length(2);
+});
+
+test('compare types', () => {
+  const spaceKey = PublicKey.random();
+  const itemId = PublicKey.random().toHex();
+
+  expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
+  expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random())).to
+    .be.false;
+
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      spaceKey,
+    ),
+  ).to.be.true;
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      Reference.fromLegacyTypeName('dxos.sdk.client.Test'),
+      spaceKey,
+    ),
+  ).to.be.false;
+
+  // Missing host on items created on some versions.
+  expect(
+    compareType(
+      Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+      new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
+      spaceKey,
+    ),
+  ).to.be.true;
 });

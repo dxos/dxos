@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
-import type { IntentProvides } from '@braneframe/plugin-intent';
-import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
+import type {
+  GraphBuilderProvides,
+  IntentResolverProvides,
+  SurfaceProvides,
+  TranslationsProvides,
+} from '@dxos/app-framework';
 import { isTypedObject } from '@dxos/react-client/echo';
 
 export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
@@ -15,7 +18,10 @@ export enum ThreadAction {
   CREATE = `${THREAD_ACTION}/create`,
 }
 
-export type ThreadPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type ThreadPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  TranslationsProvides;
 
 export interface ThreadModel {
   root: ThreadType;

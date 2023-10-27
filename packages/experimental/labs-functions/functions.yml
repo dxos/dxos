@@ -1,18 +1,18 @@
 functions:
-  chess:
-    description: "Chess bot."
-
   chatgpt:
-    description: "Chat GPT."
+    description: "Chat GPT"
+
+  chess:
+    description: "Chess"
 
   hello:
-    description: "Test function."
+    description: "Test"
 
 triggers:
-  - function: chess
-    subscription:
-      type: dxos.experimental.chess.Game
-
   - function: chatgpt
     subscription:
       type: braneframe.Thread.Block
+
+  - function: chess
+    subscription:
+      type: dxos.experimental.chess.Game
