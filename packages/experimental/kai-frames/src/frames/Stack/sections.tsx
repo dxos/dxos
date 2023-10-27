@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
-import { Composer } from '@dxos/aurora-composer';
+import { Composer } from '@dxos/react-ui-editor';
 import { Contact, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { Dialog } from '@dxos/react-appkit';

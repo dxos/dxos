@@ -8,6 +8,10 @@ package dxos.agent.functions;
 
 import "google/protobuf/empty.proto";
 
+message FunctionsConfig {
+  optional int32 port = 1;
+}
+
 message Function {
   string name = 1;
 }

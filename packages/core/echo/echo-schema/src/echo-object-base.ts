@@ -3,6 +3,7 @@
 //
 
 import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
+import { Reference } from '@dxos/document-model';
 import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -197,4 +198,13 @@ export const setStateFromSnapshot = (obj: EchoObjectBase, snapshot: ObjectSnapsh
 
 export const forceUpdate = (obj: EchoObjectBase) => {
   obj[base]._itemUpdate();
+};
+
+export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
+  return obj[base]._database;
+};
+
+export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
+  const db = getDatabaseFromObject(obj);
+  return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
 };

@@ -5,7 +5,7 @@
 import { CaretRight, Plus, QrCode, Textbox } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/react-ui';
 
 import { CompoundButton } from '../CompoundButton';
 

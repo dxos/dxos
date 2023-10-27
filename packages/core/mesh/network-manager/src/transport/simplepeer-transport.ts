@@ -107,7 +107,7 @@ export class SimplePeerTransport implements Transport {
       try {
         if (typeof (this._peer as any)?._pc?.getStats === 'function') {
           (this._peer as any)._pc.getStats().then((stats: any) => {
-            log.warn('report after webrtc error', {
+            log.info('report after webrtc error', {
               config: this.params.webrtcConfig,
               stats,
             });

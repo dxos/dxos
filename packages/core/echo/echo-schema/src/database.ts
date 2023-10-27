@@ -3,28 +3,21 @@
 //
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { DocumentModel, type DocumentModelState } from '@dxos/document-model';
-import {
-  type BatchUpdate,
-  type DatabaseProxy,
-  type Item,
-  type ItemManager,
-  type QueryOptions,
-  UpdateEvent,
-} from '@dxos/echo-db';
+import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/document-model';
+import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
-import { ComplexMap, WeakDictionary, getDebugName } from '@dxos/util';
+import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { type EchoObject, base, db, immutable } from './defs';
-import { type HyperGraph } from './hyper-graph';
+import { type EchoObject, base, db } from './defs';
+import { type QueryOptions, type FilterSource } from './filter';
+import { type HyperGraph } from './hypergraph';
 import { type Schema } from './proto';
-import { type Filter, Query, type TypeFilter } from './query';
+import { type Query } from './query';
 import { Text } from './text-object';
-import { TypedObject, isTypedObject } from './typed-object';
+import { TypedObject } from './typed-object';
 
 /**
  * Database wrapper.
@@ -89,15 +82,6 @@ export class EchoDatabase {
     log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
-
-    // TODO(dmaretskyi): Better way to differentiate static schemas.
-    if (isTypedObject(obj) && obj.__schema && obj.__schema[immutable]) {
-      const objectConstructor = Object.getPrototypeOf(obj).constructor;
-      invariant(
-        this._graph.types.getPrototype(obj.__typename!) === objectConstructor,
-        `Prototype invalid or not registered: ${objectConstructor.name}`,
-      );
-    }
 
     if (this._removed.has(obj[base]._id)) {
       this._backend.mutate({
@@ -203,16 +187,11 @@ export class EchoDatabase {
   /**
    * Filter by type.
    */
-  // TODO(burdon): Additional filters?
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
-    return new Query(
-      new ComplexMap(PublicKey.hash, [[this._backend.spaceKey, this._objects]]),
-      this._updateEvent,
-      filter,
-      options,
-    );
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+    options ??= {};
+    options.spaces = [this._backend.spaceKey];
+
+    return this._graph.query(filter, options);
   }
 
   private _update(updateEvent: UpdateEvent) {
@@ -233,6 +212,7 @@ export class EchoDatabase {
         invariant(!this._objects.has(object.id));
         this._objects.set(object.id, obj);
         obj[base]._database = this;
+        obj[base]._beforeBind();
         obj[base]._bind(object);
       }
     }
@@ -269,26 +249,26 @@ export class EchoDatabase {
       const state = item.state as DocumentModelState;
       if (!state.type) {
         return new TypedObject();
-      }
-
-      if (state.type.protocol === 'protobuf') {
-        const type = state.type.itemId;
-        const Proto = this._graph.types.getPrototype(type);
-        if (!Proto) {
-          log.warn('Unknown schema type', { type: state.type?.encode() });
-          return new TypedObject(); // TODO(burdon): Expando?
-        } else {
-          return new Proto();
-        }
-      } else if (state.type.protocol === undefined) {
-        const schema = this.getObjectById(state.type.itemId);
-        return new TypedObject(undefined, { schema: schema as Schema | undefined });
+      } else {
+        return new TypedObject(undefined, { type: state.type });
       }
     } else if (item.modelType === TextModel.meta.type) {
       return new Text();
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _resolveSchema(type: Reference): Schema | undefined {
+    if (type.protocol === 'protobuf') {
+      return this._graph.types.getSchema(type.itemId);
+    } else {
+      // TODO(dmaretskyi): Cross-space references.
+      return this.getObjectById(type.itemId) as Schema | undefined;
     }
   }
 }

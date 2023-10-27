@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): RDF? OWL?
-// TODO(burdon): Map to echo?
+// TODO(burdon): Triggers.
 
 export type Generator<Subject> = (subject: Subject) => string;
 

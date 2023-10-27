@@ -1,5 +1,6 @@
 import React, { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -32,10 +33,10 @@ export const globalTypes = {
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
+  useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
   }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn)})
+  return createElement(ThemeProvider, { tx: defaultTx, children: createElement(StoryFn) })
 }
 
 export const decorators = [withTheme];

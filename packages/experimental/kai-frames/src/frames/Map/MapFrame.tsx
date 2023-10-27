@@ -10,7 +10,7 @@ import { LatLngExpression } from 'leaflet';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { GeoLocation, Organization } from '@dxos/kai-types';
 import { NavMenu } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client/echo';

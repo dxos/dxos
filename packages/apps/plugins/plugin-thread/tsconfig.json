@@ -30,16 +30,19 @@
       "path": "../../../core/echo/echo-schema"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-surface"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../../ui/aurora"
+      "path": "../../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../../ui/aurora-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
       "path": "../../types"
@@ -51,16 +54,16 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
+    },
+    {
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"

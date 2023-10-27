@@ -23,8 +23,9 @@ export type DevServerOptions = {
 /**
  * Functions dev server provides a local HTTP server for testing functions.
  */
+// TODO(burdon): Not secure.
 export class DevServer {
-  private readonly _functionHandlers: Record<string, FunctionHandler> = {};
+  private readonly _functionHandlers: Record<string, FunctionHandler<any>> = {};
 
   private _server?: http.Server;
   private _port?: number;
@@ -91,7 +92,8 @@ export class DevServer {
 
       void (async () => {
         try {
-          await this._functionHandlers[functionName](req.body, context);
+          // TODO(burdon): Typed event handler.
+          await this._functionHandlers[functionName]({ event: req.body, context });
         } catch (err: any) {
           res.statusCode = 500;
           res.end(err.message);

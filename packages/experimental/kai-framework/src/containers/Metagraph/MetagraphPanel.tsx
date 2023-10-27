@@ -5,8 +5,8 @@
 import { AppWindow, Circle, Code, Robot } from '@phosphor-icons/react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useMetagraph } from '@dxos/react-metagraph';

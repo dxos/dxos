@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { File as FileType } from '@braneframe/types';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { useIpfsClient } from '../hooks';
 

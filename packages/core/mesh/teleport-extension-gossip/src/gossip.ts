@@ -6,7 +6,7 @@ import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
+import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -111,6 +111,8 @@ export class Gossip {
         .catch(async (err) => {
           if (err instanceof RpcClosedError) {
             log('sendAnnounce failed because of RpcClosedError', { err });
+          } else if (err instanceof TimeoutError) {
+            log('sendAnnounce failed because of TimeoutError', { err });
           } else {
             log.catch(err);
           }

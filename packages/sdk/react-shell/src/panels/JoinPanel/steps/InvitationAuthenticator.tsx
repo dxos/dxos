@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, useState } from 'react';
 
-import { Input, useTranslation } from '@dxos/aurora';
+import { Input, useTranslation } from '@dxos/react-ui';
 
 import { Actions, Action, Emoji, StepHeading } from '../../../components';
 import { toEmoji } from '../../../util';

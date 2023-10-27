@@ -5,15 +5,15 @@
 import React from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { Button, useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN, type LocalEntity } from '../types';
 
-export const LocalFileMainPermissions = ({ data }: { data: LocalEntity }) => {
+export const LocalFileMainPermissions = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useGraph();
-  const node = graph.findNode(data.id);
+  const node = graph.findNode(entity.id);
   const action = node?.actionsMap['re-open'];
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

@@ -36,8 +36,8 @@ Type in the boxes below to create new list items and experiment with the replica
 import { X } from '@phosphor-icons/react';
 import React, { KeyboardEventHandler, useState } from 'react';
 
-import { TextInput, Button, Checkbox, InputRoot, Label } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { TextInput, Button, Checkbox, InputRoot, Label } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 

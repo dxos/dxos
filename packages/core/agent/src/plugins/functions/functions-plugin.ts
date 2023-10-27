@@ -3,35 +3,42 @@
 //
 
 import express from 'express';
+import { type Server } from 'node:http';
+
+import { log } from '@dxos/log';
+import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
-const DEFAULT_PORT = 7000;
-
-export type FunctionsPluginOptions = {
-  port?: number;
+const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
+  '@type': 'dxos.agent.functions.FunctionsConfig',
+  port: 7000,
 };
 
-export class FunctionsPlugin extends AbstractPlugin {
+export class FunctionsPlugin extends Plugin {
+  public readonly id = 'dxos.org/agent/plugin/functions';
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
   private readonly _devDispatcher = new DevFunctionDispatcher();
 
-  private _server?: ReturnType<typeof express>;
-
-  constructor(private readonly _options: FunctionsPluginOptions) {
-    super();
-  }
+  private _server?: Server;
 
   async open() {
+    if (!this._config.enabled) {
+      log.info('Functions disabled.');
+      return;
+    }
+
+    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
+
     this._dispatchers.set('dev', this._devDispatcher);
     this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
-    this._server = express();
-    this._server.use(express.json());
+    const app = express();
+    app.use(express.json());
 
-    this._server.post('/:dispatcher/:functionName', (req, res) => {
+    app.post('/:dispatcher/:functionName', (req, res) => {
       const dispatcher = req.params.dispatcher;
       const functionName = req.params.functionName;
 
@@ -60,13 +67,16 @@ export class FunctionsPlugin extends AbstractPlugin {
         );
     });
 
-    const port = this._options.port ?? DEFAULT_PORT;
-    this._server.listen(port, () => {
+    const port = this._config.config!.port;
+    this._server = app.listen(port, () => {
       console.log('functions server listening', { port });
     });
+    this.statusUpdate.emit();
   }
 
   async close() {
     this.host.serviceRegistry.removeService('FunctionRegistryService');
+    this._server?.close();
+    this.statusUpdate.emit();
   }
 }

@@ -3,11 +3,59 @@
 //
 
 import { expect } from 'chai';
+import { Duplex, pipeline } from 'node:stream';
+import randomBytes from 'randombytes';
 import * as varint from 'varint';
+import waitForExpect from 'wait-for-expect';
 
+import { Trigger, sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { encodeChunk, decodeChunk } from './balancer';
+import { encodeChunk, decodeChunk, Balancer } from './balancer';
+
+class StuckableStream extends Duplex {
+  public unstuck: Function | undefined;
+  public writeCalls = 0;
+
+  constructor(private _stuck: boolean) {
+    super();
+  }
+
+  override _write(chunk: Buffer, encoding: string, callback: Function) {
+    this.writeCalls++;
+    if (this._stuck) {
+      this.unstuck = () => {
+        this._stuck = false;
+        this.push(chunk);
+        callback();
+      };
+    } else {
+      this.push(chunk);
+      callback();
+    }
+  }
+
+  override _read(size: number) {}
+}
+
+const setupBalancer = (channels: number, stuck: boolean): { balancer: Balancer; stream: StuckableStream } => {
+  const balancer = new Balancer(0);
+  const stream = new StuckableStream(stuck);
+
+  pipeline(balancer.stream, stream, () => {});
+
+  let i = 1;
+  for (i; i <= channels; i++) {
+    balancer.addChannel(i);
+    for (let j = 0; j < 10; j++) {
+      const chunk = Uint8Array.from(randomBytes(5_000));
+      const trigger = new Trigger<void>();
+      balancer.pushData(chunk, trigger, i);
+    }
+  }
+
+  return { balancer, stream };
+};
 
 describe('Balancer', () => {
   test('varints', () => {
@@ -46,5 +94,30 @@ describe('Balancer', () => {
     expect(decoded.channelId).to.equal(channelId);
     expect(decoded.dataLength).to.equal(dataLength);
     expect(decoded.chunk).to.deep.equal(chunk);
+  });
+
+  test('should buffer chunks on the balancer for separate channels', async () => {
+    const channels = 3;
+    const { balancer, stream } = setupBalancer(channels, true);
+
+    await sleep(20);
+
+    expect(stream.writeCalls).to.equal(1);
+    expect(balancer.buffersCount).to.equal(channels);
+
+    stream.unstuck?.();
+
+    await waitForExpect(() => {
+      expect(balancer.buffersCount).to.equal(0);
+    });
+  });
+
+  test('should not buffer when backpressure is not applied', async () => {
+    const channels = 3;
+    const { balancer } = setupBalancer(channels, false);
+
+    await sleep(20);
+
+    expect(balancer.buffersCount).to.equal(0);
   });
 });

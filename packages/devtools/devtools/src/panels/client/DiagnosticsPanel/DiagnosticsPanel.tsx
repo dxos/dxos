@@ -5,10 +5,10 @@
 import { ArrowClockwise, ClipboardText, Download } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Input, Toolbar } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
+import { Input, Toolbar } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { JsonView, PanelContainer, Tree } from '../../../components';
 

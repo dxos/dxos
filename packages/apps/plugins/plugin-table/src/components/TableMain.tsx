@@ -4,26 +4,29 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
+import { useFilteredObjects } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { DensityProvider, Main } from '@dxos/aurora';
-import { Table, type TableDef } from '@dxos/aurora-table';
-import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
-import { Expando, type TypedObject, type Schema as SchemaType } from '@dxos/client/echo';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { Expando, type TypedObject, type Schema } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
+import { DensityProvider, Main } from '@dxos/react-ui';
+import { Table, type TableDef } from '@dxos/react-ui-table';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { getSchemaType, schemaPropMapper, TableColumnBuilder } from '../schema';
+import { getSchema, schemaPropMapper, TableColumnBuilder } from '../schema';
 
-const EMPTY_ROW_ID = '__new';
+// TODO(burdon): Factor out echo fn to update when changed.
+const reactDeps = (...obj: TypedObject[]) => {
+  return JSON.stringify(obj);
+};
 
-export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
+export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
+
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
-  // TODO(burdon): Not updated when object deleted.
-  const tables = useQuery<TableType>(space, TableType.filter());
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -33,11 +36,11 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     [table.schema],
   );
 
-  console.log(table);
+  const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
+  const rows = [...useFilteredObjects(objects), newObject];
 
-  const rows = [...objects, {} as any];
-
-  const updateSchemaProp = (update: SchemaType.Prop) => {
+  const tables = useQuery<TableType>(space, TableType.filter());
+  const updateSchemaProp = (update: Schema.Prop) => {
     const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
     if (idx !== -1) {
       const current = table.schema?.props[idx];
@@ -64,7 +67,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
 
     const tableDefs: TableDef[] = tables.map((table) => ({
       id: table.schema.id,
-      name: table.schema.typename ?? table.title,
+      name: table.schema.typename ?? table.title, // TODO(burdon): Typename?
       columns: table.schema.props.map(schemaPropMapper(table)),
     }));
 
@@ -74,7 +77,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
         updateTableProp({ id, refProp, label });
         updateSchemaProp({
           id,
-          type: getSchemaType(type),
+          type: getSchema(type),
           ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
           digits,
         });
@@ -89,11 +92,10 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       },
       onRowUpdate: (object, prop, value) => {
         object[prop] = value;
-        if (!object.id) {
-          // TODO(burdon): Add directly.
-          const obj = new Expando(object, { schema: table.schema });
+        if (object === newObject) {
           // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(obj);
+          space!.db.add(newObject);
+          setNewObject(new Expando({}, { schema: table.schema }));
         }
       },
       onRowDelete: (object) => {
@@ -103,7 +105,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
     });
 
     return builder.createColumns();
-  }, [space, tables, JSON.stringify(table), JSON.stringify(table.schema)]); // TODO(burdon): Impl. echo useMemo-like hook.
+  }, [space, tables, reactDeps(table, table.schema), newObject]);
 
   const handleColumnResize = (state: Record<string, number>) => {
     Object.entries(state).forEach(([id, size]) => {
@@ -118,7 +120,7 @@ export const TableMain: FC<{ data: TableType }> = ({ data: table }) => {
       <DensityProvider density='fine'>
         <div className='flex grow m-4 overflow-hidden'>
           <Table<TypedObject>
-            keyAccessor={(row) => row.id ?? EMPTY_ROW_ID}
+            keyAccessor={(row) => row.id ?? '__new'}
             columns={columns}
             data={rows}
             border

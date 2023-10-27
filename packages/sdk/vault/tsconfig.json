@@ -20,10 +20,10 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-telemetry"
+      "path": "../../apps/plugins/plugin-navtree"
     },
     {
-      "path": "../../apps/plugins/plugin-treeview"
+      "path": "../../apps/plugins/plugin-telemetry"
     },
     {
       "path": "../../common/async"
@@ -47,10 +47,13 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
-      "path": "../../ui/aurora"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../app-framework"
     },
     {
       "path": "../client"
@@ -69,9 +72,6 @@
     },
     {
       "path": "../react-shell"
-    },
-    {
-      "path": "../react-surface"
     }
   ]
 }

@@ -151,7 +151,7 @@ export class Peer {
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
-            log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+            log.info('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           }
 
           // Calls `onStateChange` with CLOSED state.
@@ -327,7 +327,7 @@ export class Peer {
     this._connectionCtx = this._ctx.derive();
 
     connection.errors.handle((err) => {
-      log.warn('connection error, closing', {
+      log.info('connection error, closing', {
         topic: this.topic,
         peerId: this.localPeerId,
         remoteId: this.id,

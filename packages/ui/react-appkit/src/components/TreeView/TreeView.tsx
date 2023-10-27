@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { type FC, type ReactNode, useState } from 'react';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);

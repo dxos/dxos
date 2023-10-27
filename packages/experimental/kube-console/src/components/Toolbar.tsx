@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Radix.
 //  https://www.radix-ui.com/docs/primitives/components/toolbar

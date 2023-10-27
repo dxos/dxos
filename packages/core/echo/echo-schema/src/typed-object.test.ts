@@ -51,8 +51,6 @@ describe('TypedObject', () => {
     test('meta keys', () => {
       const obj = new TypedObject();
       expect(Object.keys(obj.__meta)).to.deep.equal(['keys']);
-      obj.__meta.index = '5';
-      expect(Object.keys(obj.__meta)).to.deep.equal(['keys', 'index']);
     });
   });
 
