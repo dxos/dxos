@@ -14,20 +14,20 @@ export {
   Expando,
   Query,
   Schema,
-  type Text, // TODO(burdon): Deprecated.
+  Text, // TODO(burdon): Deprecated.
   TextObject,
   TypeCollection,
   TypedObject,
   Filter,
   ShowDeletedOption,
   QUERY_ALL_MODELS,
-  type QueryOptions,
-  type EchoObject,
+  type EchoObject, // TODO(burdon): Remove?
+  type FilterSource,
   type ObjectMeta,
+  type QueryOptions,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  type FilterSource,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

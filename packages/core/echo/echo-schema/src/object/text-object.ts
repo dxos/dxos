@@ -90,4 +90,4 @@ export class TextObject extends EchoObjectBase<TextModel> {
  * @deprecated Use TextObject.
  */
 // TODO(burdon): Remove.
-export type Text = TextObject;
+export class Text extends TextObject {}
