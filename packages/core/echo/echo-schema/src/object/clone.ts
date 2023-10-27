@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { type EchoObjectBase } from './base';
+import { type EchoObjectBase } from './object';
 import { TypedObject } from './typed-object';
 import { base, type EchoObject } from './types';
 

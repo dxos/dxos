@@ -8,7 +8,7 @@ import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-mode
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { EchoObjectBase } from './base';
+import { EchoObjectBase } from './object';
 import { type TypedObject } from './typed-object';
 import { base } from './types';
 

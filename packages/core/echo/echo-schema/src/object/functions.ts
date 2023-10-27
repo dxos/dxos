@@ -6,7 +6,7 @@ import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { type EchoObjectBase } from './base';
+import { type EchoObjectBase } from './object';
 import { base, type EchoObject } from './types';
 import type { EchoDatabase } from '../database';
 

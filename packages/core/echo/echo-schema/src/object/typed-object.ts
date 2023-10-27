@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
-import { EchoObjectBase } from './base';
+import { EchoObjectBase } from './object';
 import { TextObject } from './text-object';
 import {
   base,
