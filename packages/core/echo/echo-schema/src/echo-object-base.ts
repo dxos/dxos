@@ -59,7 +59,7 @@ export abstract class EchoObjectBase<T extends Model = any> implements EchoObjec
    */
   _modelConstructor: ModelConstructor<T>;
 
-  private _callbacks = new Set<(value: any) => void>();
+  private readonly _callbacks = new Set<(value: any) => void>();
 
   protected readonly _signal = createSignal?.();
 

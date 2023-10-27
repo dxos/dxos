@@ -15,15 +15,14 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
-import { EchoDatabase } from './database';
-import { Hypergraph } from './hypergraph';
-import { schemaBuiltin } from './proto';
+import { EchoDatabase } from '../database';
+import { Hypergraph } from '../hypergraph';
+import { schemaBuiltin } from '../proto';
 
-// TODO(burdon): Builder pattern.
-// TODO(burdon): Rename createMemoryDatabase.
 /**
  * @deprecated Use TestBuilder.
  */
+// TODO(burdon): Builder pattern.
 export const createDatabase = async (graph = new Hypergraph()) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()

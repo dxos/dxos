@@ -13,8 +13,16 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { type EchoObject } from './defs';
-import { Filter, type QueryOptions, type FilterSource } from './filter';
-import { Query, type QueryContext, type QueryResult, type QuerySource, filterMatch } from './query';
+import {
+  filterMatch,
+  Filter,
+  Query,
+  type FilterSource,
+  type QueryContext,
+  type QueryOptions,
+  type QueryResult,
+  type QuerySource,
+} from './query';
 import { TypeCollection } from './type-collection';
 import { type TypedObject } from './typed-object';
 

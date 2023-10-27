@@ -9,7 +9,7 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { base } from './defs';
-import { Filter, QUERY_ALL_MODELS } from './filter';
+import { Filter, QUERY_ALL_MODELS } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 

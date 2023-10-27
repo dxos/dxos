@@ -9,11 +9,11 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { base, type EchoObject } from './defs';
-import { getDatabaseFromObject } from './echo-object-base';
-import { ShowDeletedOption, type Filter } from './filter';
-import { createSignal } from './signal';
-import { isTypedObject, type TypedObject } from './typed-object';
+import { ShowDeletedOption, type Filter, QUERY_ALL_MODELS } from './filter';
+import { base, type EchoObject } from '../defs';
+import { getDatabaseFromObject } from '../echo-object-base';
+import { createSignal } from '../signal';
+import { isTypedObject, type TypedObject } from '../typed-object';
 
 // TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
@@ -194,7 +194,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
   }
 
-  if (filter.modelFilterPreference !== null) {
+  if (filter.modelFilterPreference !== QUERY_ALL_MODELS) {
     if (!filter.modelFilterPreference.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }

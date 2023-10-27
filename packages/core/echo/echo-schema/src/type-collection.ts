@@ -118,6 +118,7 @@ let deferLink = true;
 /**
  * Call after module code has loaded to avoid circular dependency errors.
  */
+// TODO(burdon): Factor out.
 export const linkDeferred = () => {
   deferLink = false;
   // eslint-disable-next-line @typescript-eslint/no-var-requires

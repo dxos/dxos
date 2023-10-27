@@ -9,19 +9,18 @@ import { Reference } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { type EchoDatabase } from './database';
-import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
-import { compareType } from './query';
-import { TestBuilder, createDatabase } from './testing';
-import { Text } from './text-object';
-import { Expando, TypedObject } from './typed-object';
+import { QUERY_ALL_MODELS, ShowDeletedOption, compareType } from './query';
+import { type EchoDatabase } from '../database';
+import { TestBuilder, createDatabase } from '../testing';
+import { Text } from '../text-object';
+import { Expando, TypedObject } from '../typed-object';
 
 describe('Queries', () => {
   let db: EchoDatabase;
   beforeAll(async () => {
     ({ db } = await createDatabase());
 
-    // TODO(burdon): Factor out common dataset.
+    // TODO(burdon): Factor out common dataset. Change to Expando.
     const objects = [
       new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
       new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),

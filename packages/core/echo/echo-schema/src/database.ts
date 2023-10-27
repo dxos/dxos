@@ -12,10 +12,9 @@ import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
 import { type EchoObject, base, db } from './defs';
-import { type QueryOptions, type FilterSource } from './filter';
 import { type Hypergraph } from './hypergraph';
 import { type Schema } from './proto';
-import { type Query } from './query';
+import { type QueryOptions, type FilterSource, type Query } from './query';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
 

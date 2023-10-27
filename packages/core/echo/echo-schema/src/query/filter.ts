@@ -6,10 +6,10 @@ import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
-import { type EchoObject } from './defs';
-import { getReferenceWithSpaceKey } from './echo-object-base';
-import { type Schema } from './proto';
-import { type Expando, type TypedObject } from './typed-object';
+import { type EchoObject } from '../defs';
+import { getReferenceWithSpaceKey } from '../echo-object-base';
+import { type Schema } from '../proto';
+import { type Expando, type TypedObject } from '../typed-object';
 
 /**
  * Controls how deleted items are filtered.
