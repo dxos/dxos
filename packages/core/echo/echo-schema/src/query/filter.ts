@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentModel, Reference } from '@dxos/document-model';
+import { Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
@@ -45,9 +45,6 @@ export type QueryOptions = {
    */
   spaces?: (PublicKey | { key: PublicKey })[];
 };
-
-// TODO(burdon): Remove.
-export const QUERY_ALL_MODELS = null;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
@@ -182,13 +179,13 @@ export class Filter<T extends EchoObject = EchoObject> {
     return this.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
   }
 
-  get modelFilterPreference(): string[] | null {
-    if (this.options.models === undefined) {
-      return [DocumentModel.meta.type];
-    }
-
-    return this.options.models;
-  }
+  // get modelFilterPreference(): string[] | null {
+  //   if (this.options.models === undefined) {
+  //     return [DocumentModel.meta.type];
+  //   }
+  //
+  //   return this.options.models;
+  // }
 
   get searchSpacesPreference(): PublicKey[] | undefined {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));

@@ -9,7 +9,7 @@ import { Reference } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { QUERY_ALL_MODELS, ShowDeletedOption } from './filter';
+import { ShowDeletedOption } from './filter';
 import { compareType } from './query';
 import { type EchoDatabase } from '../database';
 import { Expando, TypedObject, TextObject } from '../object';
@@ -201,7 +201,7 @@ test('query with model filters', async () => {
   expect(peer.db.query().objects).to.have.length(1);
   expect(peer.db.query().objects[0]).to.eq(obj);
 
-  expect(peer.db.query(undefined, { models: QUERY_ALL_MODELS }).objects).to.have.length(2);
+  expect(peer.db.query(undefined, { models: null }).objects).to.have.length(2);
 });
 
 test('compare types', () => {

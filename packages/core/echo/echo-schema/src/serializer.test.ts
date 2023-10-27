@@ -8,7 +8,6 @@ import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { TextObject, TypedObject } from './object';
-import { QUERY_ALL_MODELS } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 
@@ -117,7 +116,7 @@ describe('Serializer', () => {
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
-      const { objects } = db.query(undefined, { models: QUERY_ALL_MODELS });
+      const { objects } = db.query(undefined, { models: null });
       expect(objects[0] instanceof TextObject).to.be.true;
       expect(objects).to.have.length(1);
       expect(objects[0].text).to.deep.eq(content);

@@ -4,12 +4,12 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference } from '@dxos/document-model';
+import { DocumentModel, type Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { ShowDeletedOption, type Filter, QUERY_ALL_MODELS } from './filter';
+import { ShowDeletedOption, type Filter } from './filter';
 import { base, type EchoObject, isTypedObject, type TypedObject } from '../object';
 import { getDatabaseFromObject } from '../object';
 import { createSignal } from '../util';
@@ -193,8 +193,9 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     }
   }
 
-  if (filter.modelFilterPreference !== QUERY_ALL_MODELS) {
-    if (!filter.modelFilterPreference.includes(object[base]._modelConstructor.meta.type)) {
+  if (filter.options.models !== null) {
+    const models = filter.options.models ?? [DocumentModel.meta.type];
+    if (!models.includes(object[base]._modelConstructor.meta.type)) {
       return false;
     }
   }

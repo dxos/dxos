@@ -9,7 +9,7 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
 import { base, TextObject, TypedObject } from './object';
-import { Filter, QUERY_ALL_MODELS } from './query';
+import { Filter } from './query';
 
 export type SerializedObject = {
   '@id': string;
@@ -30,7 +30,7 @@ export type SerializedSpace = {
 // TODO(burdon): Sort JSON keys (npm canonical serialize util).
 export class Serializer {
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const { objects } = database.query(undefined, { models: QUERY_ALL_MODELS });
+    const { objects } = database.query(undefined, { models: null });
     const data = {
       objects: objects.map((object) => {
         return stripUndefinedValues({

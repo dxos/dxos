@@ -20,7 +20,6 @@ export {
   TypedObject,
   Filter,
   ShowDeletedOption,
-  QUERY_ALL_MODELS,
   type EchoObject, // TODO(burdon): Remove?
   type FilterSource,
   type ObjectMeta,
