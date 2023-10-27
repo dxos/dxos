@@ -17,13 +17,13 @@ import { TextObject } from './text-object';
 import {
   base,
   data,
-  proxy,
   immutable,
-  schema,
   meta,
+  proxy,
+  schema,
+  type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
-  type EchoObject,
 } from './types';
 import { type Schema } from '../proto'; // NOTE: Keep as type-import.
 import { isReferenceLike, getBody, getHeader } from '../util';
@@ -39,7 +39,7 @@ const isValidKey = (key: string | symbol) =>
     key === 'id' ||
     key === '__meta' ||
     key === '__schema' ||
-    key === '__typename' || // TODO(burdon): Reconcile with schema name.
+    key === '__typename' || // TODO(burdon): Reconcile with schema name (and document).
     key === '__deleted'
   );
 
@@ -86,7 +86,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private _schema?: Schema = undefined;
+  private readonly _schema?: Schema;
   private readonly _immutable;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
