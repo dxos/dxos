@@ -20,7 +20,7 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { isTypedObject, type Query, subscribe } from '@dxos/echo-schema';
+import { isTypedObject, subscribe } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceProxy } from '@dxos/react-client/echo';
@@ -297,9 +297,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                     order: nextOrder,
                   });
                   client.spaces.default.db.add(nextObjectOrder);
+                  spacesOrder = nextObjectOrder;
                 } else {
                   spacesOrder.order = nextOrder;
                 }
+                updateSpacesOrder({ objects: [spacesOrder] });
               },
             },
           });
@@ -369,7 +371,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
           );
 
-          const updateSpacesOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+          const updateSpacesOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
             spacesOrder = spacesOrders[0];
             groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder?.order);
           };
