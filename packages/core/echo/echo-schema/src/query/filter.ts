@@ -179,14 +179,6 @@ export class Filter<T extends EchoObject = EchoObject> {
     return this.options.deleted ?? ShowDeletedOption.HIDE_DELETED;
   }
 
-  // get modelFilterPreference(): string[] | null {
-  //   if (this.options.models === undefined) {
-  //     return [DocumentModel.meta.type];
-  //   }
-  //
-  //   return this.options.models;
-  // }
-
   get searchSpacesPreference(): PublicKey[] | undefined {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));
   }

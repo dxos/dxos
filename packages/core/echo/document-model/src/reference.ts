@@ -13,6 +13,7 @@ export class Reference {
   /**
    * @deprecated
    */
+  // TODO(burdon): Remove?
   static fromLegacyTypeName(type: string): Reference {
     return new Reference(type, 'protobuf', 'dxos.org');
   }
