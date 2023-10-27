@@ -30,8 +30,8 @@ message AgentStatus {
 }
 
 message PluginState {
-  string plugin_id = 1;
-  dxos.config.Runtime.Agent.Plugin plugin_config = 2;
+  string id = 1;
+  dxos.config.Runtime.Agent.Plugin config = 2;
 }
 
 service DashboardService {

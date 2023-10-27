@@ -16,18 +16,18 @@ export type PluginListProps = {
 export const PluginList = ({ plugins, togglePlugin }: PluginListProps) => {
   const { helper, builder } = createColumnBuilder<PluginState>();
   const columns: TableColumnDef<PluginState, any>[] = [
-    helper.accessor('pluginId', builder.string()),
-    helper.accessor((plugin) => !!plugin.pluginConfig.enabled, { id: 'enabled', ...builder.icon(), size: 80 }),
+    helper.accessor('id', builder.string()),
+    helper.accessor((plugin) => !!plugin.config.enabled, { id: 'enabled', ...builder.icon(), size: 80 }),
     helper.display({
       id: 'toggle',
       cell: (context) => (
         <Button
-          disabled={context.row.original.pluginId === 'dxos.org/agent/plugin/dashboard'}
+          disabled={context.row.original.id === 'dxos.org/agent/plugin/dashboard'}
           onClick={() => {
-            void togglePlugin(context.row.original.pluginId);
+            void togglePlugin(context.row.original.id);
           }}
         >
-          {context.row.original.pluginConfig.enabled ? 'Disable' : 'Enable'}
+          {context.row.original.config.enabled ? 'Disable' : 'Enable'}
         </Button>
       ),
     }),

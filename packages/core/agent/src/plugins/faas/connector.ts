@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { FaasClient, type InvocationContext, type Trigger } from './faas-client';
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
 type MountedTrigger = {
   trigger: Trigger;
@@ -23,7 +23,7 @@ type MountedTrigger = {
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
  * @deprecated
  */
-export class FaasConnector extends AbstractPlugin {
+export class FaasConnector extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/faas-connector';
   private readonly _ctx = new Context();
 

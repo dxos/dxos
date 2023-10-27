@@ -16,7 +16,7 @@ import { schema } from '@dxos/protocols';
 import { AgentStatus, type PluginState, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
 export const CHANNEL_NAME = 'dxos.org/agent/plugin/dashboard';
 export const UPDATE_INTERVAL = 5_000;
@@ -29,7 +29,7 @@ export type DashboardPluginParams = {
   configPath: string;
 };
 
-export class DashboardPlugin extends AbstractPlugin {
+export class DashboardPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/dashboard';
   private readonly _ctx = new Context();
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
@@ -42,7 +42,7 @@ export class DashboardPlugin extends AbstractPlugin {
     log('Opening dashboard plugin...');
 
     invariant(this._pluginCtx);
-    if (!this._pluginConfig.enabled) {
+    if (!this._config.enabled) {
       log.info('Dashboard disabled.');
       return;
     }
@@ -95,8 +95,8 @@ export class DashboardPlugin extends AbstractPlugin {
           },
 
           plugins: this._pluginCtx!.plugins.map((plugin) => ({
-            pluginId: plugin.id,
-            pluginConfig: plugin.config,
+            id: plugin.id,
+            config: plugin.config,
           })),
         });
       };

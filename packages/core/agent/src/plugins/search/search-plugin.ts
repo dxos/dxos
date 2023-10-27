@@ -15,11 +15,11 @@ import { SearchRequest, type SearchResponse } from '@dxos/protocols/proto/dxos/a
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
 export const SEARCH_CHANNEL = 'dxos.org/agent/plugin/search';
 
-export class Search extends AbstractPlugin {
+export class Search extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/search';
   private _ctx?: Context;
   private _index?: MiniSearch;
@@ -49,7 +49,7 @@ export class Search extends AbstractPlugin {
   async open(): Promise<void> {
     log.info('Opening indexing plugin...');
 
-    if (!this._pluginConfig.enabled) {
+    if (!this._config.enabled) {
       log.info('Search disabled.');
       return;
     }

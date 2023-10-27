@@ -10,14 +10,14 @@ import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions
 
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { type FunctionDispatcher } from './dispatcher';
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
 const DEFAULT_OPTIONS: Required<FunctionsConfig> & { '@type': string } = {
   '@type': 'dxos.agent.functions.FunctionsConfig',
   port: 7000,
 };
 
-export class FunctionsPlugin extends AbstractPlugin {
+export class FunctionsPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/functions';
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
   private readonly _devDispatcher = new DevFunctionDispatcher();
@@ -25,12 +25,12 @@ export class FunctionsPlugin extends AbstractPlugin {
   private _server?: Server;
 
   async open() {
-    if (!this._pluginConfig.enabled) {
+    if (!this._config.enabled) {
       log.info('Functions disabled.');
       return;
     }
 
-    this._pluginConfig.config = { ...DEFAULT_OPTIONS, ...this._pluginConfig.config };
+    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
     this._dispatchers.set('dev', this._devDispatcher);
     this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
@@ -67,7 +67,7 @@ export class FunctionsPlugin extends AbstractPlugin {
         );
     });
 
-    const port = this._pluginConfig.config!.port;
+    const port = this._config.config!.port;
     this._server = app.listen(port, () => {
       console.log('functions server listening', { port });
     });

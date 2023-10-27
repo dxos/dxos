@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { type EpochMonitorConfig } from '@dxos/protocols/proto/dxos/agent/epoch';
 import { ComplexMap } from '@dxos/util';
 
-import { AbstractPlugin } from '../plugin';
+import { Plugin } from '../plugin';
 
 // TODO(dmaretskyi): Review defaults.
 const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
@@ -29,7 +29,7 @@ const DEFAULT_OPTIONS: Required<EpochMonitorConfig> & { '@type': string } = {
  * - Updates address book.
  */
 // TODO(burdon): Create test.
-export class EpochMonitor extends AbstractPlugin {
+export class EpochMonitor extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/epoch-monitor';
   private _ctx?: Context = undefined;
   private _monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
@@ -40,20 +40,20 @@ export class EpochMonitor extends AbstractPlugin {
   async open() {
     invariant(this._pluginCtx);
 
-    if (!this._pluginConfig.enabled) {
+    if (!this._config.enabled) {
       log.info('epoch monitor disabled from config');
       return;
     }
     this._ctx = new Context();
-    this._pluginConfig.config = { ...DEFAULT_OPTIONS, ...this._pluginConfig.config };
+    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
 
-    log.info('epoch monitor open', { config: this._pluginConfig });
+    log.info('epoch monitor open', { config: this._config });
 
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!this._monitors.has(space.key)) {
-          invariant(this._pluginConfig.config);
-          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._pluginConfig.config);
+          invariant(this._config.config);
+          const monitor = new SpaceMonitor(this._pluginCtx!.client, space, this._config.config);
           this._monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
