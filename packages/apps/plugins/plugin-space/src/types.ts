@@ -9,7 +9,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
-import type { Space } from '@dxos/react-client/echo';
+import type { ItemID, Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
@@ -27,6 +27,7 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
 }
 
 export type ObjectViewer = {
@@ -46,6 +47,11 @@ export type SpaceState = {
    * If no ancestor represents a space, then it is undefined.
    */
   active: Space | undefined;
+
+  /**
+   * Object that was linked to directly but not found and is being awaited.
+   */
+  awaiting: ItemID | undefined;
 
   /**
    * Which objects peers are currently viewing.

@@ -106,6 +106,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
         <Main.Overlay />
 
         {/* Main content surface. */}
+        {/* TODO(wittjosiah): Check if anything fulfills this Surface, if not, show 404. */}
         <Surface role='main' limit={1} fallback={Fallback} />
 
         {/* Global popovers. */}

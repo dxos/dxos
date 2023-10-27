@@ -28,13 +28,15 @@ import { inferRecordOrder } from '@dxos/util';
 
 import { backupSpace } from './backup';
 import {
+  AwaitingObject,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
-  SpaceMain,
-  SpacePresence,
+  MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  SpaceMain,
+  SpacePresence,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
@@ -58,6 +60,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
   const state = deepSignal<SpaceState>({
     active: undefined,
+    awaiting: undefined,
     viewers: [],
   }) as RevertDeepSignal<SpaceState>;
   const graphSubscriptions = new EventSubscriptions();
@@ -215,11 +218,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       space: state,
       settings: settings.values,
       translations,
+      root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       surface: {
         component: (data, role) => {
           switch (role) {
             case 'main':
-              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
+              // TODO(wittjosiah): ItemID length constant.
+              return isSpace(data.active) ? (
+                <SpaceMain space={data.active} />
+              ) : typeof data.active === 'string' && data.active.length === 64 ? (
+                <MissingObject id={data.active} />
+              ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
               switch (true) {
@@ -404,6 +413,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               }
               const { space } = await clientPlugin.provides.client.shell.joinSpace();
               return space && { space, id: createNodeId(space.key) };
+            }
+
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
             }
           }
 

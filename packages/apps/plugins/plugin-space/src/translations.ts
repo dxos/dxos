@@ -33,6 +33,17 @@ export default [
         'show hidden spaces label': 'Show hidden spaces',
         'rename object label': 'Rename',
         'delete object label': 'Delete',
+        'go to object label': 'Open',
+        'found object label': 'Is this what you were looking for?',
+        'found object description': 'The object you were linked to has now synced to your device.',
+        'waiting for object label': 'Syncing…',
+        'waiting for object description':
+          'Your device is replicating data in the background and will notify you when the object is ready.',
+        'object not found label': 'Object not found',
+        'object not found description': 'Your device is still syncing in the background but the search timed out.',
+        'missing object message': 'Something’s missing...',
+        'missing object description':
+          'The object you were linked to hasn’t been synced to your device yet. Take a look around and we’ll let you when it’s ready.',
       },
     },
   },

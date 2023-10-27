@@ -165,43 +165,36 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           }
         }, [state.values.active]);
 
-        const surfaceProps: SurfaceProps = layout.activeNode
+        const surfaces: SurfaceProps['surfaces'] = layout.activeNode
           ? state.values.fullscreen
-            ? {
-                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
-                surfaces: { main: { data: layout.activeNode.data } },
-              }
+            ? { main: { data: layout.activeNode.data } }
             : {
-                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
-                surfaces: {
-                  sidebar: {
-                    data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
-                  },
-                  complementary: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
-                  },
-                  main: { data: { active: layout.activeNode.data } },
-                  presence: { data: { active: layout.activeNode.data } },
-                  status: { data: { active: layout.activeNode.data } },
-                  heading: { data: { activeNode: layout.activeNode } },
-                  documentTitle: { data: { activeNode: layout.activeNode } },
-                },
-              }
-          : {
-              data: { component: `${LAYOUT_PLUGIN}/SplitView` },
-              surfaces: {
                 sidebar: {
                   data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
-                main: { data: { component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
-                // TODO(wittjosiah): This plugin should own document title.
-                documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
+                complementary: {
+                  data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: layout.activeNode.data },
+                },
+                main: { data: { active: layout.activeNode.data } },
+                presence: { data: { active: layout.activeNode.data } },
+                status: { data: { active: layout.activeNode.data } },
+                heading: { data: { activeNode: layout.activeNode } },
+                documentTitle: { data: { activeNode: layout.activeNode } },
+              }
+          : {
+              sidebar: {
+                data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
               },
+              main: {
+                data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
+              },
+              // TODO(wittjosiah): This plugin should own document title.
+              documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
             };
 
         return (
           <>
-            {result || <Surface {...surfaceProps} />}
+            {result || <Surface {...{ data: { component: `${LAYOUT_PLUGIN}/SplitView` }, surfaces }} />}
             <Mosaic.DragOverlay />
           </>
         );

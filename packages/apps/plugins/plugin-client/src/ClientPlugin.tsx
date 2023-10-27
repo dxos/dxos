@@ -82,9 +82,7 @@ export const ClientPlugin = (
 
       // TODO(burdon): Timeout.
       if (client.halo.identity.get()) {
-        console.log('### waiting...');
         await client.spaces.isReady.wait();
-        console.log('### ok');
       }
 
       return {
