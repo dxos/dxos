@@ -4,8 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { useId, type Elevation, ElevationProvider } from '@dxos/aurora';
-import { group, mx } from '@dxos/aurora-theme';
+import { useId, type Elevation, ElevationProvider } from '@dxos/react-ui';
+import { group, mx } from '@dxos/react-ui-theme';
 
 import { Heading, type HeadingProps } from '../Heading';
 

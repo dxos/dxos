@@ -14,8 +14,8 @@ import {
   type DialogOverlayProps,
   type DialogRootProps,
   type DialogTitleProps,
-} from '@dxos/aurora';
-import { focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
+} from '@dxos/react-ui';
+import { focusRing, hoverColors, getSize, mx } from '@dxos/react-ui-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -42,7 +42,7 @@ export interface DialogProps extends Pick<DialogRootProps, 'open' | 'defaultOpen
 }
 
 /**
- * @deprecated please use the components from @dxos/aurora directly
+ * @deprecated please use the components from @dxos/react-ui directly
  */
 export const Dialog = ({
   title,

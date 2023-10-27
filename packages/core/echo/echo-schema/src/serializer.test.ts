@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
+import { QUERY_ALL_MODELS } from './filter';
 import { type SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 import { Text } from './text-object';
@@ -117,7 +118,7 @@ describe('Serializer', () => {
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
-      const { objects } = db.query();
+      const { objects } = db.query(undefined, { models: QUERY_ALL_MODELS });
       expect(objects[0] instanceof Text).to.be.true;
       expect(objects).to.have.length(1);
       expect(objects[0].text).to.deep.eq(content);

@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, TimeoutError } from '@dxos/protocols';
 import { type Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
@@ -171,7 +171,11 @@ export class SwarmMessenger implements SignalMessenger {
         },
       });
     } catch (err) {
-      log.warn('error sending answer', { err });
+      if (err instanceof TimeoutError) {
+        log.info('timeout sending answer to offer', { err });
+      } else {
+        log.info('error sending answer to offer', { err });
+      }
     }
   }
 

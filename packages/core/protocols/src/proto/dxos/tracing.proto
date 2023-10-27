@@ -72,6 +72,16 @@ message Metric {
     optional string units = 2;
   }
 
+  message MultiCounter {
+    message Record {
+      string key = 1;
+      double value = 2;
+    }
+
+    repeated Record records = 1;
+    optional string units = 2;
+  }
+
   message TimeSeries {
     message Point {
       double value = 1;
@@ -96,6 +106,7 @@ message Metric {
   oneof Value {
     Counter counter = 100;
     TimeSeries time_series = 101;
+    MultiCounter multi_counter = 102;
     Custom custom = 199;
   }
 }

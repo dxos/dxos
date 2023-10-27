@@ -6,7 +6,6 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Tree, TreeItem, Toolbar } from '@dxos/aurora';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
@@ -18,6 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';

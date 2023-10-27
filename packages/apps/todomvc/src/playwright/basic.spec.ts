@@ -9,7 +9,6 @@ import waitForExpect from 'wait-for-expect';
 import { AppManager } from './app-manager';
 import { FILTER } from '../constants';
 
-// TODO(burdon): ???
 enum Groceries {
   Eggs = 'eggs',
   Eggnog = 'eggnog',
@@ -69,7 +68,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.true;
         expect(await guest.todoCount()).to.equal(0);
-      }, 10);
+      });
     });
 
     test('untoggle a task', async () => {
@@ -79,7 +78,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.false;
         expect(await guest.todoCount()).to.equal(1);
-      }, 10);
+      });
     });
 
     test('edit a task', async () => {
@@ -92,7 +91,7 @@ test.describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await guest.todoIsVisible(Groceries.Eggnog)).to.be.true;
         expect(await guest.todoCount()).to.equal(1);
-      }, 10);
+      });
     });
 
     test('cancel editing a task', async () => {
@@ -109,7 +108,7 @@ test.describe('Basic test', () => {
       // Wait for sync.
       await waitForExpect(async () => {
         expect(await guest.textIsVisible(Groceries.Eggnog)).to.be.false;
-      }, 10);
+      });
     });
 
     test('filter active tasks', async () => {
@@ -129,7 +128,7 @@ test.describe('Basic test', () => {
         expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
         expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
         expect(await host.todoCount()).to.equal(2);
-      }, 10);
+      });
     });
 
     test('filter completed tasks', async () => {

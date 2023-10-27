@@ -1,0 +1,77 @@
+{
+  "sourceRoot": "packages/sdk/app-graph/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/sdk/app-graph/src/index.ts",
+        "outputPath": "packages/sdk/app-graph/dist/types",
+        "tsConfig": "packages/sdk/app-graph/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/app-graph/src/index.ts",
+          "packages/sdk/app-graph/src/testing.ts"
+        ],
+        "outputPath": "packages/sdk/app-graph/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/sdk/app-graph/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/sdk/app-graph/.storybook"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/sdk/app-graph",
+        "outputPath": "tmp/mocha/packages/sdk/app-graph",
+        "resultsPath": "test-results/packages/sdk/app-graph",
+        "testPatterns": [
+          "packages/sdk/app-graph/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/app-graph/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

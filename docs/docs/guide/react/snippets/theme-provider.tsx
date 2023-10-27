@@ -5,11 +5,11 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeProvider } from '@dxos/react-ui';
 
 render(
   <ThemeProvider>
-    {/* your components using aurora here */}
+    {/* your components using react-ui here */}
   </ThemeProvider>,
   document.getElementById('root'),
 );

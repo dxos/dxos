@@ -7,8 +7,8 @@ import '@dxosTheme';
 import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
+import { getSize } from '@dxos/react-ui-theme';
 import { range } from '@dxos/util';
 
 import { Stack } from './Stack';

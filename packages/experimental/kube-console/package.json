@@ -14,7 +14,7 @@
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/aurora": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.7.2",
     "@swc-node/register": "1.5.4",

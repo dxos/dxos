@@ -7,9 +7,8 @@ import { deepSignal } from 'deepsignal';
 import React from 'react';
 
 import { isMarkdownContent } from '@braneframe/plugin-markdown';
-import { SPLITVIEW_PLUGIN, SplitViewAction } from '@braneframe/plugin-splitview';
 import { isStack } from '@braneframe/plugin-stack';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import translations from './translations';
@@ -33,7 +32,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
     provides: {
       translations,
       graph: {
-        withPlugins: (plugins) => (parent) => {
+        builder: ({ parent, plugins }) => {
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
           if (isStack(parent.data)) {
             parent.addAction({
               id: 'toggle-presentation',
@@ -41,16 +42,16 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               icon: (props) => <Presentation {...props} />,
               // TODO(burdon): Allow function so can generate state when activated.
               //  So can set explicit fullscreen state coordinated with current presenter state.
-              intent: [
-                {
-                  plugin: PRESENTER_PLUGIN,
-                  action: 'toggle-presentation',
-                },
-                {
-                  plugin: SPLITVIEW_PLUGIN,
-                  action: SplitViewAction.TOGGLE_FULLSCREEN,
-                },
-              ],
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: PRESENTER_PLUGIN,
+                    action: 'toggle-presentation',
+                  },
+                  {
+                    action: LayoutAction.TOGGLE_FULLSCREEN,
+                  },
+                ]),
               keyBinding: 'shift+meta+p',
             });
           }
@@ -69,28 +70,20 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           </PresenterContext.Provider>
         );
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isStack(data.active) && state.presenting ? <PresenterMain stack={data.active} /> : null;
+            }
+
+            case 'presenter-slide': {
+              return isMarkdownContent(data.slide) ? <MarkdownSlideMain slide={data.slide} /> : null;
+            }
+          }
+
           return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            if (isStack(data) && state.presenting) {
-              return PresenterMain;
-            }
-            break;
-          }
-
-          case 'presenter-slide': {
-            if (isMarkdownContent(data)) {
-              return MarkdownSlideMain;
-            }
-            break;
-          }
-        }
-
-        return null;
+        },
       },
       intent: {
         resolver: (intent) => {

@@ -12,14 +12,14 @@ import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
 import 'highlight.js/styles/github.css';
 
-import { defaultNodeClasses, defaultPadding, defaultSlideClasses } from './styles';
+import { theme } from './theme';
 
 export type SlideProps = {
   content?: string;
   classes?: { [selector: string]: string };
 };
 
-export const Slide = ({ content = '', classes = defaultNodeClasses }: SlideProps) => {
+export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
@@ -66,7 +66,7 @@ const slideLayout =
 
         case 'columns': {
           content = h('div', { class: 'flex grow grid grid-cols-2' }, [
-            h('div', { class: defaultPadding }, [content]),
+            h('div', { class: theme.padding }, [content]),
             img,
           ]);
           break;
@@ -74,17 +74,17 @@ const slideLayout =
 
         case 'rows': {
           content = h('div', { class: 'flex grow flex-col' }, [
-            h('div', { class: defaultPadding }, [content]),
-            h('div', { class: ['flex grow pt-0', defaultPadding] }, [img]),
+            h('div', { class: theme.padding }, [content]),
+            h('div', { class: ['flex grow pt-0', theme.padding] }, [img]),
           ]);
           break;
         }
       }
     } else {
-      content = h('div', { class: ['flex grow flex-col', defaultPadding] }, [content]);
+      content = h('div', { class: ['flex grow flex-col', theme.padding] }, [content]);
     }
 
-    const root = h('div', { class: ['flex flex-col grow', defaultSlideClasses] }, [content]);
+    const root = h('div', { class: ['flex flex-col grow', theme.root] }, [content]);
     tree.children = [root];
   };
 

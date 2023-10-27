@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { Button, Input, type TextInputProps } from '@dxos/aurora';
+import { Button, Input, type TextInputProps } from '@dxos/react-ui';
 
 export type SearchbarProps = Pick<TextInputProps, 'placeholder'> & {
   value?: string;

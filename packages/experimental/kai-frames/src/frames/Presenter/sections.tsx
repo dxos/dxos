@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
-import { Composer } from '@dxos/aurora-composer';
+import { Composer } from '@dxos/react-ui-editor';
 import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { type Config, useConfig } from '@dxos/react-client';

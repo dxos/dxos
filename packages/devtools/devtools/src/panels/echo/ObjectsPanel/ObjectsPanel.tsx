@@ -4,10 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/aurora';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/aurora-table';
 import { PublicKey } from '@dxos/keys';
 import { ShowDeletedOption, type TypedObject, useQuery } from '@dxos/react-client/echo';
+import { Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { SpaceSelector } from '../../../containers';

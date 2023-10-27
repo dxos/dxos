@@ -5,10 +5,10 @@
 import React from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Main, useSidebars } from '@dxos/aurora';
 import { useTelemetry } from '@dxos/react-appkit';
 import { SpaceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Main, useSidebars } from '@dxos/react-ui';
 
 import { SpacePanel } from './SpacePanel';
 import { Surface, Sidebar } from '../containers';

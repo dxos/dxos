@@ -69,7 +69,7 @@ export default template.define.text({
                 executor: '@nx/storybook:storybook',
                 options: {
                   config: {
-                    configFolder: 'packages/ui/aurora/.storybook',
+                    configFolder: 'packages/ui/react-ui/.storybook',
                   },
                   uiFramework: '@storybook/react',
                 },

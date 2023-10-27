@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { XCircle } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { type TileContentProps } from '../components';
 import { type TestData } from '../testing';

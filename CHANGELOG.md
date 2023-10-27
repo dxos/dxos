@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.3.3](https://github.com/dxos/dxos/compare/v0.3.2...v0.3.3) (2023-10-27)
+
+
+### Features
+
+* add sentry capture for agent ([#4413](https://github.com/dxos/dxos/issues/4413)) ([a79b0bc](https://github.com/dxos/dxos/commit/a79b0bc8ef3ca438286e83b82e33751eba9d499a))
+* add signal & swarm info to diagnostics ([#4461](https://github.com/dxos/dxos/issues/4461)) ([f2ca85a](https://github.com/dxos/dxos/commit/f2ca85a42480ef541b10bd0380ed5b131defe350))
+* Api to get space from object & query improvements ([#4486](https://github.com/dxos/dxos/issues/4486)) ([d66bdd4](https://github.com/dxos/dxos/commit/d66bdd4aaa5bf096cf3bda68e43608522a033eee))
+* Batch data service events ([#4470](https://github.com/dxos/dxos/issues/4470)) ([f990aad](https://github.com/dxos/dxos/commit/f990aadc57dda0eb7d8092273aa5be7084b27407))
+* D3 visualization ([#4482](https://github.com/dxos/dxos/issues/4482)) ([10234ef](https://github.com/dxos/dxos/commit/10234ef219e2ddc54fbee4b599149377dc273a85))
+* Data visualization ([#4458](https://github.com/dxos/dxos/issues/4458)) ([72cb938](https://github.com/dxos/dxos/commit/72cb938cdeecc438f2bfcf78b67fa8212d1d26c5))
+* **devtools:** Add agent dashboard ([#4429](https://github.com/dxos/dxos/issues/4429)) ([1817c8a](https://github.com/dxos/dxos/commit/1817c8a25e818c60dab4d91531b542bd904bc183))
+* Echo query ([#4505](https://github.com/dxos/dxos/issues/4505)) ([6dfc6c0](https://github.com/dxos/dxos/commit/6dfc6c038031ea574d3b10c4fd99a1de0f48b29e))
+* ECHO query engine ([#4485](https://github.com/dxos/dxos/issues/4485)) ([55fdeb1](https://github.com/dxos/dxos/commit/55fdeb1c865b8a10f023a123a23bd50b2d580699))
+* Echo testing generator ([#4489](https://github.com/dxos/dxos/issues/4489)) ([ef9deca](https://github.com/dxos/dxos/commit/ef9decacae67837984399d6f1584e53b28f4994d))
+* Grid plugin ([#4434](https://github.com/dxos/dxos/issues/4434)) ([9766dd8](https://github.com/dxos/dxos/commit/9766dd87301992069a03f56d5444ce6536d74df5))
+* Open devtools app hook ([#4468](https://github.com/dxos/dxos/issues/4468)) ([006ca4d](https://github.com/dxos/dxos/commit/006ca4de1af0a6eb894041e0b0ef1c85e6f0ac66))
+* Query DSL ([#4507](https://github.com/dxos/dxos/issues/4507)) ([e5ff429](https://github.com/dxos/dxos/commit/e5ff4298febe714e1cc8a5aeda080f32ab05870e))
+* Search demo. ([#4477](https://github.com/dxos/dxos/issues/4477)) ([b1ae07a](https://github.com/dxos/dxos/commit/b1ae07a9fe9bb8f308574ab35595411e7e2b4040))
+* Search plugin ([#4466](https://github.com/dxos/dxos/issues/4466)) ([a269dfc](https://github.com/dxos/dxos/commit/a269dfc039a3683ccc143d2ce0da937e86eedfc8))
+
+
+### Bug Fixes
+
+* agents as system daemon feedback/readme ([#4487](https://github.com/dxos/dxos/issues/4487)) ([5a4d70e](https://github.com/dxos/dxos/commit/5a4d70e7caf4f24e21b09ef61cc7c35ad4f27aa5))
+* Automatically save dynamic schema to the database ([#4491](https://github.com/dxos/dxos/issues/4491)) ([3dbd870](https://github.com/dxos/dxos/commit/3dbd870f9d00cc2bc295596f6a67d086c05cdc05))
+* balancer should wait on framer to send chunk ([#4460](https://github.com/dxos/dxos/issues/4460)) ([22971a3](https://github.com/dxos/dxos/commit/22971a3b40c66b546e6c517bf16a187e2d174552))
+* Clean-up todos ([#4481](https://github.com/dxos/dxos/issues/4481)) ([d5b74b2](https://github.com/dxos/dxos/commit/d5b74b25c1fb265564c61e9bf76218845737ccd5))
+* **cli:** Implement UX changes from Jess's feedback ([#4508](https://github.com/dxos/dxos/issues/4508)) ([0c081e6](https://github.com/dxos/dxos/commit/0c081e6bceb8e0f9125053af9da814cbedabae93))
+* Delete unused code in labs-functions ([#4453](https://github.com/dxos/dxos/issues/4453)) ([85c02fd](https://github.com/dxos/dxos/commit/85c02fd13002fa83f3c702ec9e65153a2bc856e5))
+* diagnostics timeout ([#4474](https://github.com/dxos/dxos/issues/4474)) ([6b9536c](https://github.com/dxos/dxos/commit/6b9536cda3eb07fc572c75e6748cf6324f6c7617))
+* **plugin-grid:** default to copy ([#4502](https://github.com/dxos/dxos/issues/4502)) ([97c2b9e](https://github.com/dxos/dxos/commit/97c2b9ef64eaf0951b1269fb18016debf3d77554))
+* **plugin-space:** Revert: set an index when a Space or SpaceObject is created ([#4476](https://github.com/dxos/dxos/issues/4476)) ([44bdbf7](https://github.com/dxos/dxos/commit/44bdbf79936b1c3c60d9d6422d551f7e23b5d23c))
+* **plugin-space:** Set an index when a Space or SpaceObject is created ([#4475](https://github.com/dxos/dxos/issues/4475)) ([1b7ca63](https://github.com/dxos/dxos/commit/1b7ca63ef14a82a6530656b438f48c50aa587f21))
+* **plugin-treeview,react-ui-navtree:** Polish items & tech debt ([#4467](https://github.com/dxos/dxos/issues/4467)) ([3ce60d4](https://github.com/dxos/dxos/commit/3ce60d41027b51a1a8357b9348edc7e09b22ab8d))
+* **react-ui-mosaic:** Support more versatility in sorting & ID management while dragging ([#4488](https://github.com/dxos/dxos/issues/4488)) ([052ad73](https://github.com/dxos/dxos/commit/052ad7379d0cabeff548ca96bdb6d1769625be8c))
+* Type comparison in filters ([#4519](https://github.com/dxos/dxos/issues/4519)) ([6bede4d](https://github.com/dxos/dxos/commit/6bede4dd9fc8ac165cb0af3b92f678f0e514a23a))
+
 ## [0.3.2](https://github.com/dxos/dxos/compare/v0.3.1...v0.3.2) (2023-10-18)
 
 

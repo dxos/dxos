@@ -20,8 +20,8 @@ import type { Kanban as KanbanType } from '@braneframe/types';
 import { createSubscription } from '@dxos/echo-schema';
 import { arrayMove } from '@dxos/util';
 
+import { KanbanCardComponent } from './KanbanCard';
 import { type ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
-import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 import type { Location, KanbanModel } from '../types';
 import { findLocation } from '../util';
@@ -182,7 +182,7 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
           {/* Overlay required to drag across columns. */}
           {draggingItem && (
             <DragOverlay style={{ margin: 0 }}>
-              <KanbanItemComponent item={draggingItem.source.item!} onDelete={() => {}} />
+              <KanbanCardComponent item={draggingItem.source.item!} onDelete={() => {}} />
             </DragOverlay>
           )}
 

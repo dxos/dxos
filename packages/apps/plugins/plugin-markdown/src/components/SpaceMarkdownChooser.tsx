@@ -6,8 +6,8 @@
 // import React, { useState } from 'react';
 
 // import { useGraph } from '@braneframe/plugin-graph';
-// import { useTreeView } from '@braneframe/plugin-treeview';
-// import { Button, Dialog, Input, useTranslation } from '@dxos/aurora';
+// import { useTreeView } from '@braneframe/plugin-navtree';
+// import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 // import { MARKDOWN_PLUGIN } from '../types';
 // import { isMarkdown } from '../util';

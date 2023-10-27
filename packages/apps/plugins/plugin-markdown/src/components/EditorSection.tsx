@@ -4,26 +4,16 @@
 
 import React, { type HTMLAttributes, useRef } from 'react';
 
-import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/aurora-composer';
-import { focusRing, mx } from '@dxos/aurora-theme';
+import { type ComposerModel, MarkdownComposer, type MarkdownComposerRef } from '@dxos/react-ui-editor';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
-import { type MarkdownProperties } from '../types';
-
-export const EditorSection = ({
-  data: { content: document },
-}: {
-  data: { content: MarkdownProperties & ComposerModel };
-}) => {
+export const EditorSection = ({ content: document }: { content: ComposerModel }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
-  const model: ComposerModel = {
-    id: document.id,
-    content: document.content,
-  };
 
   return (
     <MarkdownComposer
       ref={editorRef}
-      model={model}
+      model={document}
       slots={{
         root: {
           role: 'none',

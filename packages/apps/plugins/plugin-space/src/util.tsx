@@ -4,19 +4,18 @@
 
 import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
-import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { getAppStateIndex, setAppStateIndex } from '@braneframe/plugin-dnd';
 import { type Node } from '@braneframe/plugin-graph';
-import { type AppState } from '@braneframe/types';
-import { clone } from '@dxos/echo-schema';
+import { ObjectOrder } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
+import { clone, type Query } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
+import { inferRecordOrder } from '@dxos/util';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
-
-type Index = ReturnType<typeof getIndices>[number];
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
@@ -24,7 +23,7 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 // TODO(burdon): Factor out.
-export const createNodId = (spaceKey: PublicKeyLike) => {
+export const createNodeId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
     spaceKey = spaceKey.toHex();
   }
@@ -44,23 +43,25 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
 export const spaceToGraphNode = ({
   space,
   parent,
+  dispatch,
   settings,
-  appState,
-  defaultIndex,
 }: {
   space: Space;
   parent: Node;
+  dispatch: DispatchIntent;
   settings: SpaceSettingsProps;
-  appState?: AppState;
-  defaultIndex?: string;
-}): Node<Space> => {
-  const id = createNodId(space.key);
+}): { node: Node<Space>; subscription: UnsubscribeCallback } => {
+  const id = createNodeId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
   const disabled = state !== SpaceState.READY;
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
+
+  const spaceOrderQuery = space.db.query(ObjectOrder.filter({ scope: id }));
+
+  let spaceOrder: ObjectOrder | undefined;
 
   let node!: Node;
   // TODO(wittjosiah): Why is this batch needed?
@@ -79,29 +80,44 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
-        onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(burdon): Decouple from object's data structure.
-          child.data.meta.index = nextIndex;
+        onRearrangeChildren: (nextOrder: string[]) => {
+          if (!spaceOrder) {
+            const nextObjectOrder = new ObjectOrder({
+              scope: id,
+              order: nextOrder,
+            });
+            space.db.add(nextObjectOrder);
+          } else {
+            spaceOrder.order = nextOrder;
+          }
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
-        onMigrateStartChild: (child: Node<TypedObject>, nextParent: Node<Space>, nextIndex: string) => {
-          // create clone of child and add to migration destination
+        // TODO(wittjosiah): Rename migrate to transfer.
+        onMigrateStartChild: (child: Node<TypedObject>, nextIndex: string) => {
+          // Create clone of child and add to migration destination.
           const object = clone(child.data, {
             retainId: true,
             additional: [child.data.content],
           });
           space.db.add(object);
-          object.meta.index = nextIndex;
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
-          // remove child being replicated from migration origin
+          // Remove child being replicated from migration origin.
           space.db.remove(child.data);
         },
       },
     });
   });
+
+  const updateSpaceOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+    spaceOrder = spacesOrders[0];
+    node.childrenMap = inferRecordOrder(node.childrenMap, spaceOrder?.order);
+  };
+
+  updateSpaceOrder(spaceOrderQuery);
+
+  const subscription = spaceOrderQuery.subscribe(updateSpaceOrder);
 
   if (parent.id !== 'root') {
     node.addAction(
@@ -109,7 +125,7 @@ export const spaceToGraphNode = ({
         id: 'rename-space',
         label: ['rename space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.RENAME },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RENAME }),
         properties: {
           disabled: disabled || error,
         },
@@ -118,7 +134,7 @@ export const spaceToGraphNode = ({
         id: 'share-space',
         label: ['share space', { ns: SPACE_PLUGIN }],
         icon: (props) => <Users {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.SHARE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.SHARE }),
         properties: {
           disabled: disabled || error,
         },
@@ -131,7 +147,7 @@ export const spaceToGraphNode = ({
       id: 'backup-space',
       label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Download {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.BACKUP },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.BACKUP }),
       properties: {
         disabled: disabled || error,
       },
@@ -140,7 +156,7 @@ export const spaceToGraphNode = ({
       id: 'restore-space',
       label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Upload {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.RESTORE },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RESTORE }),
       properties: {
         disabled: disabled || error,
       },
@@ -153,17 +169,17 @@ export const spaceToGraphNode = ({
         id: 'close-space',
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <X {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.CLOSE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.CLOSE }),
       });
     } else {
       node.addAction({
         id: 'open-space',
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <ClockCounterClockwise {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.OPEN },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.OPEN }),
       });
     }
   }
 
-  return node;
+  return { node, subscription };
 };

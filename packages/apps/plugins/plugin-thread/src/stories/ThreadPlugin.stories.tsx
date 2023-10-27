@@ -5,35 +5,22 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { mx } from '@dxos/aurora-theme';
+import { Surface, createApp } from '@dxos/app-framework';
 import { Config } from '@dxos/client';
-import { PluginProvider, Surface } from '@dxos/react-surface';
 
-import { createThread } from './testing';
 import { ThreadPlugin } from '../ThreadPlugin';
+import { FullscreenDecorator, createThread } from '../testing';
 
 faker.seed(7);
-
-// TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
-  return (Story) => (
-    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
-      <Story />
-    </div>
-  );
-};
 
 const DefaultThreadPluginStory = () => {
   const object = createThread();
 
-  // TODO(burdon): Why array? Should first be space?
-  return <Surface role='main' data={[object, object]} />;
+  return <Surface role='main' data={{ active: object }} />;
 };
 
 const ThreadPluginStoryPlugin = () => ({
@@ -41,23 +28,19 @@ const ThreadPluginStoryPlugin = () => ({
     id: 'dxos.org/plugin/thread-story',
   },
   provides: {
-    components: {
-      default: DefaultThreadPluginStory,
-    },
+    root: DefaultThreadPluginStory,
   },
 });
 
-const ThreadSurfacesApp = () => (
-  <PluginProvider
-    plugins={[ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]}
-  />
-);
+const ThreadSurfacesApp = createApp({
+  plugins: [ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()],
+});
 
 export default {
+  decorators: [FullscreenDecorator('bg-neutral-200 dark:bg-neutral-800')],
   component: ThreadSurfacesApp,
 };
 
 export const Default = {
-  decorators: [FullscreenDecorator('bg-zinc-200 dark:bg-zinc-800')],
   args: {},
 };
