@@ -11,6 +11,7 @@ import { Client } from '@dxos/client';
 import { type TextObject, Filter } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
@@ -49,14 +50,22 @@ describe('Tests against old storage', () => {
     const spaces = client.spaces.get();
     await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1_000);
 
-    // const space = spaces.find((space) => space.properties.name === data.space.properties.name);
-    // invariant(space, 'Space not found');
+    const space = spaces.find((space) => space.properties.name === data.space.properties.name);
+    invariant(space, 'Space not found');
 
-    // TODO(burdon): All different.
-    const space = spaces[1];
-    console.log('A', space.properties);
-    console.log('B', space.db.query(Filter.typename('dxos.sdk.client.Properties')).objects);
-    console.log('C', space.db.query().objects);
+    // TODO(burdon): There are multiple properties objects.
+    console.log(
+      JSON.stringify(
+        {
+          space: space.key.truncate(),
+          space_properties: space.properties,
+          space_query_properties: space.db.query(Filter.typename('dxos.sdk.client.Properties')).objects,
+          space_objects: space.db.query().objects,
+        },
+        undefined,
+        2,
+      ),
+    );
 
     {
       // Check epoch.
