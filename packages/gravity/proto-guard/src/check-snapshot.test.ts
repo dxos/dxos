@@ -53,7 +53,7 @@ describe('Tests against old storage', () => {
     const space = spaces.find((space) => space.properties.name === data.space.properties.name);
     invariant(space, 'Space not found');
 
-    // TODO(burdon): There are multiple properties objects.
+    // TODO(burdon): There are multiple Properties objects (see space-proxy).
     console.log(
       JSON.stringify(
         {
