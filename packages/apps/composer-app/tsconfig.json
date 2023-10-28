@@ -49,6 +49,9 @@
       "path": "../plugins/plugin-client"
     },
     {
+      "path": "../plugins/plugin-debug"
+    },
+    {
       "path": "../plugins/plugin-error"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-ipfs"
     },
     {
       "path": "../plugins/plugin-layout"
