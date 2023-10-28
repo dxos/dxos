@@ -48,6 +48,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
     Object.entries(fields).some(([, value]) => {
       const result = value.match(match);
       if (result) {
+        // TODO(burdon): Use schema.
         const label = getStringProperty(object, ['label', 'name', 'title']);
 
         results.push({

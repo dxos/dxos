@@ -7,7 +7,7 @@ import React, { type FC, useEffect } from 'react';
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
 import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando } from '@dxos/client/echo';
+import { Expando, type TypedObject } from '@dxos/client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   type MosaicTileAction,
@@ -60,14 +60,23 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const handleOver = (): MosaicOperation => 'copy';
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
-    if (!grid.items.includes(active.item as any)) {
-      grid.items.push(active.item as any);
+    if (grid.items.includes(active.item as any)) {
+      grid.layout.position[active.item.id] = over.position;
+    } else {
+      // TODO(burdon): Fail if not expando?
+      // TODO(burdon): Have to dive into object if SearchResult (need adapter?)
+      const object: TypedObject = (active.item as any).object ?? active.item;
+      const item = new GridType.Item({ object });
+
+      console.log('###', JSON.stringify(object, undefined, 2));
+      console.log('>>>', JSON.stringify(item, undefined, 2));
+
+      grid.items.push(item);
+      grid.layout.position[item.id] = over.position;
     }
-    grid.layout.position[active.item.id] = over.position;
   };
 
   const handleCreate = (position: Position) => {
-    // const document = new DocumentType();
     const item = new GridType.Item();
     grid.layout.position[item.id] = position;
     grid.items.push(item);

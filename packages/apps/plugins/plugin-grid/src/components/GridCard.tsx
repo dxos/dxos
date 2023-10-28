@@ -20,14 +20,34 @@ export const colors: Record<string, string> = {
   blue: 'bg-cyan-50',
 };
 
+type ValueAccessor<TObject extends {}, TValue> = {
+  getValue(object: TObject): TValue;
+  setValue(object: TObject, value: TValue | undefined): void;
+};
+
 export type GridCardProps = { id: string; title?: string; content?: Text; image?: string; color?: string };
 
 export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {
     const { t } = useTranslation(GRID_PLUGIN);
 
-    // TODO(burdon): Accessor.
-    const model = useTextModel({ text: item.content ?? (item as any).object?.description }); // TODO(burdon): Hack (description).
+    console.log(item.id);
+
+    // TODO(burdon): Need lenses (which should be normalized outside of card).
+    const titleAccessor: ValueAccessor<GridCardProps, string> = {
+      getValue: (object) => (item as any).object?.title ?? object.title ?? '',
+      setValue: (object, value) => {
+        if ((item as any).object) {
+          (item as any).object.title = value;
+        } else {
+          object.title = value;
+        }
+      },
+    };
+
+    const content = useTextModel({
+      text: (item as any).object?.content ?? (item as any).object?.description ?? item.content,
+    });
 
     const color = (item.color && colors[item.color]) ?? colors.gray;
 
@@ -41,8 +61,8 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
                 variant='subdued'
                 classNames='p-0'
                 placeholder={t('title placeholder')}
-                value={item.title ?? (item as any).label ?? ''} // TODO(burdon): Hack (label).
-                onChange={(event) => (item.title = event.target.value)}
+                value={titleAccessor.getValue(item)}
+                onChange={(event) => titleAccessor.setValue(item, event.target.value)}
               />
             </Input.Root>
             <Card.Menu>
@@ -57,7 +77,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
           </Card.Header>
           <Card.Body>
             <MarkdownComposer
-              model={model}
+              model={content}
               slots={{
                 root: {
                   className: mx(
@@ -66,7 +86,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
                     '[&>div]:h-full',
                   ),
                 },
-                editor: { className: 'h-full ring', placeholder: t('content placeholder') },
+                editor: { className: 'h-full', placeholder: t('content placeholder') },
               }}
             />
           </Card.Body>
