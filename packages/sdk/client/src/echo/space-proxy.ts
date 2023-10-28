@@ -286,7 +286,7 @@ export class SpaceProxy implements Space {
     {
       const query = this._db.query(Properties.filter());
       if (query.objects.length > 0) {
-        this._properties = query.objects[query.objects.length - 1]; // TODO(burdon): ???
+        this._properties = query.objects[0];
         this._stateUpdate.emit(this._currentState);
       } else {
         const unsubscribe = query.subscribe((query) => {

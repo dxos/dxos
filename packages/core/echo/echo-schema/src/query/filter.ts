@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
-
 import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -73,7 +71,7 @@ export class Filter<T extends EchoObject = EchoObject> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
     } else if (source instanceof Filter) {
-      return source.clone();
+      return new Filter(source, options);
     } else if (typeof source === 'function') {
       return new Filter(
         {
@@ -116,7 +114,7 @@ export class Filter<T extends EchoObject = EchoObject> {
   }
 
   static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
-    return source.clone({ not: !source.not });
+    return new Filter({ ...source, not: !source.not }, source.options);
   }
 
   static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
@@ -155,11 +153,6 @@ export class Filter<T extends EchoObject = EchoObject> {
   }
 
   // TODO(burdon): toJSON.
-
-  // TODO(burdon): If predicate is { foo: undefined } then it is removed.
-  protected clone(params: FilterParams<T> = {}): Filter<T> {
-    return new Filter(defaultsDeep({}, params, this), this.options);
-  }
 
   get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces?.map((entry) => ('key' in entry ? entry.key : (entry as PublicKey)));

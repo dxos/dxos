@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { type TextObject, Filter } from '@dxos/client/echo';
+import { type TextObject } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -52,20 +52,6 @@ describe('Tests against old storage', () => {
 
     const space = spaces.find((space) => space.properties.name === data.space.properties.name);
     invariant(space, 'Space not found');
-
-    // TODO(burdon): There are multiple Properties objects (see space-proxy).
-    console.log(
-      JSON.stringify(
-        {
-          space: space.key.truncate(),
-          space_properties: space.properties,
-          space_query_properties: space.db.query(Filter.typename('dxos.sdk.client.Properties')).objects,
-          space_objects: space.db.query().objects,
-        },
-        undefined,
-        2,
-      ),
-    );
 
     {
       // Check epoch.
