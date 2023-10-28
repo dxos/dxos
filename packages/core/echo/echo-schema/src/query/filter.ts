@@ -8,7 +8,7 @@ import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
-import { base, type EchoObject, type Expando, getDatabaseFromObject, isTypedObject, type TypedObject } from '../object';
+import { base, getDatabaseFromObject, isTypedObject, type EchoObject, type Expando, type TypedObject } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
 import { type Schema } from '../proto';
 
@@ -58,11 +58,11 @@ export type FilterSource<T extends EchoObject> = PropertyFilter | OperatorFilter
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams = {
+export type FilterParams<T extends EchoObject> = {
   type?: Reference;
   properties?: Record<string, any>;
-  textMatch?: string;
-  predicate?: OperatorFilter<any>;
+  text?: string;
+  predicate?: OperatorFilter<T>;
   not?: boolean;
   and?: Filter[];
   or?: Filter[];
@@ -108,9 +108,9 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  static byTypeName(typename: string, properties?: Record<string, any>) {
+  static typename(typename: string, properties?: Record<string, any>) {
     return new Filter({
-      type: Reference.fromLegacyTypeName(typename),
+      type: Reference.fromLegacyTypename(typename),
       properties,
     });
   }
@@ -131,22 +131,22 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  // TODO(burdon): Make plain immutable object.
-  // TODO(burdon): Split into serializable and non-serializable.
+  // TODO(burdon): Make plain immutable object (unless generics are important).
+  // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
   public readonly type?: Reference;
   public readonly properties?: Record<string, any>;
-  public readonly textMatch?: string;
+  public readonly text?: string;
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
   public readonly and: Filter[];
   public readonly or: Filter[];
   public readonly options: QueryOptions = {};
 
-  protected constructor(params: FilterParams, options: QueryOptions = {}) {
+  protected constructor(params: FilterParams<T>, options: QueryOptions = {}) {
     this.type = params.type;
     this.properties = params.properties;
-    this.textMatch = params.textMatch;
+    this.text = params.text;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
     this.and = params.and ?? [];
@@ -154,10 +154,10 @@ export class Filter<T extends EchoObject = EchoObject> {
     this.options = options;
   }
 
-  // TODO(burdon): JSON tree.
+  // TODO(burdon): toJSON.
 
-  // TODO(burdon): If predicate is { foo: undefined } then this is removed.
-  protected clone(params: FilterParams = {}): Filter<T> {
+  // TODO(burdon): If predicate is { foo: undefined } then it is removed.
+  protected clone(params: FilterParams<T> = {}): Filter<T> {
     return new Filter(defaultsDeep({}, params, this), this.options);
   }
 
@@ -167,7 +167,6 @@ export class Filter<T extends EchoObject = EchoObject> {
 }
 
 // TODO(burdon): Move logic into Filter.
-
 export const filterMatch = (filter: Filter, object: EchoObject): boolean => {
   const result = filterMatchInner(filter, object);
   return filter.not ? !result : result;
@@ -239,7 +238,7 @@ const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
     match = true;
   }
 
-  if (filter.textMatch !== undefined) {
+  if (filter.text !== undefined) {
     throw new Error('Text based search not implemented.');
   }
 

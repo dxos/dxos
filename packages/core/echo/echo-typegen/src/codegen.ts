@@ -183,7 +183,7 @@ export const createObjectClass = (type: pb.Type) => {
       declare static readonly schema: ${importNamespace}.Schema;
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.Filter<${name}> {
-        return ${importNamespace}.Filter.byTypeName('${fullName}', opts);
+        return ${importNamespace}.Filter.typename('${fullName}', opts);
       }
   
       constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOptions) {

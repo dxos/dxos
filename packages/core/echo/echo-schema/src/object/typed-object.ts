@@ -103,7 +103,7 @@ class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements Ty
       opts?.type ??
       (this._schema
         ? this._schema[immutable]
-          ? Reference.fromLegacyTypeName(this._schema!.typename)
+          ? Reference.fromLegacyTypename(this._schema!.typename)
           : this._linkObject(this._schema)
         : undefined);
 

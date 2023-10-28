@@ -45,7 +45,7 @@ export class Serializer {
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
       objects: [properties],
-    } = database.query(Filter.byTypeName(TYPE_PROPERTIES));
+    } = database.query(Filter.typename(TYPE_PROPERTIES));
 
     const { objects } = data;
     for (const object of objects) {

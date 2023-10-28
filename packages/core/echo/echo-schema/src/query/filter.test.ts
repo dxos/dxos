@@ -72,15 +72,15 @@ describe('Filter', () => {
 
     expect(
       compareType(
-        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
         spaceKey,
       ),
     ).to.be.true;
     expect(
       compareType(
-        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypeName('dxos.sdk.client.Test'),
+        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypename('dxos.sdk.client.Test'),
         spaceKey,
       ),
     ).to.be.false;
@@ -88,7 +88,7 @@ describe('Filter', () => {
     // Missing host on items created on some versions.
     expect(
       compareType(
-        Reference.fromLegacyTypeName('dxos.sdk.client.Properties'),
+        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
         new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
         spaceKey,
       ),

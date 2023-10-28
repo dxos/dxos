@@ -55,7 +55,7 @@ describe('Tests against old storage', () => {
     // TODO(burdon): All different.
     const space = spaces[1];
     console.log('A', space.properties);
-    console.log('B', space.db.query(Filter.byTypeName('dxos.sdk.client.Properties')).objects);
+    console.log('B', space.db.query(Filter.typename('dxos.sdk.client.Properties')).objects);
     console.log('C', space.db.query().objects);
 
     {
