@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { useSearch } from '@braneframe/plugin-search';
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
@@ -16,13 +17,14 @@ export const ExplorerMain = () => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;
+  const { match } = useSearch();
   if (!space) {
     return null;
   }
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <Explorer space={space} />
+      <Explorer space={space} match={match} />
     </Main.Content>
   );
 };
