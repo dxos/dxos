@@ -31,8 +31,8 @@ const colors = [
   '[&>circle]:!fill-indigo-300    [&>circle]:!stroke-indigo-600',
 ];
 
-export const Explorer: FC<{ space: Space }> = ({ space }) => {
-  const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
+  const model = useMemo(() => (space ? new EchoGraphModel(match).open(space) : undefined), [space, match]);
   const [colorMap] = useState(new Map<Schema, string>());
   const context = createSvgContext();
   const projector = useMemo(
@@ -62,7 +62,7 @@ export const Explorer: FC<{ space: Space }> = ({ space }) => {
       <SVG className={slots?.root?.className}>
         <Markers arrowSize={6} />
         <Grid className={slots?.grid?.className} />
-        <Zoom extent={[1, 4]}>
+        <Zoom extent={[1 / 2, 4]}>
           <Graph
             model={model}
             drag

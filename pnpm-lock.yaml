@@ -1119,6 +1119,9 @@ importers:
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
+      '@braneframe/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
