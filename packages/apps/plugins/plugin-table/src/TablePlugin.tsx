@@ -10,9 +10,9 @@ import { Table as TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Expando, Filter, Schema, SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
-import { TableMain } from './components';
+import { TableMain, TableSection } from './components';
 import translations from './translations';
-import { isObject, TABLE_PLUGIN, TableAction, type TablePluginProvides } from './types';
+import { isTable, TABLE_PLUGIN, TableAction, type TablePluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
@@ -32,7 +32,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       if (dispatch) {
         adapter = new GraphNodeAdapter({
           dispatch,
-          filter: Filter.from((object: TypedObject) => isObject(object)),
+          filter: Filter.from((object: TypedObject) => isTable(object)),
           adapter: objectToGraphNode,
         });
       }
@@ -80,9 +80,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       surface: {
         component: (data, role) => {
           switch (role) {
-            case 'main': {
-              return isObject(data.active) ? <TableMain table={data.active} /> : null;
-            }
+            case 'main':
+              return isTable(data.active) ? <TableMain table={data.active} /> : null;
+            case 'section':
+              // TODO(burdon): active vs. object?
+              return isTable(data.object) ? <TableSection table={data.object} /> : null;
           }
 
           return null;
