@@ -35,7 +35,7 @@ export type SearchResult = {
 
 export const filterObjects = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
   if (!match) {
-    return objects;
+    return [];
   }
 
   return objects.reduce<SearchResult[]>((results, object) => {

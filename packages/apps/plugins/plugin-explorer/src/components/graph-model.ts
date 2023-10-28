@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { filterObjects } from '@braneframe/plugin-search';
 import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/client/echo';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 
@@ -16,18 +15,19 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
   };
 
   private _subscription?: Subscription;
+  private _objects?: TypedObject[];
 
-  constructor(private readonly _match?: RegExp) {
-    super();
+  get objects(): TypedObject[] {
+    return this._objects ?? [];
   }
 
   open(space: Space) {
     if (!this._subscription) {
       const query = space.db.query();
       this._subscription = query.subscribe(({ objects }) => {
-        const filtered = filterObjects(objects, this._match);
-        this._graph.nodes = filtered;
-        this._graph.links = filtered.reduce<GraphLink[]>((links, object) => {
+        this._objects = objects;
+        this._graph.nodes = objects;
+        this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
           if (object.__schema) {
             const idx = objects.findIndex((obj) => obj.id === object.__schema?.id);
             if (idx === -1) {

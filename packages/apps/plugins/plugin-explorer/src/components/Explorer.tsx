@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useMemo, useRef, useState } from 'react';
 
+import { filterObjects, type SearchResult } from '@braneframe/plugin-search';
 import { type Schema, type Space, type TypedObject } from '@dxos/client/echo';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
@@ -32,7 +33,12 @@ const colors = [
 ];
 
 export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match }) => {
-  const model = useMemo(() => (space ? new EchoGraphModel(match).open(space) : undefined), [space, match]);
+  const model = useMemo(() => (space ? new EchoGraphModel().open(space) : undefined), [space]);
+
+  // TODO(burdon): Re-render if match changes.
+  const filteredRef = useRef<SearchResult[]>();
+  filteredRef.current = filterObjects(model?.objects ?? [], match);
+
   const [colorMap] = useState(new Map<Schema, string>());
   const context = createSvgContext();
   const projector = useMemo(
@@ -87,7 +93,11 @@ export const Explorer: FC<{ space: Space; match?: RegExp }> = ({ space, match })
                 }
 
                 return {
-                  class: mx(className, '[&>text]:!fill-neutral-700'),
+                  class: mx(
+                    (!filteredRef.current || filteredRef.current.some((object) => object.id === node.data?.id)) &&
+                      className,
+                    '[&>text]:!fill-neutral-700',
+                  ),
                 };
               },
               link: () => ({
