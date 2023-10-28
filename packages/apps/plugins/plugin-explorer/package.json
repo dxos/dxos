@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-layout": "workspace:*",
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/gem-core": "workspace:*",
