@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-gallery/src",
+  "sourceRoot": "packages/apps/plugins/plugin-registry/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-gallery/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-gallery/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-gallery/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-registry/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-registry/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-registry/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-gallery/src/index.ts"
+          "packages/apps/plugins/plugin-registry/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-gallery/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-registry/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-gallery/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-registry/src/**/*.{js,jsx,ts,tsx}"
         ],
         "quiet": true
       },
@@ -49,21 +49,21 @@
       },
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-gallery/.storybook"
+        "configDir": "packages/apps/plugins/plugin-registry/.storybook"
       }
     },
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-gallery",
+        "coveragePath": "coverage/packages/apps/plugins/plugin-registry",
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-gallery",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-gallery",
+        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-registry",
+        "resultsPath": "test-results/packages/apps/plugins/plugin-registry",
         "testPatterns": [
-          "packages/apps/plugins/plugin-gallery/src/**/*.test.{ts,js}"
+          "packages/apps/plugins/plugin-registry/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/plugins/plugin-gallery/src/**/*"
+          "packages/apps/plugins/plugin-registry/src/**/*"
         ]
       }
     }

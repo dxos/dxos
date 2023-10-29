@@ -69,11 +69,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-gallery/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },
@@ -125,6 +120,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-pwa/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-registry/package.json",
           "jsonpath": "$.version"
         },
         {

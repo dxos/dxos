@@ -14,7 +14,7 @@ export type PluginDef = {
   name?: string;
   description?: string;
   enabled?: boolean;
-  Icon?: Icon;
+  Icon?: Icon; // TODO(burdon): Use Serializable data.
 };
 
 export type GalleryProps = {
@@ -26,7 +26,7 @@ const styles = {
   highlight: 'hover:bg-neutral-100 dark:hover:bg-neutral-900',
 };
 
-export const Gallery = ({ plugins = [], onChange }: GalleryProps) => {
+export const PluginList = ({ plugins = [], onChange }: GalleryProps) => {
   return (
     <div className={mx('flex flex-col w-full overflow-x-hidden overflow-y-scroll', inputSurface)}>
       <List>

@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 
 import { DensityProvider } from '@dxos/react-ui';
 
-import { Gallery } from './Gallery';
+import { type PluginDef, PluginList } from './PluginList';
 
 const Story = () => {
-  const [plugins, setPlugins] = useState([
+  const [plugins, setPlugins] = useState<PluginDef[]>([
     {
       id: 'dxos.org/plugin/plugin-1',
       name: 'Plugin 1',
@@ -47,21 +47,20 @@ const Story = () => {
   ]);
 
   const handleChange = (id: string, enabled: boolean) => {
-    console.log(';;', id, enabled);
     setPlugins((plugins) => plugins.map((plugin) => (plugin.id === id ? { ...plugin, enabled } : plugin)));
   };
 
   return (
     <div className={'flex w-[400px] overflow-hidden'}>
       <DensityProvider density={'fine'}>
-        <Gallery plugins={plugins} onChange={handleChange} />
+        <PluginList plugins={plugins} onChange={handleChange} />
       </DensityProvider>
     </div>
   );
 };
 
 export default {
-  component: Gallery,
+  component: PluginList,
   render: Story,
   parameters: {
     layout: 'centered',
