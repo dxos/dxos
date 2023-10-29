@@ -10,10 +10,10 @@ import React, { type FC, type MutableRefObject, type RefCallback, useCallback } 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
-import { Document } from '@braneframe/types';
+import { Document, Folder } from '@braneframe/types';
 import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, Text, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -92,11 +92,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  // TODO(burdon): Is `data` expected to be a Document (TypedObject) or MarkdownProperties?
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.active;
+    // TODO(wittjosiah): Should this be a hook?
+    const space = getSpaceForObject(document);
 
     const textModel = useTextModel({
       identity,
@@ -111,10 +110,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
     if (!textModel) {
       return null;
-    }
-
-    if (!space?.db.getObjectById(document.id)) {
-      return <MarkdownMainEmpty {...{ composer: { content: () => null }, properties: document }} />;
     }
 
     return (
@@ -207,12 +202,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder) || parent.data.name === 'root') {
             return;
           }
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const space = parent.data;
 
           parent.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
@@ -229,8 +223,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   action: MarkdownAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: space.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -238,7 +232,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               ]),
           });
 
-          return adapter?.createNodes(space, parent);
+          // return adapter?.createNodes(space, parent);
         },
       },
       stack: {

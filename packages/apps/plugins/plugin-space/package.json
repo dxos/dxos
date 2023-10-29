@@ -19,6 +19,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",

@@ -118,10 +118,11 @@ export const TreeViewContainer = ({
         const activeClass = activeNode.properties.persistenceClass;
         if (operation === 'rearrange') {
           const ids = Object.keys(activeNode.parent!.childrenMap);
+          const nodes = Object.values(activeNode.parent!.childrenMap).map(({ data }) => data);
           const activeIndex = ids.indexOf(activeNode.id);
           const overIndex = ids.indexOf(overNode.id);
           activeNode.parent!.properties.onRearrangeChildren(
-            arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
+            arrayMove(nodes, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
           );
         }
         if (operation === 'transfer') {
@@ -130,9 +131,8 @@ export const TreeViewContainer = ({
             : getPersistenceParent(overNode, activeClass);
           const originParent = getPersistenceParent(activeNode, activeClass);
           if (destinationParent && originParent) {
-            // TODO(wittjosiah): Rename migrate to transfer.
-            destinationParent.properties.onMigrateStartChild(activeNode, 'never');
-            originParent.properties.onMigrateEndChild(activeNode);
+            destinationParent.properties.onTransferStartChild(activeNode, 'never');
+            originParent.properties.onTransferEndChild(activeNode);
           }
         }
       }

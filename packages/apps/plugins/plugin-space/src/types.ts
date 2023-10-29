@@ -27,6 +27,8 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
+  REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
 }
 
 export type ObjectViewer = {
