@@ -31,7 +31,8 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {
     const { t } = useTranslation(GRID_PLUGIN);
 
-    console.log(item.id);
+    // TODO(burdon): JSON recursion error.
+    console.log(JSON.stringify({ id: item.id, title: '::' + item.title }, null, 2));
 
     // TODO(burdon): Need lenses (which should be normalized outside of card).
     const titleAccessor: ValueAccessor<GridCardProps, string> = {

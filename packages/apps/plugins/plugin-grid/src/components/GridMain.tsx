@@ -68,9 +68,6 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
       const object: TypedObject = (active.item as any).object ?? active.item;
       const item = new GridType.Item({ object });
 
-      console.log('###', JSON.stringify(object, undefined, 2));
-      console.log('>>>', JSON.stringify(item, undefined, 2));
-
       grid.items.push(item);
       grid.layout.position[item.id] = over.position;
     }
