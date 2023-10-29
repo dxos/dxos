@@ -1,0 +1,74 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-gallery/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/apps/plugins/plugin-gallery/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-gallery/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-gallery/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-gallery/src/index.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-gallery/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-gallery/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-gallery/.storybook"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/plugins/plugin-gallery",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-gallery",
+        "resultsPath": "test-results/packages/apps/plugins/plugin-gallery",
+        "testPatterns": [
+          "packages/apps/plugins/plugin-gallery/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/plugins/plugin-gallery/src/**/*"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}
