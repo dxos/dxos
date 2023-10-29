@@ -2,28 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Icon, Circle } from '@phosphor-icons/react';
+import { Circle } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Input, List, ListItem } from '@dxos/react-ui';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Serializable.
-export type PluginDef = {
-  id: string;
-  name?: string;
-  description?: string;
-  enabled?: boolean;
-  Icon?: Icon; // TODO(burdon): Use Serializable data.
+import { type PluginDef } from './types';
+
+const styles = {
+  highlight: 'hover:bg-neutral-100 dark:hover:bg-neutral-900',
 };
 
 export type GalleryProps = {
   plugins?: PluginDef[];
   onChange?: (id: string, enabled: boolean) => void;
-};
-
-const styles = {
-  highlight: 'hover:bg-neutral-100 dark:hover:bg-neutral-900',
 };
 
 export const PluginList = ({ plugins = [], onChange }: GalleryProps) => {
