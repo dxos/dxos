@@ -23,6 +23,7 @@
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@observablehq/plot": "^0.6.11",
+    "d3": "^7.8.5",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"
   },

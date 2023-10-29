@@ -1146,6 +1146,9 @@ importers:
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
+      d3:
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
