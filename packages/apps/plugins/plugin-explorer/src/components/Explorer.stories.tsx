@@ -7,6 +7,7 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
+import { unixDay } from 'd3';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
@@ -17,6 +18,8 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Explorer } from './Explorer';
+
+console.log(unixDay);
 
 faker.seed(1);
 
