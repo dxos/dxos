@@ -1146,9 +1146,6 @@ importers:
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
-      d3:
-        specifier: ^7.4.4
-        version: 7.8.2
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5665,8 +5662,8 @@ importers:
         specifier: ^3.0.10
         version: 3.1.2
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5723,8 +5720,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       d3-force:
         specifier: ~3.0.0
         version: 3.0.0
@@ -6267,8 +6264,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6535,8 +6532,8 @@ importers:
         specifier: workspace:*
         version: link:../../experimental/gem-core
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       use-resize-observer:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -8143,8 +8140,8 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8749,8 +8746,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -15084,7 +15081,7 @@ packages:
     resolution: {integrity: sha512-7f43OizjVcno6/lZ+IC/bIceud9ZYJa7PCnZTjHCf3utcaGXgLqC1qxpYLzNZTnVHpKTFfqoPY/jOuFC/kSWgA==}
     engines: {node: '>=12'}
     dependencies:
-      d3: 7.8.2
+      d3: 7.8.5
       interval-tree-1d: 1.0.4
       isoformat: 0.2.1
     dev: false
@@ -25322,8 +25319,8 @@ packages:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  /d3@7.8.2:
-    resolution: {integrity: sha512-WXty7qOGSHb7HR7CfOzwN1Gw04MUOzN8qh9ZUsvwycIMb4DYMpY9xczZ6jUorGtO6bR9BPMPaueIKwiDxu9uiQ==}
+  /d3@7.8.5:
+    resolution: {integrity: sha512-JgoahDG51ncUfJu6wX/1vWQEqOflgXyl4MaHqlcSruTez7yhaRKR9i8VjjcQGeS2en/jnFivXuaIMnseMMt0XA==}
     engines: {node: '>=12'}
     dependencies:
       d3-array: 3.2.0
@@ -25367,7 +25364,7 @@ packages:
   /dagre-d3-es@7.0.9:
     resolution: {integrity: sha512-rYR4QfVmy+sR44IBDvVtcAmOReGBvRCWDpO2QjYwqgh9yijw6eSHBqaPG/LIOEy7aBsniLvtMW6pg19qJhq60w==}
     dependencies:
-      d3: 7.8.2
+      d3: 7.8.5
       lodash-es: 4.17.21
     dev: true
 
@@ -33302,7 +33299,7 @@ packages:
       cytoscape: 3.23.0
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.23.0)
       cytoscape-fcose: 2.1.0(cytoscape@3.23.0)
-      d3: 7.8.2
+      d3: 7.8.5
       dagre-d3-es: 7.0.9
       dayjs: 1.11.7
       dompurify: 2.4.3

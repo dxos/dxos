@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 // TODO(burdon): Failed to fetch dynamically imported module: http://localhost:9009/src/components/Plot.stories.tsx?t=1698508451079
-// import * as Plot from '@observablehq/plot';
+import * as Plot from '@observablehq/plot';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
 import React, { type ComponentType, lazy, Suspense } from 'react';
@@ -14,6 +14,8 @@ import React, { type ComponentType, lazy, Suspense } from 'react';
 import { types } from '@braneframe/types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
+
+console.log(':::', Plot);
 
 faker.seed(1);
 
