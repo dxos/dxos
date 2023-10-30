@@ -14,7 +14,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Bundler", // Allows us to use "types" in "exports" in package.json among other things.
     "isolatedModules": true,
     "noImplicitOverride": true,
     "resolveJsonModule": true,
@@ -25,7 +25,11 @@
     "target": "ES2018"
   },
   "ts-node": {
-    "swc": true
+    "swc": true,
+    "compilerOptions": {
+      "module": "CommonJS",
+      "moduleResolution": "Node" // We don't care about not supporting "types" in "exports" since SWC doesn't process types anyway.
+    }
   },
   "include": [
     "**/*.ts",
