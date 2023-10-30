@@ -102,6 +102,9 @@ export class Balancer {
   }
 
   destroy() {
+    if (this._sendBuffers.size !== 0) {
+      log.warn('destroying balancer with pending calls');
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }
