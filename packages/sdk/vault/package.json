@@ -8,10 +8,22 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/node/node/testing/index.cjs",
-    "./shared-worker": "./dist/lib/browser/shared-worker.mjs",
-    "./vite-plugin": "./dist/node/node/vite-plugin.cjs"
+    ".": {
+      "default": "./dist/lib/browser/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "default": "./dist/node/node/testing/index.cjs",
+      "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./shared-worker": {
+      "default": "./dist/lib/browser/shared-worker.mjs",
+      "types": "./dist/types/src/shared-worker.d.ts"
+    },
+    "./vite-plugin": {
+      "default": "./dist/node/node/vite-plugin.cjs",
+      "types": "./dist/types/src/vite-plugin.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
