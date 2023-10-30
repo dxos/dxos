@@ -9,7 +9,7 @@
   "main": "dist/src/main.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "toolbox": "ts-node ./src/toolbox.ts"
+    "toolbox": "node -r ts-node/register ./src/toolbox.ts"
   },
   "dependencies": {
     "chalk": "^4.1.0",
