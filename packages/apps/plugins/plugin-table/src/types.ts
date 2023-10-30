@@ -26,6 +26,6 @@ export type TablePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   TranslationsProvides;
 
-export const isObject = (object: unknown): object is TableType => {
+export const isTable = (object: unknown): object is TableType => {
   return isTypedObject(object) && TableType.schema.typename === object.__typename;
 };

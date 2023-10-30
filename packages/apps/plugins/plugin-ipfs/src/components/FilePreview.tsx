@@ -20,5 +20,5 @@ export const FilePreview: FC<FilePreviewProps> = ({ type, url, className }) => {
     return <iframe className={mx('w-full h-full overflow-auto', className)} src={url} />;
   }
 
-  return <img className={mx('w-full h-full', className ?? 'object-fit')} src={url} />;
+  return <img className={mx('w-full h-full', className ?? 'object-contain')} src={url} />;
 };

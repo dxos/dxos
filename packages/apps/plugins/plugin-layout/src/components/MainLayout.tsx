@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
-import { baseSurface, coarseBlockSize, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, coarseBlockSize, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
@@ -25,7 +25,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
   if (fullscreen) {
     return (
-      <div className='flex absolute inset-0'>
+      <div className={fixedInsetFlexLayout}>
         <Surface role='main' limit={1} />
       </div>
     );

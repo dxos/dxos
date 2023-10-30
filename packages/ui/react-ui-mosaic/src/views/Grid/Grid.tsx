@@ -154,13 +154,14 @@ export const Grid = ({
         id,
         Component,
         getOverlayProps: () => ({ grow: true }),
-        getOverlayStyle: () => getDimension(cellBounds, options.spacing),
+        getOverlayStyle: () => ({ display: 'flex', ...getDimension(cellBounds, options.spacing) }),
         onDrop,
         onOver,
       }}
     >
       <div className={mx('flex grow overflow-auto', className)}>
-        <div ref={containerRef} className={mx('grow overflow-auto snap-x snap-mandatory md:snap-none')}>
+        {/* TODO(burdon): Tailwind classes aren't currently processed by labs. */}
+        <div ref={containerRef} className={mx('grow overflow-auto snap-x md:snap-none snap-mandatory')}>
           <div className='group block relative' style={{ ...bounds, margin: marginSize }}>
             {matrix && (
               <div style={{ padding: options.spacing }}>
@@ -237,9 +238,9 @@ const GridCell: FC<{
       <div
         className={mx(
           'group/cell flex group-hover:flex w-full h-full items-center justify-center',
-          'box-border border-dashed border-4 border-neutral-100 rounded-lg',
+          'box-border border-dashed border-4 border-neutral-100/50 rounded-lg',
           'transition ease-in-out duration-300',
-          isOver && 'flex bg-neutral-200 border-neutral-400',
+          isOver && 'flex bg-neutral-100 border-neutral-400',
         )}
       >
         <div

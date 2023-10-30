@@ -21,7 +21,8 @@
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*"
+    "@dxos/react-ui-theme": "workspace:*",
+    "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",
