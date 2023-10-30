@@ -106,11 +106,19 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
-  static typename(typename: string, properties?: Record<string, any>) {
-    return new Filter({
-      type: Reference.fromLegacyTypename(typename),
-      properties,
-    });
+  static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
+    const type = Reference.fromLegacyTypename(typename);
+
+    switch (typeof filter) {
+      case 'function':
+        return new Filter({ type, predicate: filter as any });
+      case 'object':
+        return new Filter({ type, properties: filter });
+      case 'undefined':
+        return new Filter({ type });
+      default:
+        throw new TypeError('Invalid filter.');
+    }
   }
 
   static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
