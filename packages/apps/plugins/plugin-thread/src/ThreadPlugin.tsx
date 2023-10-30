@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Chat } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
@@ -47,10 +47,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Chat {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

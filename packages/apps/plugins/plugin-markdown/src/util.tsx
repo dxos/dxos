@@ -70,13 +70,13 @@ const getFallbackTitle = (document: Document) => {
 export const documentToGraphNode = (parent: Node<Space>, document: Document): Node => {
   const [child] = parent.addNode(MARKDOWN_PLUGIN, {
     id: document.id,
-    label: document.title ?? getFallbackTitle(document) ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+    label: document.title || getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) =>
       document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
     data: document,
     properties: {
       persistenceClass: 'spaceObject',
-      'data-testid': 'markdownPlugin.document',
+      testId: 'markdownPlugin.document',
     },
   });
 
