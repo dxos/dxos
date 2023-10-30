@@ -131,8 +131,8 @@ export const TreeViewContainer = ({
             : getPersistenceParent(overNode, activeClass);
           const originParent = getPersistenceParent(activeNode, activeClass);
           if (destinationParent && originParent) {
-            destinationParent.properties.onTransferStartChild(activeNode, 'never');
-            originParent.properties.onTransferEndChild(activeNode);
+            destinationParent.properties.onTransferStart(activeNode);
+            originParent.properties.onTransferEnd(activeNode, destinationParent);
           }
         }
       }

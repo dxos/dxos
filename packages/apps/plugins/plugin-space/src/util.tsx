@@ -109,19 +109,23 @@ export const objectToGraphNode = ({
         persistenceClass: 'folder',
         ...(isFolder
           ? {
-              acceptPersistenceClass: new Set(['folder']),
+              acceptPersistenceClass: isSharedSpacesFolder ? undefined : new Set(['folder']),
               role: 'branch',
               onRearrangeChildren: (nextOrder: TypedObject[]) => {
                 object.objects = nextOrder;
               },
-              onTransferStartChild: (child: Node<TypedObject>, nextIndex: string) => {
+              onTransferStart: (child: Node<TypedObject>) => {
                 const childSpace = getSpaceForObject(child.data);
                 if (space && childSpace && !childSpace.key.equals(space.key)) {
                   // Create clone of child and add to destination space.
                   const newObject = clone(child.data, {
                     retainId: true,
                     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-                    additional: [child.data.content, ...child.data.objects],
+                    additional: [
+                      child.data.content,
+                      ...(child.data.objects ?? []),
+                      ...(child.data.objects ?? []).map((object) => object.content),
+                    ],
                   });
                   space.db.add(newObject);
                   object.objects.push(newObject);
@@ -130,7 +134,7 @@ export const objectToGraphNode = ({
                   object.objects.push(child.data);
                 }
               },
-              onTransferEndChild: (child: Node<TypedObject>) => {
+              onTransferEnd: (child: Node<TypedObject>, destination: Node) => {
                 // Remove child from origin folder.
                 const index = object.objects.indexOf(child.data);
                 if (index > -1) {
@@ -138,9 +142,10 @@ export const objectToGraphNode = ({
                 }
 
                 const childSpace = getSpaceForObject(child.data);
-                if (space && childSpace && childSpace.key.equals(space.key)) {
+                const destinationSpace = getSpaceForObject(destination.data);
+                if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
                   // Mark child as deleted in origin space.
-                  space.db.remove(child.data);
+                  childSpace.db.remove(child.data);
                 }
               },
             }
@@ -257,37 +262,36 @@ export const objectToGraphNode = ({
           },
         },
       );
+    } else {
+      node.addAction({
+        id: 'delete',
+        label: ['delete object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <Trash {...props} />,
+        invoke: () =>
+          dispatch([
+            {
+              action: SpaceAction.REMOVE_FROM_FOLDER,
+              data: { folder: parent.data, object },
+            },
+            {
+              action: SpaceAction.REMOVE_OBJECT,
+              data: { object },
+            },
+          ]),
+      });
     }
 
     if (!isFolder) {
-      node.addAction(
-        {
-          id: 'rename',
-          label: ['rename object label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <PencilSimpleLine {...props} />,
-          invoke: () =>
-            dispatch({
-              action: SpaceAction.RENAME_OBJECT,
-              data: { object },
-            }),
-        },
-        {
-          id: 'delete',
-          label: ['delete object label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <Trash {...props} />,
-          invoke: () =>
-            dispatch([
-              {
-                action: SpaceAction.REMOVE_FROM_FOLDER,
-                data: { folder: parent.data, object },
-              },
-              {
-                action: SpaceAction.REMOVE_OBJECT,
-                data: { object },
-              },
-            ]),
-        },
-      );
+      node.addAction({
+        id: 'rename',
+        label: ['rename object label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <PencilSimpleLine {...props} />,
+        invoke: () =>
+          dispatch({
+            action: SpaceAction.RENAME_OBJECT,
+            data: { object },
+          }),
+      });
       return;
     }
 
