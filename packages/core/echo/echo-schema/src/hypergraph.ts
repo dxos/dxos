@@ -127,10 +127,10 @@ export class Hypergraph {
       .value.on(new Context(), onResolve, { weak: true });
   }
 
-  async registerQuerySourceProvider(provider: QuerySourceProvider) {
+  registerQuerySourceProvider(provider: QuerySourceProvider) {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(await provider.create());
+      context.addQuerySource(provider.create());
     }
   }
 
@@ -176,7 +176,7 @@ export class Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): Promise<QuerySource>;
+  create(): QuerySource;
 }
 
 class GraphQueryContext implements QueryContext {
