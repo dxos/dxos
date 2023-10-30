@@ -1,8 +1,6 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.cjs.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
