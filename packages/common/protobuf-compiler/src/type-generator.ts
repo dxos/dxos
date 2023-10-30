@@ -34,10 +34,13 @@ export const parseAndGenerateSchema = async (
 
   const root = await pb.load(protoFiles);
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
+
+  console.log(`Substitutions ${Object.keys(substitutions).length}:`)
   for (const fqn of Object.keys(substitutions)) {
     if (!root.lookup(fqn)) {
       throw new Error(`No protobuf definition found matching the substitution: ${fqn}`);
     }
+    console.log('  ', fqn, substitutions[fqn])
   }
 
   if (substitutionsModule) {

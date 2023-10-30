@@ -33,7 +33,7 @@
     "src"
   ],
   "scripts": {
-    "tsc-cjs": "tsc --module commonjs --target es2018 --outdir ./dist/cjs"
+    "tsc-cjs": "tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
