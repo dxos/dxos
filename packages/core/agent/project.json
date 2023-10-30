@@ -29,19 +29,6 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/core/agent/**/*.{ts,js}?(x)"
-        ],
-        "quiet": true
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
@@ -63,6 +50,19 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/agent/**/*.{ts,js}?(x)"
+        ],
+        "quiet": true
+      },
+      "outputs": [
+        "{options.outputFile}"
       ]
     }
   },
