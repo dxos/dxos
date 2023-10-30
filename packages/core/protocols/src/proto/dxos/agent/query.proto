@@ -1,0 +1,30 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/echo/filter.proto";
+import "dxos/keys.proto";
+import "dxos/echo/object.proto";
+
+package dxos.agent.query;
+
+
+message QueryRequest {
+  string queryId = 1;
+  filter.Filter filter = 2;
+}
+
+message QueryResult {
+  string queryId = 1;
+  string id = 2;
+  keys.PublicKey spaceKey = 3;
+  float rank = 4;
+ object.EchoObject item = 5;
+}
+
+message SearchResponse {
+  repeated QueryResult results = 1;
+}
+
