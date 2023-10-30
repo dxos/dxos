@@ -14,7 +14,7 @@ export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const doneButton = useRef<HTMLButtonElement>(null);
   // TODO(wittjosiah): Normalize title vs name.
   // TODO(burdon): Field should not be hard-code 'title' field.
-  const [name, setName] = useState(object.title ?? '');
+  const [name, setName] = useState(object.title || '');
 
   const handleDone = useCallback(() => {
     object.title = name;

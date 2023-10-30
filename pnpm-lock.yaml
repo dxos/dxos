@@ -524,6 +524,9 @@ importers:
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
+      '@braneframe/plugin-presenter':
+        specifier: workspace:*
+        version: link:../plugins/plugin-presenter
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
@@ -4166,6 +4169,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -4173,6 +4179,12 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2

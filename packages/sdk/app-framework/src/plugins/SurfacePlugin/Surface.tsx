@@ -21,7 +21,6 @@ export type SurfaceProps = {
 
   /**
    * Names allow nested surfaces to be specified in the parent context, similar to a slot.
-   *
    * Defaults to the value of `role` if not specified.
    */
   name?: string;
@@ -32,7 +31,7 @@ export type SurfaceProps = {
   data?: Record<string, unknown>;
 
   /**
-   * Configure nested surfaces.
+   * Configure nested surfaces (indexed by the surface's `name`).
    */
   surfaces?: Record<string, Pick<SurfaceProps, 'data' | 'surfaces'>>;
 
@@ -49,7 +48,6 @@ export type SurfaceProps = {
 
   /**
    * If more than one component is resolved, the direction determines how they are laid out.
-   *
    * NOTE: This is not yet implemented.
    */
   direction?: Direction;
