@@ -49,7 +49,7 @@ export const Stack = ({
   onDrop,
   onRemoveSection,
 }: StackProps) => {
-  const { ref: containerRef, width } = useResizeDetector({ refreshRate: 200 });
+  const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
