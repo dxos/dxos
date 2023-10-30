@@ -55,7 +55,7 @@
     "d3": "^7.4.4",
     "date-fns": "^2.29.3",
     "hastscript": "^7.1.0",
-    "ipfs-http-client": "~60.0.1",
+    "ipfs-http-client": "~56.0.1",
     "leaflet": "^1.9.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isequal": "^4.5.0",
