@@ -3,7 +3,6 @@
 //
 
 import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { type Client } from '@dxos/client';
@@ -20,9 +19,7 @@ export type ToggleNetworkDecoratorOptions = {
  * @param {number} clients
  * @returns {DecoratorFunction}
  */
-export const ToggleNetworkDecorator = ({
-  clients,
-}: ToggleNetworkDecoratorOptions): DecoratorFunction<any> => {
+export const ToggleNetworkDecorator = ({ clients }: ToggleNetworkDecoratorOptions): DecoratorFunction<any> => {
   const toggleNetwork = async (checked: boolean) => {
     const mode = checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
     await Promise.all(clients.map((client) => client.mesh.updateConfig(mode)));

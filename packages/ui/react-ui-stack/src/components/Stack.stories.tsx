@@ -5,13 +5,13 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { ReactElement, useRef, useState } from 'react';
+import { type StoryObj } from '@storybook/react';
+import React, { useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 
 import { Stack, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
-import { StoryObj } from '@storybook/react';
 
 faker.seed(3);
 

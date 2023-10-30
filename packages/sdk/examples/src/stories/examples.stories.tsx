@@ -5,7 +5,6 @@
 import '@dxosTheme';
 
 import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
@@ -37,13 +36,7 @@ const editor = await setupPeersInSpace({
 });
 
 // TODO(wittjosiah): Reconcile with ToggleNetworkDecorator.
-const DemoToggles = ({
-  clients,
-  spaceKey,
-}: {
-  clients: Client[];
-  spaceKey: PublicKey;
-}): DecoratorFunction<any> => {
+const DemoToggles = ({ clients, spaceKey }: { clients: Client[]; spaceKey: PublicKey }): DecoratorFunction<any> => {
   const handleToggleNetwork = async (checked: boolean) => {
     const mode = checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
     await Promise.all(clients.map((client) => client.mesh.updateConfig(mode)));

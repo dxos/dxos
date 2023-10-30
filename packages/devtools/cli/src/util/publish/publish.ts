@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
+import { type CID } from 'ipfs-http-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
@@ -14,7 +15,6 @@ import { invariant } from '@dxos/invariant';
 
 import { type Logger, type PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';
-import { type CID } from 'ipfs-http-client';
 
 const DEFAULT_OUTDIR = 'out';
 
@@ -41,7 +41,10 @@ interface PublishArgs {
   config?: string;
 }
 
-export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { log, config, module }: PublishParams): Promise<CID> => {
+export const publish = async (
+  { verbose, timeout, path, pin }: PublishArgs,
+  { log, config, module }: PublishParams,
+): Promise<CID> => {
   invariant(module.name, 'Module name is required to publish.');
   log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;

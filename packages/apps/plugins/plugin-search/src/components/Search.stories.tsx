@@ -6,7 +6,6 @@ import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 import type { DecoratorFunction } from '@storybook/csf';
-import type { ReactRenderer } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { DensityProvider } from '@dxos/react-ui';

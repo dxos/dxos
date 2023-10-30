@@ -40,8 +40,13 @@ export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
   project.resolveSourceFileDependencies();
   const typeChecker = project.getTypeChecker();
 
-  console.log('Substitution diagnostics:\n')
-  console.log(project.formatDiagnosticsWithColorAndContext([...project.getPreEmitDiagnostics(), ...project.getConfigFileParsingDiagnostics()]))
+  console.log('Substitution diagnostics:\n');
+  console.log(
+    project.formatDiagnosticsWithColorAndContext([
+      ...project.getPreEmitDiagnostics(),
+      ...project.getConfigFileParsingDiagnostics(),
+    ]),
+  );
 
   const exportSymbol = sourceFile.getDefaultExportSymbolOrThrow();
   const declarations = exportSymbol.getDeclarations();

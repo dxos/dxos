@@ -4,7 +4,6 @@
 
 import { faker } from '@faker-js/faker';
 import { type DecoratorFunction } from '@storybook/csf';
-import { type ReactRenderer } from '@storybook/react';
 import React, { type PropsWithChildren, type ReactNode, useState } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
