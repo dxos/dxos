@@ -55,7 +55,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@phosphor-icons/react": "^2.0.13",
     "@types/lodash.throttle": "^4.1.7",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "react": "^18.2.0",

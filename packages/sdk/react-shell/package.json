@@ -56,7 +56,7 @@
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.13",
     "@types/lodash.toarray": "^4.4.7",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "chromatic": "^7.5.0",

@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "latest",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",

@@ -84,7 +84,7 @@
     "@types/lodash.set": "^4.3.7",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/sharedworker": "0.0.80",
     "@types/uuid": "~8.3.3",
     "@types/wicg-file-system-access": "^2020.9.6",

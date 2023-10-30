@@ -48,7 +48,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "@types/level-js": "~4.0.1",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@types/use-subscription": "^1.0.0",
     "level-js": "^5.0.2",

@@ -27,7 +27,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.13",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^7.5.0",
     "react": "^18.2.0",

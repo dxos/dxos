@@ -46,7 +46,7 @@
     "@types/d3": "^7.1.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^7.5.0",
     "d3": "^7.4.4",

@@ -45,7 +45,7 @@
     "@types/lodash.pick": "^4.4.7",
     "@types/minimatch": "^5.1.2",
     "@types/node": "^18.11.9",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/yargs": "~16.0.1",
     "typescript": "^5.2.2"
   }

@@ -41,7 +41,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "vite": "^4.3.9",

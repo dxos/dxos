@@ -29,7 +29,7 @@
   "devDependencies": {
     "@sentry/vite-plugin": "^0.7.2",
     "@types/node": "^18.11.9",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.2.33",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
     "typescript": "^5.2.2",
