@@ -29,7 +29,7 @@ export type ClientDecoratorOptions = {
  * @returns {DecoratorFunction}
  */
 // TODO(burdon): Reconcile with ClientSpaceDecorator.
-export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> => {
+export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<any> => {
   const { clients, count = 1, className = 'flex place-content-evenly' } = options;
   if (options.registerSignalFactory ?? true) {
     registerSignalFactory();

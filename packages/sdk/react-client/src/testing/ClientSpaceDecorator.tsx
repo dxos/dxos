@@ -87,7 +87,7 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
  */
 // prettier-ignore
 export const ClientSpaceDecorator =
-  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> => {
+  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<any> => {
     return (Story, context) => (
       <PeersInSpace {...options}>
         {(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}

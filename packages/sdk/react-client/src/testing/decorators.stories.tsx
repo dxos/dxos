@@ -40,7 +40,7 @@ const ClientStory = () => {
 
 export const WithClient = {
   render: () => <ClientStory />,
-  decorators: [ClientDecorator({ count: 2 })] as any, // TODO(dmaretskyi): Non portable type TS error.
+  decorators: [ClientDecorator({ count: 2 })],
 };
 
 const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
@@ -63,10 +63,10 @@ const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 
 export const WithClientSpace = {
   render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })] as any, // TODO(dmaretskyi): Non portable type TS error.
+  decorators: [ClientDecorator({ clients })],
 };
 
 export const WithNetworkToggle = {
   render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })] as any, // TODO(dmaretskyi): Non portable type TS error.
+  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
 };

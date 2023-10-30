@@ -15,7 +15,7 @@ import { Slide } from './Slide';
 import { createSlide } from '../../testing';
 
 // TODO(burdon): Factor out.
-const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
+const FullscreenDecorator = (className?: string): DecoratorFunction<any> => {
   return (Story) => (
     <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
       <Story />

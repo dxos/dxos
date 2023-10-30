@@ -22,7 +22,7 @@ export type ToggleNetworkDecoratorOptions = {
  */
 export const ToggleNetworkDecorator = ({
   clients,
-}: ToggleNetworkDecoratorOptions): DecoratorFunction<ReactRenderer, any> => {
+}: ToggleNetworkDecoratorOptions): DecoratorFunction<any> => {
   const toggleNetwork = async (checked: boolean) => {
     const mode = checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
     await Promise.all(clients.map((client) => client.mesh.updateConfig(mode)));

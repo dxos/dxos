@@ -35,7 +35,7 @@ const Story: FC<{ objects: any[] }> = ({ objects }) => {
   );
 };
 
-const SearchContextDecorator = (): DecoratorFunction<ReactRenderer> => {
+const SearchContextDecorator = (): DecoratorFunction<any> => {
   return (Story) => (
     <SearchContextProvider>
       <Story />
