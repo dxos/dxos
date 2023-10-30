@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import {
   InvitationList,
@@ -60,6 +60,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   );
 };
 
+const headingFragment = 'p-1 mbe-1 font-system-medium';
+
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
     active,
@@ -85,13 +87,17 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
       <ScrollArea.Root classNames='grow shrink basis-28 -mli-2'>
         <ScrollArea.Viewport classNames='is-full pli-2'>
           {!!visibleInvitations?.length && (
-            <InvitationListComponent
-              className='mb-2'
-              send={send}
-              invitations={visibleInvitations ?? []}
-              onClickRemove={(invitation) => invitation.cancel()}
-              createInvitationUrl={createInvitationUrl}
-            />
+            <>
+              <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
+              <InvitationListComponent
+                className='mb-2'
+                send={send}
+                invitations={visibleInvitations ?? []}
+                onClickRemove={(invitation) => invitation.cancel()}
+                createInvitationUrl={createInvitationUrl}
+              />
+              <h3 className={mx(headingFragment, descriptionText, 'mbs-2')}>{t('space member list heading')}</h3>
+            </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
