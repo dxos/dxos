@@ -7,9 +7,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { base, type EchoObject } from './defs';
-import { type EchoObjectBase } from './echo-object-base';
+import { type AbstractEchoObject } from './object';
 import { TypedObject } from './typed-object';
+import { base, type EchoObject } from './types';
 
 export type CloneOptions = {
   /**
@@ -28,7 +28,7 @@ export type CloneOptions = {
  */
 export const clone = <T extends EchoObject>(obj: T, { retainId = true, additional = [] }: CloneOptions = {}): T => {
   if (retainId === false && additional.length > 0) {
-    throw new Error("Updating id's is not supported when cloning with nested objects.");
+    throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
   if (!obj[base]) {
@@ -45,6 +45,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
     if (!obj[base]) {
       throw new TypeError('Object is not an EchoObject.');
     }
+
     clones.push(cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()));
   }
 
@@ -67,7 +68,7 @@ export const clone = <T extends EchoObject>(obj: T, { retainId = true, additiona
   return clone;
 };
 
-const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
+const cloneInner = (obj: AbstractEchoObject, id: string): EchoObject => {
   const prototype = Object.getPrototypeOf(obj);
   const snapshot = getObjectSnapshot(obj);
 
@@ -78,7 +79,7 @@ const cloneInner = (obj: EchoObjectBase, id: string): EchoObject => {
   return clone;
 };
 
-const getObjectSnapshot = (obj: EchoObjectBase): EchoObjectProto => {
+const getObjectSnapshot = (obj: AbstractEchoObject): EchoObjectProto => {
   if (obj._item) {
     return obj._item.createSnapshot();
   } else {

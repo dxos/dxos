@@ -4,18 +4,13 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference } from '@dxos/document-model';
-import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { base, type EchoObject } from './defs';
-import { getDatabaseFromObject } from './echo-object-base';
-import { ShowDeletedOption, type Filter } from './filter';
-import { createSignal } from './signal';
-import { isTypedObject, type TypedObject } from './typed-object';
+import { type Filter } from './filter';
+import { type EchoObject, type TypedObject } from '../object';
+import { createSignal } from '../util';
 
-// TODO(burdon): Test suite.
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
 // TODO(burdon): Multi-sort option.
@@ -163,100 +158,3 @@ export class Query<T extends TypedObject = TypedObject> {
     return subscription;
   }
 }
-
-export const filterMatch = (filter: Filter, object: EchoObject) => {
-  let result = filterMatchInner(filter, object);
-
-  for (const orFilter of filter.orFilters) {
-    if (filterMatch(orFilter, object)) {
-      result = true;
-      break;
-    }
-  }
-
-  if (filter.invert) {
-    result = !result;
-  }
-
-  return result;
-};
-
-const filterMatchInner = (filter: Filter, object: EchoObject): boolean => {
-  if (isTypedObject(object)) {
-    if (object.__deleted) {
-      if (filter.showDeletedPreference === ShowDeletedOption.HIDE_DELETED) {
-        return false;
-      }
-    } else {
-      if (filter.showDeletedPreference === ShowDeletedOption.SHOW_DELETED_ONLY) {
-        return false;
-      }
-    }
-  }
-
-  if (filter.modelFilterPreference !== null) {
-    if (!filter.modelFilterPreference.includes(object[base]._modelConstructor.meta.type)) {
-      return false;
-    }
-  }
-
-  if (filter.type) {
-    if (!isTypedObject(object)) {
-      return false;
-    }
-
-    const type = object[base]._getType();
-
-    if (!type) {
-      return false;
-    }
-
-    if (!compareType(filter.type, type, getDatabaseFromObject(object)?._backend.spaceKey)) {
-      return false;
-    }
-  }
-
-  if (filter.properties) {
-    for (const key in filter.properties) {
-      invariant(key !== '@type');
-      const value = filter.properties[key];
-      if ((object as any)[key] !== value) {
-        return false;
-      }
-    }
-  }
-
-  if (filter.textMatch !== undefined) {
-    throw new Error('Text based search not implemented.');
-  }
-
-  if (filter.predicate) {
-    if (!filter.predicate(object)) {
-      return false;
-    }
-  }
-
-  for (const andFilter of filter.andFilters) {
-    if (!filterMatch(andFilter, object)) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-// Type comparison is a bit weird due to backwards compatibility requirements.
-// TODO(dmaretskyi): Deprecate `protobuf` protocol to clean this up.
-export const compareType = (expected: Reference, actual: Reference, spaceKey?: PublicKey) => {
-  const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
-
-  if (
-    actual.itemId !== expected.itemId ||
-    actual.protocol !== expected.protocol ||
-    (host !== expected.host && actual.host !== expected.host)
-  ) {
-    return false;
-  } else {
-    return true;
-  }
-};

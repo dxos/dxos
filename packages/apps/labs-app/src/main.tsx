@@ -58,6 +58,7 @@ import {
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
+  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;

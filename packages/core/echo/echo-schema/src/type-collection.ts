@@ -5,9 +5,8 @@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { base } from './defs';
+import { base, TypedObject, dangerouslyMutateImmutableObject } from './object';
 import type { SchemaProps, Schema as SchemaProto } from './proto';
-import { TypedObject, dangerouslyMutateImmutableObject } from './typed-object';
 
 type Prototype = {
   new (...args: any): any;
@@ -118,6 +117,7 @@ let deferLink = true;
 /**
  * Call after module code has loaded to avoid circular dependency errors.
  */
+// TODO(burdon): Factor out.
 export const linkDeferred = () => {
   deferLink = false;
   // eslint-disable-next-line @typescript-eslint/no-var-requires

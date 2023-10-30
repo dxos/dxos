@@ -242,7 +242,7 @@ export class MutationUtil {
   static applyMutationSet(object: DocumentModelState, message: ObjectMutationSet): DocumentModelState {
     invariant(message);
     if (message.type) {
-      object.type = Reference.fromLegacyTypeName(message.type);
+      object.type = Reference.fromLegacyTypename(message.type);
     }
     if (message.typeRef) {
       object.type = Reference.fromValue(message.typeRef);

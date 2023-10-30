@@ -7,9 +7,8 @@ import { expect } from 'chai';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { subscribe } from './defs';
+import { subscribe, Expando } from './object';
 import { TestBuilder } from './testing';
-import { Expando } from './typed-object';
 
 describe('HyperGraph', () => {
   test('cross-space query', async () => {
