@@ -58,7 +58,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@sentry/react": "^7.41.0",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",

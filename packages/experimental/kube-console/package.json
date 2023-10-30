@@ -41,7 +41,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@sentry/react": "^7.41.0",
     "@storybook/addons": "^7.0.6",
     "@storybook/api": "^7.0.6",

@@ -46,7 +46,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@radix-ui/react-scroll-area": "^1.0.3",
     "assert": "^2.0.0",
     "change-case": "^4.1.2",
@@ -115,6 +115,6 @@
     "workbox-window": "^6.5.4"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5"
+    "@phosphor-icons/react": "^2.0.13"
   }
 }

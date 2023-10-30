@@ -42,7 +42,7 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@faker-js/faker": "^8.0.2",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@types/d3": "^7.1.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
@@ -56,7 +56,7 @@
     "vite-plugin-turbosnap": "^1.0.2"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -48,7 +48,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/mousetrap": "^1.6.11",
@@ -59,7 +59,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

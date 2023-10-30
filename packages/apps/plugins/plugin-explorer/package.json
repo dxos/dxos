@@ -36,7 +36,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "@types/d3": "^7.1.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
@@ -54,7 +54,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.0.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
