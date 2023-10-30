@@ -33,7 +33,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, useLayout } from './LayoutContext';
-import { SplitView, ContextView, ContentEmpty } from './components';
+import { MainLayout, ContextView, ContentEmpty } from './components';
 import { activeToUri, uriToActive } from './helpers';
 import translations from './translations';
 import { LAYOUT_PLUGIN, type LayoutState } from './types';
@@ -168,11 +168,11 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
         const surfaceProps: SurfaceProps = layout.activeNode
           ? state.values.fullscreen
             ? {
-                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
-                surfaces: { main: { data: layout.activeNode.data } },
+                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                surfaces: { main: { data: { active: layout.activeNode.data } } },
               }
             : {
-                data: { component: `${LAYOUT_PLUGIN}/SplitView` },
+                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
@@ -188,7 +188,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
                 },
               }
           : {
-              data: { component: `${LAYOUT_PLUGIN}/SplitView` },
+              data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
               surfaces: {
                 sidebar: {
                   data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
@@ -209,9 +209,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
       surface: {
         component: ({ component }) => {
           switch (component) {
-            case `${LAYOUT_PLUGIN}/SplitView`:
+            case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
-                <SplitView fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />
+                <MainLayout fullscreen={state.values.fullscreen} showComplementarySidebar={showComplementarySidebar} />
               );
 
             case `${LAYOUT_PLUGIN}/ContentEmpty`:
@@ -230,12 +230,13 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           switch (intent.action) {
             case LayoutAction.TOGGLE_FULLSCREEN: {
               state.values.fullscreen =
-                (intent.data as LayoutAction.ToggleFullscreen).state ?? !state.values.fullscreen;
+                (intent.data as LayoutAction.ToggleFullscreen)?.state ?? !state.values.fullscreen;
               return true;
             }
 
             case LayoutAction.TOGGLE_SIDEBAR: {
-              state.values.sidebarOpen = (intent.data as LayoutAction.ToggleSidebar).state ?? !state.values.sidebarOpen;
+              state.values.sidebarOpen =
+                (intent.data as LayoutAction.ToggleSidebar)?.state ?? !state.values.sidebarOpen;
               return true;
             }
 
