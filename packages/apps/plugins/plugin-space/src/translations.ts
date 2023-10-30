@@ -30,6 +30,7 @@ export default [
         'object title placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'shared spaces label': 'Shared Spaces',
+        'hidden spaces label': 'Hidden Spaces',
         'show hidden spaces label': 'Show hidden spaces',
         'rename object label': 'Rename',
         'delete object label': 'Delete',

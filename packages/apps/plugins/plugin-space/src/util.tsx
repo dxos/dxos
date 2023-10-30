@@ -12,8 +12,8 @@ import {
   Intersect,
   Download,
   Upload,
-  ClockCounterClockwise,
   X,
+  ClockCounterClockwise,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -30,6 +30,7 @@ import { SPACE_PLUGIN, SpaceAction } from './types';
 
 export const ROOT = 'root';
 export const SHARED = 'shared-spaces';
+export const HIDDEN = 'hidden-spaces';
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
@@ -37,11 +38,9 @@ export const isSpace = (data: unknown): data is Space =>
     : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
-  // TODO(wittjosiah): Diff between loading and closed.
-  const disabled = space.state.get() !== SpaceState.READY;
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
-    : disabled
+    : space.state.get() === SpaceState.INITIALIZING
     ? ['loading space label', { ns: SPACE_PLUGIN }]
     : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
@@ -59,7 +58,6 @@ export const objectToGraphNode = ({
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const space = getSpaceForObject(object);
-  const disabled = space?.state.get() !== SpaceState.READY;
   const metadata = object.__typename ? resolve(object.__typename) : {};
   const isFolder = object instanceof Folder;
   const isSpaceFolder = isFolder && space && object.name === space.key.toHex();
@@ -68,6 +66,10 @@ export const objectToGraphNode = ({
 
   let previousObjects: TypedObject[] = [];
   return effect(() => {
+    if (isSpaceFolder && space.state.get() === SpaceState.INACTIVE) {
+      return;
+    }
+
     const [node] = parent.addNode(SPACE_PLUGIN, {
       id: object.id,
       label: isPersonalSpace
@@ -188,9 +190,6 @@ export const objectToGraphNode = ({
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, id: object.id } }),
-          properties: {
-            disabled,
-          },
         },
         {
           id: 'share-space',
@@ -198,23 +197,13 @@ export const objectToGraphNode = ({
           icon: (props) => <Users {...props} />,
           invoke: () =>
             dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
-          properties: {
-            disabled,
-          },
         },
-        space.state.get() === SpaceState.READY
-          ? {
-              id: 'close-space',
-              label: ['close space label', { ns: SPACE_PLUGIN }],
-              icon: (props) => <X {...props} />,
-              invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
-            }
-          : {
-              id: 'open-space',
-              label: ['open space label', { ns: SPACE_PLUGIN }],
-              icon: (props) => <ClockCounterClockwise {...props} />,
-              invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
-            },
+        {
+          id: 'close-space',
+          label: ['close space label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <X {...props} />,
+          invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+        },
       );
     }
 
@@ -230,27 +219,18 @@ export const objectToGraphNode = ({
               action: SpaceAction.ADD_TO_FOLDER,
               data: { folder: object, object: new Folder() },
             }),
-          properties: {
-            disabled,
-          },
         },
         {
           id: 'backup-space',
           label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Download {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.BACKUP, data: { space } }),
-          properties: {
-            disabled,
-          },
         },
         {
           id: 'restore-space',
           label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Upload {...props} />,
           invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RESTORE, data: { space } }),
-          properties: {
-            disabled,
-          },
         },
       );
     }
@@ -305,6 +285,54 @@ export const objectToGraphNode = ({
 
     return () => childSubscriptions.clear();
   });
+};
+
+export const hiddenSpacesToGraphNodes = ({
+  parent,
+  hidden,
+  spaces,
+  dispatch,
+}: {
+  parent: Node;
+  hidden?: boolean;
+  spaces: Space[];
+  dispatch: DispatchIntent;
+}) => {
+  if (!hidden) {
+    parent.removeNode(HIDDEN);
+    return;
+  }
+
+  const [hiddenSpacesNode] = parent.addNode(SPACE_PLUGIN, {
+    id: HIDDEN,
+    label: ['hidden spaces label', { ns: SPACE_PLUGIN }],
+    properties: {
+      palette: 'orange',
+    },
+  });
+
+  spaces
+    .filter((space) => space.state.get() === SpaceState.INACTIVE)
+    .forEach((space) => {
+      const [node] = hiddenSpacesNode.addNode(SPACE_PLUGIN, {
+        id: space.key.toHex(),
+        label: getSpaceDisplayName(space),
+        icon: (props) => <Planet {...props} />,
+        properties: {
+          disabled: true,
+        },
+      });
+
+      node.addAction({
+        id: 'open-space',
+        label: ['open space label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <ClockCounterClockwise {...props} />,
+        invoke: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } }),
+        properties: {
+          disposition: 'toolbar',
+        },
+      });
+    });
 };
 
 export const getActiveSpace = (graph: Graph, active?: string) => {

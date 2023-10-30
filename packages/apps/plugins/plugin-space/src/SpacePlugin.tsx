@@ -44,9 +44,9 @@ import {
   SpaceAction,
   type SpacePluginProvides,
   type SpaceSettingsProps,
-  type SpaceState,
+  type PluginState,
 } from './types';
-import { ROOT, SHARED, getActiveSpace, isSpace, objectToGraphNode } from './util';
+import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -66,7 +66,7 @@ export type SpacePluginOptions = {
 
 export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<SpaceState>({ viewers: [] });
+  const state = deepSignal<PluginState>({ viewers: [] });
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
@@ -212,7 +212,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
-      space: state as RevertDeepSignal<SpaceState>,
+      space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
       metadata: {
@@ -301,120 +301,30 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               sharedSpacesFolder.id,
               objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch, resolve }),
             );
+
+            hiddenSpacesToGraphNodes({
+              parent,
+              hidden: settings.values.showHidden,
+              spaces: client.spaces.get(),
+              dispatch,
+            });
           });
 
-          // Ensure default space is always first.
-          // spaceToGraphNode({ space: client.spaces.default, parent, dispatch, settings: settings.values });
-
-          // let spacesOrder: Folder | undefined;
-
-          // const [groupNode] = parent.addNode(SPACE_PLUGIN, {
-          //   id: 'shared-spaces',
-          //   label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-          //   properties: {
-          //     // TODO(burdon): Factor out palette constants.
-          //     palette: 'pink',
-          //     'data-testid': 'spacePlugin.allSpaces',
-          //     acceptPersistenceClass: new Set(['appState']),
-          //     childrenPersistenceClass: 'appState',
-          //     onRearrangeChildren: (nextOrder: TypedObject[]) => {
-          //       if (!spacesOrder) {
-          //         const nextObjectOrder = new Folder({
-          //           name: allSpacesId,
-          //           objects: nextOrder,
-          //         });
-          //         client.spaces.default.db.add(nextObjectOrder);
-          //       } else {
-          //         spacesOrder.objects = nextOrder;
-          //       }
-          //     },
-          //   },
-          // });
-
-          // const updateSpace = (space: Space) => {
-          //   const {
-          //     node: { id },
-          //     subscription,
-          //   } = client.spaces.default.key.equals(space.key)
-          //     ? spaceToGraphNode({ space, parent, dispatch, settings: settings.values })
-          //     : spaceToGraphNode({
-          //         space,
-          //         parent: groupNode,
-          //         dispatch,
-          //         settings: settings.values,
-          //       });
-          //   orderSubscriptions[id]?.();
-          //   orderSubscriptions[id] = subscription;
-          // };
-
-          // const { unsubscribe } = client.spaces.subscribe((spaces) => {
-          //   graphSubscriptions.clear();
-          //   spaces.forEach((space, index) => {
-          //     graphSubscriptions.add(space.properties[subscribe](() => updateSpace(space)));
-          //     updateSpace(space);
-          //   });
-          // });
-
-          // const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
-          //   const spaces = client.spaces.get();
-          //   spaces.forEach((space) => updateSpace(space));
-          // });
-
-          // groupNode.addAction(
-          //   {
-          //     id: 'create-space',
-          //     label: ['create space label', { ns: 'os' }],
-          //     icon: (props) => <Planet {...props} />,
-          //     properties: {
-          //       disposition: 'toolbar',
-          //       testId: 'spacePlugin.createSpace',
-          //     },
-          //     invoke: () =>
-          //       intentPlugin?.provides.intent.dispatch({
-          //         plugin: SPACE_PLUGIN,
-          //         action: SpaceAction.CREATE,
-          //       }),
-          //   },
-          //   {
-          //     id: 'join-space',
-          //     label: ['join space label', { ns: 'os' }],
-          //     icon: (props) => <Intersect {...props} />,
-          //     properties: {
-          //       disposition: 'toolbar',
-          //       testId: 'spacePlugin.joinSpace',
-          //     },
-          //     invoke: () =>
-          //       intentPlugin?.provides.intent.dispatch([
-          //         {
-          //           plugin: SPACE_PLUGIN,
-          //           action: SpaceAction.JOIN,
-          //         },
-          //         {
-          //           action: LayoutAction.ACTIVATE,
-          //         },
-          //       ]),
-          //   },
-          // );
-
-          // const updateSpacesOrder = ({ objects: spacesOrders }: Query<Folder>) => {
-          //   spacesOrder = spacesOrders[0];
-          //   groupNode.childrenMap = inferRecordOrder(
-          //     groupNode.childrenMap,
-          //     spacesOrder?.objects.map(({ id }) => id),
-          //   );
-          // };
-
-          // updateSpacesOrder(spacesOrderQuery);
-
-          // orderSubscriptions[allSpacesId] = spacesOrderQuery.subscribe(updateSpacesOrder);
+          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => {
+            hiddenSpacesToGraphNodes({
+              parent,
+              hidden: settings.values.showHidden,
+              spaces: client.spaces.get(),
+              dispatch,
+            });
+          });
 
           return () => {
             unsubscribe();
+            unsubscribeHidden();
             spacesSubscription.unsubscribe();
             graphSubscriptions.forEach((cb) => cb());
             graphSubscriptions.clear();
-            // unsubscribeHidden();
-            // graphSubscriptions.clear();
           };
         },
       },

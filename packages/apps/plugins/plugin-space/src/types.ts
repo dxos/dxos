@@ -41,7 +41,7 @@ export type ObjectViewer = {
 /**
  * The state of the space plugin.
  */
-export type SpaceState = {
+export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
@@ -56,5 +56,5 @@ export type SpacePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   TranslationsProvides & {
     settings: Readonly<SpaceSettingsProps>;
-    space: Readonly<SpaceState>;
+    space: Readonly<PluginState>;
   };
