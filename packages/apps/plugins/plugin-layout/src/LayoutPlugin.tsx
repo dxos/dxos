@@ -240,6 +240,13 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
               return true;
             }
 
+            case LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR: {
+              state.values.complementarySidebarOpen =
+                (intent.data as LayoutAction.ToggleComplementarySidebar).state ??
+                !state.values.complementarySidebarOpen;
+              return true;
+            }
+
             case LayoutAction.OPEN_DIALOG: {
               const { component, subject } = intent.data as LayoutAction.OpenDialog;
               state.values.dialogOpen = true;

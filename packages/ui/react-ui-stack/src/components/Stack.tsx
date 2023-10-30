@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, forwardRef, useMemo } from 'react';
+import React, { type FC, forwardRef, useCallback, useMemo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { List, useTranslation } from '@dxos/react-ui';
 import {
-  Mosaic,
   type MosaicContainerProps,
   type MosaicDataItem,
   type MosaicTileComponent,
+  Mosaic,
   Path,
   useContainer,
   useItemsWithPreview,
@@ -48,6 +49,7 @@ export const Stack = ({
   onDrop,
   onRemoveSection,
 }: StackProps) => {
+  const { ref: containerRef, width = 0 } = useResizeDetector({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
@@ -73,16 +75,21 @@ export const Stack = ({
     [id, SectionContent],
   );
 
+  // TODO(burdon): Create context provider to relay inner section width.
+  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
+
   return (
-    <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <Mosaic.DroppableTile
-        path={id}
-        className={className}
-        item={{ id, items: itemsWithPreview }}
-        Component={StackTile}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
-      />
-    </Mosaic.Container>
+    <div ref={containerRef}>
+      <Mosaic.Container {...{ id, Component, getOverlayStyle, onOver, onDrop }}>
+        <Mosaic.DroppableTile
+          path={id}
+          className={className}
+          item={{ id, items: itemsWithPreview }}
+          isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+          Component={StackTile}
+        />
+      </Mosaic.Container>
+    </div>
   );
 };
 
@@ -91,8 +98,9 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
     const { t } = useTranslation(translationKey);
     const { Component } = useContainer();
 
+    // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-1', isOver && dropRing)}>
+      <List ref={forwardedRef} classNames={mx(className, textBlockWidth, 'p-2', isOver && dropRing)}>
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>
             {items.map((item, index) => (
