@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, forwardRef, useMemo } from 'react';
+import React, { type FC, forwardRef, useCallback, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { List, useTranslation } from '@dxos/react-ui';
@@ -75,17 +75,18 @@ export const Stack = ({
     [id, SectionContent],
   );
 
-  console.log('::::', width);
+  // TODO(burdon): Create context provider to relay inner section width.
+  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
 
   return (
     <div ref={containerRef}>
-      <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
+      <Mosaic.Container {...{ id, Component, getOverlayStyle, onOver, onDrop }}>
         <Mosaic.DroppableTile
           path={id}
           className={className}
           item={{ id, items: itemsWithPreview }}
-          Component={StackTile}
           isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+          Component={StackTile}
         />
       </Mosaic.Container>
     </div>

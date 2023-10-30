@@ -10,7 +10,7 @@ import { Table as TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Expando, Filter, Schema, SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
-import { TableMain, TableSection } from './components';
+import { TableMain, TableSection, TableSlide } from './components';
 import translations from './translations';
 import { isTable, TABLE_PLUGIN, TableAction, type TablePluginProvides } from './types';
 import { objectToGraphNode } from './util';
@@ -83,11 +83,12 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'main':
               return isTable(data.active) ? <TableMain table={data.active} /> : null;
             case 'section':
-              // TODO(burdon): active vs. object?
               return isTable(data.object) ? <TableSection table={data.object} /> : null;
+            case 'slide':
+              return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
+            default:
+              return null;
           }
-
-          return null;
         },
       },
       intent: {

@@ -30,6 +30,14 @@ export const TableSection: FC<{ table: TableType }> = ({ table }) => {
   );
 };
 
+export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <div className={'flex m-8 overflow-hidden'}>
+      <TableComponent table={table} />
+    </div>
+  );
+};
+
 export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
