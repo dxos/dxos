@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.4](https://github.com/dxos/dxos/compare/v0.3.3...v0.3.4) (2023-10-30)
+
+
+### Features
+
+* Adding debug plugin to composer ([#4528](https://github.com/dxos/dxos/issues/4528)) ([4bacfa8](https://github.com/dxos/dxos/commit/4bacfa85b7047e5200426e907aded71c1d715d57))
+* Typed operator filters ([#4534](https://github.com/dxos/dxos/issues/4534)) ([a5d25f3](https://github.com/dxos/dxos/commit/a5d25f361f12903bb4ffe55ef5657b4915e1f860))
+
+
+### Bug Fixes
+
+* Explorer ([#4527](https://github.com/dxos/dxos/issues/4527)) ([933059e](https://github.com/dxos/dxos/commit/933059e400073ce4e8b1bb3afe2a884d15440036))
+* **plugin-space:** Fix nondeterministic rearrange updates ([#4526](https://github.com/dxos/dxos/issues/4526)) ([e2d9be5](https://github.com/dxos/dxos/commit/e2d9be54102bba4b54eddc5cde78948295fd20a8))
+* Presenter working with sketch ([#4540](https://github.com/dxos/dxos/issues/4540)) ([90fec5e](https://github.com/dxos/dxos/commit/90fec5e86da62f00987ef18d8b7050516ff7d45e))
+* Restructure echo-schema ([#4525](https://github.com/dxos/dxos/issues/4525)) ([17ab053](https://github.com/dxos/dxos/commit/17ab053943a9b657c26c321c975e709a2b48c1c1))
+
 ## [0.3.3](https://github.com/dxos/dxos/compare/v0.3.2...v0.3.3) (2023-10-27)
 
 
