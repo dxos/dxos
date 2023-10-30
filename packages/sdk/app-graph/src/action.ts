@@ -63,7 +63,13 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
   removeProperty(key: string): void;
 
   addAction<TActionProperties extends Record<string, any> = Record<string, any>>(
-    ...action: (Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TActionProperties>>)[]
+    ...action: ActionArg<TActionProperties>[]
   ): Action<TActionProperties>[];
   removeAction(id: string): Action;
 };
+
+export type ActionArg<TProperties extends Record<string, any> = Record<string, any>> = Pick<
+  Action,
+  'id' | 'label' | 'invoke'
+> &
+  Partial<Omit<Action<TProperties>, 'id' | 'label' | 'invoke' | 'actions'>> & { actions?: ActionArg[] };
