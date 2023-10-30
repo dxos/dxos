@@ -48,7 +48,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@types/chess.js": "^0.13.4",
     "@types/react": "^18.2.33",
-    "@types/react-dom": "^18.0.6",
+    "@types/react-dom": "^18.2.14",
     "typescript": "^5.2.2",
     "vite": "^4.3.9"
   }
