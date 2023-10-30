@@ -13,18 +13,22 @@ import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../types';
 
-export type SplitViewProps = {
+export type MainLayoutProps = {
   fullscreen?: boolean;
   showComplementarySidebar?: boolean;
 };
 
-export const SplitView = ({ fullscreen, showComplementarySidebar = true }: SplitViewProps) => {
+export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: MainLayoutProps) => {
   const context = useLayout();
   const { complementarySidebarOpen, dialogOpen, dialogContent, popoverOpen, popoverContent, popoverAnchorId } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
 
   if (fullscreen) {
-    return <Surface name='main' role='main' limit={1} />;
+    return (
+      <div className='flex absolute inset-0'>
+        <Surface role='main' limit={1} />
+      </div>
+    );
   }
 
   return (
@@ -40,8 +44,9 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
       }}
     >
       <div role='none' className='sr-only'>
-        <Surface name='documentTitle' role='document-title' limit={1} />
+        <Surface role='document-title' name='documentTitle' limit={1} />
       </div>
+
       <Main.Root
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
@@ -50,17 +55,15 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
-        {/* TODO(burdon): name vs. role? */}
-
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar classNames='overflow-hidden'>
-          <Surface name='sidebar' role='navigation' />
+          <Surface role='navigation' name='sidebar' />
         </Main.NavigationSidebar>
 
         {/* Right Complementary sidebar. */}
         {complementarySidebarOpen !== null && showComplementarySidebar && (
           <Main.ComplementarySidebar classNames='overflow-hidden'>
-            <Surface name='complementary' role='context' />
+            <Surface role='context' name='complementary' />
           </Main.ComplementarySidebar>
         )}
 
@@ -75,10 +78,13 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
                 <span className='sr-only'>{t('open navigation sidebar label')}</span>
                 <MenuIcon weight='light' className={getSize(4)} />
               </Button>
+
               <Surface role='heading' limit={2} />
               <div role='none' className='grow' />
+
               {/* TODO(burdon): Too specific? status? contentinfo? */}
               <Surface role='presence' limit={1} />
+
               {complementarySidebarOpen !== null && showComplementarySidebar && (
                 <Button
                   onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}

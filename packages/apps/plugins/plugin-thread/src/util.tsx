@@ -14,7 +14,7 @@ import { THREAD_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: ThreadType): Node<ThreadType> => {
   const [child] = parent.addNode(THREAD_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['thread title placeholder', { ns: THREAD_PLUGIN }],
+    label: object.title || ['thread title placeholder', { ns: THREAD_PLUGIN }],
     icon: (props) => <Chat {...props} />,
     data: object,
     properties: {

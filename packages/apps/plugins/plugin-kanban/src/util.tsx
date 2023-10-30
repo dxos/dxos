@@ -32,7 +32,7 @@ export const findLocation = (columns: KanbanType.Column[], id: string): Location
 export const objectToGraphNode = (parent: Node<Space>, object: KanbanType): Node<KanbanType> => {
   const [child] = parent.addNode(KANBAN_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+    label: object.title || ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
     icon: (props) => <Kanban {...props} />,
     data: object,
     properties: {

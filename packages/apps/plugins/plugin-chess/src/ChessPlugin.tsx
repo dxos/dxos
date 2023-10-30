@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
 import { CLIENT_PLUGIN, type ClientPluginProvides } from '@braneframe/plugin-client';
@@ -47,10 +47,10 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
           const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${CHESS_PLUGIN}/create`,
             label: ['create game label', { ns: CHESS_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <ShieldChevron {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

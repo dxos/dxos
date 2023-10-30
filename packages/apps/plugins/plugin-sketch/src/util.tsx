@@ -14,7 +14,7 @@ import { SKETCH_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: SketchType): Node<SketchType> => {
   const [child] = parent.addNode(SKETCH_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['object title placeholder', { ns: SKETCH_PLUGIN }],
+    label: object.title || ['object title placeholder', { ns: SKETCH_PLUGIN }],
     icon: (props) => <CompassTool {...props} />,
     data: object,
     properties: {
