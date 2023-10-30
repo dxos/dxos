@@ -7,13 +7,12 @@ import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
 import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, Text, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -31,7 +30,6 @@ import {
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
-import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
@@ -170,19 +168,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
       }
 
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (clientPlugin && clientPlugin.provides.firstRun) {
-        const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
-        );
-        if (document && intentPlugin) {
-          void intentPlugin.provides.intent.dispatch({
-            action: LayoutAction.ACTIVATE,
-            data: { id: document.id },
-          });
-        }
-      }
-
       // TODO(wittjosiah): Replace? Remove?
       // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
       // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
@@ -202,7 +187,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder) || parent.data.name === 'root') {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 

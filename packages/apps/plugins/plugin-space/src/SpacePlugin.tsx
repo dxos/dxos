@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -18,12 +17,13 @@ import {
   parseGraphPlugin,
   parseLayoutPlugin,
   LayoutAction,
+  type DispatchIntent,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { TypedObject, isTypedObject, subscribe } from '@dxos/echo-schema';
+import { TypedObject, isTypedObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
+import { type Client, PublicKey } from '@dxos/react-client';
+import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { backupSpace } from './backup';
 import {
@@ -45,26 +45,35 @@ import {
   type SpaceSettingsProps,
   type SpaceState,
 } from './types';
-import { folderToGraphNodes, isSpace } from './util';
+import { ROOT, SHARED, isSpace, objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
 
-const ROOT = 'root';
+export type SpacePluginOptions = {
+  onFirstRun?: (params: {
+    client: Client;
+    defaultSpace: Space;
+    rootFolder: Folder;
+    personalSpaceFolder: Folder;
+    sharedSpacesFolder: Folder;
+    dispatch: DispatchIntent;
+  }) => void;
+};
 
-export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
   const state = deepSignal<SpaceState>({
     active: undefined,
     viewers: [],
   }) as RevertDeepSignal<SpaceState>;
-  const graphSubscriptions = new EventSubscriptions();
+  // const graphSubscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
-  const orderSubscriptions: Record<string, UnsubscribeCallback> = {};
+  const orderSubscriptions = new Map<string, UnsubscribeCallback>();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
@@ -78,18 +87,29 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-      if (!clientPlugin || !layoutPlugin) {
+      if (!clientPlugin || !layoutPlugin || !intentPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
       // TODO(wittjosiah): Remove once space can be computed directly from an object.
       const layout = layoutPlugin.provides.layout as LayoutState;
+      const dispatch = intentPlugin.provides.intent.dispatch;
 
-      // Create root folder.
+      // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
-        const rootFolder = new Folder({ name: ROOT });
+        const personalSpaceFolder = new Folder({ name: client.spaces.default.key.toHex() });
+        const sharedSpacesFolder = new Folder({ name: SHARED });
+        const rootFolder = new Folder({ name: ROOT, objects: [personalSpaceFolder, sharedSpacesFolder] });
         client.spaces.default.db.add(rootFolder);
+        onFirstRun?.({
+          client,
+          defaultSpace: client.spaces.default,
+          rootFolder,
+          personalSpaceFolder,
+          sharedSpacesFolder,
+          dispatch,
+        });
       }
 
       // Check if opening app from invitation code.
@@ -109,7 +129,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             history.replaceState({}, document.title, url.href);
           }
 
-          await intentPlugin?.provides.intent.dispatch({
+          await dispatch({
             action: LayoutAction.ACTIVATE,
             data: { id: space.key.toHex() },
           });
@@ -213,7 +233,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     },
     unload: async () => {
       settings.close();
-      graphSubscriptions.clear();
+      // graphSubscriptions.clear();
       spaceSubscriptions.clear();
       subscriptions.clear();
       window.removeEventListener('keydown', handleKeyDown);
@@ -278,75 +298,25 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             return;
           }
 
-          let rootFolder: Folder;
-          const update = (folder: Folder) => {
-            graphSubscriptions.clear();
-
-            rootFolder = folder;
-            const [rootNode] = parent.addNode(SPACE_PLUGIN, {
-              id: folder.id,
-              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-              data: folder,
-              properties: {
-                // TODO(burdon): Factor out palette constants.
-                palette: 'pink',
-                'data-testid': 'spacePlugin.sharedSpaces',
-                acceptPersistenceClass: new Set(['folder']),
-                childrenPersistenceClass: 'folder',
-                onRearrangeChildren: (nextOrder: TypedObject[]) => {
-                  folder.objects = nextOrder;
-                },
-              },
+          const update = (rootFolder?: Folder) => {
+            rootFolder?.objects.forEach((object) => {
+              orderSubscriptions.get(object.id)?.();
+              orderSubscriptions.set(object.id, objectToGraphNode({ object, parent, dispatch }));
             });
-
-            rootNode.addAction(
-              {
-                id: 'create-space',
-                label: ['create space label', { ns: 'os' }],
-                icon: (props) => <Planet {...props} />,
-                properties: {
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.createSpace',
-                },
-                invoke: () =>
-                  intentPlugin?.provides.intent.dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.CREATE,
-                  }),
-              },
-              {
-                id: 'join-space',
-                label: ['join space label', { ns: 'os' }],
-                icon: (props) => <Intersect {...props} />,
-                properties: {
-                  disposition: 'toolbar',
-                  testId: 'spacePlugin.joinSpace',
-                },
-                invoke: () =>
-                  intentPlugin?.provides.intent.dispatch([
-                    {
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    },
-                    {
-                      action: LayoutAction.ACTIVATE,
-                    },
-                  ]),
-              },
-            );
-
-            graphSubscriptions.add(folderToGraphNodes({ parent: rootNode, representsSpace: true, dispatch }));
           };
-
           const rootQuery = client.spaces.default.db.query(Folder.filter({ name: ROOT }));
-          rootQuery.objects[0] && update(rootQuery.objects[0]);
-          const unsubscribe = rootQuery.subscribe(({ objects }) => objects[0] && update(objects[0]));
+          update(rootQuery.objects[0]);
+          const unsubscribe = rootQuery.subscribe(({ objects }) => update(objects[0]));
 
-          const spacesSubscription = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              graphSubscriptions.add(space.properties[subscribe](() => update(rootFolder)));
-              update(rootFolder);
-            });
+          const spacesSubscription = client.spaces.subscribe(() => {
+            const {
+              objects: [sharedSpacesFolder],
+            } = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
+            orderSubscriptions.get(sharedSpacesFolder.id)?.();
+            orderSubscriptions.set(
+              sharedSpacesFolder.id,
+              objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch }),
+            );
           });
 
           // Ensure default space is always first.
@@ -457,9 +427,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           return () => {
             unsubscribe();
             spacesSubscription.unsubscribe();
-            Object.values(orderSubscriptions).forEach((cb) => cb());
+            orderSubscriptions.forEach((cb) => cb());
+            orderSubscriptions.clear();
             // unsubscribeHidden();
-            graphSubscriptions.clear();
+            // graphSubscriptions.clear();
           };
         },
       },
@@ -474,12 +445,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               }
               const defaultSpace = client.spaces.default;
               const {
-                objects: [rootFolder],
-              } = defaultSpace.db.query(Folder.filter({ name: ROOT }));
+                objects: [sharedSpacesFolder],
+              } = defaultSpace.db.query(Folder.filter({ name: SHARED }));
               const space = await client.spaces.create(intent.data);
               const folder = new Folder({ name: space.key.toHex() });
               space.db.add(folder);
-              rootFolder.objects.push(folder);
+              sharedSpacesFolder.objects.push(folder);
               return { space, id: space.key.toHex() };
             }
 
@@ -491,38 +462,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               return space && { space, id: space.key.toHex() };
             }
 
-            case SpaceAction.ADD_TO_FOLDER: {
-              const folder = intent.data.folder;
-              const object = intent.data.object;
-              if (folder instanceof Folder && object instanceof TypedObject) {
-                folder.objects.push(intent.data.object);
-                return true;
-              }
-              break;
-            }
-
-            case SpaceAction.REMOVE_FROM_FOLDER: {
-              const folder = intent.data.folder;
-              const object = intent.data.object;
-              if (folder instanceof Folder && object instanceof TypedObject) {
-                const index = folder.objects.indexOf(object);
-                folder.objects.splice(index, 1);
-                return true;
-              }
-              break;
-            }
-          }
-
-          // TODO(thure): Why is `PublicKey.safeFrom` returning `undefined` sometimes?
-          const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
-          if (!spaceKey) {
-            return;
-          }
-
-          const space = clientPlugin?.provides.client.spaces.get(spaceKey);
-          switch (intent.action) {
             case SpaceAction.SHARE: {
-              if (clientPlugin) {
+              const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
+              if (clientPlugin && spaceKey) {
                 const { members } = await clientPlugin.provides.client.shell.shareSpace({ spaceKey });
                 return members && { members };
               }
@@ -534,25 +476,25 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${spaceKey.toHex()}`,
+                  anchorId: `dxos.org/ui/navtree/${intent.data.id}`,
                   component: 'dxos.org/plugin/space/RenameSpacePopover',
-                  subject: space,
+                  subject: intent.data.space,
                 },
               });
             }
-
             case SpaceAction.OPEN: {
-              void space?.internal.open();
+              void intent.data.space.internal.open();
               break;
             }
 
             case SpaceAction.CLOSE: {
-              void space?.internal.close();
+              void intent.data.space.internal.close();
               break;
             }
 
             case SpaceAction.BACKUP: {
-              if (space) {
+              const space = intent.data.space;
+              if (space instanceof SpaceProxy) {
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
                 const backupBlob = await backupSpace(space, 'untitled document');
                 const spaceName = space.properties.name || 'untitled space';
@@ -574,12 +516,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 action: LayoutAction.OPEN_DIALOG,
                 data: {
                   component: 'dxos.org/plugin/space/RestoreSpaceDialog',
-                  subject: space,
+                  subject: intent.data.space,
                 },
               });
             }
 
             case SpaceAction.ADD_OBJECT: {
+              const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
+              const space = spaceKey && clientPlugin?.provides.client.spaces.get(spaceKey);
               if (space && intent.data.object) {
                 return space.db.add(intent.data.object);
               }
@@ -587,10 +531,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.REMOVE_OBJECT: {
-              const object =
-                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
-              if (space && object) {
-                space.db.remove(object);
+              const space = getSpaceForObject(intent.data.object);
+              if (space) {
+                space.db.remove(intent.data.object);
                 return true;
               }
               break;
@@ -598,16 +541,35 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.RENAME_OBJECT: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              const subject =
-                typeof intent.data.objectId === 'string' ? space?.db.getObjectById(intent.data.objectId) : null;
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.OPEN_POPOVER,
                 data: {
-                  anchorId: `dxos.org/ui/navtree/${intent.data.objectId}`,
+                  anchorId: `dxos.org/ui/navtree/${intent.data.object.id}`,
                   component: 'dxos.org/plugin/space/RenameObjectPopover',
-                  subject,
+                  subject: intent.data.object,
                 },
               });
+            }
+
+            case SpaceAction.ADD_TO_FOLDER: {
+              const folder = intent.data.folder;
+              const object = intent.data.object;
+              if (folder instanceof Folder && object instanceof TypedObject) {
+                folder.objects.push(intent.data.object);
+                return true;
+              }
+              break;
+            }
+
+            case SpaceAction.REMOVE_FROM_FOLDER: {
+              const folder = intent.data.folder;
+              const object = intent.data.object;
+              if (folder instanceof Folder && object instanceof TypedObject) {
+                const index = folder.objects.indexOf(object);
+                folder.objects.splice(index, 1);
+                return true;
+              }
+              break;
             }
           }
         },
