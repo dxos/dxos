@@ -10,11 +10,13 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": "./dist/lib/node/index.cjs",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./proto": {
       "browser": "./dist/lib/browser/proto/index.mjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+      "node": "./dist/lib/node/proto/index.cjs",
+      "types": "./dist/types/src/proto/index.d.ts"
     }
   },
   "types": "./dist/types/src/index.d.ts",
