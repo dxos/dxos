@@ -21,7 +21,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
-    "ipfs-http-client": "~56.0.1",
+    "ipfs-http-client": "~60.0.1",
     "lodash.get": "^4.4.2",
     "node-fetch": "^2.6.0",
     "react-drag-drop-files": "^2.3.8",
