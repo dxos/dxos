@@ -17,14 +17,14 @@ message QueryRequest {
 }
 
 message QueryResult {
-  string queryId = 1;
-  string id = 2;
-  keys.PublicKey spaceKey = 3;
-  float rank = 4;
- object.EchoObject item = 5;
+  string id = 1;
+  keys.PublicKey spaceKey = 2;
+  float rank = 3;
+ object.EchoObject item = 4;
 }
 
 message QueryResponse {
-  repeated QueryResult results = 1;
+  string queryId = 1;
+  repeated QueryResult results = 2;
 }
 
