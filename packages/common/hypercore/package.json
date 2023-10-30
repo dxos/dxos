@@ -45,10 +45,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "pnpm": {
-    "overrides": {
-      "noise-protocol": "3.0.1"
-    }
-  }
+
 }
