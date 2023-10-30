@@ -97,7 +97,7 @@ export const objectToGraphNode = ({
           : isFolder
           ? 'spacePlugin.folder'
           : undefined,
-        persistenceClass: 'folder',
+        persistenceClass: isSpaceFolder ? undefined : 'folder',
         ...(isFolder
           ? {
               acceptPersistenceClass: isSharedSpacesFolder ? undefined : new Set(['folder']),
