@@ -65,7 +65,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     } else {
       // TODO(burdon): Fail if not expando?
       // TODO(burdon): Have to dive into object if SearchResult (need adapter?)
-      const object: TypedObject = (active.item as any).object ?? active.item;
+      const object: TypedObject = (active.item as any).node?.data ?? (active.item as any).object ?? active.item;
       const item = new GridType.Item({ object });
 
       grid.items.push(item);
