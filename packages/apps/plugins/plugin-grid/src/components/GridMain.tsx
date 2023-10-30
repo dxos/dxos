@@ -6,15 +6,21 @@ import React, { type FC, useEffect } from 'react';
 
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Expando } from '@dxos/client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
-import { type MosaicTileAction, Grid, type MosaicDropEvent, type Position } from '@dxos/react-ui-mosaic';
+import {
+  type MosaicTileAction,
+  Grid,
+  type MosaicDropEvent,
+  type Position,
+  type MosaicOperation,
+} from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { colors, GridCard } from './GridCard';
 
-export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
+export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const { plugins } = usePlugins();
 
   // TODO(burdon): Get from properties?
@@ -51,6 +57,8 @@ export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
     }
   };
 
+  const handleOver = (): MosaicOperation => 'copy';
+
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
     if (!grid.items.includes(active.item as any)) {
       grid.items.push(active.item as any);
@@ -75,6 +83,7 @@ export const GridMain: FC<{ data: GridType }> = ({ data: grid }) => {
         onAction={handleAction}
         onCreate={handleCreate}
         onDrop={handleDrop}
+        onOver={handleOver}
         Component={GridCard}
       />
     </Main.Content>

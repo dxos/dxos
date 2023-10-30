@@ -15,10 +15,10 @@ const reservedFieldNames = ['id', '__typename', '__deleted', 'meta'];
 // Types that are injected from `importNamespace`.
 // prettier-ignore
 const injectedTypes = [
-  '.dxos.schema.Text',
   '.dxos.schema.Expando',
+  '.dxos.schema.Schema',
+  '.dxos.schema.Text', // TODO(burdon): Matches TextObject.
   '.dxos.schema.TypedObject',
-  '.dxos.schema.Schema'
 ];
 
 /**
@@ -163,6 +163,7 @@ export const createObjectClass = (type: pb.Type) => {
   if (reservedTypeNames.includes(type.name)) {
     throw new Error(`Reserved type name: ${type.name}`);
   }
+
   for (const field of type.fieldsArray) {
     if (reservedFieldNames.includes(field.name)) {
       throw new Error(`Reserved field name: ${field.name}`);
@@ -181,8 +182,8 @@ export const createObjectClass = (type: pb.Type) => {
     export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
       declare static readonly schema: ${importNamespace}.Schema;
 
-      static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
-        return { ...opts, '@type': '${fullName}' } as any;
+      static filter(filter?: Partial<${name}Props> | ${importNamespace}.OperatorFilter<${name}>): ${importNamespace}.Filter<${name}> {
+        return ${importNamespace}.Filter.typename('${fullName}', filter);
       }
   
       constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOptions) {

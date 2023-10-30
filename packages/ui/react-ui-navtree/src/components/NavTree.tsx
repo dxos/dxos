@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Tree } from '@dxos/react-ui';
-import { useContainer, useSortedItems, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
+import { useContainer, Mosaic, type MosaicContainerProps } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NavTreeProvider, type NavTreeProviderProps } from './NavTreeContext';
@@ -14,11 +14,10 @@ import type { TreeNode } from '../types';
 
 const NavTreeImpl = ({ node }: { node: TreeNode }) => {
   const { id, Component } = useContainer();
-  const sortedNodes = useSortedItems(node.children);
 
   return (
-    <Mosaic.SortableContext id={id} items={sortedNodes} direction='vertical'>
-      {sortedNodes.map((node, index) => (
+    <Mosaic.SortableContext id={id} items={node.children} direction='vertical'>
+      {node.children.map((node, index) => (
         <Mosaic.SortableTile
           key={node.id}
           item={{ id: node.id, node, level: 0 }}
@@ -32,7 +31,7 @@ const NavTreeImpl = ({ node }: { node: TreeNode }) => {
 };
 
 const defaultIsOver: NavTreeProviderProps['isOver'] = ({ path, operation, overItem }) =>
-  overItem?.path === path && (operation === 'adopt' || operation === 'copy');
+  overItem?.path === path && (operation === 'transfer' || operation === 'copy');
 
 export type NavTreeProps = {
   node: TreeNode;
@@ -50,7 +49,6 @@ export const NavTree = ({
   isOver = defaultIsOver,
   onOver,
   onDrop,
-  compare,
   className,
 }: NavTreeProps) => {
   return (
@@ -60,7 +58,6 @@ export const NavTree = ({
         Component: NavTreeItem,
         onOver,
         onDrop,
-        compare,
       }}
     >
       <Tree.Root classNames={mx('flex flex-col', className)}>

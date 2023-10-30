@@ -16,6 +16,7 @@ import { type Runner, type RunnerStartOptions } from './runner';
 import { type ProcessInfo } from '../../daemon';
 
 const PLIST_TEMPLATE_FILE = 'templates/org.dxos.agent.plist.template';
+const AGENT_PLIST_PREFIX = 'org.dxos.agent';
 
 const execPromise = util.promisify(exec);
 
@@ -117,6 +118,6 @@ export class LaunchctlRunner implements Runner {
   }
 
   private _getServiceName(profile: string): string {
-    return `org.dxos.agent.${profile}`;
+    return `${AGENT_PLIST_PREFIX}.${profile}`;
   }
 }

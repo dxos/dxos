@@ -7,10 +7,15 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Stack as StackType } from '@braneframe/types';
+import {
+  resolvePlugin,
+  type Plugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { SpaceProxy } from '@dxos/client/echo';
-import { type Plugin, type PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain } from './components';
 import translations from './translations';
@@ -23,13 +28,19 @@ import { isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const stackState: StackState = deepSignal({ creators: [] });
-  const adapter = new GraphNodeAdapter({ filter: StackType.filter(), adapter: stackToGraphNode });
+  let adapter: GraphNodeAdapter<StackType> | undefined;
 
   return {
     meta: {
       id: STACK_PLUGIN,
     },
     ready: async (plugins) => {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({ dispatch, filter: StackType.filter(), adapter: stackToGraphNode });
+      }
+
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {
           continue;
@@ -41,55 +52,59 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       }
     },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const space = parent.data;
 
           parent.addAction({
             id: `${STACK_PLUGIN}/create`,
             label: ['create stack label', { ns: STACK_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: STACK_PLUGIN,
-                action: StackAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: STACK_PLUGIN,
+                  action: StackAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'stackPlugin.createObject',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!isStack(data)) {
-          return null;
-        }
-
-        switch (role) {
-          case 'main':
-            return StackMain;
-
-          default:
+      surface: {
+        component: (data, role) => {
+          if (!isStack(data.active)) {
             return null;
-        }
+          }
+
+          switch (role) {
+            case 'main':
+              return <StackMain stack={data.active} />;
+
+            default:
+              return null;
+          }
+        },
       },
       intent: {
         resolver: (intent) => {

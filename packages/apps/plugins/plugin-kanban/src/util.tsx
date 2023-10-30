@@ -3,7 +3,6 @@
 //
 
 import { Kanban } from '@phosphor-icons/react';
-import get from 'lodash.get';
 import React from 'react';
 
 import type { Node } from '@braneframe/plugin-graph';
@@ -30,14 +29,13 @@ export const findLocation = (columns: KanbanType.Column[], id: string): Location
   }
 };
 
-export const objectToGraphNode = (parent: Node<Space>, object: KanbanType, index: string): Node<KanbanType> => {
+export const objectToGraphNode = (parent: Node<Space>, object: KanbanType): Node<KanbanType> => {
   const [child] = parent.addNode(KANBAN_PLUGIN, {
     id: object.id,
     label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
     icon: (props) => <Kanban {...props} />,
     data: object,
     properties: {
-      index: get(object, 'meta.index', index),
       persistenceClass: 'spaceObject', // TODO(burdon): ???
     },
   });

@@ -4,17 +4,20 @@
 
 import React, { useEffect, useState } from 'react';
 
+import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { type TypeCollection } from '@dxos/client/echo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type PluginDefinition } from '@dxos/react-surface';
 
 import { type ClientPluginProvides, CLIENT_PLUGIN } from './types';
 
 export type ClientPluginOptions = ClientOptions & { debugIdentity?: boolean; types?: TypeCollection };
+
+export const parseClientPlugin = (plugin?: Plugin) =>
+  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
 export const ClientPlugin = (
   options: ClientPluginOptions = { config: new Config(Envs(), Local(), Defaults()) },
@@ -77,8 +80,11 @@ export const ClientPlugin = (
         }
       }
 
+      // TODO(burdon): Timeout.
       if (client.halo.identity.get()) {
+        console.log('### waiting...');
         await client.spaces.isReady.wait();
+        console.log('### ok');
       }
 
       return {
@@ -86,14 +92,12 @@ export const ClientPlugin = (
         firstRun,
         context: ({ children }) => {
           const [status, setStatus] = useState<SystemStatus | null>(null);
-
           useEffect(() => {
             if (!client) {
               return;
             }
 
             const subscription = client.status.subscribe((status) => setStatus(status));
-
             return () => subscription.unsubscribe();
           }, [client, setStatus]);
 

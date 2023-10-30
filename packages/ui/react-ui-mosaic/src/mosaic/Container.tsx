@@ -22,8 +22,16 @@ export type MosaicTileOverlayProps = {
   debug?: boolean;
 };
 
-// TODO(wittjosiah): Add delete.
-export type MosaicOperation = 'adopt' | 'copy' | 'rearrange' | 'reject';
+/**
+ * Possible operations when dropping a tile.
+ *
+ * * `transfer` - Remove the tile from it's current path and move to a new path.
+ * * `copy` - Add a clone of the tile at a new path.
+ * * `rearrange` - Change the order of the tile within it's current path.
+ * * `reject` - The tile is not allowed where it was dropped.
+ */
+// TODO(wittjosiah): Add 'delete'. Consider adding 'swap'.
+export type MosaicOperation = 'transfer' | 'copy' | 'rearrange' | 'reject';
 
 export type MosaicMoveEvent<TPosition = unknown> = {
   active: MosaicDraggedItem<TPosition>;
@@ -33,8 +41,6 @@ export type MosaicMoveEvent<TPosition = unknown> = {
 export type MosaicDropEvent<TPosition = unknown> = MosaicMoveEvent<TPosition> & {
   operation: MosaicOperation;
 };
-
-export type MosaicCompareDataItem = Parameters<typeof Array.prototype.sort>[0];
 
 export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, TPosition = unknown> = Pick<
   HTMLAttributes<HTMLDivElement>,
@@ -84,11 +90,6 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
      * Called when a tile is dropped on the container.
      */
     onDrop?: (event: MosaicDropEvent<TPosition>) => void;
-
-    /**
-     * Used to sort items within the container.
-     */
-    compare?: MosaicCompareDataItem;
   }>;
 
 export type MosaicContainerContextType = Omit<MosaicContainerProps<any>, 'children'>;
@@ -109,7 +110,6 @@ export const MosaicContainer = ({
   getOverlayStyle,
   onOver,
   onDrop,
-  compare,
 }: MosaicContainerProps) => {
   const mosaic = useMosaic();
   const container = {
@@ -122,7 +122,6 @@ export const MosaicContainer = ({
     getOverlayStyle,
     onOver,
     onDrop,
-    compare,
   };
 
   useEffect(() => {

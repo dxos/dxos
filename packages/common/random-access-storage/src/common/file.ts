@@ -9,6 +9,8 @@ import { log } from '@dxos/log';
 
 import { type StorageType } from './storage';
 
+const MAX_STORAGE_OPERATION_TIME = 50;
+
 /**
  * Random access file wrapper.
  * https://github.com/random-access-storage/random-access-storage
@@ -56,7 +58,7 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
         const res = await fn(...args);
 
         const elapsed = performance.now() - before;
-        if (elapsed > 10) {
+        if (elapsed > MAX_STORAGE_OPERATION_TIME) {
           log.warn('Slow storage operation', { type, operation: field, elapsed });
         }
 

@@ -7,15 +7,13 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { type Graph as GraphType, GraphBuilder } from '@braneframe/plugin-graph';
-import { buildGraph } from '@braneframe/plugin-graph/testing';
+import { type Graph as GraphType, GraphBuilder } from '@dxos/app-graph';
+import { buildGraph } from '@dxos/app-graph/testing';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
 import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { NavTree } from './NavTree';
-import type { TreeNode } from '../types';
-import { nextRearrangeIndex } from '../util';
 
 faker.seed(3);
 const fake = faker.helpers.fake;
@@ -45,18 +43,6 @@ const createGraph = () => {
   return buildGraph(new GraphBuilder().build(), 'tree', content);
 };
 
-const graphNodeCompare = (a: TreeNode, b: TreeNode) => {
-  if (a.properties.index && b.properties.index) {
-    if (a.properties.index < b.properties.index) {
-      return -1;
-    } else if (a.properties.index > b.properties.index) {
-      return 1;
-    }
-    return 0;
-  }
-  return 0;
-};
-
 const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string; graph?: GraphType }) => {
   // TODO(wittjosiah): This graph does not handle order currently.
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
@@ -76,16 +62,15 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
         operation === 'rearrange'
       ) {
         // This is a rearrange operation
-        const nextIndex = nextRearrangeIndex(activeParent.children.sort(graphNodeCompare), activeNode.id, overNode.id);
-        activeNode.properties.index = nextIndex ?? 'a0';
-      } else if (activeNode && activeParent && overParent && operation === 'adopt') {
+        console.warn('[react-ui-navtree]', 'Graph', 'rearrange', 'needs implementation');
+      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
         activeParent.removeNode(active.item.id);
         overNode.addNode('tree', { ...activeNode });
       }
     }
   };
 
-  return <NavTree node={graph.root} onDrop={handleDrop} compare={graphNodeCompare} />;
+  return <NavTree node={graph.root} onDrop={handleDrop} />;
 };
 
 export default {

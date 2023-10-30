@@ -18,8 +18,8 @@ export type TaskProps = {
 export class Task extends dxos_echo_schema.TypedObject<TaskProps> {
   declare static readonly schema: dxos_echo_schema.Schema;
 
-  static filter(opts?: Partial<TaskProps>): dxos_echo_schema.TypeFilter<Task> {
-    return { ...opts, '@type': 'dxos.app.tasks.Task' } as any;
+  static filter(opts?: Partial<TaskProps>): dxos_echo_schema.Filter<Task> {
+    return dxos_echo_schema.Filter.typename('dxos.app.tasks.Task', opts);
   }
 
   constructor(

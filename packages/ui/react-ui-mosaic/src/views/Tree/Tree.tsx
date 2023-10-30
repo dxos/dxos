@@ -15,8 +15,7 @@ import {
   useContainer,
   useMosaic,
   Path,
-  useSortedItems,
-  type MosaicCompareDataItem,
+  useItemsWithOrigin,
 } from '../../mosaic';
 
 // TODO(burdon): Tree data model that provides a pure abstraction of the plugin Graph.
@@ -27,7 +26,6 @@ import {
 export type TreeProps<TData extends MosaicDataItem = TreeData> = MosaicContainerProps<TData, number> & {
   items?: TData[];
   debug?: boolean;
-  compare?: MosaicCompareDataItem;
 };
 
 export type TreeData = {
@@ -37,7 +35,7 @@ export type TreeData = {
 };
 
 // TODO(burdon): Make generic (and forwardRef).
-export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug, compare }: TreeProps) => {
+export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], debug }: TreeProps) => {
   return (
     <Mosaic.Container
       {...{
@@ -46,7 +44,6 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
         Component,
         onOver,
         onDrop,
-        compare,
       }}
     >
       <TreeRoot items={items} />
@@ -56,12 +53,12 @@ export const Tree = ({ id, Component = TreeItem, onOver, onDrop, items = [], deb
 
 const TreeRoot = ({ items }: { items: TreeData[] }) => {
   const { id, Component } = useContainer();
-  const sortedItems = useSortedItems(items);
+  const itemsWithOrigin = useItemsWithOrigin(id, items);
 
   return (
     <TreeComponent.Root classNames='flex flex-col'>
-      <Mosaic.SortableContext id={id} items={sortedItems} direction='vertical'>
-        {sortedItems.map((item, index) => (
+      <Mosaic.SortableContext id={id} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((item, index) => (
           <TreeItemComponent.Root key={item.id} collapsible defaultOpen>
             <Mosaic.SortableTile item={item} path={id} position={index} Component={Component!} />
           </TreeItemComponent.Root>
@@ -102,12 +99,12 @@ const TreeItem: MosaicTileComponent<TreeData> = forwardRef(
 const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
   const { operation, overItem } = useMosaic();
   const { Component } = useContainer();
-  const sortedItems = useSortedItems(items);
+  const itemsWithOrigin = useItemsWithOrigin(path, items);
 
   return (
     <TreeItemComponent.Body className='pis-4'>
-      <Mosaic.SortableContext id={path} items={sortedItems} direction='vertical'>
-        {sortedItems.map((child, index) => (
+      <Mosaic.SortableContext id={path} items={itemsWithOrigin} direction='vertical'>
+        {itemsWithOrigin.map((child, index) => (
           <TreeComponent.Branch key={child.id}>
             <TreeItemComponent.Root collapsible defaultOpen>
               <Mosaic.SortableTile
@@ -116,7 +113,7 @@ const TreeBranch = ({ path, items }: { path: string; items: TreeData[] }) => {
                 position={index}
                 Component={Component!}
                 isOver={
-                  overItem?.path === Path.create(path, child.id) && (operation === 'adopt' || operation === 'copy')
+                  overItem?.path === Path.create(path, child.id) && (operation === 'transfer' || operation === 'copy')
                 }
               />
             </TreeItemComponent.Root>

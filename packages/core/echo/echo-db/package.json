@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,7 @@
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
+    "./testing.js": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -40,15 +40,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "beast": {
-    "classDiagrams": [
-      {
-        "root": "src/packlets/space/space.ts"
-      },
-      {
-        "root": "src/packlets/database/database-backend.ts"
-      }
-    ]
   }
 }

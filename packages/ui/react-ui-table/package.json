@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,8 +38,8 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "chromatic": "^6.17.0",
-    "deepsignal": "^1.3.6",
+    "chromatic": "^7.5.0",
+    "deepsignal": "1.4.0-shallow.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vite": "^4.3.9",

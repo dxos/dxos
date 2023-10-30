@@ -1,0 +1,14 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.agent.epoch;
+
+message EpochMonitorConfig {
+  optional int32 min_messages_between_epochs = 1;
+  optional int32 min_time_between_epochs = 2;
+  optional int32 min_inactivity_before_epoch = 3;
+  optional int32 max_inactivity_delay = 4;
+}

@@ -6,7 +6,7 @@ import { faker } from '@faker-js/faker';
 import { create, insert, search } from '@orama/orama';
 import { expect } from 'chai';
 
-import { range, TestObjectGenerator } from '@dxos/echo-generator';
+import { createTestObjectGenerator, range } from '@dxos/echo-generator';
 import { describe, test } from '@dxos/test';
 
 faker.seed(1);
@@ -22,14 +22,14 @@ faker.seed(1);
 describe('Orama', () => {
   test('basic', async () => {
     // TODO(burdon): Create Client/spaces.
-    const generator = new TestObjectGenerator();
+    const generator = createTestObjectGenerator();
 
     // https://www.npmjs.com/package/@orama/orama
     const db = await create({
       schema: {
         // TODO(burdon): Index TypedObject using schema; separate db for each schema?
         title: 'string',
-        embedding: 'vector[1536]', // Vector size must be expressed during schema initialization
+        embedding: 'vector[1536]', // Vector size must be expressed during schema initialization.
         meta: {
           rating: 'number',
         },
@@ -44,7 +44,6 @@ describe('Orama', () => {
     {
       const result = await search(db, { term: 'shoes' });
       expect(result.hits).to.have.length;
-      // console.log(result);
     }
   });
 });

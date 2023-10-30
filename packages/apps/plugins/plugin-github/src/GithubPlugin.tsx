@@ -3,23 +3,23 @@
 //
 
 import { GithubLogo } from '@phosphor-icons/react';
-import get from 'lodash.get';
-import React from 'react';
+import React, { type RefObject } from 'react';
 
-import { type Node, type GraphProvides } from '@braneframe/plugin-graph';
+import { type Node } from '@braneframe/plugin-graph';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import {
-  type SpacePluginProvides,
-  GraphNodeAdapter,
-  getIndices,
-  getAppStateIndex,
-  setAppStateIndex,
-} from '@braneframe/plugin-space';
-import { type TranslationsProvides } from '@braneframe/plugin-theme';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { type Document } from '@braneframe/types';
+import {
+  type GraphBuilderProvides,
+  type PluginDefinition,
+  resolvePlugin,
+  parseIntentPlugin,
+  type TranslationsProvides,
+  type SurfaceProvides,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy } from '@dxos/react-client/echo';
-import { type PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { type Space, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {
   EmbeddedMain,
@@ -31,19 +31,21 @@ import {
   PatInput,
   UrlDialog,
 } from './components';
-import { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './props';
+import { type ExportViewState, GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID, type GhIdentifier } from './props';
 import translations from './translations';
 
 export type GithubSettingsProps = {
   pat: string;
 };
 
-export type GithubPluginProvides = TranslationsProvides &
-  MarkdownProvides &
-  GraphProvides & {
+export type GithubPluginProvides = SurfaceProvides &
+  GraphBuilderProvides &
+  TranslationsProvides &
+  MarkdownProvides & {
     settings: GithubSettingsProps;
   };
 
+// TODO(dmaretskyi): Meta filters?.
 const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
@@ -58,10 +60,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
 
-      const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-      const appState = spacePlugin?.provides.space.appState;
-      const defaultIndices = getIndices(plugins.length);
-
       const createGroup = (parent: Node) => {
         const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
         const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
@@ -70,22 +68,24 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
           icon: (props) => <GithubLogo {...props} />,
           properties: {
             palette: 'pink',
-            persistenceClass: 'appState',
+            persistenceClass: 'objectOrder',
             childrenPersistenceClass: 'spaceObject',
-            index:
-              getAppStateIndex(id, appState) ??
-              setAppStateIndex(
-                id,
-                defaultIndices[plugins.findIndex(({ meta: { id } }) => id === GITHUB_PLUGIN)],
-                appState,
-              ),
           },
         });
 
         return presentationNode;
       };
 
-      adapter = new GraphNodeAdapter({ filter, adapter: objectToGraphNode, createGroup });
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: Filter.from(filter),
+          adapter: objectToGraphNode,
+          createGroup,
+        });
+      }
     },
     unload: async () => {
       settings.close();
@@ -97,7 +97,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
         filter: (obj) => !filter(obj),
       },
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
@@ -108,44 +108,63 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
         },
       },
       context: (props) => <OctokitProvider {...props} />,
-      component: (data, role) => {
-        switch (role) {
-          case 'dialog':
-            switch (true) {
-              case data === 'dxos.org/plugin/splitview/ProfileSettings':
-                return PatInput;
-              case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/BindDialog':
-                return UrlDialog;
-              case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/ExportDialog':
-                return ExportDialog;
-              case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/ImportDialog':
-                return ImportDialog;
-              default:
-                return null;
-            }
-          case 'menuitem':
-            return Array.isArray(data) && isMarkdown(data[0]) && isMarkdownProperties(data[1]) && !data[1].readOnly
-              ? MarkdownActions
-              : null;
-          default:
-            return null;
-        }
-      },
-      components: {
-        embedded: EmbeddedMain,
+      surface: {
+        component: (data, role) => {
+          switch (data.component) {
+            case `${GITHUB_PLUGIN}/embedded`:
+              return <EmbeddedMain />;
+          }
+
+          switch (role) {
+            case 'dialog':
+              switch (data.content) {
+                case 'dxos.org/plugin/github/BindDialog':
+                  return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
+                case 'dxos.org/plugin/github/ExportDialog':
+                  return isMarkdown(data.model) ? (
+                    <ExportDialog
+                      model={data.model}
+                      type={data.type as ExportViewState}
+                      target={data.target as string | null}
+                      docGhId={data.docGhId as GhIdentifier}
+                    />
+                  ) : null;
+                case 'dxos.org/plugin/github/ImportDialog':
+                  return (
+                    <ImportDialog
+                      docGhId={data.docGhId as GhIdentifier}
+                      editorRef={data.editorRef as RefObject<MarkdownComposerRef>}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            case 'menuitem':
+              return isMarkdown(data.model) && isMarkdownProperties(data.properties) && !data.properties.readOnly ? (
+                <MarkdownActions
+                  model={data.model}
+                  properties={data.properties}
+                  editorRef={data.editorRef as RefObject<MarkdownComposerRef>}
+                />
+              ) : null;
+            case 'settings':
+              return data.component === 'dxos.org/plugin/layout/ProfileSettings' ? <PatInput /> : null;
+            default:
+              return null;
+          }
+        },
       },
     },
   };
 };
 
-const objectToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
+const objectToGraphNode = (parent: Node<Space>, document: Document): Node => {
   const [child] = parent.addNode(GITHUB_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
     icon: (props) => <Issue {...props} />,
     data: document,
     properties: {
-      index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
     },
   });

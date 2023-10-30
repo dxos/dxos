@@ -106,7 +106,6 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
       }
 
       const after = text.slice(result.index + result[0].length);
-
       content = (
         <>
           {before}
@@ -117,5 +116,5 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
     }
   }
 
-  return <span className='text-xs mb-1 line-clamp-2 text-neutral-300'>{content}</span>;
+  return <span className='text-xs mb-1 line-clamp-3 text-neutral-300'>{content}</span>;
 };

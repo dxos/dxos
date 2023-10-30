@@ -17,9 +17,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/plugins/plugin-graph"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -36,6 +33,9 @@
     },
     {
       "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/react-client"

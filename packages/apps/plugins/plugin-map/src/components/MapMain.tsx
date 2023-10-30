@@ -6,14 +6,14 @@ import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
 import { type SpacePluginProvides } from '@braneframe/plugin-space';
+import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { type TypedObject } from '@dxos/client/echo';
-import { findPlugin, usePlugins } from '@dxos/react-surface';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { MapControl } from './MapControl';
 
-export const MapMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+export const MapMain: FC<{ map: TypedObject }> = ({ map }) => {
   const { plugins } = usePlugins();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.active;

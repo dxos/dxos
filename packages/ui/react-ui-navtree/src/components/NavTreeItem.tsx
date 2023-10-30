@@ -5,7 +5,6 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { forwardRef, Fragment, useEffect, useRef, useState } from 'react';
 
-import { keyString } from '@braneframe/plugin-graph';
 import {
   Button,
   DensityProvider,
@@ -17,7 +16,7 @@ import {
   TreeItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, useContainer, useSortedItems, type MosaicTileComponent, Path } from '@dxos/react-ui-mosaic';
+import { Mosaic, useContainer, type MosaicTileComponent, Path, useItemsWithOrigin } from '@dxos/react-ui-mosaic';
 import {
   dropRing,
   focusRing,
@@ -35,19 +34,21 @@ import { NavTreeItemHeading } from './NavTreeItemHeading';
 import { levelPadding, topLevelCollapsibleSpacing } from './navtree-fragments';
 import { translationKey } from '../translations';
 import type { TreeNode, TreeNodeAction } from '../types';
+import { keyString } from '../util';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 const NavTreeBranch = ({ path, nodes, level }: { path: string; nodes: TreeNode[]; level: number }) => {
   const { Component } = useContainer();
-  const sortedNodes = useSortedItems(nodes);
+
+  const items = useItemsWithOrigin(path, nodes);
 
   return (
     <TreeItemComponent.Body>
-      <Mosaic.SortableContext id={path} items={sortedNodes} direction='vertical'>
+      <Mosaic.SortableContext id={path} items={items} direction='vertical'>
         <Tree.Branch>
-          {sortedNodes.map((node, index) => (
+          {items.map((node, index) => (
             <Mosaic.SortableTile
               key={node.id}
               item={{ id: node.id, node, level }}
@@ -126,6 +127,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
               level === 0 && 'mbs-4 first:mbs-0',
             ]}
             {...draggableProps}
+            data-itemid={item.id}
+            data-testid={testId}
             style={draggableStyle}
             ref={forwardedRef}
             role='treeitem'
@@ -141,7 +144,6 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                 ((active && active !== 'overlay') || path === current) && 'bg-neutral-75 dark:bg-neutral-850',
                 'flex items-start rounded',
               )}
-              data-testid={testId}
             >
               <NavTreeItemHeading
                 {...{
@@ -199,7 +201,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                               hoverableOpenControlItem,
                               active === 'overlay' && 'invisible',
                             ]}
-                            data-testid={`navTree.treeItemActionsLevel${level}`}
+                            data-testid={`navtree.treeItem.actionsLevel${level}`}
                           >
                             <DotsThreeVertical className={getSize(4)} />
                           </Button>

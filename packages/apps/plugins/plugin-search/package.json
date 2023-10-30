@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-search",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,19 +15,17 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -41,11 +39,10 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

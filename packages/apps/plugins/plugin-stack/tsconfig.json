@@ -24,13 +24,13 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/app-framework"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/react-ui"
@@ -48,34 +48,22 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-dnd"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-intent"
+      "path": "../plugin-layout"
     },
     {
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-space"
+      "path": "../plugin-navtree"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-treeview"
     }
   ]
 }

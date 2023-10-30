@@ -7,7 +7,7 @@ import { type ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Context } from '@dxos/context';
-import { Expando, Text } from '@dxos/echo-schema';
+import { Expando, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -76,7 +76,7 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
     await client.halo.createIdentity();
     if (real.peers.size === 0) {
       const space = await client.spaces.create();
-      const content = new Text();
+      const content = new TextObject();
       content.doc?.getText('utf8').insert(0, initialContent);
       await space.db.add(new Expando({ content }));
       real.spaceKey = space.key;

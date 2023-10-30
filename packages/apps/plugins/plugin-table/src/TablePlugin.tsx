@@ -6,10 +6,9 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { SplitViewAction } from '@braneframe/plugin-splitview';
 import { Table as TableType } from '@braneframe/types';
-import { SpaceProxy, Expando, type TypedObject, Schema as SchemaType } from '@dxos/client/echo';
-import { type PluginDefinition } from '@dxos/react-surface';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { Expando, Filter, Schema, SpaceProxy, type TypedObject } from '@dxos/client/echo';
 
 import { TableMain } from './components';
 import translations from './translations';
@@ -21,75 +20,83 @@ import { objectToGraphNode } from './util';
 (globalThis as any)[Expando.name] = Expando;
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  const adapter = new GraphNodeAdapter({
-    filter: (object: TypedObject) => isObject(object),
-    adapter: objectToGraphNode,
-  });
+  let adapter: GraphNodeAdapter<TypedObject> | undefined;
 
   return {
     meta: {
       id: TABLE_PLUGIN,
     },
+    ready: async (plugins) => {
+      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      if (dispatch) {
+        adapter = new GraphNodeAdapter({
+          dispatch,
+          filter: Filter.from((object: TypedObject) => isObject(object)),
+          adapter: objectToGraphNode,
+        });
+      }
+    },
     unload: async () => {
-      adapter.clear();
+      adapter?.clear();
     },
     provides: {
       translations,
       graph: {
-        nodes: (parent) => {
+        builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }
 
           const space = parent.data;
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
             id: `${TABLE_PLUGIN}/create`,
             label: ['create object label', { ns: TABLE_PLUGIN }],
             icon: (props) => <Plus {...props} />,
-            intent: [
-              {
-                plugin: TABLE_PLUGIN,
-                action: TableAction.CREATE,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { spaceKey: parent.data.key.toHex() },
-              },
-              {
-                action: SplitViewAction.ACTIVATE,
-              },
-            ],
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: TABLE_PLUGIN,
+                  action: TableAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
             properties: {
               testId: 'tablePlugin.createObject',
             },
           });
 
-          return adapter.createNodes(space, parent);
+          return adapter?.createNodes(space, parent);
         },
       },
-      component: (data, role) => {
-        if (!data || typeof data !== 'object') {
-          return null;
-        }
-
-        switch (role) {
-          case 'main': {
-            return isObject(data) ? TableMain : null;
+      surface: {
+        component: (data, role) => {
+          switch (role) {
+            case 'main': {
+              return isObject(data.active) ? <TableMain table={data.active} /> : null;
+            }
           }
-        }
 
-        return null;
+          return null;
+        },
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              const schema = new SchemaType({
+              const schema = new Schema({
                 props: [
                   {
                     id: 'title',
-                    type: SchemaType.PropType.STRING,
+                    type: Schema.PropType.STRING,
                   },
                 ],
               });

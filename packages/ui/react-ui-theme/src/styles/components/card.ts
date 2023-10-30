@@ -8,7 +8,7 @@ import { mx } from '../../util';
 import { getSize, inputSurface } from '../fragments';
 
 const defaults = {
-  width: 'min-w-[256px] max-w-[512px]', // TODO(burdon): Defaults.
+  width: 'min-w-[256px]',
 };
 
 export type CardStyleProps = Partial<{

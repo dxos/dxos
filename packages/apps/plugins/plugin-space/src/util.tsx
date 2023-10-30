@@ -4,19 +4,18 @@
 
 import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
-import { type getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
-import { type AppState } from '@braneframe/types';
+import { ObjectOrder } from '@braneframe/types';
+import { type DispatchIntent } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
+import { inferRecordOrder } from '@dxos/util';
 
-import { getAppStateIndex, setAppStateIndex } from './helpers';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, type SpaceSettingsProps } from './types';
-
-type Index = ReturnType<typeof getIndices>[number];
 
 export const isSpace = (data: unknown): data is Space =>
   data && typeof data === 'object'
@@ -44,16 +43,14 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
 export const spaceToGraphNode = ({
   space,
   parent,
+  dispatch,
   settings,
-  appState,
-  defaultIndex,
 }: {
   space: Space;
   parent: Node;
+  dispatch: DispatchIntent;
   settings: SpaceSettingsProps;
-  appState?: AppState;
-  defaultIndex?: string;
-}): Node<Space> => {
+}): { node: Node<Space>; subscription: UnsubscribeCallback } => {
   const id = createNodeId(space.key);
   const state = space.state.get();
   // TODO(burdon): Add disabled state to node (e.g., prevent showing "add document" action if disabled).
@@ -61,6 +58,10 @@ export const spaceToGraphNode = ({
   const error = state === SpaceState.ERROR;
   const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
+
+  const spaceOrderQuery = space.db.query(ObjectOrder.filter({ scope: id }));
+
+  let spaceOrder: ObjectOrder | undefined;
 
   let node!: Node;
   // TODO(wittjosiah): Why is this batch needed?
@@ -79,13 +80,18 @@ export const spaceToGraphNode = ({
         hidden: settings.showHidden ? false : inactive,
         disabled,
         error,
-        index: getAppStateIndex(id, appState) ?? setAppStateIndex(id, defaultIndex ?? 'a0', appState),
-        onRearrangeChild: (child: Node<TypedObject>, nextIndex: Index) => {
-          // TODO(thure): Reconcile with `TypedObject`’s `meta` record.
-          child.properties.index = nextIndex;
-          if (child.data.meta) {
-            child.data.meta.index = nextIndex;
+        onRearrangeChildren: (nextOrder: string[]) => {
+          if (!spaceOrder) {
+            const nextObjectOrder = new ObjectOrder({
+              scope: id,
+              order: nextOrder,
+            });
+            space.db.add(nextObjectOrder);
+            spaceOrder = nextObjectOrder;
+          } else {
+            spaceOrder.order = nextOrder;
           }
+          updateSpaceOrder({ objects: [spaceOrder] });
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
@@ -96,8 +102,6 @@ export const spaceToGraphNode = ({
             retainId: true,
             additional: [child.data.content],
           });
-          // TODO(wittjosiah): Use separate object to store graph/tree order.
-          // object.meta.index = nextIndex;
           space.db.add(object);
         },
         onMigrateEndChild: (child: Node<TypedObject>) => {
@@ -108,13 +112,22 @@ export const spaceToGraphNode = ({
     });
   });
 
+  const updateSpaceOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
+    spaceOrder = spacesOrders[0];
+    node.childrenMap = inferRecordOrder(node.childrenMap, spaceOrder?.order);
+  };
+
+  updateSpaceOrder(spaceOrderQuery);
+
+  const subscription = spaceOrderQuery.subscribe(updateSpaceOrder);
+
   if (parent.id !== 'root') {
     node.addAction(
       {
         id: 'rename-space',
         label: ['rename space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <PencilSimpleLine {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.RENAME },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RENAME }),
         properties: {
           disabled: disabled || error,
         },
@@ -123,7 +136,7 @@ export const spaceToGraphNode = ({
         id: 'share-space',
         label: ['share space', { ns: SPACE_PLUGIN }],
         icon: (props) => <Users {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.SHARE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.SHARE }),
         properties: {
           disabled: disabled || error,
         },
@@ -136,7 +149,7 @@ export const spaceToGraphNode = ({
       id: 'backup-space',
       label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Download {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.BACKUP },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.BACKUP }),
       properties: {
         disabled: disabled || error,
       },
@@ -145,7 +158,7 @@ export const spaceToGraphNode = ({
       id: 'restore-space',
       label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
       icon: (props) => <Upload {...props} />,
-      intent: { ...baseIntent, action: SpaceAction.RESTORE },
+      invoke: () => dispatch({ ...baseIntent, action: SpaceAction.RESTORE }),
       properties: {
         disabled: disabled || error,
       },
@@ -158,17 +171,17 @@ export const spaceToGraphNode = ({
         id: 'close-space',
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <X {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.CLOSE },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.CLOSE }),
       });
     } else {
       node.addAction({
         id: 'open-space',
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: (props) => <ClockCounterClockwise {...props} />,
-        intent: { ...baseIntent, action: SpaceAction.OPEN },
+        invoke: () => dispatch({ ...baseIntent, action: SpaceAction.OPEN }),
       });
     }
   }
 
-  return node;
+  return { node, subscription };
 };

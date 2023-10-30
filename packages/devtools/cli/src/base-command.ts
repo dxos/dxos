@@ -12,13 +12,14 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { types } from '@braneframe/types'; // TODO(burdon): Remove.
 import {
   AgentIsNotStartedByCLIError,
   AgentWaitTimeoutError,
   type Daemon,
   PhoenixDaemon,
   SystemDaemon,
+  LaunchctlRunner,
+  SystemctlRunner,
 } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -41,7 +42,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { SpaceWaitTimeoutError } from './errors';
+import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -127,7 +128,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Run command without agent.',
+      description: 'Run command without using or starting agent.',
       default: false,
     }),
 
@@ -342,6 +343,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       this.logToStderr(
         chalk`{red Error}: Agent is running, and it is detached from CLI. Maybe you started it manually or as a system daemon.`,
       );
+    } else if (err instanceof PublisherConnectionError) {
+      this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
+    } else if (err instanceof IdentityWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error}: Identity not initialized.`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -391,9 +396,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         await this.maybeStartDaemon();
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
-
-      // TODO(burdon): Remove app-specific dependencies (function should add this).
-      this._client.addTypes(types);
 
       await this._client.initialize();
       log('Client initialized', { profile: this.flags.profile });
@@ -466,7 +468,17 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     callback: (daemon: Daemon) => Promise<T | undefined>,
     system: boolean,
   ): Promise<T | undefined> {
-    const daemon = system ? new SystemDaemon(DX_RUNTIME) : new PhoenixDaemon(DX_RUNTIME);
+    const platform = os.platform();
+    const daemon = system
+      ? new SystemDaemon(
+          DX_RUNTIME,
+          platform === 'darwin'
+            ? new LaunchctlRunner()
+            : platform === 'linux'
+            ? new SystemctlRunner()
+            : raise(new Error(`System daemon not implemented for ${os.platform()}.`)),
+        )
+      : new PhoenixDaemon(DX_RUNTIME);
 
     await daemon.connect();
     const value = await callback(daemon);
@@ -487,7 +499,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.error(new PublisherConnectionError());
     } finally {
       if (rpc) {
         await rpc.close();

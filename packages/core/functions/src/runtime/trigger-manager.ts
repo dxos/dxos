@@ -60,6 +60,7 @@ export class TriggerManager {
         return;
       }
 
+      // TODO(burdon): Trigger binding.
       // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {

@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { type Space, Text } from '@dxos/client/echo';
+import { type Space, TextObject } from '@dxos/client/echo';
 import { Invitation } from '@dxos/client/invitations';
 import { type LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
@@ -143,7 +143,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     };
 
     if (config.creator) {
-      this.space.db.add(new Text('', TextKind.PLAIN));
+      this.space.db.add(new TextObject('', TextKind.PLAIN));
       await this.space.db.flush();
     }
 

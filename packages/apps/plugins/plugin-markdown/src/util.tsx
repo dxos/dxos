@@ -3,13 +3,12 @@
 //
 
 import { Article, ArticleMedium } from '@phosphor-icons/react';
-import get from 'lodash.get';
 import React from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
 import { type Document } from '@braneframe/types';
+import { type Plugin } from '@dxos/app-framework';
 import { type Space, isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
-import { type Plugin } from '@dxos/react-surface';
 import { type ComposerModel, TextKind, YText } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN, type MarkdownProperties, type MarkdownProvides } from './types';
@@ -68,7 +67,7 @@ const getFallbackTitle = (document: Document) => {
   return document.content?.content?.toString().substring(0, 63).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
 
-export const documentToGraphNode = (parent: Node<Space>, document: Document, index: string): Node => {
+export const documentToGraphNode = (parent: Node<Space>, document: Document): Node => {
   const [child] = parent.addNode(MARKDOWN_PLUGIN, {
     id: document.id,
     label: document.title ?? getFallbackTitle(document) ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
@@ -76,8 +75,8 @@ export const documentToGraphNode = (parent: Node<Space>, document: Document, ind
       document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
     data: document,
     properties: {
-      index: get(document, 'meta.index', index),
       persistenceClass: 'spaceObject',
+      'data-testid': 'markdownPlugin.document',
     },
   });
 

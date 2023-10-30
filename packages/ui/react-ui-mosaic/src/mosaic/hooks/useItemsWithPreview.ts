@@ -24,7 +24,7 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
   const [lastOverParent, setLastOverParent] = useState(overParent);
 
   useEffect(() => {
-    if (operation === 'reject' || operation === 'rearrange' || !activeItem || !overItem) {
+    if (!activeItem || !overItem) {
       setLastOverParent(undefined);
       setItemsWithPreview(items);
       return;
@@ -34,12 +34,17 @@ export const useItemsWithPreview = <T extends MosaicDataItem>({ path, items }: {
       return;
     }
 
-    setLastOverParent(overParent);
-
     const activeIsChild = Path.hasChild(path, activeItem.path);
     const overIsChild = Path.hasChild(path, overItem.path);
     const overSelf = overItem.path === path;
 
+    if (operation === 'reject' || operation === 'rearrange') {
+      setLastOverParent(undefined);
+      setItemsWithPreview(items);
+      return;
+    } else {
+      setLastOverParent(overParent);
+    }
     if (!activeIsChild && overIsChild) {
       // Insert item into sortable.
       setItemsWithPreview((items) => {

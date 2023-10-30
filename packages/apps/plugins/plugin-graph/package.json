@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-graph",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,28 +33,12 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@preact/signals-react": "^1.3.6",
-    "deepsignal": "^1.3.6",
-    "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2",
-    "mousetrap": "^1.6.5"
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/debug": "workspace:*"
   },
   "devDependencies": {
-    "@braneframe/plugin-intent": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@faker-js/faker": "^8.0.2",
-    "@phosphor-icons/react": "^2.0.5",
-    "@tldraw/indices": "2.0.0-alpha.14",
-    "@types/lodash.get": "^4.4.7",
-    "@types/lodash.set": "^4.3.7",
-    "@types/mousetrap": "^1.6.11",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -62,11 +46,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-intent": "workspace:*",
-    "@dxos/react-surface": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@dxos/app-framework": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

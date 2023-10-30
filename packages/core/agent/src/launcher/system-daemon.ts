@@ -4,14 +4,13 @@
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { platform } from 'node:os';
 import path from 'node:path';
 
 import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { LaunchctlRunner, SystemctlRunner, type Runner } from './runner';
-import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
+import { type Runner } from './runner';
+import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions, PROFILE_FOLDER } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';
@@ -20,21 +19,8 @@ import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } f
  * Manager of system daemon processes using system service manager.
  */
 export class SystemDaemon implements Daemon {
-  private readonly _runner: Runner;
-
-  constructor(private readonly _rootDir: string) {
-    switch (platform()) {
-      case 'darwin':
-        this._runner = new LaunchctlRunner();
-        break;
-      case 'linux':
-        this._runner = new SystemctlRunner();
-        break;
-      default:
-        throw new Error(`System daemon not implemented for ${platform()} yet.`);
-    }
-
-    const dir = path.join(this._rootDir, 'profile');
+  constructor(private readonly _rootDir: string, private readonly _runner: Runner) {
+    const dir = path.join(this._rootDir, PROFILE_FOLDER);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
@@ -54,7 +40,7 @@ export class SystemDaemon implements Daemon {
   }
 
   async list(): Promise<ProcessInfo[]> {
-    const profiles = (await readdir(path.join(this._rootDir, 'profile'))).filter((uid) => !uid.startsWith('.'));
+    const profiles = (await readdir(path.join(this._rootDir, PROFILE_FOLDER))).filter((uid) => !uid.startsWith('.'));
 
     return Promise.all(
       profiles.map(async (profile) => {
@@ -66,7 +52,7 @@ export class SystemDaemon implements Daemon {
 
   async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      const profileDir = path.join(this._rootDir, 'profile', profile);
+      const profileDir = path.join(this._rootDir, PROFILE_FOLDER, profile);
 
       const logDir = path.join(profileDir, 'logs');
       if (!existsSync(logDir)) {
