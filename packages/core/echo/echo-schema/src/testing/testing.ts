@@ -15,16 +15,15 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';
 import { ComplexMap } from '@dxos/util';
 
-import { EchoDatabase } from './database';
-import { HyperGraph } from './hypergraph';
-import { schemaBuiltin } from './proto';
+import { EchoDatabase } from '../database';
+import { Hypergraph } from '../hypergraph';
+import { schemaBuiltin } from '../proto';
 
-// TODO(burdon): Builder pattern.
-// TODO(burdon): Rename createMemoryDatabase.
 /**
  * @deprecated Use TestBuilder.
  */
-export const createDatabase = async (graph = new HyperGraph()) => {
+// TODO(burdon): Builder pattern.
+export const createDatabase = async (graph = new Hypergraph()) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
     .registerModel(DocumentModel)
@@ -43,7 +42,7 @@ export const createDatabase = async (graph = new HyperGraph()) => {
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
 
-  constructor(public readonly graph = new HyperGraph(), public readonly base = new DatabaseTestBuilder()) {}
+  constructor(public readonly graph = new Hypergraph(), public readonly base = new DatabaseTestBuilder()) {}
 
   public readonly peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 

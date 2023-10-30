@@ -3,7 +3,6 @@
 //
 
 import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
-import { Reference } from '@dxos/document-model';
 import { type Item, type MutateResult, createModelMutation, encodeModelMutation } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -15,17 +14,15 @@ import {
   type StateMachine,
   type StateOf,
 } from '@dxos/model-factory';
-import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { type EchoDatabase } from './database';
-import { type EchoObject, base, db, subscribe } from './defs';
-import { createSignal } from './signal';
+import { type EchoObject, base, db, subscribe } from './types';
+import { type EchoDatabase } from '../database';
+import { createSignal } from '../util';
 
 /**
  * Base class for all echo objects.
- * Can carry different models.
  */
-export abstract class EchoObjectBase<T extends Model = any> implements EchoObject {
+export abstract class AbstractEchoObject<T extends Model = any> implements EchoObject {
   /**
    * @internal
    */
@@ -59,7 +56,7 @@ export abstract class EchoObjectBase<T extends Model = any> implements EchoObjec
    */
   _modelConstructor: ModelConstructor<T>;
 
-  private _callbacks = new Set<(value: any) => void>();
+  private readonly _callbacks = new Set<(value: any) => void>();
 
   protected readonly _signal = createSignal?.();
 
@@ -190,21 +187,3 @@ export abstract class EchoObjectBase<T extends Model = any> implements EchoObjec
     }
   }
 }
-
-export const setStateFromSnapshot = (obj: EchoObjectBase, snapshot: ObjectSnapshot) => {
-  invariant(obj[base]._stateMachine);
-  obj[base]._stateMachine.reset(snapshot);
-};
-
-export const forceUpdate = (obj: EchoObjectBase) => {
-  obj[base]._itemUpdate();
-};
-
-export const getDatabaseFromObject = (obj: EchoObject): EchoDatabase | undefined => {
-  return obj[base]._database;
-};
-
-export const getReferenceWithSpaceKey = (obj: EchoObject): Reference | undefined => {
-  const db = getDatabaseFromObject(obj);
-  return db && new Reference(obj.id, undefined, db._backend.spaceKey.toHex());
-};

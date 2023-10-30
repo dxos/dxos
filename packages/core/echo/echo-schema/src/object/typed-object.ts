@@ -12,22 +12,21 @@ import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';
+import { AbstractEchoObject } from './object';
+import { TextObject } from './text-object';
 import {
   base,
   data,
-  proxy,
   immutable,
-  schema,
   meta,
+  proxy,
+  schema,
+  type EchoObject,
   type ObjectMeta,
   type TypedObjectProperties,
-  type EchoObject,
-} from './defs';
-import { getBody, getHeader } from './devtools-formatter';
-import { EchoObjectBase } from './echo-object-base';
-import { type Schema } from './proto'; // NOTE: Keep as type-import.
-import { Text } from './text-object';
-import { isReferenceLike } from './util';
+} from './types';
+import { type Schema } from '../proto'; // NOTE: Keep as type-import.
+import { isReferenceLike, getBody, getHeader } from '../util';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -40,7 +39,7 @@ const isValidKey = (key: string | symbol) =>
     key === 'id' ||
     key === '__meta' ||
     key === '__schema' ||
-    key === '__typename' || // TODO(burdon): Reconcile with schema name.
+    key === '__typename' || // TODO(burdon): Reconcile with schema name (and document).
     key === '__deleted'
   );
 
@@ -79,15 +78,14 @@ export type TypedObjectOptions = {
  * We define the exported `TypedObject` type separately to have fine-grained control over the typescript type.
  * The runtime semantics should be exactly the same since this compiled down to `export const TypedObject = TypedObjectImpl`.
  */
-// TODO(burdon): Extract interface.
-class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedObjectProperties {
+class TypedObjectImpl<T> extends AbstractEchoObject<DocumentModel> implements TypedObjectProperties {
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
   _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
-  private _schema?: Schema = undefined;
+  private _schema?: Schema;
   private readonly _immutable;
 
   constructor(initialProps?: T, opts?: TypedObjectOptions) {
@@ -105,7 +103,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       opts?.type ??
       (this._schema
         ? this._schema[immutable]
-          ? Reference.fromLegacyTypeName(this._schema!.typename)
+          ? Reference.fromLegacyTypename(this._schema!.typename)
           : this._linkObject(this._schema)
         : undefined);
 
@@ -122,7 +120,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
         if (field.repeated) {
           this._set(field.id!, new EchoArray());
         } else if (field.type === getSchemaProto().PropType.REF && field.refModelType === TextModel.meta.type) {
-          this._set(field.id!, new Text());
+          this._set(field.id!, new TextObject());
         }
       }
     }
@@ -252,7 +250,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => this._transform(value, visitorsWithDefaults);
 
-    if (value instanceof EchoObjectBase) {
+    if (value instanceof AbstractEchoObject) {
       return visitorsWithDefaults.onRef!(value.id, value);
     } else if (value instanceof Reference) {
       return visitorsWithDefaults.onRef!(value.itemId, this._lookupLink(value));
@@ -351,12 +349,12 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    */
   private _set(key: string, value: any, meta?: boolean) {
     this._inBatch(() => {
-      if (value instanceof EchoObjectBase) {
+      if (value instanceof AbstractEchoObject) {
         const ref = this._linkObject(value);
         this._mutate(this._model.builder().set(key, ref).build(meta));
       } else if (value instanceof EchoArray) {
         const values = value.map((item) => {
-          if (item instanceof EchoObjectBase) {
+          if (item instanceof AbstractEchoObject) {
             return this._linkObject(item);
           } else if (isReferenceLike(item)) {
             return new Reference(item['@id']);
@@ -511,6 +509,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
       for (const obj of this._linkCache.values()) {
         this._database!.add(obj as TypedObject);
       }
+
       this._linkCache = undefined;
     }
   }
@@ -519,7 +518,7 @@ class TypedObjectImpl<T> extends EchoObjectBase<DocumentModel> implements TypedO
    * Store referenced object.
    * @internal
    */
-  _linkObject(obj: EchoObjectBase): Reference {
+  _linkObject(obj: AbstractEchoObject): Reference {
     if (this._database) {
       if (!obj[base]._database) {
         this._database.add(obj as TypedObject);
@@ -574,7 +573,6 @@ Object.defineProperty(TypedObjectImpl, 'name', { value: 'TypedObject' });
 /**
  * Base class for generated document types and expando objects.
  */
-
 type TypedObjectConstructor = {
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,
@@ -587,7 +585,7 @@ export type TypedObject<T extends Record<string, any> = Record<string, any>> = T
 export const TypedObject: TypedObjectConstructor = TypedObjectImpl as any;
 
 /**
- *
+ * Runtime object.
  */
 type ExpandoConstructor = {
   new (initialProps?: Record<string, any>, options?: TypedObjectOptions): Expando;
@@ -599,6 +597,7 @@ export type Expando = TypedObject;
 
 let mutationOverride = false;
 
+// TODO(burdon): Document.
 export const dangerouslyMutateImmutableObject = (cb: () => void) => {
   const prev = mutationOverride;
   mutationOverride = true;
@@ -614,8 +613,9 @@ let schemaProto: typeof Schema;
 const getSchemaProto = (): typeof Schema => {
   if (!schemaProto) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Schema } = require('./proto');
+    const { Schema } = require('../proto');
     schemaProto = Schema;
   }
+
   return schemaProto;
 };

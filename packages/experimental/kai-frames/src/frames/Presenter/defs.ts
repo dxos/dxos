@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Document } from '@braneframe/types';
 import { DocumentStack, Presentation } from '@dxos/kai-types';
-import { type Space, Text } from '@dxos/react-client/echo';
+import { type Space, TextObject } from '@dxos/react-client/echo';
 
 import { slides } from './slides';
 import { type FrameRuntime } from '../../registry';
@@ -24,7 +24,7 @@ export const PresenterFrameRuntime: FrameRuntime<Presentation> = {
     slides.echo.forEach((content) => {
       presentation!.stack.sections.push(
         new DocumentStack.Section({
-          object: new Document({ content: new Text(content) }),
+          object: new Document({ content: new TextObject(content) }),
         }),
       );
     });

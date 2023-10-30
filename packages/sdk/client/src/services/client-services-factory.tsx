@@ -37,6 +37,7 @@ export const Remote = (target: string | undefined): Partial<ConfigProto> => {
  */
 export const createClientServices = async (config: Config): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
+
   if (remote) {
     const url = new URL(remote);
     const protocol = url.protocol.slice(0, -1);

@@ -5,7 +5,7 @@
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import { type Presentation } from '@dxos/kai-types';
-import { type Text, TextKind, useSubscription } from '@dxos/react-client/echo';
+import { type TextObject, TextKind, useSubscription } from '@dxos/react-client/echo';
 
 import { Deck, type DeckProps } from '../../components';
 import { useFrameRouter, useFrameContext } from '../../hooks';
@@ -24,7 +24,7 @@ export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 
       .map((document) => {
         return document.content?.kind === TextKind.PLAIN ? document.content : undefined;
       })
-      .filter(Boolean) as Text[];
+      .filter(Boolean) as TextObject[];
 
     setContent(texts.map((text) => text.content!.toString()) ?? []);
   }, [presentation]);

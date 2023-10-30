@@ -7,8 +7,8 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
-import { createDatabase } from './testing';
 import { Expando, TypedObject } from './typed-object';
+import { createDatabase } from '../testing';
 
 describe('Arrays', () => {
   test('array of tags', async () => {

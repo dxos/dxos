@@ -37,8 +37,6 @@ describe('TypedObject', () => {
       },
     );
 
-    console.log(obj3.__meta);
-    console.log(JSON.stringify(obj3, null, 2));
     expect(obj3.__meta.keys[0].source).to.equal('dxos.org');
   });
 

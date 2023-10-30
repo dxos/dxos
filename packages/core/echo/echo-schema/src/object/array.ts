@@ -8,9 +8,9 @@ import { type DocumentModel, OrderedArray, Reference } from '@dxos/document-mode
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { base } from './defs';
-import { EchoObjectBase } from './echo-object-base';
+import { AbstractEchoObject } from './object';
 import { type TypedObject } from './typed-object';
+import { base } from './types';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -18,6 +18,7 @@ const isIndex = (property: string | symbol): property is string =>
 /**
  * Array of complex or scalar values.
  */
+// TODO(burdon): Rename OrderedList.
 export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {
     return Array;
@@ -350,7 +351,7 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _encode(value: T) {
-    if (value instanceof EchoObjectBase) {
+    if (value instanceof AbstractEchoObject) {
       return this._object!._linkObject(value);
     } else if (
       typeof value === 'object' &&
@@ -425,7 +426,7 @@ export class EchoArray<T> implements Array<T> {
 }
 
 const encodeRecords = (value: any, document: TypedObject): any => {
-  if (value instanceof EchoObjectBase) {
+  if (value instanceof AbstractEchoObject) {
     return document!._linkObject(value);
   } else if (Array.isArray(value)) {
     return value.map((value) => encodeRecords(value, document));

@@ -4,7 +4,7 @@
 
 import { type Thread } from '@braneframe/types';
 import { type Client } from '@dxos/client';
-import { Text } from '@dxos/echo-schema';
+import { TextObject } from '@dxos/echo-schema';
 
 import { parseMessage } from './parser';
 
@@ -29,7 +29,7 @@ export const createResponse = (client: Client, content: string) => {
             for (const prop of schema.props) {
               if (data[prop.id!]) {
                 if (prop.refModelType === 'dxos.org/model/text' && typeof data[prop.id!] === 'string') {
-                  data[prop.id!] = new Text(data[prop.id!]);
+                  data[prop.id!] = new TextObject(data[prop.id!]);
                 }
               }
             }

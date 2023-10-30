@@ -4,8 +4,8 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { type EchoObject, subscribe } from './defs';
-import { EchoObjectBase } from './echo-object-base';
+import { AbstractEchoObject } from './object';
+import { type EchoObject, subscribe } from './types';
 
 export type Selection = any[];
 
@@ -40,7 +40,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof EchoObjectBase));
+      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof AbstractEchoObject));
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;
