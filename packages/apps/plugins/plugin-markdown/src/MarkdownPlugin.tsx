@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, Plus } from '@phosphor-icons/react';
+import { ArticleMedium, type IconProps, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
+import { SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
-import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -38,14 +38,7 @@ import {
   type MarkdownProperties,
   type MarkdownSettingsProps,
 } from './types';
-import {
-  documentToGraphNode,
-  isMarkdown,
-  isMarkdownContent,
-  isMarkdownPlaceholder,
-  isMarkdownProperties,
-  markdownPlugins,
-} from './util';
+import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -65,8 +58,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
     pluginMutableRef.current = { ...nextRef };
   };
-
-  let adapter: GraphNodeAdapter<Document> | undefined;
 
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
   const EditorMainStandalone: FC<{
@@ -124,8 +115,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const StandaloneMainMenu: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.active;
+    // TODO(wittjosiah): Should this be a hook?
+    const space = getSpaceForObject(document);
+
     const textModel = useTextModel({
       identity,
       space,
@@ -156,35 +148,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           filters.push(plugin.provides.markdown.filter);
         }
       });
-
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides.intent.dispatch;
-
-      if (dispatch) {
-        const filter = Filter.from(
-          (document: Document) =>
-            document.__typename === Document.schema.typename && filters.every((filter) => filter(document)),
-        );
-        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
-      }
-
-      // TODO(wittjosiah): Replace? Remove?
-      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-      //     if (isMarkdownContent(node.data)) {
-      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-      //     }
-      //     return tile;
-      //   });
-      // }
-    },
-    unload: async () => {
-      adapter?.clear();
     },
     provides: {
       settings: settings.values,
       translations,
+      metadata: {
+        records: {
+          [Document.schema.typename]: {
+            fallbackName: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+            icon: (props: IconProps) => <ArticleMedium {...props} />,
+          },
+        },
+      },
       graph: {
         builder: ({ parent, plugins }) => {
           if (!(parent.data instanceof Folder)) {
@@ -246,7 +221,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       surface: {
         component: (data, role) => {
           // TODO(burdon): Document.
-          // TODO(wittjosiah): Expose all through `components` as well?
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {

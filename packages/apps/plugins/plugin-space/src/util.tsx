@@ -3,14 +3,12 @@
 //
 
 import {
-  Folder as FolderIcon,
   FolderPlus,
   PencilSimpleLine,
   Planet,
   Placeholder,
   Trash,
   Users,
-  type IconProps,
   Intersect,
   Download,
   Upload,
@@ -18,15 +16,15 @@ import {
   X,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
-import React, { type FC } from 'react';
+import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
+import type { Graph, Node } from '@braneframe/plugin-graph';
 import { Folder } from '@braneframe/types';
-import { LayoutAction, type DispatchIntent } from '@dxos/app-framework';
+import { LayoutAction, type DispatchIntent, type MetadataResolver } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { clone } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { EchoDatabase, type Space, SpaceState, type TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { EchoDatabase, type Space, SpaceState, TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
 
 import { SPACE_PLUGIN, SpaceAction } from './types';
 
@@ -44,16 +42,8 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : disabled
-    ? ['loading space title', { ns: SPACE_PLUGIN }]
-    : ['untitled space title', { ns: SPACE_PLUGIN }];
-};
-
-export const getObjectDisplayName = (object: TypedObject): string | [string, { ns: string }] => {
-  return object.name || object.title || 'todo';
-};
-
-export const getObjectIcon = (object: TypedObject): FC<IconProps> => {
-  return object instanceof Folder ? (props) => <FolderIcon {...props} /> : (props) => <Placeholder {...props} />;
+    ? ['loading space label', { ns: SPACE_PLUGIN }]
+    : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
 // TODO(wittjosiah): Remove space folders from graph when closed.
@@ -61,13 +51,16 @@ export const objectToGraphNode = ({
   object,
   parent,
   dispatch,
+  resolve,
 }: {
   object: TypedObject;
   parent: Node;
   dispatch: DispatchIntent;
+  resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const space = getSpaceForObject(object);
   const disabled = space?.state.get() !== SpaceState.READY;
+  const metadata = object.__typename ? resolve(object.__typename) : {};
   const isFolder = object instanceof Folder;
   const isSpaceFolder = isFolder && space && object.name === space.key.toHex();
   const isPersonalSpace = isSpaceFolder && parent.id === ROOT;
@@ -83,16 +76,14 @@ export const objectToGraphNode = ({
         ? ['shared spaces label', { ns: SPACE_PLUGIN }]
         : isSpaceFolder
         ? getSpaceDisplayName(space)
-        : getObjectDisplayName(object),
+        : object.name || object.title || metadata.fallbackName || ['unnamed object label', { ns: SPACE_PLUGIN }],
       description: isSpaceFolder ? space.properties.description : object.description,
       icon:
         isPersonalSpace || isSharedSpacesFolder
           ? undefined
           : isSpaceFolder
           ? (props) => <Planet {...props} />
-          : isFolder
-          ? (props) => <FolderIcon {...props} />
-          : getObjectIcon(object),
+          : metadata.icon ?? ((props) => <Placeholder {...props} />),
       data: isSharedSpacesFolder ? null : object,
       properties: {
         // TODO(burdon): Factor out palette constants.
@@ -124,7 +115,7 @@ export const objectToGraphNode = ({
                     additional: [
                       child.data.content,
                       ...(child.data.objects ?? []),
-                      ...(child.data.objects ?? []).map((object) => object.content),
+                      ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
                     ],
                   });
                   space.db.add(newObject);
@@ -262,36 +253,40 @@ export const objectToGraphNode = ({
           },
         },
       );
-    } else {
-      node.addAction({
-        id: 'delete',
-        label: ['delete object label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <Trash {...props} />,
-        invoke: () =>
-          dispatch([
-            {
-              action: SpaceAction.REMOVE_FROM_FOLDER,
-              data: { folder: parent.data, object },
-            },
-            {
-              action: SpaceAction.REMOVE_OBJECT,
+    }
+
+    if (!isSpaceFolder && !isSharedSpacesFolder) {
+      node.addAction(
+        {
+          id: 'rename',
+          label: ['rename object label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <PencilSimpleLine {...props} />,
+          invoke: () =>
+            dispatch({
+              action: SpaceAction.RENAME_OBJECT,
               data: { object },
-            },
-          ]),
-      });
+            }),
+        },
+        {
+          id: 'delete',
+          label: ['delete object label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <Trash {...props} />,
+          invoke: () =>
+            dispatch([
+              {
+                action: SpaceAction.REMOVE_FROM_FOLDER,
+                data: { folder: parent.data, object },
+              },
+              {
+                action: SpaceAction.REMOVE_OBJECT,
+                data: { object },
+              },
+            ]),
+        },
+      );
     }
 
     if (!isFolder) {
-      node.addAction({
-        id: 'rename',
-        label: ['rename object label', { ns: SPACE_PLUGIN }],
-        icon: (props) => <PencilSimpleLine {...props} />,
-        invoke: () =>
-          dispatch({
-            action: SpaceAction.RENAME_OBJECT,
-            data: { object },
-          }),
-      });
       return;
     }
 
@@ -302,7 +297,7 @@ export const objectToGraphNode = ({
 
     removedObjects.forEach((object) => parent.removeNode(object.id));
     folder.objects.forEach((object) => {
-      const unsubscribe = objectToGraphNode({ object, parent: node, dispatch });
+      const unsubscribe = objectToGraphNode({ object, parent: node, dispatch, resolve });
       if (unsubscribe) {
         childSubscriptions.add(unsubscribe);
       }
@@ -310,4 +305,17 @@ export const objectToGraphNode = ({
 
     return () => childSubscriptions.clear();
   });
+};
+
+export const getActiveSpace = (graph: Graph, active?: string) => {
+  if (!active) {
+    return;
+  }
+
+  const node = graph.findNode(active);
+  if (!node || !(node.data instanceof TypedObject)) {
+    return;
+  }
+
+  return getSpaceForObject(node.data);
 };

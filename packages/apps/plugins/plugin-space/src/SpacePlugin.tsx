@@ -2,22 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Folder as FolderIcon, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { type LayoutState } from '@braneframe/plugin-layout';
 import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
   resolvePlugin,
   parseIntentPlugin,
-  parseGraphPlugin,
   parseLayoutPlugin,
   LayoutAction,
   type DispatchIntent,
+  parseGraphPlugin,
+  parseMetadataResolverPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { TypedObject, isTypedObject } from '@dxos/echo-schema';
@@ -45,7 +46,7 @@ import {
   type SpaceSettingsProps,
   type SpaceState,
 } from './types';
-import { ROOT, SHARED, isSpace, objectToGraphNode } from './util';
+import { ROOT, SHARED, getActiveSpace, isSpace, objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -63,17 +64,12 @@ export type SpacePluginOptions = {
   }) => void;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  // TODO(wittjosiah): Plugin exposed state should be marked as read-only.
-  const state = deepSignal<SpaceState>({
-    active: undefined,
-    viewers: [],
-  }) as RevertDeepSignal<SpaceState>;
-  // const graphSubscriptions = new EventSubscriptions();
+  const state = deepSignal<SpaceState>({ viewers: [] });
   const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
-  const orderSubscriptions = new Map<string, UnsubscribeCallback>();
+  const graphSubscriptions = new Map<string, UnsubscribeCallback>();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
@@ -87,13 +83,13 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-      if (!clientPlugin || !layoutPlugin || !intentPlugin) {
+      if (!clientPlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      // TODO(wittjosiah): Remove once space can be computed directly from an object.
-      const layout = layoutPlugin.provides.layout as LayoutState;
+      const graph = graphPlugin.provides.graph;
+      const layout = layoutPlugin.provides.layout;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
       // Create root folder structure.
@@ -136,35 +132,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
         });
       }
 
-      // Calculate the active space based on the graph and active node.
-      subscriptions.add(
-        effect(async () => {
-          if (!layout.activeNode) {
-            return;
-          }
-
-          state.active = await new Promise<Space | undefined>((resolve) => {
-            graphPlugin?.provides.graph.traverse({
-              node: layout.activeNode,
-              direction: 'up',
-              visitor: (node) => {
-                if (isSpace(node.data)) {
-                  resolve(node.data);
-                }
-              },
-            });
-
-            resolve(undefined);
-          });
-        }),
-      );
-
       // Broadcast active node to other peers in the space.
       subscriptions.add(
         effect(() => {
           const send = () => {
             const identity = client.halo.identity.get();
-            const space = state.active;
+            const space = getActiveSpace(graph, layout.active);
             if (identity && space && layout.active) {
               void space.postMessage('viewing', {
                 identityKey: identity.identityKey.toHex(),
@@ -223,9 +196,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
         if (event.key === '>' && event.shiftKey && modifier) {
           void client.shell.open();
         } else if (event.key === '.' && modifier) {
-          const spaceKey = state.active?.key as PublicKey;
-          if (spaceKey) {
-            void client.shell.shareSpace({ spaceKey });
+          const space = getActiveSpace(graph, layout.active);
+          if (space) {
+            void client.shell.shareSpace({ spaceKey: space.key });
           }
         }
       };
@@ -239,9 +212,17 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
-      space: state,
+      space: state as RevertDeepSignal<SpaceState>,
       settings: settings.values,
       translations,
+      metadata: {
+        records: {
+          [Folder.schema.typename]: {
+            fallbackName: ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <FolderIcon {...props} />,
+          },
+        },
+      },
       surface: {
         component: (data, role) => {
           switch (role) {
@@ -290,18 +271,21 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
           }
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const dispatch = intentPlugin?.provides.intent.dispatch;
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          const client = clientPlugin?.provides.client;
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
 
-          if (!dispatch || !client || !client.spaces.isReady.get()) {
+          const client = clientPlugin?.provides.client;
+          const dispatch = intentPlugin?.provides.intent.dispatch;
+          const resolve = metadataPlugin?.provides.metadata.resolver;
+
+          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
             return;
           }
 
           const update = (rootFolder?: Folder) => {
             rootFolder?.objects.forEach((object) => {
-              orderSubscriptions.get(object.id)?.();
-              orderSubscriptions.set(object.id, objectToGraphNode({ object, parent, dispatch }));
+              graphSubscriptions.get(object.id)?.();
+              graphSubscriptions.set(object.id, objectToGraphNode({ object, parent, dispatch, resolve }));
             });
           };
           const rootQuery = client.spaces.default.db.query(Folder.filter({ name: ROOT }));
@@ -312,10 +296,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
             const {
               objects: [sharedSpacesFolder],
             } = client.spaces.default.db.query(Folder.filter({ name: SHARED }));
-            orderSubscriptions.get(sharedSpacesFolder.id)?.();
-            orderSubscriptions.set(
+            graphSubscriptions.get(sharedSpacesFolder.id)?.();
+            graphSubscriptions.set(
               sharedSpacesFolder.id,
-              objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch }),
+              objectToGraphNode({ object: sharedSpacesFolder, parent, dispatch, resolve }),
             );
           });
 
@@ -427,8 +411,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
           return () => {
             unsubscribe();
             spacesSubscription.unsubscribe();
-            orderSubscriptions.forEach((cb) => cb());
-            orderSubscriptions.clear();
+            graphSubscriptions.forEach((cb) => cb());
+            graphSubscriptions.clear();
             // unsubscribeHidden();
             // graphSubscriptions.clear();
           };
@@ -496,8 +480,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
               const space = intent.data.space;
               if (space instanceof SpaceProxy) {
                 // TODO(wittjosiah): Expose translations helper from theme plugin provides.
-                const backupBlob = await backupSpace(space, 'untitled document');
-                const spaceName = space.properties.name || 'untitled space';
+                const backupBlob = await backupSpace(space, 'unnamed document');
+                const spaceName = space.properties.name || 'unnamed space';
                 const url = URL.createObjectURL(backupBlob);
                 // TODO(burdon): See DebugMain useFileDownload
                 const element = document.createElement('a');
@@ -556,7 +540,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions): PluginDefinitio
               const object = intent.data.object;
               if (folder instanceof Folder && object instanceof TypedObject) {
                 folder.objects.push(intent.data.object);
-                return true;
+                return { id: object.id };
               }
               break;
             }

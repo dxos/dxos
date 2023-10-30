@@ -6,6 +6,7 @@ import type { Document } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -54,6 +55,7 @@ export type MarkdownSettingsProps = { editorMode?: EditorMode };
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides &
   StackProvides & {
     settings: MarkdownSettingsProps;

@@ -14,6 +14,7 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 // import { SketchPlugin } from '@braneframe/plugin-sketch';
@@ -57,6 +58,7 @@ const main = async () => {
       // Core framework.
       ErrorPlugin(),
       GraphPlugin(),
+      MetadataPlugin(),
       ClientPlugin({ config, services, types }),
 
       // Core UX.

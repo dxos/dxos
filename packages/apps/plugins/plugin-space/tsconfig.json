@@ -75,10 +75,7 @@
       "path": "../plugin-layout"
     },
     {
-      "path": "../plugin-navtree"
-    },
-    {
-      "path": "../plugin-theme"
+      "path": "../plugin-metadata"
     }
   ]
 }

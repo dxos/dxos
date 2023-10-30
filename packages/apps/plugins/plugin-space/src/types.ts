@@ -5,11 +5,11 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
-import type { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
@@ -43,13 +43,6 @@ export type ObjectViewer = {
  */
 export type SpaceState = {
   /**
-   * The space that is associated with the currently active graph node.
-   * If the current graph node does not itself represent a space, then it is the space of the nearest ancestor.
-   * If no ancestor represents a space, then it is undefined.
-   */
-  active: Space | undefined;
-
-  /**
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
@@ -59,8 +52,9 @@ export type SpaceSettingsProps = { showHidden?: boolean };
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
+  MetadataRecordsProvides &
   GraphBuilderProvides &
   TranslationsProvides & {
-    settings: SpaceSettingsProps;
-    space: SpaceState;
+    settings: Readonly<SpaceSettingsProps>;
+    space: Readonly<SpaceState>;
   };

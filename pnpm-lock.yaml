@@ -515,6 +515,9 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-metadata':
+        specifier: workspace:*
+        version: link:../plugins/plugin-metadata
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
@@ -1802,6 +1805,25 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-metadata:
+    dependencies:
+      deepsignal:
+        specifier: 1.4.0-shallow.0
+        version: 1.4.0-shallow.0(react@18.2.0)
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-navtree:
     dependencies:
       '@braneframe/types':
@@ -2218,12 +2240,9 @@ importers:
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
-      '@braneframe/plugin-navtree':
+      '@braneframe/plugin-metadata':
         specifier: workspace:*
-        version: link:../plugin-navtree
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
+        version: link:../plugin-metadata
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
