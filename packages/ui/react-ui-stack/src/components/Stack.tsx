@@ -3,13 +3,14 @@
 //
 
 import React, { type FC, forwardRef, useMemo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { List, useTranslation } from '@dxos/react-ui';
 import {
-  Mosaic,
   type MosaicContainerProps,
   type MosaicDataItem,
   type MosaicTileComponent,
+  Mosaic,
   Path,
   useContainer,
   useItemsWithPreview,
@@ -48,6 +49,7 @@ export const Stack = ({
   onDrop,
   onRemoveSection,
 }: StackProps) => {
+  const { ref: containerRef, width } = useResizeDetector({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
@@ -73,16 +75,20 @@ export const Stack = ({
     [id, SectionContent],
   );
 
+  console.log('::::', width);
+
   return (
-    <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
-      <Mosaic.DroppableTile
-        path={id}
-        className={className}
-        item={{ id, items: itemsWithPreview }}
-        Component={StackTile}
-        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
-      />
-    </Mosaic.Container>
+    <div ref={containerRef}>
+      <Mosaic.Container {...{ id, Component, onOver, onDrop }}>
+        <Mosaic.DroppableTile
+          path={id}
+          className={className}
+          item={{ id, items: itemsWithPreview }}
+          Component={StackTile}
+          isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+        />
+      </Mosaic.Container>
+    </div>
   );
 };
 

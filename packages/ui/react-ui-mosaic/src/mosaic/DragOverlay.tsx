@@ -63,7 +63,7 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   // NOTE: The DragOverlay wrapper element must always be mounted to support animations. Conditionally render the content.
   return (
     // TODO(burdon): Set custom animations (e.g., in/out/around).
-    <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }}>
+    <DragOverlay adjustScale={false} {...overlayProps} style={{ ...container?.getOverlayStyle?.() }} className='ring'>
       {/* TODO(burdon): Configure density via getOverlayProps. */}
       {activeItem?.path && container && OverlayComponent && (
         <DensityProvider density='fine'>
