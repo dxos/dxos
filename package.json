@@ -16,7 +16,7 @@
     "conform": "conform",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
-    "postinstall": "node -r @swc-node/register tools/executors/toolbox/src/toolbox.ts",
+    "postinstall": "TS_NODE_PROJECT=tools/executors/toolbox/tsconfig.json node -r ts-node/register tools/executors/toolbox/src/toolbox.ts",
     "install-playwright": "playwright install",
     "lint": "nx run-many --target=lint --fix",
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
