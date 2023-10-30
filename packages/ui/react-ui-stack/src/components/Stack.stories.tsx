@@ -5,12 +5,13 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-import React, { useRef, useState } from 'react';
+import React, { ReactElement, useRef, useState } from 'react';
 
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
 
 import { Stack, type StackProps, type StackSectionItem } from './Stack';
 import { FullscreenDecorator, TestObjectGenerator } from '../testing';
+import { StoryObj } from '@storybook/react';
 
 faker.seed(3);
 
@@ -36,7 +37,7 @@ export default {
       </Mosaic.Root>
     );
   },
-};
+} as any;
 
 export const Empty = {
   args: {
@@ -61,7 +62,7 @@ export const Complex = {
   },
 };
 
-export const Transfer = {
+export const Transfer: StoryObj<DemoStackProps & { debug: boolean }> = {
   args: {
     Component: SimpleContent,
     types: ['document'],
@@ -84,7 +85,7 @@ export const Transfer = {
   decorators: [FullscreenDecorator()],
 };
 
-export const Copy = {
+export const Copy: StoryObj<DemoStackProps & { debug: boolean }> = {
   args: {
     Component: SimpleContent,
     types: ['document'],

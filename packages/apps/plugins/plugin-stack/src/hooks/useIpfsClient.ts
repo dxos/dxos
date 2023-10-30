@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create } from 'ipfs-http-client';
+import { create, type IPFSHTTPClient } from 'ipfs-http-client';
 import { useMemo } from 'react';
 
 import { useConfig } from '@dxos/react-client';
@@ -42,7 +42,7 @@ export const defaultFileTypes = {
  * - https://www.npmjs.com/package/ipfs-http-client
  */
 // TODO(burdon): Factor out and remove Remove dxos/react-ipfs package.
-export const useIpfsClient = ({ timeout = 30_000 }: { timeout?: number } = {}) => {
+export const useIpfsClient = ({ timeout = 30_000 }: { timeout?: number } = {}): IPFSHTTPClient | undefined => {
   const config = useConfig();
   const ipfsClient = useMemo(() => {
     const server = config.values.runtime?.services?.ipfs?.server;

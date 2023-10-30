@@ -13,8 +13,8 @@
       "DOM",
       "ESNext"
     ],
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noImplicitOverride": true,
     "resolveJsonModule": true,

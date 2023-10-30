@@ -3,7 +3,7 @@
 //
 
 import { DotsSixVertical, X } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren, forwardRef, ForwardRefExoticComponent, RefAttributes } from 'react';
 
 import { Button, DensityProvider, ListItem, useTranslation } from '@dxos/react-ui';
 import { type MosaicActiveType, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -35,7 +35,7 @@ export type SectionProps = PropsWithChildren<{
   onRemove?: MosaicTileProps['onRemove'];
 }>;
 
-export const Section = forwardRef<HTMLLIElement, SectionProps>(
+export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<HTMLLIElement, SectionProps>(
   ({ id, title, active, draggableProps, draggableStyle, onRemove, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
