@@ -1,7 +1,7 @@
 import { FunctionsPlugin } from '@dxos/agent';
 import { Trigger } from '@dxos/async';
 import { Game, types } from '@dxos/chess-app/proto';
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { subscribe } from '@dxos/echo-schema';
 import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
@@ -16,15 +16,28 @@ test('chess function', async () => {
   const testBuilder = new TestBuilder();
   afterTest(() => testBuilder.destroy());
   const services = testBuilder.createLocal();
-  const client = new Client({ services });
+
+  const config = new Config({
+    runtime: {
+      agent: {
+        plugins: [{
+          id: 'dxos.org/agent/plugin/functions',
+          enabled: true,
+          config: {
+            port: HUB_PORT,
+          }
+        }]
+      }
+    }
+  })
+
+  const client = new Client({ services, config });
   await client.initialize();
   afterTest(() => client.destroy());
 
   client.addTypes(types)
 
-  const functionsPlugin = new FunctionsPlugin({
-    port: HUB_PORT,
-  });
+  const functionsPlugin = new FunctionsPlugin();
   await functionsPlugin.initialize({
     client,
     clientServices: services,
