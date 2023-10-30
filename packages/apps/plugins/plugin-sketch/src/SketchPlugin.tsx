@@ -100,7 +100,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
             case 'section':
               return isSketch(data.object) ? <SketchSection sketch={data.object} /> : null;
-            case 'presenter-slide':
+            case 'slide':
               return isSketch(data.slide) ? <SketchSlide sketch={data.slide} /> : null;
             default:
               return null;

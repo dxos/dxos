@@ -45,7 +45,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'shift+meta+f',
+              keyBinding: 'shift+meta+s',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: SEARCH_PLUGIN,
@@ -72,7 +72,6 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
           switch (intent.action) {
             case SearchAction.SEARCH: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              console.log('::');
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
                 data: { state: true },
