@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Intersect, Planet } from '@phosphor-icons/react';
+import { Intersect, Plus } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import React from 'react';
@@ -287,7 +287,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             properties: {
               // TODO(burdon): Factor out palette constants.
               palette: 'pink',
-              'data-testid': 'spacePlugin.allSpaces',
+              testId: 'spacePlugin.allSpaces',
               acceptPersistenceClass: new Set(['appState']),
               childrenPersistenceClass: 'appState',
               onRearrangeChildren: (nextOrder: string[]) => {
@@ -339,7 +339,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             {
               id: 'create-space',
               label: ['create space label', { ns: 'os' }],
-              icon: (props) => <Planet {...props} />,
+              icon: (props) => <Plus {...props} />,
               properties: {
                 disposition: 'toolbar',
                 testId: 'spacePlugin.createSpace',
@@ -355,7 +355,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               label: ['join space label', { ns: 'os' }],
               icon: (props) => <Intersect {...props} />,
               properties: {
-                disposition: 'toolbar',
                 testId: 'spacePlugin.joinSpace',
               },
               invoke: () =>

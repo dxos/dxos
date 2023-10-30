@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, Plus } from '@phosphor-icons/react';
+import { ArticleMedium } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
@@ -214,14 +214,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const space = parent.data;
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            properties: {
-              testId: 'markdownPlugin.createDocument',
-              disposition: 'toolbar',
-            },
+            icon: (props) => <ArticleMedium {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
@@ -236,6 +232,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   action: LayoutAction.ACTIVATE,
                 },
               ]),
+            properties: {
+              testId: 'markdownPlugin.createDocument',
+            },
           });
 
           return adapter?.createNodes(space, parent);

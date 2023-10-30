@@ -13,7 +13,7 @@ import { MAP_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: TypedObject): Node<TypedObject> => {
   const [child] = parent.addNode(MAP_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['object title placeholder', { ns: MAP_PLUGIN }],
+    label: object.title || ['object title placeholder', { ns: MAP_PLUGIN }],
     icon: (props) => <Compass {...props} />,
     data: object,
     properties: {

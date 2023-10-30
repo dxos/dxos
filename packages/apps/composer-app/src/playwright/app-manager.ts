@@ -40,7 +40,6 @@ export class AppManager {
   }
 
   async createSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
   }
@@ -56,7 +55,7 @@ export class AppManager {
   }
 
   async createDocument() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel1').last().click();
+    await this.page.getByTestId('spacePlugin.createObject').last().click();
     return this.page.getByTestId('markdownPlugin.createDocument').last().click();
   }
 

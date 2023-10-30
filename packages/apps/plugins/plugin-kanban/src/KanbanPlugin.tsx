@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Kanban } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
@@ -43,10 +43,10 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${KANBAN_PLUGIN}/create`,
             label: ['create kanban label', { ns: KANBAN_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Kanban {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
