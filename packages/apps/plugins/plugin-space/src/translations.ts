@@ -33,6 +33,7 @@ export default [
         'show hidden spaces label': 'Show hidden spaces',
         'rename object label': 'Rename',
         'delete object label': 'Delete',
+        'create object group label': 'Add to space',
       },
     },
   },
