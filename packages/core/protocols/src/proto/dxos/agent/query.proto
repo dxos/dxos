@@ -24,7 +24,7 @@ message QueryResult {
  object.EchoObject item = 5;
 }
 
-message SearchResponse {
+message QueryResponse {
   repeated QueryResult results = 1;
 }
 
