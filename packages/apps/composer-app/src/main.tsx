@@ -17,6 +17,7 @@ import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -71,6 +72,7 @@ const main = async () => {
 
       // Presentation plugins.
       MarkdownPlugin(),
+      PresenterPlugin(), // Before Stack.
       StackPlugin(),
       SketchPlugin(),
     ],

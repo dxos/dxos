@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 
 import { Document as DocumentType, Table as TableType } from '@braneframe/types';
-import { type Space, Text } from '@dxos/client/echo';
+import { type Space, TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, type TestSchemaType } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -61,7 +61,7 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    this._space.db.add(new DocumentType({ title, content: new Text(content) }));
+    this._space.db.add(new DocumentType({ title, content: new TextObject(content) }));
   }
 
   updateDocument() {

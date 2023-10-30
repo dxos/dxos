@@ -6,7 +6,7 @@ import startCase from 'lodash.startcase';
 import { type ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
-import { type Space, Text, TextKind } from '@dxos/client/echo';
+import { type Space, TextObject, TextKind } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { type Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
@@ -80,7 +80,7 @@ export class ContactStackResolver implements Resolver<DocumentStack> {
       // const data = parseJson(content);
 
       // TODO(burdon): Add formatting?
-      const text = new Text([title, '', content].join('\n'), TextKind.RICH);
+      const text = new TextObject([title, '', content].join('\n'), TextKind.RICH);
       const document = await space.db.add(new Document({ title, content: text }));
 
       // TODO(burdon): Add metadata.

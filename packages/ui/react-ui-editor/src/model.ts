@@ -6,7 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { type ComponentProps, useMemo } from 'react';
 import type * as awarenessProtocol from 'y-protocols/awareness';
 
-import { type Space, type Text } from '@dxos/react-client/echo';
+import { type Space, type TextObject } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
@@ -40,7 +40,7 @@ export type ComposerModel = {
 export type UseTextModelOptions = {
   identity?: Identity | null;
   space?: Space;
-  text?: Text;
+  text?: TextObject;
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
