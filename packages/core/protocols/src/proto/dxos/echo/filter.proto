@@ -1,0 +1,49 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+import "dxos/keys.proto";
+
+package dxos.echo.filter;
+
+
+message QueryOptions {
+  enum ShowDeletedOption {
+    /// Do not return deleted items. Default behaviour.
+    HIDE_DELETED = 0;
+
+    /// Return deleted and regular items.
+    SHOW_DELETED = 1;
+
+    /// Return only deleted items.
+    SHOW_DELETED_ONLY = 2;
+  }
+
+  /// Controls how deleted items are filtered.
+  optional ShowDeletedOption deleted = 1;
+
+  /**
+   * Filter by model.
+   * @default * Only DocumentModel.
+   * To querty all models, use `models: ["*"]`.
+   */
+  repeated string models = 2;
+
+  /**
+   * Query only in specific spaces.
+   */
+  repeated dxos.keys.PublicKey spaces = 3;
+}
+
+/**
+ * Protocol for ephemeral Filter serialization.
+ */
+message Filter {
+  optional google.protobuf.Struct properties = 1;
+  optional google.protobuf.Struct type = 2;
+  optional string text_match = 3;
+}

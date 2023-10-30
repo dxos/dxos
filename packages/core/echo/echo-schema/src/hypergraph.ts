@@ -9,6 +9,7 @@ import { type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
@@ -19,7 +20,6 @@ import {
   Query,
   type FilterSource,
   type QueryContext,
-  type QueryOptions,
   type QueryResult,
   type QuerySource,
 } from './query';
@@ -86,9 +86,7 @@ export class Hypergraph {
    * Filter by type.
    */
   query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    const spaces = options?.spaces?.map(
-      (entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey ? entry.key : (entry as PublicKey)),
-    );
+    const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
     return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
