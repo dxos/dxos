@@ -8,8 +8,8 @@ import { Trigger } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
-import { createDatabase } from './testing';
 import { Expando } from './typed-object';
+import { createDatabase } from '../testing';
 
 describe('create subscription', () => {
   test('updates are propagated', async () => {

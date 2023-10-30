@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
-import { baseSurface, coarseBlockSize, fixedSurface, getSize, mx } from '@dxos/react-ui-theme';
+import { baseSurface, coarseBlockSize, getSize, mx } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
@@ -98,7 +98,7 @@ export const SplitView = ({ fullscreen, showComplementarySidebar = true }: Split
 
         {/* Status info. */}
         {/* TODO(burdon): Currently covered by complementary sidebar. */}
-        <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]', fixedSurface)}>
+        <div role='none' aria-label={t('status label')} className={mx('fixed bottom-0 right-0 z-[1]')}>
           <Surface role='status' />
         </div>
 

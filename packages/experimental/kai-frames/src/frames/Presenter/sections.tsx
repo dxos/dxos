@@ -7,12 +7,12 @@ import React, { type FC } from 'react';
 import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
-import { Composer } from '@dxos/react-ui-editor';
 import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { type Config, useConfig } from '@dxos/react-client';
-import { Text, type TypedObject } from '@dxos/react-client/echo';
+import { TextObject, type TypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Composer } from '@dxos/react-ui-editor';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';
@@ -43,7 +43,7 @@ export const sectionActions = (config: Config, section?: DocumentStack.Section) 
         onAction: (stack, section, object) => {
           const url = urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object!.cid);
           const idx = section ? stack.sections.findIndex(({ id }) => id === section.id) : stack.sections.length;
-          const document = new Document({ content: new Text(`![${object?.name}](${url})`, TextKind.PLAIN) });
+          const document = new Document({ content: new TextObject(`![${object?.name}](${url})`, TextKind.PLAIN) });
           stack.sections.splice(idx, 0, new DocumentStack.Section({ object: document }));
         },
       },
