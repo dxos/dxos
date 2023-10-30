@@ -10,15 +10,15 @@ import { findPlugin, usePlugins } from '@dxos/app-framework';
 import { Expando, type TypedObject } from '@dxos/client/echo';
 import { Main } from '@dxos/react-ui';
 import {
-  type MosaicTileAction,
   Grid,
   type MosaicDropEvent,
-  type Position,
+  type MosaicTileAction,
   type MosaicOperation,
+  type Position,
 } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { colors, GridCard } from './GridCard';
+import { colors, getObject, GridCard } from './GridCard';
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const { plugins } = usePlugins();
@@ -63,9 +63,7 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     if (grid.items.includes(active.item as any)) {
       grid.layout.position[active.item.id] = over.position;
     } else {
-      // TODO(burdon): Fail if not expando?
-      // TODO(burdon): Have to dive into object if SearchResult (need adapter?)
-      const object: TypedObject = (active.item as any).node?.data ?? (active.item as any).object ?? active.item;
+      const object: TypedObject = getObject(active.item);
       const item = new GridType.Item({ object });
 
       grid.items.push(item);

@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
+import { type TextObject, type TypedObject } from '@dxos/client/echo';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -20,7 +20,10 @@ export const colors: Record<string, string> = {
   blue: 'bg-cyan-50',
 };
 
-type ValueAccessor<TObject extends {}, TValue> = {
+// TODO(burdon): Need lenses (which should be normalized outside of card).
+export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
+
+export type ValueAccessor<TObject extends {}, TValue> = {
   getValue(object: TObject): TValue;
   setValue(object: TObject, value: TValue | undefined): void;
 };
@@ -31,12 +34,8 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {
     const { t } = useTranslation(GRID_PLUGIN);
 
-    // TODO(burdon): JSON recursion error.
-    console.log(JSON.stringify({ id: item.id, title: '::' + item.title }, null, 2));
-
-    // TODO(burdon): Need lenses (which should be normalized outside of card).
     const titleAccessor: ValueAccessor<GridCardProps, string> = {
-      getValue: (object) => (item as any).object?.title ?? object.title ?? '',
+      getValue: (object) => getObject(item).title ?? '',
       setValue: (object, value) => {
         if ((item as any).object) {
           (item as any).object.title = value;
@@ -47,7 +46,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     };
 
     const content = useTextModel({
-      text: (item as any).object?.content ?? (item as any).object?.description ?? item.content,
+      text: getObject(item).content ?? getObject(item).description,
     });
 
     const color = (item.color && colors[item.color]) ?? colors.gray;
