@@ -524,6 +524,9 @@ importers:
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
+      '@braneframe/plugin-presenter':
+        specifier: workspace:*
+        version: link:../plugins/plugin-presenter
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
