@@ -56,15 +56,11 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
-
-        // TODO(burdon): Required until integrated with theme.
-        resolve(__dirname, './node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-table/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-dnd/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-grid/node_modules/@dxos/react-ui-mosaic/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-stack/node_modules/@dxos/react-ui-stack/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-navtree/node_modules/@dxos/react-ui-navtree/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/devtools/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/vault/dist/lib/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269
@@ -79,7 +75,7 @@ export default defineConfig({
         name: 'DXOS Labs',
         short_name: 'Labs',
         description: 'DXOS Labs',
-        theme_color: '#ffffff',
+        theme_color: '#003E70',
         icons: [
           {
             src: 'icons/icon-32.png',
@@ -89,6 +85,16 @@ export default defineConfig({
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
+            type: 'image/png',
+          },
+          {
+            src: 'android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'android-chrome-512x512.png',
+            sizes: '512x512',
             type: 'image/png',
           },
         ],
