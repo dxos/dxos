@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { EchoDatabase } from './database';
-import { type EchoObjectBase } from './echo-object-base';
-import { type Schema } from './proto';
+import { type AbstractEchoObject } from './object';
+import type { EchoDatabase } from '../database';
+import { type Schema } from '../proto';
+
+// TODO(burdon): Don't export symbols outside of package?
 
 // TypedObject
 export const schema = Symbol.for('dxos.echo.schema');
@@ -37,7 +39,7 @@ export interface EchoObject {
    * Returns the underlying object.
    * Same as `this` for non-proxied objects.
    */
-  [base]: EchoObjectBase;
+  [base]: AbstractEchoObject;
 
   /**
    * The database this object belongs to.

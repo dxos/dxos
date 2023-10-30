@@ -7,14 +7,14 @@ import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expec
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createDatabase } from './testing';
-import { Text } from './text-object';
+import { TextObject } from './text-object';
 import { TypedObject } from './typed-object';
+import { createDatabase } from '../testing';
 
-describe('Text', () => {
+describe('TextObject', () => {
   test('basic', async () => {
     const { db } = await createDatabase();
-    const text = new Text();
+    const text = new TextObject();
     db.add(text);
     await db.flush();
 
@@ -30,7 +30,7 @@ describe('Text', () => {
     const task = new TypedObject();
     db.add(task);
     await db.flush();
-    task.text = new Text();
+    task.text = new TextObject();
     await sleep(10);
     expect(task.text.doc).toBeDefined();
     expect(task.text.model).toBeDefined();
