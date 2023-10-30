@@ -229,5 +229,5 @@ const EchoGraphStory = () => {
 
 export const EchoGraph = {
   render: () => <EchoGraphStory />,
-  decorators: [ClientDecorator({ clients: [client], className: 'flex flex-col' })],
+  decorators: [ClientDecorator({ clients: [client], className: 'flex flex-col' })] as any, // TODO(dmaretskyi): Non portable type TS error.
 };

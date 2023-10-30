@@ -218,7 +218,7 @@ export const Default = {
       <Invitations {...args} />
     </Tooltip.Provider>
   ),
-  decorators: [ClientDecorator({ count: 3 })],
+  decorators: [ClientDecorator({ count: 3 })] as any, // TODO(dmaretskyi): Non portable type TS error.
   parameters: {
     chromatic: { disableSnapshot: true },
   },
