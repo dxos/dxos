@@ -39,7 +39,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
     ValueUtil.applyValue(object, 'meta', snapshot.meta ?? DEFAULT_META_SNAPSHOT);
     this._object = object;
     if (snapshot.type) {
-      this._object.type = Reference.fromLegacyTypeName(snapshot.type);
+      this._object.type = Reference.fromLegacyTypename(snapshot.type);
     } else if (snapshot.typeRef) {
       this._object.type = Reference.fromValue(snapshot.typeRef);
     }

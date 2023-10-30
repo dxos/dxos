@@ -305,7 +305,7 @@
 * **aurora:** Popper overflows ([#4036](https://github.com/dxos/dxos/issues/4036)) ([71eb10c](https://github.com/dxos/dxos/commit/71eb10ca676feb00af2ebf213c4f78da89508506))
 * **client:** add default space ([#3860](https://github.com/dxos/dxos/issues/3860)) ([538bda2](https://github.com/dxos/dxos/commit/538bda20e43f15e5adf3e78155c71a74859eb334))
 * **client:** update halo profile ([#3933](https://github.com/dxos/dxos/issues/3933)) ([a63ce79](https://github.com/dxos/dxos/commit/a63ce79e0789b0e6c223a837429dcc2f6a34f605))
-* Devtools feed montioring ([#4000](https://github.com/dxos/dxos/issues/4000)) ([795aa44](https://github.com/dxos/dxos/commit/795aa44eb357350b9b720c8f8f9935686cf57100))
+* Devtools feed monitoring ([#4000](https://github.com/dxos/dxos/issues/4000)) ([795aa44](https://github.com/dxos/dxos/commit/795aa44eb357350b9b720c8f8f9935686cf57100))
 * devtools throuput calculation ([#3956](https://github.com/dxos/dxos/issues/3956)) ([cf6bb41](https://github.com/dxos/dxos/commit/cf6bb4109e778012c12a3f81cbfa627850359c96))
 * **echo:** Correctly resets database on Epoch ([#3934](https://github.com/dxos/dxos/issues/3934)) ([5db35f4](https://github.com/dxos/dxos/commit/5db35f4c5d9a9dab2ea96e1e3761b3d8200c648d))
 * Grid plugin ([#3926](https://github.com/dxos/dxos/issues/3926)) ([82d95f1](https://github.com/dxos/dxos/commit/82d95f1049e7153295e5db5f39e0f4e20b58be6d))

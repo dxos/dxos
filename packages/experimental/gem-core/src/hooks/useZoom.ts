@@ -85,7 +85,7 @@ export class ZoomHandler {
 
   reset(duration = 500) {
     // TODO(burdon): Scale to midpoint in extent.
-    const scale = this._options.extent?.[0] ?? 1;
+    const scale = 1; // this._options.extent?.[0] ?? 1;
     const transform = d3.zoomIdentity.scale(scale);
     d3.select(this._context.svg)
       .transition()

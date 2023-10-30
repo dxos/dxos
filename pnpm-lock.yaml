@@ -497,6 +497,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugins/plugin-client
+      '@braneframe/plugin-debug':
+        specifier: workspace:*
+        version: link:../plugins/plugin-debug
       '@braneframe/plugin-error':
         specifier: workspace:*
         version: link:../plugins/plugin-error
@@ -509,6 +512,9 @@ importers:
       '@braneframe/plugin-graph':
         specifier: workspace:*
         version: link:../plugins/plugin-graph
+      '@braneframe/plugin-ipfs':
+        specifier: workspace:*
+        version: link:../plugins/plugin-ipfs
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugins/plugin-layout
@@ -1119,6 +1125,9 @@ importers:
       '@braneframe/plugin-layout':
         specifier: workspace:*
         version: link:../plugin-layout
+      '@braneframe/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -4157,6 +4166,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -4164,6 +4176,12 @@ importers:
       '@dxos/echo-typegen':
         specifier: workspace:*
         version: link:../echo-typegen
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
