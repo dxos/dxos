@@ -6080,7 +6080,7 @@ importers:
         version: 8.0.2
     devDependencies:
       '@dxos/agent':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core/agent
       '@mediapipe/tasks-text':
         specifier: ^0.10.7

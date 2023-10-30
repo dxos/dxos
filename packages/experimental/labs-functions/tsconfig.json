@@ -37,6 +37,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../core/agent"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
