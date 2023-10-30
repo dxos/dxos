@@ -5,7 +5,7 @@
 import { DocumentModel, Reference } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { base, getDatabaseFromObject, isTypedObject, type EchoObject, type Expando, type TypedObject } from '../object';
 import { getReferenceWithSpaceKey } from '../object';
@@ -101,6 +101,21 @@ export class Filter<T extends EchoObject = EchoObject> {
     });
   }
 
+  static fromProto(proto: FilterProto): Filter {
+    const options = proto.options;
+    return new Filter(
+      {
+        type: proto.type && Reference.fromValue(proto.type),
+        properties: proto.properties,
+        text: proto.text,
+        not: proto.not,
+        and: proto.and?.map((filter) => Filter.fromProto(filter)),
+        or: proto.or?.map((filter) => Filter.fromProto(filter)),
+      },
+      options,
+    );
+  }
+
   // TODO(burdon): Make plain immutable object (unless generics are important).
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
@@ -128,6 +143,18 @@ export class Filter<T extends EchoObject = EchoObject> {
 
   get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces;
+  }
+
+  serialize(): FilterProto {
+    return {
+      properties: this.properties,
+      type: this.type?.encode(),
+      text: this.text,
+      not: this.not,
+      and: this.and.map((filter) => filter.serialize()),
+      or: this.or.map((filter) => filter.serialize()),
+      options: this.options,
+    };
   }
 }
 

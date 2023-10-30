@@ -7,6 +7,7 @@ syntax = "proto3";
 import "google/protobuf/struct.proto";
 
 import "dxos/keys.proto";
+import "dxos/echo/model/document.proto";
 
 package dxos.echo.filter;
 
@@ -44,6 +45,10 @@ message QueryOptions {
  */
 message Filter {
   optional google.protobuf.Struct properties = 1;
-  optional google.protobuf.Struct type = 2;
-  optional string text_match = 3;
+  optional dxos.echo.model.document.Reference type = 2;
+  optional string text = 3;
+  optional bool not = 4;
+  repeated Filter and = 5; 
+  repeated Filter or = 6;
+  QueryOptions options = 7; 
 }
