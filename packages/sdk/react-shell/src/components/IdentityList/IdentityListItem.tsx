@@ -24,7 +24,7 @@ export const IdentityListItem = forwardRef<HTMLLIElement, IdentityListItemProps>
     const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
     return (
       <ListItem.Root
-        classNames={mx('rounded p-2 flex gap-2 items-center', onClick && 'cursor-pointer')}
+        classNames={mx('flex gap-2 pli-1 items-center', onClick && 'cursor-pointer')}
         onClick={() => onClick?.()}
         data-testid='identity-list-item'
         labelId={labelId}
