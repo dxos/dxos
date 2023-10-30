@@ -166,7 +166,7 @@ export class Hypergraph {
         context.addQuerySource(new SpaceQuerySource(database));
       }
       for (const provider of this._querySourceProviders) {
-        context.addQuerySource(await provider.create());
+        context.addQuerySource(provider.create());
       }
     });
     this._queryContexts.set({}, context);
