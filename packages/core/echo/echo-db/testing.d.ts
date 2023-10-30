@@ -8,4 +8,4 @@
  * import { ... } from '@dxos/echo-db/testing';
  * ```
  */
-export * from './dist/types/src/packlets/testing';
+export * from './dist/types/src/testing';

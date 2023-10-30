@@ -4,7 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import { type Text } from '@dxos/client/echo';
+import { type TextObject } from '@dxos/client/echo';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -20,7 +20,7 @@ export const colors: Record<string, string> = {
   blue: 'bg-cyan-50',
 };
 
-export type GridCardProps = { id: string; title?: string; content?: Text; image?: string; color?: string };
+export type GridCardProps = { id: string; title?: string; content?: TextObject; image?: string; color?: string };
 
 export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {

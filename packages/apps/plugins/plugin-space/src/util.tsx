@@ -10,7 +10,7 @@ import { type Node } from '@braneframe/plugin-graph';
 import { ObjectOrder } from '@braneframe/types';
 import { type DispatchIntent } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { clone, type Query } from '@dxos/echo-schema';
+import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
@@ -87,9 +87,11 @@ export const spaceToGraphNode = ({
               order: nextOrder,
             });
             space.db.add(nextObjectOrder);
+            spaceOrder = nextObjectOrder;
           } else {
             spaceOrder.order = nextOrder;
           }
+          updateSpaceOrder({ objects: [spaceOrder] });
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
@@ -110,7 +112,7 @@ export const spaceToGraphNode = ({
     });
   });
 
-  const updateSpaceOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+  const updateSpaceOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
     spaceOrder = spacesOrders[0];
     node.childrenMap = inferRecordOrder(node.childrenMap, spaceOrder?.order);
   };

@@ -19,7 +19,7 @@ import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import {
   type QueryOptions,
   type FilterSource,
-  type HyperGraph,
+  type Hypergraph,
   type Query,
   type TypeCollection,
   type TypedObject,
@@ -47,7 +47,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
-    private readonly _graph: HyperGraph,
+    private readonly _graph: Hypergraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal

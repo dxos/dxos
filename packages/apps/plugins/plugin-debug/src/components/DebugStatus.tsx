@@ -13,11 +13,12 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {
-  success: 'text-green-500 dark:text-green-600',
-  warning: 'text-orange-500 dark:text-orange-600',
-  error: 'text-red-500 dark:text-red-600',
+  success: 'text-sky-300 dark:text-green-700',
+  warning: 'text-orange-300 dark:text-orange-600',
+  error: 'text-red-300 dark:text-red-600',
 };
 
+// TODO(burdon): Move out of debug plugin.
 // TODO(burdon): Make pluggable (move indicators to relevant plugins).
 // TODO(burdon): Vault heartbeat indicator (global scope)?
 
@@ -185,7 +186,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
 export const DebugStatus = () => {
   const indicators = [SavingIndicator, ErrorIndicator, SwarmIndicator];
   return (
-    <div className='flex items-center px-1 gap-1 h-6 text-neutral-300 dark:text-neutral-700 border-l border-t'>
+    <div className='flex items-center px-1 gap-1 h-6 text-neutral-200 dark:text-neutral-800'>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}
