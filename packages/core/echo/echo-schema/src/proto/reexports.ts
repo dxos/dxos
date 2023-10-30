@@ -6,5 +6,5 @@
 
 export { type TypedObjectOptions, TextObject, TypedObject } from '../object';
 export { TypeCollection } from '../type-collection';
-export { Filter } from '../query';
+export { Filter, type OperatorFilter } from '../query';
 export { type Schema } from './index';

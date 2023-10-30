@@ -159,4 +159,14 @@ describe('database', () => {
 
     expect(() => db1.add(task1)).to.throw;
   });
+
+  test('operator-based filters', async () => {
+    const { db: database } = await createDatabase(new Hypergraph().addTypes(types));
+
+    database.add(new Task({ title: 'foo 1' }));
+    database.add(new Task({ title: 'foo 2' }));
+    database.add(new Task({ title: 'bar 3' }));
+
+    expect(database.query(Task.filter((task) => task.title.startsWith('foo'))).objects).to.have.length(2);
+  });
 });
