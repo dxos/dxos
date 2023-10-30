@@ -3430,8 +3430,8 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
       yaml:
-        specifier: ^2.1.3
-        version: 2.2.2
+        specifier: ^2.3.3
+        version: 2.3.3
       yargs:
         specifier: ~16.2.0
         version: 16.2.0
@@ -3853,8 +3853,8 @@ importers:
         specifier: ^7.4.4
         version: 7.5.9
       yaml:
-        specifier: ^2.1.3
-        version: 2.2.2
+        specifier: ^2.3.3
+        version: 2.3.3
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
@@ -35910,7 +35910,7 @@ packages:
       lilconfig: 2.1.0
       postcss: 8.4.24
       ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.3.70)(@types/node@18.11.9)(typescript@5.2.2)
-      yaml: 2.2.2
+      yaml: 2.3.3
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.4.24):
     resolution: {integrity: sha512-bdHleFnP3kZ4NYDhuGlVK+CMrQ/pqUm8bx/oGL93K6gVwiclvX5x0n76fYMKuIGKzlABOy13zsvqjb0f92TEXw==}
@@ -37700,7 +37700,7 @@ packages:
       estree-util-value-to-estree: 2.1.0
       toml: 3.0.0
       unified: 10.1.2
-      yaml: 2.2.2
+      yaml: 2.3.3
     dev: true
 
   /remark-mdx@2.1.5:
@@ -43139,6 +43139,11 @@ packages:
 
   /yaml@2.2.2:
     resolution: {integrity: sha512-CBKFWExMn46Foo4cldiChEzn7S7SRV+wqiluAb6xmueD/fGyRHIhX8m14vVGgeFWjN540nKCNVj6P21eQjgTuA==}
+    engines: {node: '>= 14'}
+    dev: true
+
+  /yaml@2.3.3:
+    resolution: {integrity: sha512-zw0VAJxgeZ6+++/su5AFoqBbZbrEakwu+X0M5HmcwUiBL7AzcuPKjj5we4xfQLp78LkEMpD0cOnUhmgOVy3KdQ==}
     engines: {node: '>= 14'}
 
   /yargs-parser@18.1.3:
