@@ -58,7 +58,7 @@ export const objectToGraphNode = ({
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const space = getSpaceForObject(object);
-  const metadata = object.__typename ? resolve(object.__typename) : {};
+  const metadata = object.__typename ? resolve(object.__typename) : object.type ? resolve(object.type) : {};
   const isFolder = object instanceof Folder;
   const isSpaceFolder = isFolder && space && object.name === space.key.toHex();
   const isPersonalSpace = isSpaceFolder && parent.id === ROOT;

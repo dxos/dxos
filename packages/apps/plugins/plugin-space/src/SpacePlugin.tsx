@@ -465,6 +465,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               }
               break;
             }
+
+            case SpaceAction.TOGGLE_HIDDEN: {
+              settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
+              return true;
+            }
           }
         },
       },

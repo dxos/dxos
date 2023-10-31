@@ -2,45 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { type IconProps, Plus, SquaresFour } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { Grid as GridType } from '@braneframe/types';
+import { SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Grid as GridType } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/client/echo';
 
 import { GridMain } from './components';
 import translations from './translations';
-import { isGrid, GRID_PLUGIN, GridAction, type GridPluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { GRID_PLUGIN, GridAction, type GridPluginProvides, isGrid } from './types';
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[GridType.name] = GridType;
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
-  let adapter: GraphNodeAdapter<GridType> | undefined;
-
   return {
     meta: {
       id: GRID_PLUGIN,
     },
-    ready: async (plugins) => {
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides.intent.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({ dispatch, filter: GridType.filter(), adapter: objectToGraphNode });
-      }
-    },
-    unload: async () => {
-      adapter?.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [GridType.schema.typename]: {
+            fallbackName: ['grid title placeholder', { ns: GRID_PLUGIN }],
+            icon: (props: IconProps) => <SquaresFour {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           parent.addAction({
@@ -54,8 +51,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                   action: GridAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { spaceKey: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -65,8 +62,6 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
               testId: 'gridPlugin.createObject',
             },
           });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       surface: {

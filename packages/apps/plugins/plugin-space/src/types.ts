@@ -29,6 +29,7 @@ export enum SpaceAction {
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
   ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
   REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
+  TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 
 export type ObjectViewer = {
@@ -54,6 +55,7 @@ export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   MetadataRecordsProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides & {
     settings: Readonly<SpaceSettingsProps>;
     space: Readonly<PluginState>;

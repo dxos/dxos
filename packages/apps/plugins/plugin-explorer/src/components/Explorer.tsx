@@ -4,9 +4,9 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
-import { type Schema, type Space, type TypedObject } from '@dxos/client/echo';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
+import { type Schema, type Space, type TypedObject } from '@dxos/react-client/echo';
 
 import { EchoGraphModel } from './graph-model';
 

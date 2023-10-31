@@ -4,7 +4,6 @@
 
 import { ArticleMedium, type IconProps, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
-import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
@@ -174,7 +173,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             icon: (props) => <Plus {...props} />,
             properties: {
               testId: 'markdownPlugin.createDocument',
-              disposition: 'toolbar',
             },
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
@@ -191,8 +189,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 },
               ]),
           });
-
-          // return adapter?.createNodes(space, parent);
         },
       },
       stack: {
@@ -268,10 +264,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             // TODO(burdon): Review with @thure.
             case 'dialog': {
-              if (
-                get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
-                get(data, 'id') === 'choose-stack-section-doc'
-              ) {
+              if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
                 // return <SpaceMarkdownChooser />;
                 return null;
               }

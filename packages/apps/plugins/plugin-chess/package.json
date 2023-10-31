@@ -15,26 +15,19 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/chess-app": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "chess.js": "1.0.0-alpha.0",
-    "deepsignal": "1.4.0-shallow.0",
-    "lodash.get": "^4.4.2"
+    "deepsignal": "1.4.0-shallow.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -42,11 +35,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

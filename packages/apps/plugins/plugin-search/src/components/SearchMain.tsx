@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import type { SpacePluginProvides } from '@braneframe/plugin-space';
-import { usePlugin } from '@dxos/app-framework';
+import { getActiveSpace } from '@braneframe/plugin-space';
+import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
@@ -16,8 +16,13 @@ export const SearchMain = () => {
   const { setMatch } = useSearch();
 
   // TODO(burdon): Query agent/cross-space.
-  const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
-  const space = spacePlugin?.provides.space.active;
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  // console.log('layout:', layoutPlugin?.provides.layout.active);
+  const graphPlugin = useResolvePlugin(parseGraphPlugin);
+  const layout = layoutPlugin?.provides.layout;
+  const graph = graphPlugin?.provides.graph;
+  const space = layout && graph ? getActiveSpace(graph, layout.active) : undefined;
+
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const { objects } = space?.db.query() ?? {};
   const results = useSearchResults(objects);

@@ -4,18 +4,15 @@
 
 import React from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { type View } from '@braneframe/types';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Explorer } from './Explorer';
 
-export const ExplorerMain = () => {
-  // TODO(burdon): Get from node.
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+export const ExplorerMain = ({ view }: { view: View }) => {
+  const space = getSpaceForObject(view);
   if (!space) {
     return null;
   }

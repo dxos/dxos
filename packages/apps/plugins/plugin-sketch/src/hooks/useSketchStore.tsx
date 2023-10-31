@@ -16,7 +16,7 @@ import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useMemo } from 'react';
 import { type Transaction, type YEvent } from 'yjs';
 
-import { type Text } from '@dxos/client/echo';
+import { type Text } from '@dxos/react-client/echo';
 
 type Unsubscribe = () => void;
 

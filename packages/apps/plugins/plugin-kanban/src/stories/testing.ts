@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 
 import { Kanban as KanbanType } from '@braneframe/types';
-import { Text } from '@dxos/echo-schema';
+import { Text } from '@dxos/react-client/echo';
 
 // TODO(burdon): Types.
 export const createKanban = () => {

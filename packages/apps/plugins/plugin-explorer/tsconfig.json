@@ -48,19 +48,7 @@
       "path": "../../types"
     },
     {
-      "path": "../../types"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

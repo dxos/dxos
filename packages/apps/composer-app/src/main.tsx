@@ -9,17 +9,17 @@ import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-// import { FilesPlugin } from '@braneframe/plugin-files';
-// import { GithubPlugin } from '@braneframe/plugin-github';
+import { FilesPlugin } from '@braneframe/plugin-files';
+import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
-// import { SketchPlugin } from '@braneframe/plugin-sketch';
+import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
-// import { StackPlugin } from '@braneframe/plugin-stack';
+import { StackPlugin } from '@braneframe/plugin-stack';
 import { TelemetryPlugin } from '@braneframe/plugin-telemetry';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { types, Document } from '@braneframe/types';
@@ -80,10 +80,10 @@ const main = async () => {
 
       // Apps.
       MarkdownPlugin(),
-      // StackPlugin(),
-      // FilesPlugin(),
-      // GithubPlugin(),
-      // SketchPlugin(),
+      StackPlugin(),
+      FilesPlugin(),
+      GithubPlugin(),
+      SketchPlugin(),
     ],
   });
 

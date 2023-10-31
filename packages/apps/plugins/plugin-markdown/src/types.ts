@@ -10,7 +10,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { ObjectMeta } from '@dxos/client/echo';
+import type { ObjectMeta } from '@dxos/react-client/echo';
 import type { EditorMode, MarkdownComposerProps } from '@dxos/react-ui-editor';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
