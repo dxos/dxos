@@ -87,5 +87,6 @@ export const os = {
   'invite one label': 'Invite one',
   'invite one description': 'Only one user may join.',
   'invite many label': 'Invite many',
-  'invite many description': 'Anyone with the link join.',
+  'invite many description': 'Anyone with the link can join.',
+  'invite options label': 'Change the active invite option.',
 };
