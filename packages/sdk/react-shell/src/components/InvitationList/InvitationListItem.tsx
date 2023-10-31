@@ -75,7 +75,7 @@ export const InvitationListItemImpl = ({
   ].includes(status);
 
   return (
-    <ListItem.Root id={invitationCode} classNames='flex gap-2 pli-1 items-center'>
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center'>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>

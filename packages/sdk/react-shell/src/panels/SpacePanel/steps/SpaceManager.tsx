@@ -82,7 +82,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'p-1 mbe-1 font-system-medium';
+const headingFragment = 'pis-3 pie-1 plb-1 mbe-1 font-system-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
@@ -125,7 +125,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   return (
     <>
       <ScrollArea.Root classNames='grow shrink basis-28 -mli-2'>
-        <ScrollArea.Viewport classNames='is-full pli-2'>
+        <ScrollArea.Viewport classNames='is-full pie-2'>
           {!!visibleInvitations?.length && (
             <>
               <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
