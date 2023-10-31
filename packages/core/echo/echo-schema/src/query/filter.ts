@@ -145,14 +145,14 @@ export class Filter<T extends EchoObject = EchoObject> {
     return this.options.spaces;
   }
 
-  serialize(): FilterProto {
+  toProto(): FilterProto {
     return {
       properties: this.properties,
       type: this.type?.encode(),
       text: this.text,
       not: this.not,
-      and: this.and.map((filter) => filter.serialize()),
-      or: this.or.map((filter) => filter.serialize()),
+      and: this.and.map((filter) => filter.toProto()),
+      or: this.or.map((filter) => filter.toProto()),
       options: this.options,
     };
   }
