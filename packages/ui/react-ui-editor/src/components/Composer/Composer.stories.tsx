@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
-import { Text, TextKind, useQuery, useSpace } from '@dxos/react-client/echo';
+import { TextObject, TextKind, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 import { useId } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ const { spaceKey: markdownSpaceKey, clients: markdownClients } = await setupPeer
   count: 2,
   schema,
   onCreateSpace: async (space) => {
-    const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
+    const document = new ComposerDocument({ content: new TextObject('Hello, Storybook!') });
     await space?.db.add(document);
   },
 });
@@ -62,7 +62,7 @@ const { spaceKey: richSpaceKey, clients: richClients } = await setupPeersInSpace
   count: 2,
   schema,
   onCreateSpace: async (space) => {
-    const document = new ComposerDocument({ content: new Text('Hello, Storybook!', TextKind.RICH) });
+    const document = new ComposerDocument({ content: new TextObject('Hello, Storybook!', TextKind.RICH) });
     await space?.db.add(document);
   },
 });

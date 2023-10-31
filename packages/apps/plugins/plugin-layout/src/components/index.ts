@@ -5,4 +5,4 @@
 export * from './ContentEmpty';
 export * from './ContextView';
 export * from './Fallback';
-export * from './SplitView';
+export * from './MainLayout';

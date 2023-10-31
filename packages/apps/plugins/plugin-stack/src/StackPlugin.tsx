@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { StackSimple } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
@@ -65,10 +65,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const space = parent.data;
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${STACK_PLUGIN}/create`,
             label: ['create stack label', { ns: STACK_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <StackSimple {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

@@ -57,6 +57,9 @@
       "path": "../plugin-layout"
     },
     {
+      "path": "../plugin-search"
+    },
+    {
       "path": "../plugin-space"
     },
     {

@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 
 import { types, Document } from '@braneframe/types';
 import { ClientContext } from '@dxos/react-client';
-import { Text } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, ProgressBar, Center } from '@dxos/react-ui';
@@ -28,7 +28,7 @@ const main = async () => {
     onCreateSpace: (space) => {
       space.db.add(
         new Document({
-          content: new Text('## Type here...\n\ntry the airplane mode switch.'),
+          content: new TextObject('## Type here...\n\ntry the airplane mode switch.'),
         }),
       );
     },
