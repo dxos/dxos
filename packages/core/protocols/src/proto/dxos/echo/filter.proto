@@ -49,5 +49,5 @@ message Filter {
   optional bool not = 4;
   repeated Filter and = 5; 
   repeated Filter or = 6;
-  QueryOptions options = 7; 
+  optional QueryOptions options = 7; 
 }
