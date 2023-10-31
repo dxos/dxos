@@ -35,11 +35,12 @@ const Story = () => {
   const [view, setView] = useState<ViewType>();
   useEffect(() => {
     const space = client.spaces.default;
-    const view = space.db.add(new ViewType({}));
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
     generator.createObjects({ count: 30 });
+
+    const view = space.db.add(new ViewType({}));
 
     setSpace(space);
     setView(view);

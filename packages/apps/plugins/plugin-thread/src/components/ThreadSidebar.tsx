@@ -5,9 +5,9 @@
 import { CaretDoubleRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { findPlugin, parseLayoutPlugin, resolvePlugin, usePlugins } from '@dxos/app-framework';
+import { parseLayoutPlugin, resolvePlugin } from '@dxos/app-framework';
+import { getSpaceForObject } from '@dxos/client/echo';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -15,12 +15,10 @@ import { ThreadContainer } from './ThreadContainer';
 import { THREAD_PLUGIN } from '../types';
 
 export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThread }) => {
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const { t } = useTranslation('os');
-  const space = spacePlugin?.provides.space.active;
+  const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const [thread, setThread] = useState(initialThread);
+  const space = getSpaceForObject(thread);
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.

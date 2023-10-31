@@ -2397,6 +2397,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

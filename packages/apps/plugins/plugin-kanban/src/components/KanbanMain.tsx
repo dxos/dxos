@@ -4,9 +4,8 @@
 
 import React, { type FC } from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
+import { getSpaceForObject } from '@dxos/client/echo';
 import { Main } from '@dxos/react-ui';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
@@ -15,13 +14,7 @@ import { type KanbanModel } from '../types';
 
 export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
-
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
-  if (!space) {
-    return null;
-  }
+  const space = getSpaceForObject(kanban);
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
