@@ -7,6 +7,7 @@ import '@dxosTheme';
 import * as Plot from '@observablehq/plot';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
+import * as d3 from 'd3';
 import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as topojson from 'topojson-client';
@@ -24,7 +25,20 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
-const Story = () => {
+// TODO(burdon): Generate data with geo lat/lng.
+// TODO(burdon): How to provide geo service via agent?
+
+export default {
+  component: Plot,
+  decorators: [
+    FullscreenDecorator(),
+    ClientSpaceDecorator({
+      schema: types,
+    }),
+  ],
+};
+
+export const Globe = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {
@@ -49,21 +63,29 @@ const Story = () => {
       lng: feature.geometry.coordinates[1],
     }));
 
-    // https://observablehq.com/plot/features/projections
+    const city = cities[0];
+    const circle = d3.geoCircle().center([city.lat, city.lng]).radius(16)();
+
     // https://observablehq.com/plot/marks/geo
     // https://observablehq.com/@observablehq/plot-earthquake-globe?intent=fork
     const plot = Plot.plot({
-      projection: { type: 'orthographic', rotate: [-120, -20] },
+      // https://observablehq.com/plot/features/projections
+      projection: { type: 'orthographic', rotate: [-city.lat + 30, -30] },
+      // projection: { type: 'equirectangular', rotate: [-140, -30] },
       width,
       height,
+      style: {
+        background: 'transparent',
+      },
       marks: [
-        Plot.geo(land, { fill: 'currentColor', fillOpacity: 0.3 }),
+        Plot.sphere({ fill: 'lightblue', fillOpacity: 0.5 }),
+        Plot.geo(land, { fill: 'green', fillOpacity: 0.3 }),
         Plot.graticule(),
-        Plot.sphere(),
+        Plot.geo(circle, { stroke: 'black', fill: 'darkblue', fillOpacity: 0.1, strokeWidth: 2 }),
         Plot.dot(cities, {
           x: 'lat',
           y: 'lng',
-          r: 8,
+          r: 6,
           stroke: 'red',
           fill: 'red',
           fillOpacity: 0.2,
@@ -75,18 +97,54 @@ const Story = () => {
     return () => plot?.remove();
   }, [data, width, height]);
 
-  return <div ref={containerRef} className='grow m-4' />;
+  return <div ref={containerRef} className='grow p-8' />;
 };
 
-export default {
-  component: Story,
-  render: Story,
-  decorators: [
-    FullscreenDecorator(),
-    ClientSpaceDecorator({
-      schema: types,
-    }),
-  ],
-};
+export const Chart = () => {
+  const [data, setData] = useState<{ cities: any }>();
+  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
+  useEffect(() => {
+    setTimeout(async () => {
+      const cities = await (await fetch('/cities.json')).json();
+      setData({
+        cities,
+      });
+    });
+  }, [width, height]);
 
-export const Default = {};
+  useEffect(() => {
+    if (!data || !width || !height) {
+      return;
+    }
+
+    const cities = data.cities.features.map((feature: any) => ({
+      lat: feature.geometry.coordinates[0],
+      lng: feature.geometry.coordinates[1],
+    }));
+
+    const plot = Plot.plot({
+      grid: true,
+      width,
+      height,
+      style: {
+        background: 'transparent',
+      },
+      marks: [
+        Plot.frame(),
+        Plot.dot(cities, {
+          x: 'lat',
+          y: 'lng',
+          r: 6,
+          stroke: 'red',
+          fill: 'red',
+          fillOpacity: 0.2,
+        }),
+      ],
+    });
+
+    containerRef.current!.append(plot);
+    return () => plot?.remove();
+  }, [data, width, height]);
+
+  return <div ref={containerRef} className='grow p-8' />;
+};
