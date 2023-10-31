@@ -149,6 +149,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             <circle
               className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
               strokeWidth={strokeWidth}
+              fill='none'
               cx={imageSizeNumber / 2}
               cy={imageSizeNumber / 2}
               r={imageSizeNumber / 2 - strokeWidth / 4}
@@ -159,6 +160,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               strokeWidth={strokeWidth}
               x={strokeWidth / 4}
               y={strokeWidth / 4}
+              fill='none'
               rx={rx}
               width={imageSizeNumber - strokeWidth / 4}
               height={imageSizeNumber - strokeWidth / 4}
