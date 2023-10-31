@@ -3,12 +3,13 @@
 //
 
 import { Context } from '@dxos/context';
-import { Filter, base } from '@dxos/echo-schema';
+import { getStateMachineFromItem } from '@dxos/echo-db';
+import { type EchoObject, Filter, base } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/agent/query';
-import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
+import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { Plugin } from '../plugin';
@@ -60,23 +61,47 @@ export class QueryPlugin extends Plugin {
     await this._initialized.wait();
 
     const request: QueryRequest = message.payload;
-    const response: QueryResponse = { queryId: request.queryId, results: await this._search(request.filter) };
+
+    const filter = Filter.fromProto(request.filter);
+    const { results: queryResults } = this._pluginCtx!.client.spaces.query(filter, filter.options);
+
+    const response: QueryResponse = {
+      queryId: request.queryId,
+      results:
+        queryResults.map((result) => {
+          return {
+            id: result.id,
+            spaceKey: result.spaceKey,
+            rank: result.match?.rank ?? 0,
+          };
+        }) ?? [],
+      objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
+    };
+
     await this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
       '@type': 'dxos.agent.query.QueryResponse',
       ...response,
     });
   }
-
-  private async _search(request: FilterProto): Promise<QueryResult[]> {
-    const filter = Filter.fromProto(request);
-    const query = this._pluginCtx!.client.spaces.query(filter, filter.options);
-
-    const queryResults = query.results;
-    return queryResults.map((result) => ({
-      id: result.id,
-      spaceKey: result.spaceKey,
-      rank: result.match?.rank ?? 0,
-      item: result.object![base]._item!.createSnapshot(),
-    }));
-  }
 }
+
+const createSnapshot = (object: EchoObject): EchoObjectProto => {
+  const item = object[base]._item!;
+  let model: Uint8Array | undefined;
+  if (!item.modelMeta?.snapshotCodec) {
+    log.warn('No snapshot codec for model.');
+  } else {
+    model = item.modelMeta.snapshotCodec.encode(getStateMachineFromItem(item)?.snapshot());
+  }
+  return {
+    objectId: object.id,
+    genesis: {
+      modelType: item.modelType,
+    },
+    snapshot: {
+      parentId: item.parent ?? undefined,
+      deleted: item.deleted,
+      model,
+    },
+  };
+};

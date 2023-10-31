@@ -20,11 +20,11 @@ message QueryResult {
   string id = 1;
   keys.PublicKey spaceKey = 2;
   float rank = 3;
- object.EchoObject item = 4;
 }
 
 message QueryResponse {
   string queryId = 1;
   repeated QueryResult results = 2;
+  repeated object.EchoObject objects = 3;
 }
 
