@@ -4,6 +4,7 @@
 
 import { Context } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
+import { getEchoObjectItem } from '@dxos/echo-schema';
 import { type EchoObject, Filter, base } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -86,7 +87,7 @@ export class QueryPlugin extends Plugin {
 }
 
 const createSnapshot = (object: EchoObject): EchoObjectProto => {
-  const item = object[base]._item!;
+  const item = getEchoObjectItem(object[base])!;
   let model: Uint8Array | undefined;
   if (!item.modelMeta?.snapshotCodec) {
     log.warn('No snapshot codec for model.');

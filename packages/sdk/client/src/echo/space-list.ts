@@ -32,6 +32,7 @@ import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/servic
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -117,6 +118,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
             ) {
               this._defaultSpaceAvailable.next(true);
               this._defaultSpaceAvailable.complete();
+              this._graph.registerQuerySourceProvider(new AgentQuerySourceProvider(this.default));
             }
           });
 
