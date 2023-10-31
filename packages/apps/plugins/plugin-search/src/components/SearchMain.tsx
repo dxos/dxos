@@ -16,13 +16,13 @@ import { useSearch, useSearchResults } from '../context';
 export const SearchMain = () => {
   const { setMatch } = useSearch();
 
-  // TODO(burdon): Query agent/cross-space.
+  // TODO(burdon): UX to select all spaces.
+  const allSpaces = false;
+  const client = useClient();
   const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.active;
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  // const { objects } = space?.db.query() ?? {};
-  const client = useClient();
-  const { objects } = client.spaces.query();
+  const { objects } = allSpaces ? client.spaces.query() : space?.db.query() ?? {};
   const results = useSearchResults(objects);
 
   const [selected, setSelected] = useState<string>();
