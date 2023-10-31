@@ -86,7 +86,9 @@ export const os = {
   'display name input placeholder': 'Enter a display name',
   'invite one label': 'Invite one',
   'invite one description': 'Only one user may join.',
+  'invite one qr label': 'Single-use',
   'invite many label': 'Invite many',
   'invite many description': 'Anyone with the link can join.',
+  'invite many qr label': 'Multiple-use',
   'invite options label': 'Change the active invite option.',
 };
