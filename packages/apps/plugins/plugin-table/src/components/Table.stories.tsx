@@ -35,7 +35,7 @@ const Story = () => {
   }
 
   return (
-    <div className='flex grow p-2'>
+    <div className='grow p-2'>
       <TableComponent table={table} />
     </div>
   );
