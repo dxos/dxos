@@ -118,7 +118,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
             ) {
               this._defaultSpaceAvailable.next(true);
               this._defaultSpaceAvailable.complete();
-              this._graph.registerQuerySourceProvider(new AgentQuerySourceProvider(this.default));
             }
           });
 
@@ -140,6 +139,17 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
+
+    this._isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
+
+      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+      await agentQuerySourceProvider.open();
+      this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+      this._ctx.onDispose(() => agentQuerySourceProvider.close());
+    });
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));

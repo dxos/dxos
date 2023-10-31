@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
 import { getEchoObjectItem } from '@dxos/echo-schema';
@@ -79,6 +80,7 @@ export class QueryPlugin extends Plugin {
       objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
     };
 
+
     await this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
       '@type': 'dxos.agent.query.QueryResponse',
       ...response,
@@ -88,11 +90,11 @@ export class QueryPlugin extends Plugin {
 
 const createSnapshot = (object: EchoObject): EchoObjectProto => {
   const item = getEchoObjectItem(object[base])!;
-  let model: Uint8Array | undefined;
+  let model: WithTypeUrl<Any> | undefined;
   if (!item.modelMeta?.snapshotCodec) {
     log.warn('No snapshot codec for model.');
   } else {
-    model = item.modelMeta.snapshotCodec.encode(getStateMachineFromItem(item)?.snapshot());
+    model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
   }
   return {
     objectId: object.id,

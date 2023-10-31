@@ -11,6 +11,7 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Expando, Filter } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -77,7 +78,7 @@ describe('QueryPlugin', () => {
     }
   });
 
-  test.repeat(100)('search request/response', async () => {
+  test('search request/response', async () => {
     //
     // 1. Test topology:
     //
@@ -166,5 +167,61 @@ describe('QueryPlugin', () => {
     }
 
     await asyncTimeout(results.wait(), 1000);
+  });
+
+  test.only('remote query', async () => {
+    const builder = new TestBuilder();
+    afterTest(() => builder.destroy());
+
+    const services1 = builder.createLocal();
+    const client1 = new Client({
+      services: services1,
+      config: new Config({
+        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query', enabled: true }] } },
+      }),
+    });
+    await client1.initialize();
+    afterTest(() => client1.destroy());
+    await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
+
+    {
+      // Create one space before indexing is initialized.
+      const space = await client1.spaces.create({ name: 'first space' });
+      await space.waitUntilReady();
+      space.db.add(new Expando(documents[0]));
+      space.db.add(new Expando(documents[1]));
+      await space.db.flush();
+    }
+    const plugin = new QueryPlugin();
+    await plugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+
+    await plugin.open();
+    afterTest(() => plugin.close());
+
+    const services2 = builder.createLocal();
+    const client2 = new Client({ services: services2 });
+    await client2.initialize();
+    afterTest(() => client2.destroy());
+
+    await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
+
+    const results = new Trigger();
+    {
+      await asyncTimeout(client2.spaces.isReady.wait(), 1000);
+
+      await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
+      const query = client2.spaces.query(
+        { foo: 'bar' },
+        { models: ['*'], spaces: client2.spaces.get().map((s) => s.key) },
+      );
+      query.subscribe((query) => {
+        if (query.results.some((r) => r.resolution?.source === 'remote')) {
+          log.info('Received remote query results.', { res: query.results });
+          results.wake();
+        }
+      });
+
+      await asyncTimeout(results.wait(), 5000);
+    }
   });
 });

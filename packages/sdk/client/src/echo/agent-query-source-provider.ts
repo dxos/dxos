@@ -18,14 +18,13 @@ import {
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
+import { QUERY_CHANNEL } from '@dxos/protocols';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { TextModel } from '@dxos/text-model';
-
-const CHANNEL_NAME = 'dxos.org/agent/plugin/search';
 
 export class AgentQuerySourceProvider implements QuerySourceProvider {
   private readonly _responsePromises = new Map<string, { resolve: (response: QueryResponse) => void }>();
@@ -38,7 +37,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _space: Space) {}
 
   async open() {
-    this._unsubscribe = this._space.listen(CHANNEL_NAME, (message) => this._handleMessage(message));
+    this._unsubscribe = this._space.listen(QUERY_CHANNEL, (message) => this._handleMessage(message));
   }
 
   async close() {
@@ -46,21 +45,23 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
   }
 
   private _sendRequest(filter: FilterProto) {
-    const id = PublicKey.random().toHex();
+    const request: QueryRequest = {
+      filter,
+      queryId: PublicKey.random().toHex(),
+    };
     this._space
-      .postMessage(CHANNEL_NAME, {
+      .postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryRequest',
-        filter,
-        id,
+        ...request,
       })
       .catch((error) => log.catch(error));
     let cancelRequest: () => void;
     return {
       response: new Promise<QueryResponse>((resolve, reject) => {
-        this._responsePromises.set(id, { resolve });
+        this._responsePromises.set(request.queryId, { resolve });
         cancelRequest = () => {
           reject(new Error('Request cancelled.'));
-          this._responsePromises.delete(id);
+          this._responsePromises.delete(request.queryId);
         };
       }),
       cancelRequest: () => {
@@ -86,8 +87,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
   }
 
   create(): AgentQuerySource {
-    const source = new AgentQuerySource({ sendRequest: this._sendRequest.bind(this) });
-    return source;
+    return new AgentQuerySource({ sendRequest: this._sendRequest.bind(this) });
   }
 }
 
@@ -127,7 +127,7 @@ export class AgentQuerySource implements QuerySource {
               },
               resolution: {
                 source: 'remote',
-                time: startTime - Date.now(),
+                time: Date.now() - startTime,
               },
             };
           }) ?? [];
@@ -141,7 +141,7 @@ const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoObject | u
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 
   if (objSnapshot.genesis.modelType === DocumentModel.meta.type) {
-    const modelSnapshot: ObjectSnapshot = DocumentModel.meta.snapshotCodec!.decode(objSnapshot.snapshot.model);
+    const modelSnapshot: ObjectSnapshot = DocumentModel.meta.snapshotCodec!.decode(objSnapshot.snapshot.model.value);
     const obj = new TypedObject(undefined, {
       type: modelSnapshot.typeRef && Reference.fromValue(modelSnapshot.typeRef),
       immutable: true,
