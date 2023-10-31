@@ -16,7 +16,7 @@ import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useMemo } from 'react';
 import { type Transaction, type YEvent } from 'yjs';
 
-import { type Text } from '@dxos/react-client/echo';
+import { type TextObject } from '@dxos/react-client/echo';
 
 type Unsubscribe = () => void;
 
@@ -28,7 +28,7 @@ export class EchoStore {
   private readonly _subscriptions: Unsubscribe[] = [];
   private readonly _store: TLStore;
 
-  constructor(private readonly _data: Text, private readonly _options = { timeout: 250 }) {
+  constructor(private readonly _data: TextObject, private readonly _options = { timeout: 250 }) {
     this._store = createTLStore({ shapes: defaultShapes });
   }
 
@@ -178,7 +178,7 @@ export class EchoStore {
   }
 }
 
-export const useSketchStore = (data: Text, options = { timeout: 250 }): TLStore => {
+export const useSketchStore = (data: TextObject, options = { timeout: 250 }): TLStore => {
   const store = useMemo(() => new EchoStore(data, options), [data.id]);
   useEffect(() => {
     store.open();

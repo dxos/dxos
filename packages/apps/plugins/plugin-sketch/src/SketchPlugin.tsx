@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, type IconProps, Plus } from '@phosphor-icons/react';
+import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -40,10 +40,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${SKETCH_PLUGIN}/create`,
             label: ['create object label', { ns: SKETCH_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <CompassTool {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
@@ -85,8 +85,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               return isSketch(data.active) ? <SketchMain sketch={data.active} /> : null;
             case 'section':
               return isSketch(data.object) ? <SketchSection sketch={data.object} /> : null;
-            case 'presenter-slide':
-              return isSketch(data.object) ? <SketchSlide sketch={data.object} /> : null;
+            case 'slide':
+              return isSketch(data.slide) ? <SketchSlide sketch={data.slide} /> : null;
             default:
               return null;
           }

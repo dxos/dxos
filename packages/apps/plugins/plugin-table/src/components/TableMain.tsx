@@ -18,7 +18,34 @@ const reactDeps = (...obj: TypedObject[]) => {
   return JSON.stringify(obj);
 };
 
+// TODO(burdon): Section container with chrome.
+export const TableSection: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <div className={'flex h-[386px] my-2 overflow-hidden'}>
+      <TableComponent table={table} />
+    </div>
+  );
+};
+
+export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <div className={'flex m-8 overflow-hidden'}>
+      <TableComponent table={table} />
+    </div>
+  );
+};
+
 export const TableMain: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+      <div className={'flex grow m-4 overflow-hidden'}>
+        <TableComponent table={table} />
+      </div>
+    </Main.Content>
+  );
+};
+
+export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
 
   const space = getSpaceForObject(table);
@@ -111,24 +138,22 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   const debug = false;
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <DensityProvider density='fine'>
-        <div className='flex grow m-4 overflow-hidden'>
-          <Table<TypedObject>
-            keyAccessor={(row) => row.id ?? '__new'}
-            columns={columns}
-            data={rows}
-            border
-            onColumnResize={handleColumnResize}
-          />
-        </div>
+    <DensityProvider density='fine'>
+      <div className='flex flex-col grow __m-4 overflow-hidden'>
+        <Table<TypedObject>
+          keyAccessor={(row) => row.id ?? '__new'}
+          columns={columns}
+          data={rows}
+          border
+          onColumnResize={handleColumnResize}
+        />
         {debug && (
           <div className='flex text-xs'>
             <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
             <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
           </div>
         )}
-      </DensityProvider>
-    </Main.Content>
+      </div>
+    </DensityProvider>
   );
 };

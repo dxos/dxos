@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Asterisk, type IconProps, Plus } from '@phosphor-icons/react';
+import { Asterisk, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -42,10 +42,10 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
             label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Asterisk {...props} />,
             // TODO(burdon): Factor out helper.
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([

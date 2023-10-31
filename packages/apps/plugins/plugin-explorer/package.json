@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-explorer",
-  "version": "0.3.1",
+  "version": "0.3.4",
   "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,6 +25,7 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
@@ -42,6 +43,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

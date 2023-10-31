@@ -37,6 +37,7 @@ export default [
         'add folder label': 'Add folder',
         'unnamed object label': 'New object',
         'unnamed folder label': 'New folder',
+        'create object group label': 'Add to space',
       },
     },
   },

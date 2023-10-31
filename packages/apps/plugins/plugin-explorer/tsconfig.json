@@ -48,6 +48,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-search"
+    },
+    {
       "path": "../plugin-space"
     }
   ]

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Plus, SquaresFour } from '@phosphor-icons/react';
+import { type IconProps, SquaresFour } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -40,10 +40,10 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${GRID_PLUGIN}/create`,
             label: ['create grid label', { ns: GRID_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <SquaresFour {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

@@ -3,5 +3,6 @@
 //
 
 export * from './context';
+export * from './search';
 
 export * from './SearchPlugin';

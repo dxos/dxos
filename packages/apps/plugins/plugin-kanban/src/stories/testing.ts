@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 
 import { Kanban as KanbanType } from '@braneframe/types';
-import { Text } from '@dxos/react-client/echo';
+import { TextObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Types.
 export const createKanban = () => {
@@ -18,7 +18,7 @@ export const createKanban = () => {
           items: faker.datatype.array(faker.number.int(8)).map(
             () =>
               new KanbanType.Item({
-                title: new Text(faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.'),
+                title: new TextObject(faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.'),
               }),
           ),
         }),

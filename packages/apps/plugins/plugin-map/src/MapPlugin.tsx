@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Compass, type IconProps, Plus } from '@phosphor-icons/react';
+import { Compass, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -41,10 +41,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${MAP_PLUGIN}/create`,
             label: ['create object label', { ns: MAP_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Compass {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

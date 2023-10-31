@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Plus, Table } from '@phosphor-icons/react';
+import { type IconProps, Table } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceAction } from '@braneframe/plugin-space';
@@ -10,9 +10,9 @@ import { Table as TableType, Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Schema } from '@dxos/react-client/echo';
 
-import { TableMain } from './components';
+import { TableMain, TableSection, TableSlide } from './components';
 import translations from './translations';
-import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isObject } from './types';
+import { TABLE_PLUGIN, TableAction, type TablePluginProvides, isTable } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -41,10 +41,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${TABLE_PLUGIN}/create`,
             label: ['create object label', { ns: TABLE_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Table {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
@@ -68,12 +68,15 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       surface: {
         component: (data, role) => {
           switch (role) {
-            case 'main': {
-              return isObject(data.active) ? <TableMain table={data.active} /> : null;
-            }
+            case 'main':
+              return isTable(data.active) ? <TableMain table={data.active} /> : null;
+            case 'section':
+              return isTable(data.object) ? <TableSection table={data.object} /> : null;
+            case 'slide':
+              return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
+            default:
+              return null;
           }
-
-          return null;
         },
       },
       intent: {

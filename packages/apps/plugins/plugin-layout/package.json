@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-layout",
-  "version": "0.3.2",
-  "description": "DXOS Surface plugin for a split view application layout.",
+  "version": "0.3.4",
+  "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

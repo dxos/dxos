@@ -121,7 +121,7 @@ message Grid {
     option (object) = true;
 
     dxos.schema.TypedObject object = 1;
-    dxos.schema.Text title = 2;
+    string title = 2;
     dxos.schema.Text content = 3;
 
     // TODO(burdon): Properties.

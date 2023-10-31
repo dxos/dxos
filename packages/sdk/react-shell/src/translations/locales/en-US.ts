@@ -79,7 +79,7 @@ export const os = {
   'device invitation list heading': 'Pending device invitations',
   'space invitation list heading': 'Pending invitations',
   'device list heading': 'Devices',
-  'space member list heading': 'Members in this space',
+  'space member list heading': 'Members',
   'space panel heading': 'Space membership',
   'auth code message': 'Enter the following auth code on the joining device.',
   'display name input label': 'Display name',

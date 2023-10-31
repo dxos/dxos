@@ -58,6 +58,7 @@ import {
 
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
+  // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
   const config = new Config(Remote(searchParams.get('target') ?? undefined), Envs(), Local(), Defaults());
   const services = await createClientServices(config);
   const debug = config?.values.runtime?.app?.env?.DX_DEBUG;
@@ -82,7 +83,6 @@ const main = async () => {
 
   const App = createApp({
     plugins: [
-      // TODO(burdon): Normalize namespace across apps.
       TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
       ThemePlugin({ appName: 'Labs', tx: labsTx }),
 
@@ -98,9 +98,7 @@ const main = async () => {
       LayoutPlugin({ showComplementarySidebar: true }),
       NavTreePlugin(),
 
-      // TODO(burdon): Remove need to come after SplitView.
       SpacePlugin(),
-
       DebugPlugin(),
       FilesPlugin(),
       GithubPlugin(),
@@ -119,7 +117,7 @@ const main = async () => {
       ExplorerPlugin(),
       ChessPlugin(),
 
-      // Last so that action are added at end of dropdown menu.
+      // TODO(burdon): Currently last so that action are added at end of dropdown menu.
       SearchPlugin(),
     ],
   });

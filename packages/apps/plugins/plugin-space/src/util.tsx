@@ -14,6 +14,7 @@ import {
   Upload,
   X,
   ClockCounterClockwise,
+  Plus,
 } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-react';
 import React from 'react';
@@ -87,6 +88,23 @@ export const objectToGraphNode = ({
           ? (props) => <Planet {...props} />
           : metadata.icon ?? ((props) => <Placeholder {...props} />),
       data: isSharedSpacesFolder ? null : object,
+      actions:
+        isFolder && !isSharedSpacesFolder
+          ? [
+              {
+                id: 'create-object-group',
+                label: ['create object group label', { ns: SPACE_PLUGIN }],
+                icon: (props) => <Plus {...props} />,
+                invoke: () => {
+                  // No-op.
+                },
+                properties: {
+                  disposition: 'toolbar',
+                  testId: 'spacePlugin.createObject',
+                },
+              },
+            ]
+          : [],
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: isPersonalSpace ? 'teal' : isSharedSpacesFolder ? 'pink' : undefined,
@@ -208,18 +226,19 @@ export const objectToGraphNode = ({
     }
 
     if (isSpaceFolder) {
+      node.actionsMap['create-object-group'].addAction({
+        id: 'folder/create',
+        label: ['add folder label', { ns: SPACE_PLUGIN }],
+        icon: (props) => <FolderPlus {...props} />,
+        invoke: () =>
+          dispatch({
+            plugin: SPACE_PLUGIN,
+            action: SpaceAction.ADD_TO_FOLDER,
+            data: { folder: object, object: new Folder() },
+          }),
+      });
+
       node.addAction(
-        {
-          id: 'folder/create',
-          label: ['add folder label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <FolderPlus {...props} />,
-          invoke: () =>
-            dispatch({
-              plugin: SPACE_PLUGIN,
-              action: SpaceAction.ADD_TO_FOLDER,
-              data: { folder: object, object: new Folder() },
-            }),
-        },
         {
           id: 'backup-space',
           label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
