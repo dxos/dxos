@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, base } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
