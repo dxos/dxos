@@ -13,7 +13,7 @@ import { IPFS_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: TypedObject) => {
   const [child] = parent.addNode(IPFS_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['object title placeholder', { ns: IPFS_PLUGIN }],
+    label: object.title || ['object title placeholder', { ns: IPFS_PLUGIN }],
     icon: (props) => <Image {...props} />,
     data: object,
     properties: {

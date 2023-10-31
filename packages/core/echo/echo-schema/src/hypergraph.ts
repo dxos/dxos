@@ -12,17 +12,25 @@ import { log } from '@dxos/log';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { type EchoObject } from './defs';
-import { Filter, type QueryOptions, type FilterSource } from './filter';
-import { Query, type QueryContext, type QueryResult, type QuerySource, filterMatch } from './query';
+import { type EchoObject, type TypedObject } from './object';
+import {
+  filterMatch,
+  Filter,
+  Query,
+  type FilterSource,
+  type QueryContext,
+  type QueryOptions,
+  type QueryResult,
+  type QuerySource,
+} from './query';
 import { TypeCollection } from './type-collection';
-import { type TypedObject } from './typed-object';
 
 /**
  * Manages cross-space database interactions.
  */
-export class HyperGraph {
+export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
@@ -81,7 +89,6 @@ export class HyperGraph {
       (entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey ? entry.key : (entry as PublicKey)),
     );
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-
     return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
 
@@ -229,10 +236,7 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (
-      filter.searchSpacesPreference !== undefined &&
-      !filter.searchSpacesPreference.some((key) => key.equals(this.spaceKey))
-    ) {
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
       this._filter = undefined;
       return;

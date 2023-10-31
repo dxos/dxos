@@ -28,6 +28,33 @@ const getIcon = (type: string): Icon | undefined => {
   return iconMap[type];
 };
 
+export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
+  let content = <>{text}</>;
+  if (match) {
+    const result = text.match(match);
+    if (result?.index !== undefined) {
+      // Break near to match.
+      const maxOffset = 16;
+      let before = text.slice(0, result.index);
+      if (before.length > maxOffset) {
+        const idx = before.indexOf(' ', result.index - maxOffset);
+        before = '… ' + before.slice(idx);
+      }
+
+      const after = text.slice(result.index + result[0].length);
+      content = (
+        <>
+          {before}
+          <span className='text-blue-500'>{result[0]}</span>
+          {after}
+        </>
+      );
+    }
+  }
+
+  return <span className='text-xs mb-1 line-clamp-3 text-neutral-300'>{content}</span>;
+};
+
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
@@ -71,7 +98,6 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
     <ScrollArea.Root classNames={['grow', groupSurface]}>
       <ScrollArea.Viewport>
         <div className='flex flex-col'>
-          {/* TODO(burdon): ID. */}
           <Mosaic.Container id={path} Component={SearchItem}>
             {items.map((item) => (
               <Mosaic.DraggableTile
@@ -90,31 +116,4 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
       <ScrollArea.Corner />
     </ScrollArea.Root>
   );
-};
-
-export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
-  let content = <>{text}</>;
-  if (match) {
-    const result = text.match(match);
-    if (result?.index !== undefined) {
-      // Break near to match.
-      const maxOffset = 16;
-      let before = text.slice(0, result.index);
-      if (before.length > maxOffset) {
-        const idx = before.indexOf(' ', result.index - maxOffset);
-        before = '… ' + before.slice(idx);
-      }
-
-      const after = text.slice(result.index + result[0].length);
-      content = (
-        <>
-          {before}
-          <span className='text-blue-500'>{result[0]}</span>
-          {after}
-        </>
-      );
-    }
-  }
-
-  return <span className='text-xs mb-1 line-clamp-3 text-neutral-300'>{content}</span>;
 };

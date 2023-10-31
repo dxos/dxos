@@ -8,9 +8,9 @@ import Mousetrap from 'mousetrap';
 
 import { EventSubscriptions } from '@dxos/async';
 
-import { type Action } from './action';
+import type { ActionArg, Action } from './action';
 import { Graph } from './graph';
-import { type Node, type NodeBuilder } from './node';
+import type { NodeArg, Node, NodeBuilder } from './node';
 
 /**
  * The builder...
@@ -71,7 +71,7 @@ export class GraphBuilder {
 
   private _createNode<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
     getGraph: () => Graph,
-    partial: Pick<Node, 'id' | 'label'> & Partial<Node<TData, TProperties>>,
+    partial: NodeArg<TData, TProperties>,
     path: string[] = [],
     ignoreBuilders: string[] = [],
   ): Node<TData, TProperties> {
@@ -85,7 +85,6 @@ export class GraphBuilder {
       // TODO(burdon): Document.
       ...partial,
 
-      // TODO(wittjosiah): Default sort.
       get children() {
         return Object.values(node.childrenMap);
       },
@@ -153,17 +152,22 @@ export class GraphBuilder {
       },
     }) as RevertDeepSignal<Node<TData, TProperties>>;
 
+    // Only actions added at this stage are available to subsequent builders.
+    // `addNode` immediately passes the new node to other builders.
+    // As such, actions added later with `addAction` are not available to those builders.
+    // Having actions available to subsequent builders is useful for building groups.
+    partial.actions && partial.actions.forEach((action) => node.addAction(action));
+
     return node;
   }
 
   private _createAction<TProperties extends Record<string, any> = Record<string, any>>(
-    partial: Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TProperties>>,
+    partial: ActionArg<TProperties>,
   ): Action<TProperties> {
     const action: Action<TProperties> = deepSignal({
       properties: {} as TProperties,
-      actionsMap: {},
       ...partial,
-      // TODO(wittjosiah): Default sort.
+      actionsMap: {},
       get actions() {
         return Object.values(action.actionsMap);
       },
@@ -194,6 +198,8 @@ export class GraphBuilder {
         });
       },
     }) as RevertDeepSignal<Action<TProperties>>;
+
+    partial.actions && partial.actions.forEach((subAction) => action.addAction(subAction));
 
     return action;
   }

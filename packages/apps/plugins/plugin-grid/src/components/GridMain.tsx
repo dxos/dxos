@@ -7,18 +7,18 @@ import React, { type FC, useEffect } from 'react';
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Grid as GridType } from '@braneframe/types';
 import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando } from '@dxos/client/echo';
+import { Expando, type TypedObject } from '@dxos/client/echo';
 import { Main } from '@dxos/react-ui';
 import {
-  type MosaicTileAction,
   Grid,
   type MosaicDropEvent,
-  type Position,
+  type MosaicTileAction,
   type MosaicOperation,
+  type Position,
 } from '@dxos/react-ui-mosaic';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-import { colors, GridCard } from './GridCard';
+import { colors, getObject, GridCard } from './GridCard';
 
 export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const { plugins } = usePlugins();
@@ -60,14 +60,18 @@ export const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const handleOver = (): MosaicOperation => 'copy';
 
   const handleDrop = ({ active, over }: MosaicDropEvent<Position>) => {
-    if (!grid.items.includes(active.item as any)) {
-      grid.items.push(active.item as any);
+    if (grid.items.includes(active.item as any)) {
+      grid.layout.position[active.item.id] = over.position;
+    } else {
+      const object: TypedObject = getObject(active.item);
+      const item = new GridType.Item({ object });
+
+      grid.items.push(item);
+      grid.layout.position[item.id] = over.position;
     }
-    grid.layout.position[active.item.id] = over.position;
   };
 
   const handleCreate = (position: Position) => {
-    // const document = new DocumentType();
     const item = new GridType.Item();
     grid.layout.position[item.id] = position;
     grid.items.push(item);

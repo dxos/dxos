@@ -8,13 +8,16 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { DebugPlugin } from '@braneframe/plugin-debug';
 import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
+import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -45,7 +48,7 @@ const main = async () => {
       </div>
     ),
     plugins: [
-      // TODO(burdon): Normalize namespace across apps.
+      // TODO(burdon): Normalize namespace across apps (composer.dxos.org).
       TelemetryPlugin({ namespace: 'composer-app', config: new Config(Defaults()) }),
       ThemePlugin({ appName: 'Composer' }),
 
@@ -61,14 +64,16 @@ const main = async () => {
       LayoutPlugin(),
       NavTreePlugin(),
 
-      // TODO(burdon): Remove need to come after SplitView.
       SpacePlugin(),
-
-      // Apps.
-      MarkdownPlugin(),
-      StackPlugin(),
+      DebugPlugin(),
       FilesPlugin(),
       GithubPlugin(),
+      IpfsPlugin(),
+
+      // Presentation plugins.
+      MarkdownPlugin(),
+      PresenterPlugin(), // Before Stack.
+      StackPlugin(),
       SketchPlugin(),
     ],
   });
