@@ -17,7 +17,7 @@ export type AvatarStyleProps = Partial<{
 }>;
 
 export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
-  mx('relative inline-flex', getSize(size), inGroup && '-mie-2', ...etc);
+  mx('relative inline-flex shrink-0', getSize(size), inGroup && '-mie-2', ...etc);
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
