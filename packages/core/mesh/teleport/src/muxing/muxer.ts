@@ -18,6 +18,9 @@ import { type RpcPort } from './rpc-port';
 
 const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
 
+const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
+const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
+
 export type CleanupCb = void | (() => void);
 
 export type CreateChannelOpts = {
@@ -203,8 +206,8 @@ export class Muxer {
     };
 
     const port: RpcPort = {
-      send: async (data: Uint8Array) => {
-        await this._sendData(channel, data);
+      send: async (data: Uint8Array, timeout?: number) => {
+        await this._sendData(channel, data, timeout);
         // TODO(dmaretskyi): Debugging.
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
@@ -259,6 +262,7 @@ export class Muxer {
         },
       },
       SYSTEM_CHANNEL_ID,
+      DESTROY_COMMAND_SEND_TIMEOUT,
     ).catch(async (err: any) => {
       log('error sending close command', { err });
 
@@ -380,11 +384,11 @@ export class Muxer {
     }
   }
 
-  private async _sendCommand(cmd: Command, channelId = -1) {
+  private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT) {
     try {
       const trigger = new Trigger<void>();
       this._balancer.pushData(Command.encode(cmd), trigger, channelId);
-      await trigger.wait();
+      await trigger.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);
     }
@@ -414,7 +418,7 @@ export class Muxer {
     return channel;
   }
 
-  private async _sendData(channel: Channel, data: Uint8Array): Promise<void> {
+  private async _sendData(channel: Channel, data: Uint8Array, timeout?: number): Promise<void> {
     if (data.length > MAX_SAFE_FRAME_SIZE) {
       log.warn('frame size exceeds maximum safe value', { size: data.length, threshold: MAX_SAFE_FRAME_SIZE });
     }
@@ -433,6 +437,7 @@ export class Muxer {
         },
       },
       channel.id,
+      timeout,
     );
   }
 
