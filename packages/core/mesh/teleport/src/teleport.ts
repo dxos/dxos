@@ -188,7 +188,7 @@ export class Teleport {
       }
     }
 
-    await this._muxer.destroy(err);
+    await this._muxer.close();
   }
 
   addExtension(name: string, extension: TeleportExtension) {
