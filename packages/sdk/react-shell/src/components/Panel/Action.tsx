@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check, type IconProps } from '@phosphor-icons/react';
+import { CaretDown, Check, type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type FC, forwardRef, type SetStateAction } from 'react';
 
@@ -41,12 +41,21 @@ const buttonColorFragment: ComponentFragment<LargeButtonProps> = (props: LargeBu
   ];
 };
 
+const defaultActions = {
+  noopAction: {
+    label: 'No-op',
+    description: '',
+    icon: Placeholder,
+    onClick: () => {},
+  },
+} as Record<string, ActionMenuItem>;
+
 export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionProps>((props, forwardedRef) => {
   const {
     classNames,
     variant,
     isFull = true,
-    actions,
+    actions = defaultActions,
     activeAction: propsActiveAction,
     onChangeActiveAction,
     defaultActiveAction,
@@ -72,8 +81,8 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         variant={variant}
         onClick={activeAction.onClick}
       >
-        {<activeAction.icon />}
-        {activeAction.label}
+        {activeAction.icon && <activeAction.icon />}
+        <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
@@ -95,7 +104,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                   onCheckedChange={(checked) => checked && setActiveAction(id)}
                   classNames='gap-2'
                 >
-                  <action.icon className={getSize(5)} />
+                  {action.icon && <action.icon className={getSize(5)} />}
                   <div role='none' className='flex-1 min-is-0 space-b-1'>
                     <p id={`${id}__label`}>{action.label}</p>
                     {action.description && (
