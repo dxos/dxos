@@ -33,7 +33,7 @@ export const textGenerator: DataGenerator<LoremOptions> = ({ text, period = 1000
       const startPosition = Math.floor(Math.random() * text.toArray().length);
       const paragraph = new XmlElement('paragraph');
       paragraph.insert(0, [new XmlText(lorem)]);
-      text.insert(startPosition, [paragraph]);
+      text.insert(startPosition, [paragraph] as any); // TODO(burdon): Type error.
     }
   }, period);
 
