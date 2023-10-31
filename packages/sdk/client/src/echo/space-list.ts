@@ -17,7 +17,6 @@ import {
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import {
-  type QueryOptions,
   type FilterSource,
   type Hypergraph,
   type Query,
@@ -30,6 +29,7 @@ import { log } from '@dxos/log';
 import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { SpaceProxy } from './space-proxy';
