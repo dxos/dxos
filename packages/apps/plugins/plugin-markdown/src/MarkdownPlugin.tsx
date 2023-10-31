@@ -3,6 +3,7 @@
 //
 
 import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
@@ -37,7 +38,14 @@ import {
   type MarkdownProperties,
   type MarkdownSettingsProps,
 } from './types';
-import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import {
+  getFallbackTitle,
+  isMarkdown,
+  isMarkdownContent,
+  isMarkdownPlaceholder,
+  isMarkdownProperties,
+  markdownPlugins,
+} from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -161,34 +169,38 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder)) {
-            return;
+          if (parent.data instanceof Folder) {
+            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+            parent.actionsMap['create-object-group']?.addAction({
+              id: `${MARKDOWN_PLUGIN}/create`,
+              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.CREATE,
+                  },
+                  {
+                    action: SpaceAction.ADD_TO_FOLDER,
+                    data: { folder: parent.data },
+                  },
+                  {
+                    action: LayoutAction.ACTIVATE,
+                  },
+                ]),
+              properties: {
+                testId: 'markdownPlugin.createDocument',
+              },
+            });
+          } else if (parent.data instanceof Document && !parent.data.title) {
+            return effect(() => {
+              const document = parent.data;
+              parent.label = document.title ||
+                getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+            });
           }
-
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap['create-object-group']?.addAction({
-            id: `${MARKDOWN_PLUGIN}/create`,
-            label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <ArticleMedium {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_TO_FOLDER,
-                  data: { folder: parent.data },
-                },
-                {
-                  action: LayoutAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'markdownPlugin.createDocument',
-            },
-          });
         },
       },
       stack: {
