@@ -102,7 +102,7 @@ export class AgentQuerySource implements QuerySource {
     if (this._cancelPreviousRequest) {
       this._cancelPreviousRequest();
     }
-    const { response, cancelRequest } = this._params.sendRequest(filter.serialize());
+    const { response, cancelRequest } = this._params.sendRequest(filter.toProto());
     this._cancelPreviousRequest = cancelRequest;
     response
       .then((response) => {
