@@ -6,19 +6,17 @@ import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
 // TODO(burdon): Failed to fetch dynamically imported module: http://localhost:9009/src/components/Plot.stories.tsx?t=1698508451079
-// import * as Plot from '@observablehq/plot';
+import * as Plot from '@observablehq/plot';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
-import { unixDay } from 'd3';
 import React, { type ComponentType, lazy, Suspense } from 'react';
 
 import { types } from '@braneframe/types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
-// console.log(':::', Plot);
 // TODO(burdon): The requested module '/node_modules/.cache/.vite-storybook/deps/d3.js?v=a04af487' does not provide an export named 'unixDay'
-console.log(unixDay);
+console.log(':::', Plot);
 
 faker.seed(1);
 

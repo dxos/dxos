@@ -11,6 +11,9 @@ patchedDependencies:
   '@nx/vite@16.5.4':
     hash: xxzhsuqrsbs6wyvhvm37cpe46m
     path: patches/@nx__vite@16.5.4.patch
+  '@types/d3-time@3.0.0':
+    hash: uqeftwh6cnfy4ciox3awq6njvm
+    path: patches/@types__d3-time@3.0.0.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
@@ -19896,7 +19899,7 @@ packages:
   /@types/d3-scale@4.0.2:
     resolution: {integrity: sha512-Yk4htunhPAwN0XGlIwArRomOjdoBFXC3+kCxK2Ubg7I9shQlVSJy/pG/Ht5ASN+gdMIalpk8TJ5xV74jFsetLA==}
     dependencies:
-      '@types/d3-time': 3.0.0
+      '@types/d3-time': 3.0.0(patch_hash=uqeftwh6cnfy4ciox3awq6njvm)
 
   /@types/d3-selection@3.0.3:
     resolution: {integrity: sha512-Mw5cf6nlW1MlefpD9zrshZ+DAWL4IQ5LnWfRheW6xwsdaWOb6IRRu2H7XPAQcyXEx1D7XQWgdoKR83ui1/HlEA==}
@@ -19911,8 +19914,9 @@ packages:
     resolution: {integrity: sha512-yjfBUe6DJBsDin2BMIulhSHmr5qNR5Pxs17+oW4DoVPyVIXZ+m6bs7j1UVKP08Emv6jRmYrYqxYzO63mQxy1rw==}
     dev: true
 
-  /@types/d3-time@3.0.0:
+  /@types/d3-time@3.0.0(patch_hash=uqeftwh6cnfy4ciox3awq6njvm):
     resolution: {integrity: sha512-sZLCdHvBUcNby1cB6Fd3ZBrABbjz3v1Vm90nysCQ6Vt7vd6e/h9Lt7SiJUoEX0l4Dzc7P5llKyhqSi1ycSf1Hg==}
+    patched: true
 
   /@types/d3-timer@3.0.0:
     resolution: {integrity: sha512-HNB/9GHqu7Fo8AQiugyJbv6ZxYz58wef0esl4Mv828w1ZKpAshw/uFWVDUcIB9KKFeFKoxS3cHY07FFgtTRZ1g==}
@@ -19959,7 +19963,7 @@ packages:
       '@types/d3-scale-chromatic': 3.0.0
       '@types/d3-selection': 3.0.3
       '@types/d3-shape': 3.1.0
-      '@types/d3-time': 3.0.0
+      '@types/d3-time': 3.0.0(patch_hash=uqeftwh6cnfy4ciox3awq6njvm)
       '@types/d3-time-format': 4.0.0
       '@types/d3-timer': 3.0.0
       '@types/d3-transition': 3.0.2
