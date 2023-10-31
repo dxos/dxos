@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Graph } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
@@ -41,10 +41,10 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // TODO(burdon): Util.
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Graph {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {

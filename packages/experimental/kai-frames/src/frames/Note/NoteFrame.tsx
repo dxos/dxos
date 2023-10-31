@@ -5,12 +5,12 @@
 import { ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
+import { Note, type NoteBoard } from '@dxos/kai-types';
+import { Grid, GridLayout, GridLensModel, type Item, type Location } from '@dxos/mosaic';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { TextObject, useQuery, useSubscription } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
-import { Note, NoteBoard } from '@dxos/kai-types';
-import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { Text, useQuery, useSubscription } from '@dxos/react-client/echo';
 
 import { NoteTile } from './NoteTile';
 import { useFrameContext } from '../../hooks';
@@ -78,7 +78,7 @@ export const NoteFrame = () => {
 
   const handleCreateNote = async (location: Location) => {
     // TODO(wittjosiah): Remove text initalization once rich text annotation is hooked up.
-    const note = new Note({ content: new Text('', TextKind.RICH) });
+    const note = new Note({ content: new TextObject('', TextKind.RICH) });
     setItemLocation(board!, note.id, location);
     // TODO(burdon): Need transaction.
     // NOTE: Must happen after updating board; otherwise will be assigned a random location on layout.

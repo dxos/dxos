@@ -7,7 +7,7 @@ import { type FC } from 'react';
 
 import type { UnsubscribeCallback } from '@dxos/async';
 
-import { type Action, type Label } from './action';
+import { type ActionArg, type Action, type Label } from './action';
 
 /**
  * Called when a node is added to the graph, allowing other node builders to add children, actions or properties.
@@ -88,15 +88,21 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
 
   addNode<TChildData = null, TChildProperties extends Record<string, any> = Record<string, any>>(
     id: string,
-    ...node: (Pick<Node, 'id' | 'label'> & Partial<Node<TChildData, TChildProperties>>)[]
+    ...node: NodeArg<TChildData, TChildProperties>[]
   ): Node<TChildData, TChildProperties>[];
   removeNode(id: string): Node;
 
   addAction<TActionProperties extends Record<string, any> = Record<string, any>>(
-    ...action: (Pick<Action, 'id' | 'label' | 'invoke'> & Partial<Action<TActionProperties>>)[]
+    ...action: ActionArg<TActionProperties>[]
   ): Action<TActionProperties>[];
   removeAction(id: string): Action;
 };
+
+export type NodeArg<TData = null, TProperties extends Record<string, any> = Record<string, any>> = Pick<
+  Node,
+  'id' | 'label'
+> &
+  Partial<Omit<Node<TData, TProperties>, 'id' | 'label' | 'actions'>> & { actions?: ActionArg[] };
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' ? 'id' in data && 'label' in data : false;

@@ -60,7 +60,7 @@ export const FileSlide: FC<{ file: TypedObject }> = ({ file }) => {
   // TODO(burdon): Config object-container/-fit.
   return (
     <div className='h-full'>
-      <FilePreview type={file.type} url={url} className='object-fit' />
+      <FilePreview type={file.type} url={url} className='object-cover' />
     </div>
   );
 };

@@ -9,7 +9,7 @@ import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { Document } from '@braneframe/types';
-import { EchoDatabase, Text } from '@dxos/echo-schema';
+import { type EchoDatabase, TextObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { stripUndefinedValues } from '@dxos/util';
@@ -170,7 +170,7 @@ export class Generator {
 
   createNote = async () => {
     const document = await this._db.add(createNote());
-    document.content = new Text(faker.lorem.sentence(), TextKind.RICH);
+    document.content = new TextObject(faker.lorem.sentence(), TextKind.RICH);
     return document;
   };
 
@@ -179,7 +179,7 @@ export class Generator {
   };
 }
 
-// TODO(burdon): Replace with `new Text(str)` (and remove pm deps).
+// TODO(burdon): Replace with `new TextObject(str)` (and remove pm deps).
 export const createTextObjectContent = (content: Text, sentences = 5, text?: string) => {
   const paragraphs = range({ min: 1, max: 5 }).flatMap(() => [
     schema.node('paragraph', null, [schema.text(text ?? faker.lorem.sentences(sentences))]),
@@ -256,7 +256,7 @@ export const createEvent = () => {
 export const createDocument = () => {
   const document = new Document();
   document.title = faker.lorem.sentence(3);
-  document.content = new Text('', TextKind.RICH);
+  document.content = new TextObject('', TextKind.RICH);
   return document;
 };
 

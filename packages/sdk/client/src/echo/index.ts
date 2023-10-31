@@ -4,7 +4,8 @@
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export { type ItemID, DocumentModel } from '@dxos/document-model';
-export { TYPE_SCHEMA, Item, type SchemaDef, type SchemaField, type SchemaRef } from '@dxos/echo-db';
+// TODO(burdon): Remove/Rename Item.
+export { Item } from '@dxos/echo-db';
 export {
   base,
   createSubscription,
@@ -14,19 +15,19 @@ export {
   Expando,
   Query,
   Schema,
-  Text,
+  Text, // TODO(burdon): Deprecated.
+  TextObject,
   TypeCollection,
   TypedObject,
   Filter,
   ShowDeletedOption,
-  QUERY_ALL_MODELS,
-  type QueryOptions,
-  type EchoObject,
+  type EchoObject, // TODO(burdon): Remove?
+  type FilterSource,
   type ObjectMeta,
+  type QueryOptions,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  type FilterSource,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

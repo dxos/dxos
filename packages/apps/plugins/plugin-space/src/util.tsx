@@ -2,7 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import {
+  ClockCounterClockwise,
+  Download,
+  Users,
+  PencilSimpleLine,
+  Planet,
+  Upload,
+  X,
+  Plus,
+} from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import React from 'react';
 
@@ -10,7 +19,7 @@ import { type Node } from '@braneframe/plugin-graph';
 import { ObjectOrder } from '@braneframe/types';
 import { type DispatchIntent } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { clone, type Query } from '@dxos/echo-schema';
+import { clone } from '@dxos/echo-schema';
 import { PublicKey, type PublicKeyLike } from '@dxos/keys';
 import { EchoDatabase, type Space, SpaceState, type TypedObject } from '@dxos/react-client/echo';
 import { inferRecordOrder } from '@dxos/util';
@@ -72,10 +81,25 @@ export const spaceToGraphNode = ({
       description: space.properties.description,
       ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
       data: space,
+      actions: [
+        {
+          id: 'create-object-group',
+          label: ['create object group label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <Plus {...props} />,
+          invoke: () => {
+            // No-op.
+          },
+          properties: {
+            disposition: 'toolbar',
+            disabled: disabled || error,
+            testId: 'spacePlugin.createObject',
+          },
+        },
+      ],
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: parent.id === 'root' ? 'teal' : undefined,
-        'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
+        testId: parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
         role: 'branch',
         hidden: settings.showHidden ? false : inactive,
         disabled,
@@ -87,9 +111,11 @@ export const spaceToGraphNode = ({
               order: nextOrder,
             });
             space.db.add(nextObjectOrder);
+            spaceOrder = nextObjectOrder;
           } else {
             spaceOrder.order = nextOrder;
           }
+          updateSpaceOrder({ objects: [spaceOrder] });
         },
         persistenceClass: 'appState',
         acceptPersistenceClass: new Set(['spaceObject']),
@@ -110,7 +136,7 @@ export const spaceToGraphNode = ({
     });
   });
 
-  const updateSpaceOrder = ({ objects: spacesOrders }: Query<ObjectOrder>) => {
+  const updateSpaceOrder = ({ objects: spacesOrders }: { objects: ObjectOrder[] }) => {
     spaceOrder = spacesOrders[0];
     node.childrenMap = inferRecordOrder(node.childrenMap, spaceOrder?.order);
   };
