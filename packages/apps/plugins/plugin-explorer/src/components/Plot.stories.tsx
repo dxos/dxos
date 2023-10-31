@@ -5,10 +5,10 @@
 import '@dxosTheme';
 
 import { faker } from '@faker-js/faker';
-// TODO(burdon): Failed to fetch dynamically imported module: http://localhost:9009/src/components/Plot.stories.tsx?t=1698508451079
 import * as Plot from '@observablehq/plot';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
+import { unixDay } from 'd3';
 import React, { type ComponentType, lazy, Suspense } from 'react';
 
 import { types } from '@braneframe/types';
@@ -16,7 +16,14 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): The requested module '/node_modules/.cache/.vite-storybook/deps/d3.js?v=a04af487' does not provide an export named 'unixDay'
-console.log(':::', Plot);
+// TODO(burdon): Failed to fetch dynamically imported module: http://localhost:9009/src/components/Plot.stories.tsx?t=1698508451079
+// [ERROR] No matching export in "node_modules/.pnpm/d3@7.8.5/node_modules/d3/src/index.js" for import "unixDay"
+//
+//     node_modules/.pnpm/@observablehq+plot@0.6.11/node_modules/@observablehq/plot/src/time.js:2:39:
+//       2 │ ...utcSecond, utcMinute, utcHour, unixDay, utcWeek, utcMonth, utcYear} f...
+//         ╵                                   ~~~~~~~~
+console.log({ Plot }); // Error from @observablehq/plot
+console.log({ unixDay }); // OK since imported directly.
 
 faker.seed(1);
 

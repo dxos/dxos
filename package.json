@@ -145,7 +145,8 @@
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "@types/d3-time@3.1.0": "patches/@types__d3-time@3.0.0.patch"
+      "@types/d3-time@3.0.0": "patches/@types__d3-time@3.0.0.patch",
+      "@types/d3@7.4.2": "patches/@types__d3@7.4.2.patch"
     }
   }
 }
