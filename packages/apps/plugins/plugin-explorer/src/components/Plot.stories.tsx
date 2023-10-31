@@ -4,28 +4,16 @@
 
 import '@dxosTheme';
 
-import { faker } from '@faker-js/faker';
 import * as Plot from '@observablehq/plot';
 import type { DecoratorFunction } from '@storybook/csf';
 import type { ReactRenderer } from '@storybook/react';
-import { unixDay } from 'd3';
-import React, { type ComponentType, lazy, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
+import * as topojson from 'topojson-client';
 
 import { types } from '@braneframe/types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
-
-// TODO(burdon): The requested module '/node_modules/.cache/.vite-storybook/deps/d3.js?v=a04af487' does not provide an export named 'unixDay'
-// TODO(burdon): Failed to fetch dynamically imported module: http://localhost:9009/src/components/Plot.stories.tsx?t=1698508451079
-// [ERROR] No matching export in "node_modules/.pnpm/d3@7.8.5/node_modules/d3/src/index.js" for import "unixDay"
-//
-//     node_modules/.pnpm/@observablehq+plot@0.6.11/node_modules/@observablehq/plot/src/time.js:2:39:
-//       2 │ ...utcSecond, utcMinute, utcHour, unixDay, utcWeek, utcMonth, utcYear} f...
-//         ╵                                   ~~~~~~~~
-console.log({ Plot }); // Error from @observablehq/plot
-console.log({ unixDay }); // OK since imported directly.
-
-faker.seed(1);
 
 // TODO(burdon): Factor out.
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
@@ -36,57 +24,58 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
-const data = [
-  {
-    species: 'Adelie',
-    island: 'Torgersen',
-    culmen_length_mm: 39.1,
-    culmen_depth_mm: 18.7,
-    flipper_length_mm: 181,
-    body_mass_g: 3750,
-    sex: 'MALE',
-  },
-  {
-    species: 'Adelie',
-    island: 'Torgersen',
-    culmen_length_mm: 39.5,
-    culmen_depth_mm: 17.4,
-    flipper_length_mm: 186,
-    body_mass_g: 3800,
-    sex: 'FEMALE',
-  },
-];
-
-const Test = lazy(() => {
-  return new Promise<{ default: ComponentType<any> }>((resolve) => {
-    // const x = import('@observablehq/plot');
-    resolve({ default: () => <div>Test</div> });
-  });
-});
-
 const Story = () => {
-  //   const containerRef = useRef<HTMLDivElement>(null);
-  //   useEffect(() => {
-  //     if (data === undefined) {
-  //     }
-  //
-  //     const plot = Plot.plot({
-  //       y: { grid: true },
-  //       color: { scheme: 'burd' },
-  //       marks: [Plot.ruleY([0]), Plot.dot(data, { x: 'Date', y: 'Anomaly', stroke: 'Anomaly' })],
-  //     });
-  //
-  //     containerRef.current!.append(plot);
-  //     return () => plot.remove();
-  //   }, [data]);
-  //
-  //   return <div ref={containerRef} />;
+  const [data, setData] = useState<{ world: any; cities: any }>();
+  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
+  useEffect(() => {
+    setTimeout(async () => {
+      const world = await (await fetch('/countries-110m.json')).json();
+      const cities = await (await fetch('/cities.json')).json();
+      setData({
+        world,
+        cities,
+      });
+    });
+  }, [width, height]);
 
-  return (
-    <Suspense>
-      <Test />
-    </Suspense>
-  );
+  useEffect(() => {
+    if (!data || !width || !height) {
+      return;
+    }
+
+    const land = topojson.feature(data.world, data.world.objects.land);
+    const cities = data.cities.features.map((feature: any) => ({
+      lat: feature.geometry.coordinates[0],
+      lng: feature.geometry.coordinates[1],
+    }));
+
+    // https://observablehq.com/plot/features/projections
+    // https://observablehq.com/plot/marks/geo
+    // https://observablehq.com/@observablehq/plot-earthquake-globe?intent=fork
+    const plot = Plot.plot({
+      projection: { type: 'orthographic', rotate: [-120, -20] },
+      width,
+      height,
+      marks: [
+        Plot.geo(land, { fill: 'currentColor', fillOpacity: 0.3 }),
+        Plot.graticule(),
+        Plot.sphere(),
+        Plot.dot(cities, {
+          x: 'lat',
+          y: 'lng',
+          r: 8,
+          stroke: 'red',
+          fill: 'red',
+          fillOpacity: 0.2,
+        }),
+      ],
+    });
+
+    containerRef.current!.append(plot);
+    return () => plot?.remove();
+  }, [data, width, height]);
+
+  return <div ref={containerRef} className='grow m-4' />;
 };
 
 export default {
@@ -98,9 +87,6 @@ export default {
       schema: types,
     }),
   ],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Default = {};

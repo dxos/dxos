@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import type { SpacePluginProvides } from '@braneframe/plugin-space';
 import { usePlugin } from '@dxos/app-framework';
+import { useClient } from '@dxos/react-client';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
@@ -19,7 +20,9 @@ export const SearchMain = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
   const space = spacePlugin?.provides.space.active;
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const { objects } = space?.db.query() ?? {};
+  // const { objects } = space?.db.query() ?? {};
+  const client = useClient();
+  const { objects } = client.spaces.query();
   const results = useSearchResults(objects);
 
   const [selected, setSelected] = useState<string>();
