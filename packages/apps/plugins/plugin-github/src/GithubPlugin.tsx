@@ -3,22 +3,20 @@
 //
 
 import { GithubLogo } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import React, { type RefObject } from 'react';
 
 import { type Node } from '@braneframe/plugin-graph';
 import { type MarkdownProvides, isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { GraphNodeAdapter } from '@braneframe/plugin-space';
-import { type Document } from '@braneframe/types';
+import { Folder, type Document } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   type PluginDefinition,
-  resolvePlugin,
-  parseIntentPlugin,
   type TranslationsProvides,
   type SurfaceProvides,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type Space, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
 import { type MarkdownComposerRef } from '@dxos/react-ui-editor';
 
 import {
@@ -50,7 +48,6 @@ const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.i
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   const settings = new LocalStorageStore<GithubSettingsProps>(GITHUB_PLUGIN);
-  let adapter: GraphNodeAdapter<Document> | undefined;
 
   return {
     meta: {
@@ -59,33 +56,6 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
     },
     ready: async (plugins) => {
       settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
-
-      const createGroup = (parent: Node) => {
-        const id = `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`;
-        const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
-          id,
-          label: ['plugin name', { ns: GITHUB_PLUGIN }],
-          icon: (props) => <GithubLogo {...props} />,
-          properties: {
-            palette: 'pink',
-            persistenceClass: 'objectOrder',
-            childrenPersistenceClass: 'spaceObject',
-          },
-        });
-
-        return presentationNode;
-      };
-
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({
-          dispatch,
-          filter: Filter.from(filter),
-          adapter: objectToGraphNode,
-          createGroup,
-        });
-      }
     },
     unload: async () => {
       settings.close();
@@ -98,13 +68,31 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
       graph: {
         builder: ({ parent }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          // TODO(wittjosiah): Easier way to identify node which represents a space.
+          const space = isTypedObject(parent.data) ? getSpaceForObject(parent.data) : undefined;
+          if (!space || !(parent.data instanceof Folder) || parent.data.name !== space.key.toHex()) {
             return;
           }
 
-          const space = parent.data;
+          // TODO(dmaretskyi): Turn into subscription.
+          if (space.state.get() !== SpaceState.READY) {
+            return;
+          }
 
-          return adapter?.createNodes(space, parent);
+          const query = space.db.query(filter);
+          return effect(() => {
+            if (query.objects.length === 0) {
+              return;
+            }
+
+            const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
+              id: `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`,
+              label: ['plugin name', { ns: GITHUB_PLUGIN }],
+              icon: (props) => <GithubLogo {...props} />,
+            });
+
+            query.objects.forEach((object) => objectToGraphNode(presentationNode, object));
+          });
         },
       },
       context: (props) => <OctokitProvider {...props} />,
@@ -158,7 +146,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   };
 };
 
-const objectToGraphNode = (parent: Node<Space>, document: Document): Node => {
+const objectToGraphNode = (parent: Node, document: Document): Node => {
   const [child] = parent.addNode(GITHUB_PLUGIN, {
     id: document.id,
     label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],

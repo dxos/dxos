@@ -5,7 +5,7 @@
 import React, { type FC, useEffect } from 'react';
 
 import { Grid as GridType } from '@braneframe/types';
-import { getSpaceForObject, Expando, type TypedObject } from '@dxos/client/echo';
+import { Expando, getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   Grid,

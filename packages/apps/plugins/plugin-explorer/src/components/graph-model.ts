@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/client/echo';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
+import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/react-client/echo';
 
 /**
  * Converts ECHO objects to a graph.

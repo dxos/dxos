@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium } from '@phosphor-icons/react';
+import { ArticleMedium, type IconProps } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-react';
 import { deepSignal } from 'deepsignal';
-import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@braneframe/plugin-space';
-import { Document } from '@braneframe/types';
-import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Document, Folder } from '@braneframe/types';
+import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceProxy, TextObject, isTypedObject } from '@dxos/react-client/echo';
+import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -31,7 +30,6 @@ import {
   // SpaceMarkdownChooser,
   StandaloneMenu,
 } from './components';
-import { INITIAL_CONTENT, INITIAL_TITLE } from './initialContent';
 import translations from './translations';
 import {
   MARKDOWN_PLUGIN,
@@ -41,7 +39,7 @@ import {
   type MarkdownSettingsProps,
 } from './types';
 import {
-  documentToGraphNode,
+  getFallbackTitle,
   isMarkdown,
   isMarkdownContent,
   isMarkdownPlaceholder,
@@ -68,8 +66,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     pluginMutableRef.current = { ...nextRef };
   };
 
-  let adapter: GraphNodeAdapter<Document> | undefined;
-
   // TODO(burdon): Rationalize EditorMainStandalone vs EditorMainEmbedded, etc. Should these components be inline or external?
   const EditorMainStandalone: FC<{
     composer: ComposerModel;
@@ -92,11 +88,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  // TODO(burdon): Is `data` expected to be a Document (TypedObject) or MarkdownProperties?
   const MarkdownMain: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.active;
+    // TODO(wittjosiah): Should this be a hook?
+    const space = getSpaceForObject(document);
 
     const textModel = useTextModel({
       identity,
@@ -113,10 +108,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       return null;
     }
 
-    if (!space?.db.getObjectById(document.id)) {
-      return <MarkdownMainEmpty {...{ composer: { content: () => null }, properties: document }} />;
-    }
-
     return (
       <EditorMain
         model={textModel}
@@ -131,8 +122,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const StandaloneMainMenu: FC<{ content: Document }> = ({ content: document }) => {
     const identity = useIdentity();
-    const spacePlugin = usePlugin<SpacePluginProvides>('dxos.org/plugin/space');
-    const space = spacePlugin?.provides.space.active;
+    // TODO(wittjosiah): Should this be a hook?
+    const space = getSpaceForObject(document);
+
     const textModel = useTextModel({
       identity,
       space,
@@ -163,81 +155,52 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           filters.push(plugin.provides.markdown.filter);
         }
       });
-
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides.intent.dispatch;
-
-      if (dispatch) {
-        const filter = Filter.from(
-          (document: Document) =>
-            document.__typename === Document.schema.typename && filters.every((filter) => filter(document)),
-        );
-        adapter = new GraphNodeAdapter({ dispatch, filter, adapter: documentToGraphNode });
-      }
-
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (clientPlugin && clientPlugin.provides.firstRun) {
-        const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) }),
-        );
-        if (document && intentPlugin) {
-          void intentPlugin.provides.intent.dispatch({
-            action: LayoutAction.ACTIVATE,
-            data: { id: document.id },
-          });
-        }
-      }
-
-      // TODO(wittjosiah): Replace? Remove?
-      // const dndPlugin = findPlugin<DndPluginProvides>(plugins, 'dxos.org/plugin/dnd');
-      // if (dndPlugin && dndPlugin.provides.dnd?.onSetTileSubscriptions) {
-      //   dndPlugin.provides.dnd.onSetTileSubscriptions.push((tile, node) => {
-      //     if (isMarkdownContent(node.data)) {
-      //       tile.copyClass = (tile.copyClass ?? new Set()).add('stack-section');
-      //     }
-      //     return tile;
-      //   });
-      // }
-    },
-    unload: async () => {
-      adapter?.clear();
     },
     provides: {
       settings: settings.values,
       translations,
+      metadata: {
+        records: {
+          [Document.schema.typename]: {
+            placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+            icon: (props: IconProps) => <ArticleMedium {...props} />,
+          },
+        },
+      },
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return;
+          if (parent.data instanceof Folder) {
+            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+              id: `${MARKDOWN_PLUGIN}/create`,
+              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              invoke: () =>
+                intentPlugin?.provides.intent.dispatch([
+                  {
+                    plugin: MARKDOWN_PLUGIN,
+                    action: MarkdownAction.CREATE,
+                  },
+                  {
+                    action: SpaceAction.ADD_TO_FOLDER,
+                    data: { folder: parent.data },
+                  },
+                  {
+                    action: LayoutAction.ACTIVATE,
+                  },
+                ]),
+              properties: {
+                testId: 'markdownPlugin.createDocument',
+              },
+            });
+          } else if (parent.data instanceof Document && !parent.data.title) {
+            return effect(() => {
+              const document = parent.data;
+              parent.label = document.title ||
+                getFallbackTitle(document) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }];
+            });
           }
-
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          const space = parent.data;
-
-          parent.actionsMap['create-object-group']?.addAction({
-            id: `${MARKDOWN_PLUGIN}/create`,
-            label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <ArticleMedium {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: space.key.toHex() },
-                },
-                {
-                  action: LayoutAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'markdownPlugin.createDocument',
-            },
-          });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       stack: {
@@ -266,7 +229,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       surface: {
         component: (data, role) => {
           // TODO(burdon): Document.
-          // TODO(wittjosiah): Expose all through `components` as well?
           // TODO(wittjosiah): Improve the naming of surface components.
           switch (role) {
             case 'main': {
@@ -314,10 +276,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             // TODO(burdon): Review with @thure.
             case 'dialog': {
-              if (
-                get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
-                get(data, 'id') === 'choose-stack-section-doc'
-              ) {
+              if (data.subject === 'dxos.org/plugin/stack/chooser' && data.id === 'choose-stack-section-doc') {
                 // return <SpaceMarkdownChooser />;
                 return null;
               }

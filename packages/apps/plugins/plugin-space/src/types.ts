@@ -5,11 +5,11 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
-import type { Space } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
@@ -27,6 +27,9 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
+  ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
+  REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
+  TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 
 export type ObjectViewer = {
@@ -39,14 +42,7 @@ export type ObjectViewer = {
 /**
  * The state of the space plugin.
  */
-export type SpaceState = {
-  /**
-   * The space that is associated with the currently active graph node.
-   * If the current graph node does not itself represent a space, then it is the space of the nearest ancestor.
-   * If no ancestor represents a space, then it is undefined.
-   */
-  active: Space | undefined;
-
+export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
@@ -57,8 +53,10 @@ export type SpaceSettingsProps = { showHidden?: boolean };
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
+  MetadataRecordsProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides & {
-    settings: SpaceSettingsProps;
-    space: SpaceState;
+    settings: Readonly<SpaceSettingsProps>;
+    space: Readonly<PluginState>;
   };

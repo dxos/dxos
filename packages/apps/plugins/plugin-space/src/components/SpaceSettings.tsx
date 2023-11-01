@@ -4,19 +4,20 @@
 
 import React from 'react';
 
-import { usePlugin } from '@dxos/app-framework';
+import { parseIntentPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN, type SpacePluginProvides } from '../types';
+import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides } from '../types';
 
 export const SpaceSettings = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const debugPlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
-  if (!debugPlugin) {
+  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  if (!spacePlugin || !intentPlugin) {
     return null;
   }
 
-  const settings = debugPlugin.provides.settings;
+  const settings = spacePlugin.provides.settings;
 
   return (
     <>
@@ -24,7 +25,13 @@ export const SpaceSettings = () => {
         <Input.Root>
           <Input.Checkbox
             checked={settings.showHidden}
-            onCheckedChange={(checked) => (settings.showHidden = !!checked)}
+            onCheckedChange={(checked) =>
+              intentPlugin.provides.intent.dispatch({
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.TOGGLE_HIDDEN,
+                data: { state: !!checked },
+              })
+            }
           />
           <Input.Label>{t('show hidden spaces label')}</Input.Label>
         </Input.Root>

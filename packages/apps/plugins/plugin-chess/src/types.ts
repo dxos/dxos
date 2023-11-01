@@ -5,11 +5,12 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
-import { isTypedObject } from '@dxos/client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 
@@ -24,6 +25,7 @@ export type ChessProvides = {};
 export type ChessPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.

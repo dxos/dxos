@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 import { MapContainer } from 'react-leaflet';
 
-import { type TypedObject } from '@dxos/client/echo';
+import { type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
