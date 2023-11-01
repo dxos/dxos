@@ -118,9 +118,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   const visibleInvitations = showInactiveInvitations
     ? invitations
-    : invitations?.filter(
-        (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
-      );
+    : invitations?.filter((invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state));
 
   return (
     <>
