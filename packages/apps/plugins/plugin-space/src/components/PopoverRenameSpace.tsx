@@ -26,7 +26,7 @@ export const PopoverRenameSpace = ({ space }: { space: Space }) => {
           <Input.Label srOnly>{t('space name label')}</Input.Label>
           <Input.TextInput
             defaultValue={space.properties.name ?? ''}
-            placeholder={t('untitled space title')}
+            placeholder={t('unnamed space label')}
             onChange={({ target: { value } }) => setName(value)}
             // TODO(wittjosiah): Ideally this should access the popover context to close the popover.
             //   Currently this is not possible because Radix does not expose the popover context.

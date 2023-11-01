@@ -73,6 +73,9 @@
       "path": "../plugins/plugin-markdown"
     },
     {
+      "path": "../plugins/plugin-metadata"
+    },
+    {
       "path": "../plugins/plugin-navtree"
     },
     {

@@ -4,8 +4,8 @@
 
 import React, { type FC } from 'react';
 
-import { PublicKey } from '@dxos/client';
-import { getSpaceForObject, type TypedObject } from '@dxos/client/echo';
+import { PublicKey } from '@dxos/react-client';
+import { getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
