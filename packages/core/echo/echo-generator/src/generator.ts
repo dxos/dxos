@@ -57,6 +57,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   addSchemas() {
     this.schemas.forEach((schema) => this._space.db.add(schema));
+    return this.schemas;
   }
 
   override createObject({ types }: { types?: T[] } = {}): Expando {
