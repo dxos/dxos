@@ -84,9 +84,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
     awaiting: undefined,
     viewers: [],
   }) as RevertDeepSignal<PluginState>;
+  const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  const subscriptions = new EventSubscriptions();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {

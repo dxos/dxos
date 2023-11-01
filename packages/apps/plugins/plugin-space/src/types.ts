@@ -57,8 +57,8 @@ export type SpaceSettingsProps = { showHidden?: boolean };
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  MetadataRecordsProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides & {
     settings: Readonly<SpaceSettingsProps>;
     space: Readonly<PluginState>;
