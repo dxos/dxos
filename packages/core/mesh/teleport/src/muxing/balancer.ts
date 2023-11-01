@@ -72,8 +72,7 @@ export class Balancer {
 
   pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
     this._enqueueChunk(data, trigger, channelId);
-    // Start processing calls if this is the first call.
-    this._sendChunk(channelId).catch((err) => log.catch(err));
+    this._sendChunks(channelId).catch((err) => log.catch(err));
   }
 
   destroy() {
@@ -167,7 +166,7 @@ export class Balancer {
     return null;
   }
 
-  private async _sendChunk(channelId: number) {
+  private async _sendChunks(channelId: number) {
     if (this._sending) {
       return;
     }
