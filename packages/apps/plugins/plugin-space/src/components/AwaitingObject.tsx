@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CheckCircle, SpinnerGap, Warning } from '@phosphor-icons/react';
+import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { LayoutAction, parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
@@ -64,20 +64,20 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   return (
     <Toast.Root defaultOpen duration={TOAST_TIMEOUT}>
       <Toast.Body>
-        <Toast.Title>
+        <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
             <>
-              <CheckCircle className={mx(getSize(5), 'inline mr-1')} />
+              <CheckCircle className={getSize(5)} />
               <span>{t('found object label')}</span>
             </>
           ) : waiting ? (
             <>
-              <SpinnerGap className={mx(getSize(5), 'animate-spinning inline mr-1')} />
+              <CircleNotch className={mx(getSize(5), 'animate-spin')} />
               <span>{t('waiting for object label')}</span>
             </>
           ) : (
             <>
-              <Warning className={mx(getSize(5), 'inline mr-1')} />
+              <CircleDashed className={getSize(5)} />
               <span>{t('object not found label')}</span>
             </>
           )}
@@ -93,16 +93,20 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         </Toast.Description>
       </Toast.Body>
       <Toast.Actions>
-        {found && (
-          <Toast.Action altText={t('go to object alt')} asChild>
-            <Button variant='primary' onClick={handleNavigate}>
-              {t('go to object label')}
-            </Button>
-          </Toast.Action>
-        )}
-        {(!waiting || found) && (
+        {found ? (
+          <>
+            <Toast.Action altText={t('go to object alt')} asChild>
+              <Button variant='primary' onClick={handleNavigate}>
+                {t('go to object label')}
+              </Button>
+            </Toast.Action>
+            <Toast.Close asChild>
+              <Button onClick={handleClose}>{t('close label', { ns: 'appkit' })}</Button>
+            </Toast.Close>
+          </>
+        ) : (
           <Toast.Close asChild>
-            <Button onClick={handleClose}>{t('close label', { ns: 'appkit' })}</Button>
+            <Button onClick={handleClose}>{t(waiting ? 'close label' : 'confirm label', { ns: 'appkit' })}</Button>
           </Toast.Close>
         )}
       </Toast.Actions>
