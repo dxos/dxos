@@ -36,8 +36,9 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     const { t } = useTranslation(GRID_PLUGIN);
 
     // TODO(burdon): Factor out images. Use surface?
-    const cid = (item as any).object?.cid;
+    const cid = getObject(item)?.cid;
     const config = useConfig();
+
     const url = cid ? config.values.runtime!.services!.ipfs!.gateway + '/' + cid : undefined;
 
     const titleAccessor: ValueAccessor<GridCardProps, string> = {
