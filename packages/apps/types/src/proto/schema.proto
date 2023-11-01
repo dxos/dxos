@@ -55,6 +55,16 @@ message Document {
   dxos.schema.Text content = 2;
 }
 
+/**
+ *
+ */
+message Script {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text content = 2;
+}
+
 // TODO(burdon): Lightweight document (not visible in sidebar).
 message Note {
   option (object) = true;

@@ -129,6 +129,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-script/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-search/package.json",
           "jsonpath": "$.version"
         },

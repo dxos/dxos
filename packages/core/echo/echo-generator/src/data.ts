@@ -51,6 +51,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const person = new Schema({
+    typename: 'dxos.org/schema/person',
     props: [
       {
         id: 'name',
