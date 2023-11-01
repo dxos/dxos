@@ -31,7 +31,7 @@ export class QueryPlugin extends Plugin {
     this._ctx = new Context();
 
     invariant(this._pluginCtx);
-    this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
+    const subscription = this._pluginCtx.client.spaces.isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
       }
@@ -46,6 +46,7 @@ export class QueryPlugin extends Plugin {
 
       this._ctx?.onDispose(unsubscribe);
     });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     this.statusUpdate.emit();
   }
