@@ -48,7 +48,14 @@ export class MetadataStore {
 
   public readonly update = new Event<EchoMetadata>();
 
-  constructor(private readonly _directory: Directory) {}
+  /**
+   * @internal
+   */
+  readonly _directory: Directory;
+
+  constructor(directory: Directory) {
+    this._directory = directory;
+  }
 
   get metadata(): EchoMetadata {
     return this._metadata;
@@ -94,7 +101,10 @@ export class MetadataStore {
     }
   }
 
-  private async _writeFile<T>(file: File, codec: Codec<T>, data: T): Promise<void> {
+  /**
+   * @internal
+   */
+  async _writeFile<T>(file: File, codec: Codec<T>, data: T): Promise<void> {
     const encoded = arrayToBuffer(codec.encode(data));
     const checksum = CRC32.buf(encoded);
 
