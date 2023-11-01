@@ -37,6 +37,18 @@ message QueryOptions {
    * Query only in specific spaces.
    */
   repeated dxos.keys.PublicKey spaces = 3;
+
+  enum DataLocation {
+    ALL = 0;
+    LOCAL = 1;
+    REMOTE = 2;
+  }
+
+  /**
+    * Query only local spaces, or remote on agent.
+    * @default `QueryOptions.DataLocation.LOCAL`
+    */
+  optional DataLocation data_location = 4;
 }
 
 /**
