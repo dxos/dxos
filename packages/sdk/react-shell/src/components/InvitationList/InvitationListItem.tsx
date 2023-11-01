@@ -79,14 +79,14 @@ export const InvitationListItemImpl = ({
   createInvitationUrl,
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status: invitationStatus, invitationCode, authCode, authMethod } = propsInvitationStatus;
+  const { cancel, status: invitationStatus, invitationCode, authCode, type } = propsInvitationStatus;
 
   const isCancellable = !(
     [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
-    authMethod === Invitation.AuthMethod.NONE ||
+    type === Invitation.Type.MULTIUSE ||
     [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
 
   const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
@@ -122,11 +122,9 @@ export const InvitationListItemImpl = ({
   return (
     <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center relative'>
       <ListItem.Heading classNames='sr-only'>
-        {t(authMethod === Invitation.AuthMethod.NONE ? 'invite many list item label' : 'invite one list item label')}
+        {t(type === Invitation.Type.MULTIUSE ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
-      {authMethod === Invitation.AuthMethod.NONE && (
-        <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />
-      )}
+      {type === Invitation.Type.MULTIUSE && <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />}
       <Tooltip.Root>
         <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
           <Tooltip.Trigger asChild>
@@ -137,7 +135,7 @@ export const InvitationListItemImpl = ({
         </Avatar.Root>
         <Tooltip.Portal>
           <Tooltip.Content side='left' classNames='z-[70]'>
-            {t(authMethod === Invitation.AuthMethod.NONE ? 'invite many qr label' : 'invite one qr label')}
+            {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
