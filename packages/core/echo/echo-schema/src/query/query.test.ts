@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { ShowDeletedOption } from './filter';
 import { type EchoDatabase } from '../database';
 import { Expando, TypedObject, TextObject } from '../object';
 import { TestBuilder, createDatabase } from '../testing';
@@ -110,17 +110,17 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.HIDE_DELETED });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
       expect(objects).to.have.length(7);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.SHOW_DELETED });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
       expect(objects).to.have.length(10);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: ShowDeletedOption.SHOW_DELETED_ONLY });
+      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY });
       expect(objects).to.have.length(3);
     }
   });
@@ -198,5 +198,5 @@ test('query with model filters', async () => {
   expect(peer.db.query().objects).to.have.length(1);
   expect(peer.db.query().objects[0]).to.eq(obj);
 
-  expect(peer.db.query(undefined, { models: null }).objects).to.have.length(2);
+  expect(peer.db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
 });

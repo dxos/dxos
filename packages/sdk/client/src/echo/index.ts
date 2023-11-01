@@ -20,15 +20,15 @@ export {
   TypeCollection,
   TypedObject,
   Filter,
-  ShowDeletedOption,
   type EchoObject, // TODO(burdon): Remove?
   type FilterSource,
   type ObjectMeta,
-  type QueryOptions,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
 } from '@dxos/echo-schema';
+
+export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';

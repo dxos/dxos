@@ -17,7 +17,6 @@ import {
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import {
-  type QueryOptions,
   type FilterSource,
   type Hypergraph,
   type Query,
@@ -30,8 +29,10 @@ import { log } from '@dxos/log';
 import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -138,6 +139,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
+
+    const subscription = this._isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
+
+      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+      await agentQuerySourceProvider.open();
+      this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+      this._ctx.onDispose(() => agentQuerySourceProvider.close());
+    });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
