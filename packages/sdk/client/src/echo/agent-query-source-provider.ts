@@ -20,7 +20,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
-import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -107,6 +107,11 @@ export class AgentQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
+    if (!filter.options.dataLocation || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
+      // Disabled by dataLocation filter.
+      return;
+    }
+
     if (this._cancelPreviousRequest) {
       this._cancelPreviousRequest();
     }

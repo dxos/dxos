@@ -9,7 +9,7 @@ import { type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
@@ -251,6 +251,12 @@ class SpaceQuerySource implements QuerySource {
   update(filter: Filter<EchoObject>): void {
     if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
+      this._filter = undefined;
+      return;
+    }
+
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+      // Disabled by dataLocation filter.
       this._filter = undefined;
       return;
     }
