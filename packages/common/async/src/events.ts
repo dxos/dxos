@@ -57,7 +57,6 @@ export type ListenerOptions = {
  *   }
  * }
  *
- *
  * model.update.on(data => {
  *   ...
  * });

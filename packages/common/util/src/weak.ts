@@ -28,7 +28,11 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
 
   *values(): IterableIterator<V> {
     for (const value of this._internal.values()) {
-      yield value.deref()!;
+      const deref = value.deref();
+      if (!deref) {
+        continue;
+      }
+      yield deref;
     }
   }
 

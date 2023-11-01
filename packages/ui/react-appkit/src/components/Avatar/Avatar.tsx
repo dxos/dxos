@@ -17,8 +17,8 @@ import {
   Avatar as NaturalAvatar,
   useJdenticonHref,
   type AvatarFrameProps,
-} from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+} from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export interface AvatarSlots {
   root?: Omit<AvatarFrameProps, 'children'>;
@@ -53,7 +53,7 @@ interface IdLabeledAvatarProps extends Omit<SharedAvatarProps, 'labelId'> {
 export type AvatarProps = DirectlyLabeledAvatarProps | IdLabeledAvatarProps;
 
 /**
- * @deprecated please use `Avatar` from ui/aurora.
+ * @deprecated please use `Avatar` from ui/react-ui.
  */
 export const Avatar = forwardRef(
   (

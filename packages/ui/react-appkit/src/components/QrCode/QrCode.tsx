@@ -7,8 +7,8 @@ import type { PopoverContentProps } from '@radix-ui/react-popover';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, type ReactHTMLElement, type ComponentProps } from 'react';
 
-import { Button, ButtonGroup, type ButtonProps, type Size, useId } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Button, ButtonGroup, type ButtonProps, type Size, useId } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { Popover } from '../Popover';
 import { TooltipContent, TooltipRoot, TooltipTrigger, type TooltipContentProps } from '../Tooltip';

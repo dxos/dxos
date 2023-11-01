@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export type FilePreviewProps = {
   type: string;
@@ -20,5 +20,5 @@ export const FilePreview: FC<FilePreviewProps> = ({ type, url, className }) => {
     return <iframe className={mx('max-w-full h-full overflow-auto', className)} src={url} />;
   }
 
-  return <img className={mx('max-w-full h-full object-contain', className)} src={url} />;
+  return <img className={mx('max-w-full h-full', className ?? 'object-contain')} src={url} />;
 };

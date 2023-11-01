@@ -17,14 +17,13 @@ import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortabl
 import React, { type FC, useEffect, useState } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { createSubscription } from '@dxos/echo-schema';
+import { createSubscription } from '@dxos/react-client/echo';
 import { arrayMove } from '@dxos/util';
 
+import { KanbanCardComponent } from './KanbanCard';
 import { type ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
-import { KanbanItemComponent } from './KanbanItem';
-import { useSubscription } from './util';
+import { findLocation, useSubscription } from './util';
 import type { Location, KanbanModel } from '../types';
-import { findLocation } from '../util';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
@@ -182,7 +181,7 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
           {/* Overlay required to drag across columns. */}
           {draggingItem && (
             <DragOverlay style={{ margin: 0 }}>
-              <KanbanItemComponent item={draggingItem.source.item!} onDelete={() => {}} />
+              <KanbanCardComponent item={draggingItem.source.item!} onDelete={() => {}} />
             </DragOverlay>
           )}
 

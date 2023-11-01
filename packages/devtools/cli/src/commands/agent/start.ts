@@ -12,7 +12,7 @@ import {
   EchoProxyServer,
   EpochMonitor,
   FunctionsPlugin,
-  Indexing,
+  QueryPlugin,
   parseAddress,
 } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
@@ -40,10 +40,6 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Expose web socket port.',
       helpValue: 'port',
       aliases: ['web-socket'],
-    }),
-    echo: Flags.integer({
-      description: 'Expose ECHO REST API.',
-      helpValue: 'port',
     }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
@@ -90,21 +86,17 @@ export default class Start extends BaseCommand<typeof Start> {
         // Epoch monitoring.
         new EpochMonitor(),
 
-        // Indexing.
-        new Indexing(),
+        // Query plugin.
+        new QueryPlugin(),
 
         // Dashboard.
-        new DashboardPlugin(),
+        new DashboardPlugin({ configPath: this.flags.config }),
 
         // ECHO API.
-        // TODO(burdon): Config.
-        this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
+        new EchoProxyServer(),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.plugins?.functions &&
-          new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
-          }),
+        new FunctionsPlugin(),
       ],
     });
 

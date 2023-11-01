@@ -17,7 +17,7 @@ export default template.define.script({
   import { useSpace, useQuery } from '@dxos/react-client/echo';
   
   import { TaskList } from './TaskList';
-  import { Task } from './proto';
+  import { Task, types } from './proto';
   
   // Dynamics allows configuration to be supplied by the hosting KUBE.
   const config = async () => new Config(await Dynamics(), Local(), Defaults());
@@ -102,6 +102,7 @@ export default template.define.script({
       <ClientProvider
         config={config}
         onInitialized={async (client) => {
+          client.addTypes(types);
           const searchParams = new URLSearchParams(location.search);
           if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
             await client.halo.createIdentity();

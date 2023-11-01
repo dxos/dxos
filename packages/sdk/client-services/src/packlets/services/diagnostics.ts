@@ -16,10 +16,12 @@ import {
   type Device,
   type Identity,
   type Metrics,
+  type NetworkStatus,
   type Space as SpaceProto,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getPlatform, type Platform } from './platform';
@@ -42,6 +44,8 @@ export type Diagnostics = {
   identity?: Identity;
   devices?: Device[];
   spaces?: SpaceStats[];
+  networkStatus?: NetworkStatus;
+  swarms?: SwarmInfo[];
   feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
   metrics?: Metrics;
 };
@@ -122,6 +126,17 @@ export const createDiagnostics = async (
         timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
     diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
+
+    // Signal servers.
+
+    const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
+      timeout: DEFAULT_TIMEOUT,
+    }).catch(() => undefined);
+    diagnostics.networkStatus = status;
+
+    // Networking.
+
+    diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
   }
 
   diagnostics.config = config.values;

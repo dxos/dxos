@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.3.1",
+  "version": "0.3.4",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -30,7 +30,6 @@
     "readme": "oclif readme"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -69,7 +68,6 @@
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
-    "oclif": "^3.7.0",
     "pkg-up": "^3.1.0",
     "react": "^18.2.0",
     "uuid": "^8.3.2",
@@ -83,6 +81,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
+    "oclif": "^3.7.0",
     "shx": "^0.3.3",
     "typescript": "^5.2.2"
   },
@@ -105,8 +104,29 @@
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
-      "config": {
-        "description": "Configuration information."
+      "agent": {
+        "description": "DXOS Daemon with client services, which is constantly backuping your data. Agent can be extended with plugins (e.g. search plugin, epoch monitor). Also agent has an ability to run functions."
+      },
+      "app": {
+        "description": "Control apps that are published to KUBE specified in DXOS config."
+      },
+      "debug": {
+        "description": "Commands to help debug stuff (contains data generation to imitate high load, database metrics, etc.)."
+      },
+      "device": {
+        "description": "Devices in your HALO."
+      },
+      "function": {
+        "description": "Runtime plugable code with data/event specific triggers."
+      },
+      "halo": {
+        "description": "HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements."
+      },
+      "kube": {
+        "description": "KUBE is a set of runtime services for static web apps and peer-to-peer applications. "
+      },
+      "space": {
+        "description": "A space is an instance of an ECHO database which can be replicated by a number of peers."
       }
     }
   }

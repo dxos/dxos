@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import Inspect from 'vite-plugin-inspect';
 
-import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 

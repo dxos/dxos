@@ -13,9 +13,10 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { type ClientPluginProvides } from '@braneframe/plugin-client';
-import { type IntentPluginProvides } from '@braneframe/plugin-intent';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
+import { Surface, useIntent } from '@dxos/app-framework';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
   Button,
@@ -28,11 +29,9 @@ import {
   DropdownMenu,
   Tooltip,
   useJdenticonHref,
-} from '@dxos/aurora';
-import { useTextModel } from '@dxos/aurora-composer';
-import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Surface, usePlugin } from '@dxos/react-surface';
+} from '@dxos/react-ui';
+import { useTextModel } from '@dxos/react-ui-editor';
+import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
@@ -53,8 +52,8 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
-  const clientPlugin = usePlugin<ClientPluginProvides>('dxos.org/plugin/client');
-  const intentPlugin = usePlugin<IntentPluginProvides>('dxos.org/plugin/intent');
+  const { dispatch } = useIntent();
+  const client = useClient();
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -64,23 +63,14 @@ const EmbeddedLayoutImpl = () => {
     document && window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
   }, [document]);
 
-  const handleCreateSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: SpaceAction.CREATE,
-    });
-  }, [intentPlugin]);
-
-  const handleJoinSpace = useCallback(() => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: SpaceAction.JOIN,
-    });
-  }, [intentPlugin]);
+  const handleCreateSpace = () => dispatch({ action: SpaceAction.CREATE });
+  const handleJoinSpace = () => dispatch({ action: SpaceAction.JOIN });
 
   const handleInvite = useCallback(() => {
-    if (clientPlugin && space) {
-      void clientPlugin.provides.client.shell.shareSpace({ spaceKey: space.key });
+    if (client && space) {
+      void client.shell.shareSpace({ spaceKey: space.key });
     }
-  }, [clientPlugin, space]);
+  }, [client, space]);
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
   const isPreviewing = editorViewState === 'preview';
@@ -262,10 +252,10 @@ const EmbeddedLayoutImpl = () => {
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
-            <div role='none' className={auroraTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+            <div role='none' className={defaultTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
               <div
                 role='none'
-                className={auroraTx(
+                className={defaultTx(
                   'dialog.content',
                   'dialog--resolver__content',
                   {},
@@ -281,7 +271,7 @@ const EmbeddedLayoutImpl = () => {
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
             <Dialog.Overlay classNames='backdrop-blur'>
               <Dialog.Content>
-                <Surface role='dialog' data={['dxos.org/plugin/space/RenameSpaceDialog', space]} />
+                <Surface role='dialog' data={{ content: 'dxos.org/plugin/space/RenameSpaceDialog', subject: space }} />
               </Dialog.Content>
             </Dialog.Overlay>
           </Dialog.Root>

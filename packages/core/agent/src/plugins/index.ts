@@ -7,5 +7,5 @@ export * from './echo-proxy';
 export * from './epoch-monitor';
 export * from './faas';
 export * from './functions';
-export * from './indexing';
+export * from './query';
 export * from './plugin';

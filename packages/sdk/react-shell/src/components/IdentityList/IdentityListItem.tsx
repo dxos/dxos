@@ -4,11 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
+import { ListItem, Avatar, useJdenticonHref, useId } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 type IdentityListItemProps = {
   identity: Identity;
@@ -24,7 +24,7 @@ export const IdentityListItem = forwardRef<HTMLLIElement, IdentityListItemProps>
     const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
     return (
       <ListItem.Root
-        classNames={mx('rounded p-2 flex gap-2 items-center', onClick && 'cursor-pointer')}
+        classNames={mx('flex gap-2 pli-1 items-center', onClick && 'cursor-pointer')}
         onClick={() => onClick?.()}
         data-testid='identity-list-item'
         labelId={labelId}

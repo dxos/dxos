@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.3.1",
+  "version": "0.3.4",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,7 @@
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "gen-schema": "dxtype --schema-package ../reexports ./src/proto/schema.proto ./src/proto/gen/schema.ts",
-    "gen-test": "dxtype --schema-package ../../.. ./src/test/proto/test.proto ./src/test/proto/gen/test.ts",
+    "gen-test": "dxtype --schema-package ../../.. ./src/tests/proto/test.proto ./src/tests/proto/gen/test.ts",
     "prebuild": "pnpm gen-schema && pnpm gen-test"
   },
   "dependencies": {
@@ -39,11 +39,14 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.get": "^4.4.7",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

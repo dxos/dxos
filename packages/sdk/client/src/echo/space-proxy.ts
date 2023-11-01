@@ -11,7 +11,7 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { type HyperGraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
+import { type Hypergraph, EchoDatabase, forceUpdate, setStateFromSnapshot, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -80,7 +80,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _data: SpaceData,
-    graph: HyperGraph,
+    graph: Hypergraph,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -113,7 +113,7 @@ export class SpaceProxy implements Space {
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
-    graph._register(this.key, this._db);
+    graph._register(this.key, this._db, this);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);
@@ -285,15 +285,15 @@ export class SpaceProxy implements Space {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const query = this._db.query(Properties.filter());
-      if (query.objects.length === 1) {
+      if (query.objects.length > 0) {
         this._properties = query.objects[0];
         this._stateUpdate.emit(this._currentState);
       } else {
-        const subscription = query.subscribe((query) => {
+        const unsubscribe = query.subscribe((query) => {
           if (query.objects.length === 1) {
             this._properties = query.objects[0];
             this._stateUpdate.emit(this._currentState);
-            subscription();
+            unsubscribe();
           }
         });
       }

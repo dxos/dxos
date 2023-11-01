@@ -7,22 +7,20 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
+  Properties,
+  defaultKey,
   type ClientServicesProvider,
   type Echo,
-  Properties,
   type PropertiesProps,
   type Space,
-  defaultKey,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { type QueryOptions } from '@dxos/echo-db';
 import {
-  type Filter,
-  type HyperGraph,
+  type FilterSource,
+  type Hypergraph,
   type Query,
   type TypeCollection,
-  type TypeFilter,
   type TypedObject,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -31,8 +29,10 @@ import { log } from '@dxos/log';
 import { type ModelFactory } from '@dxos/model-factory';
 import { ApiError, trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { InvitationsProxy } from '../invitations';
 
@@ -48,7 +48,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
-    private readonly _graph: HyperGraph,
+    private readonly _graph: Hypergraph,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
@@ -139,6 +139,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
+
+    const subscription = this._isReady.subscribe(async (ready) => {
+      if (!ready) {
+        return;
+      }
+
+      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+      await agentQuerySourceProvider.open();
+      this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+      this._ctx.onDispose(() => agentQuerySourceProvider.close());
+    });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
@@ -240,9 +252,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
-  query<T extends TypedObject>(filter: TypeFilter<T>, options?: QueryOptions): Query<T>;
-  query(filter?: Filter<any>, options?: QueryOptions): Query;
-  query(filter: Filter<any>, options?: QueryOptions): Query {
+  query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._graph.query(filter, options);
   }
 }

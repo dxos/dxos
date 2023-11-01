@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, TimeoutError } from '@dxos/protocols';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
@@ -38,11 +38,14 @@ export type MuxerStats = {
   bytesReceived: number;
   bytesSentRate?: number;
   bytesReceivedRate?: number;
+  readBufferSize?: number;
+  writeBufferSize?: number;
 };
 
 const STATS_INTERVAL = 1_000;
 const MAX_SAFE_FRAME_SIZE = 1_000_000;
 const SYSTEM_CHANNEL_ID = 0;
+const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
 type Channel = {
   /**
@@ -102,11 +105,12 @@ export class Muxer {
   private _nextId = 1;
   private _destroyed = false;
   private _destroying = false;
+  private _closing = false;
 
   private _lastStats?: MuxerStats = undefined;
   private readonly _lastChannelStats = new Map<number, Channel['stats']>();
 
-  public close = new Event<Error | undefined>();
+  public afterClosed = new Event<Error | undefined>();
   public statsUpdated = new Event<MuxerStats>();
 
   public readonly stream = this._balancer.stream;
@@ -234,46 +238,95 @@ export class Muxer {
     return port;
   }
 
-  /**
-   * Force-close with optional error.
-   */
-  async destroy(err?: Error) {
+  // initiate graceful close
+
+  async close(err?: Error) {
     if (this._destroying) {
+      log('already destroying, ignoring graceful close request');
       return;
     }
-    this._destroying = true;
+    if (this._closing) {
+      log('already closing, ignoring graceful close request');
+      return;
+    }
 
-    this._sendCommand(
+    this._closing = true;
+
+    await this._sendCommand(
       {
-        destroy: {
+        close: {
           error: err?.message,
         },
       },
       SYSTEM_CHANNEL_ID,
-    )
-      .then(() => {
-        this._dispose();
-      })
-      .catch((err: any) => {
-        this._dispose(err);
-      });
+    ).catch(async (err: any) => {
+      log('error sending close command', { err });
 
-    void this._ctx.dispose();
+      await this.dispose(err);
+    });
+
+    await Promise.race([
+      new Promise((_resolve, reject) => {
+        setTimeout(() => {
+          reject(new TimeoutError('gracefully closing muxer'));
+        }, GRACEFUL_CLOSE_TIMEOUT);
+      }),
+      (async () => {
+        await this.dispose(err);
+      })(),
+    ]);
   }
 
-  private _dispose(err?: Error) {
+  // force close without confirmation
+
+  async destroy(err?: Error) {
+    if (this._destroying) {
+      log('already destroying, ignoring destroy request');
+      return;
+    }
+    this._destroying = true;
+    void this._ctx.dispose();
+    if (this._closing) {
+      log('destroy cancelling graceful close');
+      this._closing = false;
+    } else {
+      // as a courtesy to the peer, send destroy command but ignore errors sending
+
+      await this._sendCommand(
+        {
+          close: {
+            error: err?.message,
+          },
+        },
+        SYSTEM_CHANNEL_ID,
+      ).catch(async (err: any) => {
+        log('error sending courtesy close command', { err });
+      });
+    }
+
+    this.dispose(err).catch((err) => {
+      log('error disposing after destroy', { err });
+    });
+  }
+
+  // complete the termination, graceful or otherwise
+
+  async dispose(err?: Error) {
     if (this._destroyed) {
+      log('already destroyed, ignoring dispose request');
       return;
     }
 
-    this._destroyed = true;
-    this._balancer.destroy();
+    void this._ctx.dispose();
+
+    await this._balancer.destroy();
 
     for (const channel of this._channelsByTag.values()) {
       channel.destroy?.(err);
     }
+    this._destroyed = true;
 
-    this.close.emit(err);
+    this.afterClosed.emit(err);
 
     // Make it easy for GC.
     this._channelsByLocalId.clear();
@@ -281,14 +334,19 @@ export class Muxer {
   }
 
   private async _handleCommand(cmd: Command) {
-    log('Received command', { cmd });
+    if (this._destroyed) {
+      log.warn('Received command after destroy', { cmd });
+      return;
+    }
 
-    if (this._destroyed || this._destroying) {
-      if (cmd.destroy) {
-        return;
+    if (cmd.close) {
+      if (!this._closing) {
+        log('received peer close, initiating my own graceful close');
+        await this.close();
+      } else {
+        log('received close from peer, already closing');
       }
 
-      log.warn('Received command after destroy', { cmd });
       return;
     }
 
@@ -319,8 +377,6 @@ export class Muxer {
         return;
       }
       stream.push(cmd.data.data);
-    } else if (cmd.destroy) {
-      this._dispose();
     }
   }
 
@@ -416,6 +472,7 @@ export class Muxer {
           id: channel.id,
           tag: channel.tag,
           contentType: channel.contentType,
+          writeBufferSize: channel.buffer.length,
           bytesSent: channel.stats.bytesSent,
           bytesReceived: channel.stats.bytesReceived,
           ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
@@ -427,6 +484,8 @@ export class Muxer {
       bytesSent,
       bytesReceived,
       ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
+      readBufferSize: this._balancer.stream.readableLength,
+      writeBufferSize: this._balancer.stream.writableLength,
     };
 
     this.statsUpdated.emit(this._lastStats);

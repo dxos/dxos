@@ -4,14 +4,14 @@
 import { X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
-import { chromeSurface, getSize } from '@dxos/aurora-theme';
 import {
   type CancellableInvitationObservable,
   Invitation,
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
+import { Button, ListItem, useTranslation, Avatar } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
@@ -75,7 +75,7 @@ export const InvitationListItemImpl = ({
   ].includes(status);
 
   return (
-    <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 pli-1 items-center'>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>
@@ -91,7 +91,7 @@ export const InvitationListItemImpl = ({
         <>
           <Button
             variant='ghost'
-            classNames='grow justify-start'
+            classNames='grow justify-start font-system-medium'
             onClick={() => send({ type: 'selectInvitation', invitation })}
             data-testid='show-qrcode'
           >
@@ -100,9 +100,7 @@ export const InvitationListItemImpl = ({
           <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
-        <span className='flex grow'>
-          <AuthCode code={authCode} />
-        </span>
+        <AuthCode code={authCode} classNames='grow' />
       ) : status === Invitation.State.CONNECTING ? (
         <span className='pli-2 grow text-neutral-500'>Connecting...</span>
       ) : status === Invitation.State.AUTHENTICATING ? (

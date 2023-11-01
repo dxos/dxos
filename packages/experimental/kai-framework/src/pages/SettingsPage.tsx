@@ -10,11 +10,11 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Input as NaturalInput } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 import { useConfig } from '@dxos/react-client';
 import { useKeyStore } from '@dxos/react-client/halo';
+import { Input as NaturalInput } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { bool, botKeys, optionsKeys, useAppState } from '../hooks';
 

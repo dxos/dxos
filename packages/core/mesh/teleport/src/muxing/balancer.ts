@@ -60,6 +60,10 @@ export class Balancer {
     return this._framer.bytesReceived;
   }
 
+  get buffersCount() {
+    return this._sendBuffers.size;
+  }
+
   addChannel(channel: number) {
     this._channels.push(channel);
   }
@@ -93,11 +97,14 @@ export class Balancer {
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      this._sendChunks().catch((err) => log.catch(err));
+      this._sendChunk().catch((err) => log.catch(err));
     }
   }
 
   destroy() {
+    if (this._sendBuffers.size !== 0) {
+      log.warn('destroying balancer with pending calls');
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }
@@ -153,9 +160,13 @@ export class Balancer {
     return chunk;
   }
 
-  private async _sendChunks() {
+  private async _sendChunk() {
     if (this._sendBuffers.size === 0) {
       return;
+    }
+
+    if (!this._framer.writable) {
+      await this._framer.drain.waitForCount(1);
     }
 
     const chunk = this._getNextChunk();
@@ -167,7 +178,7 @@ export class Balancer {
       chunk.trigger?.throw(err);
     }
 
-    await this._sendChunks();
+    await this._sendChunk();
   }
 }
 

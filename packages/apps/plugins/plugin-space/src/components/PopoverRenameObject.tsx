@@ -4,17 +4,17 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Input, Popover, useTranslation } from '@dxos/aurora';
 import { type TypedObject } from '@dxos/react-client/echo';
+import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../types';
 
-export const PopoverRenameObject = ({ data: [_, object] }: { data: [string, TypedObject] }) => {
+export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
   // TODO(wittjosiah): Normalize title vs name.
   // TODO(burdon): Field should not be hard-code 'title' field.
-  const [name, setName] = useState(object.title ?? '');
+  const [name, setName] = useState(object.title || '');
 
   const handleDone = useCallback(() => {
     object.title = name;

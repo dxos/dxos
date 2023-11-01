@@ -10,7 +10,7 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { HyperGraph, schemaBuiltin } from '@dxos/echo-schema';
+import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -66,7 +66,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
-  private readonly _graph = new HyperGraph();
+  private readonly _graph = new Hypergraph();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -165,6 +165,29 @@ export class Client {
     invariant(this._runtime, 'Client not initialized.');
     invariant(this._runtime.shell, 'Shell not available.');
     return this._runtime.shell;
+  }
+
+  get experimental() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    return {
+      get types() {
+        return self._graph.types;
+      },
+    };
+  }
+
+  // TODO(dmaretskyi): Expose `graph` directly?
+  addTypes(types: TypeCollection) {
+    this._graph.addTypes(types);
+    return this;
+  }
+
+  /**
+   * @deprecated Replaced by addTypes.
+   */
+  addSchema(types: TypeCollection) {
+    return this.addTypes(types);
   }
 
   /**
@@ -310,17 +333,5 @@ export class Client {
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
-  }
-
-  // TODO(dmaretskyi): Expose `graph` directly?
-  addTypes(types: TypeCollection) {
-    this._graph.addTypes(types);
-  }
-
-  /**
-   * @deprecated Replaced by addTypes.
-   */
-  addSchema(types: TypeCollection) {
-    this.addTypes(types);
   }
 }

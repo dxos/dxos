@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export const StepHeading = forwardRef<HTMLHeadingElement, ComponentPropsWithRef<'h2'>>(
   ({ children, className, ...props }, forwardedRef) => {

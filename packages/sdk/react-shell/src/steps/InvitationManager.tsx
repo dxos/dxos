@@ -6,9 +6,9 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useId, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
+import { useId, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type StepProps } from './StepProps';
 import {
@@ -95,7 +95,7 @@ export const InvitationManager = ({ invitationUrl, active, send, status, authCod
           <InvitationManagerView id='showing auth code'>
             <div role='none' className='absolute inset-0 flex flex-col justify-between items-center'>
               <Label>{t('auth code message')}</Label>
-              <AuthCode code={authCode} large className='text-black dark:text-white' />
+              <AuthCode code={authCode} large classNames='text-black dark:text-white' />
               <Label>Be sure the other device is showing this symbol:</Label>
               {emoji && <Emoji text={emoji} />}
             </div>
