@@ -55,6 +55,17 @@ import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, object
 (globalThis as any)[Folder.name] = Folder;
 
 export type SpacePluginOptions = {
+  /**
+   * Root folder structure is created on identity first run.
+   * This callback is invoked immediately following the creation of the root folder structure.
+   *
+   * @param params.client DXOS Client
+   * @param params.defaultSpace Default space
+   * @param params.rootFolder Root of identity's folder structure, stored in default space
+   * @param params.personalSpaceFolder Folder representing the contents of the default space
+   * @param params.sharedSpacesFolder Folder grouping all other space folders, stored in default space where contents is cross-space references
+   * @param params.dispatch Function to dispatch intents
+   */
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
