@@ -9,7 +9,6 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type EchoObject, Expando, Filter } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -124,7 +123,7 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   });
 
-  test.only('remote query', async () => {
+  test('remote query', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
