@@ -41,13 +41,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       },
       surface: {
         component: (data, role) => {
-          // TODO(burdon): When is it active vs object vs slide?
-          const object = isObject<ScriptType>(data.object, ScriptType.schema, ScriptType.filter());
+          const object = isObject(data.object, ScriptType.schema, ScriptType.filter());
           if (!object) {
             return null;
           }
 
-          // TODO(burdon): Compare with Sketch (types).
           switch (role) {
             case 'section':
               return <ScriptEditor content={object.content} />;

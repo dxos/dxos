@@ -2108,9 +2108,21 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@monaco-editor/react':
+        specifier: ^4.4.6
+        version: 4.4.6(monaco-editor@0.25.2)(react-dom@18.2.0)(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      monaco-editor:
+        specifier: ^0.25.0
+        version: 0.25.2
+      y-monaco:
+        specifier: ^0.1.0
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
+      yjs:
+        specifier: ^13.6.7
+        version: 13.6.8
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -43309,6 +43321,17 @@ packages:
       yjs: 13.6.7
     dev: false
 
+  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.8):
+    resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
+    peerDependencies:
+      monaco-editor: '>=0.20.0'
+      yjs: ^13.3.1
+    dependencies:
+      lib0: 0.2.78
+      monaco-editor: 0.25.2
+      yjs: 13.6.8
+    dev: false
+
   /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7):
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
@@ -43552,7 +43575,6 @@ packages:
     dependencies:
       lib0: 0.2.78
     dev: false
-    optional: true
 
   /yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

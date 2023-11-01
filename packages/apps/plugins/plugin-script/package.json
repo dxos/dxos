@@ -19,7 +19,11 @@
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "lodash.get": "^4.4.2"
+    "@monaco-editor/react": "^4.4.6",
+    "lodash.get": "^4.4.2",
+    "monaco-editor": "^0.25.0",
+    "y-monaco": "^0.1.0",
+    "yjs": "^13.6.7"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
