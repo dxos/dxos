@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.4](https://github.com/dxos/dxos/compare/v0.3.3...v0.3.4) (2023-10-31)
+
+
+### Features
+
+* Adding debug plugin to composer ([#4528](https://github.com/dxos/dxos/issues/4528)) ([4bacfa8](https://github.com/dxos/dxos/commit/4bacfa85b7047e5200426e907aded71c1d715d57))
+* Experiment with schema based lenses ([#4529](https://github.com/dxos/dxos/issues/4529)) ([1f122eb](https://github.com/dxos/dxos/commit/1f122eb3885412b7549a8297c862cdff3cbf9c8a))
+* Promote presenter plugin to composer ([#4543](https://github.com/dxos/dxos/issues/4543)) ([86dd5bc](https://github.com/dxos/dxos/commit/86dd5bc939c0abb0b00b4ced1fe513b3dd2736bb))
+* Typed operator filters ([#4534](https://github.com/dxos/dxos/issues/4534)) ([a5d25f3](https://github.com/dxos/dxos/commit/a5d25f361f12903bb4ffe55ef5657b4915e1f860))
+
+
+### Bug Fixes
+
+* black avatars ([#4549](https://github.com/dxos/dxos/issues/4549)) ([1e21f62](https://github.com/dxos/dxos/commit/1e21f62971e385ef774dd644a00809b6bbb688aa))
+* Explorer ([#4527](https://github.com/dxos/dxos/issues/4527)) ([933059e](https://github.com/dxos/dxos/commit/933059e400073ce4e8b1bb3afe2a884d15440036))
+* **plugin-space:** Fix nondeterministic rearrange updates ([#4526](https://github.com/dxos/dxos/issues/4526)) ([e2d9be5](https://github.com/dxos/dxos/commit/e2d9be54102bba4b54eddc5cde78948295fd20a8))
+* Presenter working with sketch ([#4540](https://github.com/dxos/dxos/issues/4540)) ([90fec5e](https://github.com/dxos/dxos/commit/90fec5e86da62f00987ef18d8b7050516ff7d45e))
+* **react-shell:** Visual adjustments ([#4546](https://github.com/dxos/dxos/issues/4546)) ([2bb3601](https://github.com/dxos/dxos/commit/2bb360145eec58c1cb6eaa4205d8394a6c511b38))
+* Restructure echo-schema ([#4525](https://github.com/dxos/dxos/issues/4525)) ([17ab053](https://github.com/dxos/dxos/commit/17ab053943a9b657c26c321c975e709a2b48c1c1))
+
 ## [0.3.3](https://github.com/dxos/dxos/compare/v0.3.2...v0.3.3) (2023-10-27)
 
 
@@ -305,7 +325,7 @@
 * **aurora:** Popper overflows ([#4036](https://github.com/dxos/dxos/issues/4036)) ([71eb10c](https://github.com/dxos/dxos/commit/71eb10ca676feb00af2ebf213c4f78da89508506))
 * **client:** add default space ([#3860](https://github.com/dxos/dxos/issues/3860)) ([538bda2](https://github.com/dxos/dxos/commit/538bda20e43f15e5adf3e78155c71a74859eb334))
 * **client:** update halo profile ([#3933](https://github.com/dxos/dxos/issues/3933)) ([a63ce79](https://github.com/dxos/dxos/commit/a63ce79e0789b0e6c223a837429dcc2f6a34f605))
-* Devtools feed montioring ([#4000](https://github.com/dxos/dxos/issues/4000)) ([795aa44](https://github.com/dxos/dxos/commit/795aa44eb357350b9b720c8f8f9935686cf57100))
+* Devtools feed monitoring ([#4000](https://github.com/dxos/dxos/issues/4000)) ([795aa44](https://github.com/dxos/dxos/commit/795aa44eb357350b9b720c8f8f9935686cf57100))
 * devtools throuput calculation ([#3956](https://github.com/dxos/dxos/issues/3956)) ([cf6bb41](https://github.com/dxos/dxos/commit/cf6bb4109e778012c12a3f81cbfa627850359c96))
 * **echo:** Correctly resets database on Epoch ([#3934](https://github.com/dxos/dxos/issues/3934)) ([5db35f4](https://github.com/dxos/dxos/commit/5db35f4c5d9a9dab2ea96e1e3761b3d8200c648d))
 * Grid plugin ([#3926](https://github.com/dxos/dxos/issues/3926)) ([82d95f1](https://github.com/dxos/dxos/commit/82d95f1049e7153295e5db5f39e0f4e20b58be6d))

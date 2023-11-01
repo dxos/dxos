@@ -16,6 +16,7 @@ enum FileState {
   DONE = 'DONE',
 }
 
+// TODO(burdon): Comment.
 export class Printer {
   private state = FileState.INIT;
   private stream?: fs.ReadStream;

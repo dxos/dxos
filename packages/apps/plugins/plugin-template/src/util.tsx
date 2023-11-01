@@ -15,7 +15,7 @@ import { TEMPLATE_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: TypedObject): Node<TypedObject> => {
   const [child] = parent.addNode(TEMPLATE_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['object title placeholder', { ns: TEMPLATE_PLUGIN }],
+    label: object.title || ['object title placeholder', { ns: TEMPLATE_PLUGIN }],
     icon: (props) => <Asterisk {...props} />,
     data: object,
     properties: {

@@ -82,7 +82,7 @@ describe('Muxer', () => {
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
 
-    const promise = asyncTimeout(peer1.close.waitForCount(1), 100);
+    const promise = asyncTimeout(peer1.afterClosed.waitForCount(1), 100);
     await peer2.destroy();
     await promise;
   });

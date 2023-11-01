@@ -13,7 +13,7 @@ import { TABLE_PLUGIN } from './types';
 export const objectToGraphNode = (parent: Node<Space>, object: TypedObject): Node<TypedObject> => {
   const [child] = parent.addNode(TABLE_PLUGIN, {
     id: object.id,
-    label: object.title ?? ['object placeholder', { ns: TABLE_PLUGIN }],
+    label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
     icon: (props) => <Table {...props} />,
     data: object,
     properties: {

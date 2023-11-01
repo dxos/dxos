@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, Plus } from '@phosphor-icons/react';
+import { ArticleMedium } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
@@ -13,7 +13,7 @@ import { GraphNodeAdapter, SpaceAction, type SpacePluginProvides } from '@branef
 import { Document } from '@braneframe/types';
 import { type PluginDefinition, usePlugin, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceProxy, Text, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, SpaceProxy, TextObject, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {
   type ComposerModel,
@@ -178,7 +178,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (clientPlugin && clientPlugin.provides.firstRun) {
         const document = clientPlugin.provides.client.spaces.default.db.add(
-          new Document({ title: INITIAL_TITLE, content: new Text(INITIAL_CONTENT) }),
+          new Document({ title: INITIAL_TITLE, content: new TextObject(INITIAL_CONTENT) }),
         );
         if (document && intentPlugin) {
           void intentPlugin.provides.intent.dispatch({
@@ -214,14 +214,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const space = parent.data;
 
-          parent.addAction({
+          parent.actionsMap['create-object-group']?.addAction({
             id: `${MARKDOWN_PLUGIN}/create`,
             label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props) => <Plus {...props} />,
-            properties: {
-              testId: 'markdownPlugin.createDocument',
-              disposition: 'toolbar',
-            },
+            icon: (props) => <ArticleMedium {...props} />,
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
                 {
@@ -236,6 +232,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   action: LayoutAction.ACTIVATE,
                 },
               ]),
+            properties: {
+              testId: 'markdownPlugin.createDocument',
+            },
           });
 
           return adapter?.createNodes(space, parent);

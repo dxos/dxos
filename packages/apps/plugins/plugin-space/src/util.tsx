@@ -2,7 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClockCounterClockwise, Download, Users, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
+import {
+  ClockCounterClockwise,
+  Download,
+  Users,
+  PencilSimpleLine,
+  Planet,
+  Upload,
+  X,
+  Plus,
+} from '@phosphor-icons/react';
 import { batch } from '@preact/signals-react';
 import React from 'react';
 
@@ -72,10 +81,25 @@ export const spaceToGraphNode = ({
       description: space.properties.description,
       ...(parent.id !== 'root' && { icon: (props) => <Planet {...props} /> }),
       data: space,
+      actions: [
+        {
+          id: 'create-object-group',
+          label: ['create object group label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <Plus {...props} />,
+          invoke: () => {
+            // No-op.
+          },
+          properties: {
+            disposition: 'toolbar',
+            disabled: disabled || error,
+            testId: 'spacePlugin.createObject',
+          },
+        },
+      ],
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: parent.id === 'root' ? 'teal' : undefined,
-        'data-testid': parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
+        testId: parent.id === 'root' ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
         role: 'branch',
         hidden: settings.showHidden ? false : inactive,
         disabled,
