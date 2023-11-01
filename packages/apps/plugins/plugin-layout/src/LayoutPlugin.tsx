@@ -165,7 +165,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
           }
         }, [state.values.active]);
 
-        const surfaces: SurfaceProps['surfaces'] = layout.activeNode
+        const surfaceProps: SurfaceProps = layout.activeNode
           ? state.values.fullscreen
             ? {
                 data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
@@ -193,7 +193,9 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
                 sidebar: {
                   data: { graph, activeId: layout.active, popoverAnchorId: layout.popoverAnchorId },
                 },
-                main: { data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` } },
+                main: {
+                  data: layout.active ? { active: layout.active } : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
+                },
                 // TODO(wittjosiah): This plugin should own document title.
                 documentTitle: { data: { component: 'dxos.org/plugin/treeview/DocumentTitle' } },
               },
@@ -201,7 +203,7 @@ export const LayoutPlugin = (options?: LayoutPluginOptions): PluginDefinition<La
 
         return (
           <>
-            {result || <Surface {...{ data: { component: `${LAYOUT_PLUGIN}/SplitView` }, surfaces }} />}
+            {result || <Surface {...surfaceProps} />}
             <Mosaic.DragOverlay />
           </>
         );

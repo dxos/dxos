@@ -10,7 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { PublicKey } from '@dxos/react-client';
-import type { ItemID, Space } from '@dxos/react-client/echo';
+import type { ItemID } from '@dxos/react-client/echo';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
@@ -41,28 +41,16 @@ export type ObjectViewer = {
   lastSeen: number;
 };
 
-/**
- * The state of the space plugin.
- */
-export type SpaceState = {
-  /**
-   * The space that is associated with the currently active graph node.
-   * If the current graph node does not itself represent a space, then it is the space of the nearest ancestor.
-   * If no ancestor represents a space, then it is undefined.
-   */
-  active: Space | undefined;
-
-  /**
-   * Object that was linked to directly but not found and is being awaited.
-   */
-  awaiting: ItemID | undefined;
-};
-
 export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
   viewers: ObjectViewer[];
+
+  /**
+   * Object that was linked to directly but not found and is being awaited.
+   */
+  awaiting: ItemID | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

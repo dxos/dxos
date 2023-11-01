@@ -80,10 +80,13 @@ export type SpacePluginOptions = {
 
 export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<PluginState>({ viewers: [] });
-  const subscriptions = new EventSubscriptions();
+  const state = deepSignal<PluginState>({
+    awaiting: undefined,
+    viewers: [],
+  }) as RevertDeepSignal<PluginState>;
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
+  const subscriptions = new EventSubscriptions();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
   return {
