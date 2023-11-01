@@ -10,24 +10,24 @@ import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type PluginDef } from './types';
 
-// TODO(burdon): Standardize on styles.
+// TODO(burdon): Factor out.
 const styles = {
-  highlight: 'hover:bg-neutral-100 dark:hover:bg-neutral-900',
+  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
 };
 
-export type GalleryProps = {
+export type PluginListProps = {
   plugins?: PluginDef[];
   onChange?: (id: string, enabled: boolean) => void;
 };
 
-export const PluginList = ({ plugins = [], onChange }: GalleryProps) => {
+export const PluginList = ({ plugins = [], onChange }: PluginListProps) => {
   return (
     <div className={mx('flex flex-col w-full overflow-x-hidden overflow-y-scroll', inputSurface)}>
       <List>
         {plugins.map(({ id, name, enabled, Icon = Circle }) => (
           <ListItem.Root
             key={id}
-            classNames={mx('flex is-full items-center cursor-pointer', styles.highlight)}
+            classNames={mx('flex is-full items-center cursor-pointer', styles.hover)}
             onClick={() => onChange?.(id, !enabled)}
           >
             <ListItem.Endcap classNames={'items-center mr-4'}>
