@@ -92,7 +92,7 @@ export const objectToGraphNode = ({
         isFolder && !isSharedSpacesFolder
           ? [
               {
-                id: 'create-object-group',
+                id: `${SPACE_PLUGIN}/create`,
                 label: ['create object group label', { ns: SPACE_PLUGIN }],
                 icon: (props) => <Plus {...props} />,
                 invoke: () => {
@@ -226,7 +226,7 @@ export const objectToGraphNode = ({
     }
 
     if (isSpaceFolder) {
-      node.actionsMap['create-object-group'].addAction({
+      node.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
         id: 'folder/create',
         label: ['add folder label', { ns: SPACE_PLUGIN }],
         icon: (props) => <FolderPlus {...props} />,

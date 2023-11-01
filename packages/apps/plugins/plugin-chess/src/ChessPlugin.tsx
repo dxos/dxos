@@ -5,7 +5,7 @@
 import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Game } from '@dxos/chess-app';
@@ -39,7 +39,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${CHESS_PLUGIN}/create`,
             label: ['create game label', { ns: CHESS_PLUGIN }],
             icon: (props) => <ShieldChevron {...props} />,

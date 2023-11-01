@@ -5,7 +5,7 @@
 import { type IconProps, SquaresFour } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Grid as GridType } from '@braneframe/types';
 import { LayoutAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 
@@ -40,7 +40,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${GRID_PLUGIN}/create`,
             label: ['create grid label', { ns: GRID_PLUGIN }],
             icon: (props) => <SquaresFour {...props} />,

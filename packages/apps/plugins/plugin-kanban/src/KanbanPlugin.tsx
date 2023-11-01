@@ -5,7 +5,7 @@
 import { type IconProps, Kanban } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Kanban as KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
@@ -40,7 +40,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${KANBAN_PLUGIN}/create`,
             label: ['create kanban label', { ns: KANBAN_PLUGIN }],
             icon: (props) => <Kanban {...props} />,

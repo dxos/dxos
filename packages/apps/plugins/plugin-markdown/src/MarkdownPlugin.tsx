@@ -8,7 +8,7 @@ import { deepSignal } from 'deepsignal';
 import React, { type FC, type MutableRefObject, type RefCallback, useCallback } from 'react';
 
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Document, Folder } from '@braneframe/types';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -172,7 +172,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           if (parent.data instanceof Folder) {
             const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-            parent.actionsMap['create-object-group']?.addAction({
+            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
               id: `${MARKDOWN_PLUGIN}/create`,
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <ArticleMedium {...props} />,

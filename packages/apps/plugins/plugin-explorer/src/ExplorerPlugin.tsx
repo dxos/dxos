@@ -5,7 +5,7 @@
 import { Graph, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, View as ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition, LayoutAction } from '@dxos/app-framework';
 
@@ -41,7 +41,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
           // TODO(burdon): Util.
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${EXPLORER_PLUGIN}/create`,
             label: ['create object label', { ns: EXPLORER_PLUGIN }],
             icon: (props) => <Graph {...props} />,

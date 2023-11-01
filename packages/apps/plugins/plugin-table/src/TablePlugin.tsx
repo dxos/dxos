@@ -5,7 +5,7 @@
 import { type IconProps, Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Table as TableType, Folder } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { Schema } from '@dxos/react-client/echo';
@@ -41,7 +41,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${TABLE_PLUGIN}/create`,
             label: ['create object label', { ns: TABLE_PLUGIN }],
             icon: (props) => <Table {...props} />,

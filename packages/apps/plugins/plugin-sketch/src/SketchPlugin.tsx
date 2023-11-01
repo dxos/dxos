@@ -5,7 +5,7 @@
 import { CompassTool, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Sketch as SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
@@ -40,7 +40,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${SKETCH_PLUGIN}/create`,
             label: ['create object label', { ns: SKETCH_PLUGIN }],
             icon: (props) => <CompassTool {...props} />,

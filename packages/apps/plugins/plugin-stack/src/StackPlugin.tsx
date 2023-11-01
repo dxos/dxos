@@ -6,7 +6,7 @@ import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Stack as StackType } from '@braneframe/types';
 import {
   resolvePlugin,
@@ -67,7 +67,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${STACK_PLUGIN}/create`,
             label: ['create stack label', { ns: STACK_PLUGIN }],
             icon: (props) => <StackSimple {...props} />,

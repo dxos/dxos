@@ -5,7 +5,7 @@
 import { Asterisk, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
 import { Expando } from '@dxos/react-client/echo';
@@ -42,7 +42,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
             label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
             icon: (props) => <Asterisk {...props} />,

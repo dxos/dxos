@@ -5,7 +5,7 @@
 import { Chat, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { SpaceAction } from '@braneframe/plugin-space';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 import { Folder, Thread as ThreadType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 
@@ -40,7 +40,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.actionsMap['create-object-group']?.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${THREAD_PLUGIN}/create`,
             label: ['create thread label', { ns: THREAD_PLUGIN }],
             icon: (props) => <Chat {...props} />,
