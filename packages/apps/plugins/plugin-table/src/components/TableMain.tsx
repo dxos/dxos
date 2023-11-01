@@ -5,10 +5,8 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando, type TypedObject, type Schema } from '@dxos/client/echo';
+import { getSpaceForObject, Expando, type TypedObject, type Schema } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
@@ -50,10 +48,7 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
-
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+  const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
