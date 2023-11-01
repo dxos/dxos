@@ -757,6 +757,9 @@ importers:
       '@braneframe/plugin-pwa':
         specifier: workspace:*
         version: link:../plugins/plugin-pwa
+      '@braneframe/plugin-script':
+        specifier: workspace:*
+        version: link:../plugins/plugin-script
       '@braneframe/plugin-search':
         specifier: workspace:*
         version: link:../plugins/plugin-search

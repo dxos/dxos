@@ -106,6 +106,9 @@
       "path": "../plugins/plugin-pwa"
     },
     {
+      "path": "../plugins/plugin-script"
+    },
+    {
       "path": "../plugins/plugin-search"
     },
     {

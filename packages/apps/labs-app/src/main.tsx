@@ -24,6 +24,7 @@ import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { ScriptPlugin } from '@braneframe/plugin-script';
 import { SearchPlugin } from '@braneframe/plugin-search';
 import { SketchPlugin } from '@braneframe/plugin-sketch';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -110,6 +111,7 @@ const main = async () => {
       KanbanPlugin(),
       MapPlugin(),
       PresenterPlugin(), // Before Stack.
+      ScriptPlugin(),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),
