@@ -10,8 +10,16 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import { Button, ListItem, useTranslation, Avatar, useThemeContext, type AvatarRootProps } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import {
+  Button,
+  ListItem,
+  useTranslation,
+  Avatar,
+  useThemeContext,
+  type AvatarRootProps,
+  Tooltip,
+} from '@dxos/react-ui';
+import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
@@ -114,16 +122,26 @@ export const InvitationListItemImpl = ({
   return (
     <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center relative'>
       <ListItem.Heading classNames='sr-only'>
-        {t('invitation heading') /* todo(thure): Make this more accessible. */}
+        {t(authMethod === Invitation.AuthMethod.NONE ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
       {authMethod === Invitation.AuthMethod.NONE && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />
       )}
-      <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
-        <Avatar.Frame classNames='relative'>
-          <Avatar.Fallback text={toEmoji(invitationId)} />
-        </Avatar.Frame>
-      </Avatar.Root>
+      <Tooltip.Root>
+        <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
+          <Tooltip.Trigger asChild>
+            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full']}>
+              <Avatar.Fallback text={toEmoji(invitationId)} />
+            </Avatar.Frame>
+          </Tooltip.Trigger>
+        </Avatar.Root>
+        <Tooltip.Portal>
+          <Tooltip.Content side='left' classNames='z-[70]'>
+            {t(authMethod === Invitation.AuthMethod.NONE ? 'invite many qr label' : 'invite one qr label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
       {showShare && invitationUrl ? (
         <>
           <Button
