@@ -9,7 +9,8 @@ import React, { useState } from 'react';
 
 import { DensityProvider } from '@dxos/react-ui';
 
-import { type PluginDef, PluginList } from './PluginList';
+import { PluginList } from './PluginList';
+import { type PluginDef } from './types';
 
 const Story = () => {
   const [plugins, setPlugins] = useState<PluginDef[]>([
