@@ -78,6 +78,7 @@ export const InvitationListItemImpl = ({
   );
 
   const showShare =
+    authMethod === Invitation.AuthMethod.NONE ||
     [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
 
   const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
