@@ -1,0 +1,65 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+import "dxos/keys.proto";
+import "dxos/echo/model/document.proto";
+
+package dxos.echo.filter;
+
+message QueryOptions {
+  enum ShowDeletedOption {
+    /// Do not return deleted items. Default behaviour.
+    HIDE_DELETED = 0;
+
+    /// Return deleted and regular items.
+    SHOW_DELETED = 1;
+
+    /// Return only deleted items.
+    SHOW_DELETED_ONLY = 2;
+  }
+
+  /// Controls how deleted items are filtered.
+  optional ShowDeletedOption deleted = 1;
+
+  /**
+   * Filter by model.
+   * @default * Only DocumentModel.
+   * To querty all models, use `models: ["*"]`.
+   */
+  repeated string models = 2;
+
+  /**
+   * Query only in specific spaces.
+   */
+  repeated dxos.keys.PublicKey spaces = 3;
+
+  enum DataLocation {
+    ALL = 0;
+    LOCAL = 1;
+    REMOTE = 2;
+  }
+
+  /**
+    * Query only local spaces, or remote on agent.
+    * @default `QueryOptions.DataLocation.LOCAL`
+    */
+  optional DataLocation data_location = 4;
+}
+
+/**
+ * Protocol for ephemeral Filter serialization.
+ */
+message Filter {
+  optional google.protobuf.Struct properties = 1;
+  optional dxos.echo.model.document.Reference type = 2;
+  optional string text = 3;
+  optional bool not = 4;
+  repeated Filter and = 5; 
+  repeated Filter or = 6;
+  optional QueryOptions options = 7; 
+}
