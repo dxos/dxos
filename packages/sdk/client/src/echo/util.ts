@@ -20,6 +20,7 @@ export const getSpaceForObject = (object: EchoObject): SpaceProxy | undefined =>
   if (!key) {
     return undefined;
   }
+
   const owner = db?.graph._getOwningObject(key);
   if (owner instanceof SpaceProxy) {
     return owner;

@@ -25,6 +25,7 @@
     "@braneframe/plugin-search": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-generator": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",

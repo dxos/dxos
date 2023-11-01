@@ -24,6 +24,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

@@ -47,7 +47,6 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
 
 export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
   const [, forceUpdate] = useState({});
-
   const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
     space,

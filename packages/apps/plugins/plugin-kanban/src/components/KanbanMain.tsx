@@ -14,7 +14,6 @@ import { type KanbanModel } from '../types';
 
 export const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
-
   const space = getSpaceForObject(kanban);
   if (!space) {
     return null;

@@ -5,9 +5,9 @@
 import { CaretDoubleRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { getActiveSpace } from '@braneframe/plugin-space';
 import { Thread as ThreadType } from '@braneframe/types';
-import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { getSpaceForObject } from '@dxos/react-client/echo';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -21,12 +21,9 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
   // TODO(burdon): Get current context.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   // console.log('layout:', layoutPlugin?.provides.layout.active);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const layout = layoutPlugin?.provides.layout;
-  const graph = graphPlugin?.provides.graph;
-  const space = layout && graph ? getActiveSpace(graph, layout.active) : undefined;
 
   const [thread, setThread] = useState(initialThread);
+  const space = thread && getSpaceForObject(thread);
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.

@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseLayoutPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { useClient } from '@dxos/react-client';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
@@ -13,7 +14,10 @@ import { Searchbar } from './Searchbar';
 import { useSearch, useSearchResults } from '../context';
 
 export const SearchMain = () => {
+  const client = useClient();
   const { setMatch } = useSearch();
+  // TODO(burdon): UX to select all spaces.
+  const allSpaces = false;
 
   // TODO(burdon): Query agent/cross-space.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
@@ -24,7 +28,7 @@ export const SearchMain = () => {
   const space = layout && graph ? getActiveSpace(graph, layout.active) : undefined;
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const { objects } = space?.db.query() ?? {};
+  const { objects } = allSpaces ? client.spaces.query() : space?.db.query() ?? {};
   const results = useSearchResults(objects);
 
   const [selected, setSelected] = useState<string>();
