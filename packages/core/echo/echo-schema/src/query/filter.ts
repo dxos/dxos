@@ -102,7 +102,12 @@ export class Filter<T extends EchoObject = EchoObject> {
   }
 
   static fromProto(proto: FilterProto): Filter {
-    const options = proto.options;
+    // NOTE(mykola): Filter expects options empty arrays to be undefined.
+    const options = {
+      ...proto.options,
+      spaces: proto.options?.spaces?.length === 0 ? undefined : proto.options?.spaces,
+      models: proto.options?.models?.length === 0 ? undefined : proto.options?.models,
+    };
     return new Filter(
       {
         type: proto.type && Reference.fromValue(proto.type),
