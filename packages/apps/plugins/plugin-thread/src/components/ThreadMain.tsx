@@ -13,6 +13,9 @@ import { ThreadContainer } from './ThreadContainer';
 
 export const ThreadMain: FC<{ thread: ThreadType }> = ({ thread }) => {
   const space = getSpaceForObject(thread);
+  if (!space) {
+    return null;
+  }
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>

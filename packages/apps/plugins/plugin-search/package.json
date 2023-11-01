@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-search",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

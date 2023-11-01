@@ -6,7 +6,7 @@ import { CaretDoubleRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { parseLayoutPlugin, resolvePlugin } from '@dxos/app-framework';
+import { parseLayoutPlugin, resolvePlugin, usePlugins } from '@dxos/app-framework';
 import { getSpaceForObject } from '@dxos/client/echo';
 import { Button, Tooltip, useSidebars, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -18,7 +18,7 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
   const { t } = useTranslation('os');
   const { closeComplementarySidebar, complementarySidebarOpen } = useSidebars(THREAD_PLUGIN);
   const [thread, setThread] = useState(initialThread);
-  const space = getSpaceForObject(thread);
+  const space = thread && getSpaceForObject(thread);
   useEffect(() => {
     if (space) {
       // TODO(burdon): Get thread appropriate for context.
@@ -30,6 +30,7 @@ export const ThreadSidebar: FC<{ thread?: ThreadType }> = ({ thread: initialThre
   }, [space, thread]);
 
   // TODO(burdon): Get current context.
+  const { plugins } = usePlugins();
   const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
   // console.log('layout:', layoutPlugin?.provides.layout.active);
 

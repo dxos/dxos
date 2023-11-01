@@ -138,8 +138,11 @@ export class MemoryTransport implements Transport {
       // code   .unpipe(this._incomingDelay)
       // code   .unpipe(this._stream);
 
-      this._outgoingDelay.unpipe();
-      this._incomingDelay.unpipe();
+      this.options.stream.unpipe(this._incomingDelay);
+      this._incomingDelay.unpipe(this._remoteConnection.options.stream);
+      this._remoteConnection.options.stream.unpipe(this._outgoingDelay);
+      this._outgoingDelay.unpipe(this.options.stream);
+      this.options.stream.unpipe(this._outgoingDelay);
 
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;

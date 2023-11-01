@@ -1146,15 +1146,24 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@observablehq/plot':
+        specifier: ^0.6.11
+        version: 0.6.11
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+      topojson-client:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -1184,8 +1193,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -1198,6 +1207,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      '@types/topojson-client':
+        specifier: ^3.1.3
+        version: 3.1.3
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2023,6 +2035,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2571,6 +2586,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
@@ -5677,8 +5695,8 @@ importers:
         specifier: ^3.0.10
         version: 3.1.2
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5693,8 +5711,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5735,8 +5753,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       d3-force:
         specifier: ~3.0.0
         version: 3.0.0
@@ -5761,8 +5779,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -6279,8 +6297,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6307,8 +6325,8 @@ importers:
         specifier: 1.3.70
         version: 1.3.70
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6547,8 +6565,8 @@ importers:
         specifier: workspace:*
         version: link:../../experimental/gem-core
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       use-resize-observer:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -6575,8 +6593,8 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash':
         specifier: ^4.14.182
         version: 4.14.191
@@ -8137,8 +8155,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -8155,8 +8173,8 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8764,8 +8782,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8798,8 +8816,8 @@ importers:
         specifier: ^0.5.8
         version: 0.5.8(tailwindcss@3.3.2)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -15095,6 +15113,15 @@ packages:
       - debug
     dev: true
 
+  /@observablehq/plot@0.6.11:
+    resolution: {integrity: sha512-7f43OizjVcno6/lZ+IC/bIceud9ZYJa7PCnZTjHCf3utcaGXgLqC1qxpYLzNZTnVHpKTFfqoPY/jOuFC/kSWgA==}
+    engines: {node: '>=12'}
+    dependencies:
+      d3: 7.8.5
+      interval-tree-1d: 1.0.4
+      isoformat: 0.2.1
+    dev: false
+
   /@oclif/color@1.0.4:
     resolution: {integrity: sha512-HEcVnSzpQkjskqWJyVN3tGgR0H0F8GrBmDjgQ1N0ZwwktYa4y9kfV07P/5vt5BjPXNyslXHc4KAO8Bt7gmErCA==}
     engines: {node: '>=12.0.0'}
@@ -19922,8 +19949,8 @@ packages:
       '@types/d3-selection': 3.0.3
     dev: true
 
-  /@types/d3@7.4.0:
-    resolution: {integrity: sha512-jIfNVK0ZlxcuRDKtRS/SypEyOQ6UHaFQBKv032X45VvxSJ6Yi5G9behy9h6tNTHTDGh5Vq+KbmBjUWLgY4meCA==}
+  /@types/d3@7.4.2:
+    resolution: {integrity: sha512-Y4g2Yb30ZJmmtqAJTqMRaqXwRawfvpdpVmyEYEcyGNhrQI/Zvkq3k7yE1tdN07aFSmNBfvmegMQ9Fe2qy9ZMhw==}
     dependencies:
       '@types/d3-array': 3.0.3
       '@types/d3-axis': 3.0.1
@@ -20729,6 +20756,19 @@ packages:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
       '@types/node': 18.11.9
+    dev: true
+
+  /@types/topojson-client@3.1.3:
+    resolution: {integrity: sha512-liC+dHCxoqQy5bbJMsF59Cx1WZZwbcT084v/5bdp3NWSFUuzQpsm4gbLQh+wlv58Mng4jCsO4p8hWelqGlb7rg==}
+    dependencies:
+      '@types/geojson': 7946.0.10
+      '@types/topojson-specification': 1.0.4
+    dev: true
+
+  /@types/topojson-specification@1.0.4:
+    resolution: {integrity: sha512-LG/a8kJi4X6MsFhZKiBAIC/a+yCFtjkHsDMwuQqSoB1az8D2bR2xRKU3aczizfcqdt2lVqnS+aJBFMrO+rO5Aw==}
+    dependencies:
+      '@types/geojson': 7946.0.10
     dev: true
 
   /@types/trusted-types@2.0.2:
@@ -23096,6 +23136,10 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
+  /binary-search-bounds@2.0.5:
+    resolution: {integrity: sha512-H0ea4Fd3lS1+sTEB2TgcLoK21lLhwEJzlQv3IN47pJS976Gx4zoWe0ak3q+uYh60ppQxg9F16Ri4tS1sfD4+jA==}
+    dev: false
+
   /binary@0.3.0:
     resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
     dependencies:
@@ -24417,7 +24461,6 @@ packages:
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
-    dev: true
 
   /commander@2.9.0:
     resolution: {integrity: sha512-bmkUukX8wAOjHdN26xj5c4ctEV22TQ7dQYhSmuckKhToXrkUn0iIaolHdIxYYqD55nhpSPA9zPQ1yP57GdXP2A==}
@@ -25324,8 +25367,8 @@ packages:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  /d3@7.8.2:
-    resolution: {integrity: sha512-WXty7qOGSHb7HR7CfOzwN1Gw04MUOzN8qh9ZUsvwycIMb4DYMpY9xczZ6jUorGtO6bR9BPMPaueIKwiDxu9uiQ==}
+  /d3@7.8.5:
+    resolution: {integrity: sha512-JgoahDG51ncUfJu6wX/1vWQEqOflgXyl4MaHqlcSruTez7yhaRKR9i8VjjcQGeS2en/jnFivXuaIMnseMMt0XA==}
     engines: {node: '>=12'}
     dependencies:
       d3-array: 3.2.0
@@ -25369,7 +25412,7 @@ packages:
   /dagre-d3-es@7.0.9:
     resolution: {integrity: sha512-rYR4QfVmy+sR44IBDvVtcAmOReGBvRCWDpO2QjYwqgh9yijw6eSHBqaPG/LIOEy7aBsniLvtMW6pg19qJhq60w==}
     dependencies:
-      d3: 7.8.2
+      d3: 7.8.5
       lodash-es: 4.17.21
     dev: true
 
@@ -29848,6 +29891,12 @@ packages:
     resolution: {integrity: sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==}
     engines: {node: '>= 0.10'}
 
+  /interval-tree-1d@1.0.4:
+    resolution: {integrity: sha512-wY8QJH+6wNI0uh4pDQzMvl+478Qh7Rl4qLmqiluxALlNvl+I+o5x38Pw3/z7mDPTPS1dQalZJXsmbvxx5gclhQ==}
+    dependencies:
+      binary-search-bounds: 2.0.5
+    dev: false
+
   /invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
     dependencies:
@@ -30559,6 +30608,10 @@ packages:
   /isobject@3.0.1:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
+
+  /isoformat@0.2.1:
+    resolution: {integrity: sha512-tFLRAygk9NqrRPhJSnNGh7g7oaVWDwR0wKh/GM2LgmPa50Eg4UfyaCO4I8k6EqJHl1/uh2RAD6g06n5ygEnrjQ==}
+    dev: false
 
   /isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
@@ -33294,7 +33347,7 @@ packages:
       cytoscape: 3.23.0
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.23.0)
       cytoscape-fcose: 2.1.0(cytoscape@3.23.0)
-      d3: 7.8.2
+      d3: 7.8.5
       dagre-d3-es: 7.0.9
       dayjs: 1.11.7
       dompurify: 2.4.3
@@ -40158,6 +40211,13 @@ packages:
   /toml@3.0.0:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
     dev: true
+
+  /topojson-client@3.1.0:
+    resolution: {integrity: sha512-605uxS6bcYxGXw9qi62XyrV6Q3xwbndjachmNxu8HWTtVPxZfEJN9fd/SZS1Q54Sn2y0TMyMxFj/cJINqGHrKw==}
+    hasBin: true
+    dependencies:
+      commander: 2.20.3
+    dev: false
 
   /tosource@1.0.0:
     resolution: {integrity: sha512-N6g8eQ1eerw6Y1pBhdgkubWIiPFwXa2POSUrlL8jth5CyyEWNWzoGKRkO3CaO7Jx27hlJP54muB3btIAbx4MPg==}

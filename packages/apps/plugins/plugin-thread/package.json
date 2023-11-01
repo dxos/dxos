@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-thread",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Kanban DXOS Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@braneframe/plugin-layout": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-client": "workspace:*",
