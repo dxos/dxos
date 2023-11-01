@@ -26,7 +26,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       metadata: {
         records: {
           [Game.schema.typename]: {
-            fallbackName: ['game title placeholder', { ns: CHESS_PLUGIN }],
+            placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: (props: IconProps) => <ShieldChevron {...props} />,
           },
         },

@@ -79,7 +79,7 @@ export const objectToGraphNode = ({
         ? ['shared spaces label', { ns: SPACE_PLUGIN }]
         : isSpaceFolder
         ? getSpaceDisplayName(space)
-        : object.name || object.title || metadata.fallbackName || ['unnamed object label', { ns: SPACE_PLUGIN }],
+        : object.name || object.title || metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
       description: isSpaceFolder ? space.properties.description : object.description,
       icon:
         isPersonalSpace || isSharedSpacesFolder

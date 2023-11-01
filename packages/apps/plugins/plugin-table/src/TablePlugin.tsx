@@ -27,7 +27,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.schema.typename]: {
-            fallbackName: ['object placeholder', { ns: TABLE_PLUGIN }],
+            placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
         },

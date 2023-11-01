@@ -26,7 +26,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       metadata: {
         records: {
           [GridType.schema.typename]: {
-            fallbackName: ['grid title placeholder', { ns: GRID_PLUGIN }],
+            placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
           },
         },

@@ -26,7 +26,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       metadata: {
         records: {
           [ThreadType.schema.typename]: {
-            fallbackName: ['thread title placeholder', { ns: THREAD_PLUGIN }],
+            placeholder: ['thread title placeholder', { ns: THREAD_PLUGIN }],
             icon: (props: IconProps) => <Chat {...props} />,
           },
         },

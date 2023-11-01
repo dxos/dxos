@@ -26,7 +26,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
       metadata: {
         records: {
           [ViewType.schema.typename]: {
-            fallbackName: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+            placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: (props: IconProps) => <Graph {...props} />,
           },
         },

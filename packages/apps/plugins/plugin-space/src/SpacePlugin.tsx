@@ -218,7 +218,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       metadata: {
         records: {
           [Folder.schema.typename]: {
-            fallbackName: ['unnamed folder label', { ns: SPACE_PLUGIN }],
+            placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <FolderIcon {...props} />,
           },
         },

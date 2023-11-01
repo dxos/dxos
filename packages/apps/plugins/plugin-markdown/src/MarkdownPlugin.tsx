@@ -162,7 +162,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [Document.schema.typename]: {
-            fallbackName: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+            placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <ArticleMedium {...props} />,
           },
         },

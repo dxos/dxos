@@ -18,6 +18,8 @@ import { MAP_PLUGIN, MapAction, type MapPluginProvides, isObject } from './types
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
+const typename = 'map';
+
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
     meta: {
@@ -26,8 +28,8 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          map: {
-            fallbackName: ['object title placeholder', { ns: MAP_PLUGIN }],
+          [typename]: {
+            placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: (props: IconProps) => <Compass {...props} />,
           },
         },

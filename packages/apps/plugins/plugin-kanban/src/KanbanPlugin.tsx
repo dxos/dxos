@@ -26,7 +26,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       metadata: {
         records: {
           [KanbanType.schema.typename]: {
-            fallbackName: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+            placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
           },
         },

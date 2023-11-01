@@ -53,7 +53,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       metadata: {
         records: {
           [StackType.schema.typename]: {
-            fallbackName: ['stack title placeholder', { ns: STACK_PLUGIN }],
+            placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
         },

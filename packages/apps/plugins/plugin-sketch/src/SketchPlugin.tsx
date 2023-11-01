@@ -26,7 +26,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       metadata: {
         records: {
           [SketchType.schema.typename]: {
-            fallbackName: ['object title placeholder', { ns: SKETCH_PLUGIN }],
+            placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: (props: IconProps) => <CompassTool {...props} />,
           },
         },

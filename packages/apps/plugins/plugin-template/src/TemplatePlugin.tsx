@@ -18,6 +18,8 @@ import { TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides, isObject 
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
+const typename = 'template'; // Type.schema.typename
+
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   return {
     meta: {
@@ -26,9 +28,8 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
     provides: {
       metadata: {
         records: {
-          // [Type.schema.typename]
-          template: {
-            fallbackName: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
+          [typename]: {
+            placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: (props: IconProps) => <Asterisk {...props} />,
           },
         },
