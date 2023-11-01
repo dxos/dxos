@@ -24,7 +24,8 @@ export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...
 export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
   mx(descriptionText, srOnly && 'sr-only', ...etc);
 
-export const avatarFrame: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('is-full bs-full', ...etc);
+export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
+  mx('is-full bs-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -50,10 +51,11 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
       ? 'border-warning-400 dark:border-warning-500'
       : '',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
+    ...etc,
   );
 
 export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('fill-neutral-600 dark:fill-neutral-300');
+  mx('fill-neutral-600 dark:fill-neutral-300', ...etc);
 
 export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('inline-flex items-center', ...etc);

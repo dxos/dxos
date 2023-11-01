@@ -29,7 +29,7 @@ export const Emoji = ({ text, className }: { text?: string; className?: string }
 export const Centered = (props: PropsWithChildren) => {
   const { children } = props;
   return (
-    <div role='none' className='absolute inset-0 flex items-center justify-center mbe-8'>
+    <div role='none' className='absolute inset-0 flex items-center justify-center'>
       {children}
     </div>
   );
