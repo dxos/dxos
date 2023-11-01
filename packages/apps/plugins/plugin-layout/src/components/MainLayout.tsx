@@ -9,6 +9,7 @@ import { Surface } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover } from '@dxos/react-ui';
 import { baseSurface, coarseBlockSize, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
+import { ContentFallback } from './ContentFallback';
 import { Fallback } from './Fallback';
 import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../types';
@@ -26,7 +27,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
   if (fullscreen) {
     return (
       <div className={fixedInsetFlexLayout}>
-        <Surface role='main' limit={1} />
+        <Surface role='main' limit={1} fallback={Fallback} />
       </div>
     );
   }
@@ -113,7 +114,7 @@ export const MainLayout = ({ fullscreen, showComplementarySidebar = true }: Main
 
         {/* Main content surface. */}
         {/* TODO(wittjosiah): Check if anything fulfills this Surface, if not, show 404. */}
-        <Surface role='main' limit={1} fallback={Fallback} />
+        <Surface role='main' limit={1} fallback={Fallback} contentFallback={ContentFallback} />
 
         {/* Global popovers. */}
         {/* TODO(burdon): Doesn't allow client to control the popover. */}
