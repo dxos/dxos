@@ -82,9 +82,7 @@ export const ClientPlugin = (
 
       // TODO(burdon): Timeout.
       if (client.halo.identity.get()) {
-        console.log('### waiting...');
         await client.spaces.isReady.wait();
-        console.log('### ok');
       }
 
       return {
@@ -103,14 +101,12 @@ export const ClientPlugin = (
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        components: {
-          default: () => {
-            if (error) {
-              throw error;
-            }
+        root: () => {
+          if (error) {
+            throw error;
+          }
 
-            return null;
-          },
+          return null;
         },
       };
     },
