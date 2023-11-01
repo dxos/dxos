@@ -10,6 +10,7 @@ import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
 
 import { type PluginDef } from './types';
 
+// TODO(burdon): Standardize on styles.
 const styles = {
   highlight: 'hover:bg-neutral-100 dark:hover:bg-neutral-900',
 };
