@@ -3,9 +3,6 @@
 //
 
 import { expect } from 'chai';
-import MiniSearch, { type Options } from 'minisearch';
-import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -36,47 +33,6 @@ describe('QueryPlugin', () => {
       },
     },
   ];
-
-  /**
-   * Test MiniSearch.
-   * @see https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
-   */
-  test.skip('minisearch', async () => {
-    const opts: Options = {
-      fields: ['hello', 'foo', 'nested.deep.foo'],
-      extractField: (document: any, fieldName: string) => {
-        return fieldName.split('.').reduce((doc, key) => doc && doc[key], document);
-      },
-      idField: 'idx',
-    };
-    const miniSearch = new MiniSearch(opts);
-
-    miniSearch.addAll(documents);
-
-    const check = (index: MiniSearch) => {
-      const searchResult = index.search('bas', { fuzzy: true });
-      expect(searchResult).to.have.lengthOf(2);
-      expect(searchResult.find((r) => r.idx === 1)?.match.bar).to.deep.equal(['foo']);
-      expect(searchResult.find((r) => r.idx === 2)?.match.bar).to.deep.equal(['foo', 'nested.deep.foo']);
-    };
-
-    check(miniSearch);
-
-    const file = path.join(TEST_DIR, 'index.json');
-    {
-      // Write index to file.
-      const json = miniSearch.toJSON();
-      mkdirSync(TEST_DIR, { recursive: true });
-      writeFileSync(file, JSON.stringify(json, null, 2), { encoding: 'utf8' });
-      afterTest(() => unlinkSync(file));
-    }
-
-    {
-      // Read index from file.
-      const readIndex = MiniSearch.loadJSON(readFileSync(file, 'utf8'), opts);
-      check(readIndex);
-    }
-  });
 
   test('search request/response', async () => {
     //
@@ -169,7 +125,7 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   });
 
-  test.only('remote query', async () => {
+  test('remote query', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
@@ -210,10 +166,7 @@ describe('QueryPlugin', () => {
       await asyncTimeout(client2.spaces.isReady.wait(), 1000);
 
       await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
-      const query = client2.spaces.query(
-        { foo: 'bar' },
-        { models: ['*'], spaces: client2.spaces.get().map((s) => s.key) },
-      );
+      const query = client2.spaces.query({ foo: 'bar' });
       query.subscribe((query) => {
         if (query.results.some((r) => r.resolution?.source === 'remote')) {
           log.info('Received remote query results.', { res: query.results });

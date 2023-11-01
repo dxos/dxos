@@ -55,6 +55,7 @@ export class QueryPlugin extends Plugin {
   }
 
   private async _processRequest(message: GossipMessage) {
+    log.info('Indexing plugin received message.', { message });
     if (message.payload['@type'] !== 'dxos.agent.query.QueryRequest') {
       log('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
       return;
@@ -79,7 +80,6 @@ export class QueryPlugin extends Plugin {
         }) ?? [],
       objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
     };
-
 
     await this._pluginCtx!.client!.spaces.default.postMessage(QUERY_CHANNEL, {
       '@type': 'dxos.agent.query.QueryResponse',
