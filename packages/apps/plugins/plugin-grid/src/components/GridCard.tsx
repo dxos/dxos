@@ -35,7 +35,7 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     const { t } = useTranslation(GRID_PLUGIN);
 
     const titleAccessor: ValueAccessor<GridCardProps, string> = {
-      getValue: (object) => getObject(item).title ?? '',
+      getValue: (object) => getObject(item).title ?? getObject(item).name ?? '',
       setValue: (object, value) => {
         if ((item as any).object) {
           (item as any).object.title = value;

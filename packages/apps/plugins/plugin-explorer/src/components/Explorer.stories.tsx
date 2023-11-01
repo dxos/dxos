@@ -39,7 +39,7 @@ const Story = () => {
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ count: 30 });
+    generator.createObjects({ count: 100 });
 
     setSpace(space);
     setView(view);
