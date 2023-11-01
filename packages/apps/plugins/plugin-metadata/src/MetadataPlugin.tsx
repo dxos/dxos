@@ -13,7 +13,7 @@ import {
 } from '@dxos/app-framework';
 
 /**
- *
+ * Plugin for collecting and resolving type metadata.
  */
 export const MetadataPlugin = (): PluginDefinition<MetadataResolverProvides> => {
   const state = deepSignal<MetadataRecordsProvides['metadata']>({ records: {} });
