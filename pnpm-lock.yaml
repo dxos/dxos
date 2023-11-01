@@ -2105,9 +2105,15 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/text-model':
+        specifier: workspace:*
+        version: link:../../../core/echo/text-model
       '@monaco-editor/react':
         specifier: ^4.4.6
         version: 4.4.6(monaco-editor@0.25.2)(react-dom@18.2.0)(react@18.2.0)
@@ -2121,7 +2127,7 @@ importers:
         specifier: ^0.1.0
         version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
       yjs:
-        specifier: ^13.6.7
+        specifier: ^13.6.8
         version: 13.6.8
     devDependencies:
       '@braneframe/plugin-graph':
@@ -2273,8 +2279,8 @@ importers:
         specifier: ^0.1.4
         version: 0.1.4(react@18.2.0)
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -4078,8 +4084,8 @@ importers:
         specifier: ^3.0.2
         version: 3.3.0
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
@@ -4505,8 +4511,8 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/document-model':
         specifier: workspace:*
@@ -6010,10 +6016,10 @@ importers:
         version: 1.8.0(react@18.2.0)
       y-monaco:
         specifier: ^0.1.0
-        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.7)
+        version: 0.1.4(monaco-editor@0.25.2)(yjs@13.6.8)
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7451,7 +7457,7 @@ importers:
         specifier: ^8.0.2
         version: 8.2.0
       yjs:
-        specifier: ^13.6.7
+        specifier: ^13.6.8
         version: 13.6.8
     devDependencies:
       '@dxos/react-ui-theme':
@@ -8189,16 +8195,16 @@ importers:
         version: 1.30.1
       y-codemirror.next:
         specifier: ^0.3.2
-        version: 0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.7)
+        version: 0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.8)
       y-prosemirror:
         specifier: ~1.0.20
-        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+        version: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
       y-protocols:
         specifier: ^1.0.5
         version: 1.0.5
       yjs:
-        specifier: ^13.6.7
-        version: 13.6.7
+        specifier: ^13.6.8
+        version: 13.6.8
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -19417,7 +19423,7 @@ packages:
       y-prosemirror: 1.0.20
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
     dev: false
 
   /@tiptap/extension-collaboration@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)(@tiptap/pm@2.0.0-beta.220)(y-prosemirror@1.0.20):
@@ -19429,7 +19435,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.220(@tiptap/pm@2.0.0-beta.220)
       '@tiptap/pm': 2.0.0-beta.220(@tiptap/core@2.0.0-beta.220)
-      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7)
+      y-prosemirror: 1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8)
     dev: false
 
   /@tiptap/extension-document@2.0.0-beta.220(@tiptap/core@2.0.0-beta.220):
@@ -43297,7 +43303,7 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
-  /y-codemirror.next@0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.7):
+  /y-codemirror.next@0.3.2(@codemirror/state@6.2.0)(@codemirror/view@6.9.2)(yjs@13.6.8):
     resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
     peerDependencies:
       '@codemirror/state': ^6.0.0
@@ -43307,18 +43313,7 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
       lib0: 0.2.78
-      yjs: 13.6.7
-    dev: false
-
-  /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.7):
-    resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
-    peerDependencies:
-      monaco-editor: '>=0.20.0'
-      yjs: ^13.3.1
-    dependencies:
-      lib0: 0.2.78
-      monaco-editor: 0.25.2
-      yjs: 13.6.7
+      yjs: 13.6.8
     dev: false
 
   /y-monaco@0.1.4(monaco-editor@0.25.2)(yjs@13.6.8):
@@ -43332,7 +43327,7 @@ packages:
       yjs: 13.6.8
     dev: false
 
-  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.7):
+  /y-prosemirror@1.0.20(prosemirror-model@1.19.0)(prosemirror-state@1.4.2)(prosemirror-view@1.30.1)(y-protocols@1.0.5)(yjs@13.6.8):
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -43346,7 +43341,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.6.7
+      yjs: 13.6.8
     dev: false
 
   /y-protocols@1.0.5:
@@ -43560,13 +43555,6 @@ packages:
       - encoding
       - supports-color
     dev: true
-
-  /yjs@13.6.7:
-    resolution: {integrity: sha512-mCZTh4kjvUS2DnaktsYN6wLH3WZCJBLqrTdkWh1bIDpA/sB/GNFaLA/dyVJj2Hc7KwONuuoC/vWe9bwBBosZLQ==}
-    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
-    dependencies:
-      lib0: 0.2.78
-    dev: false
 
   /yjs@13.6.8:
     resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}

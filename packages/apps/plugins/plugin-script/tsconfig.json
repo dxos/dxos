@@ -24,6 +24,12 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../core/protocols"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

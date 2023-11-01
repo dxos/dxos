@@ -2,46 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import MonacoEditor from '@monaco-editor/react';
-import React, { useRef } from 'react';
+import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
+import { Play } from '@phosphor-icons/react';
+import { editor, languages } from 'monaco-editor';
+import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
 import { type TextObject } from '@dxos/client/echo';
+import { Button, DensityProvider, Toolbar } from '@dxos/react-ui';
+import { type YText } from '@dxos/text-model';
+
+import JsxEmit = languages.typescript.JsxEmit;
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+
+// TODO(burdon): Basic sandbox: access current client/space: goal to run query.
+// TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
 
 export type ScriptEditorProps = {
   content: TextObject;
 };
 
+/**
+ * Monaco script editor.
+ * https://www.npmjs.com/package/@monaco-editor
+ */
 export const ScriptEditor = ({ content }: ScriptEditorProps) => {
-  const handleBeforeMount = (monaco: any) => {
-    // https://microsoft.github.io/monaco-editor/api/modules/monaco.languages.typescript.html
-    // https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.typescript.CompilerOptions.html
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      jsx: 'react',
-      noLib: true,
-      // TODO(burdon): Error.
-      // https://github.com/microsoft/monaco-editor/issues/2249
-      // allowNonTsExtensions: true
-    });
-  };
+  // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
+  const monaco = useMonaco();
+  useEffect(() => {
+    if (monaco) {
+      console.log('initialized', { monaco });
+    }
+  }, [monaco]);
 
-  const monacoRef = useRef(null);
-  const handleMount = (editor: any, monaco: any) => {
-    // Get instance.
-    const _ = new MonacoBinding(content.doc!.getText('monaco'), editor.getModel(), new Set([editor]));
-    monacoRef.current = editor;
-  };
-
-  const handleChange = (event) => {
-    console.log('updated', event);
-  };
-
+  // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options = {
-    readOnly: false,
     minimap: {
       enabled: false,
     },
-    // https://github.com/microsoft/monaco-editor/blob/212670ceb460441b3ebed29e6ca30aa1e9bdde85/website/typedoc/monaco.d.ts#L4035
+    readOnly: false,
     scrollbar: {
       useShadows: false,
       verticalScrollbarSize: 4,
@@ -49,21 +48,50 @@ export const ScriptEditor = ({ content }: ScriptEditorProps) => {
     },
   };
 
-  // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
-  // https://www.npmjs.com/package/@monaco-editor/react#props
-  // TODO(burdon): Throws the following error:
-  //  Uncaught (in promise) Error: Could not find source file: 'inmemory://model/1'.
-  //  https://github.com/microsoft/monaco-editor/issues/2249
+  const handleWillMount = (monaco: Monaco) => {
+    // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      allowNonTsExtensions: true, // Allow in-memory file.
+      jsx: JsxEmit.ReactJSX,
+      lib: ['dom'],
+    });
+  };
+
+  const handleMount = (editor: IStandaloneCodeEditor, monaco: Monaco) => {
+    if (content) {
+      // Connect editor model to YJS.
+      const models = monaco.editor.getModels();
+      const _ = new MonacoBinding(content.content as YText, models[0], new Set([editor]));
+    }
+  };
+
+  const handleExec = () => {
+    // https://developer.mozilla.org/en-US/docs/web/javascript/reference/global_objects/eval#never_use_eval!
+    // eslint-disable-next-line no-eval
+    return eval?.(`"use strict";(${content.text})`);
+  };
+
   return (
-    <div className={'h-[300px] py-2'}>
-      <MonacoEditor
-        defaultLanguage='typescript'
-        defaultValue='// (c) 2023, DXOS.org'
-        beforeMount={handleBeforeMount}
-        options={options}
-        onMount={handleMount}
-        onChange={handleChange}
-      />
+    <div className='flex flex-col grow'>
+      <DensityProvider density='fine'>
+        <Toolbar.Root>
+          <div className={'grow'} />
+          <Button variant={'ghost'} onClick={handleExec}>
+            <Play />
+          </Button>
+        </Toolbar.Root>
+      </DensityProvider>
+      <div className='flex grow overflow-hidden'>
+        {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
+        <MonacoEditor
+          language={'typescript'}
+          loading={<div />}
+          options={options}
+          theme={'light'}
+          beforeMount={handleWillMount}
+          onMount={handleMount}
+        />
+      </div>
     </div>
   );
 };
