@@ -23,8 +23,8 @@ const Story = () => {
   }
 
   return (
-    <div className={'flex flex-col h-[300px] w-full overflow-hidden m-8 border'}>
-      <ScriptEditor content={content} />
+    <div className={'flex flex-col w-full overflow-hidden m-8 border'}>
+      <ScriptEditor content={content} className={'h-[300px]'} />
     </div>
   );
 };

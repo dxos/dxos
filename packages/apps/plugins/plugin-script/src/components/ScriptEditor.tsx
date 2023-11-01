@@ -3,30 +3,33 @@
 //
 
 import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
-import { Play } from '@phosphor-icons/react';
+import { Code, Play } from '@phosphor-icons/react';
 import { editor, languages } from 'monaco-editor';
 import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
 import { type TextObject } from '@dxos/client/echo';
 import { Button, DensityProvider, Toolbar } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import JsxEmit = languages.typescript.JsxEmit;
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
 
 // TODO(burdon): Basic sandbox: access current client/space: goal to run query.
 // TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
 
 export type ScriptEditorProps = {
   content: TextObject;
+  className?: string;
 };
 
 /**
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
  */
-export const ScriptEditor = ({ content }: ScriptEditorProps) => {
+export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
   // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
   const monaco = useMonaco();
   useEffect(() => {
@@ -36,10 +39,13 @@ export const ScriptEditor = ({ content }: ScriptEditorProps) => {
   }, [monaco]);
 
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
-  const options = {
+  const options: IStandaloneEditorConstructionOptions = {
+    cursorStyle: 'line-thin',
+    fontSize: 15,
     minimap: {
       enabled: false,
     },
+    renderLineHighlight: 'none',
     readOnly: false,
     scrollbar: {
       useShadows: false,
@@ -72,12 +78,15 @@ export const ScriptEditor = ({ content }: ScriptEditorProps) => {
   };
 
   return (
-    <div className='flex flex-col grow'>
+    <div className={mx('flex flex-col grow', className)}>
       <DensityProvider density='fine'>
         <Toolbar.Root>
+          <Button variant={'ghost'}>
+            <Code className={getSize(6)} />
+          </Button>
           <div className={'grow'} />
           <Button variant={'ghost'} onClick={handleExec}>
-            <Play />
+            <Play className={getSize(4)} />
           </Button>
         </Toolbar.Root>
       </DensityProvider>
