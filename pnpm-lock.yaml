@@ -1146,15 +1146,24 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@observablehq/plot':
+        specifier: ^0.6.11
+        version: 0.6.11
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+      topojson-client:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@braneframe/plugin-graph':
         specifier: workspace:*
@@ -1184,8 +1193,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -1198,6 +1207,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      '@types/topojson-client':
+        specifier: ^3.1.3
+        version: 3.1.3
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2023,6 +2035,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3111,7 +3126,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
@@ -4196,7 +4211,7 @@ importers:
         version: link:../echo-schema
       '@preact/signals':
         specifier: ^1.2.1
-        version: 1.2.1(preact@10.11.2)
+        version: 1.2.1(preact@10.18.1)
       '@preact/signals-core':
         specifier: ^1.5.0
         version: 1.5.0
@@ -4206,7 +4221,7 @@ importers:
     optionalDependencies:
       preact:
         specifier: ^10.11.0
-        version: 10.11.2
+        version: 10.18.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -5674,8 +5689,8 @@ importers:
         specifier: ^3.0.10
         version: 3.1.2
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5690,8 +5705,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5732,8 +5747,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       d3-force:
         specifier: ~3.0.0
         version: 3.0.0
@@ -5749,7 +5764,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -5758,8 +5773,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -6080,7 +6095,7 @@ importers:
     optionalDependencies:
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
     devDependencies:
       '@types/html-to-text':
         specifier: ^9.0.0
@@ -6276,8 +6291,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6304,8 +6319,8 @@ importers:
         specifier: 1.3.70
         version: 1.3.70
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6544,8 +6559,8 @@ importers:
         specifier: workspace:*
         version: link:../../experimental/gem-core
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       use-resize-observer:
         specifier: ^9.0.0
         version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -6572,8 +6587,8 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash':
         specifier: ^4.14.182
         version: 4.14.191
@@ -7282,10 +7297,10 @@ importers:
         version: link:../../core/echo/text-model
       '@faker-js/faker':
         specifier: ^8.0.2
-        version: 8.0.2
+        version: 8.2.0
       yjs:
         specifier: ^13.6.7
-        version: 13.6.7
+        version: 13.6.8
     devDependencies:
       '@dxos/react-ui-theme':
         specifier: workspace:*
@@ -8134,8 +8149,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -8152,8 +8167,8 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8761,8 +8776,8 @@ importers:
         specifier: ^1.1.1
         version: 1.2.1
       d3:
-        specifier: ^7.4.4
-        version: 7.8.2
+        specifier: ^7.8.5
+        version: 7.8.5
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -8795,8 +8810,8 @@ importers:
         specifier: ^0.5.8
         version: 0.5.8(tailwindcss@3.3.2)
       '@types/d3':
-        specifier: ^7.1.0
-        version: 7.4.0
+        specifier: ^7.4.2
+        version: 7.4.2
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -12873,6 +12888,13 @@ packages:
     resolution: {integrity: sha512-Uo3pGspElQW91PCvKSIAXoEgAUlRnH29sX2/p89kg7sP1m2PzCufHINd0FhTXQf6DYGiUlVncdSPa2F9wxed2A==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
 
+  /@faker-js/faker@8.2.0:
+    resolution: {integrity: sha512-VacmzZqVxdWdf9y64lDOMZNDMM/FQdtM9IsaOPKOm2suYwEatb8VkdHqOzXcDnZbk7YDE2BmsJmy/2Hmkn563g==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
+    requiresBuild: true
+    dev: false
+    optional: true
+
   /@fal-works/esbuild-plugin-global-externals@2.1.2:
     resolution: {integrity: sha512-cEee/Z+I12mZcFJshKcCqC8tuX5hG3s+d+9nZ3LabqKF1vKdF41B92pJVCBggjAGORAeOzyyDDKrZwIkLffeOQ==}
     dev: true
@@ -15092,6 +15114,15 @@ packages:
       - debug
     dev: true
 
+  /@observablehq/plot@0.6.11:
+    resolution: {integrity: sha512-7f43OizjVcno6/lZ+IC/bIceud9ZYJa7PCnZTjHCf3utcaGXgLqC1qxpYLzNZTnVHpKTFfqoPY/jOuFC/kSWgA==}
+    engines: {node: '>=12'}
+    dependencies:
+      d3: 7.8.5
+      interval-tree-1d: 1.0.4
+      isoformat: 0.2.1
+    dev: false
+
   /@oclif/color@1.0.4:
     resolution: {integrity: sha512-HEcVnSzpQkjskqWJyVN3tGgR0H0F8GrBmDjgQ1N0ZwwktYa4y9kfV07P/5vt5BjPXNyslXHc4KAO8Bt7gmErCA==}
     engines: {node: '>=12.0.0'}
@@ -15686,13 +15717,13 @@ packages:
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
-  /@preact/signals@1.2.1(preact@10.11.2):
+  /@preact/signals@1.2.1(preact@10.18.1):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.5.0
-      preact: 10.11.2
+      preact: 10.18.1
     dev: false
 
   /@protobufjs/aspromise@1.1.2:
@@ -19919,8 +19950,8 @@ packages:
       '@types/d3-selection': 3.0.3
     dev: true
 
-  /@types/d3@7.4.0:
-    resolution: {integrity: sha512-jIfNVK0ZlxcuRDKtRS/SypEyOQ6UHaFQBKv032X45VvxSJ6Yi5G9behy9h6tNTHTDGh5Vq+KbmBjUWLgY4meCA==}
+  /@types/d3@7.4.2:
+    resolution: {integrity: sha512-Y4g2Yb30ZJmmtqAJTqMRaqXwRawfvpdpVmyEYEcyGNhrQI/Zvkq3k7yE1tdN07aFSmNBfvmegMQ9Fe2qy9ZMhw==}
     dependencies:
       '@types/d3-array': 3.0.3
       '@types/d3-axis': 3.0.1
@@ -20726,6 +20757,19 @@ packages:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
       '@types/node': 18.11.9
+    dev: true
+
+  /@types/topojson-client@3.1.3:
+    resolution: {integrity: sha512-liC+dHCxoqQy5bbJMsF59Cx1WZZwbcT084v/5bdp3NWSFUuzQpsm4gbLQh+wlv58Mng4jCsO4p8hWelqGlb7rg==}
+    dependencies:
+      '@types/geojson': 7946.0.10
+      '@types/topojson-specification': 1.0.4
+    dev: true
+
+  /@types/topojson-specification@1.0.4:
+    resolution: {integrity: sha512-LG/a8kJi4X6MsFhZKiBAIC/a+yCFtjkHsDMwuQqSoB1az8D2bR2xRKU3aczizfcqdt2lVqnS+aJBFMrO+rO5Aw==}
+    dependencies:
+      '@types/geojson': 7946.0.10
     dev: true
 
   /@types/trusted-types@2.0.2:
@@ -23093,6 +23137,10 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
+  /binary-search-bounds@2.0.5:
+    resolution: {integrity: sha512-H0ea4Fd3lS1+sTEB2TgcLoK21lLhwEJzlQv3IN47pJS976Gx4zoWe0ak3q+uYh60ppQxg9F16Ri4tS1sfD4+jA==}
+    dev: false
+
   /binary@0.3.0:
     resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
     dependencies:
@@ -24414,7 +24462,6 @@ packages:
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
-    dev: true
 
   /commander@2.9.0:
     resolution: {integrity: sha512-bmkUukX8wAOjHdN26xj5c4ctEV22TQ7dQYhSmuckKhToXrkUn0iIaolHdIxYYqD55nhpSPA9zPQ1yP57GdXP2A==}
@@ -25029,8 +25076,8 @@ packages:
       internmap: 1.0.1
     dev: false
 
-  /d3-array@3.2.0:
-    resolution: {integrity: sha512-3yXFQo0oG3QCxbF06rMPFyGRMGJNS7NvsV1+2joOjbBE+9xvWQ8+GcMJAjRCzw06zQ3/arXeJgbPYcjUCuC+3g==}
+  /d3-array@3.2.4:
+    resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
     engines: {node: '>=12'}
     dependencies:
       internmap: 2.0.3
@@ -25053,7 +25100,7 @@ packages:
     resolution: {integrity: sha512-VE5S6TNa+j8msksl7HwjxMHDM2yNK3XCkusIlpX5kwauBfXuyLAtNg9jCp/iHH61tgI4sb6R/EIMWCqEIdjT/g==}
     engines: {node: '>=12'}
     dependencies:
-      d3-path: 3.0.1
+      d3-path: 3.1.0
 
   /d3-collection@1.0.7:
     resolution: {integrity: sha512-ii0/r5f4sjKNTfh84Di+DpztYwqKhEyUlKoPrzUFfeSkWxjW49xU2QzO9qrPrNkpdI0XJkfzvmTu8V2Zylln6A==}
@@ -25073,11 +25120,11 @@ packages:
       d3-array: 1.2.4
     dev: false
 
-  /d3-contour@4.0.0:
-    resolution: {integrity: sha512-7aQo0QHUTu/Ko3cP9YK9yUTxtoDEiDGwnBHyLxG5M4vqlBkO/uixMRele3nfsfj6UXOcuReVpVXzAboGraYIJw==}
+  /d3-contour@4.0.2:
+    resolution: {integrity: sha512-4EzFTRIikzs47RGmdxbeUvLWtGedDUNkTcmzoeyg4sP/dvCexO47AaQL7VKy/gul85TOxw+IBgA8US2xwbToNA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-delaunay@5.3.0:
     resolution: {integrity: sha512-amALSrOllWVLaHTnDLHwMIiz0d1bBu9gZXd1FiLfXf8sHcX9jrcj81TVZOqD4UX7MgBZZ07c8GxzEgBpJqc74w==}
@@ -25085,8 +25132,8 @@ packages:
       delaunator: 4.0.1
     dev: false
 
-  /d3-delaunay@6.0.2:
-    resolution: {integrity: sha512-IMLNldruDQScrcfT+MWnazhHbDJhcRJyOEBAJfwQnHle1RPh6WDuLvxNArUju2VSMSUuKlY5BGHRJ2cYyoFLQQ==}
+  /d3-delaunay@6.0.4:
+    resolution: {integrity: sha512-mdjtIZ1XLAM8bm/hx3WwjfHt6Sggek7qH043O8KEjDXN40xi3vx/6pYSVTwLjEgiXQTbvaouWKynLBiUZ6SK6A==}
     engines: {node: '>=12'}
     dependencies:
       delaunator: 5.0.0
@@ -25143,11 +25190,11 @@ packages:
       d3-array: 1.2.4
     dev: false
 
-  /d3-geo@3.0.1:
-    resolution: {integrity: sha512-Wt23xBych5tSy9IYAM1FR2rWIBFWa52B/oF/GYe5zbdHrg08FU8+BuI6X4PvTwPDdqdAdq04fuWJpELtsaEjeA==}
+  /d3-geo@3.1.0:
+    resolution: {integrity: sha512-JEo5HxXDdDYXCaWdwLRt79y7giK8SbhZJbFWXqbRTolCHFI5jRqteLzCsq51NKbUoX0PjBVSohxrx+NoOUujYA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-hexbin@0.2.2:
     resolution: {integrity: sha512-KS3fUT2ReD4RlGCjvCEm1RgMtp2NFZumdMu4DBzQK8AZv3fXRM6Xm8I4fSU07UXvH4xxg03NwWKWdvxfS/yc4w==}
@@ -25177,8 +25224,12 @@ packages:
     resolution: {integrity: sha512-VLaYcn81dtHVTjEHd8B+pbe9yHWpXKZUC87PzoFmsFrJqgFwDe/qxfp5MlfsfM1V5E/iVt0MmEbWQ7FVIXh/bg==}
     dev: false
 
-  /d3-path@3.0.1:
-    resolution: {integrity: sha512-gq6gZom9AFZby0YLduxT1qmrp4xpBA1YZr19OI717WIdKE2OM5ETq5qrHLb301IgxhLwcuxvGZVLeeWc/k1I6w==}
+  /d3-path@2.0.0:
+    resolution: {integrity: sha512-ZwZQxKhBnv9yHaiWd6ZU4x5BtCQ7pXszEV9CU6kRgwIQVQGLMv1oiL4M+MK/n79sYzsj+gcgpPQSctJUsLN7fA==}
+    dev: false
+
+  /d3-path@3.1.0:
+    resolution: {integrity: sha512-p3KP5HCf/bvjBSSKuXid6Zqijx7wIfNW+J/maPs+iwR35at5JCbLUT0LzF1cnjbCHWhqzQTIN2Jpe8pRebIEFQ==}
     engines: {node: '>=12'}
 
   /d3-polygon@3.0.1:
@@ -25234,10 +25285,10 @@ packages:
     resolution: {integrity: sha512-GZW464g1SH7ag3Y7hXjf8RoUuAFIqklOAq3MRl4OaWabTFJY9PN/E1YklhXLh+OQ3fM9yS2nOkCoS+WLZ6kvxQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
       d3-format: 3.1.0
       d3-interpolate: 3.0.1
-      d3-time: 3.0.0
+      d3-time: 3.1.0
       d3-time-format: 4.1.0
 
   /d3-selection@3.0.0:
@@ -25253,14 +25304,14 @@ packages:
   /d3-shape@2.1.0:
     resolution: {integrity: sha512-PnjUqfM2PpskbSLTJvAzp2Wv4CZsnAgTfcVRTwW03QR3MkXF8Uo7B1y/lWkAsmbKwuecto++4NlsYcvYpXpTHA==}
     dependencies:
-      d3-path: 1.0.9
+      d3-path: 2.0.0
     dev: false
 
-  /d3-shape@3.1.0:
-    resolution: {integrity: sha512-tGDh1Muf8kWjEDT/LswZJ8WF85yDZLvVJpYU9Nq+8+yW1Z5enxrmXOhTArlkaElU+CTn0OTVNli+/i+HP45QEQ==}
+  /d3-shape@3.2.0:
+    resolution: {integrity: sha512-SaLBuwGm3MOViRq2ABk3eLoxwZELpH6zhl3FbAoJ7Vm1gofKx6El1Ib5z23NUEhF9AsGl7y+dzLe5Cw2AArGTA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-path: 3.0.1
+      d3-path: 3.1.0
 
   /d3-time-format@2.3.0:
     resolution: {integrity: sha512-guv6b2H37s2Uq/GefleCDtbe0XZAuy7Wa49VGkPVPMfLL9qObgBST3lEHJBMUp8S7NdLQAGIvr2KXk8Hc98iKQ==}
@@ -25272,7 +25323,7 @@ packages:
     resolution: {integrity: sha512-dJxPBlzC7NugB2PDLwo9Q8JiTR3M3e4/XANkreKSUxF8vvXKqm1Yfq4Q5dl8budlunRVlUUaDUgFt7eA8D6NLg==}
     engines: {node: '>=12'}
     dependencies:
-      d3-time: 3.0.0
+      d3-time: 3.1.0
 
   /d3-time@1.1.0:
     resolution: {integrity: sha512-Xh0isrZ5rPYYdqhAVk8VLnMEidhz5aP7htAADH6MfzgmmicPkTo8LhkLxci61/lCB7n7UmE3bN0leRt+qvkLxA==}
@@ -25284,11 +25335,11 @@ packages:
       d3-array: 2.12.1
     dev: false
 
-  /d3-time@3.0.0:
-    resolution: {integrity: sha512-zmV3lRnlaLI08y9IMRXSDshQb5Nj77smnfpnd2LrBa/2K281Jijactokeak14QacHs/kKq0AQ121nidNYlarbQ==}
+  /d3-time@3.1.0:
+    resolution: {integrity: sha512-VqKjzBLejbSMT4IgbmVgDjpkYrNWUYJnbCGo874u7MMKIWsILRX+OpX/gTk8MqjpT1A/c6HY2dCA77ZN0lkQ2Q==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
 
   /d3-timer@3.0.1:
     resolution: {integrity: sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==}
@@ -25321,17 +25372,17 @@ packages:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  /d3@7.8.2:
-    resolution: {integrity: sha512-WXty7qOGSHb7HR7CfOzwN1Gw04MUOzN8qh9ZUsvwycIMb4DYMpY9xczZ6jUorGtO6bR9BPMPaueIKwiDxu9uiQ==}
+  /d3@7.8.5:
+    resolution: {integrity: sha512-JgoahDG51ncUfJu6wX/1vWQEqOflgXyl4MaHqlcSruTez7yhaRKR9i8VjjcQGeS2en/jnFivXuaIMnseMMt0XA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.2.0
+      d3-array: 3.2.4
       d3-axis: 3.0.0
       d3-brush: 3.0.0
       d3-chord: 3.0.1
       d3-color: 3.1.0
-      d3-contour: 4.0.0
-      d3-delaunay: 6.0.2
+      d3-contour: 4.0.2
+      d3-delaunay: 6.0.4
       d3-dispatch: 3.0.1
       d3-drag: 3.0.0
       d3-dsv: 3.0.1
@@ -25339,18 +25390,18 @@ packages:
       d3-fetch: 3.0.1
       d3-force: 3.0.0
       d3-format: 3.1.0
-      d3-geo: 3.0.1
+      d3-geo: 3.1.0
       d3-hierarchy: 3.1.2
       d3-interpolate: 3.0.1
-      d3-path: 3.0.1
+      d3-path: 3.1.0
       d3-polygon: 3.0.1
       d3-quadtree: 3.0.1
       d3-random: 3.0.1
       d3-scale: 4.0.2
       d3-scale-chromatic: 3.0.0
       d3-selection: 3.0.0
-      d3-shape: 3.1.0
-      d3-time: 3.0.0
+      d3-shape: 3.2.0
+      d3-time: 3.1.0
       d3-time-format: 4.1.0
       d3-timer: 3.0.1
       d3-transition: 3.0.1(d3-selection@3.0.0)
@@ -25366,7 +25417,7 @@ packages:
   /dagre-d3-es@7.0.9:
     resolution: {integrity: sha512-rYR4QfVmy+sR44IBDvVtcAmOReGBvRCWDpO2QjYwqgh9yijw6eSHBqaPG/LIOEy7aBsniLvtMW6pg19qJhq60w==}
     dependencies:
-      d3: 7.8.2
+      d3: 7.8.5
       lodash-es: 4.17.21
     dev: true
 
@@ -29845,6 +29896,12 @@ packages:
     resolution: {integrity: sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==}
     engines: {node: '>= 0.10'}
 
+  /interval-tree-1d@1.0.4:
+    resolution: {integrity: sha512-wY8QJH+6wNI0uh4pDQzMvl+478Qh7Rl4qLmqiluxALlNvl+I+o5x38Pw3/z7mDPTPS1dQalZJXsmbvxx5gclhQ==}
+    dependencies:
+      binary-search-bounds: 2.0.5
+    dev: false
+
   /invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
     dependencies:
@@ -30556,6 +30613,10 @@ packages:
   /isobject@3.0.1:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
+
+  /isoformat@0.2.1:
+    resolution: {integrity: sha512-tFLRAygk9NqrRPhJSnNGh7g7oaVWDwR0wKh/GM2LgmPa50Eg4UfyaCO4I8k6EqJHl1/uh2RAD6g06n5ygEnrjQ==}
+    dev: false
 
   /isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
@@ -33291,7 +33352,7 @@ packages:
       cytoscape: 3.23.0
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.23.0)
       cytoscape-fcose: 2.1.0(cytoscape@3.23.0)
-      d3: 7.8.2
+      d3: 7.8.5
       dagre-d3-es: 7.0.9
       dayjs: 1.11.7
       dompurify: 2.4.3
@@ -36039,6 +36100,11 @@ packages:
 
   /preact@10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
+    dev: false
+
+  /preact@10.18.1:
+    resolution: {integrity: sha512-mKUD7RRkQQM6s7Rkmi7IFkoEHjuFqRQUaXamO61E6Nn7vqF/bo7EZCmSyrUnp2UWHw0O7XjZ2eeXis+m7tf4lg==}
+    requiresBuild: true
     dev: false
 
   /prebuild-install@7.1.1:
@@ -40156,6 +40222,13 @@ packages:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
     dev: true
 
+  /topojson-client@3.1.0:
+    resolution: {integrity: sha512-605uxS6bcYxGXw9qi62XyrV6Q3xwbndjachmNxu8HWTtVPxZfEJN9fd/SZS1Q54Sn2y0TMyMxFj/cJINqGHrKw==}
+    hasBin: true
+    dependencies:
+      commander: 2.20.3
+    dev: false
+
   /tosource@1.0.0:
     resolution: {integrity: sha512-N6g8eQ1eerw6Y1pBhdgkubWIiPFwXa2POSUrlL8jth5CyyEWNWzoGKRkO3CaO7Jx27hlJP54muB3btIAbx4MPg==}
     engines: {node: '>=0.4.0'}
@@ -43333,6 +43406,15 @@ packages:
     dependencies:
       lib0: 0.2.78
     dev: false
+
+  /yjs@13.6.8:
+    resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    requiresBuild: true
+    dependencies:
+      lib0: 0.2.78
+    dev: false
+    optional: true
 
   /yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
