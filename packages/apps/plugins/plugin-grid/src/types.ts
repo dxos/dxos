@@ -6,10 +6,11 @@ import { Grid as GridType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const GRID_PLUGIN = 'dxos.org/plugin/grid';
 
@@ -19,7 +20,11 @@ export enum GridAction {
   CREATE = `${GRID_ACTION}/create`,
 }
 
-export type GridPluginProvides = SurfaceProvides & IntentResolverProvides & GraphBuilderProvides & TranslationsProvides;
+export type GridPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides;
 
 export const isGrid = (data: unknown): data is GridType => {
   return isTypedObject(data) && GridType.schema.typename === data.__typename;

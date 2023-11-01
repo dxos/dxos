@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { ShowDeletedOption, type TypedObject, useQuery } from '@dxos/react-client/echo';
+import { type TypedObject, useQuery, QueryOptions } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 
@@ -41,7 +41,7 @@ const columns: TableColumnDef<TypedObject, any>[] = [
 export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, {}, { deleted: ShowDeletedOption.SHOW_DELETED });
+  const items = useQuery(space, {}, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
 
   return (

@@ -15,15 +15,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "lodash.get": "^4.4.2"
+    "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -38,8 +34,6 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",

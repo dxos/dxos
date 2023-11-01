@@ -116,7 +116,7 @@ describe('Serializer', () => {
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
-      const { objects } = db.query(undefined, { models: null });
+      const { objects } = db.query(undefined, { models: ['*'] });
       expect(objects[0] instanceof TextObject).to.be.true;
       expect(objects).to.have.length(1);
       expect(objects[0].text).to.deep.eq(content);

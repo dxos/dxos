@@ -23,14 +23,14 @@
     "@emotion/react": "^11.9.0",
     "assert": "^2.0.0",
     "csstype": "^3.0.10",
-    "d3": "^7.4.4",
+    "d3": "^7.8.5",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/react-ui": "workspace:*",
-    "@types/d3": "^7.1.0",
+    "@types/d3": "^7.4.2",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

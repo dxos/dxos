@@ -3,5 +3,3 @@
 //
 
 export * from './ChessPlugin';
-export * from './types';
-export * from './util';

@@ -7,6 +7,7 @@ import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/do
 import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
@@ -15,7 +16,7 @@ import { type Hypergraph } from './hypergraph';
 import { type EchoObject, base, db, TextObject } from './object';
 import { TypedObject } from './object';
 import { type Schema } from './proto';
-import { type QueryOptions, type FilterSource, type Query } from './query';
+import { type FilterSource, type Query } from './query';
 
 /**
  * Database wrapper.
