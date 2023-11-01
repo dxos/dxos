@@ -7,8 +7,9 @@ import type {
   IntentResolverProvides,
   TranslationsProvides,
   SurfaceProvides,
+  MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject, type Expando, type TypedObject } from '@dxos/client/echo';
+import { isTypedObject, type Expando, type TypedObject } from '@dxos/react-client/echo';
 
 export const MAP_PLUGIN = 'dxos.org/plugin/map';
 
@@ -20,7 +21,11 @@ export enum MapAction {
 
 export type MapProvides = {};
 
-export type MapPluginProvides = SurfaceProvides & IntentResolverProvides & GraphBuilderProvides & TranslationsProvides;
+export type MapPluginProvides = SurfaceProvides &
+  IntentResolverProvides &
+  GraphBuilderProvides &
+  MetadataRecordsProvides &
+  TranslationsProvides;
 
 export const isObject = (object: unknown): object is TypedObject => {
   return isTypedObject(object) && (object as Expando).type === 'map';
