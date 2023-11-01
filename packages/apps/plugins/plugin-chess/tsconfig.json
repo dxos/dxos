@@ -30,7 +30,7 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../ui/react-ui"
@@ -39,25 +39,10 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-layout"
+      "path": "../../types"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

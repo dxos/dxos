@@ -10,8 +10,16 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import { Button, ListItem, useTranslation, Avatar } from '@dxos/react-ui';
-import { chromeSurface, getSize } from '@dxos/react-ui-theme';
+import {
+  Button,
+  ListItem,
+  useTranslation,
+  Avatar,
+  useThemeContext,
+  type AvatarRootProps,
+  Tooltip,
+} from '@dxos/react-ui';
+import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { toEmoji } from '../../util';
@@ -33,24 +41,55 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
+const avatarProps: Pick<AvatarRootProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
+
+const AvatarStackEffect = ({ animation, status }: Pick<AvatarRootProps, 'status' | 'animation'>) => {
+  const { tx } = useThemeContext();
+  return (
+    <>
+      <span
+        role='none'
+        className={mx('absolute inline-start-1 inline-end-auto opacity-20', getSize(avatarProps.size!))}
+      >
+        <span
+          role='none'
+          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          style={{ animationDelay: '400ms' }}
+        />
+      </span>
+      <span
+        role='none'
+        className={mx('absolute inline-start-2 inline-end-auto opacity-50', getSize(avatarProps.size!))}
+      >
+        <span
+          role='none'
+          className={tx('avatar.ring', 'avatar__ring', { ...avatarProps, status, animation })}
+          style={{ animationDelay: '200ms' }}
+        />
+      </span>
+    </>
+  );
+};
+
 export const InvitationListItemImpl = ({
   invitation,
-  invitationStatus,
+  invitationStatus: propsInvitationStatus,
   send,
   onClickRemove,
   createInvitationUrl,
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status, invitationCode, authCode } = invitationStatus;
+  const { cancel, status: invitationStatus, invitationCode, authCode, type } = propsInvitationStatus;
 
   const isCancellable = !(
-    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(status) >= 0
+    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
-    [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(status) >= 0;
+    type === Invitation.Type.MULTIUSE ||
+    [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0;
 
-  const showAuthCode = status === Invitation.State.READY_FOR_AUTHENTICATION;
+  const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
 
   const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
@@ -63,35 +102,49 @@ export const InvitationListItemImpl = ({
     Invitation.State.CONNECTED,
     Invitation.State.READY_FOR_AUTHENTICATION,
     Invitation.State.AUTHENTICATING,
-  ].includes(status);
+  ].includes(invitationStatus)
+    ? 'pulse'
+    : 'none';
 
-  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(status);
+  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(
+    invitationStatus,
+  );
 
   const avatarGreen = [
     Invitation.State.CONNECTED,
     Invitation.State.READY_FOR_AUTHENTICATION,
     Invitation.State.AUTHENTICATING,
     Invitation.State.SUCCESS,
-  ].includes(status);
+  ].includes(invitationStatus);
+
+  const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
   return (
-    <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 pis-3 pie-1 items-center relative'>
       <ListItem.Heading classNames='sr-only'>
-        {t('invitation heading') /* todo(thure): Make this more accessible. */}
+        {t(type === Invitation.Type.MULTIUSE ? 'invite many list item label' : 'invite one list item label')}
       </ListItem.Heading>
-      <Avatar.Root
-        animation={avatarAnimation ? 'pulse' : 'none'}
-        status={avatarError ? 'error' : avatarGreen ? 'active' : 'inactive'}
-      >
-        <Avatar.Frame>
-          <Avatar.Fallback text={toEmoji(invitationId)} />
-        </Avatar.Frame>
-      </Avatar.Root>
+      {type === Invitation.Type.MULTIUSE && <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} />}
+      <Tooltip.Root>
+        <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
+          <Tooltip.Trigger asChild>
+            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full']}>
+              <Avatar.Fallback text={toEmoji(invitationId)} />
+            </Avatar.Frame>
+          </Tooltip.Trigger>
+        </Avatar.Root>
+        <Tooltip.Portal>
+          <Tooltip.Content side='left' classNames='z-[70]'>
+            {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
       {showShare && invitationUrl ? (
         <>
           <Button
             variant='ghost'
-            classNames='grow justify-start'
+            classNames='grow justify-start font-system-medium'
             onClick={() => send({ type: 'selectInvitation', invitation })}
             data-testid='show-qrcode'
           >
@@ -100,18 +153,16 @@ export const InvitationListItemImpl = ({
           <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
-        <span className='flex grow'>
-          <AuthCode code={authCode} />
-        </span>
-      ) : status === Invitation.State.CONNECTING ? (
+        <AuthCode code={authCode} classNames='grow' />
+      ) : invitationStatus === Invitation.State.CONNECTING ? (
         <span className='pli-2 grow text-neutral-500'>Connecting...</span>
-      ) : status === Invitation.State.AUTHENTICATING ? (
+      ) : invitationStatus === Invitation.State.AUTHENTICATING ? (
         <span className='pli-2 grow text-neutral-500'>Authenticating...</span>
-      ) : status === Invitation.State.ERROR || status === Invitation.State.TIMEOUT ? (
+      ) : invitationStatus === Invitation.State.ERROR || invitationStatus === Invitation.State.TIMEOUT ? (
         <span className='pli-2 grow text-neutral-500'>Failed</span>
-      ) : status === Invitation.State.CANCELLED ? (
+      ) : invitationStatus === Invitation.State.CANCELLED ? (
         <span className='pli-2 grow text-neutral-500'>Cancelled</span>
-      ) : status === Invitation.State.SUCCESS ? (
+      ) : invitationStatus === Invitation.State.SUCCESS ? (
         <span className='pli-2 grow truncate'>User joined</span>
       ) : (
         <span className='grow'> </span>

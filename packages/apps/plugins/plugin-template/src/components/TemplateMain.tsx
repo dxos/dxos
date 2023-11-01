@@ -4,17 +4,13 @@
 
 import React, { type FC } from 'react';
 
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { PublicKey } from '@dxos/client';
-import { type TypedObject } from '@dxos/client/echo';
+import { PublicKey } from '@dxos/react-client';
+import { getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 export const TemplateMain: FC<{ object: TypedObject }> = ({ object }) => {
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+  const space = getSpaceForObject(object);
 
   return (
     // TODO(burdon): Boilerplate.

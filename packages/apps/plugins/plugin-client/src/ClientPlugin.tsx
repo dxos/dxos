@@ -101,14 +101,12 @@ export const ClientPlugin = (
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
-        components: {
-          default: () => {
-            if (error) {
-              throw error;
-            }
+        root: () => {
+          if (error) {
+            throw error;
+          }
 
-            return null;
-          },
+          return null;
         },
       };
     },

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/client/echo';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
+import { type Subscription, type Space, type TypedObject, Schema } from '@dxos/react-client/echo';
 
 /**
  * Converts ECHO objects to a graph.
@@ -15,16 +15,20 @@ export class EchoGraphModel extends GraphModel<TypedObject> {
   };
 
   private _subscription?: Subscription;
+  private _objects?: TypedObject[];
+
+  get objects(): TypedObject[] {
+    return this._objects ?? [];
+  }
 
   open(space: Space) {
     if (!this._subscription) {
       const query = space.db.query();
       this._subscription = query.subscribe(({ objects }) => {
+        this._objects = objects;
         this._graph.nodes = objects;
         this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
           if (object.__schema) {
-            // TODO(burdon): Query for schema.
-            // TODO(burdon): Fix layout of schema objects.
             const idx = objects.findIndex((obj) => obj.id === object.__schema?.id);
             if (idx === -1) {
               this._graph.nodes.push(object.__schema);

@@ -132,3 +132,5 @@ build
 .husky/post-rewrite
 .husky/pre-auto-gc
 .husky/reference-transaction
+
+.nx

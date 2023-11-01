@@ -7,17 +7,16 @@ import { DocumentModel, type Reference, type DocumentModelState } from '@dxos/do
 import { type BatchUpdate, type DatabaseProxy, type Item, type ItemManager, UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 import { WeakDictionary, getDebugName } from '@dxos/util';
 
-import { type EchoObject, base, db } from './defs';
-import { type QueryOptions, type FilterSource } from './filter';
-import { type HyperGraph } from './hypergraph';
+import { type Hypergraph } from './hypergraph';
+import { type EchoObject, base, db, TextObject } from './object';
+import { TypedObject } from './object';
 import { type Schema } from './proto';
-import { type Query } from './query';
-import { Text } from './text-object';
-import { TypedObject } from './typed-object';
+import { type FilterSource, type Query } from './query';
 
 /**
  * Database wrapper.
@@ -46,7 +45,7 @@ export class EchoDatabase {
      */
     readonly _itemManager: ItemManager,
     public readonly _backend: DatabaseProxy,
-    private readonly _graph: HyperGraph,
+    private readonly _graph: Hypergraph,
   ) {
     this._backend.itemUpdate.on(this._update.bind(this));
 
@@ -253,7 +252,7 @@ export class EchoDatabase {
         return new TypedObject(undefined, { type: state.type });
       }
     } else if (item.modelType === TextModel.meta.type) {
-      return new Text();
+      return new TextObject();
     } else {
       log.warn('Unknown model type', { type: item.modelType });
       return undefined;

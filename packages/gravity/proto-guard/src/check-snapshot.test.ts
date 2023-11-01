@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { QUERY_ALL_MODELS, type Text } from '@dxos/client/echo';
+import { type TextObject } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -40,12 +40,13 @@ describe('Tests against old storage', () => {
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
     const services = builder.createLocal();
+
+    log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const client = new Client({ services });
-    await asyncTimeout(client.initialize(), 1000);
+    await asyncTimeout(client.initialize(), 1_000);
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    log.info('Running test', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const spaces = client.spaces.get();
     await asyncTimeout(Promise.all(spaces.map(async (space) => space.waitUntilReady())), 1_000);
 
@@ -57,7 +58,7 @@ describe('Tests against old storage', () => {
       const spaceBackend = services.host!.context.spaceManager.spaces.get(space.key) ?? failUndefined();
       await asyncTimeout(
         spaceBackend.controlPipeline.state.waitUntilTimeframe(spaceBackend.controlPipeline.state.endTimeframe),
-        1000,
+        1_000,
       );
       const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
       expect(epoch).to.equal(data.epochs);
@@ -66,7 +67,7 @@ describe('Tests against old storage', () => {
     {
       // TODO(dmaretskyi): Only needed because waitUntilReady seems to not guarantee that all objects will be present.
       const expectedObjects = 3;
-      if (space.db.query(undefined, { models: QUERY_ALL_MODELS }).objects.length < expectedObjects) {
+      if (space.db.query(undefined, { models: ['*'] }).objects.length < expectedObjects) {
         const queryPromise = new Promise<void>((resolve) => {
           space.db.query().subscribe((query) => {
             if (query.objects.length >= expectedObjects) {
@@ -74,7 +75,8 @@ describe('Tests against old storage', () => {
             }
           });
         });
-        await asyncTimeout(queryPromise, 1000);
+
+        await asyncTimeout(queryPromise, 1_000);
       }
     }
 
@@ -88,8 +90,8 @@ describe('Tests against old storage', () => {
 
       // Text.
       // TODO(mykola): add ability to query.
-      const text = space.db.query({ text: data.space.text.content }, { models: QUERY_ALL_MODELS }).objects[0];
-      expect((text as unknown as Text).text).to.equal(data.space.text.content);
+      const text = space.db.query({ text: data.space.text.content }, { models: ['*'] }).objects[0];
+      expect((text as unknown as TextObject).text).to.equal(data.space.text.content);
     }
   });
 });

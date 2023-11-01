@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-markdown",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,8 +22,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@preact/signals-react": "^1.3.6",
-    "deepsignal": "1.4.0-shallow.0",
-    "lodash.get": "^4.4.2"
+    "deepsignal": "1.4.0-shallow.0"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
@@ -35,7 +34,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",

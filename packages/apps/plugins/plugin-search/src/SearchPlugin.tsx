@@ -6,12 +6,12 @@ import { MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/client/echo';
+import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
 import translations from './translations';
-import { SEARCH_PLUGIN, type SearchPluginProvides, SearchAction } from './types';
+import { SEARCH_PLUGIN, SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
   return {
@@ -45,7 +45,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               id: SearchAction.SEARCH,
               label: ['search action label', { ns: SEARCH_PLUGIN }],
               icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'shift+meta+f',
+              keyBinding: 'shift+meta+s',
               invoke: () =>
                 intentPlugin?.provides.intent.dispatch({
                   plugin: SEARCH_PLUGIN,
@@ -72,7 +72,6 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
           switch (intent.action) {
             case SearchAction.SEARCH: {
               const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              console.log('::');
               return intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.TOGGLE_COMPLEMENTARY_SIDEBAR,
                 data: { state: true },

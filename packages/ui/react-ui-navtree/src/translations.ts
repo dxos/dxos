@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [translationKey]: {
-        'tree item options label': 'More options',
+        'tree item actions label': 'More actions',
       },
     },
   },

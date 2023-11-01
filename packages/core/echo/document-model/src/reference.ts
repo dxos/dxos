@@ -5,12 +5,17 @@
 import { type ItemID } from '@dxos/protocols';
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
 
+// TODO(burdon): Comment.
 export class Reference {
   static fromValue(value: ReferenceValue): Reference {
     return new Reference(value.itemId, value.protocol, value.host);
   }
 
-  static fromLegacyTypeName(type: string): Reference {
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Document/remove?
+  static fromLegacyTypename(type: string): Reference {
     return new Reference(type, 'protobuf', 'dxos.org');
   }
 

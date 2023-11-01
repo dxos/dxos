@@ -5,6 +5,7 @@
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -28,6 +29,9 @@ export enum SpaceAction {
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
+  ADD_TO_FOLDER = `${SPACE_ACTION}/add-to-folder`,
+  REMOVE_FROM_FOLDER = `${SPACE_ACTION}/remove-from-folder`,
+  TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
 }
 
 export type ObjectViewer = {
@@ -52,7 +56,9 @@ export type SpaceState = {
    * Object that was linked to directly but not found and is being awaited.
    */
   awaiting: ItemID | undefined;
+};
 
+export type PluginState = {
   /**
    * Which objects peers are currently viewing.
    */
@@ -63,8 +69,9 @@ export type SpaceSettingsProps = { showHidden?: boolean };
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
+  MetadataRecordsProvides &
   GraphBuilderProvides &
   TranslationsProvides & {
-    settings: SpaceSettingsProps;
-    space: SpaceState;
+    settings: Readonly<SpaceSettingsProps>;
+    space: Readonly<PluginState>;
   };

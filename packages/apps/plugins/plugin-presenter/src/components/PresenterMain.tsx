@@ -52,7 +52,7 @@ export const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
           />
         }
       >
-        <Surface role='presenter-slide' data={{ slide: stack.sections[slide].object }} />
+        <Surface role='slide' data={{ slide: stack.sections[slide].object }} />
       </Layout>
     </Main.Content>
   );

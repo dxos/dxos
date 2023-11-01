@@ -91,7 +91,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
           width={imageSizeNumber}
           height={imageSizeNumber}
-          className={tx('avatar.frame', 'avatar__frame', {})}
+          className={tx('avatar.frame', 'avatar__frame', { variant })}
         >
           <defs>
             <mask id={maskId}>
@@ -149,6 +149,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             <circle
               className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
               strokeWidth={strokeWidth}
+              fill='none'
               cx={imageSizeNumber / 2}
               cy={imageSizeNumber / 2}
               r={imageSizeNumber / 2 - strokeWidth / 4}
@@ -159,13 +160,14 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               strokeWidth={strokeWidth}
               x={strokeWidth / 4}
               y={strokeWidth / 4}
+              fill='none'
               rx={rx}
               width={imageSizeNumber - strokeWidth / 4}
               height={imageSizeNumber - strokeWidth / 4}
             />
           )}
         </svg>
-        <span className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })}></span>
+        <span role='none' className={tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })} />
       </AvatarRootPrimitive>
     );
   },

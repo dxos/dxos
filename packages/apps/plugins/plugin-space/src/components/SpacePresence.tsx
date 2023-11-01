@@ -5,25 +5,34 @@
 import { Users } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { parseIntentPlugin, parseLayoutPlugin, usePlugin, useResolvePlugin } from '@dxos/app-framework';
+import {
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  usePlugin,
+  useResolvePlugin,
+} from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Avatar, AvatarGroup, AvatarGroupItem, Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN, SpaceAction, type SpacePluginProvides, type ObjectViewer } from '../types';
+import { getActiveSpace } from '../util';
 
 export const SpacePresence = () => {
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const space = spacePlugin?.provides.space.active;
+  const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const defaultSpace = useSpace();
   const identity = useIdentity();
 
-  if (!identity || !spacePlugin) {
+  if (!identity || !spacePlugin || !layoutPlugin || !intentPlugin || !graphPlugin) {
     return null;
   }
+
+  const space = getActiveSpace(graphPlugin.provides.graph, layoutPlugin.provides.layout.active);
 
   // TODO(burdon): Error when popup appears (BUT DOES NOT GET CAUGHT BY DebugStatus!)
   //  Warning: React does not recognize the `labelId` prop on a DOM element.

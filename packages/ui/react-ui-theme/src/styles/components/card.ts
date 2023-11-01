@@ -8,7 +8,7 @@ import { mx } from '../../util';
 import { getSize, inputSurface } from '../fragments';
 
 const defaults = {
-  width: 'min-w-[256px] max-w-[512px]', // TODO(burdon): Defaults.
+  width: 'min-w-[256px]',
 };
 
 export type CardStyleProps = Partial<{
@@ -83,7 +83,7 @@ export const cardBody: ComponentFunction<CardStyleProps & { gutter?: boolean }> 
 
 export const cardMedia: ComponentFunction<CardStyleProps & { contain?: boolean }> = ({ contain }, ...etc) =>
   mx(
-    'grow max-h-[256px]',
+    'grow max-h-[300px]', // TODO(burdon): ???
     // Hide broken image links (e.g., if offline).
     "before:content-[' '] before:block before:w-full before:h-full before:border-0",
     contain ? 'object-contain' : 'object-cover',

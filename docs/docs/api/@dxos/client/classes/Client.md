@@ -20,7 +20,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L53)
-Type: <code>"0.3.2"</code>
+Type: <code>"0.3.4"</code>
 
 The version of this client API.
 
@@ -28,6 +28,11 @@ The version of this client API.
 Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 Current configuration object.
+
+### [experimental](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L170)
+Type: <code>object</code>
+
+
 
 ### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L151)
 Type: <code>HaloProxy</code>
@@ -78,31 +83,31 @@ Arguments: none
 
 
 
-### [addSchema(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L323)
+### [addSchema(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L189)
 
 
 
 
-Returns: <code>void</code>
-
-Arguments: 
-
-`types`: <code>TypeCollection</code>
-
-
-### [addTypes(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L316)
-
-
-
-
-Returns: <code>void</code>
+Returns: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
 Arguments: 
 
 `types`: <code>TypeCollection</code>
 
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L276)
+### [addTypes(types)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L181)
+
+
+
+
+Returns: <code>[Client](/api/@dxos/client/classes/Client)</code>
+
+Arguments: 
+
+`types`: <code>TypeCollection</code>
+
+
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L299)
 
 
 Cleanup, release resources.
@@ -115,7 +120,7 @@ Arguments: none
 
 
 
-### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L173)
+### [diagnostics(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L196)
 
 
 Get client diagnostics data.
@@ -127,7 +132,7 @@ Arguments:
 `options`: <code>JsonKeyOptions</code>
 
 
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L190)
+### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L213)
 
 
 Initializes internal resources in an idempotent way.
@@ -140,7 +145,7 @@ Arguments: none
 
 
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L303)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L326)
 
 
 Resets and destroys client storage.
@@ -153,7 +158,7 @@ Arguments: none
 
 
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L294)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L317)
 
 
 Reinitialized the client session with the remote service host.

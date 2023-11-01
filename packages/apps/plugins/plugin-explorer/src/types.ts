@@ -6,10 +6,11 @@ import { View as ViewType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
+  MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject } from '@dxos/client/echo';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
 
@@ -22,6 +23,7 @@ export enum ExplorerAction {
 export type ExplorerPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
+  MetadataRecordsProvides &
   TranslationsProvides;
 
 // TODO(burdon): Standardize views?

@@ -10,9 +10,9 @@ import type { ReactRenderer } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { View as ViewType, types } from '@braneframe/types';
-import { type Space } from '@dxos/client/echo';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -35,11 +35,12 @@ const Story = () => {
   const [view, setView] = useState<ViewType>();
   useEffect(() => {
     const space = client.spaces.default;
-    const view = space.db.add(new ViewType({}));
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ count: 30 });
+    generator.createObjects({ count: 100 });
+
+    const view = space.db.add(new ViewType({}));
 
     setSpace(space);
     setView(view);

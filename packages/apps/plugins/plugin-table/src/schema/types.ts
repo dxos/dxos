@@ -3,8 +3,8 @@
 //
 
 import { type Table as TableType } from '@braneframe/types';
-import { Schema } from '@dxos/client/echo';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/react-client';
+import { Schema } from '@dxos/react-client/echo';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
 export const getPropType = (type?: Schema.PropType): ColumnProps['type'] => {

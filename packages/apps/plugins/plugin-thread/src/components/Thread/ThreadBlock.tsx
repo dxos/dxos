@@ -7,8 +7,8 @@ import format from 'date-fns/format';
 import React, { forwardRef, useId } from 'react';
 
 import { type Thread as ThreadType } from '@braneframe/types';
-import { type Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
+import { type Expando, TextObject } from '@dxos/react-client/echo';
 import { Card, DensityProvider } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { getSize, inputSurface, mx } from '@dxos/react-ui-theme';
@@ -113,7 +113,7 @@ const ThreadMessage = ({ message, onDelete }: { message: ThreadType.Message; onD
 const Pill: MosaicTileComponent<Expando> = forwardRef(
   ({ draggableStyle, draggableProps, item, onRemove }, forwardRef) => {
     let title = item.name ?? item.title ?? item.__typename ?? 'Object';
-    if (title instanceof Text) {
+    if (title instanceof TextObject) {
       title = title.text;
     }
 

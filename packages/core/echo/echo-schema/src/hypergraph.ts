@@ -9,25 +9,34 @@ import { type UpdateEvent } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type EchoDatabase } from './database';
-import { type EchoObject } from './defs';
-import { Filter, type QueryOptions, type FilterSource } from './filter';
-import { Query, type QueryContext, type QueryResult, type QuerySource, filterMatch } from './query';
+import { type EchoObject, type TypedObject } from './object';
+import {
+  filterMatch,
+  Filter,
+  Query,
+  type FilterSource,
+  type QueryContext,
+  type QueryResult,
+  type QuerySource,
+} from './query';
 import { TypeCollection } from './type-collection';
-import { type TypedObject } from './typed-object';
 
 /**
  * Manages cross-space database interactions.
  */
-export class HyperGraph {
+export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
+  // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _types = new TypeCollection();
   private readonly _updateEvent = new Event<UpdateEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
+  private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get types(): TypeCollection {
     return this._types;
@@ -77,11 +86,8 @@ export class HyperGraph {
    * Filter by type.
    */
   query<T extends TypedObject>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    const spaces = options?.spaces?.map(
-      (entry): PublicKey => ('key' in entry && entry.key instanceof PublicKey ? entry.key : (entry as PublicKey)),
-    );
+    const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-
     return new Query(this._createQueryContext(), Filter.from(filter, options));
   }
 
@@ -121,6 +127,13 @@ export class HyperGraph {
       .value.on(new Context(), onResolve, { weak: true });
   }
 
+  registerQuerySourceProvider(provider: QuerySourceProvider) {
+    this._querySourceProviders.push(provider);
+    for (const context of this._queryContexts.values()) {
+      context.addQuerySource(provider.create());
+    }
+  }
+
   private _onUpdate(updateEvent: UpdateEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
@@ -152,11 +165,18 @@ export class HyperGraph {
       for (const database of this._databases.values()) {
         context.addQuerySource(new SpaceQuerySource(database));
       }
+      for (const provider of this._querySourceProviders) {
+        context.addQuerySource(provider.create());
+      }
     });
     this._queryContexts.set({}, context);
 
     return context;
   }
+}
+
+export interface QuerySourceProvider {
+  create(): QuerySource;
 }
 
 class GraphQueryContext implements QueryContext {
@@ -229,11 +249,14 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoObject>): void {
-    if (
-      filter.searchSpacesPreference !== undefined &&
-      !filter.searchSpacesPreference.some((key) => key.equals(this.spaceKey))
-    ) {
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
+      this._filter = undefined;
+      return;
+    }
+
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+      // Disabled by dataLocation filter.
       this._filter = undefined;
       return;
     }

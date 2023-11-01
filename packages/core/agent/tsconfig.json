@@ -49,6 +49,9 @@
       "path": "../../sdk/client-services"
     },
     {
+      "path": "../echo/echo-db"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {
