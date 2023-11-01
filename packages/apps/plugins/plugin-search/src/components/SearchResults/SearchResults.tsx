@@ -13,7 +13,7 @@ import { type SearchResult } from '../../search';
 
 // TODO(burdon): Factor out.
 const styles = {
-  hover: 'hover:bg-neutral-50 dark:hover:bg-neutral-800',
+  hover: 'hover:bg-neutral-75 dark:hover:bg-neutral-850',
   selected: '!bg-teal-100 !dark:bg-teal-900',
 };
 
