@@ -1,10 +1,17 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ThemePlugin } = require('@dxos/react-ui-theme/plugin');
 
 module.exports = {
-  stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: [
+    '../src/**/*.stories.mdx',
+    '../src/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
@@ -16,10 +23,6 @@ module.exports = {
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
-      define: {
-        // TODO(thure): Why is this necessary?
-        'process.env.NODE_DEBUG': false,
-      },
       plugins: [
         ThemePlugin({
           root: __dirname,
