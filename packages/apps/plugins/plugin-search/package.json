@@ -17,6 +17,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
