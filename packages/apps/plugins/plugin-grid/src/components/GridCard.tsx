@@ -5,6 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { type TextObject, type TypedObject } from '@dxos/client/echo';
+import { useConfig } from '@dxos/react-client';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -34,6 +35,11 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {
     const { t } = useTranslation(GRID_PLUGIN);
 
+    // TODO(burdon): Factor out images. Use surface?
+    const cid = (item as any).object?.cid;
+    const config = useConfig();
+    const url = cid ? config.values.runtime!.services!.ipfs!.gateway + '/' + cid : undefined;
+
     const titleAccessor: ValueAccessor<GridCardProps, string> = {
       getValue: (object) => getObject(item).title ?? getObject(item).name ?? '',
       setValue: (object, value) => {
@@ -54,18 +60,20 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root classNames={mx(className, 'w-full snap-center', color, isDragging && 'opacity-20')} grow={grow}>
-          <Card.Header onDoubleClick={() => onSelect?.()}>
-            <Card.DragHandle {...draggableProps} />
-            <Input.Root>
-              <Input.TextInput
-                variant='subdued'
-                classNames='p-0'
-                placeholder={t('title placeholder')}
-                value={titleAccessor.getValue(item)}
-                onChange={(event) => titleAccessor.setValue(item, event.target.value)}
-              />
-            </Input.Root>
-            <Card.Menu>
+          <Card.Header onDoubleClick={() => onSelect?.()} floating={!!url}>
+            <Card.DragHandle {...draggableProps} position={url ? 'left' : undefined} />
+            {!url && (
+              <Input.Root>
+                <Input.TextInput
+                  variant='subdued'
+                  classNames='p-0'
+                  placeholder={t('title placeholder')}
+                  value={titleAccessor.getValue(item)}
+                  onChange={(event) => titleAccessor.setValue(item, event.target.value)}
+                />
+              </Input.Root>
+            )}
+            <Card.Menu position={url ? 'right' : undefined}>
               {/* TODO(burdon): Handle events/intents? */}
               <DropdownMenu.Item onClick={() => onAction?.({ id: item.id, action: 'delete' })}>
                 <span className='grow'>Delete</span>
@@ -75,21 +83,24 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
               </DropdownMenu.Item>
             </Card.Menu>
           </Card.Header>
-          <Card.Body>
-            <MarkdownComposer
-              model={content}
-              slots={{
-                root: {
-                  className: mx(
-                    'h-full p-1 text-sm',
-                    // TODO(burdon): Hack since classname ignored below.
-                    '[&>div]:h-full',
-                  ),
-                },
-                editor: { className: 'h-full', placeholder: t('content placeholder') },
-              }}
-            />
-          </Card.Body>
+          {!url && (
+            <Card.Body>
+              <MarkdownComposer
+                model={content}
+                slots={{
+                  root: {
+                    className: mx(
+                      'h-full p-1 text-sm',
+                      // TODO(burdon): Hack since classname ignored below.
+                      '[&>div]:h-full',
+                    ),
+                  },
+                  editor: { className: 'h-full', placeholder: t('content placeholder') },
+                }}
+              />
+            </Card.Body>
+          )}
+          {url && <Card.Media src={url} />}
         </Card.Root>
       </div>
     );
