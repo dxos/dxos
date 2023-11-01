@@ -6,8 +6,9 @@ import { expect } from 'chai';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
+import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { Expando, Filter } from '@dxos/echo-schema';
+import { type EchoObject, Expando, Filter } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
@@ -15,8 +16,6 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { afterTest, describe, test } from '@dxos/test';
 
 import { QueryPlugin } from './query-plugin';
-
-const TEST_DIR = 'tmp/dxos/testing/agent/query';
 
 describe('QueryPlugin', () => {
   const documents = [
@@ -125,7 +124,7 @@ describe('QueryPlugin', () => {
     await asyncTimeout(results.wait(), 1000);
   });
 
-  test('remote query', async () => {
+  test.only('remote query', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
@@ -161,20 +160,20 @@ describe('QueryPlugin', () => {
 
     await asyncTimeout(Promise.all(performInvitation({ host: client1.halo, guest: client2.halo })), 1000);
 
-    const results = new Trigger();
+    const results = new Trigger<EchoObject[]>();
     {
       await asyncTimeout(client2.spaces.isReady.wait(), 1000);
 
       await asyncTimeout(client2.spaces.default.waitUntilReady(), 1000);
-      const query = client2.spaces.query({ foo: 'bar' });
+      const query = client2.spaces.query({ foo: 'bar' }, { dataLocation: QueryOptions.DataLocation.REMOTE });
       query.subscribe((query) => {
         if (query.results.some((r) => r.resolution?.source === 'remote')) {
-          log.info('Received remote query results.', { res: query.results });
-          results.wake();
+          results.wake(query.objects);
         }
       });
 
       await asyncTimeout(results.wait(), 5000);
+      expect(await results.wait()).to.have.lengthOf(2);
     }
   });
 });

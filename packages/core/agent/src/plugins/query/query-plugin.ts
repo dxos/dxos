@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { getStateMachineFromItem } from '@dxos/echo-db';
@@ -55,7 +56,6 @@ export class QueryPlugin extends Plugin {
   }
 
   private async _processRequest(message: GossipMessage) {
-    log.info('Indexing plugin received message.', { message });
     if (message.payload['@type'] !== 'dxos.agent.query.QueryRequest') {
       log('Indexing plugin received unexpected message type.', { type: message.payload['@type'] });
       return;
@@ -65,6 +65,7 @@ export class QueryPlugin extends Plugin {
 
     const request: QueryRequest = message.payload;
 
+    request.filter.options = { ...request.filter.options, dataLocation: QueryOptions.DataLocation.LOCAL };
     const filter = Filter.fromProto(request.filter);
     const { results: queryResults } = this._pluginCtx!.client.spaces.query(filter, filter.options);
 

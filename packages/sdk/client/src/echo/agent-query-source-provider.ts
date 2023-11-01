@@ -94,7 +94,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 export class AgentQuerySource implements QuerySource {
   public changed = new Event<void>();
   private _cancelPreviousRequest?: () => void = undefined;
-  private _results: QueryResult<EchoObject>[] = [];
+  private _results?: QueryResult<EchoObject>[] = [];
 
   constructor(
     private readonly _params: {
@@ -103,7 +103,7 @@ export class AgentQuerySource implements QuerySource {
   ) {}
 
   getResults(): QueryResult<EchoObject>[] {
-    return this._results;
+    return this._results ?? [];
   }
 
   update(filter: Filter<EchoObject>): void {
@@ -111,6 +111,9 @@ export class AgentQuerySource implements QuerySource {
       // Disabled by dataLocation filter.
       return;
     }
+
+    this._results = undefined;
+    this.changed.emit();
 
     if (this._cancelPreviousRequest) {
       this._cancelPreviousRequest();
@@ -136,6 +139,7 @@ export class AgentQuerySource implements QuerySource {
               },
             };
           }) ?? [];
+        this.changed.emit();
       })
       .catch((error) => log.catch(error));
   }

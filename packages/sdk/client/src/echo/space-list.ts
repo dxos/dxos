@@ -140,7 +140,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => spacesStream.close());
 
-    this._isReady.subscribe(async (ready) => {
+    const subscription = this._isReady.subscribe(async (ready) => {
       if (!ready) {
         return;
       }
@@ -150,6 +150,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
     });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     await gotInitialUpdate.wait();
     log.trace('dxos.sdk.echo-proxy.open', trace.end({ id: this._instanceId }));
