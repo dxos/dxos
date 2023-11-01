@@ -13,6 +13,7 @@ import { AbstractEchoObject } from './object';
 //  So rethink how we expose this.
 export class TextObject extends AbstractEchoObject<TextModel> {
   // TODO(burdon): Change to object.
+  // TODO(mykola): Add immutable option.
   constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
 
