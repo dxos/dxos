@@ -52,6 +52,7 @@ import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, object
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 (globalThis as any)[PublicKey.name] = PublicKey;
+(globalThis as any)[Folder.name] = Folder;
 
 export type SpacePluginOptions = {
   onFirstRun?: (params: {
@@ -67,8 +68,8 @@ export type SpacePluginOptions = {
 export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = deepSignal<PluginState>({ viewers: [] });
-  const spaceSubscriptions = new EventSubscriptions();
   const subscriptions = new EventSubscriptions();
+  const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
   let handleKeyDown: (event: KeyboardEvent) => void;
 
@@ -206,9 +207,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
     },
     unload: async () => {
       settings.close();
-      // graphSubscriptions.clear();
       spaceSubscriptions.clear();
       subscriptions.clear();
+      graphSubscriptions.forEach((cb) => cb());
+      graphSubscriptions.clear();
       window.removeEventListener('keydown', handleKeyDown);
     },
     provides: {
