@@ -28,12 +28,12 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
-const port = createIFramePort({
-  channel: 'frame',
-  origin: '*',
-});
-
-const services = new ClientServicesProxy(port);
+const services = new ClientServicesProxy(
+  createIFramePort({
+    channel: 'frame',
+    origin: '*',
+  }),
+);
 
 createRoot(document.getElementById('root')!).render(
   <ClientProvider services={() => services}>
