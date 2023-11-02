@@ -4,7 +4,7 @@
 
 import { DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
-import type { Space } from '@dxos/client/echo';
+import type { Query, Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -24,6 +24,8 @@ export class TriggerManager {
     { name: string; spaceKey: PublicKey },
     { ctx: Context; trigger: FunctionTrigger }
   >(({ name, spaceKey }) => `${spaceKey.toHex()}:${name}`);
+
+  private readonly _queries = new Set<Query>();
 
   constructor(
     private readonly _client: Client,
@@ -89,19 +91,18 @@ export class TriggerManager {
         task.schedule();
         count++;
       });
-
-      ctx.onDispose(() => subscription.unsubscribe());
-
       // TODO(burdon): DSL for query (replace props).
       const query = space.db.query(Filter.typename(trigger.subscription.type, trigger.subscription.props));
+      this._queries.add(query);
       const unsubscribe = query.subscribe(({ objects }) => {
         subscription.update(objects);
+      }, true);
+
+      ctx.onDispose(() => {
+        subscription.unsubscribe();
+        unsubscribe();
+        this._queries.delete(query);
       });
-
-      // TODO(burdon): Option to trigger on first subscription.
-      // TODO(burdon): After restart not triggered.
-
-      ctx.onDispose(() => unsubscribe());
     }
   }
 
