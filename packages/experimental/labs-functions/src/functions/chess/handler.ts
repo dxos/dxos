@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type FunctionHandler, type FunctionSubscriptionEvent } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 
@@ -10,7 +12,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
   const space = context.client.spaces.get(PublicKey.from(event.space))!;
 
   return new Promise<void>((resolve) => {
-    setTimeout(async () => {
+    scheduleTask(new Context(), async () => {
       const { Chess } = await import('chess.js');
       for (const objectId of event.objects) {
         const game = space.db.query({ id: objectId }).objects[0];
@@ -32,7 +34,7 @@ export const handler: FunctionHandler<FunctionSubscriptionEvent> = async ({ even
         }
       }
 
-      return context.status(200).succeed({});
+      context.status(200).succeed({});
     });
   });
 };
