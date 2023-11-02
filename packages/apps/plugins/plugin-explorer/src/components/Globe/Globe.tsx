@@ -48,7 +48,7 @@ export const Globe = ({ items = [], accessor, options = defaultOptions }: GlobeP
       // TODO(burdon): Create simple wrapper for Plot with good defaults.
       marks: [
         Plot.sphere({ fill: 'lightblue', fillOpacity: 0.5 }),
-        Plot.geo(land, { fill: 'green', fillOpacity: 0.3 }),
+        Plot.geo(land, { fill: 'darkgreen', fillOpacity: 0.5 }),
         Plot.graticule(),
         Plot.dot(items, {
           x: accessor

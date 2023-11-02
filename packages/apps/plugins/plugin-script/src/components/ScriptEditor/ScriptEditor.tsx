@@ -7,6 +7,7 @@ import { editor } from 'monaco-editor';
 import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
+import { type ThemeMode } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
@@ -15,6 +16,7 @@ import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructi
 
 export type ScriptEditorProps = {
   content: YText;
+  themeMode?: ThemeMode;
   className?: string;
 };
 
@@ -22,7 +24,7 @@ export type ScriptEditorProps = {
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
  */
-export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
+export const ScriptEditor = ({ content, themeMode, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
@@ -79,7 +81,7 @@ export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
     <div className={mx('grow overflow-hidden', className)}>
       {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
       <MonacoEditor
-        theme='light'
+        theme={themeMode === 'dark' ? 'vs-dark' : 'light'}
         language='typescript'
         loading={<div />}
         options={options}

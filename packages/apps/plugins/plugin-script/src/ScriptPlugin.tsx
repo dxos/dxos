@@ -93,7 +93,7 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
               ) : null;
             case 'section':
               return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px]'} />
+                <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px] py-2'} />
               ) : null;
           }
         },

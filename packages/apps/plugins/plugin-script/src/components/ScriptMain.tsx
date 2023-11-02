@@ -8,7 +8,7 @@ import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type TextObject } from '@dxos/client/echo';
-import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
+import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
@@ -31,6 +31,7 @@ export const ScriptMain = (props: ScriptMainProps) => {
 };
 
 export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) => {
+  const { themeMode } = useThemeContext();
   const [view, setView] = useState<'editor' | 'preview' | 'split'>('editor');
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
@@ -54,7 +55,7 @@ export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) =
   return (
     <div className={mx('flex flex-col grow overflow-hidden', className)}>
       <DensityProvider density={'fine'}>
-        <Toolbar.Root classNames='p-2 mb-1'>
+        <Toolbar.Root classNames='p-2'>
           <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
             <ToggleGroupItem value='editor'>
               <Code />
@@ -75,7 +76,7 @@ export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) =
       <div className='flex overflow-hidden grow'>
         {view !== 'preview' && (
           <div className={mx('flex flex-1 shrink-0 overflow-x-auto')}>
-            <ScriptEditor content={source.content as YText} />
+            <ScriptEditor content={source.content as YText} themeMode={themeMode} />
           </div>
         )}
         {view !== 'editor' && result && (
