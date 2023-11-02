@@ -87,7 +87,16 @@ const DebugSpace: FC<{ space: Space }> = ({ space }) => {
 
   const handleCreateObject = async (createTables: boolean) => {
     if (createTables) {
-      generator.createTables();
+      // TODO(burdon): Add tables to sidebar via. SpaceAction.ADD_TO_FOLDER
+      const tables = generator.createTables();
+      console.log('created', { tables });
+      // TODO(burdon): Callback.
+      // intentPlugin?.provides.intent.dispatch(
+      //   tables.map((table) => ({
+      //     action: SpaceAction.ADD_TO_FOLDER,
+      //     data: { object: table },
+      //   })),
+      // );
     } else {
       generator.createDocument();
     }

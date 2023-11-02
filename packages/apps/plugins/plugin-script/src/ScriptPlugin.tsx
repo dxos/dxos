@@ -5,8 +5,9 @@
 import { Code } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Script as ScriptType } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder, Script as ScriptType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/client/echo';
 
 import { ScriptMain, ScriptSection } from './components';
@@ -14,7 +15,7 @@ import translations from './translations';
 import { SCRIPT_PLUGIN, ScriptAction, type ScriptPluginProvides } from './types';
 
 // TODO(burdon): Make generic and remove need for filter.
-const isObject = <T extends EchoObject>(object: any, schema: Schema, filter: Filter<T>): T | undefined => {
+const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
   return isTypedObject(object) && object.__typename === schema.typename ? (object as T) : undefined;
 };
 
@@ -28,7 +29,47 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
       id: SCRIPT_PLUGIN,
     },
     provides: {
+      metadata: {
+        records: {
+          [ScriptType.schema.typename]: {
+            placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+            icon: (props) => <Code {...props} />,
+          },
+        },
+      },
       translations,
+      graph: {
+        builder: ({ parent, plugins }) => {
+          if (!(parent.data instanceof Folder)) {
+            return;
+          }
+
+          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
+            id: `${SCRIPT_PLUGIN}/create`,
+            label: ['create object label', { ns: SCRIPT_PLUGIN }],
+            icon: (props) => <Code {...props} />,
+            invoke: () =>
+              intentPlugin?.provides.intent.dispatch([
+                {
+                  plugin: SCRIPT_PLUGIN,
+                  action: ScriptAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
+                },
+                {
+                  action: LayoutAction.ACTIVATE,
+                },
+              ]),
+            properties: {
+              testId: 'scriptPlugin.createObject',
+            },
+          });
+        },
+      },
       stack: {
         creators: [
           {
@@ -45,16 +86,15 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
       },
       surface: {
         component: (data, role) => {
-          const object = isObject(data.object, ScriptType.schema, ScriptType.filter());
-          if (!object) {
-            return null;
-          }
-
           switch (role) {
             case 'main':
-              return <ScriptMain source={object.source} mainUrl={mainUrl} />;
+              return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
+                <ScriptMain source={(data.active as any).source} mainUrl={mainUrl} />
+              ) : null;
             case 'section':
-              return <ScriptSection source={object.source} mainUrl={mainUrl} className={'h-[500px]'} />;
+              return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
+                <ScriptSection source={(data.object as any).source} mainUrl={mainUrl} className={'h-[500px]'} />
+              ) : null;
           }
         },
       },

@@ -52,7 +52,7 @@ export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) =
   }
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden', className)}>
+    <div className={mx('flex flex-col grow overflow-hidden', className)}>
       <DensityProvider density={'fine'}>
         <Toolbar.Root classNames='p-2 mb-1'>
           <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
