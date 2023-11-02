@@ -213,15 +213,21 @@ test('query by typename receives updates', async () => {
   const query = peer.db.query(Filter.typename('example.test.Contact'));
   expect(query.objects).to.have.length(1);
   expect(query.objects[0]).to.eq(contact);
-  const trigger = new Trigger();
 
+  const nameUpdate = new Trigger();
+  const anotherContactAdded = new Trigger();
   const unsub = query.subscribe(({ objects }) => {
-    if (objects[0].name === name) {
-      trigger.wake();
+    if (objects.some((obj) => obj.name === name)) {
+      nameUpdate.wake();
+    }
+    if (objects.length === 2) {
+      anotherContactAdded.wake();
     }
   });
   afterTest(() => unsub());
 
   contact.name = name;
-  await asyncTimeout(trigger.wait(), 1000);
+  peer.db.add(new Contact());
+  await asyncTimeout(nameUpdate.wait(), 1000);
+  await asyncTimeout(anotherContactAdded.wait(), 1000);
 });
