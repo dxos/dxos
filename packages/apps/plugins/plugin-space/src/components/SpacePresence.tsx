@@ -70,7 +70,7 @@ export const SpacePresence = () => {
   );
 };
 
-const ObjectViewers: FC<{ viewers: ObjectViewer[] }> = ({ viewers }) => {
+export const ObjectViewers: FC<{ viewers?: ObjectViewer[] }> = ({ viewers = [] }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
