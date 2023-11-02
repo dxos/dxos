@@ -48,7 +48,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
 
           switch (role) {
             case 'section':
-              return <ScriptMain className={'h-[300px]'} content={object.content} />;
+              return <ScriptMain className={'h-[400px]'} content={object.content} />;
           }
         },
       },

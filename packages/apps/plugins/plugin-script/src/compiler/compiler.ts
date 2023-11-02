@@ -3,7 +3,7 @@
 //
 
 import { type BuildOptions } from 'esbuild';
-import { build, type BuildResult } from 'esbuild-wasm';
+import { build, initialize, type BuildResult } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
@@ -24,20 +24,23 @@ export type CompilerOptions = {
   platform: BuildOptions['platform'];
 };
 
+let initialized: Promise<void>;
+export const initializeCompiler = async (options: { wasmURL: string }) => {
+  await (initialized ??= initialize({
+    wasmURL: options.wasmURL,
+  }));
+};
+
 /**
  * ESBuild compiler.
  * https://esbuild.github.io/api/#build
  */
 export class Compiler {
-  private _initialized?: Promise<void>;
-
   constructor(private readonly _options: CompilerOptions) {}
 
   async compile(source: string): Promise<CompilerResult> {
-    // TODO(burdon): Browser only.
-    // await (this._initialized ??= initialize({
-    // wasmURL: esbuildWasm,
-    // }));
+    invariant(initialized, 'Compiler not initialized.');
+    await initialized;
 
     const result = await build({
       format: 'esm',

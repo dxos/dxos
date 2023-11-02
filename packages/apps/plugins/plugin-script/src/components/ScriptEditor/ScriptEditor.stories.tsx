@@ -4,7 +4,6 @@
 
 import '@dxosTheme';
 
-import { initialize } from 'esbuild-wasm';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -14,7 +13,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { ScriptEditor } from './ScriptEditor';
-import { Compiler, type CompilerResult } from '../../compiler';
+import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
 import { FrameContainer } from '../FrameContainer';
 
 // TODO(burdon): Editor import resolution.
@@ -48,9 +47,7 @@ const Story = () => {
   useEffect(() => {
     setContent(new TextObject(code, TextKind.PLAIN));
     setTimeout(async () => {
-      await initialize({
-        wasmURL: esbuildWasmURL,
-      });
+      await initializeCompiler({ wasmURL: esbuildWasmURL });
     });
   }, []);
 

@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { initialize } from 'esbuild-wasm';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
+import { TextObject } from '@dxos/client/echo';
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { mx } from '@dxos/react-ui-theme';
 
 import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
-import { Compiler, type CompilerResult } from '../compiler';
+import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
 // TODO(burdon): Editor import resolution.
 // TODO(burdon): Reference React components from lib (e.g., Explorer).
@@ -39,30 +39,27 @@ const code = [
 ].join('\n');
 
 export type ScriptMainProps = {
-  className?: string;
   content: TextObject;
+  className?: string;
 };
 
-export const ScriptMain = ({ className, content }: ScriptMainProps) => {
+export const ScriptMain = ({ content: initialContent, className }: ScriptMainProps) => {
+  const [content, setContent] = useState<TextObject>(); // TODO(burdon): Get from space.
+  useEffect(() => {
+    setContent(new TextObject(code, TextKind.PLAIN)); // TODO(burdon): Set initial value.
+  }, []);
+
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
-  // const [content, setContent] = useState<TextObject>(); // TODO(burdon): Get from space.
   useEffect(() => {
-    // TODO(burdon): Factor out.
-    // setContent(new TextObject(code, TextKind.PLAIN));
-    setTimeout(async () => {
-      await initialize({
-        wasmURL: esbuildWasmURL,
-      });
-    });
+    // TODO(burdon): Change to useCompiler hook (with initialization).
+    void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
 
   const handleExec = async (source: string) => {
     const result = await compiler.compile(source);
     setResult(result);
   };
-
-  console.log(':::', content);
 
   if (!content) {
     return null;
