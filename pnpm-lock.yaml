@@ -2102,9 +2102,15 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../../core/protocols
@@ -2117,6 +2123,9 @@ importers:
       '@monaco-editor/react':
         specifier: ^4.4.6
         version: 4.4.6(monaco-editor@0.25.2)(react-dom@18.2.0)(react@18.2.0)
+      esbuild-wasm:
+        specifier: ^0.16.14
+        version: 0.16.17
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2

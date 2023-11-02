@@ -21,7 +21,13 @@
   ],
   "references": [
     {
+      "path": "../../../common/crypto"
+    },
+    {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/invariant"
     },
     {
       "path": "../../../core/echo/text-model"

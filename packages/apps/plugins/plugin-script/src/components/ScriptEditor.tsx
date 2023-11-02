@@ -41,12 +41,12 @@ export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
-    fontSize: 15,
+    fontSize: 14,
     minimap: {
       enabled: false,
     },
-    renderLineHighlight: 'none',
     readOnly: false,
+    renderLineHighlight: 'none',
     scrollbar: {
       useShadows: false,
       verticalScrollbarSize: 4,
@@ -93,10 +93,10 @@ export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
       <div className='flex grow overflow-hidden'>
         {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
         <MonacoEditor
+          theme={'light'}
           language={'typescript'}
           loading={<div />}
           options={options}
-          theme={'light'}
           beforeMount={handleWillMount}
           onMount={handleMount}
         />
