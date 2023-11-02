@@ -108,7 +108,7 @@ export const objectToGraphNode = ({
       properties: {
         // TODO(burdon): Factor out palette constants.
         palette: isPersonalSpace ? 'teal' : isSharedSpacesFolder ? 'pink' : undefined,
-        'data-testid': isPersonalSpace
+        testId: isPersonalSpace
           ? 'spacePlugin.personalSpace'
           : isSharedSpacesFolder
           ? 'spacePlugin.sharedSpaces'
@@ -116,7 +116,7 @@ export const objectToGraphNode = ({
           ? 'spacePlugin.space'
           : isFolder
           ? 'spacePlugin.folder'
-          : undefined,
+          : 'spacePlugin.object',
         persistenceClass: isSpaceFolder ? undefined : 'folder',
         ...(isFolder
           ? {
