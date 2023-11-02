@@ -49,7 +49,15 @@ import {
   type SpaceSettingsProps,
   type PluginState,
 } from './types';
-import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, objectToGraphNode } from './util';
+import {
+  ROOT,
+  SHARED,
+  getActiveSpace,
+  hiddenSpacesToGraphNodes,
+  indexSpaceFolder,
+  isSpace,
+  objectToGraphNode,
+} from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -59,7 +67,7 @@ import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, object
 
 export type SpacePluginOptions = {
   /**
-   * Root folder structure is created on identity first run.
+   * Root folder structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root folder structure.
    *
    * @param params.client DXOS Client
@@ -111,14 +119,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const dispatch = intentPlugin.provides.intent.dispatch;
 
       // Create root folder structure.
-      if (clientPlugin.provides.firstRun) {
+      const defaultSpace = client.spaces.default;
+      const query = defaultSpace.db.query(Folder.filter({ name: ROOT }));
+      if (clientPlugin.provides.firstRun && query.objects.length === 0) {
         const personalSpaceFolder = new Folder({ name: client.spaces.default.key.toHex() });
         const sharedSpacesFolder = new Folder({ name: SHARED });
         const rootFolder = new Folder({ name: ROOT, objects: [personalSpaceFolder, sharedSpacesFolder] });
         client.spaces.default.db.add(rootFolder);
         onFirstRun?.({
           client,
-          defaultSpace: client.spaces.default,
+          defaultSpace,
           rootFolder,
           personalSpaceFolder,
           sharedSpacesFolder,
@@ -143,9 +153,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             history.replaceState({}, document.title, url.href);
           }
 
+          const folder = await indexSpaceFolder({ space, defaultSpace });
+
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: space.key.toHex() },
+            data: { id: folder.id },
           });
         });
       }
@@ -305,7 +317,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
 
-          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
+          if (!dispatch || !resolve || !client) {
             return;
           }
 
@@ -376,11 +388,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.JOIN: {
-              if (!clientPlugin) {
+              if (!client) {
                 return;
               }
-              const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: space.key.toHex() };
+              const defaultSpace = client.spaces.default;
+              const { space } = await client.shell.joinSpace();
+              if (space) {
+                const folder = await indexSpaceFolder({ space, defaultSpace });
+                return { space, id: folder.id };
+              }
+              break;
             }
 
             case SpaceAction.WAIT_FOR_OBJECT: {
