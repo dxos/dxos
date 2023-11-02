@@ -34,6 +34,17 @@ export default [
         'show hidden spaces label': 'Show hidden spaces',
         'rename object label': 'Rename',
         'delete object label': 'Delete',
+        'go to object label': 'Open',
+        'found object label': 'Ready.',
+        'found object description': 'The requested object is now available.',
+        'waiting for object label': 'Loading…',
+        'waiting for object description': 'The requested object is still being synchronized.',
+        'object not found label': 'Nothing found.',
+        'object not found description':
+          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
+        'missing object message': 'Object not available.',
+        'missing object description':
+          'TThe requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'add folder label': 'Add folder',
         'unnamed object label': 'New object',
         'unnamed folder label': 'New folder',
