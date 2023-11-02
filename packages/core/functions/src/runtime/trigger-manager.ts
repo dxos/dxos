@@ -96,8 +96,7 @@ export class TriggerManager {
       this._queries.add(query);
       const unsubscribe = query.subscribe(({ objects }) => {
         subscription.update(objects);
-      });
-      subscription.update(query.objects);
+      }, true);
 
       ctx.onDispose(() => {
         subscription.unsubscribe();
