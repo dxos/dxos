@@ -16,6 +16,10 @@ import { types } from '@braneframe/types';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
+import { Globe } from './Globe';
+// @ts-ignore
+import world from '../../public/countries-110m.json?json';
+
 // TODO(burdon): Factor out.
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
   return (Story) => (
@@ -38,7 +42,32 @@ export default {
   ],
 };
 
-export const Globe = () => {
+export const Globe1 = () => {
+  const [data, setData] = useState<{ world: any; cities: any }>();
+  useEffect(() => {
+    setTimeout(async () => {
+      // const world = await (await fetch('/countries-110m.json')).json();
+      const cities = await (await fetch('/cities.json')).json();
+      setData({
+        world,
+        cities,
+      });
+    });
+  }, []);
+
+  if (!data) {
+    return null;
+  }
+
+  const cities = data.cities.features.map((feature: any) => ({
+    lat: feature.geometry.coordinates[0],
+    lng: feature.geometry.coordinates[1],
+  }));
+
+  return <Globe objects={cities} />;
+};
+
+export const Globe2 = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {
@@ -50,7 +79,7 @@ export const Globe = () => {
         cities,
       });
     });
-  }, [width, height]);
+  }, []);
 
   useEffect(() => {
     if (!data || !width || !height) {
@@ -110,7 +139,7 @@ export const Chart = () => {
         cities,
       });
     });
-  }, [width, height]);
+  }, []);
 
   useEffect(() => {
     if (!data || !width || !height) {

@@ -20,19 +20,17 @@ import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
 const code = [
   "import React, { useEffect } from 'react';",
-  "import { Expando } from '@dxos/client/echo';",
-  "import { useClient } from '@dxos/react-client';",
+  "import { useQuery, useSpace } from '@dxos/react-client/echo';",
   "import { Globe } from '@braneframe/plugin-explorer';",
   '',
   'const Component = () => {',
-  '  const client = useClient();',
-  '  useEffect(() => {',
-  '    client.spaces.default.db.add(new Expando());',
-  '  }, []);',
+  '  const space = useSpace();',
+  '  const objects = useQuery(space,',
+  "    object => object.__typename === 'dxos.org/schema/person');",
+  // "  const { objects } = client.spaces.query({ type: 'dxos.org/schema/person' });",
   '',
-  '  const { objects } = client.spaces.query();',
   '  return <Globe objects={objects} />',
-  // "  return <div className='m-2 p-2 text-red-500'>{objects.length}</div>;",
+  // "return <div className='p-2'>{objects.length}</div>;",
   '}',
   '',
   'export default Component;',
@@ -40,10 +38,11 @@ const code = [
 
 export type ScriptMainProps = {
   content: TextObject;
+  mainUrl: string;
   className?: string;
 };
 
-export const ScriptMain = ({ content: initialContent, className }: ScriptMainProps) => {
+export const ScriptMain = ({ content: initialContent, mainUrl, className }: ScriptMainProps) => {
   const [content, setContent] = useState<TextObject>(); // TODO(burdon): Get from space.
   useEffect(() => {
     setContent(new TextObject(code, TextKind.PLAIN)); // TODO(burdon): Set initial value.
@@ -68,11 +67,11 @@ export const ScriptMain = ({ content: initialContent, className }: ScriptMainPro
   return (
     <div className={mx('flex w-full overflow-hidden m-8', className)}>
       <div className='flex flex-1 shrink-0 overflow-x-auto'>
-        <ScriptEditor content={content} onExec={handleExec} />
+        <ScriptEditor content={content} onChangeView={() => setResult(undefined)} onExec={handleExec} />
       </div>
       {result && (
         <div className='flex flex-1 shrink-0 overflow-hidden'>
-          <FrameContainer result={result} />
+          <FrameContainer result={result} mainUrl={mainUrl} />
         </div>
       )}
     </div>

@@ -11,18 +11,17 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 
 // @ts-ignore
 import frameSrc from './frame.html?raw';
-// @ts-ignore
-import mainUrl from './frame?url';
 import { type CompilerResult } from '../../compiler';
 
 export type FrameContainerProps = {
+  mainUrl: string;
   result: CompilerResult;
 };
 
 /**
  * IFrame container for the compiled script.
  */
-export const FrameContainer = ({ result }: FrameContainerProps) => {
+export const FrameContainer = ({ mainUrl, result }: FrameContainerProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Connect iframe to client.
@@ -51,7 +50,7 @@ export const FrameContainer = ({ result }: FrameContainerProps) => {
   const html = frameSrc.replace(
     '__IMPORT_MAP__',
     JSON.stringify({
-      imports: createImportMap(result),
+      imports: createImportMap(mainUrl, result),
     }),
   );
 
@@ -59,7 +58,7 @@ export const FrameContainer = ({ result }: FrameContainerProps) => {
 };
 
 // TODO(burdon): Comment.
-const createImportMap = (result: CompilerResult) => {
+const createImportMap = (mainUrl: string, result: CompilerResult) => {
   const createReexportingModule = (namedImports: string[], key: string) => {
     const code = `
       const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(key)}];

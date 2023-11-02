@@ -814,6 +814,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc-tunnel
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -2169,6 +2172,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

@@ -51,6 +51,9 @@ import {
   surfaceElevation,
 } from '@dxos/react-ui-theme';
 
+// @ts-ignore
+import mainUrl from './frame?url';
+
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
@@ -111,7 +114,7 @@ const main = async () => {
       KanbanPlugin(),
       MapPlugin(),
       PresenterPlugin(), // Before Stack.
-      ScriptPlugin(),
+      ScriptPlugin({ mainUrl }),
       SketchPlugin(),
       StackPlugin(),
       TablePlugin(),

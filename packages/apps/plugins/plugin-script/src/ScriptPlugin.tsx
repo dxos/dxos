@@ -18,7 +18,11 @@ const isObject = <T extends EchoObject>(object: any, schema: Schema, filter: Fil
   return isTypedObject(object) && object.__typename === schema.typename ? (object as T) : undefined;
 };
 
-export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
+export type ScriptPluginProps = {
+  mainUrl: string;
+};
+
+export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<ScriptPluginProvides> => {
   return {
     meta: {
       id: SCRIPT_PLUGIN,
@@ -48,7 +52,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
 
           switch (role) {
             case 'section':
-              return <ScriptMain className={'h-[400px]'} content={object.content} />;
+              return <ScriptMain className={'h-[400px]'} content={object.content} mainUrl={mainUrl} />;
           }
         },
       },

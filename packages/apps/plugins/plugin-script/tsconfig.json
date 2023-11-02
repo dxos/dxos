@@ -30,6 +30,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {

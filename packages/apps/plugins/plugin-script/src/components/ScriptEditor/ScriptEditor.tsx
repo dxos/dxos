@@ -55,6 +55,12 @@ export const ScriptEditor = ({ content, className, onChangeView, onExec }: Scrip
     // TODO(burdon): https://github.com/lukasbach/monaco-editor-auto-typings
     // monaco.languages.typescript.typescriptDefaults.addExtraLib(content, '');
 
+    // TODO(burdon): Temporarily disable diagnostics (to hide import errors).
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: true,
+    });
+
     // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       // module: monaco.languages.typescript.ModuleKind.CommonJS,

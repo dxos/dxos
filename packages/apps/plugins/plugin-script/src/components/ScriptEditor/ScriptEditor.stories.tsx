@@ -9,16 +9,16 @@ import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { TextObject } from '@dxos/client/echo';
+import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { useClient } from '@dxos/react-client';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { ScriptEditor } from './ScriptEditor';
 import { Compiler, type CompilerResult, initializeCompiler } from '../../compiler';
 import { FrameContainer } from '../FrameContainer';
-
-// TODO(burdon): Editor import resolution.
-// TODO(burdon): Reference React components from lib (e.g., Explorer).
-// TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
+// @ts-ignore
+import mainUrl from '../FrameContainer/frame?url';
 
 const code = [
   "import React, { useEffect } from 'react';",
@@ -28,13 +28,13 @@ const code = [
   '',
   'const Component = () => {',
   '  const client = useClient();',
-  '  useEffect(() => {',
-  '    client.spaces.default.db.add(new Expando());',
-  '  }, []);',
+  // '  useEffect(() => {',
+  // '    client.spaces.default.db.add(new Expando());',
+  // '  }, []);',
   '',
-  '  const { objects } = client.spaces.query();',
-  '  return <Globe objects={objects} />',
-  // "  return <div className='m-2 p-2 text-red-500'>{objects.length}</div>;",
+  "  const { objects } = client.spaces.query({ type: 'dxos.org/schema/person' });",
+  // '  return <Globe objects={objects} />',
+  "  return <div className='p-2'>{objects.length}</div>;",
   '}',
   '',
   'export default Component;',
@@ -49,6 +49,13 @@ const Story = () => {
     setTimeout(async () => {
       await initializeCompiler({ wasmURL: esbuildWasmURL });
     });
+  }, []);
+
+  const client = useClient();
+  useEffect(() => {
+    const generator = createSpaceObjectGenerator(client.spaces.default);
+    generator.addSchemas();
+    generator.createObjects({ count: 100 });
   }, []);
 
   const handleExec = async (source: string) => {
@@ -67,7 +74,7 @@ const Story = () => {
       </div>
       {result && (
         <div className='flex flex-1 shrink-0 overflow-hidden'>
-          <FrameContainer result={result} />
+          <FrameContainer mainUrl={mainUrl} result={result} />
         </div>
       )}
     </div>

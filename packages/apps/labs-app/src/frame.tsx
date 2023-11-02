@@ -9,6 +9,9 @@ import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
+// TODO(burdon): The script main frame currently must be part of the vite applications.
+//  Import file as resource from package?
+
 const init = async (f: () => Promise<Record<string, any>>) =>
   Object.entries(await f()).reduce<Record<string, any>>((map, [key, module]) => {
     map[key] = module;
