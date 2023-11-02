@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 import { createContext, useContext } from 'react';
 
 import { ErrorBoundary } from './ErrorBoundary';
@@ -40,6 +40,11 @@ export type SurfaceProps = {
    * The fallback component will be rendered if an error occurs.
    */
   fallback?: ErrorBoundary['props']['fallback'];
+
+  /**
+   * If specified, this will render if no plugin can offer renderable content for the surface.
+   */
+  contentFallback?: FC<{}>;
 
   /**
    * If more than one component is resolved, the limit determines how many are rendered.
@@ -88,7 +93,11 @@ const SurfaceResolver = (props: SurfaceProps) => {
     },
   };
 
-  return <SurfaceContext.Provider value={currentContext}>{nodes}</SurfaceContext.Provider>;
+  return (
+    <SurfaceContext.Provider value={currentContext}>
+      {nodes.length > 0 ? nodes : props.contentFallback ? <props.contentFallback /> : null}
+    </SurfaceContext.Provider>
+  );
 };
 
 const resolveNodes = (

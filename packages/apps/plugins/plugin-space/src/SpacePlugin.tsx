@@ -28,13 +28,16 @@ import { type Space, SpaceProxy, getSpaceForObject } from '@dxos/react-client/ec
 
 import { backupSpace } from './backup';
 import {
+  AwaitingObject,
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
-  SpaceMain,
-  SpacePresence,
+  FolderMain,
+  MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
+  SpaceMain,
+  SpacePresence,
 } from './components';
 import SpaceSettings from './components/SpaceSettings';
 import translations from './translations';
@@ -86,7 +89,10 @@ export type SpacePluginOptions = {
 
 export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<PluginState>({ viewers: [] });
+  const state = deepSignal<PluginState>({
+    awaiting: undefined,
+    viewers: [],
+  }) as RevertDeepSignal<PluginState>;
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
@@ -240,6 +246,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       space: state as RevertDeepSignal<PluginState>,
       settings: settings.values,
       translations,
+      root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
           [Folder.schema.typename]: {
@@ -252,7 +259,14 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         component: (data, role) => {
           switch (role) {
             case 'main':
-              return isSpace(data.active) ? <SpaceMain space={data.active} /> : null;
+              // TODO(wittjosiah): ItemID length constant.
+              return isSpace(data.active) ? (
+                <SpaceMain space={data.active} />
+              ) : data.active instanceof Folder ? (
+                <FolderMain folder={data.active} />
+              ) : typeof data.active === 'string' && data.active.length === 64 ? (
+                <MissingObject id={data.active} />
+              ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
               switch (true) {
@@ -384,6 +398,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return { space, id: folder.id };
               }
               break;
+            }
+
+            case SpaceAction.WAIT_FOR_OBJECT: {
+              state.awaiting = intent.data.id;
+              return true;
             }
 
             case SpaceAction.SHARE: {
