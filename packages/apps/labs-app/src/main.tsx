@@ -21,6 +21,7 @@ import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { LayoutPlugin } from '@braneframe/plugin-layout';
 import { MapPlugin } from '@braneframe/plugin-map';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { MetadataPlugin } from '@braneframe/plugin-metadata';
 import { NavTreePlugin } from '@braneframe/plugin-navtree';
 import { PresenterPlugin } from '@braneframe/plugin-presenter';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
@@ -56,6 +57,8 @@ import {
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
+const APP = 'labs.dxos.org';
+
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
   // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
@@ -83,7 +86,7 @@ const main = async () => {
 
   const App = createApp({
     plugins: [
-      TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
+      TelemetryPlugin({ namespace: APP, config: new Config(Defaults()) }),
       ThemePlugin({ appName: 'Labs', tx: labsTx }),
 
       // Outside of error boundary so that updates are not blocked by errors.
@@ -92,7 +95,8 @@ const main = async () => {
       // Core framework.
       ErrorPlugin(),
       GraphPlugin(),
-      ClientPlugin({ config, services, debugIdentity: debug, types }),
+      MetadataPlugin(),
+      ClientPlugin({ appKey: APP, config, services, debugIdentity: debug, types }),
 
       // Core UX.
       LayoutPlugin({ showComplementarySidebar: true }),

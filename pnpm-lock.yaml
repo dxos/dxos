@@ -751,6 +751,9 @@ importers:
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugins/plugin-markdown
+      '@braneframe/plugin-metadata':
+        specifier: workspace:*
+        version: link:../plugins/plugin-metadata
       '@braneframe/plugin-navtree':
         specifier: workspace:*
         version: link:../plugins/plugin-navtree
@@ -5872,6 +5875,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5955,6 +5961,12 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2
     devDependencies:
+      '@dxos/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@mediapipe/tasks-text':
+        specifier: ^0.10.7
+        version: 0.10.7
       '@types/html-to-text':
         specifier: ^9.0.0
         version: 9.0.2
@@ -6196,7 +6208,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
@@ -7091,7 +7103,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7274,7 +7286,7 @@ importers:
         version: 3.1.0(vite@4.3.9)
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7760,7 +7772,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8023,7 +8035,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       d3:
         specifier: ^7.8.5
         version: 7.8.5
@@ -8078,7 +8090,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8124,7 +8136,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -8191,7 +8203,7 @@ importers:
         version: 18.0.6
       chromatic:
         specifier: ^7.5.0
-        version: 7.5.0
+        version: 7.5.4
       deepsignal:
         specifier: 1.4.0-shallow.0
         version: 1.4.0-shallow.0(react@18.2.0)
@@ -13955,6 +13967,10 @@ packages:
       vfile: 5.3.6
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@mediapipe/tasks-text@0.10.7:
+    resolution: {integrity: sha512-9OF8DJV/9nuPOQfhOkwuBFunLqc1EXXraGn+q90RpdCoHcg288fkV2r6e268o4NL+u8Lvkx0Zy9ll4/Orqh0JA==}
     dev: true
 
   /@microsoft/tsdoc@0.14.2:
@@ -23913,8 +23929,8 @@ packages:
     resolution: {integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==}
     engines: {node: '>=10'}
 
-  /chromatic@7.5.0:
-    resolution: {integrity: sha512-9B1rT8/L71BZTmAGXFBvKGrudnVZ4uBcGFckx0ZEMvOXboI0DOyr1/ehmSB1YmPOhu+r/7dy2jfTEzPmYcpXJg==}
+  /chromatic@7.5.4:
+    resolution: {integrity: sha512-DiBwsn8yABN6SFSeEf5gTbwGIqhfP+rjrAQENgeLFDUV3vX3tGdI8oVgseaeCwk8tn08ZukrmB/k3ZG9RPJPTA==}
     hasBin: true
     dev: true
 
