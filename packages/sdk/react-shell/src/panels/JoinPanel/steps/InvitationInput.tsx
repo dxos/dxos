@@ -5,11 +5,11 @@
 import React, { useState, useEffect, cloneElement } from 'react';
 
 import { log } from '@dxos/log';
+import { PublicKey, useClient } from '@dxos/react-client';
+import { InvitationEncoder } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Actions, StepHeading } from '../../../components';
-import { Action } from '../../../components/Panel/Action';
-import { Input } from '../../../components/Panel/Input';
+import { Action, Input, Actions, StepHeading } from '../../../components';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
@@ -32,6 +32,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
   const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
+  const client = useClient();
 
   const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 
@@ -39,11 +40,15 @@ export const InvitationInput = (props: InvitationInputProps) => {
     unredeemedCode && setInputValue(unredeemedCode ?? '');
   }, [unredeemedCode]);
 
-  const handleNext = () =>
-    send({
-      type: `set${Kind}InvitationCode`,
-      code: invitationCodeFromUrl(inputValue),
-    });
+  const handleNext = () => {
+    const code = invitationCodeFromUrl(inputValue);
+    const spaceKey = InvitationEncoder.decode(code)?.spaceKey;
+    if (spaceKey && client.spaces.get().some(({ key }) => PublicKey.equals(key, spaceKey))) {
+      return onExit ? onExit() : onDone?.(null);
+    } else {
+      return send({ type: `set${Kind}InvitationCode`, code });
+    }
+  };
 
   const exitAction = (
     <Action
