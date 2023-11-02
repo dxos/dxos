@@ -6,7 +6,7 @@ import { DeferredTask } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { createSubscription } from '@dxos/echo-schema';
+import { Filter, createSubscription } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -93,7 +93,7 @@ export class TriggerManager {
       ctx.onDispose(() => subscription.unsubscribe());
 
       // TODO(burdon): DSL for query (replace props).
-      const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
+      const query = space.db.query(Filter.typename(trigger.subscription.type, trigger.subscription.props));
       const unsubscribe = query.subscribe(({ objects }) => {
         subscription.update(objects);
       });
