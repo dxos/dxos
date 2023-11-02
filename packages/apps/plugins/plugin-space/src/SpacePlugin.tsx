@@ -46,7 +46,15 @@ import {
   type SpaceSettingsProps,
   type PluginState,
 } from './types';
-import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, objectToGraphNode } from './util';
+import {
+  ROOT,
+  SHARED,
+  getActiveSpace,
+  hiddenSpacesToGraphNodes,
+  indexSpaceFolder,
+  isSpace,
+  objectToGraphNode,
+} from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -114,7 +122,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         client.spaces.default.db.add(rootFolder);
         onFirstRun?.({
           client,
-          defaultSpace: client.spaces.default,
+          defaultSpace,
           rootFolder,
           personalSpaceFolder,
           sharedSpacesFolder,
@@ -139,9 +147,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             history.replaceState({}, document.title, url.href);
           }
 
+          const folder = await indexSpaceFolder({ space, defaultSpace });
+
           await dispatch({
             action: LayoutAction.ACTIVATE,
-            data: { id: space.key.toHex() },
+            data: { id: folder.id },
           });
         });
       }
@@ -364,11 +374,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
 
             case SpaceAction.JOIN: {
-              if (!clientPlugin) {
+              if (!client) {
                 return;
               }
-              const { space } = await clientPlugin.provides.client.shell.joinSpace();
-              return space && { space, id: space.key.toHex() };
+              const defaultSpace = client.spaces.default;
+              const { space } = await client.shell.joinSpace();
+              if (space) {
+                const folder = await indexSpaceFolder({ space, defaultSpace });
+                return { space, id: folder.id };
+              }
+              break;
             }
 
             case SpaceAction.SHARE: {
