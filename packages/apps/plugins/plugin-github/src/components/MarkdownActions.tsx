@@ -5,8 +5,8 @@
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
 import React, { type RefObject, useCallback } from 'react';
 
-import { useLayout } from '@braneframe/plugin-layout';
 import { type MarkdownProperties } from '@braneframe/plugin-markdown';
+import { LayoutAction, useIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { type ComposerModel, type MarkdownComposerRef } from '@dxos/react-ui-editor';
@@ -30,7 +30,7 @@ export const MarkdownActions = ({
   const ghId = properties.__meta?.keys?.find((key) => key.source === 'github.com')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
-  const layout = useLayout();
+  const { dispatch } = useIntent();
 
   const docGhId = useDocGhId(properties.__meta?.keys ?? []);
 
@@ -50,14 +50,13 @@ export const MarkdownActions = ({
         const {
           data: { html_url: issueUrl },
         } = await updateIssueContent();
-        layout.dialogContent = {
-          content: 'dxos.org/plugin/github/ExportDialog',
-          type: 'response',
-          target: issueUrl,
-          model,
-          docGhId,
-        };
-        layout.dialogOpen = true;
+        await dispatch({
+          action: LayoutAction.OPEN_DIALOG,
+          data: {
+            component: 'dxos.org/plugin/github/ExportDialog',
+            subject: { type: 'response', target: issueUrl, model, docGhId },
+          },
+        });
       } catch (err) {
         log.error('Failed to export to Github issue');
       }
@@ -70,13 +69,13 @@ export const MarkdownActions = ({
     if ('issueNumber' in docGhId!) {
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
-      layout.dialogContent = {
-        content: 'dxos.org/plugin/github/ExportDialog',
-        type: 'create-pr',
-        model,
-        docGhId,
-      };
-      layout.dialogOpen = true;
+      void dispatch({
+        action: LayoutAction.OPEN_DIALOG,
+        data: {
+          component: 'dxos.org/plugin/github/ExportDialog',
+          subject: { type: 'create-pr', model, docGhId },
+        },
+      });
     }
   }, [exportGhIssueContent, docGhId]);
 
@@ -88,10 +87,12 @@ export const MarkdownActions = ({
           <DropdownMenu.Item
             classNames='gap-2'
             disabled={!docGhId}
-            onClick={() => {
-              layout.dialogContent = { content: 'dxos.org/plugin/github/ImportDialog', docGhId, editorRef };
-              layout.dialogOpen = true;
-            }}
+            onClick={() =>
+              dispatch({
+                action: LayoutAction.OPEN_DIALOG,
+                data: { component: 'dxos.org/plugin/github/ImportDialog', subject: { docGhId, editorRef } },
+              })
+            }
           >
             <FileArrowDown className={getSize(4)} />
             <span className='grow'>{t('import from github label')}</span>
@@ -122,10 +123,12 @@ export const MarkdownActions = ({
       ) : (
         <DropdownMenu.Item
           classNames='gap-2'
-          onClick={() => {
-            layout.dialogContent = { content: 'dxos.org/plugin/github/BindDialog', properties };
-            layout.dialogOpen = true;
-          }}
+          onClick={() =>
+            dispatch({
+              action: LayoutAction.OPEN_DIALOG,
+              data: { component: 'dxos.org/plugin/github/BindDialog', subject: properties },
+            })
+          }
         >
           <Link className={getSize(4)} />
           <span className='grow'>{t('bind to file in github label')}</span>

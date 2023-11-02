@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema, Text } from '@dxos/client/echo';
+import { type Schema, TextObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Type name registry linked to schema?
 const getIcon = (schema: Schema): string | undefined => {
@@ -48,6 +48,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
     Object.entries(fields).some(([, value]) => {
       const result = value.match(match);
       if (result) {
+        // TODO(burdon): Use schema.
         const label = getStringProperty(object, ['label', 'name', 'title']);
 
         results.push({
@@ -55,7 +56,9 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
           type: object.__schema ? getIcon(object.__schema) : undefined,
           label,
           match,
-          snippet: value !== label ? value : fields.description ?? undefined, // TODO(burdon): Truncate.
+          // TODO(burdon): Truncate.
+          // TODO(burdon): Issue with sketch documents.
+          snippet: value !== label ? value : fields.content ?? fields.description ?? undefined,
           object,
         });
 
@@ -101,7 +104,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof Text) {
+    if (typeof value === 'string' || value instanceof TextObject) {
       try {
         fields[key] = String(value);
       } catch (err) {

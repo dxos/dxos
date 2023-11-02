@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-ipfs",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,21 +15,13 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
     "lodash.get": "^4.4.2",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-navtree": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
@@ -42,11 +34,6 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-navtree": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

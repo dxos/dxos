@@ -2,57 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Asterisk, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import { SpaceProxy, Expando, type TypedObject, Filter } from '@dxos/client/echo';
+import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
+import { Folder } from '@braneframe/types';
+import { resolvePlugin, parseIntentPlugin, LayoutAction, type PluginDefinition } from '@dxos/app-framework';
+import { Expando } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import translations from './translations';
-import { isObject, TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides } from './types';
-import { objectToGraphNode } from './util';
+import { TEMPLATE_PLUGIN, TemplateAction, type TemplatePluginProvides, isObject } from './types';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
 
+const typename = 'template'; // Type.schema.typename
+
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
-  let adapter: GraphNodeAdapter<TypedObject> | undefined;
   return {
     meta: {
       id: TEMPLATE_PLUGIN,
     },
-    ready: async (plugins) => {
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
-      if (dispatch) {
-        adapter = new GraphNodeAdapter({
-          dispatch,
-          filter: Filter.from((object: TypedObject) => isObject(object)),
-          adapter: objectToGraphNode,
-        });
-      }
-    },
-    unload: async () => {
-      adapter?.clear();
-    },
     provides: {
+      metadata: {
+        records: {
+          [typename]: {
+            placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
+            icon: (props: IconProps) => <Asterisk {...props} />,
+          },
+        },
+      },
       translations,
       graph: {
         builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          if (!(parent.data instanceof Folder)) {
             return;
           }
 
-          const space = parent.data;
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-          parent.addAction({
+          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
             id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
             label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
-            icon: (props) => <Plus {...props} />,
+            icon: (props) => <Asterisk {...props} />,
             // TODO(burdon): Factor out helper.
             invoke: () =>
               intentPlugin?.provides.intent.dispatch([
@@ -61,8 +55,8 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
                   action: TemplateAction.CREATE,
                 },
                 {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
+                  action: SpaceAction.ADD_TO_FOLDER,
+                  data: { folder: parent.data },
                 },
                 {
                   action: LayoutAction.ACTIVATE,
@@ -72,8 +66,6 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
               testId: 'templatePlugin.createObject',
             },
           });
-
-          return adapter?.createNodes(space, parent);
         },
       },
       surface: {

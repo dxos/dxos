@@ -5,11 +5,8 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { type SpacePluginProvides } from '@braneframe/plugin-space';
 import { Table as TableType } from '@braneframe/types';
-import { findPlugin, usePlugins } from '@dxos/app-framework';
-import { Expando, type TypedObject, type Schema } from '@dxos/client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { Expando, type TypedObject, type Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table, type TableDef } from '@dxos/react-ui-table';
 import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -21,12 +18,36 @@ const reactDeps = (...obj: TypedObject[]) => {
   return JSON.stringify(obj);
 };
 
-export const TableMain: FC<{ table: TableType }> = ({ table }) => {
-  const [, forceUpdate] = useState({});
+// TODO(burdon): Section container with chrome.
+export const TableSection: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <div className={'flex h-[386px] my-2 overflow-hidden'}>
+      <TableComponent table={table} />
+    </div>
+  );
+};
 
-  const { plugins } = usePlugins();
-  const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
-  const space = spacePlugin?.provides?.space.active;
+export const TableSlide: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <div className={'flex m-8 overflow-hidden'}>
+      <TableComponent table={table} />
+    </div>
+  );
+};
+
+export const TableMain: FC<{ table: TableType }> = ({ table }) => {
+  return (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+      <div className={'flex grow m-4 overflow-hidden'}>
+        <TableComponent table={table} />
+      </div>
+    </Main.Content>
+  );
+};
+
+export const TableComponent: FC<{ table: TableType }> = ({ table }) => {
+  const [, forceUpdate] = useState({});
+  const space = getSpaceForObject(table);
   const objects = useQuery<TypedObject>(
     space,
     // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
@@ -116,24 +137,22 @@ export const TableMain: FC<{ table: TableType }> = ({ table }) => {
   const debug = false;
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
-      <DensityProvider density='fine'>
-        <div className='flex grow m-4 overflow-hidden'>
-          <Table<TypedObject>
-            keyAccessor={(row) => row.id ?? '__new'}
-            columns={columns}
-            data={rows}
-            border
-            onColumnResize={handleColumnResize}
-          />
-        </div>
+    <DensityProvider density='fine'>
+      <div className='flex flex-col grow __m-4 overflow-hidden'>
+        <Table<TypedObject>
+          keyAccessor={(row) => row.id ?? '__new'}
+          columns={columns}
+          data={rows}
+          border
+          onColumnResize={handleColumnResize}
+        />
         {debug && (
           <div className='flex text-xs'>
             <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
             <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
           </div>
         )}
-      </DensityProvider>
-    </Main.Content>
+      </div>
+    </DensityProvider>
   );
 };

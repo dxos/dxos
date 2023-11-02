@@ -121,7 +121,7 @@ message Grid {
     option (object) = true;
 
     dxos.schema.TypedObject object = 1;
-    dxos.schema.Text title = 2;
+    string title = 2;
     dxos.schema.Text content = 3;
 
     // TODO(burdon): Properties.
@@ -185,11 +185,11 @@ message View {
 }
 
 /**
- * Portable source of truth for canonical/presentational order of objects within a certain scope.
+ *
  */
-message ObjectOrder {
+message Folder {
   option (object) = true;
 
-  string scope = 1;
-  repeated string order = 2;
+  optional string name = 1;
+  repeated dxos.schema.TypedObject objects = 2;
 }

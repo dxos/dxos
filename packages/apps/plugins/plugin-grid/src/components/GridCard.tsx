@@ -4,7 +4,8 @@
 
 import React, { forwardRef } from 'react';
 
-import { type TextObject } from '@dxos/client/echo';
+import { type TextObject, type TypedObject } from '@dxos/client/echo';
+import { useConfig } from '@dxos/react-client';
 import { Card, DropdownMenu, Input, useTranslation } from '@dxos/react-ui';
 import { MarkdownComposer, useTextModel } from '@dxos/react-ui-editor';
 import { type MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -20,32 +21,60 @@ export const colors: Record<string, string> = {
   blue: 'bg-cyan-50',
 };
 
+// TODO(burdon): Need lenses (which should be normalized outside of card).
+export const getObject = (item: any): TypedObject => item.node?.data ?? item.object ?? item;
+
+export type ValueAccessor<TObject extends {}, TValue> = {
+  getValue(object: TObject): TValue;
+  setValue(object: TObject, value: TValue | undefined): void;
+};
+
 export type GridCardProps = { id: string; title?: string; content?: TextObject; image?: string; color?: string };
 
 export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
   ({ className, isDragging, draggableStyle, draggableProps, item, grow, onSelect, onAction }, forwardRef) => {
     const { t } = useTranslation(GRID_PLUGIN);
 
-    // TODO(burdon): Accessor.
-    const model = useTextModel({ text: item.content ?? (item as any).object?.description }); // TODO(burdon): Hack (description).
+    // TODO(burdon): Factor out images. Use surface?
+    const cid = getObject(item)?.cid;
+    const config = useConfig();
+
+    const url = cid ? config.values.runtime!.services!.ipfs!.gateway + '/' + cid : undefined;
+
+    const titleAccessor: ValueAccessor<GridCardProps, string> = {
+      getValue: (object) => getObject(item).title ?? getObject(item).name ?? '',
+      setValue: (object, value) => {
+        if ((item as any).object) {
+          (item as any).object.title = value;
+        } else {
+          object.title = value;
+        }
+      },
+    };
+
+    const content = useTextModel({
+      text: getObject(item).content ?? getObject(item).description,
+    });
 
     const color = (item.color && colors[item.color]) ?? colors.gray;
 
     return (
       <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
         <Card.Root classNames={mx(className, 'w-full snap-center', color, isDragging && 'opacity-20')} grow={grow}>
-          <Card.Header onDoubleClick={() => onSelect?.()}>
-            <Card.DragHandle {...draggableProps} />
-            <Input.Root>
-              <Input.TextInput
-                variant='subdued'
-                classNames='p-0'
-                placeholder={t('title placeholder')}
-                value={item.title ?? (item as any).label ?? ''} // TODO(burdon): Hack (label).
-                onChange={(event) => (item.title = event.target.value)}
-              />
-            </Input.Root>
-            <Card.Menu>
+          <Card.Header onDoubleClick={() => onSelect?.()} floating={!!url}>
+            <Card.DragHandle {...draggableProps} position={url ? 'left' : undefined} />
+            {!url && (
+              <Input.Root>
+                <Input.TextInput
+                  variant='subdued'
+                  classNames='p-0'
+                  placeholder={t('title placeholder')}
+                  value={titleAccessor.getValue(item)}
+                  onChange={(event) => titleAccessor.setValue(item, event.target.value)}
+                />
+              </Input.Root>
+            )}
+            <Card.Menu position={url ? 'right' : undefined}>
               {/* TODO(burdon): Handle events/intents? */}
               <DropdownMenu.Item onClick={() => onAction?.({ id: item.id, action: 'delete' })}>
                 <span className='grow'>Delete</span>
@@ -55,21 +84,24 @@ export const GridCard: MosaicTileComponent<GridCardProps> = forwardRef(
               </DropdownMenu.Item>
             </Card.Menu>
           </Card.Header>
-          <Card.Body>
-            <MarkdownComposer
-              model={model}
-              slots={{
-                root: {
-                  className: mx(
-                    'h-full p-1 text-sm',
-                    // TODO(burdon): Hack since classname ignored below.
-                    '[&>div]:h-full',
-                  ),
-                },
-                editor: { className: 'h-full ring', placeholder: t('content placeholder') },
-              }}
-            />
-          </Card.Body>
+          {!url && (
+            <Card.Body>
+              <MarkdownComposer
+                model={content}
+                slots={{
+                  root: {
+                    className: mx(
+                      'h-full p-1 text-sm',
+                      // TODO(burdon): Hack since classname ignored below.
+                      '[&>div]:h-full',
+                    ),
+                  },
+                  editor: { className: 'h-full', placeholder: t('content placeholder') },
+                }}
+              />
+            </Card.Body>
+          )}
+          {url && <Card.Media src={url} />}
         </Card.Root>
       </div>
     );

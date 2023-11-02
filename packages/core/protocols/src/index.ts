@@ -8,3 +8,4 @@ export * from './storage';
 export * from './testing';
 export * from './tracing';
 export * from './types';
+export * from './query';

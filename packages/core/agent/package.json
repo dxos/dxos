@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,6 +32,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -45,7 +46,6 @@
     "date-fns": "^2.29.3",
     "express": "^4.17.1",
     "isomorphic-ws": "^4.0.1",
-    "minisearch": "^3.0.2",
     "pkg-up": "^3.1.0",
     "ws": "^7.4.4",
     "yaml": "^2.1.3"

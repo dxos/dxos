@@ -21,9 +21,17 @@ export type Resource = z.infer<typeof Resource>;
 /**
  * Provides for a plugin that exposes translations.
  */
+// TODO(wittjosiah): Rename to TranslationResourcesProvides.
 export type TranslationsProvides = {
   translations: Readonly<Resource[]>;
 };
+
+// TODO(wittjosiah): Add TranslationsProvides.
+// export type TranslationsProvides = {
+//   translations: {
+//     t: TFunction;
+//   };
+// };
 
 /**
  * Type guard for translation plugins.

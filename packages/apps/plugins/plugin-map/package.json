@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-map",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,27 +15,20 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
-    "@dxos/client": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "deepsignal": "1.4.0-shallow.0",
     "leaflet": "^1.9.3",
-    "lodash.get": "^4.4.2",
     "react-leaflet": "^4.2.0",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/leaflet": "^1.9.0",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -43,11 +36,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
