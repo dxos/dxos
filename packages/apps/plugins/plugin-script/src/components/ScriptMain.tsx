@@ -2,20 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
-
 import { initialize } from 'esbuild-wasm';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { ClientSpaceDecorator } from '@dxos/react-client/testing';
+import { type TextObject } from '@dxos/client/echo';
+import { mx } from '@dxos/react-ui-theme';
 
+import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
-import { Compiler, type CompilerResult } from '../../compiler';
-import { FrameContainer } from '../FrameContainer';
+import { Compiler, type CompilerResult } from '../compiler';
 
 // TODO(burdon): Editor import resolution.
 // TODO(burdon): Reference React components from lib (e.g., Explorer).
@@ -41,12 +38,18 @@ const code = [
   'export default Component;',
 ].join('\n');
 
-const Story = () => {
+export type ScriptMainProps = {
+  className?: string;
+  content: TextObject;
+};
+
+export const ScriptMain = ({ className, content }: ScriptMainProps) => {
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
-  const [content, setContent] = useState<TextObject>();
+  // const [content, setContent] = useState<TextObject>(); // TODO(burdon): Get from space.
   useEffect(() => {
-    setContent(new TextObject(code, TextKind.PLAIN));
+    // TODO(burdon): Factor out.
+    // setContent(new TextObject(code, TextKind.PLAIN));
     setTimeout(async () => {
       await initialize({
         wasmURL: esbuildWasmURL,
@@ -59,12 +62,14 @@ const Story = () => {
     setResult(result);
   };
 
+  console.log(':::', content);
+
   if (!content) {
     return null;
   }
 
   return (
-    <div className='flex w-full overflow-hidden m-8 h-[300px]'>
+    <div className={mx('flex w-full overflow-hidden m-8', className)}>
       <div className='flex flex-1 shrink-0 overflow-x-auto'>
         <ScriptEditor content={content} onExec={handleExec} />
       </div>
@@ -76,14 +81,3 @@ const Story = () => {
     </div>
   );
 };
-
-export default {
-  component: ScriptEditor,
-  render: Story,
-  decorators: [ClientSpaceDecorator()],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export const Default = {};

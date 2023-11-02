@@ -2096,6 +2096,9 @@ importers:
 
   packages/apps/plugins/plugin-script:
     dependencies:
+      '@braneframe/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugin-explorer
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack

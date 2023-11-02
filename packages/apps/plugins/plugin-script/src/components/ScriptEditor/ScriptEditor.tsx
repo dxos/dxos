@@ -19,6 +19,7 @@ import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructi
 export type ScriptEditorProps = {
   content: TextObject;
   className?: string;
+  onChangeView?: (view: string) => void;
   onExec?: (source: string) => void;
 };
 
@@ -26,7 +27,7 @@ export type ScriptEditorProps = {
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
  */
-export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) => {
+export const ScriptEditor = ({ content, className, onChangeView, onExec }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
@@ -74,11 +75,11 @@ export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) 
   };
 
   return (
-    <div className={mx('flex flex-col grow border divide-y', className)}>
+    <div className={mx('flex flex-col w-full overflow-hidden border divide-y', className)}>
       <DensityProvider density='fine'>
         <Toolbar.Root>
-          <Button variant='ghost'>
-            <Code className={getSize(6)} />
+          <Button variant='ghost' onClick={() => onChangeView?.('edit')}>
+            <Code className={getSize(4)} />
           </Button>
           <div className='grow' />
           <Button variant='ghost' onClick={() => onExec?.(content.text)}>

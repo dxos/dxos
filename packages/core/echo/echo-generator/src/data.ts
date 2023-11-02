@@ -33,6 +33,7 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const organization = new Schema({
+    typename: 'dxos.org/schema/organization',
     props: [
       // TODO(burdon): Add metadata for default label.
       {
@@ -66,10 +67,20 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
         type: Schema.PropType.REF,
         ref: organization,
       },
+      // TODO(burdon): Convert to object.
+      {
+        id: 'lat',
+        type: Schema.PropType.NUMBER,
+      },
+      {
+        id: 'lng',
+        type: Schema.PropType.NUMBER,
+      },
     ],
   });
 
   const project = new Schema({
+    typename: 'dxos.org/schema/project',
     props: [
       {
         id: 'title',
@@ -114,6 +125,8 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
         organizations?.length && faker.datatype.boolean({ probability: 0.3 })
           ? faker.helpers.arrayElement(organizations)
           : undefined,
+      lat: faker.location.latitude(),
+      lng: faker.location.longitude(),
     };
   },
 

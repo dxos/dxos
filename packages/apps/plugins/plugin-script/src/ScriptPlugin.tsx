@@ -9,7 +9,7 @@ import { Script as ScriptType } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
 import { type Filter, type EchoObject, type Schema, isTypedObject } from '@dxos/client/echo';
 
-import { ScriptEditor } from './components';
+import { ScriptMain } from './components/ScriptMain';
 import translations from './translations';
 import { SCRIPT_PLUGIN, ScriptAction, type ScriptPluginProvides } from './types';
 
@@ -48,7 +48,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
 
           switch (role) {
             case 'section':
-              return <ScriptEditor className={'h-[300px]'} content={object.content} />;
+              return <ScriptMain className={'h-[300px]'} content={object.content} />;
           }
         },
       },

@@ -66,6 +66,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-explorer"
+    },
+    {
       "path": "../plugin-graph"
     },
     {

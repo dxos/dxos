@@ -23,6 +23,7 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
   '@dxos/client': await import('@dxos/client'),
   '@dxos/client/echo': await import('@dxos/client/echo'),
   '@dxos/react-client': await import('@dxos/react-client'),
+  '@braneframe/plugin-explorer': await import('@braneframe/plugin-explorer'),
 }));
 
 // eslint-disable-next-line no-new-func
@@ -37,6 +38,8 @@ const services = new ClientServicesProxy(
 
 createRoot(document.getElementById('root')!).render(
   <ClientProvider services={() => services}>
-    <Component />
+    <div className='flex fixed inset-0'>
+      <Component />
+    </div>
   </ClientProvider>,
 );
