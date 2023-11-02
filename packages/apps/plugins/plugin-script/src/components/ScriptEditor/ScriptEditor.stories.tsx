@@ -21,12 +21,16 @@ import { FrameContainer } from '../FrameContainer';
 // TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
 
 const code = [
-  "import { useClient } from '@dxos/react-client';",
+  "import React from 'react';",
   '',
+  // "import { useClient } from '@dxos/react-client';",
+  // '',
   'const Component = () => {',
-  '  const client = useClient();',
-  '  const { objects } = client.spaces.query();',
-  '  return <div>{objects.length}</div>;',
+  // '  const client = useClient();',
+  // '  const { objects } = client.spaces.query();',
+  // '  return <div>{objects.length}</div>;',
+  '  const value = Math.random();',
+  "  return <div className='m-2 p-2 ring'>{value}</div>;",
   '}',
   '',
   'export default Component;',
@@ -55,7 +59,7 @@ const Story = () => {
   }
 
   return (
-    <div className={'flex flex-col w-full overflow-hidden m-8 border divide-y'}>
+    <div className={'flex flex-col w-full overflow-hidden m-8'}>
       <ScriptEditor content={content} className={'h-[300px]'} onExec={handleExec} />
       {result && <FrameContainer result={result} />}
     </div>

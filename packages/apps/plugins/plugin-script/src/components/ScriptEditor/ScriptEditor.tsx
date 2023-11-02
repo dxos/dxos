@@ -4,7 +4,7 @@
 
 import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
 import { Code, Play } from '@phosphor-icons/react';
-import { editor, languages } from 'monaco-editor';
+import { editor } from 'monaco-editor';
 import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
@@ -13,7 +13,6 @@ import { Button, DensityProvider, Toolbar } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
-import JsxEmit = languages.typescript.JsxEmit;
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
 
@@ -28,37 +27,41 @@ export type ScriptEditorProps = {
  * https://www.npmjs.com/package/@monaco-editor
  */
 export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) => {
-  // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
-  const monaco = useMonaco();
-  useEffect(() => {
-    if (monaco) {
-      // console.log('initialized', { monaco });
-    }
-  }, [monaco]);
-
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
     fontSize: 14,
+    language: 'typescript',
     minimap: {
       enabled: false,
     },
     readOnly: false,
     renderLineHighlight: 'none',
     scrollbar: {
-      useShadows: false,
-      verticalScrollbarSize: 4,
       horizontalScrollbarSize: 4,
+      verticalScrollbarSize: 4,
+      useShadows: false,
     },
+    tabSize: 2,
   };
 
+  // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
+  const monaco = useMonaco();
+  useEffect(() => {}, [monaco]);
+
   const handleWillMount = (monaco: Monaco) => {
+    // TODO(burdon): Module resolution.
+    // TODO(burdon): https://github.com/lukasbach/monaco-editor-auto-typings
+    // monaco.languages.typescript.typescriptDefaults.addExtraLib(content, '');
+
     // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      // allowJs: true,
-      allowNonTsExtensions: true, // Allow in-memory file.
-      jsx: JsxEmit.ReactJSX,
-      lib: ['DOM', 'ESNext'],
+      // module: monaco.languages.typescript.ModuleKind.CommonJS,
+      // moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      // noEmit: true,
+      // target: monaco.languages.typescript.ScriptTarget.ESNext,
+      // typeRoots: ['node_modules/@types'],
+      jsx: monaco.languages.typescript.JsxEmit.React,
     });
   };
 
@@ -71,14 +74,14 @@ export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) 
   };
 
   return (
-    <div className={mx('flex flex-col grow divide-y', className)}>
+    <div className={mx('flex flex-col grow border divide-y', className)}>
       <DensityProvider density='fine'>
         <Toolbar.Root>
-          <Button variant={'ghost'}>
+          <Button variant='ghost'>
             <Code className={getSize(6)} />
           </Button>
-          <div className={'grow'} />
-          <Button variant={'ghost'} onClick={() => onExec?.(content.text)}>
+          <div className='grow' />
+          <Button variant='ghost' onClick={() => onExec?.(content.text)}>
             <Play className={getSize(4)} />
           </Button>
         </Toolbar.Root>
@@ -86,10 +89,11 @@ export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) 
       <div className='flex grow overflow-hidden'>
         {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
         <MonacoEditor
-          theme={'light'}
-          language={'typescript'}
+          theme='light'
+          language='typescript'
           loading={<div />}
           options={options}
+          path='main.tsx' // Required to support JSX.
           beforeMount={handleWillMount}
           onMount={handleMount}
         />
