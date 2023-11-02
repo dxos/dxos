@@ -39,8 +39,10 @@ export class Compiler {
   constructor(private readonly _options: CompilerOptions) {}
 
   async compile(source: string): Promise<CompilerResult> {
-    invariant(initialized, 'Compiler not initialized.');
-    await initialized;
+    if (this._options.platform === 'browser') {
+      invariant(initialized, 'Compiler not initialized.');
+      await initialized;
+    }
 
     const result = await build({
       format: 'esm',
