@@ -32,6 +32,7 @@ import {
   DialogRestoreSpace,
   EmptySpace,
   EmptyTree,
+  FolderMain,
   MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -249,6 +250,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(data.active) ? (
                 <SpaceMain space={data.active} />
+              ) : data.active instanceof Folder ? (
+                <FolderMain folder={data.active} />
               ) : typeof data.active === 'string' && data.active.length === 64 ? (
                 <MissingObject id={data.active} />
               ) : null;
