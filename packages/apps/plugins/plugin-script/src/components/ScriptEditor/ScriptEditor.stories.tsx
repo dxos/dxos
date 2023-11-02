@@ -18,13 +18,13 @@ import { Compiler, type CompilerResult } from '../../compiler';
 import { FrameContainer } from '../FrameContainer';
 
 // TODO(burdon): Basic sandbox: access current client/space: goal to run query.
+// TODO(burdon): Reference React components from lib (e.g., Explorer).
 // TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
 
 const code = [
   "import React from 'react';",
-  '',
   // "import { useClient } from '@dxos/react-client';",
-  // '',
+  '',
   'const Component = () => {',
   // '  const client = useClient();',
   // '  const { objects } = client.spaces.query();',
