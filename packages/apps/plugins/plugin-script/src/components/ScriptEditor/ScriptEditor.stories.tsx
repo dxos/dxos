@@ -17,20 +17,23 @@ import { ScriptEditor } from './ScriptEditor';
 import { Compiler, type CompilerResult } from '../../compiler';
 import { FrameContainer } from '../FrameContainer';
 
-// TODO(burdon): Basic sandbox: access current client/space: goal to run query.
+// TODO(burdon): Editor import resolution.
 // TODO(burdon): Reference React components from lib (e.g., Explorer).
 // TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
 
 const code = [
-  "import React from 'react';",
-  // "import { useClient } from '@dxos/react-client';",
+  "import React, { useEffect } from 'react';",
+  "import { Expando } from '@dxos/client/echo';",
+  "import { useClient } from '@dxos/react-client';",
   '',
   'const Component = () => {',
-  // '  const client = useClient();',
-  // '  const { objects } = client.spaces.query();',
-  // '  return <div>{objects.length}</div>;',
-  '  const value = Math.random();',
-  "  return <div className='m-2 p-2 ring'>{value}</div>;",
+  '  const client = useClient();',
+  '  useEffect(() => {',
+  '    client.spaces.default.db.add(new Expando());',
+  '  }, []);',
+  '',
+  '  const { objects } = client.spaces.query();',
+  "  return <div className='m-2 p-2 ring'>{objects.length}</div>;",
   '}',
   '',
   'export default Component;',
@@ -60,7 +63,7 @@ const Story = () => {
 
   return (
     <div className={'flex flex-col w-full overflow-hidden m-8'}>
-      <ScriptEditor content={content} className={'h-[300px]'} onExec={handleExec} />
+      <ScriptEditor content={content} className={'h-[332px]'} onExec={handleExec} />
       {result && <FrameContainer result={result} />}
     </div>
   );

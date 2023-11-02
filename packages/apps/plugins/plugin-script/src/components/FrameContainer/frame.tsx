@@ -5,6 +5,10 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ClientServicesProxy } from '@dxos/client/services';
+import { ClientProvider } from '@dxos/react-client';
+import { createIFramePort } from '@dxos/rpc-tunnel';
+
 const init = async (f: () => Promise<Record<string, any>>) =>
   Object.entries(await f()).reduce<Record<string, any>>((map, [key, module]) => {
     map[key] = module;
@@ -17,10 +21,22 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
   'react': await import('react'),
   'react-dom/client': await import('react-dom/client'),
   '@dxos/client': await import('@dxos/client'),
+  '@dxos/client/echo': await import('@dxos/client/echo'),
   '@dxos/react-client': await import('@dxos/react-client'),
 }));
 
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
-createRoot(document.getElementById('root')!).render(<Component />);
+const port = createIFramePort({
+  channel: 'frame',
+  origin: '*',
+});
+
+const services = new ClientServicesProxy(port);
+
+createRoot(document.getElementById('root')!).render(
+  <ClientProvider services={() => services}>
+    <Component />
+  </ClientProvider>,
+);
