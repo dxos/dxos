@@ -17,8 +17,6 @@ import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Globe } from './Globe';
-// @ts-ignore
-import world from '../../public/countries-110m.json?json';
 
 // TODO(burdon): Factor out.
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
@@ -42,11 +40,11 @@ export default {
   ],
 };
 
-export const Globe1 = () => {
+export const Default = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   useEffect(() => {
     setTimeout(async () => {
-      // const world = await (await fetch('/countries-110m.json')).json();
+      const world = await (await fetch('/countries-110m.json')).json();
       const cities = await (await fetch('/cities.json')).json();
       setData({
         world,
@@ -64,10 +62,10 @@ export const Globe1 = () => {
     lng: feature.geometry.coordinates[1],
   }));
 
-  return <Globe objects={cities} />;
+  return <Globe items={cities} />;
 };
 
-export const Globe2 = () => {
+export const Extended = () => {
   const [data, setData] = useState<{ world: any; cities: any }>();
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
   useEffect(() => {
@@ -111,55 +109,6 @@ export const Globe2 = () => {
         Plot.geo(land, { fill: 'green', fillOpacity: 0.3 }),
         Plot.graticule(),
         Plot.geo(circle, { stroke: 'black', fill: 'darkblue', fillOpacity: 0.1, strokeWidth: 2 }),
-        Plot.dot(cities, {
-          x: 'lat',
-          y: 'lng',
-          r: 6,
-          stroke: 'red',
-          fill: 'red',
-          fillOpacity: 0.2,
-        }),
-      ],
-    });
-
-    containerRef.current!.append(plot);
-    return () => plot?.remove();
-  }, [data, width, height]);
-
-  return <div ref={containerRef} className='grow p-8' />;
-};
-
-export const Chart = () => {
-  const [data, setData] = useState<{ cities: any }>();
-  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
-  useEffect(() => {
-    setTimeout(async () => {
-      const cities = await (await fetch('/cities.json')).json();
-      setData({
-        cities,
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!data || !width || !height) {
-      return;
-    }
-
-    const cities = data.cities.features.map((feature: any) => ({
-      lat: feature.geometry.coordinates[0],
-      lng: feature.geometry.coordinates[1],
-    }));
-
-    const plot = Plot.plot({
-      grid: true,
-      width,
-      height,
-      style: {
-        background: 'transparent',
-      },
-      marks: [
-        Plot.frame(),
         Plot.dot(cities, {
           x: 'lat',
           y: 'lng',

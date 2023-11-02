@@ -2,78 +2,88 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Code, Play, SquareSplitHorizontal, PresentationChart } from '@phosphor-icons/react';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { mx } from '@dxos/react-ui-theme';
+import { type TextObject } from '@dxos/client/echo';
+import { Main, Button, DensityProvider, ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
+import { baseSurface, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/react-ui-theme';
+import { type YText } from '@dxos/text-model';
 
 import { FrameContainer } from './FrameContainer';
 import { ScriptEditor } from './ScriptEditor';
 import { Compiler, type CompilerResult, initializeCompiler } from '../compiler';
 
-// TODO(burdon): Editor import resolution.
-// TODO(burdon): Reference React components from lib (e.g., Explorer).
-// TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
-
-const code = [
-  "import React, { useEffect } from 'react';",
-  "import { useQuery, useSpace } from '@dxos/react-client/echo';",
-  "import { Globe } from '@braneframe/plugin-explorer';",
-  '',
-  'const Component = () => {',
-  '  const space = useSpace();',
-  '  const objects = useQuery(space,',
-  "    object => object.__typename === 'dxos.org/schema/person');",
-  // "  const { objects } = client.spaces.query({ type: 'dxos.org/schema/person' });",
-  '',
-  '  return <Globe objects={objects} />',
-  // "return <div className='p-2'>{objects.length}</div>;",
-  '}',
-  '',
-  'export default Component;',
-].join('\n');
-
 export type ScriptMainProps = {
-  content: TextObject;
+  source: TextObject;
   mainUrl: string;
   className?: string;
 };
 
-export const ScriptMain = ({ content: initialContent, mainUrl, className }: ScriptMainProps) => {
-  const [content, setContent] = useState<TextObject>(); // TODO(burdon): Get from space.
-  useEffect(() => {
-    setContent(new TextObject(code, TextKind.PLAIN)); // TODO(burdon): Set initial value.
-  }, []);
+export const ScriptMain = (props: ScriptMainProps) => {
+  return (
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, coarseBlockPaddingStart]}>
+      <ScriptSection {...props} />
+    </Main.Content>
+  );
+};
 
+export const ScriptSection = ({ source, mainUrl, className }: ScriptMainProps) => {
+  const [view, setView] = useState<'editor' | 'preview' | 'split'>('editor');
   const [result, setResult] = useState<CompilerResult>();
   const compiler = useMemo(() => new Compiler({ platform: 'browser' }), []);
   useEffect(() => {
-    // TODO(burdon): Change to useCompiler hook (with initialization).
+    // TODO(burdon): Create useCompiler hook (with initialization).
     void initializeCompiler({ wasmURL: esbuildWasmURL });
   }, []);
 
-  const handleExec = async (source: string) => {
-    const result = await compiler.compile(source);
+  const handleExec = async () => {
+    const result = await compiler.compile(String(source.content));
     setResult(result);
+    if (view === 'editor') {
+      setView('preview');
+    }
   };
 
-  if (!content) {
+  if (!source) {
     return null;
   }
 
   return (
-    <div className={mx('flex w-full overflow-hidden m-8', className)}>
-      <div className='flex flex-1 shrink-0 overflow-x-auto'>
-        <ScriptEditor content={content} onChangeView={() => setResult(undefined)} onExec={handleExec} />
+    <div className={mx('flex flex-col w-full overflow-hidden', className)}>
+      <DensityProvider density={'fine'}>
+        <Toolbar.Root classNames='p-2 mb-1'>
+          <ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as any)}>
+            <ToggleGroupItem value='editor'>
+              <Code />
+            </ToggleGroupItem>
+            <ToggleGroupItem value='split'>
+              <SquareSplitHorizontal />
+            </ToggleGroupItem>
+            <ToggleGroupItem value='preview'>
+              <PresentationChart />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <div className='grow' />
+          <Button variant={'ghost'} onClick={handleExec}>
+            <Play />
+          </Button>
+        </Toolbar.Root>
+      </DensityProvider>
+      <div className='flex overflow-hidden grow'>
+        {view !== 'preview' && (
+          <div className={mx('flex flex-1 shrink-0 overflow-x-auto')}>
+            <ScriptEditor content={source.content as YText} />
+          </div>
+        )}
+        {view !== 'editor' && result && (
+          <div className='flex flex-1 shrink-0 overflow-hidden'>
+            <FrameContainer result={result} mainUrl={mainUrl} />
+          </div>
+        )}
       </div>
-      {result && (
-        <div className='flex flex-1 shrink-0 overflow-hidden'>
-          <FrameContainer result={result} mainUrl={mainUrl} />
-        </div>
-      )}
     </div>
   );
 };

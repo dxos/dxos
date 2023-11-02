@@ -7,9 +7,9 @@ import React from 'react';
 
 import { Script as ScriptType } from '@braneframe/types';
 import { type PluginDefinition } from '@dxos/app-framework';
-import { type Filter, type EchoObject, type Schema, isTypedObject } from '@dxos/client/echo';
+import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/client/echo';
 
-import { ScriptMain } from './components/ScriptMain';
+import { ScriptMain, ScriptSection } from './components';
 import translations from './translations';
 import { SCRIPT_PLUGIN, ScriptAction, type ScriptPluginProvides } from './types';
 
@@ -51,8 +51,10 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
           }
 
           switch (role) {
+            case 'main':
+              return <ScriptMain source={object.source} mainUrl={mainUrl} />;
             case 'section':
-              return <ScriptMain className={'h-[400px]'} content={object.content} mainUrl={mainUrl} />;
+              return <ScriptSection source={object.source} mainUrl={mainUrl} className={'h-[500px]'} />;
           }
         },
       },
@@ -60,7 +62,7 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { object: new ScriptType() };
+              return { object: new ScriptType({ source: new TextObject(code) }) };
             }
           }
         },
@@ -68,3 +70,17 @@ export const ScriptPlugin = ({ mainUrl }: ScriptPluginProps): PluginDefinition<S
     },
   };
 };
+
+const code = [
+  "import React from 'react';",
+  "import { useSpace, useQuery } from '@dxos/react-client/echo';",
+  "import { Chart } from '@braneframe/plugin-explorer';",
+  '',
+  'const Component = () => {',
+  '  const space = useSpace();',
+  "  const objects = useQuery(space, obj => obj.__typename === 'dxos.org/schema/person');",
+  '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
+  '}',
+  '',
+  'export default Component;',
+].join('\n');

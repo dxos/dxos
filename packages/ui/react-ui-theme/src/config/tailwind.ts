@@ -154,6 +154,9 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
   },
 };
 
+// TODO(burdon): Changed to neutral.
+paletteConfigs.primary = paletteConfigs.neutral;
+
 export const configColors = Object.keys(paletteConfigs).reduce(
   (acc: Record<string, Record<string, string>>, palette) => {
     const isBroad = palette === 'neutral' || palette === 'primary';

@@ -3,31 +3,26 @@
 //
 
 import MonacoEditor, { type Monaco, useMonaco } from '@monaco-editor/react';
-import { Code, Play } from '@phosphor-icons/react';
 import { editor } from 'monaco-editor';
 import React, { useEffect } from 'react';
 import { MonacoBinding } from 'y-monaco';
 
-import { type TextObject } from '@dxos/client/echo';
-import { Button, DensityProvider, Toolbar } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { type YText } from '@dxos/text-model';
 
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
 
 export type ScriptEditorProps = {
-  content: TextObject;
+  content: YText;
   className?: string;
-  onChangeView?: (view: string) => void;
-  onExec?: (source: string) => void;
 };
 
 /**
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
  */
-export const ScriptEditor = ({ content, className, onChangeView, onExec }: ScriptEditorProps) => {
+export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
   // https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
   const options: IStandaloneEditorConstructionOptions = {
     cursorStyle: 'line-thin',
@@ -76,35 +71,22 @@ export const ScriptEditor = ({ content, className, onChangeView, onExec }: Scrip
     if (content) {
       // Connect editor model to YJS.
       const models = monaco.editor.getModels();
-      const _ = new MonacoBinding(content.content as YText, models[0], new Set([editor]));
+      const _ = new MonacoBinding(content, models[0], new Set([editor]));
     }
   };
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden border divide-y', className)}>
-      <DensityProvider density='fine'>
-        <Toolbar.Root>
-          <Button variant='ghost' onClick={() => onChangeView?.('edit')}>
-            <Code className={getSize(4)} />
-          </Button>
-          <div className='grow' />
-          <Button variant='ghost' onClick={() => onExec?.(content.text)}>
-            <Play className={getSize(4)} />
-          </Button>
-        </Toolbar.Root>
-      </DensityProvider>
-      <div className='flex grow overflow-hidden'>
-        {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
-        <MonacoEditor
-          theme='light'
-          language='typescript'
-          loading={<div />}
-          options={options}
-          path='main.tsx' // Required to support JSX.
-          beforeMount={handleWillMount}
-          onMount={handleMount}
-        />
-      </div>
+    <div className={mx('grow overflow-hidden', className)}>
+      {/* https://www.npmjs.com/package/@monaco-editor/react#props */}
+      <MonacoEditor
+        theme='light'
+        language='typescript'
+        loading={<div />}
+        options={options}
+        path='main.tsx' // Required to support JSX.
+        beforeMount={handleWillMount}
+        onMount={handleMount}
+      />
     </div>
   );
 };

@@ -71,7 +71,7 @@ export class Filter<T extends EchoObject = EchoObject> {
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>) {
-    const type = Reference.fromLegacyTypename(typename);
+    const type = Reference.fromLegacyTypename(typename); // TODO(burdon): ???
 
     switch (typeof filter) {
       case 'function':
