@@ -78,8 +78,8 @@ export class MulticastObservable<T> extends Observable<T> {
    *
    * @returns Promise that resolves to the value of the observable at the time of completion.
    */
-  async wait(): Promise<T> {
-    await this._completed.wait();
+  async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
+    await this._completed.wait({ timeout });
     return this.get();
   }
 
