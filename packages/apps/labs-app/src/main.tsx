@@ -57,6 +57,8 @@ import {
 (globalThis as any)[EchoDatabase.name] = EchoDatabase;
 (globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
+const APP = 'labs.dxos.org';
+
 const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
   // TODO(burdon): Add monolithic flag. Currently, can set `target=file://local`.
@@ -84,7 +86,7 @@ const main = async () => {
 
   const App = createApp({
     plugins: [
-      TelemetryPlugin({ namespace: 'labs.dxos.org', config: new Config(Defaults()) }),
+      TelemetryPlugin({ namespace: APP, config: new Config(Defaults()) }),
       ThemePlugin({ appName: 'Labs', tx: labsTx }),
 
       // Outside of error boundary so that updates are not blocked by errors.
@@ -94,7 +96,7 @@ const main = async () => {
       ErrorPlugin(),
       GraphPlugin(),
       MetadataPlugin(),
-      ClientPlugin({ config, services, debugIdentity: debug, types }),
+      ClientPlugin({ appKey: APP, config, services, debugIdentity: debug, types }),
 
       // Core UX.
       LayoutPlugin({ showComplementarySidebar: true }),

@@ -56,7 +56,7 @@ import { ROOT, SHARED, getActiveSpace, hiddenSpacesToGraphNodes, isSpace, object
 
 export type SpacePluginOptions = {
   /**
-   * Root folder structure is created on identity first run.
+   * Root folder structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root folder structure.
    *
    * @param params.client DXOS Client
@@ -105,7 +105,9 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const dispatch = intentPlugin.provides.intent.dispatch;
 
       // Create root folder structure.
-      if (clientPlugin.provides.firstRun) {
+      const defaultSpace = client.spaces.default;
+      const query = defaultSpace.db.query(Folder.filter({ name: ROOT }));
+      if (clientPlugin.provides.firstRun && query.objects.length === 0) {
         const personalSpaceFolder = new Folder({ name: client.spaces.default.key.toHex() });
         const sharedSpacesFolder = new Folder({ name: SHARED });
         const rootFolder = new Folder({ name: ROOT, objects: [personalSpaceFolder, sharedSpacesFolder] });
@@ -291,7 +293,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
 
-          if (!dispatch || !resolve || !client || !client.spaces.isReady.get()) {
+          if (!dispatch || !resolve || !client) {
             return;
           }
 
