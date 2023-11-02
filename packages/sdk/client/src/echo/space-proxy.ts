@@ -363,7 +363,7 @@ export class SpaceProxy implements Space {
    */
   share(options?: Partial<Invitation>) {
     log('create invitation', options);
-    return this._invitationsProxy.share(options);
+    return this._invitationsProxy.share({ ...options, spaceKey: this.key });
   }
 
   /**
