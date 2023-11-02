@@ -216,7 +216,7 @@ test('query by typename receives updates', async () => {
   const trigger = new Trigger();
 
   const unsub = query.subscribe(({ objects }) => {
-    if ((objects[0].name = name)) {
+    if (objects[0].name === name) {
       trigger.wake();
     }
   });
