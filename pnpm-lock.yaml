@@ -2102,6 +2102,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -2117,6 +2120,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../../core/mesh/rpc
+      '@dxos/rpc-tunnel':
+        specifier: workspace:*
+        version: link:../../../core/mesh/rpc-tunnel
       '@dxos/text-model':
         specifier: workspace:*
         version: link:../../../core/echo/text-model

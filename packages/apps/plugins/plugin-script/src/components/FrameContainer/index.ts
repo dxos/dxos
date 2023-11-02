@@ -3,4 +3,3 @@
 //
 
 export * from './FrameContainer';
-export * from './ScriptEditor';

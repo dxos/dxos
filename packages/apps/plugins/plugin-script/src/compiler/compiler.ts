@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type BuildOptions } from 'esbuild';
 import { build, type BuildResult } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
@@ -19,12 +20,18 @@ export type CompilerResult = {
   imports: Import[];
 };
 
+export type CompilerOptions = {
+  platform: BuildOptions['platform'];
+};
+
 /**
  * ESBuild compiler.
  * https://esbuild.github.io/api/#build
  */
 export class Compiler {
   private _initialized?: Promise<void>;
+
+  constructor(private readonly _options: CompilerOptions) {}
 
   async compile(source: string): Promise<CompilerResult> {
     // TODO(burdon): Browser only.
@@ -33,13 +40,12 @@ export class Compiler {
     // }));
 
     const result = await build({
-      // platform: 'browser',
-      platform: 'node',
       format: 'esm',
-      entryPoints: ['echofs:main.tsx'],
-      outdir: 'dist',
       metafile: true,
       write: false,
+      ...this._options,
+      entryPoints: ['echofs:main.tsx'],
+      outdir: 'dist',
       plugins: [
         {
           name: 'echofs',

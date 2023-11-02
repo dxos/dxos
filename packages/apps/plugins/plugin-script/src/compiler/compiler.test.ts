@@ -10,9 +10,8 @@ import { Compiler } from './compiler';
 
 describe('Compiler', () => {
   test('Basic', async () => {
-    const compiler = new Compiler();
+    const compiler = new Compiler({ platform: 'node' });
     const result = await compiler.compile('const x = 100'); // TODO(burdon): Test import.
-    console.log(JSON.stringify(result, undefined, 2));
     expect(result).to.exist;
   });
 });

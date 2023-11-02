@@ -17,24 +17,22 @@ import JsxEmit = languages.typescript.JsxEmit;
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import IStandaloneEditorConstructionOptions = editor.IStandaloneEditorConstructionOptions;
 
-// TODO(burdon): Basic sandbox: access current client/space: goal to run query.
-// TODO(burdon): Generate runtime effect/schema definitions from echo Schema.
-
 export type ScriptEditorProps = {
   content: TextObject;
   className?: string;
+  onExec?: (source: string) => void;
 };
 
 /**
  * Monaco script editor.
  * https://www.npmjs.com/package/@monaco-editor
  */
-export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
+export const ScriptEditor = ({ content, className, onExec }: ScriptEditorProps) => {
   // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
   const monaco = useMonaco();
   useEffect(() => {
     if (monaco) {
-      console.log('initialized', { monaco });
+      // console.log('initialized', { monaco });
     }
   }, [monaco]);
 
@@ -57,9 +55,10 @@ export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
   const handleWillMount = (monaco: Monaco) => {
     // https://microsoft.github.io/monaco-editor/typedoc/interfaces/languages.typescript.CompilerOptions.html
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      // allowJs: true,
       allowNonTsExtensions: true, // Allow in-memory file.
       jsx: JsxEmit.ReactJSX,
-      lib: ['dom'],
+      lib: ['DOM', 'ESNext'],
     });
   };
 
@@ -71,21 +70,15 @@ export const ScriptEditor = ({ content, className }: ScriptEditorProps) => {
     }
   };
 
-  const handleExec = () => {
-    // https://developer.mozilla.org/en-US/docs/web/javascript/reference/global_objects/eval#never_use_eval!
-    // eslint-disable-next-line no-eval
-    return eval?.(`"use strict";(${content.text})`);
-  };
-
   return (
-    <div className={mx('flex flex-col grow', className)}>
+    <div className={mx('flex flex-col grow divide-y', className)}>
       <DensityProvider density='fine'>
         <Toolbar.Root>
           <Button variant={'ghost'}>
             <Code className={getSize(6)} />
           </Button>
           <div className={'grow'} />
-          <Button variant={'ghost'} onClick={handleExec}>
+          <Button variant={'ghost'} onClick={() => onExec?.(content.text)}>
             <Play className={getSize(4)} />
           </Button>
         </Toolbar.Root>
